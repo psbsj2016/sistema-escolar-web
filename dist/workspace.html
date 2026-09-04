@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-BR_ROsnH.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-BQ-xnBCX.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -492,6 +492,11 @@
                     <textarea id="ws-mat-desc" placeholder="Breve descrição..." rows="2" style="width: 100%; padding: 12px 15px; border: 1px solid #cbd5e1; border-radius: 10px; outline: none; margin-bottom: 20px; font-size: 14px; resize: vertical; background: white;"></textarea>
                     <div style="display: flex; align-items: center; gap: 15px; flex-wrap: wrap;">
                         <input type="file" id="ws-mat-ficheiro" accept=".pdf,.ppt,.pptx,.doc,.docx,.xls,.xlsx,.mp4,.mp3,.wav" style="flex: 1; padding: 10px; background: #f1f5f9; border: 2px dashed #94a3b8; border-radius: 10px; font-size: 13px; cursor: pointer;">
+                      <div style="margin-bottom: 15px;">
+    <label style="font-size: 12px; font-weight: bold; color: #555; display: block; margin-bottom: 5px;">Palavras-Chave / Tags (Para a Inteligência Artificial)</label>
+    <input type="text" id="ws-mat-tags" placeholder="Ex: phrasal verbs, aeroporto, dicas de viagem" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #ddd; font-size: 13px; outline: none; transition: 0.2s;" onfocus="this.style.borderColor='#3498db'">
+    <div style="font-size: 10px; color: #7f8c8d; margin-top: 4px; font-weight: bold;">🪄 A IA lerá estas palavras para recomendar este ficheiro com exatidão máxima aos alunos.</div>
+</div>
                         <button class="ws-btn" id="ws-btn-enviar-mat" style="background: #2563eb; color: white; padding: 14px 25px; border-radius: 12px; font-weight: 600; cursor: pointer;" onclick="Workspace.Materiais.enviarMaterial()">Salvar e Enviar</button>
                     </div>
                 </div>
