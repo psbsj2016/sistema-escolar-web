@@ -460,6 +460,10 @@ Workspace.Feed = {
         else if (tipoFiltro === 'documento') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
         }
+        else if (tipoFiltro === 'musica') {
+            // 🚀 NOVO: Filtra a aba da Playlist!
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.categoria === 'musica');
+        }
 
         const container = document.getElementById('ws-posts-area');
         if (container) container.innerHTML = ''; 
@@ -1035,6 +1039,11 @@ Workspace.Feed = {
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
 
+            // 🚀 NOVO: Etiqueta cor-de-rosa se for uma música!
+            let categoriaBadge = p.categoria === 'musica' 
+                ? `<span style="font-size:10px; background:#fce7f3; color:#db2777; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🎵 Música</span>` 
+                : '';
+
             const likesArr = Array.isArray(p.likes) ? p.likes : [];
             const dislikesArr = Array.isArray(p.dislikes) ? p.dislikes : [];
             const euCurti = likesArr.includes(meuId);
@@ -1065,7 +1074,7 @@ Workspace.Feed = {
                                     <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge}
+                                    <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge} ${categoriaBadge}
                                 </div>
                             </div>
                         </div>
@@ -1210,8 +1219,12 @@ Workspace.Feed = {
                 const anexosLocais = Workspace.Upload ? Workspace.Upload.arquivosAtuais : [];
                 
                 const selDestino = document.getElementById('ws-post-destino');
-                const destino = selDestino ? selDestino.value : 'global';
-                const destinoNome = selDestino ? selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '') : 'Público Geral';
+                                          const destino = selDestino ? selDestino.value : 'global';
+                                          const destinoNome = selDestino ? selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '') : 'Público Geral';
+                
+                                         // 🚀 NOVO: Lê a categoria selecionada!
+                                        const selCategoria = document.getElementById('ws-post-categoria');
+                                        const categoriaPost = selCategoria ? selCategoria.value : 'normal';
 
                 if (!texto && anexosLocais.length === 0) {
                     if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Escreva algo ou anexe um ficheiro primeiro.", "warning");
@@ -1229,7 +1242,8 @@ Workspace.Feed = {
                     }
 
                     const postRes = await Workspace.api('/workspace/posts', 'POST', {
-                        texto: texto, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, autorTipo: Workspace.usuario.tipo, anexos: urlsFinais, destino: destino, destinoNome: destinoNome
+                                                     texto: texto, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, autorTipo: Workspace.usuario.tipo, anexos: urlsFinais, destino: destino, destinoNome: destinoNome,
+                        categoria: categoriaPost // 🚀 NOVO: Envia para a nuvem
                     });
 
                     if (postRes && postRes.success) {
