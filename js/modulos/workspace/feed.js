@@ -901,7 +901,7 @@ Workspace.Feed = {
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(!containerText) return;
 
-        // 🚀 REMOVE AS AMARRAS DE ALTURA DURANTE A EDIÇÃO!
+        // REMOVE AS AMARRAS DE ALTURA DURANTE A EDIÇÃO!
         containerText.classList.remove('ws-text-collapsed');
         
         // Esconde o botão Ler Mais temporariamente
@@ -909,8 +909,20 @@ Workspace.Feed = {
         if(btnLerMais) btnLerMais.style.display = 'none';
 
         const textAtual = post.texto || '';
+        const categoriaAtual = post.categoria || 'normal'; // 🚀 Puxa a categoria atual da memória
+
         containerText.innerHTML = `
             <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s; column-span: all; break-inside: avoid;" onclick="event.stopPropagation()">
+                
+                <!-- 🚀 NOVO: Seletor de Categoria Injetado -->
+                <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                    <label style="font-size:12px; font-weight:bold; color:#555;">Categoria do Post:</label>
+                    <select id="edit-categoria-${postId}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit; font-size: 13px; outline: none; background: #fff; cursor: pointer;">
+                        <option value="normal" ${categoriaAtual === 'normal' ? 'selected' : ''}>📝 Post Normal</option>
+                        <option value="musica" ${categoriaAtual === 'musica' ? 'selected' : ''}>🎵 Música c/ Letra</option>
+                    </select>
+                </div>
+
                 <textarea id="edit-input-${postId}" rows="6" style="width:100%; padding:10px; border-radius:6px; border:1px solid #ccc; font-family:inherit; font-size:13px; resize:vertical; box-sizing:border-box; outline:none;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#ccc'">${textAtual}</textarea>
                 <div style="display:flex; gap:10px; margin-top:10px;">
                     <button class="ws-btn ws-btn-gamified" style="background:#27ae60; padding:6px 15px; font-size:12px; font-weight:bold;" onclick="Workspace.Feed.salvarEdicaoPost('${postId}')">💾 Guardar Alterações</button>
@@ -945,19 +957,29 @@ Workspace.Feed = {
 
     salvarEdicaoPost: async (postId) => {
         const input = document.getElementById(`edit-input-${postId}`);
+        const selectCat = document.getElementById(`edit-categoria-${postId}`); // 🚀 Lê o novo dropdown
         if(!input) return;
+        
         const novoTexto = input.value.trim();
+        const novaCategoria = selectCat ? selectCat.value : 'normal';
+        
         const btn = event.target;
         btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
-            const res = await Workspace.api(`/workspace/posts/${postId}`, 'PUT', { texto: novoTexto });
+            // 🚀 Envia a categoria junto com o texto para a nossa rota Backend atualizada
+            const res = await Workspace.api(`/workspace/posts/${postId}`, 'PUT', { texto: novoTexto, categoria: novaCategoria });
             if(res && res.success) {
                 const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
-                if(post) post.texto = novoTexto;
+                if(post) {
+                    post.texto = novoTexto;
+                    post.categoria = novaCategoria; // Atualiza a memória local
+                }
                 
-                // 🚀 CHAMA O CANCELAR PARA RECONSTRUIR A CAIXA E AVALIAR O TAMANHO DO TEXTO NOVO
                 Workspace.Feed.cancelarEdicaoPost(postId);
+                
+                // 🚀 Recarrega a tela silenciosamente para garantir que a etiqueta (Badge) rosa de Música aparece!
+                Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
                 
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
             } else throw new Error();
