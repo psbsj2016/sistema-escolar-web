@@ -1769,13 +1769,14 @@ Workspace.Feed = {
         let htmlDias = '';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
-                // 🚀 GERAÇÃO DO MINIJOGO: Cria o input dinamicamente onde está o "____"
                 const idInput = `input-musica-dia-${dia.dia}`;
                 const idFeedback = `feedback-musica-dia-${dia.dia}`;
                 const palavraCerta = Workspace.Feed.limparTexto(dia.palavraEscondida).toLowerCase().trim();
                 
-                // Substitui os sublinhados por um campo de input elegante
                 const fraseInterativa = Workspace.Feed.formatarIA(dia.fraseOculta).replace('____', `<input type="text" id="${idInput}" placeholder="???" style="background: rgba(0,0,0,0.3); border: 1px solid #ec4899; color: #fdf2f8; font-weight: bold; font-size: 18px; width: 120px; text-align: center; border-radius: 6px; outline: none; padding: 2px 5px; font-family: inherit; transition: 0.2s;" autocomplete="off" onkeypress="if(event.key === 'Enter') Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')">`);
+
+                // Protege a frase original para não quebrar o clique do botão
+                const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1').replace(/\n/g, ' ');
 
                 htmlDias += `
                     <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
@@ -1788,10 +1789,13 @@ Workspace.Feed = {
                             ${fraseInterativa}
                         </div>
                         
-                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 15px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px;">
-                            <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">Verificar Letra</button>
-                            <span id="${idFeedback}" style="font-size: 14px; font-weight: bold;"></span>
+                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
+                            <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">✍️ Verificar Letra</button>
+                            <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 5px;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
+                            <span id="${idFeedback}" style="font-size: 14px; font-weight: bold; flex: 1;"></span>
                         </div>
+
+                        <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
 
                         <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Trad: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
                         
@@ -1812,20 +1816,18 @@ Workspace.Feed = {
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
-                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco prestando atenção à música!</p>
+                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco e treine a pronúncia com a IA!</p>
                 ${htmlVideo}
                 ${htmlDias}
             </div>
         `;
     },
 
-    // 🚀 LÓGICA DE VALIDAÇÃO: Avalia a resposta na hora!
     verificarBlankMusical: (idInput, palavraCerta, idFeedback) => {
         const input = document.getElementById(idInput);
         const feedback = document.getElementById(idFeedback);
         if (!input || !feedback) return;
         
-        // Remove pontuações finais para não dar erro se o aluno escrever "train!" em vez de "train"
         const tentativa = input.value.trim().toLowerCase().replace(/[.,!?;:]/g, '');
         const alvo = palavraCerta.replace(/[.,!?;:]/g, '');
 
@@ -1833,11 +1835,9 @@ Workspace.Feed = {
             input.style.borderColor = '#10b981';
             input.style.background = 'rgba(16, 185, 129, 0.2)';
             input.style.color = '#10b981';
-            input.disabled = true; // Tranca o input após acertar
+            input.disabled = true; 
             feedback.style.color = '#10b981';
             feedback.innerHTML = '✅ Correto! Excelente ouvido.';
-            
-            // Lança confetes ou efeito visual de sucesso
             input.style.transform = 'scale(1.1)';
             setTimeout(() => input.style.transform = 'scale(1)', 200);
         } else {
@@ -1845,13 +1845,9 @@ Workspace.Feed = {
             input.style.color = '#ef4444';
             feedback.style.color = '#ef4444';
             feedback.innerHTML = '❌ Não é bem isso. Tente novamente!';
-            
-            // Efeito de tremer (shake) no erro
             input.style.transform = 'translateX(-5px)';
             setTimeout(() => input.style.transform = 'translateX(5px)', 50);
             setTimeout(() => input.style.transform = 'translateX(0)', 100);
-
-            // Reseta a cor após 2 segundos para nova tentativa
             setTimeout(() => {
                 if(!input.disabled) {
                     input.style.borderColor = '#ec4899';
@@ -1860,6 +1856,66 @@ Workspace.Feed = {
                 }
             }, 2000);
         }
+    },
+
+    // 🚀 O NOVO MOTOR DE AVALIAÇÃO DE PRONÚNCIA
+    treinarPronunciaMusical: (dia, fraseOriginal) => {
+        const btn = document.getElementById(`btn-mic-dia-${dia}`);
+        const feedbackBox = document.getElementById(`feedback-mic-dia-${dia}`);
+        if (!btn || !feedbackBox) return;
+
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("O seu navegador não suporta reconhecimento de voz direto. Tente usar o Google Chrome.", "error");
+            return;
+        }
+
+        const recognition = new SpeechRecognition();
+        recognition.lang = 'en-US'; // Escuta em Inglês
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+
+        btn.innerHTML = '<span style="font-size: 16px; animation: pulse 1s infinite;">🔴</span> A ouvir... Fale agora!';
+        btn.style.background = '#ef4444';
+        feedbackBox.style.display = 'none';
+
+        recognition.start();
+
+        recognition.onresult = async (event) => {
+            const transcricao = event.results[0][0].transcript;
+            btn.innerHTML = '⏳ A avaliar...';
+            btn.style.background = '#f59e0b';
+            
+            try {
+                // Reutilizamos a rota fantástica de Minijogos que você já tem no Backend!
+                const res = await Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
+                    jogo: 'readAloud',
+                    pergunta: fraseOriginal,
+                    respostaAluno: transcricao
+                });
+
+                feedbackBox.style.display = 'block';
+                if (res && res.correto) {
+                    btn.innerHTML = '<span style="font-size: 16px;">⭐</span> Perfeito!';
+                    btn.style.background = '#10b981';
+                    feedbackBox.innerHTML = `<strong>A IA ouviu:</strong> "${transcricao}"<br><br>✅ <strong>Feedback:</strong> ${res.feedback}<br><span style="color:#10b981; font-weight: bold;">+${res.coins || 50} Coins! 🪙</span>`;
+                } else {
+                    btn.innerHTML = '<span style="font-size: 16px;">🎙️</span> Tentar Novamente';
+                    btn.style.background = '#8b5cf6';
+                    feedbackBox.innerHTML = `<strong>A IA ouviu:</strong> "${transcricao}"<br><br>❌ <strong>Feedback:</strong> ${res?.feedback || 'Tente pronunciar com mais clareza.'}<br><strong>Dica:</strong> ${res?.correcao || ''}`;
+                }
+            } catch (error) {
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao comunicar com a IA de pronúncia.", "error");
+                btn.innerHTML = '<span style="font-size: 16px;">🎙️</span> Treinar Pronúncia';
+                btn.style.background = '#8b5cf6';
+            }
+        };
+
+        recognition.onerror = (event) => {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Não conseguimos ouvir. Permita o uso do microfone e tente novamente.", "warning");
+            btn.innerHTML = '<span style="font-size: 16px;">🎙️</span> Treinar Pronúncia';
+            btn.style.background = '#8b5cf6';
+        };
     }
 
 };
