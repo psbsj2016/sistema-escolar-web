@@ -1846,31 +1846,39 @@ Workspace.Feed = {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
             const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
             
-            // 🚀 UX PREMIUM: Reduz a largura da coluna para espalhar a letra mais na horizontal
+            // 🚀 UX PREMIUM: Cálculo EXATO como no Feed principal
             const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
-            const estiloColunas = numLinhas >= 8 ? 'column-width: 200px; column-gap: 25px; widows: 3; orphans: 3;' : '';
+            const ehTextoLongo = (postOriginal.texto && postOriginal.texto.length > 350) || numLinhas > 8;
+            const estiloColunas = numLinhas >= 8 ? 'column-width: 220px; column-gap: 25px; widows: 3; orphans: 3;' : '';
+            const idUnico = `musica-${postOriginal.id}`;
+
+            // O Botão Mágico "Ler Mais" igual ao do Feed, adaptado para o tom rosa da música
+            const btnVerMais = `<div id="btn-ler-mais-${idUnico}" style="margin-top: 15px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="Workspace.Feed.toggleTextoPost(this, '${idUnico}')" style="color: #ec4899; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(236, 72, 153, 0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">Ler mais ⬇️</span></div>`;
             
-            // 🚀 LAYOUT PAINEL DE BORDO: Letra à Esquerda (Flex 1) e Vídeo à Direita (Fixo 320px)
+            // 🚀 LAYOUT LADO A LADO RIGOROSO: Vídeo e Letra numa linha só!
             htmlVideoELetra = `
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
                     
-                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Livre, Compacta e em Colunas) -->
-                    <div style="flex: 1; min-width: 280px; width: 100%;">
+                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Com colunas e Ler Mais) -->
+                    <div style="flex: 1 1 300px; min-width: 0;">
                         <div style="font-size: 12px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center;">
                             <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
                         </div>
-                        <!-- Fonte menor (13px) e colunas estreitas forçam a letra a espalhar-se lateralmente -->
-                        <div style="color: #d4d4d8; font-size: 13px; line-height: 1.6; ${estiloColunas}">
+                        
+                        <!-- Caixa Colapsável: Impede que a letra empurre a página para baixo infinitamente -->
+                        <div id="text-wrap-${idUnico}" class="${ehTextoLongo ? 'ws-text-collapsed' : ''}" style="color: #d4d4d8; font-size: 13.5px; line-height: 1.6; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; ${estiloColunas}">
                             ${textoSeguro}
+                            ${ehTextoLongo ? '<div class="ws-text-fade" style="background: linear-gradient(transparent, #18181b);"></div>' : ''}
                         </div>
+                        ${btnVerMais}
                     </div>
 
-                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Fixo e Ancorado) -->
-                    <div style="width: 320px; max-width: 100%; flex-shrink: 0; position: sticky; top: 70px;">
+                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Ancorado) -->
+                    <div style="flex: 0 0 320px; max-width: 100%; position: sticky; top: 70px;">
                         <div style="font-size: 12px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
                             <span>🎶 Vídeo Fonte</span>
                         </div>
-                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #000;">
+                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #000; width: 100%;">
                             ${anexos}
                         </div>
                     </div>
@@ -1879,7 +1887,7 @@ Workspace.Feed = {
             `;
         }
 
-        // 🚀 O RECIPIENTE DOS DIAS (Gera os dias e suporta a expansão para os 30 dias)
+        // 🚀 O RECIPIENTE DOS DIAS (Sem alterações, perfeito como está)
         let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
@@ -1888,7 +1896,7 @@ Workspace.Feed = {
         }
         htmlDias += '</div>';
 
-        // 🚀 O BOTÃO DE EXPANSÃO (Aparece se houver menos de 30 dias gerados)
+        // 🚀 O BOTÃO DE EXPANSÃO 
         let htmlBotaoMais = '';
         if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
             htmlBotaoMais = `
