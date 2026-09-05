@@ -1798,11 +1798,26 @@ Workspace.Feed = {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
             const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
             
+            // 🚀 UX PREMIUM: Cálculo inteligente para formatar a letra da música dentro do Modal
+            const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
+            const estiloColunas = numLinhas >= 10 ? 'column-width: 250px; column-gap: 30px;' : '';
+            
             htmlVideo = `
                 <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px;">
-                    <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 10px;">Vídeo Fonte da Imersão</div>
-                    <div style="color: #d4d4d8; font-size: 14px; margin-bottom: 15px;">${textoSeguro}</div>
-                    ${anexos}
+                    <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
+                        <span>🎶 Vídeo Fonte da Imersão</span>
+                        <span style="font-size: 11px; background: rgba(236, 72, 153, 0.2); padding: 4px 8px; border-radius: 10px;">Letra Original</span>
+                    </div>
+                    
+                    <!-- 📦 CAIXA DE LETRA ADAPTÁVEL (Barra de Scroll Suave + Colunas Automáticas) -->
+                    <div class="ws-scroll-suave" style="color: #d4d4d8; font-size: 14px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; overflow-x: hidden; padding-right: 15px; border-left: 3px solid #3f3f46; padding-left: 15px; line-height: 1.6; ${estiloColunas}">
+                        ${textoSeguro}
+                    </div>
+                    
+                    <!-- 🎬 ÁREA DO REPRODUTOR DE VÍDEO/ÁUDIO -->
+                    <div style="border-top: 1px dashed #3f3f46; padding-top: 15px;">
+                        ${anexos}
+                    </div>
                 </div>
             `;
         }
