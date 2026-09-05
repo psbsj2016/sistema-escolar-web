@@ -1743,7 +1743,7 @@ Workspace.Feed = {
         }
     },
 
-  gerarImersaoMusical: async () => {
+ gerarImersaoMusical: async () => {
         const btn = document.getElementById('ws-btn-gerar-musica');
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
@@ -1757,7 +1757,7 @@ Workspace.Feed = {
             <div style="text-align: center; padding: 60px 20px;">
                 <div style="font-size: 50px; animation: pulse 1.5s infinite;">🎧</div>
                 <h3 style="color: #fff; margin-top: 20px;">A afinar os instrumentos...</h3>
-                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano intensivo de 14 dias.</p>
+                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano intensivo.</p>
             </div>
         `;
         
@@ -1770,6 +1770,11 @@ Workspace.Feed = {
             });
             
             if (res && res.success && res.plano) {
+                // 🚀 NOVA MEMÓRIA: Guarda a música atual e quantos dias já temos
+                Workspace.Feed._estadoMusicaAtual = {
+                    postId: res.postOriginal.id,
+                    diasGerados: res.plano.planoEstudos.length
+                };
                 Workspace.Feed.renderizarImersaoMusical(res.plano, res.postOriginal);
             } else {
                 throw new Error(res?.error || 'A IA não conseguiu gerar o plano.');
@@ -1790,15 +1795,56 @@ Workspace.Feed = {
         }
     },
 
-   renderizarImersaoMusical: (plano, postOriginal) => {
+    // 🚀 NOVO: Função isolada para desenhar 1 Único Dia (Permite injetar novos sem recarregar o ecrã)
+    gerarHTMLDiaMusical: (dia) => {
+        const idInput = `input-musica-dia-${dia.dia}`;
+        const idFeedback = `feedback-musica-dia-${dia.dia}`;
+        const palavraCerta = Workspace.Feed.limparTexto(dia.palavraEscondida).toLowerCase().trim();
+        
+        const fraseInterativa = Workspace.Feed.formatarIA(dia.fraseOculta).replace('____', `<input type="text" id="${idInput}" placeholder="???" style="background: rgba(0,0,0,0.3); border: 1px solid #ec4899; color: #fdf2f8; font-weight: bold; font-size: 18px; width: 120px; text-align: center; border-radius: 6px; outline: none; padding: 2px 5px; font-family: inherit; transition: 0.2s;" autocomplete="off" onkeypress="if(event.key === 'Enter') Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')">`);
+        const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1').replace(/\n/g, ' ');
+
+        return `
+            <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
+                    <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Fill in the Blanks ✍️</span>
+                </div>
+                
+                <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 15px; font-style: italic; line-height: 1.5;">
+                    ${fraseInterativa}
+                </div>
+                
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
+                    <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">✍️ Verificar Letra</button>
+                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 5px;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
+                    <span id="${idFeedback}" style="font-size: 14px; font-weight: bold; flex: 1;"></span>
+                </div>
+
+                <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
+
+                <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Tradução: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
+                    <div style="color: #d4d4d8; font-size: 15px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.explicacao)}</div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #3f3f46;">
+                    <strong style="color: #fb7185; font-size: 14px;">🔥 O Seu Desafio:</strong>
+                    <div style="color: #e4e4e7; font-size: 14px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.desafio)}</div>
+                </div>
+            </div>
+        `;
+    },
+
+    renderizarImersaoMusical: (plano, postOriginal) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
         let htmlVideo = '';
         if (postOriginal) {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
             const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
-            
-            // 🚀 UX PREMIUM: Cálculo inteligente para formatar a letra da música dentro do Modal
             const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
             const estiloColunas = numLinhas >= 10 ? 'column-width: 250px; column-gap: 30px;' : '';
             
@@ -1808,13 +1854,9 @@ Workspace.Feed = {
                         <span>🎶 Vídeo Fonte da Imersão</span>
                         <span style="font-size: 11px; background: rgba(236, 72, 153, 0.2); padding: 4px 8px; border-radius: 10px;">Letra Original</span>
                     </div>
-                    
-                    <!-- 📦 CAIXA DE LETRA ADAPTÁVEL (Barra de Scroll Suave + Colunas Automáticas) -->
                     <div class="ws-scroll-suave" style="color: #d4d4d8; font-size: 14px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; overflow-x: hidden; padding-right: 15px; border-left: 3px solid #3f3f46; padding-left: 15px; line-height: 1.6; ${estiloColunas}">
                         ${textoSeguro}
                     </div>
-                    
-                    <!-- 🎬 ÁREA DO REPRODUTOR DE VÍDEO/ÁUDIO -->
                     <div style="border-top: 1px dashed #3f3f46; padding-top: 15px;">
                         ${anexos}
                     </div>
@@ -1822,51 +1864,23 @@ Workspace.Feed = {
             `;
         }
 
-        let htmlDias = '';
+        // 🚀 O NOVO RECIPIENTE DOS DIAS: Usamos um ID fixo para poder injetar mais conteúdo aqui!
+        let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
-                const idInput = `input-musica-dia-${dia.dia}`;
-                const idFeedback = `feedback-musica-dia-${dia.dia}`;
-                const palavraCerta = Workspace.Feed.limparTexto(dia.palavraEscondida).toLowerCase().trim();
-                
-                const fraseInterativa = Workspace.Feed.formatarIA(dia.fraseOculta).replace('____', `<input type="text" id="${idInput}" placeholder="???" style="background: rgba(0,0,0,0.3); border: 1px solid #ec4899; color: #fdf2f8; font-weight: bold; font-size: 18px; width: 120px; text-align: center; border-radius: 6px; outline: none; padding: 2px 5px; font-family: inherit; transition: 0.2s;" autocomplete="off" onkeypress="if(event.key === 'Enter') Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')">`);
-
-                // Protege a frase original para não quebrar o clique do botão
-                const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1').replace(/\n/g, ' ');
-
-                htmlDias += `
-                    <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3);">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                            <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
-                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Fill in the Blanks ✍️</span>
-                        </div>
-                        
-                        <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 15px; font-style: italic; line-height: 1.5;">
-                            ${fraseInterativa}
-                        </div>
-                        
-                        <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
-                            <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">✍️ Verificar Letra</button>
-                            <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 5px;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
-                            <span id="${idFeedback}" style="font-size: 14px; font-weight: bold; flex: 1;"></span>
-                        </div>
-
-                        <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
-
-                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Tradução: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
-                        
-                        <div style="margin-bottom: 15px;">
-                            <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
-                            <div style="color: #d4d4d8; font-size: 15px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.explicacao)}</div>
-                        </div>
-                        
-                        <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #3f3f46;">
-                            <strong style="color: #fb7185; font-size: 14px;">🔥 O Seu Desafio:</strong>
-                            <div style="color: #e4e4e7; font-size: 14px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.desafio)}</div>
-                        </div>
-                    </div>
-                `;
+                htmlDias += Workspace.Feed.gerarHTMLDiaMusical(dia);
             });
+        }
+        htmlDias += '</div>';
+
+        // 🚀 O BOTÃO DE EXPANSÃO (Só aparece se houver menos de 30 dias gerados)
+        let htmlBotaoMais = '';
+        if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
+            htmlBotaoMais = `
+                <div id="ws-btn-mais-dias-container" style="text-align: center; margin-top: 30px;">
+                    <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica()" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">➕ Quero Mais Dias de Estudo</button>
+                </div>
+            `;
         }
 
         conteudo.innerHTML = `
@@ -1875,8 +1889,59 @@ Workspace.Feed = {
                 <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco e treine a pronúncia com a IA!</p>
                 ${htmlVideo}
                 ${htmlDias}
+                ${htmlBotaoMais}
             </div>
         `;
+    },
+
+    // 🚀 O MOTOR DE EXPANSÃO: Chama o Backend e injeta o resultado visualmente!
+    gerarMaisDiasMusica: async () => {
+        const btn = document.getElementById('ws-btn-mais-dias-musica');
+        const listaDias = document.getElementById('ws-imersao-musical-lista-dias');
+        const estado = Workspace.Feed._estadoMusicaAtual;
+
+        if (!estado || !listaDias || !btn) return;
+
+        btn.innerHTML = '⏳ A compor novas lições...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const res = await Workspace.api('/workspace/posts/imersao-musical/mais-dias', 'POST', {
+                escolaId: Workspace.usuario.escolaId,
+                postId: estado.postId,
+                ultimoDia: estado.diasGerados
+            });
+
+            if (res && res.success && res.plano) {
+                estado.diasGerados += res.plano.length; // Atualiza a memória com o novo total
+                
+                let novasHtml = '';
+                res.plano.forEach(dia => {
+                    novasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia);
+                });
+                
+                // Injeta as novas caixas no fundo da lista de forma perfeita!
+                listaDias.insertAdjacentHTML('beforeend', novasHtml);
+                
+                // Se bateu no teto de 30 dias, esconde o botão para sempre
+                if (estado.diasGerados >= 30) {
+                    const container = document.getElementById('ws-btn-mais-dias-container');
+                    if (container) container.remove();
+                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Parabéns! Atingiu o plano mensal completo de 30 dias!", "success");
+                }
+            } else {
+                throw new Error(res?.error || 'Falha ao processar a música.');
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso(error.message || "A IA precisa de uma pausa. Tente novamente em alguns segundos.", "warning");
+        } finally {
+            if (btn) {
+                btn.innerHTML = '➕ Quero Mais Dias de Estudo';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
     },
 
     verificarBlankMusical: (idInput, palavraCerta, idFeedback) => {
