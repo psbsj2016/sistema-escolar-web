@@ -1838,33 +1838,48 @@ Workspace.Feed = {
         `;
     },
 
-    renderizarImersaoMusical: (plano, postOriginal) => {
+   renderizarImersaoMusical: (plano, postOriginal) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
         let htmlVideo = '';
         if (postOriginal) {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
             const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
-            const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
-            const estiloColunas = numLinhas >= 10 ? 'column-width: 250px; column-gap: 30px;' : '';
             
+            // 🚀 UX PREMIUM: Cálculo para aplicar colunas apenas se a letra for comprida
+            const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
+            const estiloColunas = numLinhas >= 10 ? 'column-width: 250px; column-gap: 30px; widows: 3; orphans: 3;' : '';
+            
+            // 🚀 LAYOUT LADO A LADO (Flexbox): Vídeo à esquerda, Letra à direita!
             htmlVideo = `
-                <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px;">
-                    <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; justify-content: space-between; align-items: center;">
-                        <span>🎶 Vídeo Fonte da Imersão</span>
-                        <span style="font-size: 11px; background: rgba(236, 72, 153, 0.2); padding: 4px 8px; border-radius: 10px;">Letra Original</span>
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-start;">
+                    
+                    <!-- 🎬 LADO ESQUERDO: REPRODUTOR DE VÍDEO (Limitado a max 450px) -->
+                    <div style="flex: 1; min-width: 280px; max-width: 450px; width: 100%;">
+                        <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>🎶 Vídeo Fonte</span>
+                        </div>
+                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
+                            ${anexos}
+                        </div>
                     </div>
-                    <div class="ws-scroll-suave" style="color: #d4d4d8; font-size: 14px; margin-bottom: 20px; max-height: 200px; overflow-y: auto; overflow-x: hidden; padding-right: 15px; border-left: 3px solid #3f3f46; padding-left: 15px; line-height: 1.6; ${estiloColunas}">
-                        ${textoSeguro}
+
+                    <!-- 📜 LADO DIREITO: LETRA DA MÚSICA (Livre e em Colunas) -->
+                    <div style="flex: 2; min-width: 280px; width: 100%;">
+                        <div style="font-size: 13px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
+                        </div>
+                        <!-- Removemos o scroll e a altura máxima para o texto respirar -->
+                        <div style="color: #d4d4d8; font-size: 14px; line-height: 1.7; ${estiloColunas}">
+                            ${textoSeguro}
+                        </div>
                     </div>
-                    <div style="border-top: 1px dashed #3f3f46; padding-top: 15px;">
-                        ${anexos}
-                    </div>
+
                 </div>
             `;
         }
 
-        // 🚀 O NOVO RECIPIENTE DOS DIAS: Usamos um ID fixo para poder injetar mais conteúdo aqui!
+        // 🚀 O RECIPIENTE DOS DIAS (Mantém-se igual, com o ID para podermos injetar mais)
         let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
@@ -1873,7 +1888,7 @@ Workspace.Feed = {
         }
         htmlDias += '</div>';
 
-        // 🚀 O BOTÃO DE EXPANSÃO (Só aparece se houver menos de 30 dias gerados)
+        // 🚀 O BOTÃO DE EXPANSÃO (Até aos 30 dias)
         let htmlBotaoMais = '';
         if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
             htmlBotaoMais = `
