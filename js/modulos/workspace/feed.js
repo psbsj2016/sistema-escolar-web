@@ -248,7 +248,7 @@ Workspace.Feed = {
                             <div style="text-align: center; padding: 50px 20px; color: #a1a1aa;">
                                 <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🎸</div>
                                 <h3 style="color: #d4d4d8; font-size: 22px;">O Poder da Repetição Espaçada</h3>
-                                <p style="max-width: 500px; margin: 0 auto;">A Inteligência Artificial vai vasculhar a turma por vídeos musicais partilhados e desenhar um plano de 7 dias com as frases e gírias mais importantes para si.</p>
+                                <p style="max-width: 500px; margin: 0 auto;">A Inteligência Artificial vai vasculhar a turma por vídeos musicais partilhados e desenhar um plano de alguns dias com as frases e gírias mais importantes para você.</p>
                             </div>
                         </div>
                     </div>
@@ -1756,8 +1756,8 @@ Workspace.Feed = {
         conteudo.innerHTML = `
             <div style="text-align: center; padding: 60px 20px;">
                 <div style="font-size: 50px; animation: pulse 1.5s infinite;">🎧</div>
-                <h3 style="color: #fff; margin-top: 20px;">A afinar os instrumentos...</h3>
-                <p style="color: #a1a1aa;">A analisar letras e a construir o seu plano intensivo.</p>
+                <h3 style="color: #fff; margin-top: 20px;">Afinando os instrumentos...</h3>
+                <p style="color: #a1a1aa;">Analisando letras e construindo o seu plano intensivo.</p>
             </div>
         `;
         
@@ -1841,37 +1841,37 @@ Workspace.Feed = {
    renderizarImersaoMusical: (plano, postOriginal) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
-        let htmlVideo = '';
+        let htmlVideoELetra = '';
         if (postOriginal) {
             const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
             const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
             
-            // 🚀 UX PREMIUM: Cálculo para aplicar colunas apenas se a letra for comprida
+            // 🚀 UX PREMIUM: Reduz a largura da coluna para espalhar a letra mais na horizontal
             const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
-            const estiloColunas = numLinhas >= 10 ? 'column-width: 250px; column-gap: 30px; widows: 3; orphans: 3;' : '';
+            const estiloColunas = numLinhas >= 8 ? 'column-width: 200px; column-gap: 25px; widows: 3; orphans: 3;' : '';
             
-            // 🚀 LAYOUT LADO A LADO (Flexbox): Vídeo à esquerda, Letra à direita!
-            htmlVideo = `
-                <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 25px; align-items: flex-start;">
+            // 🚀 LAYOUT PAINEL DE BORDO: Letra à Esquerda (Flex 1) e Vídeo à Direita (Fixo 320px)
+            htmlVideoELetra = `
+                <div style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 20px; border-radius: 16px; margin-bottom: 30px; display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
                     
-                    <!-- 🎬 LADO ESQUERDO: REPRODUTOR DE VÍDEO (Limitado a max 450px) -->
-                    <div style="flex: 1; min-width: 280px; max-width: 450px; width: 100%;">
-                        <div style="font-size: 13px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
-                            <span>🎶 Vídeo Fonte</span>
+                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Livre, Compacta e em Colunas) -->
+                    <div style="flex: 1; min-width: 280px; width: 100%;">
+                        <div style="font-size: 12px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center;">
+                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
                         </div>
-                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5);">
-                            ${anexos}
+                        <!-- Fonte menor (13px) e colunas estreitas forçam a letra a espalhar-se lateralmente -->
+                        <div style="color: #d4d4d8; font-size: 13px; line-height: 1.6; ${estiloColunas}">
+                            ${textoSeguro}
                         </div>
                     </div>
 
-                    <!-- 📜 LADO DIREITO: LETRA DA MÚSICA (Livre e em Colunas) -->
-                    <div style="flex: 2; min-width: 280px; width: 100%;">
-                        <div style="font-size: 13px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center;">
-                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
+                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Fixo e Ancorado) -->
+                    <div style="width: 320px; max-width: 100%; flex-shrink: 0; position: sticky; top: 70px;">
+                        <div style="font-size: 12px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                            <span>🎶 Vídeo Fonte</span>
                         </div>
-                        <!-- Removemos o scroll e a altura máxima para o texto respirar -->
-                        <div style="color: #d4d4d8; font-size: 14px; line-height: 1.7; ${estiloColunas}">
-                            ${textoSeguro}
+                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #000;">
+                            ${anexos}
                         </div>
                     </div>
 
@@ -1879,7 +1879,7 @@ Workspace.Feed = {
             `;
         }
 
-        // 🚀 O RECIPIENTE DOS DIAS (Mantém-se igual, com o ID para podermos injetar mais)
+        // 🚀 O RECIPIENTE DOS DIAS (Gera os dias e suporta a expansão para os 30 dias)
         let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
@@ -1888,7 +1888,7 @@ Workspace.Feed = {
         }
         htmlDias += '</div>';
 
-        // 🚀 O BOTÃO DE EXPANSÃO (Até aos 30 dias)
+        // 🚀 O BOTÃO DE EXPANSÃO (Aparece se houver menos de 30 dias gerados)
         let htmlBotaoMais = '';
         if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
             htmlBotaoMais = `
@@ -1902,7 +1902,7 @@ Workspace.Feed = {
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
                 <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco e treine a pronúncia com a IA!</p>
-                ${htmlVideo}
+                ${htmlVideoELetra}
                 ${htmlDias}
                 ${htmlBotaoMais}
             </div>
