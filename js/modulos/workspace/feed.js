@@ -1797,7 +1797,7 @@ Workspace.Feed = {
 
                         <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
 
-                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Trad: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                        <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Tradução: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
                         
                         <div style="margin-bottom: 15px;">
                             <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
@@ -1858,7 +1858,7 @@ Workspace.Feed = {
         }
     },
 
-    // 🚀 O NOVO MOTOR DE AVALIAÇÃO DE PRONÚNCIA
+ // 🚀 O NOVO MOTOR DE AVALIAÇÃO DE PRONÚNCIA (Com Injeção de Dopamina)
     treinarPronunciaMusical: (dia, fraseOriginal) => {
         const btn = document.getElementById(`btn-mic-dia-${dia}`);
         const feedbackBox = document.getElementById(`feedback-mic-dia-${dia}`);
@@ -1887,7 +1887,7 @@ Workspace.Feed = {
             btn.style.background = '#f59e0b';
             
             try {
-                // Reutilizamos a rota fantástica de Minijogos que você já tem no Backend!
+                // Reutilizamos a rota de Minijogos do Backend!
                 const res = await Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
                     jogo: 'readAloud',
                     pergunta: fraseOriginal,
@@ -1898,7 +1898,22 @@ Workspace.Feed = {
                 if (res && res.correto) {
                     btn.innerHTML = '<span style="font-size: 16px;">⭐</span> Perfeito!';
                     btn.style.background = '#10b981';
-                    feedbackBox.innerHTML = `<strong>A IA ouviu:</strong> "${transcricao}"<br><br>✅ <strong>Feedback:</strong> ${res.feedback}<br><span style="color:#10b981; font-weight: bold;">+${res.coins || 50} Coins! 🪙</span>`;
+                    
+                    // 🚀 O GERADOR DE DOPAMINA: Elogios de Alto Impacto Sorteados
+                    const elogios = [
+                        "ESPETACULAR! 🌟", 
+                        "PRONÚNCIA PERFEITA! 🎯", 
+                        "MIND-BLOWING! 🤯", 
+                        "SIMPLESMENTE BRILHANTE! 🏆", 
+                        "UAU! PARECE NATIVO! 🇺🇸",
+                        "VOCÊ ESTÁ ON FIRE! 🔥"
+                    ];
+                    const elogioSorteado = elogios[Math.floor(Math.random() * elogios.length)];
+                    
+                    // Mostra o elogio e dispara os confetes!
+                    feedbackBox.innerHTML = `<strong>A IA ouviu:</strong> "${transcricao}"<br><br>✅ <strong>Feedback:</strong> ${res.feedback}<br><div style="color:#10b981; font-weight: 900; font-size: 20px; margin-top: 15px; text-align: center; animation: pulse 1s infinite;">${elogioSorteado}</div>`;
+                    Workspace.Feed.dispararConfetes();
+
                 } else {
                     btn.innerHTML = '<span style="font-size: 16px;">🎙️</span> Tentar Novamente';
                     btn.style.background = '#8b5cf6';
@@ -1916,6 +1931,33 @@ Workspace.Feed = {
             btn.innerHTML = '<span style="font-size: 16px;">🎙️</span> Treinar Pronúncia';
             btn.style.background = '#8b5cf6';
         };
+    },
+
+    // 🚀 A FÁBRICA DE CONFETES NATIVA (Não precisa de bibliotecas externas)
+    dispararConfetes: () => {
+        const cores = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
+        for (let i = 0; i < 70; i++) {
+            const confete = document.createElement('div');
+            confete.style.position = 'fixed';
+            confete.style.width = Math.random() * 8 + 6 + 'px';
+            confete.style.height = Math.random() * 8 + 6 + 'px';
+            confete.style.background = cores[Math.floor(Math.random() * cores.length)];
+            confete.style.top = '-10px';
+            confete.style.left = Math.random() * 100 + 'vw';
+            confete.style.opacity = Math.random() + 0.5;
+            confete.style.zIndex = '9999999';
+            confete.style.pointerEvents = 'none';
+            confete.style.borderRadius = Math.random() > 0.5 ? '50%' : '0px'; // Mistura bolas e quadrados
+            document.body.appendChild(confete);
+
+            const duracao = Math.random() * 2 + 2; 
+            const animacao = confete.animate([
+                { transform: `translate3d(0,0,0) rotate(0deg)`, opacity: 1 },
+                { transform: `translate3d(${Math.random() * 200 - 100}px, 100vh, 0) rotate(${Math.random() * 720}deg)`, opacity: 0 }
+            ], { duration: duracao * 1000, easing: 'cubic-bezier(.37,0,.63,1)' });
+
+            animacao.onfinish = () => confete.remove();
+        }
     }
 
 };
