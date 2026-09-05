@@ -1595,12 +1595,17 @@ Workspace.Feed = {
         `;
     },
 
-    verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
+   verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
         const quizCache = Workspace.Feed._quizImersaoCache;
         if (!quizCache || !quizCache[perguntaIndex]) return;
         
         const pergunta = quizCache[perguntaIndex];
-        const correta = pergunta.respostaCorreta;
+        
+        // 🚀 CONVERSOR INTELIGENTE: Traduz a linguagem humana (1, 2, 3, 4) para a matriz do JavaScript (0, 1, 2, 3)
+        let correta = parseInt(pergunta.respostaCorreta);
+        if (correta > 0 && correta <= pergunta.opcoes.length) {
+            correta = correta - 1;
+        }
         
         pergunta.opcoes.forEach((_, optIndex) => {
             const btn = document.getElementById(`quiz-opt-${perguntaIndex}-${optIndex}`);
