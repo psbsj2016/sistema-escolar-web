@@ -226,7 +226,7 @@ Workspace.Feed = {
                             <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                                 <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🤖</div>
                                 <h3 style="color: #94a3b8; font-size: 22px;">O seu Professor Particular IA</h3>
-                                <p style="max-width: 500px; margin: 0 auto;">Pesquise um tema específico ou clique diretamente em "Gerar". A Inteligência Artificial vai vasculhar o Feed da sua turma, criar uma aula resumo imersiva e fabricar um Quiz de Evolução para si.</p>
+                                <p style="max-width: 500px; margin: 0 auto;">Pesquise um tema específico ou clique diretamente em "Gerar". A Inteligência Artificial vai vasculhar o Feed da sua turma, criar uma aula resumo imersiva e fabricar um Quiz de Evolução para você.</p>
                             </div>
                         </div>
                     </div>
@@ -1687,7 +1687,7 @@ Workspace.Feed = {
         
         if (!dadosBase || !listaPerguntas || !btn) return;
         
-        btn.innerHTML = '⏳ A gerar novas perguntas...';
+        btn.innerHTML = '⏳ Gerando novas perguntas...';
         btn.disabled = true;
         btn.style.opacity = '0.7';
 
