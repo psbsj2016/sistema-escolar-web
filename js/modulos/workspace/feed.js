@@ -1289,7 +1289,7 @@ Workspace.Feed = {
         }
     },
 
-  abrirPerfilUsuario: async (autorNome) => {
+abrirPerfilUsuario: async (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
@@ -1298,13 +1298,22 @@ Workspace.Feed = {
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
+        // 🚀 CSS DE ALTA PRECISÃO: Força a imagem a cobrir 100% do círculo perfeitamente centrada sem espaços brancos
+        const estiloAvatar = `
+            <style>
+                .ws-avatar-perfect img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; margin: 0 !important; padding: 0 !important; display: block !important; border-radius: 50% !important; }
+                .ws-avatar-perfect div { width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; margin: 0 !important; }
+            </style>
+        `;
+
         // 1. Apresenta o Cartão com estado de "Carregamento" ⏳
         overlay.innerHTML = `
+            ${estiloAvatar}
             <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden;">
                 <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                 </div>
-                <div style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
                     ${avatarHTML}
                 </div>
                 <div style="padding: 0 25px 30px 25px;">
@@ -1314,32 +1323,39 @@ Workspace.Feed = {
             </div>
         `;
         document.body.appendChild(overlay);
-        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[0].style.transform = 'scale(1)'; });
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[1].style.transform = 'scale(1)'; });
         
         overlay.addEventListener('click', (e) => { 
-            if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[0].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
+            if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
 
-        // 2. Consulta o servidor e injeta a Bio Real 🪄
+        // 2. Consulta o servidor e injeta a Bio Real e a FOTO FRESCA 🪄
         try {
             const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(autorNome)}`, 'GET');
             if (res && res.success) {
                 const bioReal = res.bio ? Workspace.Feed.limparTexto(res.bio) : "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
                 
-                // Distintivos Dinâmicos baseados no cargo
                 let tipoMembro = "Aluno"; let iconeMembro = "📚"; let corFundo = "#e0e7ff"; let corTexto = "#2563eb";
                 if (res.tipo === 'Professor') { tipoMembro = "Professor"; iconeMembro = "🎓"; corFundo = "#fef08a"; corTexto = "#d97706"; }
                 else if (res.tipo === 'Gestor') { tipoMembro = "Gestor"; iconeMembro = "🛡️"; corFundo = "#fce7f3"; corTexto = "#db2777"; }
 
-                const cardContent = overlay.children[0];
+                // 🚀 ANTI-CACHE: Força a imagem a atualizar imediatamente se houver uma nova!
+                let avatarFinalHTML = avatarHTML;
+                if (res.avatar) {
+                    const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
+                    // Adiciona um carimbo de tempo para obrigar o navegador a descarregar a imagem perfeita agora
+                    avatarFinalHTML = `<img src="${urlSegura}?t=${Date.now()}" alt="${autorNome}">`;
+                }
+
+                const cardContent = overlay.children[1];
                 if(cardContent) {
                     cardContent.innerHTML = `
                         <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
                         <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                         </div>
-                        <div style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
-                            ${avatarHTML}
+                        <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                            ${avatarFinalHTML}
                         </div>
                         <div style="padding: 0 25px 30px 25px; animation: fadeIn 0.3s ease;">
                             <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px;">
