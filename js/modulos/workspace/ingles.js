@@ -196,6 +196,9 @@ Workspace.Ingles = {
                 
                 document.getElementById('alunoView').classList.remove('hidden');
                 document.getElementById('professorView').classList.add('hidden');
+  
+                // 🚀 Dispara a montagem do letreiro para os alunos
+                this.renderizarMarquee();
             }
         });
     },
@@ -426,8 +429,8 @@ Workspace.Ingles = {
             .ig-game-card h3 { margin: 0 0 6px 0; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
             .ig-game-card p { margin: 0; color: #64748B; font-size: 13px; line-height: 1.4; }
             
-           /* MODAL GERAL (MODO FOCO - TELA INTEIRA) */
-            .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.95); display: flex; align-items: center; justify-content: center; z-index: 100000; backdrop-filter: blur(10px); transition: opacity 0.3s ease; }
+           /* MODAL GERAL (CORREÇÃO DO MODO FOCO TELA INTEIRA) */
+            .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.95); display: flex; align-items: center; justify-content: center; z-index: 2147483647 !important; backdrop-filter: blur(10px); transition: opacity 0.3s ease; }
             .modal.hidden { display: none !important; opacity: 0; pointer-events: none; }
             
             .modal-content { background: #fff; width: 100vw; height: 100dvh; max-width: none; max-height: none; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; border: none; transform: scale(0.98); animation: appZoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: none; }
@@ -533,6 +536,28 @@ Workspace.Ingles = {
             .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 20px; background: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
             .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
 
+            /* 🚀 CARROSSEL DE HONRA (LÍDERES) */
+            .marquee-wrapper { width: 100%; overflow: hidden; position: relative; margin-bottom: 30px; background: #fff; padding: 24px 0; border-radius: 20px; border: 1px solid #e2e8f0; box-shadow: 0 10px 25px rgba(0,0,0,0.02); }
+            .marquee-title { text-align: center; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 16px; font-weight: 800; color: #0F172A; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 1.5px; }
+            .marquee-track { display: flex; width: max-content; animation: scrollMarquee 35s linear infinite; }
+            .marquee-track:hover { animation-play-state: paused; }
+            @keyframes scrollMarquee { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
+            
+            .marquee-card { display: flex; align-items: center; gap: 12px; padding: 12px 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 16px; margin: 0 10px; min-width: 260px; flex-shrink: 0; transition: transform 0.2s; }
+            .marquee-card:hover { transform: translateY(-4px); box-shadow: 0 8px 20px rgba(0,0,0,0.06); }
+            
+            /* Destaques do Top 3 */
+            .marquee-rank-1 { background: #fffbeb; border-color: #fde68a; box-shadow: 0 4px 15px rgba(251,191,36,0.15); }
+            .marquee-rank-2 { background: #f8fafc; border-color: #cbd5e1; box-shadow: 0 4px 15px rgba(148,163,184,0.15); }
+            .marquee-rank-3 { background: #fff7ed; border-color: #fcd34d; box-shadow: 0 4px 15px rgba(217,119,6,0.15); }
+            
+            .marquee-avatar { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; background: #e2e8f0; font-size: 20px; flex-shrink: 0; overflow: hidden; border: 2px solid white; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+            .marquee-avatar img, .marquee-avatar > div { width: 100% !important; height: 100% !important; object-fit: cover !important; }
+            .marquee-info { display: flex; flex-direction: column; }
+            .marquee-name { font-weight: 800; font-size: 15px; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 140px; }
+            .marquee-stats { font-size: 12px; color: #64748b; font-weight: 700; display: flex; align-items: center; gap: 6px; margin-top: 2px; }
+            .marquee-medal { font-size: 22px; font-weight: 900; color: #94a3b8; width: 28px; text-align: center; }
+
             /* RESPONSIVIDADE MOBILE */
             @media (max-width: 768px) {
                 #professorView { flex-direction: column; gap: 16px; }
@@ -608,11 +633,13 @@ Workspace.Ingles = {
                     </section>
 
                     <section id="alunoView" class="view">
-                        <div class="welcome">
-                            <h1>Baú do Inglês aberto! 🗝️</h1>
-                            <p>Escolha um treino. Jogue sem parar, acumule Moedas de Bronze e deixe o algoritmo guiar a sua memória.</p>
+                        <!-- O Letreiro Animado substitui a mensagem estática de boas-vindas -->
+                        <div class="marquee-wrapper" id="ig-marquee-wrapper" style="display:none;">
+                            <div class="marquee-title">🏆 Top 9 Bilionários da Escola 🏆</div>
+                            <div class="marquee-track" id="ig-marquee-track">
+                                <!-- Os cartões desfilarão aqui -->
+                            </div>
                         </div>
-                        <div class="games-grid" id="gamesGrid"></div>
                     </section>
                 </main>
             </div>
@@ -1639,7 +1666,55 @@ Workspace.Ingles = {
         };
         
         this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente (Erro no Microfone)'; btn.disabled = false; } };
+    },
+
+async renderizarMarquee() {
+        const track = document.getElementById('ig-marquee-track');
+        const wrapper = document.getElementById('ig-marquee-wrapper');
+        if(!track || !wrapper) return;
+
+        try {
+            const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+            const res = await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
+            
+            if(res && res.success && res.ranking && res.ranking.length > 0) {
+                const top9 = res.ranking.slice(0, 9);
+                
+                let htmlCartoes = top9.map((aluno, index) => {
+                    const posicao = index + 1;
+                    let classeDestaque = '';
+                    let medalha = '';
+                    
+                    if(posicao === 1) { classeDestaque = 'marquee-rank-1'; medalha = '🥇'; }
+                    else if(posicao === 2) { classeDestaque = 'marquee-rank-2'; medalha = '🥈'; }
+                    else if(posicao === 3) { classeDestaque = 'marquee-rank-3'; medalha = '🥉'; }
+                    else { medalha = `<span>#${posicao}</span>`; }
+                    
+                    const avatarSrc = window.Workspace.renderizarAvatar ? window.Workspace.renderizarAvatar(aluno.nome, 46) : '<div style="background:#e2e8f0;width:100%;height:100%;"></div>';
+                    const totalMoedas = aluno.coins?.bronze || 0;
+                    const ligaTexto = aluno.liga === 'diamante' ? '💎 Diamante' : aluno.liga === 'ouro' ? '🥇 Ouro' : aluno.liga === 'prata' ? '🥈 Prata' : aluno.liga === 'bronze' ? '🥉 Bronze' : 'Aprendiz';
+
+                    return `
+                    <div class="marquee-card ${classeDestaque}">
+                        <div class="marquee-medal">${medalha}</div>
+                        <div class="marquee-avatar">${avatarSrc}</div>
+                        <div class="marquee-info">
+                            <span class="marquee-name">${Workspace.escapeHTML(aluno.nome)}</span>
+                            <span class="marquee-stats">
+                                <span style="color:#d97706;">💰 ${totalMoedas.toLocaleString('pt-BR')}</span> 
+                                <span style="color:#cbd5e1;">|</span>
+                                <span>${ligaTexto}</span>
+                            </span>
+                        </div>
+                    </div>`;
+                }).join('');
+                
+                track.innerHTML = htmlCartoes + htmlCartoes;
+                wrapper.style.display = 'block';
+            }
+        } catch(e) { console.error("Falha ao carregar letreiro de líderes", e); }
     }
+
 };
 
 setTimeout(()=> Workspace.Ingles.init(), 100);
