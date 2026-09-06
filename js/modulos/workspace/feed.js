@@ -2197,9 +2197,38 @@ Workspace.Feed = {
         }
     },
 
+   // 🚀 LÓGICA DE DUPLO ESTADO: BIO DO PERFIL
+    editarBioPerfil: () => {
+        const viewMode = document.getElementById('ws-bio-view-mode');
+        const editMode = document.getElementById('ws-bio-edit-mode');
+        const input = document.getElementById('ws-input-bio-perfil');
+
+        if(viewMode && editMode && input) {
+            viewMode.style.display = 'none';
+            editMode.style.display = 'flex';
+            
+            // Se o utilizador já tiver uma bio na memória, preenche a caixa para edição
+            if (Workspace.usuario && Workspace.usuario.bio) {
+                input.value = Workspace.usuario.bio;
+            }
+            input.focus();
+        }
+    },
+
+    cancelarEdicaoBio: () => {
+        const viewMode = document.getElementById('ws-bio-view-mode');
+        const editMode = document.getElementById('ws-bio-edit-mode');
+        
+        if(viewMode && editMode) {
+            editMode.style.display = 'none';
+            viewMode.style.display = 'flex';
+        }
+    },
+
     salvarBioPerfil: async () => {
         const input = document.getElementById('ws-input-bio-perfil');
         const btn = document.getElementById('ws-btn-salvar-bio');
+        const textoAtual = document.getElementById('ws-texto-bio-atual');
         if(!input || !btn || !Workspace.usuario) return;
 
         const novaBio = input.value.trim();
@@ -2214,15 +2243,48 @@ Workspace.Feed = {
             
             if (res && res.success) {
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase de perfil atualizada!", "success");
-                btn.innerText = '✔ Guardado';
-                btn.style.background = '#27ae60';
-                setTimeout(() => { btn.innerText = 'Guardar'; btn.style.background = '#3498db'; btn.disabled = false; }, 2500);
+                
+                // 1. Guarda na memória local do utilizador
+                Workspace.usuario.bio = novaBio;
+                
+                // 2. Atualiza o texto visual imediatamente
+                if(textoAtual) {
+                    textoAtual.innerText = novaBio !== '' ? `"${novaBio}"` : 'Clique em Editar para adicionar uma frase.';
+                }
+                
+                // 3. Fecha o modo de edição e mostra o resultado
+                Workspace.Feed.cancelarEdicaoBio();
             } else throw new Error();
         } catch(e) {
             if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao atualizar a frase.", "error");
-            btn.innerText = 'Guardar';
+        } finally {
+            btn.innerText = '✔ Guardar';
             btn.disabled = false;
         }
+    },
+
+    apagarBioPerfil: async () => {
+        if (!Workspace.usuario) return;
+        
+        // Proteção para evitar toques acidentais
+        Workspace.Feed.confirmarAcao("Apagar Frase", "Tem a certeza que deseja apagar a sua frase de perfil?", async () => {
+            try {
+                // Enviar string vazia apaga a bio na base de dados
+                const res = await Workspace.api('/workspace/perfil/bio', 'PUT', {
+                    id: Workspace.usuario.id,
+                    bio: ''
+                });
+                
+                if (res && res.success) {
+                    Workspace.usuario.bio = '';
+                    const textoAtual = document.getElementById('ws-texto-bio-atual');
+                    if(textoAtual) textoAtual.innerText = 'Clique em Editar para adicionar uma frase.';
+                    if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase removida com sucesso!", "success");
+                }
+            } catch(e) {
+                if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao remover a frase.", "error");
+            }
+        });
     }
 
 };
