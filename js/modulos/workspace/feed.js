@@ -1298,22 +1298,22 @@ abrirPerfilUsuario: async (autorNome) => {
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
-        // 🚀 CSS DE ALTA PRECISÃO: Força a imagem a cobrir 100% do círculo perfeitamente centrada sem espaços brancos
+        // 🚀 CSS DE ALTA PRECISÃO: Formato Quadrado com Cantos Arredondados (16px) e sem corte (overflow visível)
         const estiloAvatar = `
             <style>
-                .ws-avatar-perfect img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; margin: 0 !important; padding: 0 !important; display: block !important; border-radius: 50% !important; }
-                .ws-avatar-perfect div { width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 50% !important; margin: 0 !important; }
+                .ws-avatar-perfect img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; margin: 0 !important; padding: 0 !important; display: block !important; border-radius: 16px !important; }
+                .ws-avatar-perfect div { width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 16px !important; margin: 0 !important; }
             </style>
         `;
 
-        // 1. Apresenta o Cartão com estado de "Carregamento" ⏳
         overlay.innerHTML = `
             ${estiloAvatar}
             <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden;">
                 <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                 </div>
-                <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                <!-- 🚀 FORMATO QUADRADO (16px) SEM OVERFLOW HIDDEN PARA MOSTRAR A BOLINHA ONLINE -->
+                <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:16px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
                     ${avatarHTML}
                 </div>
                 <div style="padding: 0 25px 30px 25px;">
@@ -1329,7 +1329,6 @@ abrirPerfilUsuario: async (autorNome) => {
             if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
 
-        // 2. Consulta o servidor e injeta a Bio Real e a FOTO FRESCA 🪄
         try {
             const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(autorNome)}`, 'GET');
             if (res && res.success) {
@@ -1339,12 +1338,18 @@ abrirPerfilUsuario: async (autorNome) => {
                 if (res.tipo === 'Professor') { tipoMembro = "Professor"; iconeMembro = "🎓"; corFundo = "#fef08a"; corTexto = "#d97706"; }
                 else if (res.tipo === 'Gestor') { tipoMembro = "Gestor"; iconeMembro = "🛡️"; corFundo = "#fce7f3"; corTexto = "#db2777"; }
 
-                // 🚀 ANTI-CACHE: Força a imagem a atualizar imediatamente se houver uma nova!
+                // 🚀 PRESERVAÇÃO DA BOLINHA: Troca APENAS o 'src' da imagem dentro do HTML nativo!
                 let avatarFinalHTML = avatarHTML;
                 if (res.avatar) {
                     const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
-                    // Adiciona um carimbo de tempo para obrigar o navegador a descarregar a imagem perfeita agora
-                    avatarFinalHTML = `<img src="${urlSegura}?t=${Date.now()}" alt="${autorNome}">`;
+                    const novoSrc = `${urlSegura}?t=${Date.now()}`;
+                    
+                    if (avatarFinalHTML.includes('<img')) {
+                        avatarFinalHTML = avatarFinalHTML.replace(/src="([^"]+)"/, `src="${novoSrc}"`);
+                    } else {
+                        // Se o cache ainda tinha apenas iniciais, força a nova foto!
+                        avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">`;
+                    }
                 }
 
                 const cardContent = overlay.children[1];
@@ -1354,7 +1359,7 @@ abrirPerfilUsuario: async (autorNome) => {
                         <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                         </div>
-                        <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                        <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:16px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
                             ${avatarFinalHTML}
                         </div>
                         <div style="padding: 0 25px 30px 25px; animation: fadeIn 0.3s ease;">
