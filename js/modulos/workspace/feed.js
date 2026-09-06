@@ -1294,9 +1294,10 @@ abrirPerfilUsuario: async (autorNome) => {
         document.body.style.cursor = 'wait';
 
         try {
-            // 🚀 2. Vai à Base de Dados ANTES de desenhar o cartão
+            // 🚀 2. Vai à Base de Dados ANTES de desenhar o cartão (Fim do atraso visual!)
             const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(autorNome)}`, 'GET');
             
+            // Restaura o cursor ao normal
             document.body.style.cursor = 'default';
 
             const id = 'ws-perfil-visitante-modal';
@@ -1310,67 +1311,62 @@ abrirPerfilUsuario: async (autorNome) => {
             // Variáveis por defeito
             let bioReal = "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
             let tipoMembro = "Aluno"; let iconeMembro = "📚"; let corFundo = "#e0e7ff"; let corTexto = "#2563eb";
+            let avatarFinalHTML = avatarHTML;
 
+            // Se a busca teve sucesso, injeta os dados reais
             if (res && res.success) {
                 if (res.bio) bioReal = Workspace.Feed.limparTexto(res.bio);
+                
                 if (res.tipo === 'Professor') { tipoMembro = "Professor"; iconeMembro = "🎓"; corFundo = "#fef08a"; corTexto = "#d97706"; }
                 else if (res.tipo === 'Gestor') { tipoMembro = "Gestor"; iconeMembro = "🛡️"; corFundo = "#fce7f3"; corTexto = "#db2777"; }
-            }
 
-            // 🚀 3. CIRURGIA JAVASCRIPT: Limpa margens e corrige bolinha verde antes de desenhar
-            const tempDiv = document.createElement('div');
-            tempDiv.innerHTML = avatarHTML;
-            
-            const wrapperPrincipal = tempDiv.firstElementChild;
-            if(wrapperPrincipal) {
-                // Anula qualquer margem que empurre a foto para a direita
-                wrapperPrincipal.style.width = '100%';
-                wrapperPrincipal.style.height = '100%';
-                wrapperPrincipal.style.margin = '0';
-                wrapperPrincipal.style.borderRadius = '16px';
-                
-                // Encontra a imagem, ajusta o corte e "fura" a cache
-                const img = tempDiv.querySelector('img');
-                if (img) {
-                    img.style.width = '100%';
-                    img.style.height = '100%';
-                    img.style.objectFit = 'cover';
-                    img.style.borderRadius = '16px';
-                    img.style.margin = '0';
+                if (res.avatar) {
+                    const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
+                    const novoSrc = `${urlSegura}?t=${Date.now()}`; // Anti-cache
                     
-                    if (res && res.avatar) {
-                        const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
-                        img.src = `${urlSegura}?t=${Date.now()}`;
+                    if (avatarFinalHTML.includes('<img')) {
+                        avatarFinalHTML = avatarFinalHTML.replace(/src="([^"]+)"/, `src="${novoSrc}"`);
+                    } else {
+                        avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}">`;
                     }
                 }
-                
-                // Encontra a bolinha de status (absoluta) e dá-lhe o tamanho perfeito!
-                const elementosAbsolutos = tempDiv.querySelectorAll('[style*="absolute"]');
-                elementosAbsolutos.forEach(el => {
-                    // Garante que não afeta a imagem principal
-                    if (el.tagName !== 'IMG' && (!el.id || !el.id.includes('letras'))) {
-                        el.style.width = '18px';
-                        el.style.height = '18px';
-                        el.style.bottom = '-2px';
-                        el.style.right = '-2px';
-                        el.style.border = '3px solid #fff'; // Borda branca elegante
-                        el.style.transform = 'none'; // Anula escalas erradas
-                    }
-                });
             }
 
-            const avatarFinalHTML = tempDiv.innerHTML;
+            // 🚀 3. CSS BLINDADO E REFINADO: 
+            // "object-fit: contain" preserva o seu corte original sem distorcer.
+            // A regra específica "transform: scale(0.6)" encolhe a bolinha verde pela metade!
+            const estiloAvatar = `
+                <style>
+                    .ws-avatar-perfect img { 
+                        width: 100% !important; 
+                        height: 100% !important; 
+                        object-fit: contain !important; 
+                        object-position: center !important; 
+                        margin: 0 !important; 
+                        padding: 0 !important; 
+                        display: block !important; 
+                        border-radius: 12px !important; 
+                    }
+                    /* Alvo Cirúrgico: Atinge apenas a bolinha verde de status online e reduz o tamanho */
+                    .ws-avatar-perfect > div > div[style*="absolute"] {
+                        transform: scale(0.55);
+                        transform-origin: bottom right;
+                        right: -2px !important;
+                        bottom: -2px !important;
+                    }
+                </style>
+            `;
 
-            // 🚀 4. Desenha o Cartão final
+            // 🚀 4. Desenha o Cartão de uma só vez, já com todas as informações processadas!
             overlay.innerHTML = `
+                ${estiloAvatar}
                 <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
                     <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
                     <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden;">
                         <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                     </div>
                     
-                    <!-- 🚀 A CAIXA DO AVATAR -->
-                    <div style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:16px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; position: relative; z-index: 2; background: #f0f2f5; box-sizing: content-box;">
+                    <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; position: relative; z-index: 2; background: #f0f2f5;">
                         ${avatarFinalHTML}
                     </div>
                     
@@ -1393,10 +1389,10 @@ abrirPerfilUsuario: async (autorNome) => {
             `;
             
             document.body.appendChild(overlay);
-            requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[0].style.transform = 'scale(1)'; });
+            requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[1].style.transform = 'scale(1)'; });
             
             overlay.addEventListener('click', (e) => { 
-                if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[0].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
+                if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
             });
 
         } catch(e) {
