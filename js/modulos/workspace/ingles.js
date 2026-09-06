@@ -142,7 +142,9 @@ Workspace.Ingles = {
             {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debata com a IA.', icon:'⚔', color:'#E0F2FE'},
             {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie os sons.', icon:'♊', color:'#FFEDD5'},
             {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale o que vê.', icon:'👁🗨', color:'#DCFCE7'},
-            {id:'memoryGame', title:'🃏 Ilusão do Mago', desc:'Encontre os pares ocultos.', icon:'🃏', color:'#FBCFE8'}
+            {id:'memoryGame', title:'🃏 Ilusão do Mago', desc:'Encontre os pares ocultos.', icon:'🃏', color:'#FBCFE8'},
+            {id:'hangman', title:'🔤 Enigma das Letras', desc:'Adivinhe a palavra (Forca).', icon:'🔤', color:'#FEE2E2'},
+            {id:'videoQuiz', title:'🎬 Cinema do Mago', desc:'Assista e responda.', icon:'🎬', color:'#E0E7FF'}
         ]
     },
 
@@ -513,6 +515,18 @@ Workspace.Ingles = {
             .memory-back.correct { border-color: #10b981; background: #ecfdf5; color: #064e3b; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
             .memory-back.wrong { border-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
 
+            /* 🚀 FORCA (TECLADO VIRTUAL) E VÍDEO QUIZ */
+            .hangman-word { font-size: 32px; letter-spacing: 8px; font-weight: 900; color: #0F172A; margin: 20px 0; font-family: monospace; text-transform: uppercase; word-wrap: break-word; }
+            .keyboard-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; max-width: 350px; margin: 15px auto 0; }
+            .key-btn { width: 38px; height: 38px; background: #fff; border: 2px solid #E2E8F0; border-radius: 8px; font-weight: 800; font-size: 16px; cursor: pointer; transition: 0.2s; color: #1E293B; }
+            .key-btn:disabled { background: #F1F5F9; color: #94A3B8; cursor: not-allowed; border-color: #E2E8F0; }
+            .key-btn.correct { background: #10B981; color: white; border-color: #10B981; }
+            .key-btn.wrong { background: #EF4444; color: white; border-color: #EF4444; opacity: 0.5; }
+            .lives-box { font-size: 24px; letter-spacing: 4px; }
+            
+            .video-container { position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; margin-bottom: 20px; background: #000; box-shadow: 0 10px 20px rgba(0,0,0,0.1); }
+            .video-container iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: none; }
+
             /* RESPONSIVIDADE MOBILE */
             @media (max-width: 768px) {
                 #professorView { flex-direction: column; gap: 16px; }
@@ -819,6 +833,16 @@ Workspace.Ingles = {
                 if(sim>=0.9){ this.updateSRS(cur.id,'picture',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
                 else { this.registrarErro(cur,'picture'); this.falhaGenerica(); }
             }
+            if(a === 'verificar-forca'){
+                const letra = b.dataset.letra;
+                if(!this.state._hangmanGuessed.includes(letra)) {
+                    this.state._hangmanGuessed.push(letra);
+                    if(!this.state._hangmanWord.includes(letra)) {
+                        this.state._hangmanLives--; // Perde uma vida
+                    }
+                    this.atualizarTelaForca();
+                }
+            }
           if(a === 'verificar-envio'){
                 const caixaDeTexto = document.querySelector('#modalBody #ig-input') || document.getElementById('ig-input');
                 const respostaDoAluno = caixaDeTexto?.value?.trim() || '';
@@ -1063,6 +1087,11 @@ Workspace.Ingles = {
         if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
+        if(id==='hangman') return db ? this.state.words : this.defaults.words;
+        if(id==='videoQuiz') {
+            const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
+            return todosQuizzes.filter(q => q.videoUrl && q.videoUrl.trim() !== ''); // Puxa só os que têm vídeo
+        }
         return null;
     },
 
@@ -1078,6 +1107,11 @@ Workspace.Ingles = {
         if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
+        if(id==='hangman') return db ? this.state.words : this.defaults.words;
+        if(id==='videoQuiz') {
+            const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
+            return todosQuizzes.filter(q => q.videoUrl && q.videoUrl.trim() !== ''); // Puxa só os que têm vídeo
+        }
         return [];
     },
 
@@ -1097,6 +1131,8 @@ Workspace.Ingles = {
         else if(id==='minimalPairs') this.renderGameMinimalPairs();
         else if(id==='picturePop') this.renderGamePicturePop();
         else if(id==='memoryGame') this.renderGameMemory();
+        else if(id==='hangman') this.renderGameHangman();
+        else if(id==='videoQuiz') this.renderGameVideoQuiz();
     },
 
     renderTelaFimDeJornada(){
@@ -1438,6 +1474,108 @@ Workspace.Ingles = {
         
         // Ativa a sua função fantástica de recompensa e fecha o jogo!
         this.sucessoGenerico(bonus);
+    },
+
+    // =========================================================================
+   // 🔤 JOGO DA FORCA E VÍDEO QUIZ
+   // =========================================================================
+   renderGameHangman() {
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'word'); 
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        
+        const w = this.desafioAtualObj;
+        // Prepara o estado do jogo da forca
+        this.state._hangmanWord = w.word.toUpperCase().trim();
+        this.state._hangmanGuessed = [];
+        this.state._hangmanLives = 3;
+        
+        this.atualizarTelaForca();
+    },
+
+    atualizarTelaForca() {
+        const w = this.state._hangmanWord;
+        const guessed = this.state._hangmanGuessed;
+        
+        let displayWord = '';
+        let won = true;
+        // Desenha a palavra ou os espaços em branco
+        for(let char of w) {
+            if(char === ' ' || char === '-') {
+                displayWord += char;
+            } else if(guessed.includes(char)) {
+                displayWord += char;
+            } else {
+                displayWord += '_';
+                won = false;
+            }
+        }
+        
+        // Desenha o teclado virtual
+        const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
+        const keyboardHtml = alphabet.map(letter => {
+            let extraClass = ''; let disabled = '';
+            if(guessed.includes(letter)) {
+                disabled = 'disabled';
+                if(w.includes(letter)) extraClass = 'correct';
+                else extraClass = 'wrong';
+            }
+            return `<button class="key-btn ${extraClass}" ${disabled} data-action="verificar-forca" data-letra="${letter}">${letter}</button>`;
+        }).join('');
+        
+        // Corações de vida
+        let hearts = '❤️'.repeat(this.state._hangmanLives) + '🤍'.repeat(3 - this.state._hangmanLives);
+        
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center;">
+                <div style="background:#F8FAFC; padding:10px; border-radius:10px; border:1px solid #E2E8F0; margin-bottom:15px;">
+                    <p style="font-weight:700; color:#64748B; margin:0; font-size:14px;">Tradução / Pista:</p>
+                    <p style="font-weight:800; color:#0F172A; margin:5px 0 0 0; font-size:18px;">${Workspace.escapeHTML(this.desafioAtualObj.translation)}</p>
+                </div>
+                <div class="lives-box" title="Vidas restantes">${hearts}</div>
+                <div class="hangman-word">${displayWord}</div>
+                <div class="keyboard-grid">${keyboardHtml}</div>
+            </div>
+        `;
+        
+        // Valida Vitória ou Derrota
+        if(won) {
+            setTimeout(() => {
+                this.updateSRS(this.desafioAtualObj.id, 'hangman', true);
+                this.superarErro(this.desafioAtualObj.id);
+                this.sucessoGenerico(75);
+            }, 600);
+        } else if (this.state._hangmanLives <= 0) {
+            document.getElementById('modalBody').innerHTML += `<div style="margin-top:20px; background:#FEF2F2; border:1px solid #EF4444; color:#991B1B; padding:15px; border-radius:10px; font-weight:800; font-size:16px;">💀 Fim de jogo! A palavra era:<br><span style="font-size:24px;">${w}</span></div>`;
+            this.registrarErro(this.desafioAtualObj, 'hangman');
+            setTimeout(() => this.falhaGenerica(), 3500);
+        }
+    },
+
+    renderGameVideoQuiz() {
+        const col = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = this.obterItemInteligente(col, 'quiz');
+        if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
+        const q = this.desafioAtualObj;
+        
+        // Converte links normais do YouTube para formato iframe embed
+        let embedUrl = q.videoUrl || '';
+        if(embedUrl.includes('youtube.com/watch?v=')) {
+            embedUrl = embedUrl.replace('watch?v=', 'embed/');
+        } else if(embedUrl.includes('youtu.be/')) {
+            embedUrl = embedUrl.replace('youtu.be/', 'youtube.com/embed/');
+        }
+        if(embedUrl.includes('&')) embedUrl = embedUrl.split('&')[0]; // Remove tempos ou playlists anexadas
+        
+        document.getElementById('modalBody').innerHTML = `
+            <div class="video-container">
+                <iframe src="${Workspace.escapeHTML(embedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
+            <div style="display:flex; flex-direction:column; gap:10px;">
+                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
+            </div>
+        `;
     },
 
     iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo){

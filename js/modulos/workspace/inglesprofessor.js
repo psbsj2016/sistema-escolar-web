@@ -37,13 +37,17 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Frase adicionada!', 'success'); 
                 break;
-            case 'add-quiz':
+           case 'add-quiz':
                 const iQ = document.getElementById('ig-qQuestion'), iO1 = document.getElementById('ig-qOpt1'), iO2 = document.getElementById('ig-qOpt2'); 
+                const iVid = document.getElementById('ig-qVideo'); // 🚀 NOVO CAMPO
                 const q = iQ?.value.trim(), o1 = iO1?.value.trim(), o2 = iO2?.value.trim(); 
+                const vid = iVid?.value.trim() || null; 
+                
                 if(!q || !o1 || !o2) return Ingles.mostrarAvisoLocal('Preencha a pergunta e opções!', 'warning'); 
-                state.quizzes.unshift({id: 'q'+Date.now(), question: q, options: [o1, o2], correct: 1, level: 'B1'}); 
+                state.quizzes.unshift({id: 'q'+Date.now(), question: q, options: [o1, o2], correct: 1, level: 'B1', videoUrl: vid}); 
                 await Ingles.saveDados(); 
-                if(iQ) iQ.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value='';
+                
+                if(iQ) iQ.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value=''; if(iVid) iVid.value='';
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Quiz adicionado!', 'success'); 
                 break;
@@ -328,9 +332,10 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         </div>
                     </div>
                     <div class="prof-card">
-                        <div class="ig-prof-header">Testes Rápidos (Quiz) <span style="color:#64748B;font-size:14px">(${state.quizzes.length})</span></div>
+                        <div class="ig-prof-header">Quizzes e Cinema <span style="color:#64748B;font-size:14px">(${state.quizzes.length})</span></div>
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
                             <input id="ig-qQuestion" class="ig-input" placeholder="Pergunta em Inglês">
+                            <input id="ig-qVideo" class="ig-input" placeholder="Link YouTube (Opcional para Vídeo Quiz)" style="border-color:#818CF8; background:#EEF2FF;">
                             <div style="display:flex; gap:8px;">
                                 <input id="ig-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
                                 <input id="ig-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
@@ -338,7 +343,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             </div>
                         </div>
                         <div class="prof-list-scroll">
-                            ${state.quizzes.length ? state.quizzes.map(q=>`<div class="prof-list-item"><span><b>${esc(q.question)}</b> <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(q.options[q.correct])}</small></span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                            ${state.quizzes.length ? state.quizzes.map(q=>`<div class="prof-list-item"><span><b>${esc(q.question)}</b> ${q.videoUrl ? '🎬' : ''} <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(q.options[q.correct])}</small></span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
                     <div class="prof-card">
