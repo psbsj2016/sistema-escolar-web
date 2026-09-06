@@ -1289,73 +1289,77 @@ Workspace.Feed = {
         }
     },
 
-   abrirPerfilUsuario: (autorNome) => {
+  abrirPerfilUsuario: async (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
-        // Renderiza o avatar do usuário com tamanho maior para a capa
         const avatarHTML = window.Workspace.renderizarAvatar(autorNome, 100);
-        
         const overlay = document.createElement('div');
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
-        // 🚀 O NOVO DESIGN PREMIUM DO CARTÃO DE PERFIL
+        // 1. Apresenta o Cartão com estado de "Carregamento" ⏳
         overlay.innerHTML = `
             <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden;">
-                
-                <!-- Botão Fechar Flutuante -->
-                <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
-                
-                <!-- Capa / Banner do Perfil -->
                 <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
-                    <!-- Efeito de textura sutil no fundo -->
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                 </div>
-                
-                <!-- Foto do Perfil Sobreposta -->
                 <div style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
                     ${avatarHTML}
                 </div>
-                
-                <!-- Informações do Utilizador -->
                 <div style="padding: 0 25px 30px 25px;">
-                    <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px;">
-                        ${Workspace.Feed.limparTexto(autorNome)}
-                        <span style="color: #3b82f6; font-size: 16px; background: #eff6ff; border-radius: 50%; padding: 2px;" title="Conta Verificada">✔️</span>
-                    </h2>
-                    
-                    <div style="display: inline-block; background: #e0e7ff; color: #2563eb; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 20px; letter-spacing: 0.5px; text-transform: uppercase;">
-                        🌟 Membro da Plataforma
-                    </div>
-                    
-                    <p style="margin: 0 0 25px 0; color: #64748b; font-size: 14px; line-height: 1.5; font-style: italic;">
-                        "A evoluir e a participar ativamente na nossa comunidade de aprendizagem."
-                    </p>
-                    
-                    <!-- Botão de Ação Suave -->
-                    <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" style="width: 100%; background: #f1f5f9; color: #475569; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">
-                        Voltar ao Feed
-                    </button>
+                    <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 22px; font-weight: 800;">${Workspace.Feed.limparTexto(autorNome)}</h2>
+                    <div style="color: #94a3b8; font-size: 13px; font-weight: bold; margin-bottom: 20px; animation: pulse 1.5s infinite;">A procurar informações... ⏳</div>
                 </div>
             </div>
         `;
         document.body.appendChild(overlay);
+        requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[0].style.transform = 'scale(1)'; });
         
-        // 🚀 Inicia a animação de entrada com efeito Bounce (Salto)
-        requestAnimationFrame(() => { 
-            overlay.style.opacity = '1'; 
-            overlay.children[0].style.transform = 'scale(1)'; 
-        });
-        
-        // Permite fechar clicando na área escura fora do cartão
         overlay.addEventListener('click', (e) => { 
-            if(e.target === overlay) { 
-                overlay.style.opacity = '0'; 
-                overlay.children[0].style.transform = 'scale(0.9)';
-                setTimeout(() => overlay.remove(), 300); 
-            } 
+            if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[0].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
+
+        // 2. Consulta o servidor e injeta a Bio Real 🪄
+        try {
+            const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(autorNome)}`, 'GET');
+            if (res && res.success) {
+                const bioReal = res.bio ? Workspace.Feed.limparTexto(res.bio) : "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
+                
+                // Distintivos Dinâmicos baseados no cargo
+                let tipoMembro = "Aluno"; let iconeMembro = "📚"; let corFundo = "#e0e7ff"; let corTexto = "#2563eb";
+                if (res.tipo === 'Professor') { tipoMembro = "Professor"; iconeMembro = "🎓"; corFundo = "#fef08a"; corTexto = "#d97706"; }
+                else if (res.tipo === 'Gestor') { tipoMembro = "Gestor"; iconeMembro = "🛡️"; corFundo = "#fce7f3"; corTexto = "#db2777"; }
+
+                const cardContent = overlay.children[0];
+                if(cardContent) {
+                    cardContent.innerHTML = `
+                        <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
+                        <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
+                            <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
+                        </div>
+                        <div style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:50%; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; overflow: hidden; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                            ${avatarHTML}
+                        </div>
+                        <div style="padding: 0 25px 30px 25px; animation: fadeIn 0.3s ease;">
+                            <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px;">
+                                ${Workspace.Feed.limparTexto(autorNome)}
+                                <span style="color: #3b82f6; font-size: 16px; background: #eff6ff; border-radius: 50%; padding: 2px;" title="Conta Verificada">✔️</span>
+                            </h2>
+                            <div style="display: inline-block; background: ${corFundo}; color: ${corTexto}; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 20px; letter-spacing: 0.5px; text-transform: uppercase;">
+                                ${iconeMembro} ${tipoMembro}
+                            </div>
+                            <p style="margin: 0 0 25px 0; color: #64748b; font-size: 14px; line-height: 1.5; font-style: italic;">
+                                "${bioReal}"
+                            </p>
+                            <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" style="width: 100%; background: #f1f5f9; color: #475569; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">
+                                Voltar ao Feed
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+        } catch(e) {}
     },
 
     reagirComentario: async (postId, comentarioId, tipo) => {
@@ -2190,6 +2194,34 @@ Workspace.Feed = {
             ], { duration: duracao * 1000, easing: 'cubic-bezier(.37,0,.63,1)' });
 
             animacao.onfinish = () => confete.remove();
+        }
+    },
+
+    salvarBioPerfil: async () => {
+        const input = document.getElementById('ws-input-bio-perfil');
+        const btn = document.getElementById('ws-btn-salvar-bio');
+        if(!input || !btn || !Workspace.usuario) return;
+
+        const novaBio = input.value.trim();
+        btn.innerText = '⏳';
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api('/workspace/perfil/bio', 'PUT', {
+                id: Workspace.usuario.id,
+                bio: novaBio
+            });
+            
+            if (res && res.success) {
+                if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase de perfil atualizada!", "success");
+                btn.innerText = '✔ Guardado';
+                btn.style.background = '#27ae60';
+                setTimeout(() => { btn.innerText = 'Guardar'; btn.style.background = '#3498db'; btn.disabled = false; }, 2500);
+            } else throw new Error();
+        } catch(e) {
+            if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao atualizar a frase.", "error");
+            btn.innerText = 'Guardar';
+            btn.disabled = false;
         }
     }
 
