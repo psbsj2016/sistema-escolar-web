@@ -384,20 +384,27 @@ Workspace.Ingles = {
             #ws-ingles-container { background: #f8fafc; min-height: 80vh; font-family: 'Inter', sans-serif; }
             #bau-do-ingles-module { max-width: 1200px; margin: 0 auto; padding: 20px; }
             
-            /* HEADER */
-            .bau-header { display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 16px 24px; border-radius: 16px; border: 1px solid #e2e8f0; margin-bottom: 24px; flex-wrap: wrap; gap: 15px; }
-            .bau-title { display: flex; align-items: center; gap: 16px; }
-            .bau-icon { font-size: 40px; background: #FEF3C7; width: 64px; height: 64px; display: flex; align-items: center; justify-content: center; border-radius: 16px; border: 2px solid #F59E0B; }
-            .bau-title h2 { margin: 0; font-size: 22px; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; }
-            .bau-title p { margin: 4px 0 0 0; font-size: 13px; color: #64748B; font-weight: 500; }
-            .bau-actions { display: flex; align-items: center; gap: 16px; }
+            /* HEADER PREMIUM */
+            .bau-header { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 20px 24px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.03); margin-bottom: 30px; flex-wrap: wrap; gap: 20px; border: 1px solid #f1f5f9; }
+            .bau-title { display: flex; align-items: center; gap: 18px; }
+            .bau-icon { font-size: 38px; background: linear-gradient(135deg, #fef3c7, #fde68a); width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; border-radius: 18px; border: 2px solid #f59e0b; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.2); }
+            .bau-title h2 { margin: 0; font-size: 24px; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800; letter-spacing: -0.5px; }
+            .bau-title p { margin: 4px 0 0 0; font-size: 14px; color: #64748b; font-weight: 600; }
             
-            /* BADGES & BUTTONS */
-            .xp-badge { display: flex; gap: 10px; background: #F1F5F9; padding: 8px 16px; border-radius: 20px; font-size: 14px; font-weight: 700; color: #334155; }
-            .xp-badge b { color: #0F172A; }
-            .toggle-wrap { display: flex; background: #E2E8F0; padding: 4px; border-radius: 12px; }
-            .toggle-btn { background: transparent; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 700; color: #64748B; cursor: pointer; transition: 0.2s; font-size: 13px; }
-            .toggle-btn.active { background: #fff; color: #0F172A; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+            .bau-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+            
+            /* CARTEIRA DO ALUNO (HUD FINANCEIRO) */
+            .ig-wallet { display: flex; align-items: center; background: #f8fafc; padding: 6px; border-radius: 16px; border: 1px solid #e2e8f0; gap: 6px; overflow-x: auto; }
+            .ig-wallet-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 800; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
+            .ig-wallet-item.ouro { color: #b45309; border-bottom: 2px solid #fbbf24; }
+            .ig-wallet-item.prata { color: #475569; border-bottom: 2px solid #cbd5e1; }
+            .ig-wallet-item.bronze { color: #92400e; border-bottom: 2px solid #fcd34d; }
+            .ig-wallet-item.streak { color: #e11d48; border-bottom: 2px solid #fca5a5; background: #fef2f2; }
+
+            /* TOGGLE PREMIUM */
+            .toggle-wrap { display: flex; background: #f1f5f9; padding: 5px; border-radius: 14px; border: 1px solid #e2e8f0; }
+            .toggle-btn { background: transparent; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 800; color: #64748b; cursor: pointer; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); font-size: 13px; }
+            .toggle-btn.active { background: #fff; color: #0f172a; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
             
             /* ALUNO VIEW */
             .welcome { text-align: center; margin-bottom: 30px; }
@@ -534,14 +541,19 @@ Workspace.Ingles = {
                         <div class="bau-icon">🏴‍☠️</div>
                         <div>
                             <h2>Baú do Inglês</h2>
-                            <p>12 jogos • O seu treino contínuo e inteligente</p>
+                            <p>O seu treino contínuo guiado por Inteligência Artificial</p>
                         </div>
                     </div>
                     <div class="bau-actions">
-                        <div class="xp-badge" id="xpBadge">
-                            <span>🔥 <b id="streakCount">1</b> dias</span>
-                            <span>🪙 <b id="coinsCount">0</b> BZ</span>
+                        <!-- 🚀 A NOVA CARTEIRA FINANCEIRA -->
+                        <div class="ig-wallet" id="xpBadge">
+                            <div class="ig-wallet-item ouro" title="Moedas de Ouro">🥇 <span id="ouroCount">0</span></div>
+                            <div class="ig-wallet-item prata" title="Moedas de Prata">🥈 <span id="prataCount">0</span></div>
+                            <div class="ig-wallet-item bronze" title="Moedas de Bronze">🥉 <span id="coinsCount">0</span></div>
+                            <div class="ig-wallet-item streak" title="Dias Seguidos de Estudo">🔥 <span id="streakCount">1</span>d</div>
                         </div>
+                        
+                        <!-- 🚀 O NOVO TOGGLE MODERNO -->
                         <div class="toggle-wrap">
                             <button id="btnProfessor" class="toggle-btn" data-action="toggle-prof">👨‍🏫 Professor</button>
                             <button id="btnAluno" class="toggle-btn active" data-action="toggle-aluno">🎓 Aluno</button>
@@ -598,9 +610,19 @@ Workspace.Ingles = {
     },
 
     atualizarHUD(){
+        // Captura todos os contadores da nova carteira
         const bzEl = document.getElementById('coinsCount');
+        const ptEl = document.getElementById('prataCount');
+        const ouEl = document.getElementById('ouroCount');
         const stEl = document.getElementById('streakCount');
-        if(bzEl) bzEl.textContent = this.state.coins?.bronze || 0;
+        
+        // Verifica se a carteira já tem fundos ou se começa a zeros
+        const coins = this.state.coins || { bronze: 0, prata: 0, ouro: 0 };
+        
+        // Atualiza a tela em tempo real com números precisos
+        if(bzEl) bzEl.textContent = coins.bronze || 0;
+        if(ptEl) ptEl.textContent = coins.prata || 0;
+        if(ouEl) ouEl.textContent = coins.ouro || 0;
         if(stEl) stEl.textContent = this.state.streak || 1;
     },
 
