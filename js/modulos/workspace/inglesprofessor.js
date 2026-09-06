@@ -456,22 +456,93 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 </div>
             `;
         }
-        else if (tabId === 'algoritmo'){
+       else if (tabId === 'algoritmo'){
             const totalProf = state.words.length + state.phrases.length + state.quizzes.length + state.pictures.length + state.wordPickers.length + state.minimalPairs.length + state.debates.length + state.roleplays.length + state.questions.length;
+            
+            // 🚀 Cálculos Dinâmicos do Termômetro
+            const totalErros = state.errosRetidos.length;
+            const taxaErros = totalProf > 0 ? Math.min(100, Math.round((totalErros / totalProf) * 100)) : 0;
+            const corTermometro = taxaErros > 25 ? '#EF4444' : (taxaErros > 10 ? '#F59E0B' : '#10B981');
+            const statusTermometro = taxaErros > 25 ? '🔥 Crítico (Turma com Dificuldades)' : (taxaErros > 10 ? '⚠️ Atenção (Muitos erros recentes)' : '❄️ Saudável (Aprendizagem Fluida)');
+            
+            // 🚀 Análise da Piscina Colaborativa
+            const totalPiscina = state.pool.length;
+            const metaPiscina = 50; // Exemplo de meta de criações aprovadas
+            const progressoPiscina = Math.min(100, Math.round((totalPiscina / metaPiscina) * 100));
+
             document.getElementById('tab-algoritmo').innerHTML=`
-                <div class="ig-prof-header">🧠 Estatísticas do SRS (Inteligência Artificial)</div>
+                <div class="ig-prof-header" style="border:none; margin-bottom:5px;">🧠 Termômetro do Algoritmo SRS</div>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Acompanhe a saúde da aprendizagem da turma em tempo real através dos dados do Sistema de Repetição Espaçada.</p>
+                
                 <div class="grid-cards">
-                    <div class="prof-card" style="text-align:center; border-top:4px solid #4F46E5;">
-                        <div style="font-size:45px; font-weight:900; color:#4F46E5; font-family:'Plus Jakarta Sans', sans-serif;">${totalProf}</div>
-                        <h4 style="margin:5px 0; color:#1e293b;">Desafios Criados</h4>
+                    <!-- 1. Volume de Conteúdo -->
+                    <div class="prof-card" style="border-top:4px solid #4F46E5;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="margin:0; color:#1e293b; font-size:16px;">📦 Base de Conhecimento</h4>
+                            <span style="font-size:24px;">📚</span>
+                        </div>
+                        <div style="font-size:40px; font-weight:900; color:#4F46E5; margin:10px 0; font-family:'Plus Jakarta Sans', sans-serif;">${totalProf}</div>
+                        <p style="margin:0; color:#64748B; font-size:13px;">Desafios totais criados por si para a turma.</p>
                     </div>
-                    <div class="prof-card" style="text-align:center; border-top:4px solid #EF4444;">
-                        <div style="font-size:45px; font-weight:900; color:#EF4444; font-family:'Plus Jakarta Sans', sans-serif;">${state.errosRetidos.length}</div>
-                        <h4 style="margin:5px 0; color:#1e293b;">Erros Retidos</h4>
+
+                    <!-- 2. Termômetro de Dificuldade -->
+                    <div class="prof-card" style="border-top:4px solid ${corTermometro};">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="margin:0; color:#1e293b; font-size:16px;">🌡️ Termômetro de Erros</h4>
+                            <span style="font-size:24px;">🧠</span>
+                        </div>
+                        <div style="display:flex; align-items:baseline; gap:10px; margin:10px 0;">
+                            <div style="font-size:40px; font-weight:900; color:${corTermometro}; font-family:'Plus Jakarta Sans', sans-serif;">${taxaErros}%</div>
+                            <div style="color:#64748B; font-size:13px; font-weight:bold;">(${totalErros} retidos)</div>
+                        </div>
+                        
+                        <!-- Barra Visual do Termômetro -->
+                        <div style="background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 8px;">
+                            <div style="height: 100%; width: ${taxaErros}%; background: ${corTermometro}; border-radius: 10px; transition: width 1s ease-out;"></div>
+                        </div>
+                        <p style="margin:0; color:${corTermometro}; font-size:12px; font-weight:700;">${statusTermometro}</p>
                     </div>
-                    <div class="prof-card" style="text-align:center; border-top:4px solid #F59E0B;">
-                        <div style="font-size:45px; font-weight:900; color:#F59E0B; font-family:'Plus Jakarta Sans', sans-serif;">${state.pool.length}</div>
-                        <h4 style="margin:5px 0; color:#1e293b;">Piscina Global</h4>
+
+                    <!-- 3. Piscina Global -->
+                    <div class="prof-card" style="border-top:4px solid #0CA5E9;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <h4 style="margin:0; color:#1e293b; font-size:16px;">🌊 Piscina Criativa</h4>
+                            <span style="font-size:24px;">💡</span>
+                        </div>
+                        <div style="display:flex; align-items:baseline; gap:10px; margin:10px 0;">
+                            <div style="font-size:40px; font-weight:900; color:#0CA5E9; font-family:'Plus Jakarta Sans', sans-serif;">${totalPiscina}</div>
+                            <div style="color:#64748B; font-size:13px; font-weight:bold;">envios aprovados</div>
+                        </div>
+                        
+                        <!-- Barra de Meta da Piscina -->
+                        <div style="background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 8px;">
+                            <div style="height: 100%; width: ${progressoPiscina}%; background: #0CA5E9; border-radius: 10px; transition: width 1s ease-out;"></div>
+                        </div>
+                        <p style="margin:0; color:#64748B; font-size:12px;">Progresso da meta colaborativa (50 envios).</p>
+                    </div>
+                </div>
+
+                <!-- 🚀 LISTA DETALHADA DOS ERROS RECORRENTES (DIAGNÓSTICO) -->
+                <div class="prof-card" style="margin-top:20px; border:1px solid #E2E8F0; border-top:4px solid #EF4444;">
+                    <h4 style="margin:0 0 15px 0; color:#1e293b; font-size:16px;">🚨 Top Dificuldades Atuais da Turma</h4>
+                    <p style="color:#64748B; font-size:13px; margin:0 0 15px 0;">Estes são os itens exatos onde o algoritmo está a forçar a repetição porque os alunos estão a falhar. Considere abordar estes temas na próxima aula ao vivo.</p>
+                    
+                    <div style="max-height: 250px; overflow-y: auto; display:flex; flex-direction:column; gap:10px; padding-right:5px;">
+                        ${state.errosRetidos.length === 0 
+                            ? '<div style="text-align:center; padding:20px; color:#10B981; font-weight:bold; background:#ECFDF5; border-radius:10px;">🎉 Excelente! A turma não apresenta dificuldades persistentes no momento.</div>' 
+                            : state.errosRetidos.slice(0, 10).map(erro => `
+                                <div style="display:flex; justify-content:space-between; align-items:center; background:#FEF2F2; padding:12px 16px; border-radius:10px; border:1px solid #FECACA;">
+                                    <div style="display:flex; align-items:center; gap:10px;">
+                                        <span style="font-size:20px;">${erro._tipoDefeito === 'word' ? '🪄' : erro._tipoDefeito === 'phrase' ? '🗣️' : erro._tipoDefeito === 'picture' ? '🖼️' : '🧠'}</span>
+                                        <div>
+                                            <div style="font-weight:700; color:#991B1B; font-size:14px;">${Workspace.escapeHTML(erro.word || erro.phrase || erro.question || erro.a || 'Desafio')}</div>
+                                            <div style="font-size:12px; color:#DC2626;">Origem: Jogo ${Workspace.escapeHTML(erro._tipoDefeito || 'Misto')}</div>
+                                        </div>
+                                    </div>
+                                    <span style="background:#EF4444; color:white; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold;">Alta Repetição</span>
+                                </div>
+                            `).join('')
+                        }
                     </div>
                 </div>
             `;
