@@ -2218,17 +2218,19 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     },
 
-   // 🚀 LÓGICA DE DUPLO ESTADO: BIO DO PERFIL
+ 
+   // 🚀 LÓGICA DE DUPLO ESTADO: BIO DO PERFIL (VISUALIZAR, EDITAR, SALVAR E APAGAR)
     editarBioPerfil: () => {
         const viewMode = document.getElementById('ws-bio-view-mode');
         const editMode = document.getElementById('ws-bio-edit-mode');
         const input = document.getElementById('ws-input-bio-perfil');
 
         if(viewMode && editMode && input) {
+            // Esconde a leitura e mostra a edição
             viewMode.style.display = 'none';
             editMode.style.display = 'flex';
             
-            // Se o utilizador já tiver uma bio na memória, preenche a caixa para edição
+            // Preenche a caixa com a frase que o utilizador já tinha na memória
             if (Workspace.usuario && Workspace.usuario.bio) {
                 input.value = Workspace.usuario.bio;
             }
@@ -2241,6 +2243,7 @@ abrirPerfilUsuario: async (autorNome) => {
         const editMode = document.getElementById('ws-bio-edit-mode');
         
         if(viewMode && editMode) {
+            // Esconde a edição e volta a mostrar a leitura
             editMode.style.display = 'none';
             viewMode.style.display = 'flex';
         }
@@ -2265,15 +2268,15 @@ abrirPerfilUsuario: async (autorNome) => {
             if (res && res.success) {
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase de perfil atualizada!", "success");
                 
-                // 1. Guarda na memória local do utilizador
+                // 1. Guarda na memória local
                 Workspace.usuario.bio = novaBio;
                 
-                // 2. Atualiza o texto visual imediatamente
+                // 2. Atualiza o texto visual IMEDIATAMENTE na tela sem recarregar
                 if(textoAtual) {
                     textoAtual.innerText = novaBio !== '' ? `"${novaBio}"` : 'Clique em Editar para adicionar uma frase.';
                 }
                 
-                // 3. Fecha o modo de edição e mostra o resultado
+                // 3. Fecha o modo de edição e volta a mostrar apenas a frase
                 Workspace.Feed.cancelarEdicaoBio();
             } else throw new Error();
         } catch(e) {
@@ -2287,10 +2290,10 @@ abrirPerfilUsuario: async (autorNome) => {
     apagarBioPerfil: async () => {
         if (!Workspace.usuario) return;
         
-        // Proteção para evitar toques acidentais
+        // Proteção contra cliques acidentais
         Workspace.Feed.confirmarAcao("Apagar Frase", "Tem a certeza que deseja apagar a sua frase de perfil?", async () => {
             try {
-                // Enviar string vazia apaga a bio na base de dados
+                // Enviar string vazia limpa a base de dados
                 const res = await Workspace.api('/workspace/perfil/bio', 'PUT', {
                     id: Workspace.usuario.id,
                     bio: ''
@@ -2298,8 +2301,14 @@ abrirPerfilUsuario: async (autorNome) => {
                 
                 if (res && res.success) {
                     Workspace.usuario.bio = '';
+                    
+                    // Limpa a interface imediatamente
                     const textoAtual = document.getElementById('ws-texto-bio-atual');
                     if(textoAtual) textoAtual.innerText = 'Clique em Editar para adicionar uma frase.';
+                    
+                    const input = document.getElementById('ws-input-bio-perfil');
+                    if(input) input.value = '';
+
                     if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase removida com sucesso!", "success");
                 }
             } catch(e) {
