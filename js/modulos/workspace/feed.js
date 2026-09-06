@@ -1843,27 +1843,58 @@ Workspace.Feed = {
         
         let htmlVideoELetra = '';
         if (postOriginal) {
-            const textoSeguro = Workspace.Feed.processarTextoComEmbeds(postOriginal.texto || '');
-            const anexos = Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
+            // 🚀 DETETIVE DE LINKS: Extrai o vídeo de dentro do texto para o colocar na coluna da direita!
+            let textoDaLetra = Workspace.Feed.limparTexto(postOriginal.texto || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
+            const mediaLinks = [];
             
-            // 🚀 CÁLCULO DE TAMANHO: Determina se a letra precisa de colunas e de ser colapsada
-            const numLinhas = (postOriginal.texto ? (postOriginal.texto.match(/\n/g) || []).length : 0);
-            const ehTextoLongo = (postOriginal.texto && postOriginal.texto.length > 350) || numLinhas > 8;
+            // Procura e "arranca" links do YouTube da letra
+            textoDaLetra = textoDaLetra.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
+                mediaLinks.push(`<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #3f3f46; background: #000; width: 100%; margin-bottom: 15px;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
+                return ''; 
+            });
+
+            // Procura links do TikTok
+            textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
+                mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 100%; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
+                return '';
+            });
+
+            // Procura links do Instagram
+            textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
+                mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><iframe src="https://www.instagram.com/p/${id}/embed" width="100%" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #3f3f46;"></iframe></div>`);
+                return '';
+            });
+
+            // Procura links do Spotify
+            textoDaLetra = textoDaLetra.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
+                mediaLinks.push(`<div style="width: 100%; margin-bottom: 15px;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
+                return '';
+            });
+
+            // Limpa outros links de texto que sobraram para a letra ficar perfeita
+            textoDaLetra = textoDaLetra.replace(/(https?:\/\/[^\s<]+)/g, '').trim();
+
+            // Junta a Mídia detetada no texto com os ficheiros anexados do post!
+            const midiaCompleta = mediaLinks.join('') + Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
+
+            // 🚀 UX PREMIUM: Cálculo EXATO para esconder a letra longa e criar as colunas
+            const numLinhas = (textoDaLetra.match(/<br>/g) || []).length;
+            const ehTextoLongo = textoDaLetra.length > 350 || numLinhas > 8;
+            const estiloColunas = numLinhas >= 8 ? 'column-width: 220px; column-gap: 30px; widows: 3; orphans: 3;' : '';
             const idUnico = `musica-${postOriginal.id}`;
 
-            // 🚀 CSS GRID EXCLUSIVA: Força a parede à direita para o vídeo (340px) e liberta o resto para a letra (1fr)
+            // 🚀 CSS GRID DEFINITIVO: Parede à esquerda (1fr) e Parede à direita (340px) inquebráveis!
             const cssExclusivo = `
                 <style>
                     .ws-grid-musical { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
                     @media (max-width: 900px) { .ws-grid-musical { grid-template-columns: 1fr; } }
-                    .ws-letra-colunas { column-width: 220px; column-gap: 30px; widows: 3; orphans: 3; }
+                    .ws-letra-colunas { color: #d4d4d8; font-size: 13.5px; line-height: 1.7; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; ${estiloColunas} }
                     .ws-letra-collapsed { max-height: 250px; overflow: hidden; position: relative; transition: max-height 0.4s ease-out; }
                     .ws-letra-expanded { max-height: 5000px; transition: max-height 0.6s ease-in; }
                     .ws-letra-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background: linear-gradient(transparent, #1a1a1d); pointer-events: none; }
                 </style>
             `;
 
-            // Botão Ler Mais inteligente e isolado (não precisa de procurar o ID do post, atua na div atual)
             const scriptToggle = `const wrap = document.getElementById('text-wrap-${idUnico}'); const fade = document.getElementById('fade-${idUnico}'); if(wrap.classList.contains('ws-letra-expanded')) { wrap.classList.remove('ws-letra-expanded'); this.innerText = 'Ler mais ⬇️'; if(fade) fade.style.display = 'block'; } else { wrap.classList.add('ws-letra-expanded'); this.innerText = 'Subir / Ocultar ⬆️'; if(fade) fade.style.display = 'none'; }`;
             const btnVerMais = `<div id="btn-ler-mais-${idUnico}" style="margin-top: 15px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="${scriptToggle}" style="color: #ec4899; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(236, 72, 153, 0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">Ler mais ⬇️</span></div>`;
             
@@ -1871,26 +1902,27 @@ Workspace.Feed = {
                 ${cssExclusivo}
                 <div class="ws-grid-musical" style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 25px; border-radius: 16px; margin-bottom: 30px;">
                     
-                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Com colunas e limitador de altura) -->
+                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Apenas o Texto) -->
                     <div style="min-width: 0; width: 100%;">
                         <div style="font-size: 12px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center;">
                             <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
                         </div>
                         
-                        <div id="text-wrap-${idUnico}" class="ws-letra-colunas ${ehTextoLongo ? 'ws-letra-collapsed' : ''}" style="color: #d4d4d8; font-size: 13.5px; line-height: 1.7; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word;">
-                            ${textoSeguro}
+                        <!-- Caixa Colapsável e em Colunas -->
+                        <div id="text-wrap-${idUnico}" class="ws-letra-colunas ${ehTextoLongo ? 'ws-letra-collapsed' : ''}">
+                            ${textoDaLetra}
                             ${ehTextoLongo ? '<div id="fade-' + idUnico + '" class="ws-letra-fade"></div>' : ''}
                         </div>
                         ${btnVerMais}
                     </div>
 
-                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Fixo na direita) -->
+                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Apenas a Mídia Isolada) -->
                     <div style="position: sticky; top: 20px; width: 100%;">
                         <div style="font-size: 12px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                             <span>🎶 Vídeo Fonte</span>
                         </div>
-                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: #000; width: 100%;">
-                            ${anexos}
+                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: transparent; width: 100%;">
+                            ${midiaCompleta}
                         </div>
                     </div>
 
@@ -1898,7 +1930,7 @@ Workspace.Feed = {
             `;
         }
 
-        // 🚀 O RECIPIENTE DOS DIAS (Mantém a compatibilidade com a expansão até aos 30 dias)
+        // 🚀 O RECIPIENTE DOS DIAS
         let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
@@ -1907,7 +1939,7 @@ Workspace.Feed = {
         }
         htmlDias += '</div>';
 
-        // 🚀 O BOTÃO DE EXPANSÃO (Aparece se houver menos de 30 dias gerados)
+        // 🚀 O BOTÃO DE EXPANSÃO (Ate aos 30 dias)
         let htmlBotaoMais = '';
         if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
             htmlBotaoMais = `
