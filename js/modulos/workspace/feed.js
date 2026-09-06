@@ -1298,22 +1298,41 @@ abrirPerfilUsuario: async (autorNome) => {
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
-        // 🚀 CSS DE ALTA PRECISÃO: Formato Quadrado com Cantos Arredondados (16px) e sem corte (overflow visível)
+        // 🚀 CSS DE ALTA PRECISÃO CORRIGIDO: 
+        // 1. "object-fit: contain" exibe a foto inteira sem cortar o que foi configurado no upload.
+        // 2. O seletor "> div" blinda a formatação, garantindo que a bolinha verde (status) continua pequenina!
         const estiloAvatar = `
             <style>
-                .ws-avatar-perfect img { width: 100% !important; height: 100% !important; object-fit: cover !important; object-position: center !important; margin: 0 !important; padding: 0 !important; display: block !important; border-radius: 16px !important; }
-                .ws-avatar-perfect div { width: 100% !important; height: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 16px !important; margin: 0 !important; }
+                .ws-avatar-perfect img { 
+                    width: 100% !important; 
+                    height: 100% !important; 
+                    object-fit: contain !important; 
+                    object-position: center !important; 
+                    margin: 0 !important; 
+                    padding: 0 !important; 
+                    display: block !important; 
+                    border-radius: 12px !important; 
+                }
+                .ws-avatar-perfect > div { 
+                    width: 100% !important; 
+                    height: 100% !important; 
+                    display: flex !important; 
+                    align-items: center !important; 
+                    justify-content: center !important; 
+                    border-radius: 12px !important; 
+                    margin: 0 !important; 
+                }
             </style>
         `;
 
         overlay.innerHTML = `
             ${estiloAvatar}
-            <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: hidden;">
-                <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
+            <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
+                <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden;">
                     <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                 </div>
-                <!-- 🚀 FORMATO QUADRADO (16px) SEM OVERFLOW HIDDEN PARA MOSTRAR A BOLINHA ONLINE -->
-                <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:16px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                <!-- 🚀 A CAIXA DO AVATAR -->
+                <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; position: relative; z-index: 2; background: #f0f2f5;">
                     ${avatarHTML}
                 </div>
                 <div style="padding: 0 25px 30px 25px;">
@@ -1338,7 +1357,7 @@ abrirPerfilUsuario: async (autorNome) => {
                 if (res.tipo === 'Professor') { tipoMembro = "Professor"; iconeMembro = "🎓"; corFundo = "#fef08a"; corTexto = "#d97706"; }
                 else if (res.tipo === 'Gestor') { tipoMembro = "Gestor"; iconeMembro = "🛡️"; corFundo = "#fce7f3"; corTexto = "#db2777"; }
 
-                // 🚀 PRESERVAÇÃO DA BOLINHA: Troca APENAS o 'src' da imagem dentro do HTML nativo!
+                // 🚀 PRESERVAÇÃO DA BOLINHA E ANTI-CACHE
                 let avatarFinalHTML = avatarHTML;
                 if (res.avatar) {
                     const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
@@ -1347,8 +1366,7 @@ abrirPerfilUsuario: async (autorNome) => {
                     if (avatarFinalHTML.includes('<img')) {
                         avatarFinalHTML = avatarFinalHTML.replace(/src="([^"]+)"/, `src="${novoSrc}"`);
                     } else {
-                        // Se o cache ainda tinha apenas iniciais, força a nova foto!
-                        avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 16px;">`;
+                        avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}">`;
                     }
                 }
 
@@ -1356,10 +1374,10 @@ abrirPerfilUsuario: async (autorNome) => {
                 if(cardContent) {
                     cardContent.innerHTML = `
                         <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
-                        <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%;">
+                        <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden;">
                             <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; background-image: radial-gradient(#fff 2px, transparent 2px); background-size: 20px 20px;"></div>
                         </div>
-                        <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:16px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; display: flex; align-items: center; justify-content: center; font-size: 40px; position: relative; z-index: 2; background: #f0f2f5;">
+                        <div class="ws-avatar-perfect" style="width:100px; height:100px; margin: -50px auto 15px auto; border-radius:12px; box-shadow: 0 5px 15px rgba(0,0,0,0.15); border: 4px solid #fff; position: relative; z-index: 2; background: #f0f2f5;">
                             ${avatarFinalHTML}
                         </div>
                         <div style="padding: 0 25px 30px 25px; animation: fadeIn 0.3s ease;">
