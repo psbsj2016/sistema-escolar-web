@@ -469,6 +469,23 @@ Workspace.Ingles = {
             
             .ws-btn-success { background: linear-gradient(135deg, #10b981, #059669); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(16,185,129,0.2); transition: 0.2s; font-size: 14px;}
             .ws-btn-success:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(16,185,129,0.3); }
+            
+            /* 🚀 ANIMAÇÕES PREMIUM (Moedas e Ondas Sonoras) */
+            @keyframes coinFly { 0% { transform: translate(-50%, 0) scale(1); opacity: 1; } 100% { transform: translate(-50%, -120px) scale(1.8); opacity: 0; } }
+            .coin-anim { position: absolute; font-size: 28px; font-weight: 900; color: #D97706; text-shadow: 0 4px 10px rgba(0,0,0,0.3); animation: coinFly 1s cubic-bezier(0.25, 0.8, 0.25, 1) forwards; pointer-events: none; z-index: 100001; }
+            
+            @keyframes pulseWave { 0%, 100% { height: 6px; } 50% { height: 24px; } }
+            .soundwave { display: flex; align-items: center; justify-content: center; gap: 4px; height: 24px; margin-top: 8px; }
+            .soundwave div { width: 5px; background: #fff; border-radius: 3px; animation: pulseWave 0.8s infinite ease-in-out; }
+            .soundwave div:nth-child(1) { animation-delay: 0.1s; }
+            .soundwave div:nth-child(2) { animation-delay: 0.3s; }
+            .soundwave div:nth-child(3) { animation-delay: 0.0s; }
+            .soundwave div:nth-child(4) { animation-delay: 0.2s; }
+            .soundwave div:nth-child(5) { animation-delay: 0.4s; }
+
+            /* 🚀 BARRA DE DOMÍNIO DOS JOGOS */
+            .ig-progress-bg { background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-top: 15px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
+            .ig-progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
 
             /* RESPONSIVIDADE MOBILE */
             @media (max-width: 768px) {
@@ -837,20 +854,36 @@ Workspace.Ingles = {
         });
     },
 
-    renderAlunoGrid(){
+   renderAlunoGrid(){
         const grid = document.getElementById('gamesGrid'); if(!grid) return;
+        const concluidos = this.state.itensConcluidos || [];
+
         grid.innerHTML = this.defaults.games.map(g=>{
             const vencidos = Object.values(this.state.srs).filter(s=>s.tipo===g.id && s.due<=Date.now()).length;
+            
+            // 🚀 CÁLCULO DE DOMÍNIO (PROGRESSO)
+            const colecao = this.getColecaoPorJogo(g.id);
+            const total = colecao.length;
+            const feitos = colecao.filter(item => concluidos.includes(item.id)).length;
+            const percentagem = total > 0 ? Math.round((feitos / total) * 100) : 0;
+            const corBarra = g.color.replace('E0E7FF','#4F46E5').replace('FEF3C7','#D97706').replace('D1FAE5','#059669').replace('FEE2E2','#EF4444').replace('F5D0FE','#C026D3').replace('CCFBF1','#0D9488').replace('E0F2FE','#0284C7').replace('FFEDD5','#EA580C').replace('DCFCE7','#16A34A');
+
             return `
             <div class="ig-game-card" data-action="abrir-jogo" data-game-id="${g.id}">
                 <div class="ig-top">
-                    <div class="ig-icon" style="background:${g.color}30; color:${g.color.replace('E0E7FF','#4F46E5').replace('FEF3C7','#D97706').replace('D1FAE5','#059669')}">${g.icon}</div>
+                    <div class="ig-icon" style="background:${g.color}40; color:${corBarra}">${g.icon}</div>
                 </div>
                 <h3>${g.title} ${vencidos?'🔥':''}</h3>
                 <p>${g.desc}</p>
-                <div style="margin-top:12px; display:flex; gap:8px;">
+                
+                <!-- 🚀 A NOVA BARRA DE DOMÍNIO -->
+                <div class="ig-progress-bg" title="Domínio: ${percentagem}%">
+                    <div class="ig-progress-fill" style="width: ${percentagem}%; background: ${corBarra};"></div>
+                </div>
+
+                <div style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
                     <span style="background:#F1F5F9; color:#475569; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">🪙 +${['picturePop','minimalPairs'].includes(g.id)?'75':'50'} BZ</span>
-                    ${vencidos ? `<span style="color:#EF4444; font-size:11px; font-weight:700;">${vencidos} para revisar</span>` : ''}
+                    ${vencidos ? `<span style="color:#EF4444; font-size:11px; font-weight:700;">${vencidos} para revisar</span>` : `<span style="color:#64748B; font-size:11px; font-weight:700;">${percentagem}% Concluído</span>`}
                 </div>
             </div>`;
         }).join('');
@@ -865,8 +898,15 @@ Workspace.Ingles = {
         
         document.getElementById('modalIcon').textContent = game.icon;
         document.getElementById('modalTitle').textContent = game.title;
-        document.getElementById('gameModal').classList.remove('hidden');
         
+        // 🚀 TEMATIZAÇÃO MÁGICA DO MODAL BASEADA NO JOGO
+        const modalContent = document.querySelector('#gameModal .modal-content');
+        if (modalContent) {
+            modalContent.style.background = `linear-gradient(to bottom, #ffffff, ${game.color}60)`;
+            modalContent.style.borderColor = game.color.replace('E0E7FF','#C7D2FE').replace('FEF3C7','#FDE68A').replace('D1FAE5','#A7F3D0');
+        }
+
+        document.getElementById('gameModal').classList.remove('hidden');
         this.renderGameCapa();
     },
 
@@ -876,7 +916,7 @@ Workspace.Ingles = {
         this.renderAlunoGrid();
     },
 
-    sucessoGenerico: async function(bonusBase){
+   sucessoGenerico: async function(bonusBase){
         if(this.desafioAtualObj?.id){ 
             this.marcarComoConcluido(this.desafioAtualObj.id); 
             this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
@@ -885,8 +925,20 @@ Workspace.Ingles = {
         this.ganharCoins('bronze', bonusBase);
         this.tocarSom('coin'); 
         
+        // 🚀 A INJEÇÃO DA MOEDA VOADORA
+        const modalBody = document.getElementById('modalBody');
+        if (modalBody) {
+            const coinAnim = document.createElement('div');
+            coinAnim.className = 'coin-anim';
+            coinAnim.innerText = `🪙 +${bonusBase}`;
+            coinAnim.style.left = '50%';
+            coinAnim.style.top = '30%';
+            modalBody.appendChild(coinAnim);
+            setTimeout(() => coinAnim.remove(), 1000); // Limpa após a animação
+        }
+
         const srs = this.state.srs[this.desafioAtualObj?.id];
-        this.mostrarAvisoLocal(`🪙 +${bonusBase} Bronze! Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
+        this.mostrarAvisoLocal(`Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
 
         setTimeout(() => {
             const modal = document.getElementById('gameModal');
@@ -923,6 +975,21 @@ Workspace.Ingles = {
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
         return null;
+    },
+
+   getColecaoPorJogo: function(id){
+        const db = this.state._dbLoaded; 
+        if(id==='wordSpark') return db ? this.state.words : this.defaults.words;
+        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
+        if(id==='quiz') return db ? this.state.quizzes : this.defaults.quizzes;
+        if(id==='wordPicker') return db ? this.state.wordPickers : this.defaults.wordPickers;
+        if(id==='minimalPairs') return db ? this.state.minimalPairs : this.defaults.minimalPairs;
+        if(id==='picturePop') return db ? this.state.pictures : this.defaults.pictures;
+        if(id==='answerQuest') return db ? this.state.questions : this.defaults.questions;
+        if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
+        if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
+        if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
+        return [];
     },
 
     renderDesafioAtual(){
@@ -1174,7 +1241,13 @@ Workspace.Ingles = {
         const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
         this.recognition = new SR(); this.recognition.lang='en-US'; this.recognition.interimResults=false; this.recognition.maxAlternatives=1;
         
-        if(btn){ btn.innerText='🎧 Escutando... Fale agora!'; btn.style.background='#F59E0B'; }
+        if(btn){ 
+            btn.innerHTML=`🎧 Escutando... Fale agora! <div class="soundwave"><div></div><div></div><div></div><div></div><div></div></div>`; 
+            btn.style.background='#F59E0B'; 
+            btn.style.display = 'flex';
+            btn.style.flexDirection = 'column';
+            btn.style.alignItems = 'center';
+        }
         this.recognition.start();
         
         this.recognition.onresult=(e)=>{
