@@ -141,7 +141,8 @@ Workspace.Ingles = {
             {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma o papel.', icon:'🎭', color:'#CCFBF1'},
             {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debata com a IA.', icon:'⚔', color:'#E0F2FE'},
             {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie os sons.', icon:'♊', color:'#FFEDD5'},
-            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale o que vê.', icon:'👁🗨', color:'#DCFCE7'}
+            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale o que vê.', icon:'👁🗨', color:'#DCFCE7'},
+            {id:'memoryGame', title:'🃏 Ilusão do Mago', desc:'Encontre os pares ocultos.', icon:'🃏', color:'#FBCFE8'}
         ]
     },
 
@@ -486,6 +487,18 @@ Workspace.Ingles = {
             /* 🚀 BARRA DE DOMÍNIO DOS JOGOS */
             .ig-progress-bg { background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-top: 15px; box-shadow: inset 0 1px 2px rgba(0,0,0,0.05); }
             .ig-progress-fill { height: 100%; border-radius: 10px; transition: width 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+            /* 🚀 JOGO DA MEMÓRIA 3D */
+            .memory-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-top: 20px; perspective: 1000px; }
+            @media (min-width: 600px) { .memory-grid { grid-template-columns: repeat(4, 1fr); } }
+            .memory-card { width: 100%; aspect-ratio: 1; position: relative; cursor: pointer; transform-style: preserve-3d; transition: transform 0.6s cubic-bezier(0.4, 0.2, 0.2, 1); }
+            .memory-card.is-flipped { transform: rotateY(180deg); }
+            .memory-face { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 15px; font-weight: bold; text-align: center; padding: 10px; box-sizing: border-box; box-shadow: 0 4px 6px rgba(0,0,0,0.1); word-break: break-word; user-select: none; }
+            .memory-front { background: linear-gradient(135deg, #c026d3, #db2777); color: transparent; font-size: 30px; }
+            .memory-front::after { content: "🪄"; color: white; position: absolute; font-size: 35px; }
+            .memory-back { background: white; color: #1e293b; transform: rotateY(180deg); border: 2px solid #e2e8f0; }
+            .memory-back.correct { border-color: #10b981; background: #ecfdf5; color: #064e3b; box-shadow: 0 0 15px rgba(16, 185, 129, 0.4); }
+            .memory-back.wrong { border-color: #ef4444; background: #fef2f2; color: #7f1d1d; }
 
             /* RESPONSIVIDADE MOBILE */
             @media (max-width: 768px) {
@@ -1007,6 +1020,7 @@ Workspace.Ingles = {
         else if(id==='debateAI') this.renderGameDebateAI();
         else if(id==='minimalPairs') this.renderGameMinimalPairs();
         else if(id==='picturePop') this.renderGamePicturePop();
+        else if(id==='memoryGame') this.renderGameMemory();
     },
 
     renderTelaFimDeJornada(){
@@ -1231,6 +1245,123 @@ Workspace.Ingles = {
                     <button data-action="verificar-envio" data-game="picturePop" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer; font-weight:bold;">Submeter Visão 👁️‍🗨️</button>
                 </div>
             </div>`;
+    },
+
+   // =========================================================================
+   // 🃏 JOGO DA MEMÓRIA: ILUSÃO DO MAGO
+   // =========================================================================
+   renderGameMemory(){
+        // Usa a base de palavras do WordSpark
+        const col = this.getColecaoPorJogo('wordSpark'); 
+        if(!col || col.length < 3) {
+            document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:40px;color:#64748B;">Para jogar, precisa ter pelo menos 3 palavras no Banco de Vocabulário do Professor.</div>`;
+            return;
+        }
+        
+        // Pesca até 6 palavras aleatórias
+        let selectedItems = [...col].sort(()=> 0.5 - Math.random()).slice(0, 6);
+        
+        // Cria os pares (Inglês e Português)
+        let cards = [];
+        selectedItems.forEach((item, index) => {
+            cards.push({ id: `card_w_${index}`, text: item.word, matchId: index, type: 'en', originalId: item.id });
+            cards.push({ id: `card_t_${index}`, text: item.translation, matchId: index, type: 'pt', originalId: item.id });
+        });
+        
+        // Baralha as cartas
+        cards.sort(()=> 0.5 - Math.random());
+        
+        // Variáveis de Estado do Jogo da Memória
+        this.state._memoryCards = cards;
+        this.state._memorySelected = [];
+        this.state._memoryMatches = 0;
+        this.state._memoryLock = false;
+        this.state._memoryAttempts = 0;
+        this.state._memoryOriginalIds = selectedItems.map(i => i.id);
+
+        let gridHtml = cards.map((c, i) => `
+            <div class="memory-card" id="mem-card-${i}" onclick="Workspace.Ingles.virarCartaMemoria(${i})">
+                <div class="memory-face memory-front"></div>
+                <div class="memory-face memory-back" id="mem-back-${i}">${Workspace.escapeHTML(c.text)}</div>
+            </div>
+        `).join('');
+
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center;">
+                <p style="font-weight:700; color:#4F46E5; margin-bottom:15px; font-size: 15px;">Combine a palavra em Inglês com a sua tradução!</p>
+                <div class="memory-grid">${gridHtml}</div>
+            </div>
+        `;
+    },
+
+    virarCartaMemoria(index) {
+        if (this.state._memoryLock) return; // Trava se já houver 2 cartas viradas
+        const cardEl = document.getElementById(`mem-card-${index}`);
+        if (cardEl.classList.contains('is-flipped')) return; // Trava se a carta já estiver virada
+
+        // Vira a carta visualmente
+        cardEl.classList.add('is-flipped');
+        const cardData = this.state._memoryCards[index];
+        
+        // Se for a palavra em Inglês, a IA dita a pronúncia!
+        if (cardData.type === 'en') VoiceService.falar(cardData.text);
+
+        this.state._memorySelected.push({ index, el: cardEl, data: cardData });
+
+        // Verifica se formou o par
+        if (this.state._memorySelected.length === 2) {
+            this.state._memoryLock = true;
+            this.state._memoryAttempts++;
+            const [c1, c2] = this.state._memorySelected;
+
+            if (c1.data.matchId === c2.data.matchId) {
+                // ACERTOU O PAR
+                this.state._memoryMatches++;
+                document.getElementById(`mem-back-${c1.index}`).classList.add('correct');
+                document.getElementById(`mem-back-${c2.index}`).classList.add('correct');
+                this.tocarSom('coin');
+                
+                this.state._memorySelected = [];
+                this.state._memoryLock = false;
+                
+                // Se encontrou todos os pares, vence o jogo!
+                if (this.state._memoryMatches === (this.state._memoryCards.length / 2)) {
+                    setTimeout(() => this.vencerJogoMemoria(), 800);
+                }
+            } else {
+                // ERROU O PAR
+                document.getElementById(`mem-back-${c1.index}`).classList.add('wrong');
+                document.getElementById(`mem-back-${c2.index}`).classList.add('wrong');
+                
+                // Aguarda 1.2s para o aluno decorar e desvira as cartas
+                setTimeout(() => {
+                    c1.el.classList.remove('is-flipped');
+                    c2.el.classList.remove('is-flipped');
+                    document.getElementById(`mem-back-${c1.index}`).classList.remove('wrong');
+                    document.getElementById(`mem-back-${c2.index}`).classList.remove('wrong');
+                    this.state._memorySelected = [];
+                    this.state._memoryLock = false;
+                }, 1200);
+            }
+        }
+    },
+
+    vencerJogoMemoria() {
+        // Regista o progresso no Algoritmo SRS para todas as palavras treinadas!
+        this.state._memoryOriginalIds.forEach(id => {
+            this.updateSRS(id, 'memoryGame', true);
+            this.marcarComoConcluido(id);
+            this.superarErro(id);
+        });
+        
+        // Sistema Dinâmico de Recompensa (Baseado na quantidade de erros)
+        const pares = this.state._memoryCards.length / 2;
+        let bonus = 100; // Excelente (poucos erros)
+        if (this.state._memoryAttempts > pares + 2) bonus = 60; // Médio
+        if (this.state._memoryAttempts > pares + 5) bonus = 30; // Sofreu muito
+        
+        // Ativa a sua função fantástica de recompensa e fecha o jogo!
+        this.sucessoGenerico(bonus);
     },
 
     iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo){
