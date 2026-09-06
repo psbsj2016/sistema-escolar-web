@@ -426,16 +426,22 @@ Workspace.Ingles = {
             .ig-game-card h3 { margin: 0 0 6px 0; color: #0F172A; font-family: 'Plus Jakarta Sans', sans-serif; font-size: 18px; }
             .ig-game-card p { margin: 0; color: #64748B; font-size: 13px; line-height: 1.4; }
             
-            /* MODAL GERAL */
-            .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.85); display: flex; align-items: center; justify-content: center; z-index: 100000; backdrop-filter: blur(5px); }
-            .modal.hidden { display: none !important; }
-            .modal-content { background: #fff; width: 95%; max-width: 650px; border-radius: 20px; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 25px 50px rgba(0,0,0,0.25); border: 1px solid #E2E8F0; }
-            .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 16px 24px; border-bottom: 1px solid #E2E8F0; background: #F8FAFC; }
-            .modal-title { display: flex; align-items: center; gap: 12px; }
-            .modal-title h2 { margin: 0; font-size: 18px; color: #0F172A; font-weight: 800; }
-            .close-btn { background: #FEE2E2; border: none; width: 32px; height: 32px; border-radius: 8px; color: #EF4444; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s; }
-            .close-btn:hover { background: #EF4444; color: #fff; }
-            .modal-body { padding: 24px; overflow-y: auto; flex: 1; }
+           /* MODAL GERAL (MODO FOCO - TELA INTEIRA) */
+            .modal { position: fixed; inset: 0; background: rgba(15,23,42,0.95); display: flex; align-items: center; justify-content: center; z-index: 100000; backdrop-filter: blur(10px); transition: opacity 0.3s ease; }
+            .modal.hidden { display: none !important; opacity: 0; pointer-events: none; }
+            
+            .modal-content { background: #fff; width: 100vw; height: 100dvh; max-width: none; max-height: none; border-radius: 0; display: flex; flex-direction: column; overflow: hidden; border: none; transform: scale(0.98); animation: appZoomIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards; box-shadow: none; }
+            @keyframes appZoomIn { to { transform: scale(1); } }
+            
+            .modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 30px; border-bottom: 1px solid rgba(0,0,0,0.05); background: transparent; z-index: 10; }
+            .modal-title { display: flex; align-items: center; gap: 14px; }
+            .modal-title h2 { margin: 0; font-size: 22px; color: #0F172A; font-weight: 800; font-family: 'Plus Jakarta Sans', sans-serif; letter-spacing: -0.5px; }
+            .close-btn { background: rgba(239, 68, 68, 0.1); border: none; width: 40px; height: 40px; border-radius: 12px; color: #EF4444; font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+            .close-btn:hover { background: #EF4444; color: #fff; transform: scale(1.05); }
+            
+            /* O "Palco" que mantém o jogo centralizado mesmo num ecrã gigante */
+            .modal-body { padding: 30px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; align-items: center; }
+            .modal-body > * { width: 100%; max-width: 650px; margin: auto; }
             
             /* INPUTS & TEXT */
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
@@ -1012,12 +1018,15 @@ Workspace.Ingles = {
         document.getElementById('modalIcon').textContent = game.icon;
         document.getElementById('modalTitle').textContent = game.title;
         
-        // 🚀 TEMATIZAÇÃO MÁGICA DO MODAL BASEADA NO JOGO
+        // 🚀 TEMATIZAÇÃO MÁGICA: O gradiente agora desce de forma mais imersiva
         const modalContent = document.querySelector('#gameModal .modal-content');
         if (modalContent) {
-            modalContent.style.background = `linear-gradient(to bottom, #ffffff, ${game.color}60)`;
-            modalContent.style.borderColor = game.color.replace('E0E7FF','#C7D2FE').replace('FEF3C7','#FDE68A').replace('D1FAE5','#A7F3D0');
+            modalContent.style.background = `linear-gradient(to bottom, #ffffff 30%, ${game.color}60 100%)`;
+            modalContent.style.borderColor = 'transparent'; // Sem borda na tela inteira
         }
+
+        // 🚀 TRAVA O SCROLL DO FUNDO (UX de Aplicação Nativa)
+        document.body.style.overflow = 'hidden';
 
         document.getElementById('gameModal').classList.remove('hidden');
         this.renderGameCapa();
@@ -1026,6 +1035,10 @@ Workspace.Ingles = {
     fecharJogo(){
         try{ speechSynthesis.cancel(); }catch{}
         document.getElementById('gameModal').classList.add('hidden');
+        
+        // 🚀 DESTRAVA O SCROLL DO FUNDO ao voltar ao Hub
+        document.body.style.overflow = '';
+        
         this.renderAlunoGrid();
     },
 
