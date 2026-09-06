@@ -393,13 +393,19 @@ Workspace.Ingles = {
             
             .bau-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
             
-            /* CARTEIRA DO ALUNO (HUD FINANCEIRO) */
-            .ig-wallet { display: flex; align-items: center; background: #f8fafc; padding: 6px; border-radius: 16px; border: 1px solid #e2e8f0; gap: 6px; overflow-x: auto; }
-            .ig-wallet-item { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 800; background: #fff; box-shadow: 0 2px 4px rgba(0,0,0,0.02); white-space: nowrap; }
-            .ig-wallet-item.ouro { color: #b45309; border-bottom: 2px solid #fbbf24; }
-            .ig-wallet-item.prata { color: #475569; border-bottom: 2px solid #cbd5e1; }
-            .ig-wallet-item.bronze { color: #92400e; border-bottom: 2px solid #fcd34d; }
-            .ig-wallet-item.streak { color: #e11d48; border-bottom: 2px solid #fca5a5; background: #fef2f2; }
+           /* CARTEIRA DO ALUNO E LIGAS (HUD RPG) */
+            .ig-wallet { display: flex; align-items: center; gap: 12px; }
+            .ig-league-badge { display: flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 12px; font-size: 13px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: all 0.3s; }
+            .liga-bronze { background: #fff7ed; color: #b45309; border: 1px solid #fcd34d; }
+            .liga-prata { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; }
+            .liga-ouro { background: #fefce8; color: #d97706; border: 1px solid #fde047; box-shadow: 0 0 12px rgba(253,224,71,0.4); }
+            .liga-diamante { background: #f0fdfa; color: #0f766e; border: 1px solid #5eead4; box-shadow: 0 0 15px rgba(45,212,191,0.6); }
+            
+            .ig-coin-bag { display: flex; align-items: center; gap: 8px; background: #fff; padding: 6px 16px; border-radius: 14px; font-size: 16px; font-weight: 900; color: #d97706; border: 2px solid #fef08a; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.15); transition: transform 0.1s ease-out; }
+            .ig-wallet-item.streak { display: flex; align-items: center; gap: 6px; padding: 6px 12px; border-radius: 12px; font-size: 14px; font-weight: 800; color: #e11d48; border-bottom: 2px solid #fca5a5; background: #fef2f2; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+            
+            @keyframes bagBounce { 0% { transform: scale(1); } 40% { transform: scale(1.2) rotate(3deg); } 60% { transform: scale(0.9) rotate(-3deg); } 100% { transform: scale(1); } }
+            .bounce-active { animation: bagBounce 0.5s cubic-bezier(0.25, 0.8, 0.25, 1); }
 
             /* TOGGLE PREMIUM */
             .toggle-wrap { display: flex; background: #f1f5f9; padding: 5px; border-radius: 14px; border: 1px solid #e2e8f0; }
@@ -545,12 +551,11 @@ Workspace.Ingles = {
                         </div>
                     </div>
                     <div class="bau-actions">
-                        <!-- 🚀 A NOVA CARTEIRA FINANCEIRA -->
+                        <!-- 🚀 A NOVA CARTEIRA FINANCEIRA (SISTEMA DE LIGAS) -->
                         <div class="ig-wallet" id="xpBadge">
-                            <div class="ig-wallet-item ouro" title="Moedas de Ouro">🥇 <span id="ouroCount">0</span></div>
-                            <div class="ig-wallet-item prata" title="Moedas de Prata">🥈 <span id="prataCount">0</span></div>
-                            <div class="ig-wallet-item bronze" title="Moedas de Bronze">🥉 <span id="coinsCount">0</span></div>
+                            <div id="leagueBadge" class="ig-league-badge liga-bronze">🥉 Bronze</div>
                             <div class="ig-wallet-item streak" title="Dias Seguidos de Estudo">🔥 <span id="streakCount">1</span>d</div>
+                            <div id="coinBag" class="ig-coin-bag" title="Total de Moedas Acumuladas">💰 <span id="coinsCount">0</span></div>
                         </div>
                         
                         <!-- 🚀 O NOVO TOGGLE MODERNO -->
@@ -609,21 +614,86 @@ Workspace.Ingles = {
         `;
     },
 
-    atualizarHUD(){
-        // Captura todos os contadores da nova carteira
+  atualizarHUD(valorAntigo = null){
+        // 🚀 MIGRAR MOEDAS ANTIGAS SILENCIOSAMENTE: Converte a carteira velha para o saldo unificado!
+        if (this.state.coins && (this.state.coins.prata > 0 || this.state.coins.ouro > 0)) {
+            this.state.coins.bronze = (this.state.coins.bronze || 0) + (this.state.coins.prata * 100) + (this.state.coins.ouro * 10000);
+            this.state.coins.prata = 0;
+            this.state.coins.ouro = 0;
+            this.saveDados();
+        }
+
         const bzEl = document.getElementById('coinsCount');
-        const ptEl = document.getElementById('prataCount');
-        const ouEl = document.getElementById('ouroCount');
         const stEl = document.getElementById('streakCount');
+        const leagueBadge = document.getElementById('leagueBadge');
+        const coinBag = document.getElementById('coinBag');
         
-        // Verifica se a carteira já tem fundos ou se começa a zeros
-        const coins = this.state.coins || { bronze: 0, prata: 0, ouro: 0 };
+        const totalMoedas = this.state.coins?.bronze || 0;
         
-        // Atualiza a tela em tempo real com números precisos
-        if(bzEl) bzEl.textContent = coins.bronze || 0;
-        if(ptEl) ptEl.textContent = coins.prata || 0;
-        if(ouEl) ouEl.textContent = coins.ouro || 0;
-        if(stEl) stEl.textContent = this.state.streak || 1;
+        // 🚀 O NOVO SISTEMA DE LIGAS
+        let ligaInfo = { classe: 'liga-bronze', texto: '🥉 Bronze' };
+        if (totalMoedas >= 500000000) {
+            ligaInfo = { classe: 'liga-diamante', texto: '💎 Diamante' };
+        } else if (totalMoedas >= 1000000) {
+            ligaInfo = { classe: 'liga-ouro', texto: '🥇 Ouro' };
+        } else if (totalMoedas >= 100000) {
+            ligaInfo = { classe: 'liga-prata', texto: '🥈 Prata' };
+        }
+
+        if (leagueBadge) {
+            leagueBadge.className = `ig-league-badge ${ligaInfo.classe}`;
+            leagueBadge.innerHTML = ligaInfo.texto;
+        }
+
+        // 🚀 O EFEITO VÍCIO: Rola os números e faz o saco pular!
+        if (bzEl) {
+            if (valorAntigo !== null && valorAntigo !== totalMoedas) {
+                this.animarContador('coinsCount', valorAntigo, totalMoedas, 1200); // 1.2 segundos rodando
+                if (coinBag) {
+                    coinBag.classList.remove('bounce-active');
+                    void coinBag.offsetWidth; // Força recomeço da animação
+                    coinBag.classList.add('bounce-active');
+                }
+            } else {
+                bzEl.textContent = totalMoedas.toLocaleString('pt-BR');
+            }
+        }
+        if (stEl) stEl.textContent = this.state.streak || 1;
+    },
+
+    ganharCoins(tipo, qtd){
+        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0};
+        
+        // Guarda o valor que tínhamos antes do acerto
+        const valorAntigo = this.state.coins.bronze || 0;
+        
+        // Agora usamos o "bronze" como a moeda única universal do jogo
+        this.state.coins.bronze += qtd; 
+        
+        this.tocarSom('coin'); 
+        
+        // Passa o valor antigo para o HUD calcular a animação de rolagem
+        this.atualizarHUD(valorAntigo);
+        this.saveDados();
+    },
+
+    animarContador: function(id, start, end, duration) {
+        const obj = document.getElementById(id);
+        if (!obj) return;
+        let startTimestamp = null;
+        const step = (timestamp) => {
+            if (!startTimestamp) startTimestamp = timestamp;
+            const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+            const easeOut = 1 - Math.pow(1 - progress, 3); // Deixa mais lento no final
+            const current = Math.floor(easeOut * (end - start) + start);
+            obj.innerHTML = current.toLocaleString('pt-BR');
+            if (progress < 1) {
+                window.requestAnimationFrame(step);
+            } else {
+                obj.innerHTML = end.toLocaleString('pt-BR');
+            }
+        };
+        window.requestAnimationFrame(step);
     },
 
     mostrarAvisoLocal(msg, tipo='success'){
@@ -635,22 +705,6 @@ Workspace.Ingles = {
         setTimeout(()=>toast.classList.add('hidden'), 2000);
     },
 
-    ganharCoins(tipo, qtd){
-        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0};
-        this.state.coins[tipo] = (this.state.coins[tipo]||0) + qtd;
-        if(this.state.coins.bronze >= 100){ 
-            let c = Math.floor(this.state.coins.bronze/100); 
-            this.state.coins.bronze -= c*100; 
-            this.state.coins.prata = (this.state.coins.prata||0) + c; 
-        }
-        if(this.state.coins.prata >= 100){ 
-            let c2 = Math.floor(this.state.coins.prata/100); 
-            this.state.coins.prata -= c2*100; 
-            this.state.coins.ouro = (this.state.coins.ouro||0) + c2; 
-        }
-        this.atualizarHUD();
-        this.saveDados();
-    },
 
     bindEvents(){
         const root = document.getElementById('ws-ingles-container');
