@@ -1129,9 +1129,10 @@ Workspace.Ingles = {
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
         if(id==='hangman') return db ? this.state.words : this.defaults.words;
-        if(id==='videoQuiz') {
+       if(id==='videoQuiz') {
             const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
-            return todosQuizzes.filter(q => q.videoUrl && q.videoUrl.trim() !== ''); // Puxa só os que têm vídeo
+            // 🚀 PROTEÇÃO: Só tenta ler o vídeo se ele realmente existir e for um texto
+            return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
         }
         return null;
     },
@@ -1149,9 +1150,10 @@ Workspace.Ingles = {
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
         if(id==='hangman') return db ? this.state.words : this.defaults.words;
-        if(id==='videoQuiz') {
+       if(id==='videoQuiz') {
             const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
-            return todosQuizzes.filter(q => q.videoUrl && q.videoUrl.trim() !== ''); // Puxa só os que têm vídeo
+            // 🚀 PROTEÇÃO: Só tenta ler o vídeo se ele realmente existir e for um texto
+            return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
         }
         return [];
     },
