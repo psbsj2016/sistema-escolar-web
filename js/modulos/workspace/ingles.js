@@ -632,14 +632,15 @@ Workspace.Ingles = {
                         </div>
                     </section>
 
-                    <section id="alunoView" class="view">
-                        <!-- O Letreiro Animado substitui a mensagem estática de boas-vindas -->
+                  <section id="alunoView" class="view">
+                        <!-- 🚀 O Letreiro Animado (Ranking Top 9) -->
                         <div class="marquee-wrapper" id="ig-marquee-wrapper" style="display:none;">
                             <div class="marquee-title">🏆 Top 9 Bilionários da Escola 🏆</div>
-                            <div class="marquee-track" id="ig-marquee-track">
-                                <!-- Os cartões desfilarão aqui -->
-                            </div>
+                            <div class="marquee-track" id="ig-marquee-track"></div>
                         </div>
+
+                        <!-- 🚀 A GRELHA DE JOGOS (Corrigido: Este elemento não pode sumir!) -->
+                        <div class="games-grid" id="gamesGrid"></div>
                     </section>
                 </main>
             </div>
@@ -1690,9 +1691,15 @@ async renderizarMarquee() {
                     else if(posicao === 3) { classeDestaque = 'marquee-rank-3'; medalha = '🥉'; }
                     else { medalha = `<span>#${posicao}</span>`; }
                     
-                    const avatarSrc = window.Workspace.renderizarAvatar ? window.Workspace.renderizarAvatar(aluno.nome, 46) : '<div style="background:#e2e8f0;width:100%;height:100%;"></div>';
-                    const totalMoedas = aluno.coins?.bronze || 0;
-                    const ligaTexto = aluno.liga === 'diamante' ? '💎 Diamante' : aluno.liga === 'ouro' ? '🥇 Ouro' : aluno.liga === 'prata' ? '🥈 Prata' : aluno.liga === 'bronze' ? '🥉 Bronze' : 'Aprendiz';
+                    // 🚀 Traz a foto real do aluno ou cria o selo padrão
+                    let avatarSrc = '';
+                    if (aluno.avatar) {
+                        avatarSrc = `<img src="${aluno.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
+                    } else if (window.Workspace.renderizarAvatar) {
+                        avatarSrc = window.Workspace.renderizarAvatar(aluno.nome, 46);
+                    } else {
+                        avatarSrc = `<div style="background:#e2e8f0;width:100%;height:100%;"></div>`;
+                    }
 
                     return `
                     <div class="marquee-card ${classeDestaque}">

@@ -269,13 +269,29 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 return; 
             }
             
-            listEl.innerHTML = ranking.map((r, i) => {
+          listEl.innerHTML = ranking.map((r, i) => {
                 const liga = r.liga || 'aprendiz';
                 const medalha = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
                 const bordaStyle = liga === 'ouro' ? 'border-color:#fde68a;box-shadow:0 0 10px rgba(253,230,138,0.3)' : liga === 'prata' ? 'border-color:#94a3b8' : liga === 'bronze' ? 'border-color:#d97706' : '';
+                
+                // 🚀 Puxa a foto real do aluno no Painel do Professor
+                let avatarRenderizado = '';
+                if (r.avatar) {
+                    avatarRenderizado = `<img src="${r.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
+                } else if (window.Workspace.renderizarAvatar) {
+                    avatarRenderizado = window.Workspace.renderizarAvatar(r.nome, 44);
+                } else {
+                    avatarRenderizado = `<div style="width:100%; height:100%; background:#e2e8f0; border-radius:12px;"></div>`;
+                }
+
                 return `
                 <div class="ig-rank-item ${liga}" style="display:flex; align-items:center; gap:12px; padding:16px; background:#fff; border:2px solid #e2e8f0; border-radius:14px; margin-bottom:10px; transition:0.2s; ${bordaStyle}">
-                    <div style="width:40px;height:40px;background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'};border-radius:12px;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex-shrink:0">${medalha || (i+1)}</div>
+                    
+                    <div style="position:relative; width:44px; height:44px; flex-shrink:0; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+                        ${avatarRenderizado}
+                        <div style="position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; border:2px solid #fff;">${medalha || (i+1)}</div>
+                    </div>
+
                     <div style="flex:1;min-width:0">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
                             <b style="color:#0f172a;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')}</b>
@@ -284,7 +300,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#64748B;font-weight:600;"><span>🔥 Streak: ${r.streak||1}d</span></div>
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:800; border:1px solid #FDE68A;">🪙 ${(r.coins?.bronze || 0)} BZ</div>
+                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:800; border:1px solid #FDE68A;">💰 ${(r.coins?.bronze || 0).toLocaleString('pt-BR')}</div>
                     </div>
                 </div>`;
             }).join('');
