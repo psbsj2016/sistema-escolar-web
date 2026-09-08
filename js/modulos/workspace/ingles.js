@@ -1683,7 +1683,7 @@ async renderizarMarquee() {
             if(res && res.success && res.ranking && res.ranking.length > 0) {
                 const top9 = res.ranking.slice(0, 9);
                 
-                let htmlCartoes = top9.map((aluno, index) => {
+               let htmlCartoes = top9.map((aluno, index) => {
                     const posicao = index + 1;
                     let classeDestaque = '';
                     let medalha = '';
@@ -1693,14 +1693,17 @@ async renderizarMarquee() {
                     else if(posicao === 3) { classeDestaque = 'marquee-rank-3'; medalha = '🥉'; }
                     else { medalha = `<span>#${posicao}</span>`; }
                     
-                    // 🚀 Traz a foto real do aluno ou cria o selo padrão
+                    // 🚀 CORREÇÃO 1: Restaurar as variáveis apagadas!
+                    const totalMoedas = aluno.coins?.bronze || 0;
+                    const ligaTexto = aluno.liga === 'diamante' ? '💎 Diamante' : aluno.liga === 'ouro' ? '🥇 Ouro' : aluno.liga === 'prata' ? '🥈 Prata' : aluno.liga === 'bronze' ? '🥉 Bronze' : 'Aprendiz';
+                    
+                    // 🚀 CORREÇÃO 2: Criar avatar com a Inicial do Nome se não houver foto!
                     let avatarSrc = '';
                     if (aluno.avatar) {
                         avatarSrc = `<img src="${aluno.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
-                    } else if (window.Workspace.renderizarAvatar) {
-                        avatarSrc = window.Workspace.renderizarAvatar(aluno.nome, 46);
                     } else {
-                        avatarSrc = `<div style="background:#e2e8f0;width:100%;height:100%;"></div>`;
+                        const inicial = (aluno.nome || 'A').charAt(0).toUpperCase();
+                        avatarSrc = `<div style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px;">${inicial}</div>`;
                     }
 
                     return `

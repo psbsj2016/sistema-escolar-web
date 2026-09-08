@@ -274,14 +274,13 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 const medalha = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
                 const bordaStyle = liga === 'ouro' ? 'border-color:#fde68a;box-shadow:0 0 10px rgba(253,230,138,0.3)' : liga === 'prata' ? 'border-color:#94a3b8' : liga === 'bronze' ? 'border-color:#d97706' : '';
                 
-                // 🚀 Puxa a foto real do aluno no Painel do Professor
+               // 🚀 CORREÇÃO 3: Avatar com a Letra Inicial no Painel do Professor
                 let avatarRenderizado = '';
                 if (r.avatar) {
                     avatarRenderizado = `<img src="${r.avatar}" style="width:100%; height:100%; object-fit:cover; border-radius:12px;">`;
-                } else if (window.Workspace.renderizarAvatar) {
-                    avatarRenderizado = window.Workspace.renderizarAvatar(r.nome, 44);
                 } else {
-                    avatarRenderizado = `<div style="width:100%; height:100%; background:#e2e8f0; border-radius:12px;"></div>`;
+                    const inicial = (r.nome || 'A').charAt(0).toUpperCase();
+                    avatarRenderizado = `<div style="width:100%; height:100%; background:linear-gradient(135deg, #4f46e5, #6366f1); color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">${inicial}</div>`;
                 }
 
                 return `
