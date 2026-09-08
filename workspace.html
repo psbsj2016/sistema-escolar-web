@@ -838,7 +838,7 @@
             <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
                 <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">🙍 Meu Perfil</h3></div>
                 <div style="padding: 30px 20px; text-align: center;">
-                   <div style="position: relative; display: inline-block; margin: 0 auto;">
+                    <div style="position: relative; display: inline-block; margin: 0 auto;">
                         <div style="cursor: pointer; border-radius: 16px; overflow: hidden; border: 3px solid #3498db; width: 120px; height: 120px; min-width: 120px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
                             <img id="ws-perfil-img" src="" alt="Avatar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: none; margin: 0 !important; padding: 0 !important; border-radius: 0 !important;">
                             <div id="ws-perfil-letras" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3498db; color: white; font-size: 45px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0;">?</div>
@@ -858,29 +858,45 @@
                     </div>
                     <p id="ws-perfil-modal-login" style="margin: 0; font-size: 14px; color: #7f8c8d; font-weight: bold;">@login</p>
                     <div id="ws-avatar-loading" style="display: none; margin-top: 15px; font-size: 12px; color: #f39c12; font-weight: bold; padding: 8px; background: #fef9e7; border-radius: 6px;">Atualizando... ⏳</div>
-                  <!-- NOVA ÁREA: EDIÇÃO DA BIO (COM MODO VISUALIZAÇÃO E EDIÇÃO) -->
-                    <div style="margin-top: 20px; text-align: center; border-top: 1px dashed #e2e8f0; padding-top: 20px;">
-                        <label style="font-size: 13px; font-weight: 800; color: #1e293b;">Minha Frase (Bio):</label>
+                    
+                    <!-- 🚀 ÁREA DE EDIÇÃO DA BIO LIMPADA -->
+                    <div style="text-align: center; margin-top: 25px; border-top: 1px solid #f0f2f5; padding-top: 20px;">
+                        <h4 style="color: #64748b; margin: 0 0 10px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px;">Minha Frase (Bio)</h4>
                         
-                        <!-- MODO VISUALIZAÇÃO -->
-                        <div id="ws-bio-view-mode" style="display: flex; flex-direction: column; align-items: center; gap: 10px; margin-top: 10px;">
-                            <p id="ws-texto-bio-atual" style="margin: 0; font-size: 14px; color: #475569; font-style: italic; padding: 10px; background: #f8fafc; border-radius: 10px; width: 100%; max-width: 300px; border: 1px solid #e2e8f0; word-break: break-word;">Clique em Editar para adicionar uma frase.</p>
-                            <div style="display: flex; gap: 10px;">
-                                <button onclick="Workspace.Feed.editarBioPerfil()" style="background: #f1f5f9; color: #3b82f6; border: 1px solid #cbd5e1; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'" onmouseout="this.style.background='#f1f5f9'">✏️ Editar</button>
-                                <button onclick="Workspace.Feed.apagarBioPerfil()" style="background: #fef2f2; color: #e74c3c; border: 1px solid #fecaca; padding: 6px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#fee2e2'" onmouseout="this.style.background='#fef2f2'">🗑️ Apagar</button>
-                            </div>
+                        <!-- 👁️ MODO LEITURA (Padrão: Apenas o texto e o lápis) -->
+                        <div id="ws-bio-view-mode" style="display: flex; align-items: center; justify-content: center; gap: 10px; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px 20px; border-radius: 12px; max-width: 400px; margin: 0 auto; transition: 0.2s;">
+                            <span id="ws-texto-bio-atual" style="font-style: italic; color: #475569; font-size: 14px;">Sem frase no momento.</span>
+                            <button onclick="Workspace.Feed.editarBioPerfil()" style="background: none; border: none; cursor: pointer; font-size: 16px; transition: 0.2s; padding: 0;" onmouseover="this.style.transform='scale(1.2)'" onmouseout="this.style.transform='scale(1)'" title="Editar Frase">✏️</button>
                         </div>
 
-                        <!-- MODO EDIÇÃO -->
-                        <div id="ws-bio-edit-mode" style="display: none; flex-direction: column; align-items: center; gap: 8px; margin-top: 10px;">
-                            <input type="text" id="ws-input-bio-perfil" class="ws-post-input" style="margin: 0; padding: 10px 15px; border-radius: 12px; font-size: 13px; text-align: center; width: 100%; max-width: 300px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);" placeholder="Ex: Focado em alcançar a fluência!" maxlength="150">
-                            <div style="display: flex; gap: 8px;">
-                                <button onclick="Workspace.Feed.salvarBioPerfil()" id="ws-btn-salvar-bio" style="background: #27ae60; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">✔ Guardar</button>
-                                <button onclick="Workspace.Feed.cancelarEdicaoBio()" style="background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">✖ Cancelar</button>
+                        <!-- ✍️ MODO EDIÇÃO (Oculto até clicar no lápis: Mostra a caixa e os botões) -->
+                        <div id="ws-bio-edit-mode" style="display: none; flex-direction: column; align-items: center; gap: 12px; margin-top: 10px; max-width: 400px; margin: 0 auto;">
+                            <input type="text" id="ws-input-bio-perfil" placeholder="Escreva a sua frase aqui..." style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid #cbd5e1; outline: none; font-family: inherit; font-size: 14px; text-align: center;" maxlength="150" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#cbd5e1'">
+                            
+                            <div style="display: flex; gap: 10px; justify-content: center; width: 100%;">
+                                <button id="ws-btn-salvar-bio" onclick="Workspace.Feed.salvarBioPerfil()" style="flex: 1; background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe; padding: 8px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;" onmouseover="this.style.background='#dbeafe'">💾 Salvar</button>
+                                <button onclick="Workspace.Feed.apagarBioPerfil()" style="flex: 1; background: #fef2f2; color: #ef4444; border: 1px solid #fecaca; padding: 8px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;" onmouseover="this.style.background='#fee2e2'">🗑️ Apagar</button>
+                                <button onclick="Workspace.Feed.cancelarEdicaoBio()" style="flex: 1; background: #f8fafc; color: #64748b; border: 1px solid #e2e8f0; padding: 8px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 13px;" onmouseover="this.style.background='#f1f5f9'">✖ Cancelar</button>
                             </div>
-                            <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Máx. 150 caracteres.</div>
                         </div>
                     </div>
+
+                    <!-- 🚀 SCRIPT EMBUTIDO: Puxa a frase automaticamente ao abrir a página -->
+                    <script>
+                        function iniciarBioDoUsuario() {
+                            const textoAtual = document.getElementById('ws-texto-bio-atual');
+                            if (textoAtual && window.Workspace && Workspace.usuario) {
+                                if (Workspace.usuario.bio && Workspace.usuario.bio.trim() !== '') {
+                                    textoAtual.innerText = '"' + Workspace.usuario.bio + '"';
+                                } else {
+                                    textoAtual.innerText = 'Sem frase no momento.';
+                                }
+                            } else {
+                                setTimeout(iniciarBioDoUsuario, 500);
+                            }
+                        }
+                        iniciarBioDoUsuario();
+                    </script>
 
                 </div>
             </div>
