@@ -19,8 +19,10 @@ Workspace.Alertas = {
         // 🚀 LIGA O VIGIA DE ABAS ADORMECIDAS
         Workspace.Alertas.iniciarDetetiveRetorno();
         
-        const aguardarUsuario = setInterval(() => {
-            if (Workspace.usuario && Workspace.usuario.nome) {
+       const aguardarUsuario = setInterval(() => {
+            // 🚀 CORREÇÃO 3: Agora funciona mesmo que o aluno só tenha o "login" preenchido
+            const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
+            if (meuNome) {
                 clearInterval(aguardarUsuario);
                 Workspace.Alertas.buscarNotificacoes(); 
                 Workspace.Alertas.iniciarConexaoTempoReal(); 
@@ -355,10 +357,13 @@ injetarCSS: () => {
         }
     },
 
- buscarNotificacoes: async () => {
-        if (!Workspace.usuario || !Workspace.usuario.nome) return;
+buscarNotificacoes: async () => {
+        // 🚀 CORREÇÃO 4: Garante a identificação robusta na hora de buscar na nuvem
+        const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
+        if (!meuNome) return;
+        
         try {
-            const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(Workspace.usuario.nome)}`);
+            const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(meuNome)}`);
             if (Array.isArray(data)) {
                 const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
                 Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
