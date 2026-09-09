@@ -782,7 +782,7 @@ Workspace.Sidebar = {
         } catch (e) { console.error("Erro ao carregar chat", e); }
     },
 
-    enviarMensagemChat: async () => {
+   enviarMensagemChat: async () => {
         const input = document.getElementById('ws-chat-input');
         const texto = input.value.trim();
         const turmaId = Workspace.Sidebar.turmaIdAberta;
@@ -795,10 +795,15 @@ Workspace.Sidebar = {
         Workspace.Sidebar.enviarStatusDigitacao(false);
         clearTimeout(Workspace.Sidebar.typingTimer);
 
+        // 🚀 O SEGREDO: Capturamos o Nome Real da Turma diretamente do cabeçalho!
+        const turmaNomeDaInterface = Workspace.Sidebar.infoTurmaAberta ? Workspace.Sidebar.infoTurmaAberta.nome : 'Fórum da Turma';
+
         try {
             const res = await Workspace.api(`/workspace/chat/${turmaId}`, 'POST', { 
                 texto: texto, 
-                autorNome: Workspace.usuario.nome || Workspace.usuario.login 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                turmaNome: turmaNomeDaInterface, // 🚀 ENVIAMOS PARA O SERVIDOR!
+                escolaId: Workspace.usuario.escolaId
             });
             
             if (res && res.success && res.mensagem) {
@@ -819,9 +824,14 @@ Workspace.Sidebar = {
             const tipoRaw = dadosUpload.tipo.split('/')[0];
             const anexoTipo = (tipoRaw === 'image' || tipoRaw === 'video') ? tipoRaw : 'document';
             
+            // 🚀 O SEGREDO: Capturamos o Nome Real da Turma também nos anexos!
+            const turmaNomeDaInterface = Workspace.Sidebar.infoTurmaAberta ? Workspace.Sidebar.infoTurmaAberta.nome : 'Fórum da Turma';
+
             const res = await Workspace.api(`/workspace/chat/${Workspace.Sidebar.turmaIdAberta}`, 'POST', {
                 texto: '', anexoUrl: dadosUpload.url, anexoTipo: anexoTipo, anexoNome: dadosUpload.nome,
-                escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login
+                escolaId: Workspace.usuario.escolaId, 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                turmaNome: turmaNomeDaInterface // 🚀 ENVIAMOS PARA O SERVIDOR!
             });
 
             if (res && res.success) Workspace.Sidebar.carregarMensagensChat();
