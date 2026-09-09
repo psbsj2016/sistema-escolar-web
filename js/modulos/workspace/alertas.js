@@ -47,7 +47,7 @@ Workspace.Alertas = {
                     if (tempoAusente > 60000 && Workspace.usuario) {
                         console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
                         if(window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("⏳", "info", 2000);
+                            Workspace.mostrarAviso("Atualizando ⏳", "info", 2000);
                         }
                         Workspace.Alertas.reanimaSistema();
                     }
@@ -251,7 +251,17 @@ Workspace.Alertas = {
             }
         };
 
-        sse.onerror = () => { console.log("Reconectando túnel em tempo real..."); };
+        sse.onerror = () => { 
+            console.log("Túnel tremendo. O navegador está a tentar recuperar..."); 
+            // 🚀 PROTEÇÃO: Se a conexão morrer definitivamente, forçamos um religamento em 3s
+            if (sse.readyState === EventSource.CLOSED) {
+                setTimeout(() => {
+                    if (Workspace.Alertas && Workspace.Alertas.iniciarConexaoTempoReal) {
+                        Workspace.Alertas.iniciarConexaoTempoReal();
+                    }
+                }, 3000);
+            }
+        };
     },
 
 injetarCSS: () => {
@@ -525,16 +535,15 @@ atualizarInterface: () => {
         const itens = document.querySelectorAll('#ws-lista-notificacoes .ws-noti-item');
         if (itens.length === 0) return;
 
-        // 2. Aplica a classe de animação "riscando" uma por uma, com atraso de 80ms (Efeito Cascata / Escada)
+       // 2. Aplica a classe de animação, mas acelera brutalmente após o 10º item
         itens.forEach((item, index) => {
             setTimeout(() => {
                 item.classList.add('riscando');
-            }, index * 80); 
+            }, Math.min(index, 10) * 50); // Trava o multiplicador no 10
         });
 
-        // 3. Calcula o tempo exato para esperar a última animação terminar
-        // (Quantidade de itens * 80ms) + 300ms (tempo de duração da animação no CSS)
-        const tempoEspera = (itens.length * 80) + 300;
+        // 3. Calcula o tempo de espera (agora nunca passa de ~800ms)
+        const tempoEspera = (Math.min(itens.length, 10) * 50) + 300;
 
         // 4. Só depois de todas saírem da tela é que limpamos a memória e o banco de dados
         setTimeout(async () => {
@@ -730,10 +739,12 @@ atualizarInterface: () => {
         } catch (e) { if(itemUI) itemUI.classList.remove('riscando'); }
     },
 
-    tempoRelativo: (dataString) => {
+   tempoRelativo: (dataString) => {
         if (!dataString) return '';
         const dataPost = new Date(dataString);
-        const diff = Math.floor((new Date() - dataPost) / 1000);
+        // 🚀 CORREÇÃO: Math.max(0) impede que a diferença de segundos fique negativa
+        const diff = Math.max(0, Math.floor((new Date() - dataPost) / 1000));
+        
         if (diff < 60) return 'Agora mesmo';
         const m = Math.floor(diff / 60);
         if (m < 60) return `Há ${m} min`;
