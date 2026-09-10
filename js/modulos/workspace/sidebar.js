@@ -1120,8 +1120,12 @@ Workspace.Sidebar = {
                         let htmlEntregas = '';
                         entregas.forEach(ent => {
                             const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
-                            let urlCorrigida = ent.arquivoUrl;
-                            if (!urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) urlCorrigida = '/' + urlCorrigida;
+                            
+                            // 🚀 CORREÇÃO 2: Só tenta corrigir a URL se ela realmente existir! Evita Crash Fatal!
+                            let urlCorrigida = ent.arquivoUrl || '';
+                            if (urlCorrigida && !urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
+                                urlCorrigida = '/' + urlCorrigida;
+                            }
                             
                             const nomeMinusculo = (ent.arquivoNome || '').toLowerCase();
                             const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
@@ -1329,12 +1333,12 @@ Workspace.Sidebar = {
             htmlMensagens = '<div style="text-align:center; padding:30px; color:#999; font-size:13px; display:flex; flex-direction:column; align-items:center;"><span style="font-size:40px; margin-bottom:10px;">📭</span> O professor ainda não enviou nenhum comentário para este exercício.</div>';
         }
 
-        let inputArea = '';
+       let inputArea = '';
         if(isProf) {
             inputArea = `
                 <div style="border-top:1px solid #eee; padding:15px; background:#f9f9f9; display:flex; gap:10px; align-items:center;">
                     <textarea id="ws-feedback-input" rows="2" placeholder="Escreva o feedback para o aluno..." style="flex:1; border:1px solid #ccc; border-radius:12px; padding:10px 15px; font-family:inherit; font-size:13px; resize:none; outline:none;" onfocus="this.style.borderColor='#f39c12'" onblur="this.style.borderColor='#ccc'"></textarea>
-                    <button onclick="Workspace.Sidebar.enviarFeedback('${entregaId}', '${eventoId}')" class="ws-btn" style="background:#f39c12; color:white; height:45px; padding:0 20px; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Enviar</button>
+                    <button id="ws-btn-enviar-fb" onclick="Workspace.Sidebar.enviarFeedback('${entregaId}', '${eventoId}')" class="ws-btn" style="background:#f39c12; color:white; height:45px; padding:0 20px; font-weight:bold; border-radius:12px; border:none; cursor:pointer;">Enviar</button>
                 </div>
             `;
         }
@@ -1364,13 +1368,14 @@ Workspace.Sidebar = {
         listaContainer.scrollTop = listaContainer.scrollHeight;
     },
 
-    enviarFeedback: async (entregaId, eventoId) => {
+   enviarFeedback: async (entregaId, eventoId) => {
         const input = document.getElementById('ws-feedback-input');
         const texto = input.value.trim();
         if(!texto) return;
 
-        const btn = event.target;
-        btn.innerText = "⏳"; btn.disabled = true;
+        // 🚀 CORREÇÃO 1: Procura o botão de forma segura pelo ID, sem depender do evento global
+        const btn = document.getElementById('ws-btn-enviar-fb');
+        if (btn) { btn.innerText = "⏳"; btn.disabled = true; }
 
         try {
             const res = await Workspace.api(`/workspace/entregas/${entregaId}/feedback`, 'POST', {
@@ -1385,7 +1390,7 @@ Workspace.Sidebar = {
         } catch(e) {
             Workspace.mostrarAviso("Erro ao enviar avaliação.", "error");
         } finally {
-            btn.innerText = "Enviar"; btn.disabled = false;
+            if (btn) { btn.innerText = "Enviar"; btn.disabled = false; }
         }
     },
 
@@ -1760,10 +1765,15 @@ Workspace.Sidebar = {
                 return;
             }
 
-            let html = '';
+           let html = '';
             entregas.forEach(ent => {
                 const dataEnt = new Date(ent.dataEntrega).toLocaleString('pt-BR', {day:'2-digit', month:'short', hour:'2-digit', minute:'2-digit'});
-                let urlCorrigida = ent.arquivoUrl.startsWith('http') || ent.arquivoUrl.startsWith('/') ? ent.arquivoUrl : '/' + ent.arquivoUrl;
+                
+                // 🚀 CORREÇÃO 2.1: Mesma proteção de URL na lista resumida
+                let urlCorrigida = ent.arquivoUrl || '';
+                if (urlCorrigida && !urlCorrigida.startsWith('http') && !urlCorrigida.startsWith('/')) {
+                    urlCorrigida = '/' + urlCorrigida;
+                }
                 
                 const nomeMinusculo = (ent.arquivoNome || '').toLowerCase();
                 const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls');
