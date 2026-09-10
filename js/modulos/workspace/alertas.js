@@ -184,13 +184,40 @@ Workspace.Alertas = {
                 }
             }
 
-            // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
+          // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 
-                    // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
-                    if (data.mensagem && data.mensagem.autorNome !== meuNome) {
+                // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
+                if (data.mensagem && data.mensagem.autorNome !== meuNome) {
                     
+                    // =================================================================
+                    // 🚀 O ESCUDO DE PRIVACIDADE: O aluno pertence a esta turma?
+                    // =================================================================
+                    let pertenceATurma = false;
+                    
+                    if (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') {
+                        pertenceATurma = true; // Professores monitorizam todas as salas
+                    } else {
+                        // Reúne as turmas do aluno
+                        const minhasTurmas = Array.isArray(Workspace.usuario.turmas) 
+                            ? Workspace.usuario.turmas 
+                            : [Workspace.usuario.turmas, Workspace.usuario.turma, Workspace.usuario.turmaId];
+                        
+                        const idRecebido = String(data.turmaId).toLowerCase().trim();
+                        const nomeRecebido = String(data.turmaNome || '').toLowerCase().trim();
+                        
+                        pertenceATurma = (idRecebido === 'global' || idRecebido === 'geral') || minhasTurmas.some(t => {
+                            if (!t) return false;
+                            const turmaLimpa = String(t).toLowerCase().trim();
+                            return turmaLimpa === idRecebido || turmaLimpa === nomeRecebido;
+                        });
+                    }
+
+                    // Se a mensagem for de outra turma, ABORTA a notificação local instantaneamente!
+                    if (!pertenceATurma) return;
+                    // =================================================================
+
                     // 2. Verifica se o bate-papo daquela turma JÁ ESTÁ ABERTO no ecrã neste momento
                     const chatAberto = Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta === data.turmaId;
                     const modalChatVisivel = document.getElementById('ws-chat-modal') && document.getElementById('ws-chat-modal').style.display !== 'none';
@@ -236,17 +263,18 @@ Workspace.Alertas = {
                             </div>
                         `;
                         
-                        Workspace.mostrarAviso(
-                            layoutDivertido, 
-                            'pingpong', // O nosso novo CSS animado
-                            6000,       // Fica 6 segundos no ecrã a saltar
-                            () => {
-                                // 🖱️ O Atalho Direto
-                                if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
-                                    Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
+                        if(window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso(
+                                layoutDivertido, 
+                                'pingpong',
+                                6000,
+                                () => {
+                                    if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
+                                        Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
+                                    }
                                 }
-                            }
-                        );
+                            );
+                        }
                     }
                 }
             }
