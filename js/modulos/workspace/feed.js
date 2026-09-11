@@ -13,10 +13,19 @@ Workspace.Feed = {
     filtroAtivo: 'todos', 
 
     init: async () => {
-        console.log("📚 Motor do Feed ligado à API.");
+        console.log("📊 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
-        Workspace.Feed.injetarBotaoImersao(); // 🚀 NOVO: Injeta o botão da Imersão Específica
+        Workspace.Feed.injetarBotaoImersao(); 
+        
+        // 🚀 CORREÇÃO 1: Sincroniza o dicionário de fotos ANTES de desenhar os posts
+        try {
+            const avataresRes = await Workspace.api('/workspace/avatars', 'GET');
+            if (avataresRes && !avataresRes.error) {
+                window.Workspace.mapaAvatars = avataresRes;
+            }
+        } catch(e) {}
+
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
@@ -733,13 +742,19 @@ Workspace.Feed = {
             }
         }
         
-        if (videos.length > 0) {
+       if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
+                
+                // 🚀 CORREÇÃO 2: O truque do "#t=0.001" força o navegador a buscar o 1º frame visual 
+                // daquele vídeo, criando uma "capa" automática em vez de um ecrã preto.
+                let videoUrlHacked = url.includes('#') ? url : url + '#t=0.001';
+
+                // Usamos o "src" direto na tag <video> e removemos o "type=" restrito. 
+                // Assim, o navegador fará o "sniffing" automático para descobrir o codec exato.
                 htmlFinal += `
                 <div style="margin-top: 15px; width: 100%; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center;">
-                    <video controls playsinline preload="metadata" class="ws-feed-video" style="width:100%; max-height:450px; outline:none; border:none; background:#000;">
-                        <source src="${url}" type="${video.tipo}">
+                    <video controls playsinline preload="metadata" class="ws-feed-video" src="${videoUrlHacked}" style="width:100%; max-height:450px; outline:none; border:none; background:#000; object-fit: contain;">
                         O seu navegador não suporta vídeos.
                     </video>
                 </div>`;
