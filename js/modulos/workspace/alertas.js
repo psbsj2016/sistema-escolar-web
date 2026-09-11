@@ -387,9 +387,12 @@ injetarCSS: () => {
 buscarNotificacoes: async () => {
         const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
         if (!meuNome) return;
+        
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(meuNome.trim())}`);
-            if (Array.isArray(data)) {                const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
+            
+            if (Array.isArray(data)) {                
+                const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
                 Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
                 
                 const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
