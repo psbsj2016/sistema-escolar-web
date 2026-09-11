@@ -19,7 +19,7 @@ Workspace.Alertas = {
         // 🚀 LIGA O VIGIA DE ABAS ADORMECIDAS
         Workspace.Alertas.iniciarDetetiveRetorno();
         
-      const aguardarUsuario = setInterval(() => {
+     const aguardarUsuario = setInterval(() => {
             const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
             if (meuNome) {
                 clearInterval(aguardarUsuario);
@@ -387,7 +387,6 @@ injetarCSS: () => {
 buscarNotificacoes: async () => {
         const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
         if (!meuNome) return;
-        
         try {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(meuNome.trim())}`);
             if (Array.isArray(data)) {                const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
