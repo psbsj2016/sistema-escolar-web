@@ -44,7 +44,7 @@ Workspace.Feed = {
         }
     },
 
-   // 🚀 NOVO: Radar Persistente para Injetar o Botão Mágico
+  // 🚀 NOVO: Radar Persistente para Injetar os Três Botões Mágicos
    injetarBotaoImersao: () => {
         const tentarInjetar = setInterval(() => {
             const filterBar = document.getElementById('ws-feed-filter-bar');
@@ -68,8 +68,16 @@ Workspace.Feed = {
                 btnMusica.innerHTML = '🎶 Inglês com Música';
                 btnMusica.onclick = () => Workspace.Feed.abrirImersaoMusical();
 
+                // 🚀 O NOVO BOTÃO DA ARENA AO LADO DOS OUTROS
+                const btnArena = document.createElement('button');
+                btnArena.className = 'ws-filter-chip';
+                btnArena.style.cssText = 'background: linear-gradient(135deg, #f59e0b, #ea580c) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
+                btnArena.innerHTML = '⚔️ Arena de Fluência';
+                btnArena.onclick = () => { if (window.Workspace && Workspace.Arena) Workspace.Arena.abrirPainel(); };
+
                 wrapper.appendChild(btnImersao);
                 wrapper.appendChild(btnMusica);
+                wrapper.appendChild(btnArena);
                 
                 if (filterBar) filterBar.insertBefore(wrapper, filterBar.firstChild);
                 else if (areaDePosts) localAlvo.insertBefore(wrapper, areaDePosts);

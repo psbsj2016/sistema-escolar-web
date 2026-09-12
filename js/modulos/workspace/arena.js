@@ -9,10 +9,10 @@ Workspace.Arena = {
     segundosRestantes: 0,
     reconhecimentoVoz: null,
 
-    // 1. INICIALIZAÇÃO
+ // 1. INICIALIZAÇÃO
     init: () => {
         console.log("⚔️ Motor da Arena Multiplayer iniciado.");
-        Workspace.Arena.injetarBotaoFlutuante();
+        // A linha do botão flutuante foi apagada daqui!
         Workspace.Arena.injetarModalFila();
         Workspace.Arena.injetarPainelBatalha();
         Workspace.Arena.escutarEventosTempoReal();
