@@ -809,34 +809,58 @@ Workspace.Arena = {
         catch (error) { if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Ocorreu um atraso na avaliação.", "warning"); }
     },
 
-    exibirPainelResultadoFinal: (resultado) => {
+   exibirPainelResultadoFinal: (resultado) => {
         const painel = document.getElementById('ws-painel-batalha');
         if (!painel) return;
 
-        painel.innerHTML = `
-            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); animation: fadeIn 0.8s ease; overflow-y: auto;">
-                <div style="font-size: 80px; margin-bottom: 10px;">🏅</div>
-                <h1 style="color: white; margin: 0 0 10px 0; font-size: 32px;">Avaliação Concluída!</h1>
-                <p style="color: #94a3b8; font-size: 16px; margin-bottom: 30px; max-width: 500px;">"${resultado.feedbackGeral}"</p>
-                
-                <div style="background: rgba(255,255,255,0.05); border: 1px solid #334155; padding: 30px; border-radius: 20px; max-width: 600px; width: 100%; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
-                    <h2 style="color: #cbd5e1; margin: 0 0 15px 0; font-size: 20px;">Vencedor do Duelo</h2>
-                    <h1 style="color: #f59e0b; margin: 0 0 10px 0; font-size: 28px;">${resultado.vencedor}</h1>
-                    <div style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); text-transform: uppercase;">Medalha de ${resultado.medalha}</div>
-                    
-                    <div style="text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; border: 1px solid #1e293b;">
-                        <h4 style="color: #38bdf8; margin: 0 0 15px 0; font-size: 14px;">Feedback Gramatical:</h4>
-                        ${resultado.correcoes && resultado.correcoes.length > 0 ? resultado.correcoes.map(c => `
-                            <div style="margin-bottom: 12px; border-left: 2px solid #3b82f6; padding-left: 10px;">
-                                <strong style="color: #fff; font-size: 15px;">${c.nome}:</strong> 
-                                <div style="color: #94a3b8; font-size: 14px; margin-top: 4px;">${c.feedback}</div>
-                            </div>
-                        `).join('') : '<span style="color: #94a3b8;">Excelente jogo, sem correções!</span>'}
+        // 🚀 MOTOR CSS DOS CRISTAIS (Desenhados com puro código)
+        const estiloCristais = `
+            <style>
+                .ws-cristal-box { width: 80px; height: 80px; transform: rotate(45deg); margin: 20px auto; position: relative; animation: flutuarCristal 3s ease-in-out infinite; }
+                .ws-cristal-box::before { content: ''; position: absolute; top: 10%; left: 10%; right: 10%; bottom: 10%; border: 2px solid rgba(255,255,255,0.5); }
+                .cristal-Safira { background: linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%); box-shadow: 0 0 30px #3b82f6, inset 0 0 20px rgba(255,255,255,0.8); }
+                .cristal-Ametista { background: linear-gradient(135deg, #c084fc 0%, #7e22ce 100%); box-shadow: 0 0 30px #a855f7, inset 0 0 20px rgba(255,255,255,0.8); }
+                .cristal-Rubi { background: linear-gradient(135deg, #f87171 0%, #b91c1c 100%); box-shadow: 0 0 30px #ef4444, inset 0 0 20px rgba(255,255,255,0.8); }
+                .cristal-Diamante { background: linear-gradient(135deg, #22d3ee 0%, #083344 100%); box-shadow: 0 0 40px #06b6d4, inset 0 0 30px rgba(255,255,255,0.9); }
+                @keyframes flutuarCristal { 0% { transform: translateY(0) rotate(45deg); } 50% { transform: translateY(-15px) rotate(45deg); } 100% { transform: translateY(0) rotate(45deg); } }
+            </style>
+        `;
+
+        // Constrói os cards para ambos os alunos
+        let htmlJogadores = '';
+        if (resultado.jogadores && resultado.jogadores.length > 0) {
+            resultado.jogadores.forEach(j => {
+                const classeCristal = j.cristal.includes('Diamante') ? 'cristal-Diamante' : `cristal-${j.cristal}`;
+                htmlJogadores += `
+                    <div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border: 1px solid #334155; padding: 25px; border-radius: 20px; position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: white; opacity: 0.05; border-radius: 50%; filter: blur(20px);"></div>
+                        <h2 style="color: white; margin: 0 0 5px 0; font-size: 20px;">${j.nome}</h2>
+                        
+                        <div class="ws-cristal-box ${classeCristal}"></div>
+                        
+                        <div style="color: #cbd5e1; font-weight: 800; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px;">${j.titulo}</div>
+                        <div style="color: #94a3b8; font-size: 14px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border-left: 3px solid #3b82f6;">${j.feedback}</div>
                     </div>
+                `;
+            });
+        }
+
+        painel.innerHTML = `
+            ${estiloCristais}
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); animation: fadeIn 0.8s ease; overflow-y: auto;">
+                <h1 style="color: white; margin: 0 0 10px 0; font-size: 32px; background: -webkit-linear-gradient(#fcd34d, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Decisão do Mestre da Guilda (IA)</h1>
+                <p style="color: #cbd5e1; font-size: 16px; margin-bottom: 30px; max-width: 600px;">"${resultado.feedbackGeral}"</p>
+                
+                <h3 style="color: #f59e0b; margin-bottom: 20px; font-size: 22px;">Destaque do Combate: ${resultado.vencedor}</h3>
+                
+                <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; width: 100%;">
+                    ${htmlJogadores}
                 </div>
-                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="margin-top: 40px; background: #3b82f6; color: white; border: none; padding: 16px 40px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s;">Concluir e Voltar</button>
+                
+                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="margin-top: 40px; background: #3b82f6; color: white; border: none; padding: 16px 40px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Recolher Cristais e Voltar</button>
             </div>
         `;
+        
         if (Workspace.Feed && Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
     },
 

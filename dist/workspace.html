@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-DLl_SCGY.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-DzFK-A3v.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -884,6 +884,59 @@
                             </div>
                         </div>
                     </div>
+
+                   <!-- 🚀 VITRINE DE ELOQUÊNCIA DA ARENA -->
+                    <div style="margin-top: 25px; background: #0f172a; border-radius: 16px; padding: 20px; text-align: center; border: 1px solid #1e293b; box-shadow: inset 0 10px 30px rgba(0,0,0,0.5); position: relative; overflow: hidden;">
+                        <div style="position: absolute; top: -50px; left: 50%; transform: translateX(-50%); width: 150px; height: 150px; background: #3b82f6; opacity: 0.1; filter: blur(30px); pointer-events: none;"></div>
+                        <h4 style="color: #94a3b8; margin: 0 0 15px 0; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">Status de Eloquência</h4>
+                        
+                        <div style="display: flex; justify-content: center; align-items: center; gap: 20px;">
+                            <!-- Contador de Combates -->
+                            <div style="background: rgba(255,255,255,0.05); padding: 10px 15px; border-radius: 12px; border: 1px solid #334155;">
+                                <div style="font-size: 20px; animation: pulse 2s infinite;">🔥</div>
+                                <div id="ws-perfil-duelos-count" style="color: white; font-weight: 800; font-size: 18px; margin-top: 5px;">0</div>
+                                <div style="color: #64748b; font-size: 10px; text-transform: uppercase;">Duelos</div>
+                            </div>
+                            
+                            <!-- O Cristal Supremo -->
+                            <div id="ws-perfil-cristal-display" style="display: flex; flex-direction: column; align-items: center; justify-content: center; min-width: 120px;">
+                                <div style="font-size: 30px; opacity: 0.3; filter: grayscale(100%);">💎</div>
+                                <div style="color: #64748b; font-size: 12px; margin-top: 8px;">Nenhum Cristal</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 🚀 SCRIPT PARA LER A JOIA DO BANCO DE DADOS -->
+                    <script>
+                        // Escuta sempre que o perfil for aberto para atualizar a vitrine
+                        document.addEventListener('click', async (e) => {
+                            if (e.target.closest('button') && e.target.closest('button').innerText.includes('Meu Perfil')) {
+                                try {
+                                    // Pede os dados frescos ao servidor (usa a rota de info que já existe no seu sistema)
+                                    const res = await window.Workspace.api(`/workspace/perfil/info/${encodeURIComponent(window.Workspace.usuario.nome || window.Workspace.usuario.login)}`, 'GET');
+                                    
+                                    if (res && res.success && res.arenaStats) {
+                                        const stats = res.arenaStats;
+                                        document.getElementById('ws-perfil-duelos-count').innerText = stats.duelosConcluidos || 0;
+                                        
+                                        if (stats.cristalAtual) {
+                                            const display = document.getElementById('ws-perfil-cristal-display');
+                                            // Constrói o minicristal em CSS
+                                            let corBase = '#3b82f6'; let corSombra = '#1d4ed8'; // Safira padrão
+                                            if (stats.cristalAtual.includes('Ametista')) { corBase = '#c084fc'; corSombra = '#7e22ce'; }
+                                            if (stats.cristalAtual.includes('Rubi')) { corBase = '#f87171'; corSombra = '#b91c1c'; }
+                                            if (stats.cristalAtual.includes('Diamante')) { corBase = '#22d3ee'; corSombra = '#083344'; }
+                                            
+                                            display.innerHTML = `
+                                                <div style="width: 35px; height: 35px; transform: rotate(45deg); background: linear-gradient(135deg, ${corBase} 0%, ${corSombra} 100%); box-shadow: 0 0 15px ${corBase}; margin-bottom: 12px; animation: flutuarCristal 3s ease-in-out infinite;"></div>
+                                                <div style="color: ${corBase}; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 5px rgba(255,255,255,0.2);">${stats.tituloAtual || stats.cristalAtual}</div>
+                                            `;
+                                        }
+                                    }
+                                } catch (err) {}
+                            }
+                        });
+                    </script>
 
                     <!-- 🚀 SCRIPT EMBUTIDO: Puxa a frase automaticamente ao abrir a página -->
                     <script>
