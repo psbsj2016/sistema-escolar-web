@@ -253,7 +253,7 @@ Workspace.Arena = {
                 }
             }
 
-            // Lida com a Conversa em Tempo Real (Fase 2)
+            // 🚀 CORREÇÃO: O bloco agora está no seu lugar natural, dentro da função que escuta os eventos
             if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
                 if (dados.fala.autorNome !== meuNome) {
                     Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false);
@@ -270,7 +270,7 @@ Workspace.Arena = {
         status.style.display = 'block'; status.innerText = 'A vasculhar a escola à procura de um oponente... ⏳';
 
         try {
-            const res = await Workspace.api('/api/arena/procurar', 'POST', {
+            const res = await Workspace.api('/arena/procurar', 'POST', {
                 alunoId: Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
                 escolaId: Workspace.usuario.escolaId
@@ -300,7 +300,7 @@ Workspace.Arena = {
         status.style.display = 'block'; status.style.color = '#3b82f6'; status.innerText = `A enviar convite para ${nomeAlvo}... ⏳`;
 
         try {
-            const res = await Workspace.api('/api/arena/convidar', 'POST', {
+            const res = await Workspace.api('/arena/convidar', 'POST', {
                 alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, colegaNome: nomeAlvo, escolaId: Workspace.usuario.escolaId
             });
 
@@ -327,15 +327,6 @@ Workspace.Arena = {
         const log = document.getElementById('ws-arena-chat-log');
         log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #ef4444; font-size: 15px; margin-top: 20px; font-weight: bold;">⏰ O tempo esgotou-se! A IA vai agora avaliar o duelo.</div>');
         log.scrollTop = log.scrollHeight;
-        
-    }
-},
-
-// 3. Atualização no Escutador de Eventos (escutarEventosTempoReal)
-// Adicione esta condição IF dentro do evtSource.onmessage que criámos na Fase 1:
-
-if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
-    if (dados.fala.autorNome !== meuNome) {
-        Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false);
+        // Na Fase 3 enviaremos o histórico para a IA avaliar aqui!
     }
 };
