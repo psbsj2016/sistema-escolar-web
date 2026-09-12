@@ -225,7 +225,7 @@ Workspace.Arena = {
         log.scrollTop = log.scrollHeight;
     },
 
-    // 5. EVENTOS DO SERVIDOR (Escuta as respostas e convites)
+   // 5. EVENTOS DO SERVIDOR (Escuta as respostas e convites)
     escutarEventosTempoReal: () => {
         const evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
         
@@ -254,11 +254,16 @@ Workspace.Arena = {
                 }
             }
 
-            // 🚀 CORREÇÃO: O bloco agora está no seu lugar natural, dentro da função que escuta os eventos
+            // Lida com a fala do oponente em tempo real
             if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
                 if (dados.fala.autorNome !== meuNome) {
                     Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false);
                 }
+            }
+
+            // 🚀 O NOVO TRECHO INSERIDO AQUI: Ouve quando a IA entrega as Medalhas!
+            if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
+                Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
             }
         };
     },
@@ -316,20 +321,107 @@ Workspace.Arena = {
         }
     },
 
+    // 🚀 NOVO CARD DE ABANDONO (Substitui o Confirm Feio do Navegador)
     abandonarPartida: () => {
-        if (confirm("Tem certeza que deseja sair? Perderá os seus XP desta partida.")) {
-            const painel = document.getElementById('ws-painel-batalha');
-            painel.style.opacity = '0';
-            setTimeout(() => painel.style.display = 'none', 300);
-            clearInterval(Workspace.Arena.timerInterval);
-            Workspace.Arena.salaAtual = null;
+        const idModal = 'ws-arena-confirm-exit';
+        if (document.getElementById(idModal)) document.getElementById(idModal).remove();
+
+        const modal = document.createElement('div');
+        modal.id = idModal;
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.85); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); animation: fadeIn 0.2s ease;';
+        
+        modal.innerHTML = `
+            <div style="background: #1e293b; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: scale(0.95); animation: popUp 0.3s forwards;">
+                <div style="font-size: 50px; margin-bottom: 15px;">🏃💨</div>
+                <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 22px;">Abandonar a Arena?</h2>
+                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 25px; line-height: 1.5;">Se sair agora, perderá a oportunidade de conquistar <strong>Medalhas de Fluência</strong> e o seu oponente ficará a falar sozinho.</p>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-arena-ficar" style="flex: 1; background: #3b82f6; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#2563eb'">Ficar e Lutar</button>
+                    <button id="btn-arena-sair" style="flex: 1; background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'">Sim, Sair</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        document.getElementById('btn-arena-ficar').onclick = () => modal.remove();
+        document.getElementById('btn-arena-sair').onclick = () => {
+            modal.remove();
+            Workspace.Arena.destruirPainelBatalha();
+        };
+    },
+
+    // 🚀 CHAMA A INTELIGÊNCIA ARTIFICIAL QUANDO O RELÓGIO ZERA
+    encerrarPartidaViaTempo: async () => {
+        const log = document.getElementById('ws-arena-chat-log');
+        log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! A IA Groq está a analisar a vossa gramática e a preparar as Medalhas... Aguarde!</div>');
+        log.scrollTop = log.scrollHeight;
+        
+        // Desliga o microfone para garantir que não mandam mais áudio
+        if (Workspace.Arena.reconhecimentoVoz) {
+            try { Workspace.Arena.reconhecimentoVoz.stop(); } catch(e){}
+        }
+        
+        try {
+            // Dispara o Backend para chamar o Groq
+            await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/avaliar`, 'POST', {
+                escolaId: Workspace.usuario.escolaId
+            });
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Ocorreu um atraso na avaliação.", "warning");
         }
     },
 
-    encerrarPartidaViaTempo: () => {
-        const log = document.getElementById('ws-arena-chat-log');
-        log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #ef4444; font-size: 15px; margin-top: 20px; font-weight: bold;">⏰ O tempo esgotou-se! A IA vai agora avaliar o duelo.</div>');
-        log.scrollTop = log.scrollHeight;
-        // Na Fase 3 enviaremos o histórico para a IA avaliar aqui!
+    // 🚀 DESENHA O PÓDIO FINAL QUANDO A IA RESPONDE
+    exibirPainelResultadoFinal: (resultado) => {
+        const painel = document.getElementById('ws-painel-batalha');
+        if (!painel) return;
+
+        // Limpa o chat e transforma a tela no Pódio
+        painel.innerHTML = `
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); animation: fadeIn 0.8s ease; overflow-y: auto;">
+                <div style="font-size: 80px; margin-bottom: 10px; animation: bounceIn 1s forwards;">🏅</div>
+                <h1 style="color: white; margin: 0 0 10px 0; font-size: 32px;">Avaliação Concluída!</h1>
+                <p style="color: #94a3b8; font-size: 16px; margin-bottom: 30px; max-width: 500px;">"${resultado.feedbackGeral}"</p>
+                
+                <div style="background: rgba(255,255,255,0.05); border: 1px solid #334155; padding: 30px; border-radius: 20px; max-width: 600px; width: 100%; backdrop-filter: blur(10px); box-shadow: 0 25px 50px rgba(0,0,0,0.3);">
+                    <h2 style="color: #cbd5e1; margin: 0 0 15px 0; font-size: 20px;">Vencedor do Duelo</h2>
+                    <h1 style="color: #f59e0b; margin: 0 0 10px 0; font-size: 28px;">${resultado.vencedor}</h1>
+                    
+                    <div style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; padding: 8px 25px; border-radius: 30px; font-weight: 800; font-size: 16px; margin-bottom: 30px; box-shadow: 0 4px 15px rgba(245, 158, 11, 0.4); text-transform: uppercase; letter-spacing: 1px;">
+                        Medalha de ${resultado.medalha}
+                    </div>
+                    
+                    <div style="text-align: left; background: rgba(0,0,0,0.4); padding: 20px; border-radius: 12px; border: 1px solid #1e293b;">
+                        <h4 style="color: #38bdf8; margin: 0 0 15px 0; font-size: 14px; text-transform: uppercase;">Feedback Gramatical Individual:</h4>
+                        ${resultado.correcoes && resultado.correcoes.length > 0 ? resultado.correcoes.map(c => `
+                            <div style="margin-bottom: 12px; border-left: 2px solid #3b82f6; padding-left: 10px;">
+                                <strong style="color: #fff; font-size: 15px;">${c.nome}:</strong> 
+                                <div style="color: #94a3b8; font-size: 14px; margin-top: 4px;">${c.feedback}</div>
+                            </div>
+                        `).join('') : '<span style="color: #94a3b8;">Foi um jogo excelente, sem correções específicas!</span>'}
+                    </div>
+                </div>
+                
+                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="margin-top: 40px; background: #3b82f6; color: white; border: none; padding: 16px 40px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Concluir e Voltar ao Feed</button>
+            </div>
+        `;
+        
+        // 🚀 Chama os confetes maravilhosos que já criámos antes!
+        if (Workspace.Feed && Workspace.Feed.dispararConfetes) {
+            Workspace.Feed.dispararConfetes();
+        }
+    },
+
+    destruirPainelBatalha: () => {
+        const painel = document.getElementById('ws-painel-batalha');
+        if (painel) {
+            painel.style.opacity = '0';
+            setTimeout(() => {
+                painel.style.display = 'none';
+                painel.remove(); // Limpamos a tela por completo para quando ele jogar de novo o HTML nascer fresco
+                clearInterval(Workspace.Arena.timerInterval);
+                Workspace.Arena.salaAtual = null;
+            }, 300);
+        }
     }
 };
