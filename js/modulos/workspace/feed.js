@@ -73,7 +73,24 @@ Workspace.Feed = {
                 btnArena.className = 'ws-filter-chip';
                 btnArena.style.cssText = 'background: linear-gradient(135deg, #f59e0b, #ea580c) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
                 btnArena.innerHTML = '⚔️ Arena de Fluência';
-                btnArena.onclick = () => { if (window.Workspace && Workspace.Arena) Workspace.Arena.abrirPainel(); };
+                
+                // 🚀 CLIQUE BLINDADO: Constrói a arena na hora se for preciso!
+                btnArena.onclick = () => { 
+                    if (window.Workspace && Workspace.Arena) {
+                        // Se o painel não existir no HTML na hora do clique, força a inicialização
+                        if (!document.getElementById('ws-modal-arena')) {
+                            Workspace.Arena.init();
+                        }
+                        Workspace.Arena.abrirPainel(); 
+                    } else {
+                        // Se o código chegar aqui, significa que o HTML não tem a tag do arena.js
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("O motor da Arena não foi encontrado. Verifique as tags do HTML!", "error");
+                        } else {
+                            alert("O ficheiro arena.js não foi importado no seu ficheiro HTML principal!");
+                        }
+                    }
+                };
 
                 wrapper.appendChild(btnImersao);
                 wrapper.appendChild(btnMusica);

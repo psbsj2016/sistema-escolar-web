@@ -9,6 +9,7 @@ import './modulos/workspace/avaliacoes.js';
 import './modulos/workspace/materiais.js';
 import './modulos/workspace/ingles.js'; 
 import './modulos/workspace/inglesprofessor.js';
+import './modulos/workspace/arena.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -287,7 +288,8 @@ Object.assign(Workspace, {
         if (Workspace.Sidebar) Workspace.Sidebar.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
         if (Workspace.Alertas) Workspace.Alertas.init(); 
-        
+        if (Workspace.Arena) Workspace.Arena.init();        
+
         Workspace.Sessao.init(); 
         Workspace.iniciarRadarOnline(); 
 
