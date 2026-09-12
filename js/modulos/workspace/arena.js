@@ -2,6 +2,8 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.Arena = {
+    isInitialized: false, // 🚀 TRAVA 1: Lembra se a Arena já foi iniciada
+    evtSource: null,      // 🚀 TRAVA 2: Guarda o túnel de rede para não duplicar
     salaAtual: null,
     oponenteNome: null,
     timerInterval: null,
@@ -10,6 +12,10 @@ Workspace.Arena = {
     reconhecimentoVoz: null,
 
     init: () => {
+        // 🚀 SE JÁ LIGOU ANTES, CANCELA A SEGUNDA TENTATIVA IMEDIATAMENTE!
+        if (Workspace.Arena.isInitialized) return; 
+        Workspace.Arena.isInitialized = true;
+
         console.log("⚔️ Motor da Arena Multiplayer iniciado.");
         Workspace.Arena.injetarModalFila();
         Workspace.Arena.injetarPainelBatalha();
@@ -569,10 +575,13 @@ Workspace.Arena = {
         } catch (error) { status.style.color = '#ef4444'; status.innerText = 'Erro ao enviar convite.'; }
     },
 
-    escutarEventosTempoReal: () => {
-        const evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
+   escutarEventosTempoReal: () => {
+        // 🚀 TRAVA 3: Se o túnel de rede já existe, não cria outro!
+        if (Workspace.Arena.evtSource) return; 
         
-        evtSource.onmessage = (event) => {
+        Workspace.Arena.evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
+        
+        Workspace.Arena.evtSource.onmessage = (event) => {
             const dados = JSON.parse(event.data);
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             
