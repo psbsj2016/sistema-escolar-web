@@ -195,7 +195,8 @@ Workspace.Arena = {
         Workspace.Arena.desenharBalao(Workspace.usuario.nome || Workspace.usuario.login, texto, true);
 
         try {
-            await Workspace.api(`/arena/${Workspace.Arena.salaAtual}/falar`, 'POST', {
+            // 🚀 Caminho atualizado
+            await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/falar`, 'POST', {
                 texto: texto,
                 autorId: Workspace.usuario.id,
                 autorNome: Workspace.usuario.nome || Workspace.usuario.login,
@@ -263,14 +264,15 @@ Workspace.Arena = {
     },
 
     // 6. COMANDOS DE REDE
-    procurarAleatorio: async () => {
+   procurarAleatorio: async () => {
         const btn = document.getElementById('ws-btn-procurar');
         const status = document.getElementById('ws-arena-status');
         btn.disabled = true; btn.style.opacity = '0.5';
         status.style.display = 'block'; status.innerText = 'A vasculhar a escola à procura de um oponente... ⏳';
 
         try {
-            const res = await Workspace.api('/arena/procurar', 'POST', {
+            // 🚀 Caminho atualizado
+            const res = await Workspace.api('/workspace/arena/procurar', 'POST', {
                 alunoId: Workspace.usuario.id,
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
                 escolaId: Workspace.usuario.escolaId
@@ -300,7 +302,8 @@ Workspace.Arena = {
         status.style.display = 'block'; status.style.color = '#3b82f6'; status.innerText = `A enviar convite para ${nomeAlvo}... ⏳`;
 
         try {
-            const res = await Workspace.api('/arena/convidar', 'POST', {
+            // 🚀 Caminho atualizado
+            const res = await Workspace.api('/workspace/arena/convidar', 'POST', {
                 alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, colegaNome: nomeAlvo, escolaId: Workspace.usuario.escolaId
             });
 
