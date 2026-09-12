@@ -12,13 +12,17 @@ Workspace.Feed = {
     listenerAnimacaoConfigurado: false,
     filtroAtivo: 'todos', 
 
-    init: async () => {
-        console.log("📊 Motor do Feed ligado à API.");
+   init: async () => {
+        console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
         Workspace.Feed.injetarBotaoImersao(); 
         
-        // 🚀 CORREÇÃO 1: Sincroniza o dicionário de fotos ANTES de desenhar os posts
+        // 🚀 INICIA O MÓDULO DA ARENA (Se o ficheiro tiver sido importado no HTML)
+        if (window.Workspace && Workspace.Arena) {
+            Workspace.Arena.init();
+        }
+
         try {
             const avataresRes = await Workspace.api('/workspace/avatars', 'GET');
             if (avataresRes && !avataresRes.error) {
