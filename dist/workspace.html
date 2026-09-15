@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-Bke1e55R.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-CYl0U-zP.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -912,16 +912,18 @@
                         document.addEventListener('click', async (e) => {
                             if (e.target.closest('button') && e.target.closest('button').innerText.includes('Meu Perfil')) {
                                 try {
-                                    // Pede os dados frescos ao servidor (usa a rota de info que já existe no seu sistema)
-                                    const res = await window.Workspace.api(`/workspace/perfil/info/${encodeURIComponent(window.Workspace.usuario.nome || window.Workspace.usuario.login)}`, 'GET');
+                                    // 🚀 Usa o ID Absoluto!
+                                    const identificadorMestre = window.Workspace.usuario.id;
+                                    const res = await window.Workspace.api(`/workspace/perfil/info/${encodeURIComponent(identificadorMestre)}`, 'GET');
                                     
                                     if (res && res.success && res.arenaStats) {
                                         const stats = res.arenaStats;
-                                        document.getElementById('ws-perfil-duelos-count').innerText = stats.duelosConcluidos || 0;
+                                        const elCount = document.getElementById('ws-perfil-duelos-count');
+                                        const display = document.getElementById('ws-perfil-cristal-display');
                                         
-                                        if (stats.cristalAtual) {
-                                            const display = document.getElementById('ws-perfil-cristal-display');
-                                            // Constrói o minicristal em CSS
+                                        if (elCount) elCount.innerText = stats.duelosConcluidos || 0;
+                                        
+                                        if (stats.cristalAtual && display) {
                                             let corBase = '#3b82f6'; let corSombra = '#1d4ed8'; // Safira padrão
                                             if (stats.cristalAtual.includes('Ametista')) { corBase = '#c084fc'; corSombra = '#7e22ce'; }
                                             if (stats.cristalAtual.includes('Rubi')) { corBase = '#f87171'; corSombra = '#b91c1c'; }

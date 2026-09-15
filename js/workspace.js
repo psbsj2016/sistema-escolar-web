@@ -366,6 +366,8 @@ Object.assign(Workspace, {
 
        if (tela === 'perfil' && Workspace.usuario) {
             const nome = Workspace.usuario.nome || Workspace.usuario.login;
+            const identificadorMestre = Workspace.usuario.id; // 🚀 O ID nunca mente!
+            
             const elNome = document.getElementById('ws-perfil-modal-nome');
             const elLogin = document.getElementById('ws-perfil-modal-login');
             if (elNome) elNome.innerText = nome;
@@ -382,8 +384,8 @@ Object.assign(Workspace, {
                 }
             }
 
-            // 🚀 A MÁGICA BLINDADA DO PERFIL: Busca os Cristais diretamente no Motor Principal!
-            Workspace.api(`/workspace/perfil/info/${encodeURIComponent(nome)}`, 'GET').then(res => {
+            // 🚀 A MÁGICA BLINDADA DO PERFIL: Busca os Cristais usando o ID!
+            Workspace.api(`/workspace/perfil/info/${encodeURIComponent(identificadorMestre)}`, 'GET').then(res => {
                 if (res && res.success && res.arenaStats) {
                     const stats = res.arenaStats;
                     const elCount = document.getElementById('ws-perfil-duelos-count');

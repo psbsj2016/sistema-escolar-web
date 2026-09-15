@@ -908,16 +908,18 @@
                         document.addEventListener('click', async (e) => {
                             if (e.target.closest('button') && e.target.closest('button').innerText.includes('Meu Perfil')) {
                                 try {
-                                    // Pede os dados frescos ao servidor (usa a rota de info que já existe no seu sistema)
-                                    const res = await window.Workspace.api(`/workspace/perfil/info/${encodeURIComponent(window.Workspace.usuario.nome || window.Workspace.usuario.login)}`, 'GET');
+                                    // 🚀 Usa o ID Absoluto!
+                                    const identificadorMestre = window.Workspace.usuario.id;
+                                    const res = await window.Workspace.api(`/workspace/perfil/info/${encodeURIComponent(identificadorMestre)}`, 'GET');
                                     
                                     if (res && res.success && res.arenaStats) {
                                         const stats = res.arenaStats;
-                                        document.getElementById('ws-perfil-duelos-count').innerText = stats.duelosConcluidos || 0;
+                                        const elCount = document.getElementById('ws-perfil-duelos-count');
+                                        const display = document.getElementById('ws-perfil-cristal-display');
                                         
-                                        if (stats.cristalAtual) {
-                                            const display = document.getElementById('ws-perfil-cristal-display');
-                                            // Constrói o minicristal em CSS
+                                        if (elCount) elCount.innerText = stats.duelosConcluidos || 0;
+                                        
+                                        if (stats.cristalAtual && display) {
                                             let corBase = '#3b82f6'; let corSombra = '#1d4ed8'; // Safira padrão
                                             if (stats.cristalAtual.includes('Ametista')) { corBase = '#c084fc'; corSombra = '#7e22ce'; }
                                             if (stats.cristalAtual.includes('Rubi')) { corBase = '#f87171'; corSombra = '#b91c1c'; }
