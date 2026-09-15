@@ -252,6 +252,11 @@ Workspace.Arena = {
                     Workspace.Arena.tempoUltimaRececao = Date.now();
                 }
             }
+           
+            // 🚀 Escuta atenta à aparição do Mestre da Guilda!
+            if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
+                Workspace.Arena.desenharDicaDoMestre(dados.dica);
+            }
 
             if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
                 Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
@@ -454,6 +459,31 @@ Workspace.Arena = {
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
 
+        Workspace.Arena.tocarSom('mensagem');
+    },
+
+    desenharDicaDoMestre: (dica) => {
+        const log = document.getElementById('ws-arena-chat-log');
+        if (!log) return;
+        
+        // O texto vem diretamente da IA. Usamos escapeHTML para evitar quebra de código.
+        const textoLimpo = window.Workspace && Workspace.escapeHTML ? Workspace.escapeHTML(dica) : dica;
+
+        // O Design Dourado Mágico
+        const html = `
+            <div style="display: flex; justify-content: center; width: 100%; margin: 15px 0; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                <div style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; padding: 15px 25px; border-radius: 20px; max-width: 85%; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4); border: 2px solid #fde68a; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -10px; left: -10px; font-size: 50px; opacity: 0.1; transform: rotate(-15deg);">🧙‍♂️</div>
+                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 900; margin-bottom: 6px; color: #fef3c7; position: relative; z-index: 1;">✨ O Mestre da Guilda sussurra:</div>
+                    <div style="font-size: 15px; line-height: 1.6; font-weight: 700; position: relative; z-index: 1;">"${textoLimpo}"</div>
+                </div>
+            </div>
+        `;
+        
+        log.insertAdjacentHTML('beforeend', html);
+        log.scrollTop = log.scrollHeight;
+        
+        // Toca o som de notificação padrão para alertar os alunos
         Workspace.Arena.tocarSom('mensagem');
     },
 
