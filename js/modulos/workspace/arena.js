@@ -16,27 +16,49 @@ Workspace.Arena = {
     ultimoTempoFala: 0,
 
     // ============================================================================
-    // 🎵 NOVO: MOTOR DE ÁUDIO E EFEITOS SONOROS
+    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS (Com Rastreador)
     // ============================================================================
     sons: {
-        inicio: '/audios/arena-inicio.mp3',       // Som épico de entrada/gongo
-        mensagem: '/audios/arena-pop.mp3',        // Som de "bolha" ou pop suave
-        tempoEsgotado: '/audios/arena-tempo.mp3', // Som de sino ou suspense
-        vitoria: '/audios/arena-vitoria.mp3'      // Som mágico de conquista do Cristal
+        inicio: '/audios/arena-inicio.mp3',       
+        mensagem: '/audios/arena-pop.mp3',        
+        tempoEsgotado: '/audios/arena-tempo.mp3', 
+        vitoria: '/audios/arena-vitoria.mp3'      
     },
+
+    audiosAtivos: [], // 🚀 Guarda os sons que estão a tocar no momento
 
     tocarSom: (nomeSom) => {
         try {
             const url = Workspace.Arena.sons[nomeSom];
             if (url) {
                 const audio = new Audio(url);
-                // Volume agradável (0.0 a 1.0)
                 audio.volume = nomeSom === 'mensagem' ? 0.3 : 0.6; 
-                // Tenta reproduzir. O catch previne erros se o navegador bloquear o som
-                audio.play().catch(e => console.warn("Áudio bloqueado ou não encontrado:", e));
+                
+                // 🚀 Guarda o áudio na lista de ativos
+                Workspace.Arena.audiosAtivos.push(audio);
+
+                audio.play().then(() => {
+                    // Limpa da lista automaticamente quando o som termina naturalmente
+                    audio.onended = () => {
+                        Workspace.Arena.audiosAtivos = Workspace.Arena.audiosAtivos.filter(a => a !== audio);
+                    };
+                }).catch(e => console.warn("Áudio bloqueado ou não encontrado:", e));
             }
         } catch (error) {
             console.error("Erro no motor de áudio:", error);
+        }
+    },
+
+    // 🚀 NOVO: Função que corta todos os sons imediatamente
+    pararSons: () => {
+        if (Workspace.Arena.audiosAtivos && Workspace.Arena.audiosAtivos.length > 0) {
+            Workspace.Arena.audiosAtivos.forEach(audio => {
+                try {
+                    audio.pause();
+                    audio.currentTime = 0; // Rebobina para o início
+                } catch(e){}
+            });
+            Workspace.Arena.audiosAtivos = []; // Esvazia a memória
         }
     },
     // ============================================================================
@@ -398,7 +420,10 @@ Workspace.Arena = {
         document.body.appendChild(modal);
 
         document.getElementById('btn-arena-ficar').onclick = () => modal.remove();
-        document.getElementById('btn-arena-sair').onclick = () => { modal.remove(); Workspace.Arena.destruirPainelBatalha(); };
+        document.getElementById('btn-arena-sair').onclick = () => { 
+            modal.remove(); 
+            Workspace.Arena.destruirPainelBatalha(); 
+        };
     },
 
     encerrarPartidaViaTempo: async () => {
@@ -467,10 +492,18 @@ Workspace.Arena = {
     },
 
     destruirPainelBatalha: () => {
+        // 🚀 CORTA A MÚSICA ASSIM QUE O PAINEL FECHAR!
+        Workspace.Arena.pararSons();
+
         const painel = document.getElementById('ws-painel-batalha');
         if (painel) {
             painel.style.opacity = '0';
-            setTimeout(() => { painel.style.display = 'none'; painel.remove(); clearInterval(Workspace.Arena.timerInterval); Workspace.Arena.salaAtual = null; }, 300);
+            setTimeout(() => { 
+                painel.style.display = 'none'; 
+                painel.remove(); 
+                clearInterval(Workspace.Arena.timerInterval); 
+                Workspace.Arena.salaAtual = null; 
+            }, 300);
         }
     }
 };
