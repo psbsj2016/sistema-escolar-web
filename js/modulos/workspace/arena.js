@@ -137,11 +137,11 @@ Workspace.Arena = {
 
    // 🚀 NOVIDADE 2: Inteligência de Autocomplete com Normalização (Ignora acentos e maiúsculas)
     filtrarColegas: () => {
-        // Função interna que remove acentos e converte para minúsculas
-        const normalizar = (texto) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        // Motor de normalização (remove acentos e põe tudo em minúsculas)
+        const normalizar = (texto) => texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
         
-        const inputBruto = document.getElementById('ws-arena-input-convite').value;
-        const input = normalizar(inputBruto);
+        const inputStr = document.getElementById('ws-arena-input-convite').value;
+        const input = normalizar(inputStr);
         const lista = document.getElementById('ws-arena-sugestoes');
         lista.innerHTML = '';
 
@@ -150,9 +150,9 @@ Workspace.Arena = {
             return;
         }
 
-        const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login || "");
+        const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login);
 
-        // Procura no cache de avatares com tolerância a acentos e maiúsculas
+        // Procura no cache de avatares ignorando maiúsculas e acentuação
         const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
             const nomeNorm = normalizar(nome);
             return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
