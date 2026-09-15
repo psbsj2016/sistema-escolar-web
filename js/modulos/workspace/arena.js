@@ -14,8 +14,13 @@ Workspace.Arena = {
     ultimaFala: "",
     ultimoTempoFala: 0,
 
+    // 🚀 AS NOVAS VARIÁVEIS DE COMBO E VELOCIDADE
+    tempoUltimaRececao: Date.now(),
+    comboAtual: 0,
+    cenarioAtual: "",
+
     // ============================================================================
-    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS
+    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS 
     // ============================================================================
     sons: {
         inicio: '/audios/arena-inicio.mp3',       
@@ -30,7 +35,6 @@ Workspace.Arena = {
     desbloquearAudioNavegador: () => {
         if (Workspace.Arena.audioDesbloqueado) return;
         try {
-            // 🛡️ CORREÇÃO 1: Deixa o som mudo tocar naturalmente para não dar erro "AbortError"
             const audioFake = new Audio(Workspace.Arena.sons.mensagem);
             audioFake.volume = 0;
             audioFake.play().then(() => {
@@ -41,9 +45,7 @@ Workspace.Arena = {
 
     tocarSom: (nomeSom) => {
         try {
-            if (nomeSom !== 'mensagem') {
-                Workspace.Arena.pararSons();
-            }
+            if (nomeSom !== 'mensagem') Workspace.Arena.pararSons();
 
             const url = Workspace.Arena.sons[nomeSom];
             if (url) {
@@ -53,26 +55,16 @@ Workspace.Arena = {
                 Workspace.Arena.audiosAtivos.push(audio);
 
                 audio.play().then(() => {
-                    audio.onended = () => {
-                        Workspace.Arena.audiosAtivos = Workspace.Arena.audiosAtivos.filter(a => a !== audio);
-                    };
-                }).catch(e => console.warn("Áudio bloqueado pelo navegador:", e));
+                    audio.onended = () => { Workspace.Arena.audiosAtivos = Workspace.Arena.audiosAtivos.filter(a => a !== audio); };
+                }).catch(e => console.warn("Áudio bloqueado:", e));
             }
-        } catch (error) {
-            console.error("Erro no motor de áudio:", error);
-        }
+        } catch (error) { console.error("Erro áudio:", error); }
     },
 
     pararSons: () => {
         if (Workspace.Arena.audiosAtivos && Workspace.Arena.audiosAtivos.length > 0) {
             Workspace.Arena.audiosAtivos.forEach(audio => {
-                try {
-                    // Só pausa se o áudio não estiver já concluído para evitar conflitos
-                    if (!audio.paused) {
-                        audio.pause();
-                        audio.currentTime = 0; 
-                    }
-                } catch(e){}
+                try { if (!audio.paused) { audio.pause(); audio.currentTime = 0; } } catch(e){}
             });
             Workspace.Arena.audiosAtivos = []; 
         }
@@ -82,8 +74,6 @@ Workspace.Arena = {
     init: () => {
         if (Workspace.Arena.isInitialized) return; 
         Workspace.Arena.isInitialized = true;
-
-        console.log("⚔️ Motor da Arena Multiplayer iniciado.");
         Workspace.Arena.injetarModalFila();
         Workspace.Arena.injetarPainelBatalha();
         Workspace.Arena.escutarEventosTempoReal();
@@ -137,19 +127,14 @@ Workspace.Arena = {
 
     filtrarColegas: () => {
         const normalizar = (texto) => texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
-        
         const inputStr = document.getElementById('ws-arena-input-convite').value;
         const input = normalizar(inputStr);
         const lista = document.getElementById('ws-arena-sugestoes');
         lista.innerHTML = '';
 
-        if (!input || input.length < 2) {
-            lista.style.display = 'none';
-            return;
-        }
+        if (!input || input.length < 2) { lista.style.display = 'none'; return; }
 
         const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login);
-
         const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
             const nomeNorm = normalizar(nome);
             return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
@@ -166,7 +151,6 @@ Workspace.Arena = {
                     document.getElementById('ws-arena-input-convite').value = nome;
                     lista.style.display = 'none';
                 };
-                
                 const fotoHTML = window.Workspace.renderizarAvatar(nome, 30);
                 item.innerHTML = `${fotoHTML} <span style="color: #fff; font-size: 14px;">${nome}</span>`;
                 lista.appendChild(item);
@@ -179,7 +163,6 @@ Workspace.Arena = {
 
     procurarAleatorio: async () => {
         Workspace.Arena.desbloquearAudioNavegador(); 
-        
         const btn = document.getElementById('ws-btn-procurar');
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value; 
@@ -206,7 +189,6 @@ Workspace.Arena = {
 
     convidarColega: async () => {
         Workspace.Arena.desbloquearAudioNavegador(); 
-
         const input = document.getElementById('ws-arena-input-convite');
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value;
@@ -247,9 +229,7 @@ Workspace.Arena = {
                             subtitulo: "⚔️ Desafio para a Arena",
                             mensagemCorpo: `<strong>${dados.remetenteNome}</strong> desafiou-te para uma prática de inglês de <strong>${dados.limiteMinutos} minutos</strong>!`
                         }, 'arena', async () => {
-                            
                             Workspace.Arena.desbloquearAudioNavegador(); 
-
                             await Workspace.api(`/workspace/arena/${dados.salaId}/aceitar`, 'POST', {
                                 alunoId: Workspace.usuario.id, alunoNome: meuNome, escolaId: Workspace.usuario.escolaId
                             });
@@ -259,13 +239,17 @@ Workspace.Arena = {
                 
                 if (dados.type === 'ARENA_MATCH_ENCONTRADO') {
                     const oponenteReal = dados.destinatarios.find(nome => nome !== meuNome);
-                    Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos);
+                    // 🚀 Recebemos o cenário do servidor!
+                    Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos, dados.cenario);
                 }
             }
 
             if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
                 if (dados.fala.autorNome !== meuNome) {
-                    Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false);
+                    Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false, dados.fala.combo);
+                    
+                    // 🚀 Alguém falou! O tempo começa a contar agora para o Fator Combo
+                    Workspace.Arena.tempoUltimaRececao = Date.now();
                 }
             }
 
@@ -275,10 +259,14 @@ Workspace.Arena = {
         };
     },
 
-    iniciarPartida: (salaId, oponente, limiteMinutos) => {
+    iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSorteado) => {
         Workspace.Arena.salaAtual = salaId;
         Workspace.Arena.oponenteNome = oponente;
         Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50; 
+        
+        // 🚀 Reset do Combo
+        Workspace.Arena.comboAtual = 0;
+        Workspace.Arena.tempoUltimaRececao = Date.now();
         
         const modal = document.getElementById('ws-modal-arena');
         if (modal) modal.style.display = 'none';
@@ -287,31 +275,37 @@ Workspace.Arena = {
         const painel = document.getElementById('ws-painel-batalha');
         
         document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${oponente}`;
-        document.getElementById('ws-arena-chat-log').innerHTML = '<div style="text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px;">A partida começou! Liguem os microfones e conversem em Inglês.</div>';
+        
+        // 🚀 Desenha a Missão (Cenário)
+        const chatLog = document.getElementById('ws-arena-chat-log');
+        let htmlCenario = '';
+        if (cenarioSorteado) {
+            htmlCenario = `
+                <div style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: popUp 0.5s forwards;">
+                    <h3 style="margin: 0 0 5px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #ddd6fe;">🎭 Mission Scenario</h3>
+                    <p style="margin: 0; font-size: 16px; font-weight: bold;">${cenarioSorteado}</p>
+                </div>
+            `;
+        }
+        
+        chatLog.innerHTML = htmlCenario + '<div style="text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px;">A partida começou! Liguem os microfones e conversem em Inglês.</div>';
         
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
         Workspace.Arena.tocarSom('inicio');
-
         Workspace.Arena.iniciarRelogio();
     },
 
     adicionarPontuacaoInteligente: (texto) => {
         let txt = texto.trim();
         if (!txt) return "";
-        
         txt = txt.charAt(0).toUpperCase() + txt.slice(1);
         if (txt.match(/[.?!]$/)) return txt;
-
         const palavrasInterrogativas = ['what', 'where', 'when', 'who', 'why', 'how', 'do', 'does', 'did', 'is', 'are', 'can', 'could', 'would', 'should', 'will', 'have', 'has'];
         const primeiraPalavra = txt.split(' ')[0].toLowerCase();
-
-        if (palavrasInterrogativas.includes(primeiraPalavra)) {
-            return txt + "?";
-        } else {
-            return txt + ".";
-        }
+        if (palavrasInterrogativas.includes(primeiraPalavra)) return txt + "?";
+        else return txt + ".";
     },
 
     configurarMicrofone: () => {
@@ -330,7 +324,6 @@ Workspace.Arena = {
 
         Workspace.Arena.reconhecimentoVoz.onresult = (event) => {
             let transcricaoBruta = event.results[0][0].transcript;
-            
             const agora = Date.now();
             if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) {
                 return; 
@@ -358,11 +351,27 @@ Workspace.Arena = {
 
     enviarFala: async (texto) => {
         if (!texto || !Workspace.Arena.salaAtual) return;
-        Workspace.Arena.desenharBalao(Workspace.usuario.nome || Workspace.usuario.login, texto, true);
+        
+        // 🚀 O MOTOR DO COMBO! (Mede a velocidade da resposta)
+        const tempoDecorrido = Date.now() - Workspace.Arena.tempoUltimaRececao;
+        
+        // Se respondeu em menos de 8 segundos, o Fogo aumenta!
+        if (tempoDecorrido < 8000) {
+            Workspace.Arena.comboAtual += 1;
+        } else {
+            // Se demorou muito, quebra o combo!
+            Workspace.Arena.comboAtual = 0;
+        }
+
+        Workspace.Arena.desenharBalao(Workspace.usuario.nome || Workspace.usuario.login, texto, true, Workspace.Arena.comboAtual);
 
         try {
             await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/falar`, 'POST', {
-                texto: texto, autorId: Workspace.usuario.id, autorNome: Workspace.usuario.nome || Workspace.usuario.login, escolaId: Workspace.usuario.escolaId
+                texto: texto, 
+                autorId: Workspace.usuario.id, 
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login, 
+                escolaId: Workspace.usuario.escolaId,
+                combo: Workspace.Arena.comboAtual // 🚀 Envia para a IA ver!
             });
         } catch (error) { if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao transmitir fala.", "error"); }
     },
@@ -389,7 +398,7 @@ Workspace.Arena = {
                     <button onclick="Workspace.Arena.abandonarPartida()" style="background: transparent; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;" title="Sair">✖</button>
                 </div>
             </div>
-            <div id="ws-arena-chat-log" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;"></div>
+            <div id="ws-arena-chat-log" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;"></div>
             <div style="padding: 20px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: center;">
                 <button id="ws-btn-mic-arena" onclick="Workspace.Arena.alternarMicrofone()" style="background: #3b82f6; color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); transition: 0.2s; display: flex; align-items: center; justify-content: center;">🎙️</button>
             </div>
@@ -402,7 +411,6 @@ Workspace.Arena = {
         clearInterval(Workspace.Arena.timerInterval);
 
         Workspace.Arena.timerInterval = setInterval(() => {
-            // 🛡️ CORREÇÃO 2: Só prossegue se o ecrã da Arena e o relógio ainda existirem!
             const timerElement = document.getElementById('ws-arena-timer');
             if (!timerElement) {
                 clearInterval(Workspace.Arena.timerInterval);
@@ -425,13 +433,24 @@ Workspace.Arena = {
         }, 1000);
     },
 
-    desenharBalao: (nome, texto, isMinha) => {
+    desenharBalao: (nome, texto, isMinha, comboValor = 0) => {
         const log = document.getElementById('ws-arena-chat-log');
         const alinhamento = isMinha ? 'flex-end' : 'flex-start';
         const corFundo = isMinha ? '#3b82f6' : '#334155';
         const raio = isMinha ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
 
-        const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nome}</span><div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div></div>`;
+        // 🚀 A MÁGICA VISUAL DO COMBO (Crachá em chamas!)
+        let htmlCombo = '';
+        if (comboValor > 1) {
+            htmlCombo = `<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 5px; font-weight: bold; animation: popUp 0.3s ease;">🔥 x${comboValor}</span>`;
+        }
+
+        const html = `
+            <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;">
+                <span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold; display: flex; align-items: center;">${nome} ${htmlCombo}</span>
+                <div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div>
+            </div>`;
+        
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
 
@@ -467,7 +486,6 @@ Workspace.Arena = {
 
     encerrarPartidaViaTempo: async () => {
         const log = document.getElementById('ws-arena-chat-log');
-        // 🛡️ CORREÇÃO 3: Só insere a mensagem se o chat log ainda existir
         if (log) {
             log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! O Mestre da Guilda (IA) está a analisar as vossas argumentações... Aguarde!</div>');
             log.scrollTop = log.scrollHeight;
