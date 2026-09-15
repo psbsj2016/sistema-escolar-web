@@ -11,12 +11,11 @@ Workspace.Arena = {
     segundosRestantes: 0,
     reconhecimentoVoz: null,
     
-    // Trava: Memória do Cérebro (Impede o "Eco" do Microfone)
     ultimaFala: "",
     ultimoTempoFala: 0,
 
     // ============================================================================
-    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS (Com Rastreador)
+    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS (Com Desbloqueador e DJ Anti-Sobreposição)
     // ============================================================================
     sons: {
         inicio: '/audios/arena-inicio.mp3',       
@@ -25,40 +24,57 @@ Workspace.Arena = {
         vitoria: '/audios/arena-vitoria.mp3'      
     },
 
-    audiosAtivos: [], // 🚀 Guarda os sons que estão a tocar no momento
+    audiosAtivos: [], 
+    audioDesbloqueado: false, // 🚀 Memória para saber se o PC já autorizou o som
+
+    // 🚀 O TRUQUE MESTRE: Engana a Autoplay Policy do Computador!
+    desbloquearAudioNavegador: () => {
+        if (Workspace.Arena.audioDesbloqueado) return;
+        try {
+            // Toca um som no volume ZERO assim que o aluno clica no primeiro botão
+            const audioFake = new Audio(Workspace.Arena.sons.mensagem);
+            audioFake.volume = 0;
+            audioFake.play().then(() => {
+                audioFake.pause();
+                Workspace.Arena.audioDesbloqueado = true; // Navegador desbloqueado!
+            }).catch(e => {});
+        } catch(e) {}
+    },
 
     tocarSom: (nomeSom) => {
         try {
+            // 🚀 DJ INTELIGENTE: Se for um som épico, cala a música anterior para não sobrepor!
+            if (nomeSom !== 'mensagem') {
+                Workspace.Arena.pararSons();
+            }
+
             const url = Workspace.Arena.sons[nomeSom];
             if (url) {
                 const audio = new Audio(url);
                 audio.volume = nomeSom === 'mensagem' ? 0.3 : 0.6; 
                 
-                // 🚀 Guarda o áudio na lista de ativos
                 Workspace.Arena.audiosAtivos.push(audio);
 
                 audio.play().then(() => {
-                    // Limpa da lista automaticamente quando o som termina naturalmente
                     audio.onended = () => {
                         Workspace.Arena.audiosAtivos = Workspace.Arena.audiosAtivos.filter(a => a !== audio);
                     };
-                }).catch(e => console.warn("Áudio bloqueado ou não encontrado:", e));
+                }).catch(e => console.warn("Áudio bloqueado pelo navegador (Autoplay Policy):", e));
             }
         } catch (error) {
             console.error("Erro no motor de áudio:", error);
         }
     },
 
-    // 🚀 NOVO: Função que corta todos os sons imediatamente
     pararSons: () => {
         if (Workspace.Arena.audiosAtivos && Workspace.Arena.audiosAtivos.length > 0) {
             Workspace.Arena.audiosAtivos.forEach(audio => {
                 try {
                     audio.pause();
-                    audio.currentTime = 0; // Rebobina para o início
+                    audio.currentTime = 0; 
                 } catch(e){}
             });
-            Workspace.Arena.audiosAtivos = []; // Esvazia a memória
+            Workspace.Arena.audiosAtivos = []; 
         }
     },
     // ============================================================================
@@ -114,7 +130,10 @@ Workspace.Arena = {
         document.body.appendChild(modal);
     },
 
-    abrirPainel: () => { document.getElementById('ws-modal-arena').style.display = 'flex'; },
+    abrirPainel: () => { 
+        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+        document.getElementById('ws-modal-arena').style.display = 'flex'; 
+    },
 
     filtrarColegas: () => {
         const input = document.getElementById('ws-arena-input-convite').value.toLowerCase().trim();
@@ -151,6 +170,8 @@ Workspace.Arena = {
     },
 
     procurarAleatorio: async () => {
+        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+        
         const btn = document.getElementById('ws-btn-procurar');
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value; 
@@ -176,6 +197,8 @@ Workspace.Arena = {
     },
 
     convidarColega: async () => {
+        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+
         const input = document.getElementById('ws-arena-input-convite');
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value;
@@ -216,6 +239,9 @@ Workspace.Arena = {
                             subtitulo: "⚔️ Desafio para a Arena",
                             mensagemCorpo: `<strong>${dados.remetenteNome}</strong> desafiou-te para uma prática de inglês de <strong>${dados.limiteMinutos} minutos</strong>!`
                         }, 'arena', async () => {
+                            
+                            Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Autoriza o áudio ao Aceitar
+
                             await Workspace.api(`/workspace/arena/${dados.salaId}/aceitar`, 'POST', {
                                 alunoId: Workspace.usuario.id, alunoNome: meuNome, escolaId: Workspace.usuario.escolaId
                             });
@@ -258,7 +284,6 @@ Workspace.Arena = {
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
-        // 🎵 Dispara som de início (Gongo/Espadas)
         Workspace.Arena.tocarSom('inicio');
 
         Workspace.Arena.iniciarRelogio();
@@ -395,7 +420,6 @@ Workspace.Arena = {
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
 
-        // 🎵 Dispara som de bolha/pop suave ao desenhar um balão
         Workspace.Arena.tocarSom('mensagem');
     },
 
@@ -431,7 +455,6 @@ Workspace.Arena = {
         log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! O Mestre da Guilda (IA) está a analisar as vossas argumentações... Aguarde!</div>');
         log.scrollTop = log.scrollHeight;
         
-        // 🎵 Dispara som de suspense / fim de tempo
         Workspace.Arena.tocarSom('tempoEsgotado');
 
         if (Workspace.Arena.reconhecimentoVoz) { try { Workspace.Arena.reconhecimentoVoz.stop(); } catch(e){} }
@@ -444,7 +467,6 @@ Workspace.Arena = {
         const painel = document.getElementById('ws-painel-batalha');
         if (!painel) return;
 
-        // 🎵 Dispara o Som Mágico de Vitória ao exibir os Cristais!
         Workspace.Arena.tocarSom('vitoria');
 
         const estiloCristais = `
@@ -492,7 +514,6 @@ Workspace.Arena = {
     },
 
     destruirPainelBatalha: () => {
-        // 🚀 CORTA A MÚSICA ASSIM QUE O PAINEL FECHAR!
         Workspace.Arena.pararSons();
 
         const painel = document.getElementById('ws-painel-batalha');
