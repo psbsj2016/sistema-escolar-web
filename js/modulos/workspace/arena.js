@@ -11,9 +11,35 @@ Workspace.Arena = {
     segundosRestantes: 0,
     reconhecimentoVoz: null,
     
-    // 🚀 A NOVA TRAVA: Memória do Cérebro (Impede o "Eco" do Microfone)
+    // Trava: Memória do Cérebro (Impede o "Eco" do Microfone)
     ultimaFala: "",
     ultimoTempoFala: 0,
+
+    // ============================================================================
+    // 🎵 NOVO: MOTOR DE ÁUDIO E EFEITOS SONOROS
+    // ============================================================================
+    sons: {
+        inicio: '/audios/arena-inicio.mp3',       // Som épico de entrada/gongo
+        mensagem: '/audios/arena-pop.mp3',        // Som de "bolha" ou pop suave
+        tempoEsgotado: '/audios/arena-tempo.mp3', // Som de sino ou suspense
+        vitoria: '/audios/arena-vitoria.mp3'      // Som mágico de conquista do Cristal
+    },
+
+    tocarSom: (nomeSom) => {
+        try {
+            const url = Workspace.Arena.sons[nomeSom];
+            if (url) {
+                const audio = new Audio(url);
+                // Volume agradável (0.0 a 1.0)
+                audio.volume = nomeSom === 'mensagem' ? 0.3 : 0.6; 
+                // Tenta reproduzir. O catch previne erros se o navegador bloquear o som
+                audio.play().catch(e => console.warn("Áudio bloqueado ou não encontrado:", e));
+            }
+        } catch (error) {
+            console.error("Erro no motor de áudio:", error);
+        }
+    },
+    // ============================================================================
 
     init: () => {
         if (Workspace.Arena.isInitialized) return; 
@@ -210,6 +236,9 @@ Workspace.Arena = {
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
+        // 🎵 Dispara som de início (Gongo/Espadas)
+        Workspace.Arena.tocarSom('inicio');
+
         Workspace.Arena.iniciarRelogio();
     },
 
@@ -247,10 +276,9 @@ Workspace.Arena = {
         Workspace.Arena.reconhecimentoVoz.onresult = (event) => {
             let transcricaoBruta = event.results[0][0].transcript;
             
-            // 🚀 O FILTRO ANTI-ECO (Resolve a duplicação do navegador)
             const agora = Date.now();
             if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) {
-                return; // Se for exatamente a mesma frase dita há menos de 2 segundos, ignora para evitar duplicado!
+                return; 
             }
             Workspace.Arena.ultimaFala = transcricaoBruta;
             Workspace.Arena.ultimoTempoFala = agora;
@@ -344,6 +372,9 @@ Workspace.Arena = {
         const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nome}</span><div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div></div>`;
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
+
+        // 🎵 Dispara som de bolha/pop suave ao desenhar um balão
+        Workspace.Arena.tocarSom('mensagem');
     },
 
     abandonarPartida: () => {
@@ -374,6 +405,10 @@ Workspace.Arena = {
         const log = document.getElementById('ws-arena-chat-log');
         log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! O Mestre da Guilda (IA) está a analisar as vossas argumentações... Aguarde!</div>');
         log.scrollTop = log.scrollHeight;
+        
+        // 🎵 Dispara som de suspense / fim de tempo
+        Workspace.Arena.tocarSom('tempoEsgotado');
+
         if (Workspace.Arena.reconhecimentoVoz) { try { Workspace.Arena.reconhecimentoVoz.stop(); } catch(e){} }
         
         try { await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/avaliar`, 'POST', { escolaId: Workspace.usuario.escolaId }); } 
@@ -383,6 +418,9 @@ Workspace.Arena = {
     exibirPainelResultadoFinal: (resultado) => {
         const painel = document.getElementById('ws-painel-batalha');
         if (!painel) return;
+
+        // 🎵 Dispara o Som Mágico de Vitória ao exibir os Cristais!
+        Workspace.Arena.tocarSom('vitoria');
 
         const estiloCristais = `
             <style>
