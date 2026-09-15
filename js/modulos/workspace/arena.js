@@ -135,8 +135,13 @@ Workspace.Arena = {
         document.getElementById('ws-modal-arena').style.display = 'flex'; 
     },
 
+   // 🚀 NOVIDADE 2: Inteligência de Autocomplete com Normalização (Ignora acentos e maiúsculas)
     filtrarColegas: () => {
-        const input = document.getElementById('ws-arena-input-convite').value.toLowerCase().trim();
+        // Função interna que remove acentos e converte para minúsculas
+        const normalizar = (texto) => texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+        
+        const inputBruto = document.getElementById('ws-arena-input-convite').value;
+        const input = normalizar(inputBruto);
         const lista = document.getElementById('ws-arena-sugestoes');
         lista.innerHTML = '';
 
@@ -145,7 +150,13 @@ Workspace.Arena = {
             return;
         }
 
-        const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => nome.toLowerCase().includes(input) && nome !== Workspace.usuario.nome);
+        const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login || "");
+
+        // Procura no cache de avatares com tolerância a acentos e maiúsculas
+        const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
+            const nomeNorm = normalizar(nome);
+            return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
+        });
 
         if (colegas.length > 0) {
             colegas.forEach(nome => {
