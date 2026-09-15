@@ -364,7 +364,7 @@ Object.assign(Workspace, {
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('avaliacoes');
         }
 
-        if (tela === 'perfil' && Workspace.usuario) {
+       if (tela === 'perfil' && Workspace.usuario) {
             const nome = Workspace.usuario.nome || Workspace.usuario.login;
             const elNome = document.getElementById('ws-perfil-modal-nome');
             const elLogin = document.getElementById('ws-perfil-modal-login');
@@ -381,6 +381,29 @@ Object.assign(Workspace, {
                     letrasEl.style.display = 'flex'; letrasEl.innerText = nome.charAt(0).toUpperCase(); letrasEl.style.background = Workspace.gerarCorPorNome(nome);
                 }
             }
+
+            // 🚀 A MÁGICA BLINDADA DO PERFIL: Busca os Cristais diretamente no Motor Principal!
+            Workspace.api(`/workspace/perfil/info/${encodeURIComponent(nome)}`, 'GET').then(res => {
+                if (res && res.success && res.arenaStats) {
+                    const stats = res.arenaStats;
+                    const elCount = document.getElementById('ws-perfil-duelos-count');
+                    const display = document.getElementById('ws-perfil-cristal-display');
+                    
+                    if (elCount) elCount.innerText = stats.duelosConcluidos || 0;
+                    
+                    if (stats.cristalAtual && display) {
+                        let corBase = '#3b82f6'; let corSombra = '#1d4ed8'; // Safira padrão
+                        if (stats.cristalAtual.includes('Ametista')) { corBase = '#c084fc'; corSombra = '#7e22ce'; }
+                        if (stats.cristalAtual.includes('Rubi')) { corBase = '#f87171'; corSombra = '#b91c1c'; }
+                        if (stats.cristalAtual.includes('Diamante')) { corBase = '#22d3ee'; corSombra = '#083344'; }
+                        
+                        display.innerHTML = `
+                            <div style="width: 35px; height: 35px; transform: rotate(45deg); background: linear-gradient(135deg, ${corBase} 0%, ${corSombra} 100%); box-shadow: 0 0 15px ${corBase}; margin-bottom: 12px; animation: flutuarCristal 3s ease-in-out infinite;"></div>
+                            <div style="color: ${corBase}; font-weight: 800; font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px; text-shadow: 0 0 5px rgba(255,255,255,0.2);">${stats.tituloAtual || stats.cristalAtual}</div>
+                        `;
+                    }
+                }
+            }).catch(()=>{});
         }
 
         // 🚀 PASSO 1: APAGA AS LUZES E ACENDE A NOVA TELA IMEDIATAMENTE
