@@ -15,7 +15,7 @@ Workspace.Arena = {
     ultimoTempoFala: 0,
 
     // ============================================================================
-    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS (Com Desbloqueador e DJ Anti-Sobreposição)
+    // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS
     // ============================================================================
     sons: {
         inicio: '/audios/arena-inicio.mp3',       
@@ -25,25 +25,22 @@ Workspace.Arena = {
     },
 
     audiosAtivos: [], 
-    audioDesbloqueado: false, // 🚀 Memória para saber se o PC já autorizou o som
+    audioDesbloqueado: false,
 
-    // 🚀 O TRUQUE MESTRE: Engana a Autoplay Policy do Computador!
     desbloquearAudioNavegador: () => {
         if (Workspace.Arena.audioDesbloqueado) return;
         try {
-            // Toca um som no volume ZERO assim que o aluno clica no primeiro botão
+            // 🛡️ CORREÇÃO 1: Deixa o som mudo tocar naturalmente para não dar erro "AbortError"
             const audioFake = new Audio(Workspace.Arena.sons.mensagem);
             audioFake.volume = 0;
             audioFake.play().then(() => {
-                audioFake.pause();
-                Workspace.Arena.audioDesbloqueado = true; // Navegador desbloqueado!
-            }).catch(e => {});
+                Workspace.Arena.audioDesbloqueado = true;
+            }).catch(e => {}); 
         } catch(e) {}
     },
 
     tocarSom: (nomeSom) => {
         try {
-            // 🚀 DJ INTELIGENTE: Se for um som épico, cala a música anterior para não sobrepor!
             if (nomeSom !== 'mensagem') {
                 Workspace.Arena.pararSons();
             }
@@ -59,7 +56,7 @@ Workspace.Arena = {
                     audio.onended = () => {
                         Workspace.Arena.audiosAtivos = Workspace.Arena.audiosAtivos.filter(a => a !== audio);
                     };
-                }).catch(e => console.warn("Áudio bloqueado pelo navegador (Autoplay Policy):", e));
+                }).catch(e => console.warn("Áudio bloqueado pelo navegador:", e));
             }
         } catch (error) {
             console.error("Erro no motor de áudio:", error);
@@ -70,8 +67,11 @@ Workspace.Arena = {
         if (Workspace.Arena.audiosAtivos && Workspace.Arena.audiosAtivos.length > 0) {
             Workspace.Arena.audiosAtivos.forEach(audio => {
                 try {
-                    audio.pause();
-                    audio.currentTime = 0; 
+                    // Só pausa se o áudio não estiver já concluído para evitar conflitos
+                    if (!audio.paused) {
+                        audio.pause();
+                        audio.currentTime = 0; 
+                    }
                 } catch(e){}
             });
             Workspace.Arena.audiosAtivos = []; 
@@ -131,13 +131,11 @@ Workspace.Arena = {
     },
 
     abrirPainel: () => { 
-        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+        Workspace.Arena.desbloquearAudioNavegador(); 
         document.getElementById('ws-modal-arena').style.display = 'flex'; 
     },
 
-   // 🚀 NOVIDADE 2: Inteligência de Autocomplete com Normalização (Ignora acentos e maiúsculas)
     filtrarColegas: () => {
-        // Motor de normalização (remove acentos e põe tudo em minúsculas)
         const normalizar = (texto) => texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
         
         const inputStr = document.getElementById('ws-arena-input-convite').value;
@@ -152,7 +150,6 @@ Workspace.Arena = {
 
         const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login);
 
-        // Procura no cache de avatares ignorando maiúsculas e acentuação
         const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
             const nomeNorm = normalizar(nome);
             return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
@@ -181,7 +178,7 @@ Workspace.Arena = {
     },
 
     procurarAleatorio: async () => {
-        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+        Workspace.Arena.desbloquearAudioNavegador(); 
         
         const btn = document.getElementById('ws-btn-procurar');
         const status = document.getElementById('ws-arena-status');
@@ -208,7 +205,7 @@ Workspace.Arena = {
     },
 
     convidarColega: async () => {
-        Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Ganha autorização do PC
+        Workspace.Arena.desbloquearAudioNavegador(); 
 
         const input = document.getElementById('ws-arena-input-convite');
         const status = document.getElementById('ws-arena-status');
@@ -251,7 +248,7 @@ Workspace.Arena = {
                             mensagemCorpo: `<strong>${dados.remetenteNome}</strong> desafiou-te para uma prática de inglês de <strong>${dados.limiteMinutos} minutos</strong>!`
                         }, 'arena', async () => {
                             
-                            Workspace.Arena.desbloquearAudioNavegador(); // 🚀 Autoriza o áudio ao Aceitar
+                            Workspace.Arena.desbloquearAudioNavegador(); 
 
                             await Workspace.api(`/workspace/arena/${dados.salaId}/aceitar`, 'POST', {
                                 alunoId: Workspace.usuario.id, alunoNome: meuNome, escolaId: Workspace.usuario.escolaId
@@ -405,6 +402,13 @@ Workspace.Arena = {
         clearInterval(Workspace.Arena.timerInterval);
 
         Workspace.Arena.timerInterval = setInterval(() => {
+            // 🛡️ CORREÇÃO 2: Só prossegue se o ecrã da Arena e o relógio ainda existirem!
+            const timerElement = document.getElementById('ws-arena-timer');
+            if (!timerElement) {
+                clearInterval(Workspace.Arena.timerInterval);
+                return;
+            }
+
             if (Workspace.Arena.segundosRestantes === 0) {
                 if (Workspace.Arena.minutosRestantes === 0) {
                     clearInterval(Workspace.Arena.timerInterval);
@@ -417,7 +421,7 @@ Workspace.Arena = {
 
             const m = Workspace.Arena.minutosRestantes.toString().padStart(2, '0');
             const s = Workspace.Arena.segundosRestantes.toString().padStart(2, '0');
-            document.getElementById('ws-arena-timer').innerText = `${m}:${s}`;
+            timerElement.innerText = `${m}:${s}`;
         }, 1000);
     },
 
@@ -463,8 +467,11 @@ Workspace.Arena = {
 
     encerrarPartidaViaTempo: async () => {
         const log = document.getElementById('ws-arena-chat-log');
-        log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! O Mestre da Guilda (IA) está a analisar as vossas argumentações... Aguarde!</div>');
-        log.scrollTop = log.scrollHeight;
+        // 🛡️ CORREÇÃO 3: Só insere a mensagem se o chat log ainda existir
+        if (log) {
+            log.insertAdjacentHTML('beforeend', '<div style="text-align: center; color: #f59e0b; font-size: 15px; margin-top: 30px; font-weight: bold; animation: pulse 1.5s infinite;">⏰ O tempo esgotou-se! O Mestre da Guilda (IA) está a analisar as vossas argumentações... Aguarde!</div>');
+            log.scrollTop = log.scrollHeight;
+        }
         
         Workspace.Arena.tocarSom('tempoEsgotado');
 
