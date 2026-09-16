@@ -125,39 +125,64 @@ Workspace.Arena = {
         document.getElementById('ws-modal-arena').style.display = 'flex'; 
     },
 
-    filtrarColegas: () => {
+   filtrarColegas: () => {
         const normalizar = (texto) => texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
         const inputStr = document.getElementById('ws-arena-input-convite').value;
         const input = normalizar(inputStr);
         const lista = document.getElementById('ws-arena-sugestoes');
         lista.innerHTML = '';
 
-        if (!input || input.length < 2) { lista.style.display = 'none'; return; }
+        // 🚀 1. Arranca a pesquisa logo na primeira letra digitada
+        if (!input || input.length < 1) { 
+            lista.style.display = 'none'; 
+            return; 
+        }
 
         const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login);
-        const colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
+        
+        // 🚀 2. Encontra todos os colegas que contêm a letra/nome digitado
+        let colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
             const nomeNorm = normalizar(nome);
             return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
         });
 
+        // 🧠 3. INTELIGÊNCIA MATEMÁTICA: Ordenação Perfeita
+        colegas.sort((a, b) => {
+            const aNorm = normalizar(a);
+            const bNorm = normalizar(b);
+            const aComeca = aNorm.startsWith(input);
+            const bComeca = bNorm.startsWith(input);
+            
+            // Quem COMEÇA com a letra vai para o topo da lista
+            if (aComeca && !bComeca) return -1; 
+            if (!aComeca && bComeca) return 1;  
+            // Se ambos começam (ou ambos não começam), organiza por ordem alfabética normal
+            return aNorm.localeCompare(bNorm);  
+        });
+
         if (colegas.length > 0) {
             colegas.forEach(nome => {
-                const avatar = Workspace.avatarsCache[nome] || '';
+                // Se não tiver foto, o sistema desenha a bolinha colorida automaticamente
+                const fotoHTML = window.Workspace.renderizarAvatar(nome, 30);
+                
                 const item = document.createElement('div');
                 item.style.cssText = 'padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #334155; transition: 0.2s;';
                 item.onmouseover = () => item.style.background = '#334155';
                 item.onmouseout = () => item.style.background = 'transparent';
+                
                 item.onclick = () => {
                     document.getElementById('ws-arena-input-convite').value = nome;
                     lista.style.display = 'none';
                 };
-                const fotoHTML = window.Workspace.renderizarAvatar(nome, 30);
+                
                 item.innerHTML = `${fotoHTML} <span style="color: #fff; font-size: 14px;">${nome}</span>`;
                 lista.appendChild(item);
             });
             lista.style.display = 'block';
         } else {
-            lista.style.display = 'none';
+            // Feedback elegante caso o nome não exista
+            lista.innerHTML = '<div style="padding: 15px; color: #94a3b8; font-size: 13px; text-align: center;">Nenhum colega encontrado com este nome.</div>';
+            lista.style.display = 'block';
         }
     },
 
