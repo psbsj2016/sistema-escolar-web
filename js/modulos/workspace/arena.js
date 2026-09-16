@@ -592,5 +592,132 @@ Workspace.Arena = {
                 Workspace.Arena.salaAtual = null; 
             }, 300);
         }
+    },
+
+// ============================================================================
+    // 📜 MÓDULO DE HISTÓRICO E GLÓRIA (FASE 3)
+    // ============================================================================
+    abrirHistoricoEstatistico: async () => {
+        if (!Workspace.usuario || !Workspace.usuario.id) return;
+        
+        // 1. Cria o modal escuro do Pergaminho
+        const idModal = 'ws-arena-historico-modal';
+        if (document.getElementById(idModal)) document.getElementById(idModal).remove();
+        
+        const modal = document.createElement('div');
+        modal.id = idModal;
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(15, 23, 42, 0.9); z-index: 1000000; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(8px); animation: fadeIn 0.2s ease; padding: 20px; box-sizing: border-box;';
+        
+        modal.innerHTML = `
+            <div style="background: #1e293b; width: 100%; max-width: 600px; max-height: 85vh; border-radius: 20px; border: 1px solid #334155; box-shadow: 0 25px 50px rgba(0,0,0,0.5); display: flex; flex-direction: column; overflow: hidden; position: relative;">
+                
+                <!-- Cabeçalho -->
+                <div style="background: #0f172a; padding: 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #334155;">
+                    <h2 style="margin: 0; color: #fff; font-size: 18px; display: flex; align-items: center; gap: 10px;">
+                        <span style="font-size: 24px;">📜</span> O Seu Histórico Épico
+                    </h2>
+                    <button onclick="document.getElementById('${idModal}').remove()" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#ef4444'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+                </div>
+
+                <!-- Lista de Duelos -->
+                <div id="ws-arena-lista-historico" style="flex: 1; overflow-y: auto; padding: 20px; display: flex; flex-direction: column; gap: 15px;">
+                    <div style="text-align: center; color: #94a3b8; padding: 40px;">Procurando nos arquivos da Guilda... ⏳</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+
+        // 2. Busca os dados no servidor e injeta-os no ecrã
+        try {
+            const res = await Workspace.api(`/workspace/arena/historico/${Workspace.usuario.id}`, 'GET');
+            const container = document.getElementById('ws-arena-lista-historico');
+            
+            if (res && res.success && res.historico.length > 0) {
+                let html = '';
+                res.historico.forEach(batalha => {
+                    // Formatação bonita da data
+                    const dataStr = new Date(batalha.dataFim).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
+                    
+                    // Lógica para descobrir quem era o adversário (sempre a pessoa que não sou eu)
+                    const souJogador1 = batalha.jogador1.id === Workspace.usuario.id;
+                    const adversarioNome = souJogador1 ? (batalha.jogador2 ? batalha.jogador2.nome : 'Desconhecido') : batalha.jogador1.nome;
+                    
+                    // Descobre qual foi o cristal que EU ganhei nesta batalha específica
+                    const meuResultado = batalha.resultado?.jogadores?.find(j => j.id === Workspace.usuario.id);
+                    const meuCristal = meuResultado ? meuResultado.cristal : 'Nenhum';
+                    
+                    // Se foi um Diamante ou Rubi, habilita o Botão de Celebrar!
+                    let btnPartilha = '';
+                    if (meuCristal.includes('Diamante') || meuCristal.includes('Rubi') || meuCristal.includes('Ametista')) {
+                        btnPartilha = `<button onclick="Workspace.Arena.partilharVitoria('${adversarioNome}', '${meuCristal}')" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3); transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">📢 Celebrar no Feed</button>`;
+                    }
+
+                    html += `
+                        <div style="background: rgba(0,0,0,0.2); border: 1px solid #334155; padding: 15px; border-radius: 12px; display: flex; flex-direction: column; gap: 10px;">
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div style="color: #cbd5e1; font-weight: bold; font-size: 14px;">⚔️ vs ${Workspace.escapeHTML(adversarioNome)}</div>
+                                <div style="font-size: 11px; color: #64748b; background: #0f172a; padding: 4px 8px; border-radius: 6px;">${dataStr}</div>
+                            </div>
+                            <div style="font-size: 12px; color: #94a3b8; font-style: italic;">Missão: ${Workspace.escapeHTML(batalha.cenario || 'Conversa Livre')}</div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 5px; padding-top: 10px; border-top: 1px dashed #334155;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span style="font-size: 16px;">💎</span>
+                                    <span style="color: #38bdf8; font-weight: bold; font-size: 13px;">Conquista: ${meuCristal}</span>
+                                </div>
+                                ${btnPartilha}
+                            </div>
+                        </div>
+                    `;
+                });
+                container.innerHTML = html;
+            } else {
+                container.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 40px;">Você ainda não travou nenhuma batalha na Arena. Os seus desafios aparecerão aqui!</div>';
+            }
+        } catch (error) {
+            document.getElementById('ws-arena-lista-historico').innerHTML = '<div style="text-align: center; color: #ef4444; padding: 40px;">Erro ao ler os arquivos da Guilda.</div>';
+        }
+    },
+
+    partilharVitoria: async (oponenteNome, cristal) => {
+        if (!Workspace.usuario) return;
+        
+        // Monta o texto de celebração
+        const emoji = cristal.includes('Diamante') ? '💎✨' : '🔥';
+        const textoVitoria = `Acabei de conquistar o cristal de **${cristal}** ${emoji} num duelo épico de inglês na Arena contra o(a) **${oponenteNome}**! A fluência está a evoluir a cada batalha. Quem é o próximo a desafiar-me? ⚔️`;
+
+        try {
+            // Reutiliza o motor de posts do seu Feed de forma silenciosa e perfeita
+            const res = await Workspace.api('/workspace/posts', 'POST', {
+                texto: textoVitoria,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                autorTipo: Workspace.usuario.tipo,
+                escolaId: Workspace.usuario.escolaId,
+                anexos: [],
+                destino: 'global',
+                destinoNome: 'Público Geral',
+                categoria: 'normal'
+            });
+
+            if (res && res.success) {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("Vitória celebrada no Feed com sucesso! 🏆", "success");
+                }
+                
+                // Fecha o modal de histórico
+                const modal = document.getElementById('ws-arena-historico-modal');
+                if (modal) modal.remove();
+                
+                // Redireciona o aluno para o Feed para ele ver a sua própria conquista
+                Workspace.navegarPara('feed');
+                if (Workspace.Feed) {
+                    Workspace.Feed.todosOsPosts = [];
+                    Workspace.Feed.carregarPosts();
+                }
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao partilhar no Feed.", "error");
+        }
     }
+
+
 };
