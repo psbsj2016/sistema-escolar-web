@@ -612,13 +612,26 @@ Workspace.Arena = {
         if (resultado.jogadores && resultado.jogadores.length > 0) {
             resultado.jogadores.forEach(j => {
                 const classeCristal = j.cristal.includes('Diamante') ? 'cristal-Diamante' : `cristal-${j.cristal}`;
+                
+                // 🚀 1. Buscamos a Foto ou a Letra Inicial com tamanho de 40px
+                const avatarMiniatura = window.Workspace.renderizarAvatar(j.nome, 40);
+
                 htmlJogadores += `
                     <div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border: 1px solid #334155; padding: 25px; border-radius: 20px; position: relative; overflow: hidden;">
+                        <!-- Efeito de Luz de Fundo -->
                         <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: white; opacity: 0.05; border-radius: 50%; filter: blur(20px);"></div>
-                        <h2 style="color: white; margin: 0 0 5px 0; font-size: 20px;">${j.nome}</h2>
+                        
+                        <!-- 🚀 2. Caixa Elegante com a Foto e o Nome lado a lado -->
+                        <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; position: relative; z-index: 1;">
+                            <div style="box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 50%; display: flex;">
+                                ${avatarMiniatura}
+                            </div>
+                            <h2 style="color: white; margin: 0; font-size: 22px;">${j.nome}</h2>
+                        </div>
+                        
                         <div class="ws-cristal-box ${classeCristal}"></div>
-                        <div style="color: #cbd5e1; font-weight: 800; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px;">${j.titulo}</div>
-                        <div style="color: #94a3b8; font-size: 14px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border-left: 3px solid #3b82f6;">${j.feedback}</div>
+                        <div style="color: #cbd5e1; font-weight: 800; font-size: 16px; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 15px; position: relative; z-index: 1;">${j.titulo}</div>
+                        <div style="color: #94a3b8; font-size: 14px; background: rgba(255,255,255,0.05); padding: 12px; border-radius: 10px; border-left: 3px solid #3b82f6; position: relative; z-index: 1; text-align: left;">${j.feedback}</div>
                     </div>
                 `;
             });
