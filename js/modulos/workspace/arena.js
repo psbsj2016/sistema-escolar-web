@@ -590,7 +590,7 @@ Workspace.Arena = {
         catch (error) { if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Ocorreu um atraso na avaliação.", "warning"); }
     },
 
-    exibirPainelResultadoFinal: (resultado) => {
+  exibirPainelResultadoFinal: (resultado) => {
         const painel = document.getElementById('ws-painel-batalha');
         if (!painel) return;
 
@@ -609,23 +609,28 @@ Workspace.Arena = {
         `;
 
         let htmlJogadores = '';
+        let meuCristalParaFeed = 'Safira';
+        let oponenteNomeParaFeed = 'um colega';
+
         if (resultado.jogadores && resultado.jogadores.length > 0) {
+            
+            // 🚀 Identifica os perfis para o botão de desafio
+            const meuPerfil = resultado.jogadores.find(j => j.nome === Workspace.usuario.nome || j.nome === Workspace.usuario.login);
+            if (meuPerfil) meuCristalParaFeed = meuPerfil.cristal;
+            
+            const oponentePerfil = resultado.jogadores.find(j => j !== meuPerfil);
+            if (oponentePerfil) oponenteNomeParaFeed = oponentePerfil.nome;
+
             resultado.jogadores.forEach(j => {
                 const classeCristal = j.cristal.includes('Diamante') ? 'cristal-Diamante' : `cristal-${j.cristal}`;
-                
-                // 🚀 1. Buscamos a Foto ou a Letra Inicial com tamanho de 40px
                 const avatarMiniatura = window.Workspace.renderizarAvatar(j.nome, 40);
 
                 htmlJogadores += `
                     <div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border: 1px solid #334155; padding: 25px; border-radius: 20px; position: relative; overflow: hidden;">
-                        <!-- Efeito de Luz de Fundo -->
                         <div style="position: absolute; top: -50px; left: -50px; width: 100px; height: 100px; background: white; opacity: 0.05; border-radius: 50%; filter: blur(20px);"></div>
                         
-                        <!-- 🚀 2. Caixa Elegante com a Foto e o Nome lado a lado -->
                         <div style="display: flex; align-items: center; justify-content: center; gap: 12px; margin-bottom: 10px; position: relative; z-index: 1;">
-                            <div style="box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 50%; display: flex;">
-                                ${avatarMiniatura}
-                            </div>
+                            <div style="box-shadow: 0 4px 10px rgba(0,0,0,0.3); border-radius: 50%; display: flex;">${avatarMiniatura}</div>
                             <h2 style="color: white; margin: 0; font-size: 22px;">${j.nome}</h2>
                         </div>
                         
@@ -637,20 +642,69 @@ Workspace.Arena = {
             });
         }
 
+        // 🚀 O titulo foi ajustado com clamp(20px, 5vw, 32px) para não cortar em telemóveis!
         painel.innerHTML = `
             ${estiloCristais}
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); animation: fadeIn 0.8s ease; overflow-y: auto;">
-                <h1 style="color: white; margin: 0 0 10px 0; font-size: 32px; background: -webkit-linear-gradient(#fcd34d, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Decisão do Mestre da Guilda (IA)</h1>
+                <h1 style="color: white; margin: 0 0 10px 0; font-size: clamp(20px, 5vw, 32px); line-height: 1.2; background: -webkit-linear-gradient(#fcd34d, #f59e0b); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Decisão do Mestre da Guilda (IA)</h1>
                 <p style="color: #cbd5e1; font-size: 16px; margin-bottom: 30px; max-width: 600px;">"${resultado.feedbackGeral}"</p>
                 <h3 style="color: #f59e0b; margin-bottom: 20px; font-size: 22px;">Destaque do Combate: ${resultado.vencedor}</h3>
+                
                 <div style="display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; max-width: 900px; width: 100%;">
                     ${htmlJogadores}
                 </div>
-                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="margin-top: 40px; background: #3b82f6; color: white; border: none; padding: 16px 40px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Recolher Cristais e Voltar</button>
+                
+                <!-- 🚀 Os Botões (Partilhar e Voltar) -->
+                <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 40px; width: 100%;">
+                    <button onclick="Workspace.Arena.compartilharEDesafiar('${window.Workspace.escapeHTML ? Workspace.escapeHTML(oponenteNomeParaFeed) : oponenteNomeParaFeed}', '${meuCristalParaFeed}')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">📢 Partilhar e Desafiar</button>
+                    
+                    <button onclick="Workspace.Arena.destruirPainelBatalha()" style="background: #3b82f6; color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Recolher Cristais e Voltar</button>
+                </div>
             </div>
         `;
         
         if (Workspace.Feed && Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
+    },
+
+    // 🚀 O NOVO MÉTODO (Insira isto log a seguir ao 'destruirPainelBatalha: () => { ... },')
+    compartilharEDesafiar: async (oponenteNome, cristal) => {
+        if (!Workspace.usuario) return;
+        
+        // Atribui o Emoji correto ao Cristal
+        let emoji = '🔷⚡';
+        if (cristal.includes('Diamante')) emoji = '💎✨';
+        else if (cristal.includes('Rubi')) emoji = '🟥🔥';
+        else if (cristal.includes('Ametista')) emoji = '🟪🔮';
+
+        const textoVitoria = `Acabo de sobreviver à Arena e conquistei o cristal de **${cristal}** ${emoji} num duelo épico contra o(a) **${oponenteNome}**! A minha fluência está a subir de nível. \n\nQuem tem coragem de ser o meu próximo oponente na Arena? ⚔️🎙️`;
+
+        try {
+            const res = await Workspace.api('/workspace/posts', 'POST', {
+                texto: textoVitoria,
+                autorNome: Workspace.usuario.nome || Workspace.usuario.login,
+                autorTipo: Workspace.usuario.tipo,
+                escolaId: Workspace.usuario.escolaId,
+                anexos: [],
+                destino: 'global',
+                destinoNome: 'Público Geral',
+                categoria: 'normal'
+            });
+
+            if (res && res.success) {
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Desafio lançado no Feed! 🏆", "success");
+                
+                // Fecha a tela da Arena e leva o aluno direto para ver a sua publicação
+                Workspace.Arena.destruirPainelBatalha();
+                Workspace.navegarPara('feed');
+                
+                if (Workspace.Feed) {
+                    Workspace.Feed.todosOsPosts = [];
+                    Workspace.Feed.carregarPosts();
+                }
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao partilhar desafio no Feed.", "error");
+        }
     },
 
     destruirPainelBatalha: () => {
