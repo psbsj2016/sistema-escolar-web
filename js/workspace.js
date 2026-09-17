@@ -14,6 +14,26 @@ import './modulos/workspace/arena.js';
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
 
+/**
+ * 🔄 Motor de Atualização Invisível de Avatares
+ * Esta função vai ao servidor, pede a lista atualizada de nomes e fotos,
+ * e reescreve a memória do navegador instantaneamente.
+ */
+Workspace.atualizarCacheAvatares = async function() {
+    try {
+        // Faz o pedido "fantasma" (em segundo plano) à nossa rota do servidor
+        const resposta = await Workspace.api('/avatars', 'GET');
+        
+        // Se o servidor devolver os dados com sucesso, substituímos a memória antiga
+        if (resposta && !resposta.error) {
+            Workspace.avatarsCache = resposta;
+            console.log("✨ Memória da Arena atualizada com sucesso em tempo real!");
+        }
+    } catch (erro) {
+        console.error("🚨 Falha ao atualizar a lista de avatares em segundo plano:", erro);
+    }
+};
+
 Object.assign(Workspace, {
     usuario: null,
     avatarsCache: {}, 
@@ -658,6 +678,12 @@ Object.assign(Workspace, {
                 }
 
                 if (Workspace.Sidebar && Workspace.Sidebar.carregarTurmas) Workspace.Sidebar.carregarTurmas();
+
+                // 🚀 GATILHO ADICIONADO AQUI: Atualiza a memória da Arena invisivelmente!
+                if (typeof Workspace.atualizarCacheAvatares === 'function') {
+                    Workspace.atualizarCacheAvatares();
+                }
+
             } else {
                 Workspace.mostrarAviso(res.error || "Erro ao atualizar o nome.", "error");
             }
@@ -769,6 +795,11 @@ Object.assign(Workspace, {
                         Workspace.atualizarAvataresNaTela(nomeUsuario, avatarFinal);
                     }
                     
+                    // 🚀 GATILHO ADICIONADO AQUI: Sincroniza a Arena com a nova foto!
+                    if (typeof Workspace.atualizarCacheAvatares === 'function') {
+                        Workspace.atualizarCacheAvatares();
+                    }
+
                     Workspace.fecharModalCorte();
                 }
             } catch (err) {
