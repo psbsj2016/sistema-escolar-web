@@ -352,7 +352,7 @@ Workspace.Arena = {
             if(btn) { btn.innerHTML = '🔴'; btn.style.background = '#ef4444'; btn.style.animation = 'pulse 1s infinite'; }
         };
 
-        Workspace.Arena.reconhecimentoVoz.onresult = (event) => {
+       Workspace.Arena.reconhecimentoVoz.onresult = async (event) => {
             let transcricaoBruta = event.results[0][0].transcript;
             const agora = Date.now();
             if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) {
@@ -361,8 +361,34 @@ Workspace.Arena = {
             Workspace.Arena.ultimaFala = transcricaoBruta;
             Workspace.Arena.ultimoTempoFala = agora;
             
-            const transcricaoInteligente = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
-            Workspace.Arena.enviarFala(transcricaoInteligente);
+            // 🚀 UX PREMIUM: Mostra ao aluno que a IA está a processar a gramática!
+            const btn = document.getElementById('ws-btn-mic-arena');
+            if(btn) { 
+                btn.innerHTML = '⏳'; 
+                btn.style.background = '#f59e0b'; 
+                btn.style.animation = 'none'; 
+            }
+            
+            try {
+                // 1. Chama o nosso novo Revisor Inteligente na Nuvem
+                const res = await Workspace.api('/workspace/ingles/transcricao/corrigir', 'POST', { textoCru: transcricaoBruta });
+                
+                let textoFinal = transcricaoBruta;
+                if (res && res.success && res.textoCorrigido) {
+                    textoFinal = res.textoCorrigido; // A frase perfeita chega aqui!
+                } else {
+                    // Se a internet vacilar, usamos o plano B matemático local
+                    textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
+                }
+                
+                // 2. Envia a fala polida para o Chat e para o Sistema de Combo
+                Workspace.Arena.enviarFala(textoFinal);
+                
+            } catch (e) {
+                // Plano B matemático local em caso de erro extremo de rede
+                const textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
+                Workspace.Arena.enviarFala(textoFinal);
+            }
         };
 
         Workspace.Arena.reconhecimentoVoz.onend = () => {
