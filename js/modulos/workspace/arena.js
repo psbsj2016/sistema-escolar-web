@@ -369,7 +369,7 @@ Workspace.Arena = {
                 btn.style.animation = 'none'; 
             }
             
-            try {
+           try {
                 // 1. Chama o nosso novo Revisor Inteligente na Nuvem
                 const res = await Workspace.api('/workspace/ingles/transcricao/corrigir', 'POST', { textoCru: transcricaoBruta });
                 
@@ -377,7 +377,6 @@ Workspace.Arena = {
                 if (res && res.success && res.textoCorrigido) {
                     textoFinal = res.textoCorrigido; // A frase perfeita chega aqui!
                 } else {
-                    // Se a internet vacilar, usamos o plano B matemático local
                     textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
                 }
                 
@@ -385,15 +384,26 @@ Workspace.Arena = {
                 Workspace.Arena.enviarFala(textoFinal);
                 
             } catch (e) {
-                // Plano B matemático local em caso de erro extremo de rede
                 const textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
                 Workspace.Arena.enviarFala(textoFinal);
+            } finally {
+                // 🚀 Retorna o botão ao estado normal SÓ QUANDO a IA terminar o serviço!
+                if(btn) { 
+                    btn.innerHTML = '🎙️'; 
+                    btn.style.background = '#3b82f6'; 
+                    btn.style.animation = 'none'; 
+                }
             }
         };
 
         Workspace.Arena.reconhecimentoVoz.onend = () => {
             const btn = document.getElementById('ws-btn-mic-arena');
-            if(btn) { btn.innerHTML = '🎙️'; btn.style.background = '#3b82f6'; btn.style.animation = 'none'; }
+            // 🚀 Proteção: Só muda para azul se NÃO estiver ocupado com a ampulheta (IA a pensar)
+            if(btn && btn.innerHTML !== '⏳') { 
+                btn.innerHTML = '🎙️'; 
+                btn.style.background = '#3b82f6'; 
+                btn.style.animation = 'none'; 
+            }
         };
     },
 
