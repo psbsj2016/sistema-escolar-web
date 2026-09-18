@@ -237,76 +237,102 @@ Workspace.Arena = {
         } catch (error) { status.style.color = '#ef4444'; status.innerText = 'Erro ao enviar convite.'; }
     },
 
-    escutarEventosTempoReal: () => {
+   escutarEventosTempoReal: () => {
         if (Workspace.Arena.evtSource) return; 
         
         Workspace.Arena.evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
         
         Workspace.Arena.evtSource.onmessage = (event) => {
-            const dados = JSON.parse(event.data);
-            const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-            
-            if (dados.destinatarios && dados.destinatarios.includes(meuNome)) {
-                if (dados.type === 'ARENA_CONVITE_RECEBIDO') {
-                    if (window.Toast) {
-                        Toast.showInterativo({
-                            remetenteNome: dados.remetenteNome,
-                            subtitulo: "⚔️ Desafio para a Arena",
-                            mensagemCorpo: `<strong>${dados.remetenteNome}</strong> desafiou-te para uma prática de inglês de <strong>${dados.limiteMinutos} minutos</strong>!`
-                        }, 'arena', async () => {
-                            Workspace.Arena.desbloquearAudioNavegador(); 
-                            await Workspace.api(`/workspace/arena/${dados.salaId}/aceitar`, 'POST', {
-                                alunoId: Workspace.usuario.id, alunoNome: meuNome, escolaId: Workspace.usuario.escolaId
-                            });
-                        });
-                    }
-                }
+            try {
+                const dados = JSON.parse(event.data);
+                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 
-                // 🚀 1. DONO DO POST RECEBE O PING
-                if (dados.type === 'ARENA_DESAFIO_DIRETO') {
-                    Workspace.Arena.desbloquearAudioNavegador();
-                    Workspace.Arena.mostrarConviteDireto(dados.desafianteNome, dados.minutos, dados.salaId);
-                }
-
-                // 🚀 2. DESAFIANTE É AVISADO QUE O DONO RECUSOU
-                if (dados.type === 'ARENA_DESAFIO_RECUSADO') {
-                    if (window.Workspace && Workspace.mostrarAviso) {
-                        Workspace.mostrarAviso("O oponente não aceitou o desafio ou não está disponível.", "warning");
-                    }
-                    if (window.Workspace && Workspace.Feed && Workspace.Feed._ultimoBotaoDesafioPendente) {
-                        const btn = document.getElementById(Workspace.Feed._ultimoBotaoDesafioPendente);
-                        if (btn) {
-                            btn.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
-                            btn.disabled = false;
-                            btn.style.opacity = '1';
-                        }
-                        Workspace.Feed._ultimoBotaoDesafioPendente = null;
-                    }
-                }
-
-                if (dados.type === 'ARENA_MATCH_ENCONTRADO') {
-                    const oponenteReal = dados.destinatarios.find(nome => nome !== meuNome);
-                    // 🚀 Recebemos o cenário do servidor!
-                    Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos, dados.cenario);
-                }
-            }
-
-            if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
-                if (dados.fala.autorNome !== meuNome) {
-                    Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false, dados.fala.combo);
+                // 🚀 O SEGREDO DA PERFEIÇÃO: Limpa os espaços invisíveis e põe tudo em minúsculas
+                // Isto garante 100% de sucesso na receção do sinal para os dois jogadores!
+                const destLimpos = (dados.destinatarios || []).map(n => String(n).trim().toLowerCase());
+                const meuLimpo = String(meuNome).trim().toLowerCase();
+                
+                if (destLimpos.includes(meuLimpo)) {
                     
-                    // 🚀 Alguém falou! O tempo começa a contar agora para o Fator Combo
-                    Workspace.Arena.tempoUltimaRececao = Date.now();
-                }
-            }
-           
-            // 🚀 Escuta atenta à aparição do Mestre da Guilda!
-            if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
-                Workspace.Arena.desenharDicaDoMestre(dados.dica);
-            }
+                    if (dados.type === 'ARENA_CONVITE_RECEBIDO') {
+                        if (window.Toast) {
+                            Toast.showInterativo({
+                                remetenteNome: dados.remetenteNome,
+                                subtitulo: "⚔️ Desafio para a Arena",
+                                mensagemCorpo: `<strong>${dados.remetenteNome}</strong> desafiou-te para uma prática de inglês de <strong>${dados.limiteMinutos} minutos</strong>!`
+                            }, 'arena', async () => {
+                                Workspace.Arena.desbloquearAudioNavegador(); 
+                                await Workspace.api(`/workspace/arena/${dados.salaId}/aceitar`, 'POST', {
+                                    alunoId: Workspace.usuario.id, alunoNome: meuNome, escolaId: Workspace.usuario.escolaId
+                                });
+                            });
+                        }
+                    }
+                    
+                    // 🚀 1. DONO DO POST RECEBE O PING
+                    if (dados.type === 'ARENA_DESAFIO_DIRETO') {
+                        Workspace.Arena.desbloquearAudioNavegador();
+                        Workspace.Arena.mostrarConviteDireto(dados.desafianteNome, dados.minutos, dados.salaId);
+                    }
 
-            if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
-                Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
+                    // 🚀 2. DESAFIANTE É AVISADO QUE O DONO RECUSOU
+                    if (dados.type === 'ARENA_DESAFIO_RECUSADO') {
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("O oponente não aceitou o desafio ou não está disponível.", "warning");
+                        }
+                        if (window.Workspace && Workspace.Feed && Workspace.Feed._ultimoBotaoDesafioPendente) {
+                            const btn = document.getElementById(Workspace.Feed._ultimoBotaoDesafioPendente);
+                            if (btn) {
+                                btn.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
+                                btn.disabled = false;
+                                btn.style.opacity = '1';
+                            }
+                            Workspace.Feed._ultimoBotaoDesafioPendente = null;
+                        }
+                    }
+
+                    // 🚀 3. AMBOS SÃO ENGOLIDOS PARA A ARENA IMEDIATAMENTE!
+                    if (dados.type === 'ARENA_MATCH_ENCONTRADO') {
+                        // Descobre o nome do oponente limpando a matriz
+                        const oponenteReal = dados.destinatarios.find(n => String(n).trim().toLowerCase() !== meuLimpo) || "Adversário";
+                        
+                        // Garante que o Modal do dono do post é destruído
+                        const conviteModal = document.getElementById('ws-arena-convite-direto-modal');
+                        if (conviteModal) conviteModal.remove();
+
+                        // Destrava o botão do Feed do desafiante silenciosamente
+                        if (window.Workspace && Workspace.Feed && Workspace.Feed._ultimoBotaoDesafioPendente) {
+                            const btn = document.getElementById(Workspace.Feed._ultimoBotaoDesafioPendente);
+                            if (btn) {
+                                btn.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
+                                btn.disabled = false;
+                                btn.style.opacity = '1';
+                            }
+                            Workspace.Feed._ultimoBotaoDesafioPendente = null;
+                        }
+
+                        // INICIA A MAGIA!
+                        Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos, dados.cenario);
+                    }
+                }
+
+                // (Eventos que não dependem do array de destinatários)
+                if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
+                    if (dados.fala.autorNome !== meuNome) {
+                        Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false, dados.fala.combo);
+                        Workspace.Arena.tempoUltimaRececao = Date.now();
+                    }
+                }
+               
+                if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
+                    Workspace.Arena.desenharDicaDoMestre(dados.dica);
+                }
+
+                if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
+                    Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
+                }
+            } catch (err) {
+                // Silencia erros de parse para não quebrar a conexão
             }
         };
     },
