@@ -269,10 +269,10 @@ Workspace.Arena = {
                         }
                     }
                     
-                    // 🚀 1. DONO DO POST RECEBE O PING
+                   // 🚀 1. DONO DO POST RECEBE O PING
                     if (dados.type === 'ARENA_DESAFIO_DIRETO') {
                         Workspace.Arena.desbloquearAudioNavegador();
-                        Workspace.Arena.mostrarConviteDireto(dados.desafianteNome, dados.minutos, dados.salaId);
+                        Workspace.Arena.mostrarConviteDireto(dados.desafianteNome, dados.minutos, dados.salaId, dados.postId);
                     }
 
                     // 🚀 2. DESAFIANTE É AVISADO QUE O DONO RECUSOU
@@ -389,7 +389,7 @@ Workspace.Arena = {
     // ============================================================================
     // 🚀 JANELA DE DECISÃO: ALGUÉM ACEITOU O TEU DESAFIO NO FEED!
     // ============================================================================
-    mostrarConviteDireto: (desafianteNome, minutos, salaId) => {
+    mostrarConviteDireto: (desafianteNome, minutos, salaId, postId) => { // 🚀 POST ID AQUI
         const idModal = 'ws-arena-convite-direto-modal';
         if (document.getElementById(idModal)) document.getElementById(idModal).remove();
 
@@ -410,7 +410,7 @@ Workspace.Arena = {
         `;
         document.body.appendChild(modal);
 
-        Workspace.Arena.tocarSom('inicio'); // Chama a atenção com som!
+        Workspace.Arena.tocarSom('inicio');
 
         document.getElementById('btn-aceitar-direto').onclick = async () => {
             document.getElementById('btn-aceitar-direto').innerText = 'A ligar...';
@@ -420,9 +420,10 @@ Workspace.Arena = {
                     desafiadoNome: Workspace.usuario.nome || Workspace.usuario.login,
                     desafianteNome: desafianteNome,
                     escolaId: Workspace.usuario.escolaId,
-                    minutos: minutos
+                    minutos: minutos,
+                    postId: postId // 🚀 DEVOLVE O POST ID PARA O SERVIDOR APAGAR!
                 });
-                modal.remove(); // Ao fechar, o SSE "ARENA_MATCH_ENCONTRADO" vai ser ativado para os dois!
+                modal.remove(); 
             } catch(e) {
                 Workspace.mostrarAviso("Erro ao entrar na sala.", "error");
                 modal.remove();
@@ -438,7 +439,7 @@ Workspace.Arena = {
                 });
             } catch(e){}
         };
-    },   
+    },
 
     configurarMicrofone: () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;

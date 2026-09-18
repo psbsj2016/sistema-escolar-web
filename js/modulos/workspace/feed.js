@@ -2468,14 +2468,15 @@ abrirPerfilUsuario: async (autorNome) => {
                 desafiadoNome: desafiadoNome,
                 desafianteNome: Workspace.usuario.nome || Workspace.usuario.login,
                 escolaId: Workspace.usuario.escolaId,
-                minutos: minutos
+                minutos: minutos,
+                postId: postId // 🚀 A PASSAGEM DO TESTEMUNHO
             });
 
             if (res && res.success) {
                 if (btn) btn.innerHTML = 'A aguardar que oponente aceite... ⏳';
                 Workspace.Feed._ultimoBotaoDesafioPendente = `btn-desafio-${postId}`;
                 
-                // 🚀 RETOQUE: Se demorar mais de 60 segundos, desiste do convite automaticamente (para o botão não ficar preso)
+                // Retoque: desiste em 60 segundos
                 setTimeout(() => {
                     const btnAtrasado = document.getElementById(`btn-desafio-${postId}`);
                     if (btnAtrasado && btnAtrasado.innerHTML.includes('A aguardar')) {
@@ -2487,7 +2488,7 @@ abrirPerfilUsuario: async (autorNome) => {
                 }, 60000); 
 
             } else {
-                throw new Error('Falha ao enviar convite');
+                throw new Error(res.error || 'Falha ao enviar convite');
             }
         } catch (error) {
             if (btn) {
@@ -2495,7 +2496,10 @@ abrirPerfilUsuario: async (autorNome) => {
                 btn.disabled = false;
                 btn.style.opacity = '1';
             }
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao enviar o convite.", "error");
+            if (window.Workspace && Workspace.mostrarAviso) {
+                // Se a sala estiver ocupada, exibe o nosso aviso elegante do backend
+                Workspace.mostrarAviso(error.message || "Erro ao enviar o convite.", "error");
+            }
         }
     }
 
