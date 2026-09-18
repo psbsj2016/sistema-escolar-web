@@ -328,6 +328,11 @@ Workspace.Arena = {
                     Workspace.Arena.desenharDicaDoMestre(dados.dica);
                 }
 
+                // 🚀 NOVO: Captura o Plot Twist em tempo real!
+                if (dados.type === 'ARENA_PLOT_TWIST' && Workspace.Arena.salaAtual === dados.salaId) {
+                    Workspace.Arena.desenharPlotTwist(dados.twist);
+                }
+
                 if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
                     Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
                 }
@@ -648,6 +653,36 @@ Workspace.Arena = {
         log.scrollTop = log.scrollHeight;
         
         // Toca o som de notificação padrão para alertar os alunos
+        Workspace.Arena.tocarSom('mensagem');
+    },
+
+    // ============================================================================
+    // 🌪️ O RENDERIZADOR DO PLOT TWIST
+    // ============================================================================
+    desenharPlotTwist: (twistTexto) => {
+        const log = document.getElementById('ws-arena-chat-log');
+        if (!log) return;
+        
+        // Limpa o texto por segurança
+        const textoLimpo = window.Workspace && Workspace.escapeHTML ? Workspace.escapeHTML(twistTexto) : twistTexto;
+
+        // Desenha uma caixa vermelha vibrante e pulsante
+        const html = `
+            <div style="display: flex; justify-content: center; width: 100%; margin: 20px 0; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                <div style="background: linear-gradient(135deg, #ef4444, #991b1b); color: white; padding: 20px 25px; border-radius: 20px; max-width: 85%; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5); border: 2px solid #fca5a5; text-align: center; position: relative; overflow: hidden;">
+                    <div style="position: absolute; top: -10px; right: -10px; font-size: 60px; opacity: 0.1; transform: rotate(15deg);">🌪️</div>
+                    <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; margin-bottom: 8px; color: #fecaca; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <span style="animation: pulse 1s infinite;">🚨</span> PLOT TWIST <span style="animation: pulse 1s infinite;">🚨</span>
+                    </div>
+                    <div style="font-size: 16px; line-height: 1.6; font-weight: 700; position: relative; z-index: 1;">"${textoLimpo}"</div>
+                </div>
+            </div>
+        `;
+        
+        log.insertAdjacentHTML('beforeend', html);
+        log.scrollTop = log.scrollHeight;
+        
+        // Dispara o som de mensagem normal, mas o visual já vai assustar o suficiente!
         Workspace.Arena.tocarSom('mensagem');
     },
 
