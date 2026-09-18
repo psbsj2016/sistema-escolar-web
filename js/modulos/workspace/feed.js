@@ -1124,18 +1124,31 @@ Workspace.Feed = {
 
             const btnVerMais = `<div id="btn-ler-mais-${p.id}" style="margin-top: 8px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(52,152,219,0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(52,152,219,0.2)'" onmouseout="this.style.background='rgba(52,152,219,0.1)'">Ler mais ⬇️</span></div>`;
 
-            // 🚀 A GRANDE MAGIA: Deteta se a publicação veio da Arena!
+            // 🚀 A GRANDE MAGIA: Deteta o desafio e cria a Via Rápida (10 Min)
             let cardDesafioArena = '';
-            if (p.texto && p.texto.includes('Quem tem coragem de ser o meu próximo oponente na Arena?')) {
+            if (p.texto && p.texto.includes('Quem tem coragem') && p.texto.includes('na Arena')) {
+                // Impede o autor de aceitar o próprio desafio visualmente
+                const ehMeuProprioDesafio = Workspace.usuario && (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome);
+                
+                let botaoAcao = '';
+                if (ehMeuProprioDesafio) {
+                    botaoAcao = `<div style="color: #ea580c; font-size: 13px; font-weight: bold; background: rgba(234, 88, 12, 0.1); padding: 8px 12px; border-radius: 8px;">A aguardar oponentes... ⏳</div>`;
+                } else {
+                    // 🚀 O NOVO GATILHO DIRETO PARA OS 10 MINUTOS
+                    botaoAcao = `
+                        <button onclick="if(window.Workspace && Workspace.Arena){ Workspace.Arena.entrarEmBatalhaDireta('${Workspace.Feed.limparTexto(p.autorNome)}', 10); } else { alert('Módulo da Arena a carregar, aguarde um segundo!'); }" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                            Aceitar Desafio (10 Min) ⏱️
+                        </button>
+                    `;
+                }
+
                 cardDesafioArena = `
                     <div style="margin-top: 15px; border-radius: 12px; background: linear-gradient(135deg, rgba(245, 158, 11, 0.05), rgba(234, 88, 12, 0.1)); border: 1px solid rgba(245, 158, 11, 0.3); padding: 15px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; animation: popUp 0.5s ease;">
                         <div>
                             <strong style="color: #ea580c; display: flex; align-items: center; gap: 5px; font-size: 15px;">⚔️ Desafio da Arena</strong>
-                            <span style="color: #64748b; font-size: 13px;">Aceita o desafio e prove a sua fluência em inglês!</span>
+                            <span style="color: #64748b; font-size: 13px;">Duelo Rápido: 10 Minutos de Pura Adrenalina!</span>
                         </div>
-                        <button onclick="if(window.Workspace && Workspace.Arena){ if(!document.getElementById('ws-modal-arena')) Workspace.Arena.init(); Workspace.Arena.abrirPainel(); } else { alert('Módulo da Arena a carregar, aguarde um segundo!'); }" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
-                            Aceitar Desafio 🎙️
-                        </button>
+                        ${botaoAcao}
                     </div>
                 `;
             }

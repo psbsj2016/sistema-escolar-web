@@ -338,6 +338,28 @@ Workspace.Arena = {
         else return txt + ".";
     },
 
+   // ============================================================================
+    // 🚀 VIA RÁPIDA: ENTRADA DIRETA EM BATALHA A PARTIR DO FEED (10 MINUTOS)
+    // ============================================================================
+    entrarEmBatalhaDireta: (nomeAdversario, minutos) => {
+        // 1. Garante que a Arena está desenhada na memória
+        if (!document.getElementById('ws-modal-arena')) {
+            if (Workspace.Arena.init) Workspace.Arena.init();
+        }
+
+        // 2. Cria os dados falsos para a Sala de Combate Direto
+        const salaIdFake = 'duelo-feed-' + Date.now();
+        const cenarioEspecial = "🔥 DUELO RÁPIDO DO FEED 🔥\nMostre a sua fluência em 10 minutos de pura adrenalina e tente impressionar a Inteligência Artificial!";
+
+        // 3. Efeito visual de entrada no combate
+        if (window.Workspace && Workspace.mostrarAviso) {
+            Workspace.mostrarAviso(`⚔️ Desafio aceite! A batalha contra ${nomeAdversario} vai começar!`, "success", 4000);
+        }
+
+        // 4. Invoca a SUA função original, passando os 10 minutos e o cenário!
+        Workspace.Arena.iniciarPartida(salaIdFake, nomeAdversario, minutos, cenarioEspecial);
+    },
+
     configurarMicrofone: () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         if (!SpeechRecognition) return;
@@ -666,7 +688,7 @@ Workspace.Arena = {
         if (Workspace.Feed && Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
     },
 
-    // 🚀 O NOVO MÉTODO (Insira isto log a seguir ao 'destruirPainelBatalha: () => { ... },')
+   // 🚀 O NOVO GATILHO DE PARTILHA COM O MODO DE 10 MINUTOS
     compartilharEDesafiar: async (oponenteNome, cristal) => {
         if (!Workspace.usuario) return;
         
@@ -676,7 +698,8 @@ Workspace.Arena = {
         else if (cristal.includes('Rubi')) emoji = '🟥🔥';
         else if (cristal.includes('Ametista')) emoji = '🟪🔮';
 
-        const textoVitoria = `Acabo de sobreviver à Arena e conquistei o cristal de **${cristal}** ${emoji} num duelo épico contra o(a) **${oponenteNome}**! A minha fluência está a subir de nível. \n\nQuem tem coragem de ser o meu próximo oponente na Arena? ⚔️🎙️`;
+        // 🚀 O SEGREDO: Este texto tem as palavras exatas que o Feed procura para gerar o botão!
+        const textoVitoria = `Acabo de sobreviver à Arena e conquistei o cristal de **${cristal}** ${emoji} num duelo épico contra o(a) **${oponenteNome}**! A minha fluência está a subir de nível.\n\nQuem tem coragem de me enfrentar num duelo direto de **10 Minutos** na Arena? ⚔️`;
 
         try {
             const res = await Workspace.api('/workspace/posts', 'POST', {
@@ -691,7 +714,7 @@ Workspace.Arena = {
             });
 
             if (res && res.success) {
-                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Desafio lançado no Feed! 🏆", "success");
+                if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Desafio de 10 Minutos lançado no Feed! 🏆", "success");
                 
                 // Fecha a tela da Arena e leva o aluno direto para ver a sua publicação
                 Workspace.Arena.destruirPainelBatalha();
