@@ -1369,6 +1369,7 @@ abrirPerfilUsuario: async (autorNome) => {
         let bioReal = "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
         let tipoMembro = "Aluno"; let iconeMembro = "📚"; let corFundo = "#e0e7ff"; let corTexto = "#2563eb";
         let avatarFinalHTML = avatarHTML;
+        let arenaHtml = ''; // 🚀 NOVO: O espaço reservado para o Status da Arena
 
         if (res && res.success) {
             if (res.bio) bioReal = Workspace.Feed.limparTexto(res.bio);
@@ -1384,13 +1385,40 @@ abrirPerfilUsuario: async (autorNome) => {
                     avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}">`;
                 }
             }
+
+            // 🚀 MAGIA DA ARENA: Procura o Status de Eloquência no Banco de Dados
+            if (tipoMembro === "Aluno") {
+                // Tenta encontrar os dados da arena diretamente no res, ou dentro de res.usuario
+                let arenaStats = res.arenaStats || (res.usuario && res.usuario.arenaStats) || null;
+                
+                let cristalArena = arenaStats ? (arenaStats.cristalAtual || 'Safira') : 'Safira';
+                let tituloArena = arenaStats ? (arenaStats.tituloAtual || 'Iniciante da Arena') : 'Iniciante da Arena';
+                
+                // Define as cores e emojis de acordo com o Cristal
+                let corCristal = '#3b82f6'; let emojiCristal = '🔷'; let glow = 'rgba(59, 130, 246, 0.1)';
+                if (cristalArena.includes('Diamante')) { corCristal = '#06b6d4'; emojiCristal = '💎'; glow = 'rgba(6, 182, 212, 0.1)'; }
+                else if (cristalArena.includes('Rubi')) { corCristal = '#ef4444'; emojiCristal = '🟥'; glow = 'rgba(239, 68, 68, 0.1)'; }
+                else if (cristalArena.includes('Ametista')) { corCristal = '#a855f7'; emojiCristal = '🟪'; glow = 'rgba(168, 85, 247, 0.1)'; }
+
+                // Constrói a Insígnia Brilhante!
+                arenaHtml = `
+                    <div style="background: ${glow}; border: 1px solid rgba(0,0,0,0.05); padding: 8px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 12px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 10px ${glow};">
+                        <div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); animation: ws-float 3s ease-in-out infinite;">${emojiCristal}</div>
+                        <div style="line-height: 1.2;">
+                            <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Status de Eloquência</div>
+                            <div style="color: ${corCristal}; font-size: 15px; font-weight: 900; letter-spacing: -0.3px;">${tituloArena}</div>
+                        </div>
+                    </div>
+                    <br>
+                `;
+            }
         }
 
         const overlay = document.createElement('div');
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
-        // 🚀 3. CSS PRESERVADO: Mantive a sua versão exata e adicionei apenas a redução da bolinha verde de forma segura
+        // 🚀 3. CSS PRESERVADO
         const estiloAvatar = `
             <style>
                 .ws-avatar-perfect img { 
@@ -1422,7 +1450,7 @@ abrirPerfilUsuario: async (autorNome) => {
             </style>
         `;
 
-        // 🚀 4. Desenha o HTML de uma só vez (sem textos de "A carregar...")
+        // 🚀 4. Desenha o HTML de uma só vez com o Status da Arena Injetado
         overlay.innerHTML = `
             ${estiloAvatar}
             <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
@@ -1441,9 +1469,14 @@ abrirPerfilUsuario: async (autorNome) => {
                         ${Workspace.Feed.limparTexto(autorNome)}
                         <span style="color: #3b82f6; font-size: 16px; background: #eff6ff; border-radius: 50%; padding: 2px;" title="Conta Verificada">✔️</span>
                     </h2>
-                    <div style="display: inline-block; background: ${corFundo}; color: ${corTexto}; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 20px; letter-spacing: 0.5px; text-transform: uppercase;">
+                    
+                    <div style="display: inline-block; background: ${corFundo}; color: ${corTexto}; padding: 6px 14px; border-radius: 20px; font-size: 11px; font-weight: 800; margin-bottom: 15px; letter-spacing: 0.5px; text-transform: uppercase;">
                         ${iconeMembro} ${tipoMembro}
                     </div>
+                    
+                    <!-- 🚀 STATUS DA ARENA INJETADO AQUI! -->
+                    ${arenaHtml}
+
                     <p style="margin: 0 0 25px 0; color: #64748b; font-size: 14px; line-height: 1.5; font-style: italic;">
                         "${bioReal}"
                     </p>
@@ -1460,7 +1493,6 @@ abrirPerfilUsuario: async (autorNome) => {
             if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
     },
-
     reagirComentario: async (postId, comentarioId, tipo) => {
         const meuId = Workspace.usuario.id;
         const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
