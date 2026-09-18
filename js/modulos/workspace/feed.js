@@ -556,21 +556,36 @@ Workspace.Feed = {
         }
     },
  
-    iniciarMotorDeVideos: () => {
+   iniciarMotorDeVideos: () => {
         document.querySelectorAll('.ws-feed-video').forEach(video => {
             video.onplay = function() {
                 document.querySelectorAll('.ws-feed-video').forEach(v => { if (v !== this && !v.paused) v.pause(); });
-                document.querySelectorAll('.ws-video-embed').forEach(iframe => iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*'));
+                
+                document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+                    // 🚀 BLINDAGEM 1: Só envia o comando se o iframe ainda estiver "vivo" na memória
+                    if (iframe && iframe.contentWindow) {
+                        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    }
+                });
             };
         });
 
         if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect();
+        
         Workspace.Feed.videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) {
                     const el = entry.target;
-                    if (el.tagName === 'VIDEO' && !el.paused) el.pause(); 
-                    else if (el.tagName === 'IFRAME') el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                    
+                    if (el.tagName === 'VIDEO' && !el.paused) {
+                        el.pause(); 
+                    } 
+                    else if (el.tagName === 'IFRAME') {
+                        // 🚀 BLINDAGEM 2: Previne o "Cannot read properties of null"
+                        if (el && el.contentWindow) {
+                            el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                        }
+                    }
                 }
             });
         }, { threshold: 0.2 }); 
