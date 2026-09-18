@@ -234,7 +234,7 @@ Workspace.Arena = {
                 Workspace.Arena.salaAtual = res.salaId;
                 status.style.color = '#10b981'; status.innerText = 'Convite enviado! A aguardar que o colega aceite...';
             }
-        } catch (error) { status.style.color = '#ef4444'; status.innerText = 'Erro ao enviar convite.'; }
+        } catch (error) { status.style.color = '#ef4444'; status.innerText = error.message || 'Erro ao enviar convite.'; }
     },
 
    escutarEventosTempoReal: () => {
