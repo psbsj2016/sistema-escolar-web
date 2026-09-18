@@ -1134,9 +1134,9 @@ Workspace.Feed = {
                 if (ehMeuProprioDesafio) {
                     botaoAcao = `<div style="color: #ea580c; font-size: 13px; font-weight: bold; background: rgba(234, 88, 12, 0.1); padding: 8px 12px; border-radius: 8px;">A aguardar oponentes... ⏳</div>`;
                 } else {
-                    // 🚀 O NOVO GATILHO DIRETO PARA OS 10 MINUTOS
+                    // 🚀 O NOVO GATILHO QUE ENVIA O PING
                     botaoAcao = `
-                        <button onclick="if(window.Workspace && Workspace.Arena){ Workspace.Arena.entrarEmBatalhaDireta('${Workspace.Feed.limparTexto(p.autorNome)}', 10); } else { alert('Módulo da Arena a carregar, aguarde um segundo!'); }" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <button id="btn-desafio-${p.id}" onclick="if(window.Workspace && Workspace.Feed){ Workspace.Feed.enviarDesafioDireto('${Workspace.Feed.limparTexto(p.autorNome)}', 10, '${p.id}'); } else { alert('Aguarde um segundo!'); }" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                             Aceitar Desafio (10 Min) ⏱️
                         </button>
                     `;
@@ -2435,5 +2435,53 @@ abrirPerfilUsuario: async (autorNome) => {
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao remover a frase.", "error");
             }
         });
+    },
+
+// ============================================================================
+    // 🚀 LÓGICA DO DESAFIO DIRETO DO FEED (MATCHMAKING)
+    // ============================================================================
+    enviarDesafioDireto: async (desafiadoNome, minutos, postId) => {
+        const btn = document.getElementById(`btn-desafio-${postId}`);
+        if (btn) {
+            btn.innerHTML = 'A enviar convite... ⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.8';
+        }
+
+        try {
+            const res = await Workspace.api('/workspace/arena/desafio-direto', 'POST', {
+                desafiadoNome: desafiadoNome,
+                desafianteNome: Workspace.usuario.nome || Workspace.usuario.login,
+                escolaId: Workspace.usuario.escolaId,
+                minutos: minutos
+            });
+
+            if (res && res.success) {
+                if (btn) btn.innerHTML = 'A aguardar que oponente aceite... ⏳';
+                Workspace.Feed._ultimoBotaoDesafioPendente = `btn-desafio-${postId}`;
+                
+                // 🚀 RETOQUE: Se demorar mais de 60 segundos, desiste do convite automaticamente (para o botão não ficar preso)
+                setTimeout(() => {
+                    const btnAtrasado = document.getElementById(`btn-desafio-${postId}`);
+                    if (btnAtrasado && btnAtrasado.innerHTML.includes('A aguardar')) {
+                        btnAtrasado.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
+                        btnAtrasado.disabled = false;
+                        btnAtrasado.style.opacity = '1';
+                        Workspace.Feed._ultimoBotaoDesafioPendente = null;
+                    }
+                }, 60000); 
+
+            } else {
+                throw new Error('Falha ao enviar convite');
+            }
+        } catch (error) {
+            if (btn) {
+                btn.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao enviar o convite.", "error");
+        }
     }
+
 };

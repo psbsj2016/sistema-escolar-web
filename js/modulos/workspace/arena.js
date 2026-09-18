@@ -262,6 +262,28 @@ Workspace.Arena = {
                     }
                 }
                 
+                // 🚀 1. DONO DO POST RECEBE O PING
+                if (dados.type === 'ARENA_DESAFIO_DIRETO') {
+                    Workspace.Arena.desbloquearAudioNavegador();
+                    Workspace.Arena.mostrarConviteDireto(dados.desafianteNome, dados.minutos, dados.salaId);
+                }
+
+                // 🚀 2. DESAFIANTE É AVISADO QUE O DONO RECUSOU
+                if (dados.type === 'ARENA_DESAFIO_RECUSADO') {
+                    if (window.Workspace && Workspace.mostrarAviso) {
+                        Workspace.mostrarAviso("O oponente não aceitou o desafio ou não está disponível.", "warning");
+                    }
+                    if (window.Workspace && Workspace.Feed && Workspace.Feed._ultimoBotaoDesafioPendente) {
+                        const btn = document.getElementById(Workspace.Feed._ultimoBotaoDesafioPendente);
+                        if (btn) {
+                            btn.innerHTML = 'Aceitar Desafio (10 Min) ⏱️';
+                            btn.disabled = false;
+                            btn.style.opacity = '1';
+                        }
+                        Workspace.Feed._ultimoBotaoDesafioPendente = null;
+                    }
+                }
+
                 if (dados.type === 'ARENA_MATCH_ENCONTRADO') {
                     const oponenteReal = dados.destinatarios.find(nome => nome !== meuNome);
                     // 🚀 Recebemos o cenário do servidor!
@@ -338,27 +360,59 @@ Workspace.Arena = {
         else return txt + ".";
     },
 
-   // ============================================================================
-    // 🚀 VIA RÁPIDA: ENTRADA DIRETA EM BATALHA A PARTIR DO FEED (10 MINUTOS)
     // ============================================================================
-    entrarEmBatalhaDireta: (nomeAdversario, minutos) => {
-        // 1. Garante que a Arena está desenhada na memória
-        if (!document.getElementById('ws-modal-arena')) {
-            if (Workspace.Arena.init) Workspace.Arena.init();
-        }
+    // 🚀 JANELA DE DECISÃO: ALGUÉM ACEITOU O TEU DESAFIO NO FEED!
+    // ============================================================================
+    mostrarConviteDireto: (desafianteNome, minutos, salaId) => {
+        const idModal = 'ws-arena-convite-direto-modal';
+        if (document.getElementById(idModal)) document.getElementById(idModal).remove();
 
-        // 2. Cria os dados falsos para a Sala de Combate Direto
-        const salaIdFake = 'duelo-feed-' + Date.now();
-        const cenarioEspecial = "🔥 DUELO RÁPIDO DO FEED 🔥\nMostre a sua fluência em 10 minutos de pura adrenalina e tente impressionar a Inteligência Artificial!";
+        const modal = document.createElement('div');
+        modal.id = idModal;
+        modal.style.cssText = 'position: fixed; top: 0; left: 0; width: 100vw; height: 100dvh; background: rgba(0,0,0,0.85); z-index: 999999; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(5px); animation: fadeIn 0.2s ease;';
 
-        // 3. Efeito visual de entrada no combate
-        if (window.Workspace && Workspace.mostrarAviso) {
-            Workspace.mostrarAviso(`⚔️ Desafio aceite! A batalha contra ${nomeAdversario} vai começar!`, "success", 4000);
-        }
+        modal.innerHTML = `
+            <div style="background: #1e293b; padding: 30px; border-radius: 20px; width: 90%; max-width: 400px; text-align: center; border: 1px solid #334155; box-shadow: 0 20px 50px rgba(0,0,0,0.5); transform: scale(0.95); animation: popUp 0.3s forwards;">
+                <div style="font-size: 50px; margin-bottom: 15px; animation: pulse 1s infinite;">⚔️</div>
+                <h2 style="color: #fff; margin: 0 0 10px 0; font-size: 22px;">Desafio Aceite!</h2>
+                <p style="color: #94a3b8; font-size: 15px; margin-bottom: 25px; line-height: 1.5;">O(a) <strong>${Workspace.escapeHTML(desafianteNome)}</strong> acabou de aceitar o teu desafio no Feed para um combate de <strong>${minutos} Minutos</strong>!</p>
+                <div style="display: flex; gap: 10px;">
+                    <button id="btn-aceitar-direto" style="flex: 1; background: #10b981; color: white; border: none; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#059669'">Lutar Agora</button>
+                    <button id="btn-recusar-direto" style="flex: 1; background: transparent; border: 1px solid #ef4444; color: #ef4444; padding: 12px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='rgba(239, 68, 68, 0.1)'">Recusar</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
 
-        // 4. Invoca a SUA função original, passando os 10 minutos e o cenário!
-        Workspace.Arena.iniciarPartida(salaIdFake, nomeAdversario, minutos, cenarioEspecial);
-    },
+        Workspace.Arena.tocarSom('inicio'); // Chama a atenção com som!
+
+        document.getElementById('btn-aceitar-direto').onclick = async () => {
+            document.getElementById('btn-aceitar-direto').innerText = 'A ligar...';
+            try {
+                await Workspace.api('/workspace/arena/desafio-direto/aceitar', 'POST', {
+                    salaId: salaId,
+                    desafiadoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                    desafianteNome: desafianteNome,
+                    escolaId: Workspace.usuario.escolaId,
+                    minutos: minutos
+                });
+                modal.remove(); // Ao fechar, o SSE "ARENA_MATCH_ENCONTRADO" vai ser ativado para os dois!
+            } catch(e) {
+                Workspace.mostrarAviso("Erro ao entrar na sala.", "error");
+                modal.remove();
+            }
+        };
+
+        document.getElementById('btn-recusar-direto').onclick = async () => {
+            modal.remove();
+            try {
+                await Workspace.api('/workspace/arena/desafio-direto/recusar', 'POST', {
+                    desafianteNome: desafianteNome,
+                    escolaId: Workspace.usuario.escolaId
+                });
+            } catch(e){}
+        };
+    },   
 
     configurarMicrofone: () => {
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
