@@ -596,7 +596,7 @@ Workspace.Arena = {
         } catch (error) { if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao transmitir fala.", "error"); }
     },
 
-    injetarPainelBatalha: () => {
+   injetarPainelBatalha: () => {
         if (document.getElementById('ws-painel-batalha')) return;
         const painel = document.createElement('div');
         painel.id = 'ws-painel-batalha';
@@ -619,11 +619,65 @@ Workspace.Arena = {
                 </div>
             </div>
             <div id="ws-arena-chat-log" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;"></div>
-            <div style="padding: 20px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: center;">
-                <button id="ws-btn-mic-arena" onclick="Workspace.Arena.alternarMicrofone()" style="background: #3b82f6; color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); transition: 0.2s; display: flex; align-items: center; justify-content: center;">🎙️</button>
+            
+            <!-- 🚀 PAINEL DE COMANDOS COM BOTÃO LIFELINE -->
+            <div style="padding: 20px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; gap: 20px; position: relative;">
+                
+                <!-- 💡 Botão de Socorro (Lifeline) -->
+                <button id="ws-btn-lifeline" onclick="Workspace.Arena.pedirAjudaMestre()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; width: 50px; height: 50px; border-radius: 50%; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.2);" title="Pedir Ideias ao Mestre (Lifeline)" onmouseover="this.style.background='rgba(168, 85, 247, 0.3)'" onmouseout="this.style.background='rgba(168, 85, 247, 0.15)'">
+                    💡
+                </button>
+
+                <button id="ws-btn-mic-arena" onclick="Workspace.Arena.alternarMicrofone()" style="background: #3b82f6; color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); transition: 0.2s; display: flex; align-items: center; justify-content: center; z-index: 2;">🎙️</button>
+                
+                <!-- Espaçador fantasma para manter o design centrado e bonito -->
+                <div style="width: 50px;"></div>
+
+                <!-- 🪄 Caixa de Sugestões Flutuante -->
+                <div id="ws-arena-sugestoes-box" style="display: none; position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); border: 1px solid #a855f7; border-radius: 16px; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(8px);">
+                </div>
             </div>
         `;
         document.body.appendChild(painel);
+    },
+
+    pedirAjudaMestre: async () => {
+        if (!Workspace.Arena.salaAtual) return;
+        const btn = document.getElementById('ws-btn-lifeline');
+        const box = document.getElementById('ws-arena-sugestoes-box');
+
+        if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = '⏳'; }
+
+        try {
+            const res = await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/ajuda`, 'POST', {});
+
+            if (res && res.success && res.sugestoes) {
+                Workspace.Arena.tocarSom('mensagem');
+                
+                let html = `<h4 style="color: #d8b4fe; margin: 0 0 15px 0; text-align: center; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">🪄 Sugestões do Mestre</h4><div style="display: flex; flex-direction: column; gap: 10px;">`;
+
+                res.sugestoes.forEach(sugestao => {
+                    const sugestaoSegura = window.Workspace.escapeHTML ? Workspace.escapeHTML(sugestao) : sugestao;
+                    // Se clicar numa frase, ela é imediatamente disparada no chat do duelo!
+                    html += `<div style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; padding: 12px 15px; border-radius: 10px; color: #fff; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.2s; text-align: center;" onmouseover="this.style.background='rgba(168, 85, 247, 0.3)'" onmouseout="this.style.background='rgba(168, 85, 247, 0.15)'" onclick="Workspace.Arena.usarSugestao('${sugestaoSegura}')">"${sugestao}"</div>`;
+                });
+
+                html += `</div><button onclick="document.getElementById('ws-arena-sugestoes-box').style.display='none'" style="width: 100%; margin-top: 15px; background: transparent; border: 1px solid #475569; color: #94a3b8; padding: 8px; border-radius: 8px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#334155'" onmouseout="this.style.background='transparent'">Esconder Dicas</button>`;
+
+                box.innerHTML = html;
+                box.style.display = 'block';
+                box.style.animation = 'popUp 0.3s ease forwards';
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("O Mestre não pôde formular as dicas. Tente de novo.", "warning");
+        } finally {
+            if (btn) { btn.disabled = false; btn.style.opacity = '1'; btn.innerHTML = '💡'; }
+        }
+    },
+
+    usarSugestao: (texto) => {
+        document.getElementById('ws-arena-sugestoes-box').style.display = 'none';
+        Workspace.Arena.enviarFala(texto);
     },
 
     iniciarRelogio: () => {
