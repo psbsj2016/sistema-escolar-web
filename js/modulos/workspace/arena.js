@@ -242,7 +242,15 @@ Workspace.Arena = {
         } catch (error) { status.style.color = '#ef4444'; status.innerText = error.message || 'Erro ao enviar convite.'; }
     },
 
-   iniciarTreinoSolo: async () => {
+  iniciarTreinoSolo: async () => {
+        // 🛡️ BLINDAGEM DE SESSÃO: Evita que o sistema crashe se a sessão expirou por inatividade
+        if (!Workspace.usuario || !Workspace.usuario.id) {
+            if (window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso("A sua sessão expirou. Por favor, recarregue a página e faça login novamente.", "error");
+            }
+            return;
+        }
+
         Workspace.Arena.desbloquearAudioNavegador(); 
         const btn = document.getElementById('ws-btn-solo');
         const status = document.getElementById('ws-arena-status');
