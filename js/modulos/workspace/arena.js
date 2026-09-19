@@ -242,17 +242,19 @@ Workspace.Arena = {
         
         Workspace.Arena.evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
         
-        Workspace.Arena.evtSource.onmessage = (event) => {
+       Workspace.Arena.evtSource.onmessage = (event) => {
             try {
                 const dados = JSON.parse(event.data);
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                const meuIdStr = String(Workspace.usuario.id);
                 
-                // 🚀 O SEGREDO DA PERFEIÇÃO: Limpa os espaços invisíveis e põe tudo em minúsculas
-                // Isto garante 100% de sucesso na receção do sinal para os dois jogadores!
+                // 🚀 O SEGREDO DA PERFEIÇÃO BLINDADA: Filtra por Nome exato OU pela ID (Impressão Digital)
                 const destLimpos = (dados.destinatarios || []).map(n => String(n).trim().toLowerCase());
+                const destIds = (dados.destinatariosIds || []).map(id => String(id));
                 const meuLimpo = String(meuNome).trim().toLowerCase();
                 
-                if (destLimpos.includes(meuLimpo)) {
+                // Agora o "Raio Trator" puxa o jogador mesmo que o nome tenha sido alterado ou escrito errado!
+                if (destLimpos.includes(meuLimpo) || destIds.includes(meuIdStr)) {
                     
                     if (dados.type === 'ARENA_CONVITE_RECEBIDO') {
                         if (window.Toast) {
