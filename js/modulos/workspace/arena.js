@@ -101,7 +101,12 @@ Workspace.Arena = {
                     </div>
                 </div>
 
-                <div style="display: flex; flex-direction: column; gap: 15px;">
+              <div style="display: flex; flex-direction: column; gap: 15px;">
+                    <!-- 🚀 O NOVO BOTÃO DO MODO SOLO -->
+                    <button id="ws-btn-solo" onclick="Workspace.Arena.iniciarTreinoSolo()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 20px;">🤖</span> Treinar Solo com a IA
+                    </button>
+
                     <button id="ws-btn-procurar" onclick="Workspace.Arena.procurarAleatorio()" style="background: #3b82f6; color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#2563eb'">
                         🎲 Procurar Oponente Aleatório
                     </button>
@@ -235,6 +240,37 @@ Workspace.Arena = {
                 status.style.color = '#10b981'; status.innerText = 'Convite enviado! A aguardar que o colega aceite...';
             }
         } catch (error) { status.style.color = '#ef4444'; status.innerText = error.message || 'Erro ao enviar convite.'; }
+    },
+
+   iniciarTreinoSolo: async () => {
+        Workspace.Arena.desbloquearAudioNavegador(); 
+        const btn = document.getElementById('ws-btn-solo');
+        const status = document.getElementById('ws-arena-status');
+        const tempo = document.getElementById('ws-arena-input-tempo').value; 
+
+        btn.disabled = true; btn.style.opacity = '0.5';
+        status.style.display = 'block'; 
+        status.style.color = '#8b5cf6'; 
+        status.innerText = 'A evocar o Mestre da Guilda... ⚡';
+
+        try {
+            const res = await Workspace.api('/workspace/arena/solo', 'POST', {
+                alunoId: Workspace.usuario.id, 
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login, 
+                escolaId: Workspace.usuario.escolaId,
+                limiteMinutos: tempo
+            });
+
+            if (res && res.success) {
+                // Arranca o ecrã instantaneamente
+                Workspace.Arena.iniciarPartida(res.salaId, 'Mestre da Guilda 🤖', tempo, res.cenario);
+            }
+        } catch (error) { 
+            status.style.color = '#ef4444'; 
+            status.innerText = 'Erro ao contactar a IA.'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+        }
     },
 
    escutarEventosTempoReal: () => {
