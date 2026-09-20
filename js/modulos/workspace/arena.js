@@ -400,7 +400,7 @@ Workspace.Arena = {
         };
     },
 
-   iniciarPartida: (salaId, oponente, limiteMinutos) => {
+  iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSoloOpcional) => {
         Workspace.Arena.salaAtual = salaId;
         Workspace.Arena.oponenteNome = oponente;
         Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50;
@@ -415,7 +415,23 @@ Workspace.Arena = {
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
-        // 🚀 MAGIA DETERMINÍSTICA: Usa o ID da Sala para que ambos recebam o mesmo cenário sem precisar de ligação ao backend!
+        // 🚀 PROTEÇÃO PARA O MODO SOLO: A IA não clica em botões, por isso saltamos o ecrã de escolha!
+        if (oponente.includes('Mestre da Guilda')) {
+            Workspace.Arena.papelAtual = "Guerreiro Solitário";
+            document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${oponente}`;
+            const log = document.getElementById('ws-arena-chat-log');
+            log.innerHTML = `
+                <div style="text-align: center; color: #cbd5e1; font-size: 14px; margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px dashed #8b5cf6; animation: popUp 0.5s ease;">
+                    <strong style="color: #a855f7; font-size: 16px; display: block; margin-bottom: 5px;">🤖 TREINO SOLO:</strong> 
+                    <span style="color:#fff; font-size: 15px;">${cenarioSoloOpcional || 'Conversa Livre com a Inteligência Artificial.'}</span><br><br>
+                    <div style="background: #8b5cf6; color: white; display: inline-block; padding: 6px 15px; border-radius: 20px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);">O Mestre aguarda a sua voz! Liguem os microfones.</div>
+                </div>`;
+            Workspace.Arena.tocarSom('inicio');
+            Workspace.Arena.iniciarRelogio();
+            return; // Sai da função para não carregar a mecânica de escolher papéis
+        }
+
+        // 🎭 Se for contra um humano, roda a Magia Determinística do Roleplay!
         const cenarios = [
             { t: "No restaurante, a comida chegou fria e atrasada.", p1: "Cliente Faminto", p2: "Empregado de Mesa" },
             { t: "Entrevista de emprego para uma vaga na área de tecnologia.", p1: "Candidato Nervoso", p2: "Entrevistador Frio" },
@@ -429,10 +445,13 @@ Workspace.Arena = {
         for(let i=0; i < salaId.length; i++) soma += salaId.charCodeAt(i);
         Workspace.Arena.cenarioAtual = cenarios[soma % cenarios.length];
 
-        // Monta a tela de escolhas
+        // Monta a tela de escolhas e garante que os botões estão destrancados
         document.getElementById('ws-arena-cenario-texto').innerText = `"${Workspace.Arena.cenarioAtual.t}"`;
         document.getElementById('ws-btn-papel-1').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p1}`;
         document.getElementById('ws-btn-papel-2').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p2}`;
+        document.getElementById('ws-btn-papel-1').disabled = false;
+        document.getElementById('ws-btn-papel-2').disabled = false;
+        document.getElementById('ws-arena-status-escolha').style.display = 'none';
         
         // Exibe a tela de escolha. O relógio só começa depois de escolher!
         document.getElementById('ws-arena-selecao-personagem').style.display = 'flex';
