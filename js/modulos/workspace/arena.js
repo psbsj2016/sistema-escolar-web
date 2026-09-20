@@ -233,7 +233,10 @@ Workspace.Arena = {
 
         try {
             const res = await Workspace.api('/workspace/arena/convidar', 'POST', {
-                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, colegaNome: nomeAlvo, escolaId: Workspace.usuario.escolaId,
+                alunoId: Workspace.usuario.id, 
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login, 
+                colegaNome: nomeAlvo, 
+                escolaId: Workspace.usuario.escolaId,
                 limiteMinutos: tempo
             });
 
@@ -241,8 +244,14 @@ Workspace.Arena = {
                 document.getElementById('ws-arena-sugestoes').style.display = 'none';
                 Workspace.Arena.salaAtual = res.salaId;
                 status.style.color = '#10b981'; status.innerText = 'Convite enviado! A aguardar que o colega aceite...';
+            } else {
+                // 🚀 A CORREÇÃO: Força o erro para que a caixa vermelha mostre a mensagem!
+                throw new Error(res?.error || 'Guerreiro não encontrado na Base de Dados.');
             }
-        } catch (error) { status.style.color = '#ef4444'; status.innerText = error.message || 'Erro ao enviar convite.'; }
+        } catch (error) { 
+            status.style.color = '#ef4444'; 
+            status.innerText = error.message || 'Erro ao enviar convite.'; 
+        }
     },
 
   iniciarTreinoSolo: async () => {
