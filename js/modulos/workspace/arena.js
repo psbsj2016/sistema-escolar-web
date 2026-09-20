@@ -11,6 +11,9 @@ Workspace.Arena = {
     segundosRestantes: 0,
     reconhecimentoVoz: null,
     
+    papelAtual: null,
+    cenarioAtual: null,
+
     ultimaFala: "",
     ultimoTempoFala: 0,
 
@@ -370,6 +373,15 @@ Workspace.Arena = {
                     }
                 }
                
+                // Se o adversário clicou no personagem primeiro, o Servidor avisa-nos automaticamente para arrancarmos!
+                if (dados.type === 'ARENA_PAPEIS_DEFINIDOS' && Workspace.Arena.salaAtual === dados.salaId) {
+                if (!Workspace.Arena.papelAtual) { // Só executa se eu ainda estiver na tela de escolha
+                    Workspace.Arena.papelAtual = dados.seuPapel;
+                    if (window.Toast) Toast.show({ message: `O oponente escolheu rápido! Você será: ${dados.seuPapel}`, type: 'info' });
+                    Workspace.Arena.comecarCombateReal(dados.seuPapel);
+                }
+            }
+
                 if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
                     Workspace.Arena.desenharDicaDoMestre(dados.dica);
                 }
@@ -388,41 +400,95 @@ Workspace.Arena = {
         };
     },
 
-    iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSorteado) => {
+   iniciarPartida: (salaId, oponente, limiteMinutos) => {
         Workspace.Arena.salaAtual = salaId;
         Workspace.Arena.oponenteNome = oponente;
-        Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50; 
-        
-        // 🚀 Reset do Combo
-        Workspace.Arena.comboAtual = 0;
-        Workspace.Arena.tempoUltimaRececao = Date.now();
+        Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50;
+        Workspace.Arena.papelAtual = null;
+        Workspace.Arena.cenarioAtual = null;
         
         const modal = document.getElementById('ws-modal-arena');
         if (modal) modal.style.display = 'none';
 
         Workspace.Arena.injetarPainelBatalha();
         const painel = document.getElementById('ws-painel-batalha');
-        
-        document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${oponente}`;
-        
-        // 🚀 Desenha a Missão (Cenário)
-        const chatLog = document.getElementById('ws-arena-chat-log');
-        let htmlCenario = '';
-        if (cenarioSorteado) {
-            htmlCenario = `
-                <div style="background: linear-gradient(135deg, #8b5cf6, #3b82f6); color: white; padding: 15px; border-radius: 12px; margin-bottom: 20px; text-align: center; box-shadow: 0 4px 15px rgba(0,0,0,0.2); animation: popUp 0.5s forwards;">
-                    <h3 style="margin: 0 0 5px 0; font-size: 13px; text-transform: uppercase; letter-spacing: 1px; color: #ddd6fe;">🎭 Mission Scenario</h3>
-                    <p style="margin: 0; font-size: 16px; font-weight: bold;">${cenarioSorteado}</p>
-                </div>
-            `;
-        }
-        
-        chatLog.innerHTML = htmlCenario + '<div style="text-align: center; color: #64748b; font-size: 13px; margin-bottom: 20px;">A partida começou! Liguem os microfones e conversem em Inglês.</div>';
-        
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
-        Workspace.Arena.tocarSom('inicio');
+        // 🚀 MAGIA DETERMINÍSTICA: Usa o ID da Sala para que ambos recebam o mesmo cenário sem precisar de ligação ao backend!
+        const cenarios = [
+            { t: "No restaurante, a comida chegou fria e atrasada.", p1: "Cliente Faminto", p2: "Empregado de Mesa" },
+            { t: "Entrevista de emprego para uma vaga na área de tecnologia.", p1: "Candidato Nervoso", p2: "Entrevistador Frio" },
+            { t: "Devolução de um produto com defeito na loja.", p1: "Cliente Irritado", p2: "Gerente da Loja" },
+            { t: "Dois amigos perdidos numa viagem de carro.", p1: "Motorista Teimoso", p2: "Passageiro com o Mapa" },
+            { t: "No aeroporto, o voo foi cancelado.", p1: "Passageiro Desesperado", p2: "Agente de Embarque" },
+            { t: "Ligação para cancelar a internet de casa.", p1: "Cliente Farto", p2: "Atendente que não quer cancelar" }
+        ];
+        
+        let soma = 0;
+        for(let i=0; i < salaId.length; i++) soma += salaId.charCodeAt(i);
+        Workspace.Arena.cenarioAtual = cenarios[soma % cenarios.length];
+
+        // Monta a tela de escolhas
+        document.getElementById('ws-arena-cenario-texto').innerText = `"${Workspace.Arena.cenarioAtual.t}"`;
+        document.getElementById('ws-btn-papel-1').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p1}`;
+        document.getElementById('ws-btn-papel-2').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p2}`;
+        
+        // Exibe a tela de escolha. O relógio só começa depois de escolher!
+        document.getElementById('ws-arena-selecao-personagem').style.display = 'flex';
+    },
+
+    // 🚀 Lógica disparada quando o Aluno clica num botão de papel
+    escolherPapel: async (numeroPapel) => {
+        const cenario = Workspace.Arena.cenarioAtual;
+        const meuPapel = numeroPapel === 1 ? cenario.p1 : cenario.p2;
+        const papelRestante = numeroPapel === 1 ? cenario.p2 : cenario.p1;
+
+        // Tranca os botões para não clicar duas vezes
+        document.getElementById('ws-btn-papel-1').disabled = true;
+        document.getElementById('ws-btn-papel-2').disabled = true;
+        const status = document.getElementById('ws-arena-status-escolha');
+        status.style.display = 'block';
+
+        try {
+            const res = await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/escolher-papel`, 'POST', {
+                alunoId: Workspace.usuario.id,
+                papelEscolhido: meuPapel,
+                papelRestante: papelRestante,
+                cenarioTexto: cenario.t
+            });
+
+            if (res && res.success) {
+                // Se o res.papel for diferente do que ele clicou, é porque o adversário foi milissegundos mais rápido!
+                Workspace.Arena.papelAtual = res.papel;
+                Workspace.Arena.comecarCombateReal(res.papel);
+            }
+        } catch(e) {
+            status.style.color = '#ef4444'; status.innerText = 'Erro ao conectar. O duelo começará em breve.';
+        }
+    },
+
+    // 🚀 Arranca a partida a sério após os papéis estarem definidos
+    comecarCombateReal: (meuPapel) => {
+        document.getElementById('ws-arena-selecao-personagem').style.display = 'none';
+        
+        const cenario = Workspace.Arena.cenarioAtual;
+        const oponentePapel = (meuPapel === cenario.p1) ? cenario.p2 : cenario.p1;
+        
+        // Atualiza os cabeçalhos
+        document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${Workspace.Arena.oponenteNome} (${oponentePapel})`;
+        
+        // Coloca a "Claquete do Mestre" no meio do chat
+        const log = document.getElementById('ws-arena-chat-log');
+        log.innerHTML = `
+            <div style="text-align: center; color: #cbd5e1; font-size: 14px; margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px dashed #3b82f6; animation: popUp 0.5s ease;">
+                <strong style="color: #38bdf8; font-size: 16px; display: block; margin-bottom: 5px;">🎬 CENÁRIO:</strong> 
+                <span style="color:#fff; font-size: 15px;">${cenario.t}</span><br><br>
+                O teu papel: <strong style="color: #f59e0b; font-size: 18px; text-transform: uppercase;">${meuPapel}</strong><br>
+                <div style="background: #10b981; color: white; display: inline-block; padding: 6px 15px; border-radius: 20px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 10px rgba(16, 185, 129, 0.4);">A Batalha Começou! Liguem os microfones.</div>
+            </div>`;
+        
+        // AGORA SIM, o relógio arranca!
         Workspace.Arena.iniciarRelogio();
     },
 
@@ -618,24 +684,30 @@ Workspace.Arena = {
                     <button onclick="Workspace.Arena.abandonarPartida()" style="background: transparent; border: none; color: #94a3b8; font-size: 24px; cursor: pointer;" title="Sair">✖</button>
                 </div>
             </div>
-            <div id="ws-arena-chat-log" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; scroll-behavior: smooth;"></div>
             
-            <!-- 🚀 PAINEL DE COMANDOS COM BOTÃO LIFELINE -->
-            <div style="padding: 20px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; gap: 20px; position: relative;">
-                
-                <!-- 💡 Botão de Socorro (Lifeline) -->
-                <button id="ws-btn-lifeline" onclick="Workspace.Arena.pedirAjudaMestre()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; width: 50px; height: 50px; border-radius: 50%; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(168, 85, 247, 0.2);" title="Pedir Ideias ao Mestre (Lifeline)" onmouseover="this.style.background='rgba(168, 85, 247, 0.3)'" onmouseout="this.style.background='rgba(168, 85, 247, 0.15)'">
-                    💡
-                </button>
-
-                <button id="ws-btn-mic-arena" onclick="Workspace.Arena.alternarMicrofone()" style="background: #3b82f6; color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); transition: 0.2s; display: flex; align-items: center; justify-content: center; z-index: 2;">🎙️</button>
-                
-                <!-- Espaçador fantasma para manter o design centrado e bonito -->
-                <div style="width: 50px;"></div>
-
-                <!-- 🪄 Caixa de Sugestões Flutuante -->
-                <div id="ws-arena-sugestoes-box" style="display: none; position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); border: 1px solid #a855f7; border-radius: 16px; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); z-index: 100; backdrop-filter: blur(8px);">
+            <!-- 🚀 NOVO: TELA DE SELEÇÃO DE PERSONAGEM (Cobre o chat inicialmente) -->
+            <div id="ws-arena-selecao-personagem" style="position: absolute; top: 65px; left: 0; width: 100%; height: calc(100% - 65px); background: rgba(15,23,42,0.98); z-index: 100105; display: none; flex-direction: column; align-items: center; justify-content: center; padding: 20px; text-align: center; backdrop-filter: blur(10px);">
+                <div style="font-size: 60px; margin-bottom: 10px; animation: bounceIn 0.8s ease;">🎬</div>
+                <h2 style="color: white; margin: 0 0 10px 0; font-size: 24px;">Luzes, Câmera, Ação!</h2>
+                <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px dashed #475569; margin-bottom: 30px; max-width: 600px;">
+                    <p style="color: #cbd5e1; font-size: 14px; text-transform: uppercase; margin: 0 0 5px 0; font-weight: bold;">Cenário do Duelo:</p>
+                    <p id="ws-arena-cenario-texto" style="color: #38bdf8; font-size: 18px; margin: 0; font-weight: bold;">...</p>
                 </div>
+                <h3 style="color: #f59e0b; margin-bottom: 20px; animation: pulse 1.5s infinite;">Escolha rápido o seu papel:</h3>
+                <div style="display: flex; gap: 15px; width: 100%; max-width: 600px; flex-wrap: wrap; justify-content: center;">
+                    <button id="ws-btn-papel-1" onclick="Workspace.Arena.escolherPapel(1)" class="ws-btn" style="flex: 1; min-width: 250px; padding: 20px; background: #3b82f6; font-size: 16px; box-shadow: 0 10px 20px rgba(59,130,246,0.3); transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></button>
+                    <button id="ws-btn-papel-2" onclick="Workspace.Arena.escolherPapel(2)" class="ws-btn" style="flex: 1; min-width: 250px; padding: 20px; background: #8b5cf6; font-size: 16px; box-shadow: 0 10px 20px rgba(139,92,246,0.3); transition: 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'"></button>
+                </div>
+                <div id="ws-arena-status-escolha" style="color: #10b981; margin-top: 25px; font-weight: bold; display: none; font-size: 16px;">A processar escolha... ⏳</div>
+            </div>
+
+            <div id="ws-arena-chat-log" style="flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px;"></div>
+            
+            <div style="padding: 20px; background: #1e293b; border-top: 1px solid #334155; display: flex; justify-content: center; align-items: center; gap: 20px; position: relative;">
+                <button id="ws-btn-lifeline" onclick="Workspace.Arena.pedirAjudaMestre()" style="background: rgba(168, 85, 247, 0.15); border: 1px solid #a855f7; color: #d8b4fe; width: 50px; height: 50px; border-radius: 50%; font-size: 22px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center;" title="Lifeline">💡</button>
+                <button id="ws-btn-mic-arena" onclick="Workspace.Arena.alternarMicrofone()" style="background: #3b82f6; color: white; border: none; width: 70px; height: 70px; border-radius: 50%; font-size: 28px; cursor: pointer; box-shadow: 0 5px 20px rgba(59, 130, 246, 0.4); transition: 0.2s; display: flex; align-items: center; justify-content: center; z-index: 2;">🎙️</button>
+                <div style="width: 50px;"></div>
+                <div id="ws-arena-sugestoes-box" style="display: none; position: absolute; bottom: 100px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; background: rgba(15, 23, 42, 0.95); border: 1px solid #a855f7; border-radius: 16px; padding: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); z-index: 100;"></div>
             </div>
         `;
         document.body.appendChild(painel);
@@ -707,28 +779,22 @@ Workspace.Arena = {
         }, 1000);
     },
 
-    desenharBalao: (nome, texto, isMinha, comboValor = 0) => {
+    desenharBalao: (nome, texto, isMinha) => {
         const log = document.getElementById('ws-arena-chat-log');
         const alinhamento = isMinha ? 'flex-end' : 'flex-start';
         const corFundo = isMinha ? '#3b82f6' : '#334155';
         const raio = isMinha ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
 
-        // 🚀 A MÁGICA VISUAL DO COMBO (Crachá em chamas!)
-        let htmlCombo = '';
-        if (comboValor > 1) {
-            htmlCombo = `<span style="background: #f59e0b; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; margin-left: 5px; font-weight: bold; animation: popUp 0.3s ease;">🔥 x${comboValor}</span>`;
+        // 🚀 Magia visual: Mistura o nome real com o papel sorteado!
+        let nomeDisplay = nome;
+        if (Workspace.Arena.cenarioAtual && Workspace.Arena.papelAtual) {
+             const oponentePapel = (Workspace.Arena.papelAtual === Workspace.Arena.cenarioAtual.p1) ? Workspace.Arena.cenarioAtual.p2 : Workspace.Arena.cenarioAtual.p1;
+             nomeDisplay = isMinha ? `${nome} 🎭 (${Workspace.Arena.papelAtual})` : `${nome} 🎭 (${oponentePapel})`;
         }
 
-        const html = `
-            <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;">
-                <span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold; display: flex; align-items: center;">${nome} ${htmlCombo}</span>
-                <div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div>
-            </div>`;
-        
+        const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span><div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div></div>`;
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
-
-        Workspace.Arena.tocarSom('mensagem');
     },
 
     desenharDicaDoMestre: (dica) => {
