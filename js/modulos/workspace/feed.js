@@ -1931,7 +1931,7 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     }, // 🚀 A VÍRGULA MÁGICA ADICIONADA AQUI!
 
-    // ------------------------------------------------------------------------
+   // ------------------------------------------------------------------------
     // 🎶 MÓDULO: IMERSÃO MUSICAL LMS (A MONTRA E A JORNADA)
     // ------------------------------------------------------------------------
     abrirImersaoMusical: async () => {
@@ -1942,26 +1942,28 @@ abrirPerfilUsuario: async (autorNome) => {
         requestAnimationFrame(() => modal.style.opacity = '1');
         
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
-        conteudo.innerHTML = '<div style="text-align: center; padding: 60px 20px;"><div style="font-size: 50px; animation: pulse 1s infinite;">📡</div><h3 style="color: #fff; margin-top: 20px;">A sintonizar o seu estúdio musical...</h3><p style="color: #a1a1aa;">Procurando os seus treinos ativos na Base de Dados.</p></div>';
+        conteudo.innerHTML = '<div style="text-align: center; padding: 60px 20px;"><div style="font-size: 50px; animation: pulse 1s infinite;">📡</div><h3 style="color: #fff; margin-top: 20px;">A sintonizar o seu estúdio musical...</h3><p style="color: #a1a1aa;">Procurando os seus treinos e o catálogo da escola.</p></div>';
         
         const btnAntigo = document.getElementById('ws-btn-gerar-musica');
         if(btnAntigo) btnAntigo.style.display = 'none';
 
         try {
-            // Pergunta ao servidor o que o aluno anda a fazer
-            const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}`, 'GET');
+            // 🚀 Envia o ID da escola para garantir que puxamos o Catálogo Completo!
+            const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}&escolaId=${Workspace.usuario.escolaId}`, 'GET');
             
             if (statusRes && statusRes.musicaAtiva) {
-                // 🚀 TEM UM TREINO A DECORRER! (Pula a Montra e abre a aula)
+                // TEM UM TREINO A DECORRER! (Abre a aula onde parou)
                 Workspace.Feed._estadoMusicaAtual = { 
                     postId: statusRes.musicaAtiva.postOriginal.id, 
                     diasGerados: statusRes.musicaAtiva.plano.planoEstudos.length 
                 };
                 Workspace.Feed.renderizarImersaoMusical(statusRes.musicaAtiva.plano, statusRes.musicaAtiva.postOriginal);
             } else {
-                // 🚀 NÃO TEM TREINO! (Constrói a Montra de músicas disponíveis)
-                const historico = statusRes ? statusRes.historicoMusicas || [] : [];
-                Workspace.Feed.renderizarMontraMusical(historico);
+                // NÃO TEM TREINO! Guarda o histórico e o catálogo na memória e abre a montra
+                Workspace.Feed._historicoMusicas = statusRes ? statusRes.historicoMusicas || [] : [];
+                Workspace.Feed._catalogoMusicas = statusRes ? statusRes.catalogo || [] : [];
+                
+                Workspace.Feed.renderizarMontraMusical('novas');
             }
         } catch (e) {
              conteudo.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px; border: 1px solid #ef4444; border-radius: 12px; margin-top: 30px;">Erro ao carregar o seu estúdio musical.</div>';
@@ -1977,53 +1979,85 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     },
 
-    // 🚀 DESENHA A VITRINE DE MÚSICAS QUE O ALUNO AINDA NÃO FEZ
-    renderizarMontraMusical: (historicoIds) => {
+    // 🚀 DESENHA A VITRINE INTERATIVA (Separada por Abas: Novas vs Histórico)
+    renderizarMontraMusical: (abaAtiva = 'novas') => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        const historicoIds = Workspace.Feed._historicoMusicas || [];
+        const catalogoCompleto = Workspace.Feed._catalogoMusicas || [];
         
-        // Procura posts que sejam da categoria "musica" E que não estejam no histórico do aluno
-        const musicasDisponiveis = Workspace.Feed.todosOsPosts.filter(p => p.categoria === 'musica' && !historicoIds.includes(p.id));
+        // Separa as músicas
+        const musicasNovas = catalogoCompleto.filter(p => !historicoIds.includes(p.id));
+        const musicasHistorico = catalogoCompleto.filter(p => historicoIds.includes(p.id));
+        
+        const listaExibir = abaAtiva === 'novas' ? musicasNovas : musicasHistorico;
 
-        if (musicasDisponiveis.length === 0) {
-            conteudo.innerHTML = `
-                <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
-                    <div style="font-size: 50px; margin-bottom: 15px;">🏆</div>
-                    <h3 style="color: #d4d4d8; font-size: 22px;">Você é uma lenda musical!</h3>
-                    <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto;">Já completou o treino de todas as músicas disponíveis no Feed! Aguarde que os professores partilhem novas canções na plataforma.</p>
-                </div>`;
+        // Estilos dos Botões (Tabs)
+        const btnNovasStyle = abaAtiva === 'novas' ? 'background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; border: none; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);' : 'background: transparent; color: #a1a1aa; border: 1px solid #3f3f46;';
+        const btnHistStyle = abaAtiva === 'historico' ? 'background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; border: none; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);' : 'background: transparent; color: #a1a1aa; border: 1px solid #3f3f46;';
+
+        let htmlSuperior = `
+            <div style="text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;">
+                <div style="font-size: 40px; margin-bottom: 10px; animation: ws-float 3s ease-in-out infinite;">🎧</div>
+                <h3 style="color: #fff; font-size: 22px; margin: 0 0 15px 0;">O Seu Estúdio Musical</h3>
+                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="Workspace.Feed.renderizarMontraMusical('novas')" style="padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; ${btnNovasStyle}">🌟 Novas Músicas (${musicasNovas.length})</button>
+                    <button onclick="Workspace.Feed.renderizarMontraMusical('historico')" style="padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; ${btnHistStyle}">🏆 Meu Histórico (${musicasHistorico.length})</button>
+                </div>
+            </div>
+        `;
+
+        // Tratamento de Listas Vazias
+        if (listaExibir.length === 0) {
+            if (abaAtiva === 'novas') {
+                conteudo.innerHTML = htmlSuperior + `
+                    <div style="text-align: center; padding: 50px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
+                        <div style="font-size: 50px; margin-bottom: 15px;">🌟</div>
+                        <h3 style="color: #d4d4d8; font-size: 20px;">Você é uma Lenda Musical!</h3>
+                        <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto 20px auto;">Já completou o treino de todas as músicas partilhadas pelos professores. Em breve teremos mais opções!</p>
+                        <button onclick="Workspace.Feed.renderizarMontraMusical('historico')" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Rever Músicas Concluídas 🏆</button>
+                    </div>`;
+            } else {
+                conteudo.innerHTML = htmlSuperior + `
+                    <div style="text-align: center; padding: 50px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
+                        <div style="font-size: 50px; margin-bottom: 15px;">📭</div>
+                        <h3 style="color: #d4d4d8; font-size: 20px;">O Seu Hall da Fama está vazio.</h3>
+                        <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto 20px auto;">Comece a treinar nas "Novas Músicas" e conclua a jornada para adicionar troféus aqui!</p>
+                        <button onclick="Workspace.Feed.renderizarMontraMusical('novas')" style="background: #ec4899; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Ver Novas Músicas 🌟</button>
+                    </div>`;
+            }
             return;
         }
 
+        // Desenha os Cards de Música
         let htmlCards = '';
-        musicasDisponiveis.forEach(musica => {
-            // Retira a primeira linha do texto para servir de título/preview
+        listaExibir.forEach(musica => {
             const linhas = Workspace.Feed.limparTexto(musica.texto).split('\n');
             const tituloCurto = linhas.length > 0 ? linhas[0].substring(0, 40) + '...' : 'Canção Misteriosa';
             const fotoAutor = window.Workspace.renderizarAvatar(musica.autorNome, 35);
             
+            // O design e texto do botão mudam consoante a aba!
+            const textoBotao = abaAtiva === 'novas' ? 'Treinar com esta 🎧' : 'Treinar Novamente 🔄';
+            const corBotao = abaAtiva === 'novas' ? 'linear-gradient(135deg, #ec4899, #f43f5e)' : 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
+            const bordaCard = abaAtiva === 'novas' ? '#ec4899' : '#8b5cf6';
+            
             htmlCards += `
-                <div style="background: rgba(0,0,0,0.4); border: 1px solid #3f3f46; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#ec4899'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#3f3f46'">
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid #3f3f46; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='${bordaCard}'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#3f3f46'">
                     <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #27272a; padding-bottom: 15px;">
                         ${fotoAutor}
                         <div>
                             <div style="color: #fff; font-size: 14px; font-weight: bold;">${musica.autorNome}</div>
-                            <div style="color: #ec4899; font-size: 11px; text-transform: uppercase; font-weight: 800;">Partilhou esta música</div>
+                            <div style="color: ${abaAtiva === 'novas' ? '#ec4899' : '#8b5cf6'}; font-size: 11px; text-transform: uppercase; font-weight: 800;">${abaAtiva === 'novas' ? 'Nova Partilha' : 'Música Concluída ✅'}</div>
                         </div>
                     </div>
                     <div style="flex: 1; color: #d4d4d8; font-size: 16px; font-weight: bold; margin-bottom: 20px; font-style: italic;">"${tituloCurto}"</div>
-                    <button onclick="Workspace.Feed.iniciarTreinoDaMusica('${musica.id}')" style="width: 100%; background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
-                        Treinar com esta 🎧
+                    <button onclick="Workspace.Feed.iniciarTreinoDaMusica('${musica.id}')" style="width: 100%; background: ${corBotao}; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
+                        ${textoBotao}
                     </button>
                 </div>
             `;
         });
 
-        conteudo.innerHTML = `
-            <div style="text-align: center; margin-bottom: 40px; animation: fadeIn 0.5s ease;">
-                <div style="font-size: 50px; margin-bottom: 10px; animation: ws-float 3s ease-in-out infinite;">🎸</div>
-                <h3 style="color: #fff; font-size: 24px; margin: 0 0 10px 0;">Escolha a sua Jornada Musical</h3>
-                <p style="color: #a1a1aa; max-width: 500px; margin: 0 auto;">Selecione uma das músicas partilhadas na plataforma. A IA vai analisar a letra e criar um plano intensivo e persistente só para você!</p>
-            </div>
+        conteudo.innerHTML = htmlSuperior + `
             <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; animation: popUp 0.6s ease;">
                 ${htmlCards}
             </div>
