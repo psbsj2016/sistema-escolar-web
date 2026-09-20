@@ -1932,14 +1932,39 @@ abrirPerfilUsuario: async (autorNome) => {
     }, // 🚀 A VÍRGULA MÁGICA ADICIONADA AQUI!
 
     // ------------------------------------------------------------------------
-    // 🎶 MÓDULO: IMERSÃO MUSICAL (7 DIAS DE TREINO)
+    // 🎶 MÓDULO: IMERSÃO MUSICAL LMS (A MONTRA E A JORNADA)
     // ------------------------------------------------------------------------
-    abrirImersaoMusical: () => {
+    abrirImersaoMusical: async () => {
         const modal = document.getElementById('ws-imersao-musical-modal');
-        if (modal) {
-            document.body.style.overflow = 'hidden'; 
-            modal.style.display = 'flex';
-            requestAnimationFrame(() => modal.style.opacity = '1');
+        if (!modal) return;
+        document.body.style.overflow = 'hidden'; 
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.style.opacity = '1');
+        
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        conteudo.innerHTML = '<div style="text-align: center; padding: 60px 20px;"><div style="font-size: 50px; animation: pulse 1s infinite;">📡</div><h3 style="color: #fff; margin-top: 20px;">A sintonizar o seu estúdio musical...</h3><p style="color: #a1a1aa;">Procurando os seus treinos ativos na Base de Dados.</p></div>';
+        
+        const btnAntigo = document.getElementById('ws-btn-gerar-musica');
+        if(btnAntigo) btnAntigo.style.display = 'none';
+
+        try {
+            // Pergunta ao servidor o que o aluno anda a fazer
+            const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}`, 'GET');
+            
+            if (statusRes && statusRes.musicaAtiva) {
+                // 🚀 TEM UM TREINO A DECORRER! (Pula a Montra e abre a aula)
+                Workspace.Feed._estadoMusicaAtual = { 
+                    postId: statusRes.musicaAtiva.postOriginal.id, 
+                    diasGerados: statusRes.musicaAtiva.plano.planoEstudos.length 
+                };
+                Workspace.Feed.renderizarImersaoMusical(statusRes.musicaAtiva.plano, statusRes.musicaAtiva.postOriginal);
+            } else {
+                // 🚀 NÃO TEM TREINO! (Constrói a Montra de músicas disponíveis)
+                const historico = statusRes ? statusRes.historicoMusicas || [] : [];
+                Workspace.Feed.renderizarMontraMusical(historico);
+            }
+        } catch (e) {
+             conteudo.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px; border: 1px solid #ef4444; border-radius: 12px; margin-top: 30px;">Erro ao carregar o seu estúdio musical.</div>';
         }
     },
 
@@ -1952,59 +1977,93 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     },
 
- gerarImersaoMusical: async () => {
-        const btn = document.getElementById('ws-btn-gerar-musica');
+    // 🚀 DESENHA A VITRINE DE MÚSICAS QUE O ALUNO AINDA NÃO FEZ
+    renderizarMontraMusical: (historicoIds) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
-        if (btn) {
-            btn.innerText = 'Procurando Músicas no Feed... ⏳';
-            btn.disabled = true;
-            btn.style.opacity = '0.7';
+        // Procura posts que sejam da categoria "musica" E que não estejam no histórico do aluno
+        const musicasDisponiveis = Workspace.Feed.todosOsPosts.filter(p => p.categoria === 'musica' && !historicoIds.includes(p.id));
+
+        if (musicasDisponiveis.length === 0) {
+            conteudo.innerHTML = `
+                <div style="text-align: center; padding: 60px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
+                    <div style="font-size: 50px; margin-bottom: 15px;">🏆</div>
+                    <h3 style="color: #d4d4d8; font-size: 22px;">Você é uma lenda musical!</h3>
+                    <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto;">Já completou o treino de todas as músicas disponíveis no Feed! Aguarde que os professores partilhem novas canções na plataforma.</p>
+                </div>`;
+            return;
         }
+
+        let htmlCards = '';
+        musicasDisponiveis.forEach(musica => {
+            // Retira a primeira linha do texto para servir de título/preview
+            const linhas = Workspace.Feed.limparTexto(musica.texto).split('\n');
+            const tituloCurto = linhas.length > 0 ? linhas[0].substring(0, 40) + '...' : 'Canção Misteriosa';
+            const fotoAutor = window.Workspace.renderizarAvatar(musica.autorNome, 35);
+            
+            htmlCards += `
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid #3f3f46; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='#ec4899'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#3f3f46'">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #27272a; padding-bottom: 15px;">
+                        ${fotoAutor}
+                        <div>
+                            <div style="color: #fff; font-size: 14px; font-weight: bold;">${musica.autorNome}</div>
+                            <div style="color: #ec4899; font-size: 11px; text-transform: uppercase; font-weight: 800;">Partilhou esta música</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; color: #d4d4d8; font-size: 16px; font-weight: bold; margin-bottom: 20px; font-style: italic;">"${tituloCurto}"</div>
+                    <button onclick="Workspace.Feed.iniciarTreinoDaMusica('${musica.id}')" style="width: 100%; background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px; box-shadow: 0 4px 15px rgba(236, 72, 153, 0.4);" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
+                        Treinar com esta 🎧
+                    </button>
+                </div>
+            `;
+        });
+
+        conteudo.innerHTML = `
+            <div style="text-align: center; margin-bottom: 40px; animation: fadeIn 0.5s ease;">
+                <div style="font-size: 50px; margin-bottom: 10px; animation: ws-float 3s ease-in-out infinite;">🎸</div>
+                <h3 style="color: #fff; font-size: 24px; margin: 0 0 10px 0;">Escolha a sua Jornada Musical</h3>
+                <p style="color: #a1a1aa; max-width: 500px; margin: 0 auto;">Selecione uma das músicas partilhadas na plataforma. A IA vai analisar a letra e criar um plano intensivo e persistente só para você!</p>
+            </div>
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; animation: popUp 0.6s ease;">
+                ${htmlCards}
+            </div>
+        `;
+    },
+
+    // 🚀 O ALUNO CLICOU NUM CARD DA MONTRA: A IA ARRANCA!
+    iniciarTreinoDaMusica: async (postId) => {
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
         conteudo.innerHTML = `
             <div style="text-align: center; padding: 60px 20px;">
-                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🎧</div>
-                <h3 style="color: #fff; margin-top: 20px;">Afinando os instrumentos...</h3>
-                <p style="color: #a1a1aa;">Analisando letras e construindo o seu plano intensivo.</p>
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🤖🎧</div>
+                <h3 style="color: #fff; margin-top: 20px;">A IA está a criar o seu plano de estudos...</h3>
+                <p style="color: #a1a1aa;">A analisar as pautas, acordes e a construir 14 dias de fluência cirúrgica.</p>
             </div>
         `;
         
         try {
-            const refId = Workspace.usuario.alunoRefId || '';
-            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
-            
             const res = await Workspace.api('/workspace/posts/imersao-musical', 'POST', {
-                alunoRefId: refId, escolaId
+                postId: postId, userId: Workspace.usuario.id
             });
             
             if (res && res.success && res.plano) {
-                // 🚀 NOVA MEMÓRIA: Guarda a música atual e quantos dias já temos
-                Workspace.Feed._estadoMusicaAtual = {
-                    postId: res.postOriginal.id,
-                    diasGerados: res.plano.planoEstudos.length
-                };
+                Workspace.Feed._estadoMusicaAtual = { postId: res.postOriginal.id, diasGerados: res.plano.planoEstudos.length };
                 Workspace.Feed.renderizarImersaoMusical(res.plano, res.postOriginal);
             } else {
                 throw new Error(res?.error || 'A IA não conseguiu gerar o plano.');
             }
         } catch (error) {
             conteudo.innerHTML = `
-                <div style="text-align: center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
-                    <h3 style="color: #f87171;">Faltam Músicas ❌</h3>
-                    <p style="color: #fca5a5;">${error.message || 'Certifique-se de que partilha publicações com vídeos do Youtube/Spotify contendo as palavras "música" ou "letra".'}</p>
+                <div style="text-align: center; padding: 40px; border-radius: 12px; border: 1px solid #ef4444; margin-top: 30px;">
+                    <h3 style="color: #f87171;">Ocorreu um erro</h3>
+                    <p style="color: #fca5a5;">${error.message || 'Falha na ligação à matriz musical.'}</p>
+                    <button onclick="Workspace.Feed.abrirImersaoMusical()" style="margin-top: 15px; background: #3f3f46; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Voltar à Montra</button>
                 </div>
             `;
-        } finally {
-            if (btn) {
-                btn.innerHTML = 'Analisar Feed e Criar Plano Musical 🎧';
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            }
         }
     },
 
-    // 🚀 NOVO: Função isolada para desenhar 1 Único Dia (Permite injetar novos sem recarregar o ecrã)
     gerarHTMLDiaMusical: (dia) => {
         const idInput = `input-musica-dia-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
@@ -2052,47 +2111,37 @@ abrirPerfilUsuario: async (autorNome) => {
         
         let htmlVideoELetra = '';
         if (postOriginal) {
-            // 🚀 DETETIVE DE LINKS: Extrai o vídeo de dentro do texto para o colocar na coluna da direita!
             let textoDaLetra = Workspace.Feed.limparTexto(postOriginal.texto || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
             const mediaLinks = [];
             
-            // Procura e "arranca" links do YouTube da letra
             textoDaLetra = textoDaLetra.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
                 mediaLinks.push(`<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #3f3f46; background: #000; width: 100%; margin-bottom: 15px;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
                 return ''; 
             });
 
-            // Procura links do TikTok
             textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
                 mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 100%; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
                 return '';
             });
 
-            // Procura links do Instagram
             textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
                 mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><iframe src="https://www.instagram.com/p/${id}/embed" width="100%" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #3f3f46;"></iframe></div>`);
                 return '';
             });
 
-            // Procura links do Spotify
             textoDaLetra = textoDaLetra.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
                 mediaLinks.push(`<div style="width: 100%; margin-bottom: 15px;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
                 return '';
             });
 
-            // Limpa outros links de texto que sobraram para a letra ficar perfeita
             textoDaLetra = textoDaLetra.replace(/(https?:\/\/[^\s<]+)/g, '').trim();
-
-            // Junta a Mídia detetada no texto com os ficheiros anexados do post!
             const midiaCompleta = mediaLinks.join('') + Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
 
-            // 🚀 UX PREMIUM: Cálculo EXATO para esconder a letra longa e criar as colunas
             const numLinhas = (textoDaLetra.match(/<br>/g) || []).length;
             const ehTextoLongo = textoDaLetra.length > 350 || numLinhas > 8;
             const estiloColunas = numLinhas >= 8 ? 'column-width: 220px; column-gap: 30px; widows: 3; orphans: 3;' : '';
             const idUnico = `musica-${postOriginal.id}`;
 
-            // 🚀 CSS GRID DEFINITIVO: Parede à esquerda (1fr) e Parede à direita (340px) inquebráveis!
             const cssExclusivo = `
                 <style>
                     .ws-grid-musical { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
@@ -2110,22 +2159,16 @@ abrirPerfilUsuario: async (autorNome) => {
             htmlVideoELetra = `
                 ${cssExclusivo}
                 <div class="ws-grid-musical" style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 25px; border-radius: 16px; margin-bottom: 30px;">
-                    
-                    <!-- 📜 LADO ESQUERDO: LETRA DA MÚSICA (Apenas o Texto) -->
                     <div style="min-width: 0; width: 100%;">
                         <div style="font-size: 12px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center;">
                             <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
                         </div>
-                        
-                        <!-- Caixa Colapsável e em Colunas -->
                         <div id="text-wrap-${idUnico}" class="ws-letra-colunas ${ehTextoLongo ? 'ws-letra-collapsed' : ''}">
                             ${textoDaLetra}
                             ${ehTextoLongo ? '<div id="fade-' + idUnico + '" class="ws-letra-fade"></div>' : ''}
                         </div>
                         ${btnVerMais}
                     </div>
-
-                    <!-- 🎬 LADO DIREITO: VÍDEO COMPACTO (Apenas a Mídia Isolada) -->
                     <div style="position: sticky; top: 20px; width: 100%;">
                         <div style="font-size: 12px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
                             <span>🎶 Vídeo Fonte</span>
@@ -2134,12 +2177,10 @@ abrirPerfilUsuario: async (autorNome) => {
                             ${midiaCompleta}
                         </div>
                     </div>
-
                 </div>
             `;
         }
 
-        // 🚀 O RECIPIENTE DOS DIAS
         let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
         if (plano.planoEstudos && plano.planoEstudos.length > 0) {
             plano.planoEstudos.forEach(dia => {
@@ -2148,12 +2189,21 @@ abrirPerfilUsuario: async (autorNome) => {
         }
         htmlDias += '</div>';
 
-        // 🚀 O BOTÃO DE EXPANSÃO (Ate aos 30 dias)
-        let htmlBotaoMais = '';
+        // 🚀 OS BOTÕES DE CONTROLO (Mais Dias OU Concluir Treino)
+        let htmlControlos = '';
         if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
-            htmlBotaoMais = `
-                <div id="ws-btn-mais-dias-container" style="text-align: center; margin-top: 30px;">
-                    <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica()" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">➕ Quero Mais Dias de Estudo</button>
+            htmlControlos = `
+                <div id="ws-btn-mais-dias-container" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
+                    <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica()" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">➕ Mais Lições</button>
+                    
+                    <button id="ws-btn-concluir-musica" onclick="Workspace.Feed.concluirTreinoMusical()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✅ Finalizar Estudo desta Música</button>
+                </div>
+            `;
+        } else {
+            // Se já tem 30 dias, só pode concluir!
+            htmlControlos = `
+                <div style="text-align: center; margin-top: 30px;">
+                    <button id="ws-btn-concluir-musica" onclick="Workspace.Feed.concluirTreinoMusical()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 16px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✅ Finalizar Estudo (Mestre Atingido)</button>
                 </div>
             `;
         }
@@ -2161,15 +2211,52 @@ abrirPerfilUsuario: async (autorNome) => {
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
-                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">Complete os espaços em branco e treine a pronúncia com a IA!</p>
+                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu estudo guardado! Retome de onde parou e conquiste a fluência.</p>
                 ${htmlVideoELetra}
                 ${htmlDias}
-                ${htmlBotaoMais}
+                ${htmlControlos}
             </div>
         `;
     },
 
-    // 🚀 O MOTOR DE EXPANSÃO: Chama o Backend e injeta o resultado visualmente!
+    // 🚀 O BOTÃO DE OURO: Move a música para o Histórico!
+    concluirTreinoMusical: async () => {
+        const btn = document.getElementById('ws-btn-concluir-musica');
+        const estado = Workspace.Feed._estadoMusicaAtual;
+        if (!estado || !btn) return;
+
+        btn.innerHTML = '⏳ A arquivar conquista...';
+        btn.disabled = true;
+
+        try {
+            const res = await Workspace.api('/workspace/ingles/musica/concluir', 'POST', {
+                userId: Workspace.usuario.id,
+                postId: estado.postId
+            });
+
+            if (res && res.success) {
+                // Celebração Nativa
+                Workspace.Feed.dispararConfetes();
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("Música arquivada no seu Hall da Fama! 🏆", "success");
+                }
+                
+                // Limpa a memória ativa local
+                Workspace.Feed._estadoMusicaAtual = null;
+                
+                // A magia do LMS: Em 2 segundos, o ecrã volta automaticamente para a Montra!
+                setTimeout(() => {
+                    Workspace.Feed.abrirImersaoMusical();
+                }, 2000);
+
+            } else throw new Error();
+        } catch (error) {
+            btn.innerHTML = '✅ Finalizar Estudo';
+            btn.disabled = false;
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao arquivar a música. Tente de novo.", "error");
+        }
+    },
+
     gerarMaisDiasMusica: async () => {
         const btn = document.getElementById('ws-btn-mais-dias-musica');
         const listaDias = document.getElementById('ws-imersao-musical-lista-dias');
@@ -2183,39 +2270,28 @@ abrirPerfilUsuario: async (autorNome) => {
 
         try {
             const res = await Workspace.api('/workspace/posts/imersao-musical/mais-dias', 'POST', {
-                escolaId: Workspace.usuario.escolaId,
+                userId: Workspace.usuario.id,
                 postId: estado.postId,
                 ultimoDia: estado.diasGerados
             });
 
             if (res && res.success && res.plano) {
-                estado.diasGerados += res.plano.length; // Atualiza a memória com o novo total
+                estado.diasGerados += res.plano.length; 
                 
                 let novasHtml = '';
-                res.plano.forEach(dia => {
-                    novasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia);
-                });
-                
-                // Injeta as novas caixas no fundo da lista de forma perfeita!
+                res.plano.forEach(dia => { novasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia); });
                 listaDias.insertAdjacentHTML('beforeend', novasHtml);
                 
-                // Se bateu no teto de 30 dias, esconde o botão para sempre
                 if (estado.diasGerados >= 30) {
                     const container = document.getElementById('ws-btn-mais-dias-container');
                     if (container) container.remove();
                     if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Parabéns! Atingiu o plano mensal completo de 30 dias!", "success");
                 }
-            } else {
-                throw new Error(res?.error || 'Falha ao processar a música.');
-            }
+            } else throw new Error();
         } catch (error) {
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso(error.message || "A IA precisa de uma pausa. Tente novamente em alguns segundos.", "warning");
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("A IA precisa de uma pausa. Tente de novo em segundos.", "warning");
         } finally {
-            if (btn) {
-                btn.innerHTML = '➕ Quero Mais Dias de Estudo';
-                btn.disabled = false;
-                btn.style.opacity = '1';
-            }
+            if (btn) { btn.innerHTML = '➕ Mais Lições'; btn.disabled = false; btn.style.opacity = '1'; }
         }
     },
 
