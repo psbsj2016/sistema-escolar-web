@@ -1948,25 +1948,34 @@ abrirPerfilUsuario: async (autorNome) => {
         if(btnAntigo) btnAntigo.style.display = 'none';
 
         try {
-            // 🚀 Envia o ID da escola para garantir que puxamos o Catálogo Completo!
+            // 🚀 BLINDAGEM 1: Garante que o utilizador existe antes de pedir à API
+            if (!Workspace.usuario || !Workspace.usuario.id) {
+                throw new Error("Sessão de utilizador não detetada. Por favor, recarregue a página.");
+            }
+
             const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}&escolaId=${Workspace.usuario.escolaId}`, 'GET');
             
             if (statusRes && statusRes.musicaAtiva) {
-                // TEM UM TREINO A DECORRER! (Abre a aula onde parou)
                 Workspace.Feed._estadoMusicaAtual = { 
                     postId: statusRes.musicaAtiva.postOriginal.id, 
                     diasGerados: statusRes.musicaAtiva.plano.planoEstudos.length 
                 };
                 Workspace.Feed.renderizarImersaoMusical(statusRes.musicaAtiva.plano, statusRes.musicaAtiva.postOriginal);
             } else {
-                // NÃO TEM TREINO! Guarda o histórico e o catálogo na memória e abre a montra
                 Workspace.Feed._historicoMusicas = statusRes ? statusRes.historicoMusicas || [] : [];
                 Workspace.Feed._catalogoMusicas = statusRes ? statusRes.catalogo || [] : [];
                 
                 Workspace.Feed.renderizarMontraMusical('novas');
             }
         } catch (e) {
-             conteudo.innerHTML = '<div style="color: #ef4444; text-align: center; padding: 40px; border: 1px solid #ef4444; border-radius: 12px; margin-top: 30px;">Erro ao carregar o seu estúdio musical.</div>';
+             // 🚀 RADAR DE ERROS: Agora a plataforma "Cospe" o erro exato no ecrã e na consola
+             console.error("Erro Crítico no Estúdio Musical:", e);
+             conteudo.innerHTML = `
+                <div style="color: #ef4444; text-align: center; padding: 40px; border: 1px solid #ef4444; border-radius: 12px; margin-top: 30px; background: rgba(239, 68, 68, 0.05);">
+                    <h3 style="margin-top: 0;">Erro ao carregar o seu estúdio musical.</h3>
+                    <p style="color: #fca5a5; font-size: 14px; font-family: monospace;">Detalhe Técnico: ${e.message || 'Erro desconhecido na rede.'}</p>
+                    <button onclick="Workspace.Feed.fecharImersaoMusical()" style="margin-top: 15px; background: #3f3f46; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Fechar e Tentar de Novo</button>
+                </div>`;
         }
     },
 
@@ -2098,31 +2107,30 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
 
-    gerarHTMLDiaMusical: (dia) => {
+  gerarHTMLDiaMusical: (dia) => {
         const idAreaConstrucao = `area-construcao-${dia.dia}`;
         const idBancoPalavras = `banco-palavras-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
         
-        // 🚀 O BARALHADOR SINTÁTICO: Separa a frase original em palavras e baralha
-        const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1'); // Preserva a pontuação no final
-        const palavrasOriginais = dia.fraseOriginal.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
+        // 🚀 BLINDAGEM 2: Previne o colapso se a IA se tiver esquecido de enviar a Frase Original
+        const fraseOriginalBase = dia.fraseOriginal || dia.fraseOculta || dia.palavraEscondida || 'System Error Missing Sentence';
         
-        // Algoritmo Fisher-Yates para baralhar o array na perfeição
+        // O BARALHADOR SINTÁTICO: Separa a frase e baralha
+        const fraseLimpaParaJs = fraseOriginalBase.replace(/(['"\\/])/g, '\\$1'); 
+        const palavrasOriginais = fraseOriginalBase.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
+        
         const palavrasBaralhadas = [...palavrasOriginais];
         for (let i = palavrasBaralhadas.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [palavrasBaralhadas[i], palavrasBaralhadas[j]] = [palavrasBaralhadas[j], palavrasBaralhadas[i]];
         }
 
-        // 🚀 CONSTRUTOR DOS BOTÕES DO BANCO (WORD BANK)
         let htmlBotoesBanco = '';
         palavrasBaralhadas.forEach((palavra, indice) => {
-            // O botão guarda a palavra original, a caixa de onde veio, e chama a função mágica de voo!
             htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${Workspace.Feed.limparTexto(palavra)}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${Workspace.Feed.limparTexto(palavra)}</button>`;
         });
 
-        // 🚀 BLINDAGEM BASE64: Usa encodeURIComponent para não rebentar com emojis ou caracteres especiais
-        const fraseOcultaSegura = btoa(encodeURIComponent(dia.fraseOriginal));
+        const fraseOcultaSegura = btoa(encodeURIComponent(fraseOriginalBase));
 
         return `
             <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease;">
@@ -2131,12 +2139,9 @@ abrirPerfilUsuario: async (autorNome) => {
                     <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Sentence Unscramble 🧩</span>
                 </div>
                 
-                <!-- 🚀 1. ÁREA DE CONSTRUÇÃO (Drop Zone) -->
                 <div style="background: rgba(0,0,0,0.3); min-height: 60px; border-radius: 12px; border: 2px dashed #3f3f46; margin-bottom: 15px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" id="${idAreaConstrucao}">
-                    <!-- As palavras voam para aqui -->
                 </div>
 
-                <!-- 🚀 2. BANCO DE PALAVRAS (Word Bank) -->
                 <div style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; min-height: 50px;" id="${idBancoPalavras}">
                     ${htmlBotoesBanco}
                 </div>
@@ -2162,7 +2167,7 @@ abrirPerfilUsuario: async (autorNome) => {
                 </div>
             </div>
         `;
-    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
+    },
 
     // 🚀 A MÁGICA VISUAL: Mover a palavra entre o Banco e a Área de Construção
     moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
