@@ -2098,29 +2098,53 @@ abrirPerfilUsuario: async (autorNome) => {
         }
     },
 
-    gerarHTMLDiaMusical: (dia) => {
-        const idInput = `input-musica-dia-${dia.dia}`;
+   gerarHTMLDiaMusical: (dia) => {
+        const idAreaConstrucao = `area-construcao-${dia.dia}`;
+        const idBancoPalavras = `banco-palavras-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
-        const palavraCerta = Workspace.Feed.limparTexto(dia.palavraEscondida).toLowerCase().trim();
         
-        const fraseInterativa = Workspace.Feed.formatarIA(dia.fraseOculta).replace('____', `<input type="text" id="${idInput}" placeholder="???" style="background: rgba(0,0,0,0.3); border: 1px solid #ec4899; color: #fdf2f8; font-weight: bold; font-size: 18px; width: 120px; text-align: center; border-radius: 6px; outline: none; padding: 2px 5px; font-family: inherit; transition: 0.2s;" autocomplete="off" onkeypress="if(event.key === 'Enter') Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')">`);
-        const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1').replace(/\n/g, ' ');
+        // 🚀 O BARALHADOR SINTÁTICO: Separa a frase original em palavras e baralha
+        const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1'); // Preserva a pontuação no final
+        const palavrasOriginais = dia.fraseOriginal.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
+        
+        // Algoritmo Fisher-Yates para baralhar o array na perfeição
+        const palavrasBaralhadas = [...palavrasOriginais];
+        for (let i = palavrasBaralhadas.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [palavrasBaralhadas[i], palavrasBaralhadas[j]] = [palavrasBaralhadas[j], palavrasBaralhadas[i]];
+        }
+
+        // 🚀 CONSTRUTOR DOS BOTÕES DO BANCO (WORD BANK)
+        let htmlBotoesBanco = '';
+        palavrasBaralhadas.forEach((palavra, indice) => {
+            // O botão guarda a palavra original, a caixa de onde veio, e chama a função mágica de voo!
+            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${Workspace.Feed.limparTexto(palavra)}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${Workspace.Feed.limparTexto(palavra)}</button>`;
+        });
+
+        // E passamos a frase em Base64 para ser à prova de bala contra aspas quebradas!
+        const fraseOcultaSegura = btoa(encodeURIComponent(dia.fraseOriginal));
 
         return `
             <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease;">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
                     <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
-                    <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Fill in the Blanks ✍️</span>
+                    <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Sentence Unscramble 🧩</span>
                 </div>
                 
-                <div style="font-size: 22px; font-weight: 800; color: #fdf2f8; margin-bottom: 15px; font-style: italic; line-height: 1.5;">
-                    ${fraseInterativa}
+                <!-- 🚀 1. ÁREA DE CONSTRUÇÃO (Drop Zone) -->
+                <div style="background: rgba(0,0,0,0.3); min-height: 60px; border-radius: 12px; border: 2px dashed #3f3f46; margin-bottom: 15px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" id="${idAreaConstrucao}">
+                    <!-- As palavras voam para aqui -->
+                </div>
+
+                <!-- 🚀 2. BANCO DE PALAVRAS (Word Bank) -->
+                <div style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; min-height: 50px;" id="${idBancoPalavras}">
+                    ${htmlBotoesBanco}
                 </div>
                 
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
-                    <button onclick="Workspace.Feed.verificarBlankMusical('${idInput}', '${palavraCerta}', '${idFeedback}')" style="background: #ec4899; color: white; border: none; padding: 8px 18px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px;" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">✍️ Verificar Letra</button>
-                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 8px 15px; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; display: flex; align-items: center; gap: 5px;" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
-                    <span id="${idFeedback}" style="font-size: 14px; font-weight: bold; flex: 1;"></span>
+                    <button id="btn-verificar-musica-${dia.dia}" onclick="Workspace.Feed.verificarFraseMusical('${idAreaConstrucao}', '${fraseOcultaSegura}', '${idFeedback}', ${dia.dia})" style="background: #ec4899; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">🧩 Verificar Frase</button>
+                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: none; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
+                    <span id="${idFeedback}" style="font-size: 15px; font-weight: bold; flex: 1;"></span>
                 </div>
 
                 <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
@@ -2140,227 +2164,98 @@ abrirPerfilUsuario: async (autorNome) => {
         `;
     },
 
-   renderizarImersaoMusical: (plano, postOriginal) => {
-        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+    // 🚀 A MÁGICA VISUAL: Mover a palavra entre o Banco e a Área de Construção
+    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
+        // Se a frase já foi validada e bloqueada, impede movimentos!
+        const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
+        if (btnVerificar && btnVerificar.disabled) return;
+
+        const areaConstrucao = document.getElementById(idAreaConstrucao);
+        const bancoPalavras = document.getElementById(idBancoPalavras);
         
-        let htmlVideoELetra = '';
-        if (postOriginal) {
-            let textoDaLetra = Workspace.Feed.limparTexto(postOriginal.texto || '').replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
-            const mediaLinks = [];
-            
-            textoDaLetra = textoDaLetra.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
-                mediaLinks.push(`<div style="position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #3f3f46; background: #000; width: 100%; margin-bottom: 15px;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
-                return ''; 
-            });
-
-            textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?tiktok\.com\/.*\/video\/(\d+)(?:\S+)?/ig, (match, id) => {
-                mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><blockquote class="tiktok-embed" cite="${match.split('?')[0]}" data-video-id="${id}" style="max-width: 100%; border-radius: 12px;" ><section></section></blockquote><script async src="https://www.tiktok.com/embed.js"></script></div>`);
-                return '';
-            });
-
-            textoDaLetra = textoDaLetra.replace(/https?:\/\/(?:www\.)?instagram\.com\/(?:p|reel)\/([a-zA-Z0-9_-]+)(?:\S+)?/ig, (match, id) => {
-                mediaLinks.push(`<div style="display: flex; justify-content: center; width: 100%; margin-bottom: 15px;"><iframe src="https://www.instagram.com/p/${id}/embed" width="100%" height="480" frameborder="0" scrolling="no" allowtransparency="true" style="border-radius: 12px; border: 1px solid #3f3f46;"></iframe></div>`);
-                return '';
-            });
-
-            textoDaLetra = textoDaLetra.replace(/https?:\/\/open\.spotify\.com\/(track|album|playlist|episode)\/([a-zA-Z0-9]+)(?:\S+)?/ig, (match, type, id) => {
-                mediaLinks.push(`<div style="width: 100%; margin-bottom: 15px;"><iframe src="https://open.spotify.com/embed/${type}/${id}" width="100%" height="152" frameborder="0" allowtransparency="true" allow="encrypted-media" style="border-radius: 12px;"></iframe></div>`);
-                return '';
-            });
-
-            textoDaLetra = textoDaLetra.replace(/(https?:\/\/[^\s<]+)/g, '').trim();
-            const midiaCompleta = mediaLinks.join('') + Workspace.Feed.renderizarAnexos(postOriginal.anexos, 'musica');
-
-            const numLinhas = (textoDaLetra.match(/<br>/g) || []).length;
-            const ehTextoLongo = textoDaLetra.length > 350 || numLinhas > 8;
-            const estiloColunas = numLinhas >= 8 ? 'column-width: 220px; column-gap: 30px; widows: 3; orphans: 3;' : '';
-            const idUnico = `musica-${postOriginal.id}`;
-
-            const cssExclusivo = `
-                <style>
-                    .ws-grid-musical { display: grid; grid-template-columns: 1fr 340px; gap: 30px; align-items: start; }
-                    @media (max-width: 900px) { .ws-grid-musical { grid-template-columns: 1fr; } }
-                    .ws-letra-colunas { color: #d4d4d8; font-size: 13.5px; line-height: 1.7; overflow-wrap: break-word; word-wrap: break-word; word-break: break-word; ${estiloColunas} }
-                    .ws-letra-collapsed { max-height: 250px; overflow: hidden; position: relative; transition: max-height 0.4s ease-out; }
-                    .ws-letra-expanded { max-height: 5000px; transition: max-height 0.6s ease-in; }
-                    .ws-letra-fade { position: absolute; bottom: 0; left: 0; width: 100%; height: 70px; background: linear-gradient(transparent, #1a1a1d); pointer-events: none; }
-                </style>
-            `;
-
-            const scriptToggle = `const wrap = document.getElementById('text-wrap-${idUnico}'); const fade = document.getElementById('fade-${idUnico}'); if(wrap.classList.contains('ws-letra-expanded')) { wrap.classList.remove('ws-letra-expanded'); this.innerText = 'Ler mais ⬇️'; if(fade) fade.style.display = 'block'; } else { wrap.classList.add('ws-letra-expanded'); this.innerText = 'Subir / Ocultar ⬆️'; if(fade) fade.style.display = 'none'; }`;
-            const btnVerMais = `<div id="btn-ler-mais-${idUnico}" style="margin-top: 15px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="${scriptToggle}" style="color: #ec4899; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(236, 72, 153, 0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">Ler mais ⬇️</span></div>`;
-            
-            htmlVideoELetra = `
-                ${cssExclusivo}
-                <div class="ws-grid-musical" style="background: rgba(0,0,0,0.3); border: 1px solid #3f3f46; padding: 25px; border-radius: 16px; margin-bottom: 30px;">
-                    <div style="min-width: 0; width: 100%;">
-                        <div style="font-size: 12px; color: #a1a1aa; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center;">
-                            <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 10px;">Letra Original</span>
-                        </div>
-                        <div id="text-wrap-${idUnico}" class="ws-letra-colunas ${ehTextoLongo ? 'ws-letra-collapsed' : ''}">
-                            ${textoDaLetra}
-                            ${ehTextoLongo ? '<div id="fade-' + idUnico + '" class="ws-letra-fade"></div>' : ''}
-                        </div>
-                        ${btnVerMais}
-                    </div>
-                    <div style="position: sticky; top: 20px; width: 100%;">
-                        <div style="font-size: 12px; color: #ec4899; font-weight: bold; text-transform: uppercase; margin-bottom: 20px; display: flex; align-items: center; gap: 8px;">
-                            <span>🎶 Vídeo Fonte</span>
-                        </div>
-                        <div style="border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.5); background: transparent; width: 100%;">
-                            ${midiaCompleta}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        let htmlDias = '<div id="ws-imersao-musical-lista-dias">';
-        if (plano.planoEstudos && plano.planoEstudos.length > 0) {
-            plano.planoEstudos.forEach(dia => {
-                htmlDias += Workspace.Feed.gerarHTMLDiaMusical(dia);
-            });
-        }
-        htmlDias += '</div>';
-
-        // 🚀 OS BOTÕES DE CONTROLO (Mais Dias OU Concluir Treino)
-        let htmlControlos = '';
-        if (Workspace.Feed._estadoMusicaAtual && Workspace.Feed._estadoMusicaAtual.diasGerados < 30) {
-            htmlControlos = `
-                <div id="ws-btn-mais-dias-container" style="display: flex; gap: 15px; justify-content: center; margin-top: 30px; flex-wrap: wrap;">
-                    <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica()" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">➕ Mais Lições</button>
-                    
-                    <button id="ws-btn-concluir-musica" onclick="Workspace.Feed.concluirTreinoMusical()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✅ Finalizar Estudo desta Música</button>
-                </div>
-            `;
-        } else {
-            // Se já tem 30 dias, só pode concluir!
-            htmlControlos = `
-                <div style="text-align: center; margin-top: 30px;">
-                    <button id="ws-btn-concluir-musica" onclick="Workspace.Feed.concluirTreinoMusical()" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 16px 40px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">✅ Finalizar Estudo (Mestre Atingido)</button>
-                </div>
-            `;
-        }
-
-        conteudo.innerHTML = `
-            <div style="animation: fadeIn 0.5s ease;">
-                <h1 style="color: #fff; font-size: 30px; margin-bottom: 10px; text-align: center;">${Workspace.Feed.formatarIA(plano.tituloMusica)}</h1>
-                <p style="text-align: center; color: #a1a1aa; margin-bottom: 30px;">O seu estudo guardado! Retome de onde parou e conquiste a fluência.</p>
-                ${htmlVideoELetra}
-                ${htmlDias}
-                ${htmlControlos}
-            </div>
-        `;
+        // Efeito de encolher rápido para simular o voo
+        botao.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            if (botao.parentNode === bancoPalavras) {
+                // Se está no Banco, vai para a Construção (muda o visual para azul)
+                areaConstrucao.appendChild(botao);
+                botao.style.background = '#3b82f6';
+                botao.style.borderColor = '#2563eb';
+                botao.onmouseover = () => botao.style.background = '#2563eb';
+                botao.onmouseout = () => botao.style.background = '#3b82f6';
+            } else {
+                // Se está na Construção, volta para o Banco (muda para rosa)
+                bancoPalavras.appendChild(botao);
+                botao.style.background = 'rgba(236, 72, 153, 0.2)';
+                botao.style.borderColor = '#ec4899';
+                botao.onmouseover = () => botao.style.background = 'rgba(236, 72, 153, 0.4)';
+                botao.onmouseout = () => botao.style.background = 'rgba(236, 72, 153, 0.2)';
+            }
+            botao.style.transform = 'scale(1)'; // Restaura o tamanho na nova casa
+        }, 150);
+        
+        // Limpa o feedback de erro, se houver
+        const feedback = document.getElementById(`feedback-musica-dia-${diaId}`);
+        if (feedback) feedback.innerHTML = '';
+        areaConstrucao.style.borderColor = '#3f3f46';
     },
 
-    // 🚀 O BOTÃO DE OURO: Move a música para o Histórico!
-    concluirTreinoMusical: async () => {
-        const btn = document.getElementById('ws-btn-concluir-musica');
-        const estado = Workspace.Feed._estadoMusicaAtual;
-        if (!estado || !btn) return;
-
-        btn.innerHTML = '⏳ A arquivar conquista...';
-        btn.disabled = true;
-
-        try {
-            const res = await Workspace.api('/workspace/ingles/musica/concluir', 'POST', {
-                userId: Workspace.usuario.id,
-                postId: estado.postId
-            });
-
-            if (res && res.success) {
-                // Celebração Nativa
-                Workspace.Feed.dispararConfetes();
-                if (window.Workspace && Workspace.mostrarAviso) {
-                    Workspace.mostrarAviso("Música arquivada no seu Hall da Fama! 🏆", "success");
-                }
-                
-                // Limpa a memória ativa local
-                Workspace.Feed._estadoMusicaAtual = null;
-                
-                // A magia do LMS: Em 2 segundos, o ecrã volta automaticamente para a Montra!
-                setTimeout(() => {
-                    Workspace.Feed.abrirImersaoMusical();
-                }, 2000);
-
-            } else throw new Error();
-        } catch (error) {
-            btn.innerHTML = '✅ Finalizar Estudo';
-            btn.disabled = false;
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao arquivar a música. Tente de novo.", "error");
-        }
-    },
-
-    gerarMaisDiasMusica: async () => {
-        const btn = document.getElementById('ws-btn-mais-dias-musica');
-        const listaDias = document.getElementById('ws-imersao-musical-lista-dias');
-        const estado = Workspace.Feed._estadoMusicaAtual;
-
-        if (!estado || !listaDias || !btn) return;
-
-        btn.innerHTML = '⏳ A compor novas lições...';
-        btn.disabled = true;
-        btn.style.opacity = '0.7';
-
-        try {
-            const res = await Workspace.api('/workspace/posts/imersao-musical/mais-dias', 'POST', {
-                userId: Workspace.usuario.id,
-                postId: estado.postId,
-                ultimoDia: estado.diasGerados
-            });
-
-            if (res && res.success && res.plano) {
-                estado.diasGerados += res.plano.length; 
-                
-                let novasHtml = '';
-                res.plano.forEach(dia => { novasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia); });
-                listaDias.insertAdjacentHTML('beforeend', novasHtml);
-                
-                if (estado.diasGerados >= 30) {
-                    const container = document.getElementById('ws-btn-mais-dias-container');
-                    if (container) container.remove();
-                    if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Parabéns! Atingiu o plano mensal completo de 30 dias!", "success");
-                }
-            } else throw new Error();
-        } catch (error) {
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("A IA precisa de uma pausa. Tente de novo em segundos.", "warning");
-        } finally {
-            if (btn) { btn.innerHTML = '➕ Mais Lições'; btn.disabled = false; btn.style.opacity = '1'; }
-        }
-    },
-
-    verificarBlankMusical: (idInput, palavraCerta, idFeedback) => {
-        const input = document.getElementById(idInput);
+    // 🚀 O MOTOR DE VALIDAÇÃO (Substitui o antigo verificarBlankMusical)
+    verificarFraseMusical: (idAreaConstrucao, fraseOcultaBase64, idFeedback, diaId) => {
+        const areaConstrucao = document.getElementById(idAreaConstrucao);
         const feedback = document.getElementById(idFeedback);
-        if (!input || !feedback) return;
+        const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
+        const btnMic = document.getElementById(`btn-mic-dia-${diaId}`);
         
-        const tentativa = input.value.trim().toLowerCase().replace(/[.,!?;:]/g, '');
-        const alvo = palavraCerta.replace(/[.,!?;:]/g, '');
+        if (!areaConstrucao || !feedback) return;
 
-        if (tentativa === alvo) {
-            input.style.borderColor = '#10b981';
-            input.style.background = 'rgba(16, 185, 129, 0.2)';
-            input.style.color = '#10b981';
-            input.disabled = true; 
+        // Descodifica a frase original perfeita vinda do servidor
+        const fraseOriginal = decodeURIComponent(atob(fraseOcultaBase64)).replace(/[.,!?;:]/g, '').toLowerCase().trim();
+        
+        // Recolhe todas as palavras que o aluno arrastou para a área
+        const botoesConstrucao = Array.from(areaConstrucao.children);
+        const fraseDoAluno = botoesConstrucao.map(btn => btn.getAttribute('data-palavra')).join(' ').toLowerCase().trim();
+
+        if (botoesConstrucao.length === 0) {
+            feedback.style.color = '#f59e0b';
+            feedback.innerHTML = '⚠️ Monte a frase clicando nas palavras abaixo!';
+            return;
+        }
+
+        if (fraseDoAluno === fraseOriginal) {
+            // ✅ VITÓRIA! O Cérebro sintático funcionou!
+            areaConstrucao.style.borderColor = '#10b981';
+            areaConstrucao.style.background = 'rgba(16, 185, 129, 0.1)';
             feedback.style.color = '#10b981';
-            feedback.innerHTML = '✅ Correto! Excelente ouvido.';
-            input.style.transform = 'scale(1.1)';
-            setTimeout(() => input.style.transform = 'scale(1)', 200);
+            feedback.innerHTML = '✅ Brilhante! A estrutura está perfeita.';
+            
+            // Bloqueia os botões e esconde o botão de verificar
+            botoesConstrucao.forEach(b => { b.style.cursor = 'default'; b.style.pointerEvents = 'none'; });
+            if (btnVerificar) btnVerificar.style.display = 'none';
+            
+            // 🚀 LIBERTA A FASE 2: O Treino de Pronúncia!
+            if (btnMic) {
+                btnMic.style.display = 'flex';
+                btnMic.style.animation = 'popUp 0.5s ease';
+            }
+            
+            // Efeito visual de vitória
+            areaConstrucao.style.transform = 'scale(1.02)';
+            setTimeout(() => areaConstrucao.style.transform = 'scale(1)', 200);
+            if (Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
+
         } else {
-            input.style.borderColor = '#ef4444';
-            input.style.color = '#ef4444';
+            // ❌ FRACASSO: O aluno errou a ordem sintática!
+            areaConstrucao.style.borderColor = '#ef4444';
             feedback.style.color = '#ef4444';
-            feedback.innerHTML = '❌ Não é bem isso. Tente novamente!';
-            input.style.transform = 'translateX(-5px)';
-            setTimeout(() => input.style.transform = 'translateX(5px)', 50);
-            setTimeout(() => input.style.transform = 'translateX(0)', 100);
-            setTimeout(() => {
-                if(!input.disabled) {
-                    input.style.borderColor = '#ec4899';
-                    input.style.color = '#fdf2f8';
-                    feedback.innerHTML = '';
-                }
-            }, 2000);
+            feedback.innerHTML = '❌ Não é bem essa a ordem... Tente novamente!';
+            
+            // Efeito de tremor (shake) de erro
+            areaConstrucao.style.transform = 'translateX(-5px)';
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(5px)', 50);
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(-5px)', 100);
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(0)', 150);
         }
     },
 
