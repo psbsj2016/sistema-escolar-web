@@ -12,12 +12,13 @@ Workspace.Feed = {
     listenerAnimacaoConfigurado: false,
     filtroAtivo: 'todos', 
 
-    init: async () => {
+   init: async () => {
         console.log("📚 Motor do Feed ligado à API.");
         Workspace.Feed.injetarCSSAnimacoes(); 
         Workspace.Feed.injetarModaisGlobais(); 
         Workspace.Feed.injetarBotaoImersao(); 
         
+        // 🚀 INICIA O MÓDULO DA ARENA (Se o ficheiro tiver sido importado no HTML)
         if (window.Workspace && Workspace.Arena) {
             Workspace.Arena.init();
         }
@@ -32,6 +33,7 @@ Workspace.Feed = {
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();
         Workspace.Feed.iniciarRelogioTempos(); 
+        
         Workspace.Feed.conectarTempoReal();
         
         if (!Workspace.Feed.listenerFechamentoConfigurado) {
@@ -42,7 +44,8 @@ Workspace.Feed = {
         }
     },
 
-    injetarBotaoImersao: () => {
+  // 🚀 NOVO: Radar Persistente para Injetar os Três Botões Mágicos
+   injetarBotaoImersao: () => {
         const tentarInjetar = setInterval(() => {
             const filterBar = document.getElementById('ws-feed-filter-bar');
             const areaDePosts = document.getElementById('ws-posts-area');
@@ -65,17 +68,27 @@ Workspace.Feed = {
                 btnMusica.innerHTML = '🎶 Inglês com Música';
                 btnMusica.onclick = () => Workspace.Feed.abrirImersaoMusical();
 
+                // 🚀 O NOVO BOTÃO DA ARENA AO LADO DOS OUTROS
                 const btnArena = document.createElement('button');
                 btnArena.className = 'ws-filter-chip';
                 btnArena.style.cssText = 'background: linear-gradient(135deg, #f59e0b, #ea580c) !important; color: white !important; border: none !important; box-shadow: 0 4px 15px rgba(234, 88, 12, 0.4) !important; font-weight: 800 !important; padding: 10px 18px !important; font-size: 14px !important; border-radius: 20px !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; flex-shrink: 0 !important;';
                 btnArena.innerHTML = '⚔️ Arena de Fluência';
                 
+                // 🚀 CLIQUE BLINDADO: Constrói a arena na hora se for preciso!
                 btnArena.onclick = () => { 
                     if (window.Workspace && Workspace.Arena) {
-                        if (!document.getElementById('ws-modal-arena')) Workspace.Arena.init();
+                        // Se o painel não existir no HTML na hora do clique, força a inicialização
+                        if (!document.getElementById('ws-modal-arena')) {
+                            Workspace.Arena.init();
+                        }
                         Workspace.Arena.abrirPainel(); 
                     } else {
-                        if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("O motor da Arena não foi encontrado.", "error");
+                        // Se o código chegar aqui, significa que o HTML não tem a tag do arena.js
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso("O motor da Arena não foi encontrado. Verifique as tags do HTML!", "error");
+                        } else {
+                            alert("O ficheiro arena.js não foi importado no seu ficheiro HTML principal!");
+                        }
                     }
                 };
 
@@ -102,7 +115,9 @@ Workspace.Feed = {
                 if (dados.type === 'POST_APAGADO') {
                     const idDoPost = String(dados.postId);
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
-                    if (elementoHTML) elementoHTML.remove(); 
+                    if (elementoHTML) {
+                        elementoHTML.remove(); 
+                    }
                     Workspace.Feed.todosOsPosts = Workspace.Feed.todosOsPosts.filter(p => String(p.id) !== idDoPost);
                     Workspace.Feed.postsCache = Workspace.Feed.postsCache.filter(p => String(p.id) !== idDoPost);
                 }
@@ -228,18 +243,23 @@ Workspace.Feed = {
                 </div>
             `;
             
+            // 🚀 O NOVO PALCO DA IMERSÃO ESPECÍFICA!
             const modalImersao = `
                 <div id="ws-imersao-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #0f172a; z-index: 100030; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow-y: auto;">
                     <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(15, 23, 42, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); border-bottom: 1px solid #1e293b;">
                         <h2 style="color: #fff; margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">🌌 Imersão Específica</h2>
-                        <button onclick="Workspace.Feed.fecharImersao()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+                        <button onclick="Workspace.Feed.fecharImersao()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Sair da Imersão">✖</button>
                     </div>
                     
                     <div style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
+                        
+                        <!-- Barra de Pesquisa Poderosa -->
                         <div style="display: flex; gap: 10px; margin-bottom: 30px; flex-wrap: wrap;">
                             <input type="text" id="ws-imersao-busca" placeholder="O que deseja estudar agora? (Ex: Phrasal Verbs, Viagem...)" style="flex: 1; min-width: 250px; padding: 16px; border-radius: 12px; border: 1px solid #334155; font-size: 16px; outline: none; background: #1e293b; color: #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.2);" onkeypress="if(event.key === 'Enter') Workspace.Feed.gerarImersao()">
                             <button onclick="Workspace.Feed.gerarImersao()" id="ws-btn-gerar-imersao" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 16px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 16px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);">Gerar Aula da IA 🪄</button>
                         </div>
+                        
+                        <!-- A Área onde a IA desenha os resultados -->
                         <div id="ws-imersao-conteudo" style="color: #cbd5e1; font-size: 16px; line-height: 1.6;">
                             <div style="text-align: center; padding: 50px 20px; color: #64748b;">
                                 <div style="font-size: 60px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🤖</div>
@@ -250,12 +270,13 @@ Workspace.Feed = {
                     </div>
                 </div>
             `;
+            
 
-            const modalMusica = `
+        const modalMusica = `
                 <div id="ws-imersao-musical-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #18181b; z-index: 100030; flex-direction: column; opacity: 0; transition: opacity 0.3s; overflow-y: auto;">
                     <div style="padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: rgba(24, 24, 27, 0.9); position: sticky; top: 0; z-index: 10; backdrop-filter: blur(10px); border-bottom: 1px solid #3f3f46;">
                         <h2 style="color: #fff; margin: 0; font-size: 20px; display: flex; align-items: center; gap: 10px;">🎶 Inglês com Música</h2>
-                        <button onclick="Workspace.Feed.fecharImersaoMusical()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'">✖</button>
+                        <button onclick="Workspace.Feed.fecharImersaoMusical()" style="background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; cursor: pointer; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='rgba(255,255,255,0.2)'" onmouseout="this.style.background='rgba(255,255,255,0.1)'" title="Sair">✖</button>
                     </div>
                     <div style="padding: 20px; max-width: 800px; margin: 0 auto; width: 100%; box-sizing: border-box;">
                         <div style="display: flex; gap: 10px; margin-bottom: 30px; justify-content: center;">
@@ -273,6 +294,7 @@ Workspace.Feed = {
             `;
             
             document.body.insertAdjacentHTML('beforeend', modaisHTML + modalImersao + modalMusica);
+       
         }
     },
 
@@ -477,6 +499,7 @@ Workspace.Feed = {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => !a.tipo.includes('image') && !a.tipo.includes('video')));
         }
         else if (tipoFiltro === 'musica') {
+            // 🚀 NOVO: Filtra a aba da Playlist!
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.categoria === 'musica');
         }
 
@@ -539,6 +562,7 @@ Workspace.Feed = {
                 document.querySelectorAll('.ws-feed-video').forEach(v => { if (v !== this && !v.paused) v.pause(); });
                 
                 document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+                    // 🚀 BLINDAGEM 1: Só envia o comando se o iframe ainda estiver "vivo" na memória
                     if (iframe && iframe.contentWindow) {
                         iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                     }
@@ -552,10 +576,12 @@ Workspace.Feed = {
             entries.forEach(entry => {
                 if (!entry.isIntersecting) {
                     const el = entry.target;
+                    
                     if (el.tagName === 'VIDEO' && !el.paused) {
                         el.pause(); 
                     } 
                     else if (el.tagName === 'IFRAME') {
+                        // 🚀 BLINDAGEM 2: Previne o "Cannot read properties of null"
                         if (el && el.contentWindow) {
                             el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
                         }
@@ -763,8 +789,13 @@ Workspace.Feed = {
        if (videos.length > 0) {
             videos.forEach(video => {
                 let url = video.url.startsWith('http') || video.url.startsWith('/') ? video.url : '/' + video.url;
+                
+                // 🚀 CORREÇÃO 2: O truque do "#t=0.001" força o navegador a buscar o 1º frame visual 
+                // daquele vídeo, criando uma "capa" automática em vez de um ecrã preto.
                 let videoUrlHacked = url.includes('#') ? url : url + '#t=0.001';
 
+                // Usamos o "src" direto na tag <video> e removemos o "type=" restrito. 
+                // Assim, o navegador fará o "sniffing" automático para descobrir o codec exato.
                 htmlFinal += `
                 <div style="margin-top: 15px; width: 100%; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; overflow: hidden; display: flex; justify-content: center; align-items: center;">
                     <video controls playsinline preload="metadata" class="ws-feed-video" src="${videoUrlHacked}" style="width:100%; max-height:450px; outline:none; border:none; background:#000; object-fit: contain;">
@@ -929,17 +960,20 @@ Workspace.Feed = {
         const containerText = document.getElementById(`text-wrap-${postId}`);
         if(!containerText) return;
 
+        // REMOVE AS AMARRAS DE ALTURA DURANTE A EDIÇÃO!
         containerText.classList.remove('ws-text-collapsed');
         
+        // Esconde o botão Ler Mais temporariamente
         const btnLerMais = document.getElementById(`btn-ler-mais-${postId}`);
         if(btnLerMais) btnLerMais.style.display = 'none';
 
         const textAtual = post.texto || '';
-        const categoriaAtual = post.categoria || 'normal'; 
+        const categoriaAtual = post.categoria || 'normal'; // 🚀 Puxa a categoria atual da memória
 
         containerText.innerHTML = `
             <div style="background:#f4f6f7; padding:12px; border-radius:8px; border:1px solid #ddd; margin-bottom:10px; animation: fadeIn 0.3s; column-span: all; break-inside: avoid;" onclick="event.stopPropagation()">
                 
+                <!-- 🚀 NOVO: Seletor de Categoria Injetado -->
                 <div style="margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
                     <label style="font-size:12px; font-weight:bold; color:#555;">Categoria do Post:</label>
                     <select id="edit-categoria-${postId}" style="padding: 6px 12px; border-radius: 6px; border: 1px solid #ccc; font-family: inherit; font-size: 13px; outline: none; background: #fff; cursor: pointer;">
@@ -982,7 +1016,7 @@ Workspace.Feed = {
 
     salvarEdicaoPost: async (postId) => {
         const input = document.getElementById(`edit-input-${postId}`);
-        const selectCat = document.getElementById(`edit-categoria-${postId}`); 
+        const selectCat = document.getElementById(`edit-categoria-${postId}`); // 🚀 Lê o novo dropdown
         if(!input) return;
         
         const novoTexto = input.value.trim();
@@ -992,15 +1026,18 @@ Workspace.Feed = {
         btn.innerText = "⏳ A gravar..."; btn.disabled = true;
 
         try {
+            // 🚀 Envia a categoria junto com o texto para a nossa rota Backend atualizada
             const res = await Workspace.api(`/workspace/posts/${postId}`, 'PUT', { texto: novoTexto, categoria: novaCategoria });
             if(res && res.success) {
                 const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
                 if(post) {
                     post.texto = novoTexto;
-                    post.categoria = novaCategoria; 
+                    post.categoria = novaCategoria; // Atualiza a memória local
                 }
                 
                 Workspace.Feed.cancelarEdicaoPost(postId);
+                
+                // 🚀 Recarrega a tela silenciosamente para garantir que a etiqueta (Badge) rosa de Música aparece!
                 Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
                 
                 if(Workspace.mostrarAviso) Workspace.mostrarAviso("Publicação editada com sucesso!", "success");
@@ -1102,14 +1139,17 @@ Workspace.Feed = {
 
             const btnVerMais = `<div id="btn-ler-mais-${p.id}" style="margin-top: 8px; display: ${ehTextoLongo ? 'block' : 'none'};"><span onclick="Workspace.Feed.toggleTextoPost(this, '${p.id}')" style="color: #3498db; font-size: 13px; font-weight: bold; cursor: pointer; background: rgba(52,152,219,0.1); padding: 5px 12px; border-radius: 14px; transition: 0.2s;" onmouseover="this.style.background='rgba(52,152,219,0.2)'" onmouseout="this.style.background='rgba(52,152,219,0.1)'">Ler mais ⬇️</span></div>`;
 
+            // 🚀 A GRANDE MAGIA: Deteta o desafio e cria a Via Rápida (10 Min)
             let cardDesafioArena = '';
             if (p.texto && p.texto.includes('Quem tem coragem') && p.texto.includes('na Arena')) {
+                // Impede o autor de aceitar o próprio desafio visualmente
                 const ehMeuProprioDesafio = Workspace.usuario && (Workspace.usuario.nome === p.autorNome || Workspace.usuario.login === p.autorNome);
                 
                 let botaoAcao = '';
                 if (ehMeuProprioDesafio) {
                     botaoAcao = `<div style="color: #ea580c; font-size: 13px; font-weight: bold; background: rgba(234, 88, 12, 0.1); padding: 8px 12px; border-radius: 8px;">A aguardar oponentes... ⏳</div>`;
                 } else {
+                    // 🚀 O NOVO GATILHO QUE ENVIA O PING
                     botaoAcao = `
                         <button id="btn-desafio-${p.id}" onclick="if(window.Workspace && Workspace.Feed){ Workspace.Feed.enviarDesafioDireto('${Workspace.Feed.limparTexto(p.autorNome)}', 10, '${p.id}'); } else { alert('Aguarde um segundo!'); }" style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; border: none; padding: 10px 20px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.3); font-size: 13px; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
                             Aceitar Desafio (10 Min) ⏱️
@@ -1168,6 +1208,7 @@ Workspace.Feed = {
                     </div>
                     ${btnVerMais}
                     
+                    <!-- 🚀 INJEÇÃO DO CARTÃO DA ARENA AQUI! -->
                     ${cardDesafioArena}
 
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
@@ -1287,11 +1328,12 @@ Workspace.Feed = {
                 const anexosLocais = Workspace.Upload ? Workspace.Upload.arquivosAtuais : [];
                 
                 const selDestino = document.getElementById('ws-post-destino');
-                const destino = selDestino ? selDestino.value : 'global';
-                const destinoNome = selDestino ? selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '') : 'Público Geral';
+                                          const destino = selDestino ? selDestino.value : 'global';
+                                          const destinoNome = selDestino ? selDestino.options[selDestino.selectedIndex].text.replace('📚 ', '').replace('🌍 ', '') : 'Público Geral';
                 
-                const selCategoria = document.getElementById('ws-post-categoria');
-                const categoriaPost = selCategoria ? selCategoria.value : 'normal';
+                                         // 🚀 NOVO: Lê a categoria selecionada!
+                                        const selCategoria = document.getElementById('ws-post-categoria');
+                                        const categoriaPost = selCategoria ? selCategoria.value : 'normal';
 
                 if (!texto && anexosLocais.length === 0) {
                     if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Escreva algo ou anexe um ficheiro primeiro.", "warning");
@@ -1309,8 +1351,8 @@ Workspace.Feed = {
                     }
 
                     const postRes = await Workspace.api('/workspace/posts', 'POST', {
-                        texto: texto, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, autorTipo: Workspace.usuario.tipo, anexos: urlsFinais, destino: destino, destinoNome: destinoNome,
-                        categoria: categoriaPost 
+                                                     texto: texto, escolaId: Workspace.usuario.escolaId, autorNome: Workspace.usuario.nome || Workspace.usuario.login, autorTipo: Workspace.usuario.tipo, anexos: urlsFinais, destino: destino, destinoNome: destinoNome,
+                        categoria: categoriaPost // 🚀 NOVO: Envia para a nuvem
                     });
 
                     if (postRes && postRes.success) {
@@ -1334,24 +1376,28 @@ Workspace.Feed = {
         }
     },
 
-    abrirPerfilUsuario: async (autorNome) => {
+abrirPerfilUsuario: async (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
         if(document.getElementById(id)) document.getElementById(id).remove();
         
+        // 🚀 1. Muda o cursor para "Aguarde" enquanto procura na base de dados
         document.body.style.cursor = 'wait';
         
         let res = null;
         try {
+            // Vai à Base de Dados ANTES de desenhar a tela
             res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(autorNome)}`, 'GET');
         } catch(e) {}
         
+        // Restaura o cursor
         document.body.style.cursor = 'default';
 
+        // 🚀 2. Prepara os dados (Injeta as informações do utilizador)
         let avatarHTML = window.Workspace.renderizarAvatar(autorNome, 100);
         let bioReal = "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
         let tipoMembro = "Aluno"; let iconeMembro = "📚"; let corFundo = "#e0e7ff"; let corTexto = "#2563eb";
         let avatarFinalHTML = avatarHTML;
-        let arenaHtml = ''; 
+        let arenaHtml = ''; // 🚀 NOVO: O espaço reservado para o Status da Arena
 
         if (res && res.success) {
             if (res.bio) bioReal = Workspace.Feed.limparTexto(res.bio);
@@ -1360,7 +1406,7 @@ Workspace.Feed = {
 
             if (res.avatar) {
                 const urlSegura = res.avatar.startsWith('http') ? res.avatar : '/' + res.avatar;
-                const novoSrc = `${urlSegura}?t=${Date.now()}`; 
+                const novoSrc = `${urlSegura}?t=${Date.now()}`; // Força a atualização da foto (Anti-cache)
                 if (avatarFinalHTML.includes('<img')) {
                     avatarFinalHTML = avatarFinalHTML.replace(/src="([^"]+)"/, `src="${novoSrc}"`);
                 } else {
@@ -1368,16 +1414,21 @@ Workspace.Feed = {
                 }
             }
 
+            // 🚀 MAGIA DA ARENA: Procura o Status de Eloquência no Banco de Dados
             if (tipoMembro === "Aluno") {
+                // Tenta encontrar os dados da arena diretamente no res, ou dentro de res.usuario
                 let arenaStats = res.arenaStats || (res.usuario && res.usuario.arenaStats) || null;
+                
                 let cristalArena = arenaStats ? (arenaStats.cristalAtual || 'Safira') : 'Safira';
                 let tituloArena = arenaStats ? (arenaStats.tituloAtual || 'Iniciante da Arena') : 'Iniciante da Arena';
                 
+                // Define as cores e emojis de acordo com o Cristal
                 let corCristal = '#3b82f6'; let emojiCristal = '🔷'; let glow = 'rgba(59, 130, 246, 0.1)';
                 if (cristalArena.includes('Diamante')) { corCristal = '#06b6d4'; emojiCristal = '💎'; glow = 'rgba(6, 182, 212, 0.1)'; }
                 else if (cristalArena.includes('Rubi')) { corCristal = '#ef4444'; emojiCristal = '🟥'; glow = 'rgba(239, 68, 68, 0.1)'; }
                 else if (cristalArena.includes('Ametista')) { corCristal = '#a855f7'; emojiCristal = '🟪'; glow = 'rgba(168, 85, 247, 0.1)'; }
 
+                // Constrói a Insígnia Brilhante!
                 arenaHtml = `
                     <div style="background: ${glow}; border: 1px solid rgba(0,0,0,0.05); padding: 8px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 12px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 10px ${glow};">
                         <div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); animation: ws-float 3s ease-in-out infinite;">${emojiCristal}</div>
@@ -1395,6 +1446,7 @@ Workspace.Feed = {
         overlay.id = id;
         overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.85); z-index:100020; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s ease-in-out;";
         
+        // 🚀 3. CSS PRESERVADO
         const estiloAvatar = `
             <style>
                 .ws-avatar-perfect img { 
@@ -1416,6 +1468,7 @@ Workspace.Feed = {
                     border-radius: 12px !important; 
                     margin: 0 !important; 
                 }
+                /* Regra exclusiva para diminuir a bolinha de status sem mover a foto */
                 .ws-avatar-perfect div[style*="absolute"][style*="border-radius"] {
                     transform: scale(0.65);
                     transform-origin: bottom right;
@@ -1425,6 +1478,7 @@ Workspace.Feed = {
             </style>
         `;
 
+        // 🚀 4. Desenha o HTML de uma só vez com o Status da Arena Injetado
         overlay.innerHTML = `
             ${estiloAvatar}
             <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
@@ -1448,6 +1502,7 @@ Workspace.Feed = {
                         ${iconeMembro} ${tipoMembro}
                     </div>
                     
+                    <!-- 🚀 STATUS DA ARENA INJETADO AQUI! -->
                     ${arenaHtml}
 
                     <p style="margin: 0 0 25px 0; color: #64748b; font-size: 14px; line-height: 1.5; font-style: italic;">
@@ -1466,7 +1521,750 @@ Workspace.Feed = {
             if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
     },
+    reagirComentario: async (postId, comentarioId, tipo) => {
+        const meuId = Workspace.usuario.id;
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+        if (!post || !post.comentarios) return;
+        const c = post.comentarios.find(com => String(com.id) === String(comentarioId));
+        if (!c) return;
 
+        if (!Array.isArray(c.likes)) c.likes = [];
+        if (!Array.isArray(c.dislikes)) c.dislikes = [];
+        let euCurti = c.likes.includes(meuId);
+        let euNaoCurti = c.dislikes.includes(meuId);
+
+        let tipoParaEnviar = tipo;
+
+        if (tipo === 'like') {
+            if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; tipoParaEnviar = 'remove'; }
+            else { c.likes.push(meuId); euCurti = true; if (euNaoCurti) { c.dislikes = c.dislikes.filter(id => id !== meuId); euNaoCurti = false; } }
+        } else if (tipo === 'dislike') {
+            if (euNaoCurti) { c.dislikes = c.dislikes.filter(id => id !== meuId); euNaoCurti = false; tipoParaEnviar = 'remove'; }
+            else { c.dislikes.push(meuId); euNaoCurti = true; if (euCurti) { c.likes = c.likes.filter(id => id !== meuId); euCurti = false; } }
+        }
+
+        const countLikeEl = document.getElementById(`count-like-com-${comentarioId}`);
+        const btnLikeEl = document.getElementById(`btn-like-com-${comentarioId}`);
+        if (countLikeEl) countLikeEl.innerText = c.likes.length > 0 ? c.likes.length : 'Curtir';
+        if (btnLikeEl) btnLikeEl.style.color = euCurti ? '#27ae60' : '#95a5a6';
+
+        const countDislikeEl = document.getElementById(`count-dislike-com-${comentarioId}`);
+        const btnDislikeEl = document.getElementById(`btn-dislike-com-${comentarioId}`);
+        if (countDislikeEl) countDislikeEl.innerText = c.dislikes.length > 0 ? c.dislikes.length : 'Descurtir';
+        if (btnDislikeEl) btnDislikeEl.style.color = euNaoCurti ? '#e74c3c' : '#95a5a6';
+
+        try {
+            const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+            await Workspace.api(`/workspace/posts/${postId}/comentarios/${comentarioId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
+        } catch(e) {}
+    },
+
+  // ------------------------------------------------------------------------
+    // 🌌 MÓDULO: IMERSÃO ESPECÍFICA (O CÉREBRO DE CURADORIA NO FRONTEND)
+    // ------------------------------------------------------------------------
+    abrirImersao: () => {
+        const modal = document.getElementById('ws-imersao-modal');
+        if (modal) {
+            document.body.style.overflow = 'hidden'; 
+            modal.style.display = 'flex';
+            requestAnimationFrame(() => modal.style.opacity = '1');
+        }
+    },
+
+    fecharImersao: () => {
+        const modal = document.getElementById('ws-imersao-modal');
+        if (modal) {
+            document.body.style.overflow = '';
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    },
+
+    gerarImersao: async () => {
+        const input = document.getElementById('ws-imersao-busca');
+        const btn = document.getElementById('ws-btn-gerar-imersao');
+        const conteudo = document.getElementById('ws-imersao-conteudo');
+        
+        const termoBusca = input ? input.value.trim() : '';
+        
+        if (btn) {
+            btn.innerText = 'Lendo o Feed e a Biblioteca... ⏳';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+        
+        conteudo.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🧠</div>
+                <h3 style="color: #fff; margin-top: 20px;">A processar milhares de dados...</h3>
+                <p style="color: #94a3b8;">A Inteligência Artificial está a focar-se no seu pedido com exatidão.</p>
+            </div>
+        `;
+        
+        try {
+            const refId = Workspace.usuario.alunoRefId || '';
+            const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+            
+            const res = await Workspace.api('/workspace/posts/imersao', 'POST', {
+                termoBusca, alunoRefId: refId, escolaId
+            });
+            
+            if (res && res.success && res.imersao) {
+                res.imersao.materiaisExtras = res.materiaisExtras || [];
+                Workspace.Feed.renderizarImersao(res.imersao);
+            } else {
+                throw new Error(res?.error || 'A IA não encontrou conteúdo suficiente sobre este tema.');
+            }
+        } catch (error) {
+            conteudo.innerHTML = `
+                <div style="text-align: center; padding: 40px; background: rgba(239, 68, 68, 0.1); border-radius: 12px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                    <h3 style="color: #f87171;">Ocorreu um erro ❌</h3>
+                    <p style="color: #fca5a5;">${error.message || 'Houve uma falha na ligação. Tente pesquisar outro termo.'}</p>
+                </div>
+            `;
+        } finally {
+            if (btn) {
+                btn.innerHTML = 'Gerar Aula da IA 🪄';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
+    },
+
+    // 🚀 O FILTRO DOURADO BLINDADO 2.0 (Apaga estilos da IA e formata Tabela)
+    formatarIA: (txt) => {
+        if (!txt) return '';
+        
+        let textoProcessado = String(txt)
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\*(.*?)\*/g, '<em>$1</em>')
+            .replace(/```(.*?)```/gs, '<code>$1</code>')
+            .replace(/`(.*?)`/g, '<code>$1</code>');
+            
+        const descodificador = document.createElement('textarea');
+        descodificador.innerHTML = textoProcessado;
+        let textoReal = descodificador.value;
+        
+        textoReal = Workspace.Feed.limparTexto(textoReal);
+        
+        const tagsPermitidas = ['strong', 'em', 'b', 'i', 'br', 'p', 'ul', 'ol', 'li', 'u', 'h1', 'h2', 'h3', 'h4', 'table', 'tr', 'td', 'th', 'thead', 'tbody', 'span'];
+        
+        tagsPermitidas.forEach(tag => {
+            const regexOpen = new RegExp(`&lt;${tag}(?:.*?)&gt;`, 'gi');
+            const regexClose = new RegExp(`&lt;/${tag}&gt;`, 'gi');
+            const regexSelfClose = new RegExp(`&lt;${tag}\\s*/?&gt;`, 'gi');
+            
+            if (tag === 'table') {
+                textoReal = textoReal.replace(regexOpen, `<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 14px; background: rgba(255,255,255,0.05); border-radius: 8px; overflow: hidden; border: 1px solid #334155;">`).replace(regexClose, `</table></div>`).replace(regexSelfClose, `<table>`);
+            } else if (tag === 'th' || tag === 'td') {
+                textoReal = textoReal.replace(regexOpen, `<${tag} style="border: 1px solid #334155; padding: 10px 15px; text-align: left; color: #e2e8f0;">`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
+            } else if (tag === 'span') {
+                textoReal = textoReal.replace(regexOpen, `<span>`).replace(regexClose, `</span>`).replace(regexSelfClose, `<span>`);
+            } else {
+                textoReal = textoReal.replace(regexOpen, `<${tag}>`).replace(regexClose, `</${tag}>`).replace(regexSelfClose, `<${tag}>`);
+            }
+        });
+
+        textoReal = textoReal.replace(/&lt;code&gt;/gi, '<code style="background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; font-family: monospace; color: #a78bfa;">')
+                             .replace(/&lt;\/code&gt;/gi, '</code>');
+
+        return textoReal;
+    },
+
+    gerarHTMLRecursosImersao: (idsRelacionados, materiaisExtras) => {
+        let htmlVideos = '';
+        let htmlDocs = '';
+        let htmlImagens = '';
+
+        if (idsRelacionados && Array.isArray(idsRelacionados)) {
+            idsRelacionados.forEach(id => {
+                const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(id));
+                if (post) {
+                    if (post.anexos && post.anexos.length > 0) {
+                        post.anexos.forEach(a => {
+                            let url = a.url.startsWith('http') || a.url.startsWith('/') ? a.url : '/' + a.url;
+                            if (a.tipo.includes('video')) {
+                                htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><div style="background:#1e293b; padding:4px 10px; font-size:11px; color:#94a3b8; font-weight:bold;">💬 Do Feed</div><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}" type="${a.tipo}"></video></div>`;
+                            } else if (a.tipo.includes('image')) {
+                                htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #334155;"><div style="background:#1e293b; padding:4px; font-size:10px; color:#94a3b8; font-weight:bold; text-align:center;">💬 Do Feed</div><img src="${url}" loading="lazy" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                            } else {
+                                const nomeMinusculo = (a.nome || '').toLowerCase();
+                                const ehOffice = nomeMinusculo.endsWith('.docx') || nomeMinusculo.endsWith('.doc') || nomeMinusculo.endsWith('.xlsx') || nomeMinusculo.endsWith('.xls') || nomeMinusculo.endsWith('.ppt');
+                                let icone = a.tipo.includes('pdf') || nomeMinusculo.endsWith('.pdf') ? '📕' : '📝';
+                                const nomeSeguro = (a.nome || 'Documento').replace(/'/g, "\\'"); 
+                                htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${nomeSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; flex-direction:column; gap:8px; background:rgba(59, 130, 246, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(59, 130, 246, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'" onmouseout="this.style.background='rgba(59, 130, 246, 0.1)'"><div style="font-size:10px; color:#60a5fa; font-weight:bold;">💬 Partilhado no Feed</div><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${a.nome}</span></div></div>`;
+                            }
+                        });
+                    }
+                    if (post.texto) {
+                        const regexYouTube = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/ig;
+                        let match;
+                        while ((match = regexYouTube.exec(post.texto)) !== null) {
+                            htmlVideos += `<div style="flex: 1; min-width: 250px; border-radius: 12px; overflow: hidden; border: 1px solid #334155; position: relative; padding-bottom: 56.25%; height: 0; background: #000;"><iframe loading="lazy" src="https://www.youtube.com/embed/${match[1]}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allowfullscreen></iframe></div>`;
+                        }
+                    }
+                }
+            });
+        }
+
+        // NOVO: Adiciona os materiais extraídos da estante de Material Didático
+        if (materiaisExtras && Array.isArray(materiaisExtras)) {
+            materiaisExtras.forEach(m => {
+                let url = m.url.startsWith('http') || m.url.startsWith('/') ? m.url : '/' + m.url;
+                const tipoStr = (m.tipoFicheiro || m.url || '').toLowerCase();
+                const tituloSeguro = (m.titulo || 'Material da Aula').replace(/'/g, "\\'");
+                
+                if (tipoStr.includes('video') || tipoStr.endsWith('.mp4')) {
+                    htmlVideos += `<div style="flex: 1; min-width: 250px; background: rgba(0,0,0,0.4); border-radius: 12px; overflow: hidden; border: 1px solid #a78bfa;"><div style="background:#4c1d95; padding:4px 10px; font-size:11px; color:#ddd6fe; font-weight:bold;">📚 Acervo do Professor</div><video controls playsinline preload="metadata" style="width:100%; max-height:200px; background:#000;"><source src="${url}"></video><div style="padding:8px; font-size:12px; color:#fff; background:#1e1b4b;">${tituloSeguro}</div></div>`;
+                } else if (tipoStr.includes('image') || tipoStr.endsWith('.jpg') || tipoStr.endsWith('.png')) {
+                    htmlImagens += `<div style="flex: 1; min-width: 150px; max-width: 200px; border-radius: 12px; overflow: hidden; border: 1px solid #a78bfa;"><div style="background:#4c1d95; padding:4px; font-size:10px; color:#ddd6fe; font-weight:bold; text-align:center;">📚 Acervo</div><img src="${url}" loading="lazy" style="width: 100%; height: 100px; object-fit: cover; cursor: pointer;" onclick="Workspace.Feed.abrirImagemInteira('${url}')"></div>`;
+                } else {
+                    const ehOffice = tipoStr.endsWith('.docx') || tipoStr.endsWith('.doc') || tipoStr.endsWith('.xlsx') || tipoStr.endsWith('.xls') || tipoStr.endsWith('.ppt');
+                    let icone = tipoStr.includes('pdf') || tipoStr.endsWith('.pdf') ? '📕' : '📑';
+                    htmlDocs += `<div onclick="Workspace.Feed.abrirDocumento('${url}', '${tituloSeguro}', ${ehOffice})" style="cursor:pointer; display:flex; flex-direction:column; gap:8px; background:rgba(167, 139, 250, 0.1); padding:12px; border-radius:12px; color:#e2e8f0; border:1px solid rgba(167, 139, 250, 0.3); flex: 1; min-width: 200px;" onmouseover="this.style.background='rgba(167, 139, 250, 0.2)'" onmouseout="this.style.background='rgba(167, 139, 250, 0.1)'"><div style="font-size:10px; color:#c4b5fd; font-weight:bold;">📚 Acervo do Professor</div><div style="display:flex; align-items:center; gap:10px;"><span style="font-size:24px;">${icone}</span><span style="flex:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600;">${m.titulo}</span></div></div>`;
+                }
+            });
+        }
+
+        let painelCompleto = '';
+        if (htmlVideos || htmlDocs || htmlImagens) {
+            painelCompleto += `<div style="margin-top: 30px; background: rgba(15, 23, 42, 0.6); padding: 25px; border-radius: 16px; border: 1px solid #1e293b;"><h3 style="color: #a78bfa; margin-top: 0; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 20px;">📚 Foco de Estudo: Materiais Relevantes</h3>`;
+            if (htmlVideos) painelCompleto += `<h4 style="color:#e2e8f0; margin:15px 0 10px 0;">🎥 Vídeos Analisados</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlVideos}</div>`;
+            if (htmlDocs) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">📕 Documentos e Exercícios de Aprofundamento</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlDocs}</div>`;
+            if (htmlImagens) painelCompleto += `<h4 style="color:#e2e8f0; margin:25px 0 10px 0;">🖼️ Imagens</h4><div style="display:flex; gap:15px; flex-wrap:wrap;">${htmlImagens}</div>`;
+            painelCompleto += `</div>`;
+        }
+        return painelCompleto;
+    },
+
+    gerarHTMLPerguntaQuiz: (q, index) => {
+        return `
+            <div style="background: rgba(255,255,255,0.03); padding: 25px; border-radius: 16px; margin-bottom: 20px; border: 1px solid rgba(255,255,255,0.1);">
+                <p style="color: #fff; font-weight: bold; font-size: 17px; margin-top: 0;">${index + 1}. ${Workspace.Feed.formatarIA(q.pergunta)}</p>
+                <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 15px;">
+                    ${q.opcoes.map((opcao, optIndex) => `
+                        <button id="quiz-opt-${index}-${optIndex}" onclick="Workspace.Feed.verificarQuizImersao(${index}, ${optIndex})" style="background: rgba(0,0,0,0.4); border: 1px solid #334155; color: #e2e8f0; padding: 14px 20px; border-radius: 10px; text-align: left; cursor: pointer; transition: all 0.2s ease; font-size: 15px; font-family: inherit;" onmouseover="this.style.background='rgba(59, 130, 246, 0.2)'; this.style.borderColor='#3b82f6';" onmouseout="this.style.background='rgba(0,0,0,0.4)'; this.style.borderColor='#334155';">${Workspace.Feed.formatarIA(opcao)}</button>
+                    `).join('')}
+                </div>
+                <div id="quiz-exp-${index}" style="display: none; margin-top: 15px; padding: 15px; border-radius: 10px; font-size: 15px; background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.3); color: #a7f3d0; line-height: 1.5;"></div>
+            </div>
+        `;
+    },
+
+    renderizarImersao: (dados) => {
+        const conteudo = document.getElementById('ws-imersao-conteudo');
+        Workspace.Feed._quizImersaoCache = dados.quiz || []; 
+        Workspace.Feed._dadosImersaoAtual = dados; 
+        Workspace.Feed._notaImersaoAtual = { titulo: dados.tituloNota, conteudo: dados.conteudoParaNota };
+        
+        let htmlQuiz = '';
+        if (dados.quiz && dados.quiz.length > 0) {
+            htmlQuiz = `
+                <div id="ws-imersao-quiz-container">
+                    <h3 style="color: #38bdf8; margin-top: 40px; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 22px;">🎯 Quiz de Evolução</h3>
+                    <div id="ws-imersao-lista-perguntas">
+            `;
+            dados.quiz.forEach((q, index) => {
+                htmlQuiz += Workspace.Feed.gerarHTMLPerguntaQuiz(q, index);
+            });
+            htmlQuiz += `
+                    </div>
+                    <div style="text-align: center; margin-top: 20px;">
+                        <button id="ws-btn-mais-quiz" onclick="Workspace.Feed.gerarMaisQuizImersao()" style="background: rgba(56, 189, 248, 0.1); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px;">➕ Quero Mais Perguntas</button>
+                    </div>
+                </div>
+            `;
+        }
+        
+        let htmlNota = '';
+        if (dados.tituloNota && dados.conteudoParaNota) {
+            htmlNota = `
+                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 25px; border-radius: 16px; margin: 30px 0; text-align: center; animation: fadeIn 0.8s ease;">
+                    <div style="font-size: 35px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🧰</div>
+                    <h3 style="color: #34d399; margin: 0 0 10px 0; font-size: 19px;">Guardar Resumo no Baú das Memórias?</h3>
+                    <p style="color: #94a3b8; font-size: 15px; margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">A Inteligência Artificial preparou um material focado nas suas necessidades. Clique abaixo para guardá-lo permanentemente nas suas Anotações!</p>
+                    <button id="ws-btn-salvar-nota-ia" onclick="Workspace.Feed.salvarNotaImersao()" style="background: #10b981; color: white; border: none; padding: 14px 28px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onmouseover="this.style.background='#059669'" onmouseout="this.style.background='#10b981'">📝 Guardar nas Anotações</button>
+                </div>
+            `;
+        }
+
+        let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
+        let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados, dados.materiaisExtras);
+
+        conteudo.innerHTML = `
+            <div style="animation: fadeIn 0.5s ease;">
+                <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.formatarIA(dados.titulo || 'Aula Imersiva')}</h1>
+                <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px; color: #e2e8f0; line-height: 1.6;">
+                    ${Workspace.Feed.formatarIA(resumoSeguro)}
+                </div>
+                ${htmlNota}
+                ${htmlRecursos}
+                ${htmlQuiz}
+            </div>
+        `;
+    },
+
+   verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
+        const quizCache = Workspace.Feed._quizImersaoCache;
+        if (!quizCache || !quizCache[perguntaIndex]) return;
+        
+        const pergunta = quizCache[perguntaIndex];
+        
+        // 🚀 CONVERSOR INTELIGENTE: Traduz a linguagem humana (1, 2, 3, 4) para a matriz do JavaScript (0, 1, 2, 3)
+        let correta = parseInt(pergunta.respostaCorreta);
+        if (correta > 0 && correta <= pergunta.opcoes.length) {
+            correta = correta - 1;
+        }
+        
+        pergunta.opcoes.forEach((_, optIndex) => {
+            const btn = document.getElementById(`quiz-opt-${perguntaIndex}-${optIndex}`);
+            if (btn) {
+                btn.disabled = true;
+                btn.style.cursor = 'default';
+                btn.onmouseover = null;
+                btn.onmouseout = null;
+                
+                if (optIndex === correta) {
+                    btn.style.background = 'rgba(16, 185, 129, 0.2)'; 
+                    btn.style.borderColor = '#10b981';
+                    btn.style.color = '#fff';
+                    btn.style.fontWeight = 'bold';
+                } else if (optIndex === opcaoClicada && optIndex !== correta) {
+                    btn.style.background = 'rgba(239, 68, 68, 0.2)'; 
+                    btn.style.borderColor = '#ef4444';
+                    btn.style.color = '#fff';
+                } else {
+                    btn.style.opacity = '0.5';
+                }
+            }
+        });
+        
+        const exp = document.getElementById(`quiz-exp-${perguntaIndex}`);
+        if (exp) {
+            exp.style.display = 'block';
+            exp.innerHTML = `💡 <strong>Explicação:</strong> ${Workspace.Feed.formatarIA(pergunta.explicacao)}`;
+            exp.style.animation = 'fadeIn 0.3s ease';
+        }
+    },
+
+    salvarNotaImersao: async () => {
+        const nota = Workspace.Feed._notaImersaoAtual;
+        if (!nota || !nota.titulo || !nota.conteudo || !Workspace.usuario) return;
+        
+        const btn = document.getElementById('ws-btn-salvar-nota-ia');
+        if (btn) {
+            btn.innerHTML = '⏳ A guardar...';
+            btn.disabled = true;
+        }
+
+        try {
+            const res = await Workspace.api('/workspace/bau/notas', 'POST', {
+                usuarioId: Workspace.usuario.id,
+                titulo: nota.titulo,
+                texto: Workspace.Feed.formatarIA(nota.conteudo) 
+            });
+
+            if (res && res.success) {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("Anotação guardada no Baú das Memórias! 🧰✨", "success", 4000);
+                }
+                if (btn) {
+                    btn.innerHTML = '✅ Guardado nas Anotações';
+                    btn.style.background = '#059669';
+                    btn.style.boxShadow = 'none';
+                }
+                
+                if (Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
+                    Workspace.Bau.carregarDadosDaNuvem();
+                }
+            } else {
+                throw new Error('Falha no servidor');
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao guardar. Tente novamente.", "error");
+            if (btn) {
+                btn.innerHTML = '📝 Guardar nas Anotações';
+                btn.disabled = false;
+            }
+        }
+    },
+
+ gerarMaisQuizImersao: async () => {
+        const btn = document.getElementById('ws-btn-mais-quiz');
+        const listaPerguntas = document.getElementById('ws-imersao-lista-perguntas');
+        const dadosBase = Workspace.Feed._dadosImersaoAtual;
+        
+        if (!dadosBase || !listaPerguntas || !btn) return;
+        
+        btn.innerHTML = '⏳ Gerando novas perguntas...';
+        btn.disabled = true;
+        btn.style.opacity = '0.7';
+
+        try {
+            const res = await Workspace.api('/workspace/posts/imersao/mais-quiz', 'POST', {
+                titulo: dadosBase.titulo,
+                resumo: dadosBase.resumo
+            });
+
+            if (res && res.success && res.novasPerguntas) {
+                const quizInicioIndex = Workspace.Feed._quizImersaoCache.length;
+                
+                res.novasPerguntas.forEach(novaPergunta => {
+                    Workspace.Feed._quizImersaoCache.push(novaPergunta);
+                });
+
+                let novasHtml = '';
+                res.novasPerguntas.forEach((q, i) => {
+                    novasHtml += Workspace.Feed.gerarHTMLPerguntaQuiz(q, quizInicioIndex + i);
+                });
+
+                listaPerguntas.insertAdjacentHTML('beforeend', novasHtml);
+            } else {
+                throw new Error('Falha ao gerar');
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("A IA precisa de uma pausa. Tente gerar perguntas daqui a pouco.", "warning");
+        } finally {
+            btn.innerHTML = '➕ Quero Mais Perguntas';
+            btn.disabled = false;
+            btn.style.opacity = '1';
+        }
+    }, // 🚀 A VÍRGULA MÁGICA ADICIONADA AQUI!
+
+   // ------------------------------------------------------------------------
+    // 🎶 MÓDULO: IMERSÃO MUSICAL LMS (A MONTRA E A JORNADA)
+    // ------------------------------------------------------------------------
+    abrirImersaoMusical: async () => {
+        const modal = document.getElementById('ws-imersao-musical-modal');
+        if (!modal) return;
+        document.body.style.overflow = 'hidden'; 
+        modal.style.display = 'flex';
+        requestAnimationFrame(() => modal.style.opacity = '1');
+        
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        conteudo.innerHTML = '<div style="text-align: center; padding: 60px 20px;"><div style="font-size: 50px; animation: pulse 1s infinite;">📡</div><h3 style="color: #fff; margin-top: 20px;">A sintonizar o seu estúdio musical...</h3><p style="color: #a1a1aa;">Procurando os seus treinos e o catálogo da escola.</p></div>';
+        
+        const btnAntigo = document.getElementById('ws-btn-gerar-musica');
+        if(btnAntigo) btnAntigo.style.display = 'none';
+
+        try {
+            // 🚀 BLINDAGEM 1: Garante que o utilizador existe antes de pedir à API
+            if (!Workspace.usuario || !Workspace.usuario.id) {
+                throw new Error("Sessão de utilizador não detetada. Por favor, recarregue a página.");
+            }
+
+            const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}&escolaId=${Workspace.usuario.escolaId}`, 'GET');
+            
+            if (statusRes && statusRes.musicaAtiva) {
+                Workspace.Feed._estadoMusicaAtual = { 
+                    postId: statusRes.musicaAtiva.postOriginal.id, 
+                    diasGerados: statusRes.musicaAtiva.plano.planoEstudos.length 
+                };
+                Workspace.Feed.renderizarImersaoMusical(statusRes.musicaAtiva.plano, statusRes.musicaAtiva.postOriginal);
+            } else {
+                Workspace.Feed._historicoMusicas = statusRes ? statusRes.historicoMusicas || [] : [];
+                Workspace.Feed._catalogoMusicas = statusRes ? statusRes.catalogo || [] : [];
+                
+                Workspace.Feed.renderizarMontraMusical('novas');
+            }
+        } catch (e) {
+             // 🚀 RADAR DE ERROS: Agora a plataforma "Cospe" o erro exato no ecrã e na consola
+             console.error("Erro Crítico no Estúdio Musical:", e);
+             conteudo.innerHTML = `
+                <div style="color: #ef4444; text-align: center; padding: 40px; border: 1px solid #ef4444; border-radius: 12px; margin-top: 30px; background: rgba(239, 68, 68, 0.05);">
+                    <h3 style="margin-top: 0;">Erro ao carregar o seu estúdio musical.</h3>
+                    <p style="color: #fca5a5; font-size: 14px; font-family: monospace;">Detalhe Técnico: ${e.message || 'Erro desconhecido na rede.'}</p>
+                    <button onclick="Workspace.Feed.fecharImersaoMusical()" style="margin-top: 15px; background: #3f3f46; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Fechar e Tentar de Novo</button>
+                </div>`;
+        }
+    },
+
+    fecharImersaoMusical: () => {
+        const modal = document.getElementById('ws-imersao-musical-modal');
+        if (modal) {
+            document.body.style.overflow = '';
+            modal.style.opacity = '0';
+            setTimeout(() => modal.style.display = 'none', 300);
+        }
+    },
+
+    // 🚀 DESENHA A VITRINE INTERATIVA (Separada por Abas: Novas vs Histórico)
+    renderizarMontraMusical: (abaAtiva = 'novas') => {
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        const historicoIds = Workspace.Feed._historicoMusicas || [];
+        const catalogoCompleto = Workspace.Feed._catalogoMusicas || [];
+        
+        // Separa as músicas
+        const musicasNovas = catalogoCompleto.filter(p => !historicoIds.includes(p.id));
+        const musicasHistorico = catalogoCompleto.filter(p => historicoIds.includes(p.id));
+        
+        const listaExibir = abaAtiva === 'novas' ? musicasNovas : musicasHistorico;
+
+        // Estilos dos Botões (Tabs)
+        const btnNovasStyle = abaAtiva === 'novas' ? 'background: linear-gradient(135deg, #ec4899, #f43f5e); color: white; border: none; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);' : 'background: transparent; color: #a1a1aa; border: 1px solid #3f3f46;';
+        const btnHistStyle = abaAtiva === 'historico' ? 'background: linear-gradient(135deg, #3b82f6, #60a5fa); color: white; border: none; box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);' : 'background: transparent; color: #a1a1aa; border: 1px solid #3f3f46;';
+
+        let htmlSuperior = `
+            <div style="text-align: center; margin-bottom: 20px; animation: fadeIn 0.5s ease;">
+                <div style="font-size: 40px; margin-bottom: 10px; animation: ws-float 3s ease-in-out infinite;">🎧</div>
+                <h3 style="color: #fff; font-size: 22px; margin: 0 0 15px 0;">O Seu Estúdio Musical</h3>
+                <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap;">
+                    <button onclick="Workspace.Feed.renderizarMontraMusical('novas')" style="padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; ${btnNovasStyle}">🌟 Novas Músicas (${musicasNovas.length})</button>
+                    <button onclick="Workspace.Feed.renderizarMontraMusical('historico')" style="padding: 10px 20px; border-radius: 20px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 14px; ${btnHistStyle}">🏆 Meu Histórico (${musicasHistorico.length})</button>
+                </div>
+            </div>
+        `;
+
+        // Tratamento de Listas Vazias
+        if (listaExibir.length === 0) {
+            if (abaAtiva === 'novas') {
+                conteudo.innerHTML = htmlSuperior + `
+                    <div style="text-align: center; padding: 50px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
+                        <div style="font-size: 50px; margin-bottom: 15px;">🌟</div>
+                        <h3 style="color: #d4d4d8; font-size: 20px;">Você é uma Lenda Musical!</h3>
+                        <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto 20px auto;">Já completou o treino de todas as músicas partilhadas pelos professores. Em breve teremos mais opções!</p>
+                        <button onclick="Workspace.Feed.renderizarMontraMusical('historico')" style="background: #3b82f6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Rever Músicas Concluídas 🏆</button>
+                    </div>`;
+            } else {
+                conteudo.innerHTML = htmlSuperior + `
+                    <div style="text-align: center; padding: 50px 20px; background: rgba(255,255,255,0.02); border-radius: 16px; border: 1px dashed #3f3f46;">
+                        <div style="font-size: 50px; margin-bottom: 15px;">📭</div>
+                        <h3 style="color: #d4d4d8; font-size: 20px;">O Seu Hall da Fama está vazio.</h3>
+                        <p style="color: #a1a1aa; max-width: 400px; margin: 0 auto 20px auto;">Comece a treinar nas "Novas Músicas" e conclua a jornada para adicionar troféus aqui!</p>
+                        <button onclick="Workspace.Feed.renderizarMontraMusical('novas')" style="background: #ec4899; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer;">Ver Novas Músicas 🌟</button>
+                    </div>`;
+            }
+            return;
+        }
+
+        // Desenha os Cards de Música
+        let htmlCards = '';
+        listaExibir.forEach(musica => {
+            const linhas = Workspace.Feed.limparTexto(musica.texto).split('\n');
+            const tituloCurto = linhas.length > 0 ? linhas[0].substring(0, 40) + '...' : 'Canção Misteriosa';
+            const fotoAutor = window.Workspace.renderizarAvatar(musica.autorNome, 35);
+            
+            // O design e texto do botão mudam consoante a aba!
+            const textoBotao = abaAtiva === 'novas' ? 'Treinar com esta 🎧' : 'Treinar Novamente 🔄';
+            const corBotao = abaAtiva === 'novas' ? 'linear-gradient(135deg, #ec4899, #f43f5e)' : 'linear-gradient(135deg, #8b5cf6, #6d28d9)';
+            const bordaCard = abaAtiva === 'novas' ? '#ec4899' : '#8b5cf6';
+            
+            htmlCards += `
+                <div style="background: rgba(0,0,0,0.4); border: 1px solid #3f3f46; border-radius: 16px; padding: 20px; display: flex; flex-direction: column; transition: 0.3s; box-shadow: 0 10px 30px rgba(0,0,0,0.5);" onmouseover="this.style.transform='translateY(-5px)'; this.style.borderColor='${bordaCard}'" onmouseout="this.style.transform='translateY(0)'; this.style.borderColor='#3f3f46'">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid #27272a; padding-bottom: 15px;">
+                        ${fotoAutor}
+                        <div>
+                            <div style="color: #fff; font-size: 14px; font-weight: bold;">${musica.autorNome}</div>
+                            <div style="color: ${abaAtiva === 'novas' ? '#ec4899' : '#8b5cf6'}; font-size: 11px; text-transform: uppercase; font-weight: 800;">${abaAtiva === 'novas' ? 'Nova Partilha' : 'Música Concluída ✅'}</div>
+                        </div>
+                    </div>
+                    <div style="flex: 1; color: #d4d4d8; font-size: 16px; font-weight: bold; margin-bottom: 20px; font-style: italic;">"${tituloCurto}"</div>
+                    <button onclick="Workspace.Feed.iniciarTreinoDaMusica('${musica.id}')" style="width: 100%; background: ${corBotao}; color: white; border: none; padding: 12px; border-radius: 10px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: flex; align-items: center; justify-content: center; gap: 8px;" onmouseover="this.style.filter='brightness(1.2)'" onmouseout="this.style.filter='none'">
+                        ${textoBotao}
+                    </button>
+                </div>
+            `;
+        });
+
+        conteudo.innerHTML = htmlSuperior + `
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; animation: popUp 0.6s ease;">
+                ${htmlCards}
+            </div>
+        `;
+    },
+
+// 🚀 O ALUNO CLICOU NUM CARD DA MONTRA: A IA ARRANCA!
+    iniciarTreinoDaMusica: async (postId) => {
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        
+        conteudo.innerHTML = `
+            <div style="text-align: center; padding: 60px 20px;">
+                <div style="font-size: 50px; animation: pulse 1.5s infinite;">🤖🎧</div>
+                <h3 style="color: #fff; margin-top: 20px;">A IA está a criar o seu plano de estudos...</h3>
+                <p style="color: #a1a1aa;">A analisar as pautas, acordes e a construir 14 dias de fluência cirúrgica.</p>
+            </div>
+        `;
+        
+        try {
+            const res = await Workspace.api('/workspace/posts/imersao-musical', 'POST', {
+                postId: postId, userId: Workspace.usuario.id
+            });
+            
+            if (res && res.success && res.plano) {
+                Workspace.Feed._estadoMusicaAtual = { postId: res.postOriginal.id, diasGerados: res.plano.planoEstudos.length };
+                Workspace.Feed.renderizarImersaoMusical(res.plano, res.postOriginal);
+            } else {
+                throw new Error(res?.error || 'A IA não conseguiu gerar o plano.');
+            }
+        } catch (error) {
+            conteudo.innerHTML = `
+                <div style="text-align: center; padding: 40px; border-radius: 12px; border: 1px solid #ef4444; margin-top: 30px;">
+                    <h3 style="color: #f87171;">Ocorreu um erro</h3>
+                    <p style="color: #fca5a5;">${error.message || 'Falha na ligação à matriz musical.'}</p>
+                    <button onclick="Workspace.Feed.abrirImersaoMusical()" style="margin-top: 15px; background: #3f3f46; color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer;">Voltar à Montra</button>
+                </div>
+            `;
+        }
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
+
+  gerarHTMLDiaMusical: (dia) => {
+        const idAreaConstrucao = `area-construcao-${dia.dia}`;
+        const idBancoPalavras = `banco-palavras-${dia.dia}`;
+        const idFeedback = `feedback-musica-dia-${dia.dia}`;
+        
+        // 🚀 BLINDAGEM 2: Previne o colapso se a IA se tiver esquecido de enviar a Frase Original
+        const fraseOriginalBase = dia.fraseOriginal || dia.fraseOculta || dia.palavraEscondida || 'System Error Missing Sentence';
+        
+        // O BARALHADOR SINTÁTICO: Separa a frase e baralha
+        const fraseLimpaParaJs = fraseOriginalBase.replace(/(['"\\/])/g, '\\$1'); 
+        const palavrasOriginais = fraseOriginalBase.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
+        
+        const palavrasBaralhadas = [...palavrasOriginais];
+        for (let i = palavrasBaralhadas.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [palavrasBaralhadas[i], palavrasBaralhadas[j]] = [palavrasBaralhadas[j], palavrasBaralhadas[i]];
+        }
+
+        let htmlBotoesBanco = '';
+        palavrasBaralhadas.forEach((palavra, indice) => {
+            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${Workspace.Feed.limparTexto(palavra)}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${Workspace.Feed.limparTexto(palavra)}</button>`;
+        });
+
+        const fraseOcultaSegura = btoa(encodeURIComponent(fraseOriginalBase));
+
+        return `
+            <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                    <h4 style="margin: 0; color: #fff; font-size: 18px;">Dia ${dia.dia}</h4>
+                    <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Sentence Unscramble 🧩</span>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.3); min-height: 60px; border-radius: 12px; border: 2px dashed #3f3f46; margin-bottom: 15px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" id="${idAreaConstrucao}">
+                </div>
+
+                <div style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; min-height: 50px;" id="${idBancoPalavras}">
+                    ${htmlBotoesBanco}
+                </div>
+                
+                <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
+                    <button id="btn-verificar-musica-${dia.dia}" onclick="Workspace.Feed.verificarFraseMusical('${idAreaConstrucao}', '${fraseOcultaSegura}', '${idFeedback}', ${dia.dia})" style="background: #ec4899; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">🧩 Verificar Frase</button>
+                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: none; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
+                    <span id="${idFeedback}" style="font-size: 15px; font-weight: bold; flex: 1;"></span>
+                </div>
+
+                <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
+
+                <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Tradução: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
+                    <div style="color: #d4d4d8; font-size: 15px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.explicacao)}</div>
+                </div>
+                
+                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #3f3f46;">
+                    <strong style="color: #fb7185; font-size: 14px;">🔥 O Seu Desafio:</strong>
+                    <div style="color: #e4e4e7; font-size: 14px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.desafio)}</div>
+                </div>
+            </div>
+        `;
+    },
+
+    // 🚀 A MÁGICA VISUAL: Mover a palavra entre o Banco e a Área de Construção
+    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
+        // Se a frase já foi validada e bloqueada, impede movimentos!
+        const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
+        if (btnVerificar && btnVerificar.disabled) return;
+
+        const areaConstrucao = document.getElementById(idAreaConstrucao);
+        const bancoPalavras = document.getElementById(idBancoPalavras);
+        
+        // Efeito de encolher rápido para simular o voo
+        botao.style.transform = 'scale(0.8)';
+        
+        setTimeout(() => {
+            if (botao.parentNode === bancoPalavras) {
+                // Se está no Banco, vai para a Construção (muda o visual para azul)
+                areaConstrucao.appendChild(botao);
+                botao.style.background = '#3b82f6';
+                botao.style.borderColor = '#2563eb';
+                botao.onmouseover = () => botao.style.background = '#2563eb';
+                botao.onmouseout = () => botao.style.background = '#3b82f6';
+            } else {
+                // Se está na Construção, volta para o Banco (muda para rosa)
+                bancoPalavras.appendChild(botao);
+                botao.style.background = 'rgba(236, 72, 153, 0.2)';
+                botao.style.borderColor = '#ec4899';
+                botao.onmouseover = () => botao.style.background = 'rgba(236, 72, 153, 0.4)';
+                botao.onmouseout = () => botao.style.background = 'rgba(236, 72, 153, 0.2)';
+            }
+            botao.style.transform = 'scale(1)'; // Restaura o tamanho na nova casa
+        }, 150);
+        
+        // Limpa o feedback de erro, se houver
+        const feedback = document.getElementById(`feedback-musica-dia-${diaId}`);
+        if (feedback) feedback.innerHTML = '';
+        areaConstrucao.style.borderColor = '#3f3f46';
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
+
+    // 🚀 O MOTOR DE VALIDAÇÃO (Substitui o antigo verificarBlankMusical)
+    verificarFraseMusical: (idAreaConstrucao, fraseOcultaBase64, idFeedback, diaId) => {
+        const areaConstrucao = document.getElementById(idAreaConstrucao);
+        const feedback = document.getElementById(idFeedback);
+        const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
+        const btnMic = document.getElementById(`btn-mic-dia-${diaId}`);
+        
+        if (!areaConstrucao || !feedback) return;
+
+        // 🚀 Descodificação ciente de Emojis!
+        const fraseOriginal = decodeURIComponent(atob(fraseOcultaBase64)).replace(/[.,!?;:]/g, '').toLowerCase().trim();
+        
+        // Recolhe todas as palavras que o aluno arrastou para a área
+        const botoesConstrucao = Array.from(areaConstrucao.children);
+        const fraseDoAluno = botoesConstrucao.map(btn => btn.getAttribute('data-palavra')).join(' ').toLowerCase().trim();
+
+        if (botoesConstrucao.length === 0) {
+            feedback.style.color = '#f59e0b';
+            feedback.innerHTML = '⚠️ Monte a frase clicando nas palavras abaixo!';
+            return;
+        }
+
+        if (fraseDoAluno === fraseOriginal) {
+            // ✅ VITÓRIA! O Cérebro sintático funcionou!
+            areaConstrucao.style.borderColor = '#10b981';
+            areaConstrucao.style.background = 'rgba(16, 185, 129, 0.1)';
+            feedback.style.color = '#10b981';
+            feedback.innerHTML = '✅ Brilhante! A estrutura está perfeita.';
+            
+            // Bloqueia os botões e esconde o botão de verificar
+            botoesConstrucao.forEach(b => { b.style.cursor = 'default'; b.style.pointerEvents = 'none'; });
+            if (btnVerificar) btnVerificar.style.display = 'none';
+            
+            // 🚀 LIBERTA A FASE 2: O Treino de Pronúncia!
+            if (btnMic) {
+                btnMic.style.display = 'flex';
+                btnMic.style.animation = 'popUp 0.5s ease';
+            }
+            
+            // Efeito visual de vitória
+            areaConstrucao.style.transform = 'scale(1.02)';
+            setTimeout(() => areaConstrucao.style.transform = 'scale(1)', 200);
+            if (Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
+
+        } else {
+            // ❌ FRACASSO: O aluno errou a ordem sintática!
+            areaConstrucao.style.borderColor = '#ef4444';
+            feedback.style.color = '#ef4444';
+            feedback.innerHTML = '❌ Não é bem essa a ordem... Tente novamente!';
+            
+            // Efeito de tremor (shake) de erro
+            areaConstrucao.style.transform = 'translateX(-5px)';
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(5px)', 50);
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(-5px)', 100);
+            setTimeout(() => areaConstrucao.style.transform = 'translateX(0)', 150);
+        }
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
+
+ // 🚀 O NOVO MOTOR DE AVALIAÇÃO DE PRONÚNCIA (Com Injeção de Dopamina)
     treinarPronunciaMusical: (dia, fraseOriginal) => {
         const btn = document.getElementById(`btn-mic-dia-${dia}`);
         const feedbackBox = document.getElementById(`feedback-mic-dia-${dia}`);
@@ -1479,7 +2277,7 @@ Workspace.Feed = {
         }
 
         const recognition = new SpeechRecognition();
-        recognition.lang = 'en-US'; 
+        recognition.lang = 'en-US'; // Escuta em Inglês
         recognition.interimResults = false;
         recognition.maxAlternatives = 1;
 
@@ -1495,6 +2293,7 @@ Workspace.Feed = {
             btn.style.background = '#f59e0b';
             
             try {
+                // Reutilizamos a rota de Minijogos do Backend!
                 const res = await Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
                     jogo: 'readAloud',
                     pergunta: fraseOriginal,
@@ -1506,6 +2305,7 @@ Workspace.Feed = {
                     btn.innerHTML = '<span style="font-size: 16px;">⭐</span> Perfeito!';
                     btn.style.background = '#10b981';
                     
+                    // 🚀 O GERADOR DE DOPAMINA: Elogios de Alto Impacto Sorteados
                     const elogios = [
                         "ESPETACULAR! 🌟", 
                         "PRONÚNCIA PERFEITA! 🎯", 
@@ -1516,6 +2316,7 @@ Workspace.Feed = {
                     ];
                     const elogioSorteado = elogios[Math.floor(Math.random() * elogios.length)];
                     
+                    // Mostra o elogio e dispara os confetes!
                     feedbackBox.innerHTML = `<strong>A IA ouviu:</strong> "${transcricao}"<br><br>✅ <strong>Feedback:</strong> ${res.feedback}<br><div style="color:#10b981; font-weight: 900; font-size: 20px; margin-top: 15px; text-align: center; animation: pulse 1s infinite;">${elogioSorteado}</div>`;
                     Workspace.Feed.dispararConfetes();
 
@@ -1538,6 +2339,7 @@ Workspace.Feed = {
         };
     },
 
+    // 🚀 A FÁBRICA DE CONFETES NATIVA (Não precisa de bibliotecas externas)
     dispararConfetes: () => {
         const cores = ['#3b82f6', '#ec4899', '#10b981', '#f59e0b', '#8b5cf6', '#ef4444'];
         for (let i = 0; i < 70; i++) {
@@ -1551,7 +2353,7 @@ Workspace.Feed = {
             confete.style.opacity = Math.random() + 0.5;
             confete.style.zIndex = '9999999';
             confete.style.pointerEvents = 'none';
-            confete.style.borderRadius = Math.random() > 0.5 ? '50%' : '0px'; 
+            confete.style.borderRadius = Math.random() > 0.5 ? '50%' : '0px'; // Mistura bolas e quadrados
             document.body.appendChild(confete);
 
             const duracao = Math.random() * 2 + 2; 
@@ -1564,15 +2366,19 @@ Workspace.Feed = {
         }
     },
 
+ 
+   // 🚀 LÓGICA DE DUPLO ESTADO: BIO DO PERFIL (VISUALIZAR, EDITAR, SALVAR E APAGAR)
     editarBioPerfil: () => {
         const viewMode = document.getElementById('ws-bio-view-mode');
         const editMode = document.getElementById('ws-bio-edit-mode');
         const input = document.getElementById('ws-input-bio-perfil');
 
         if(viewMode && editMode && input) {
+            // Esconde a leitura e mostra a edição
             viewMode.style.display = 'none';
             editMode.style.display = 'flex';
             
+            // Preenche a caixa com a frase que o utilizador já tinha na memória
             if (Workspace.usuario && Workspace.usuario.bio) {
                 input.value = Workspace.usuario.bio;
             }
@@ -1585,12 +2391,13 @@ Workspace.Feed = {
         const editMode = document.getElementById('ws-bio-edit-mode');
         
         if(viewMode && editMode) {
+            // Esconde a edição e volta a mostrar a leitura
             editMode.style.display = 'none';
             viewMode.style.display = 'flex';
         }
     },
 
-    salvarBioPerfil: async () => {
+  salvarBioPerfil: async () => {
         const input = document.getElementById('ws-input-bio-perfil');
         const btn = document.getElementById('ws-btn-salvar-bio');
         const textoAtual = document.getElementById('ws-texto-bio-atual');
@@ -1644,6 +2451,7 @@ Workspace.Feed = {
                     const input = document.getElementById('ws-input-bio-perfil');
                     if(input) input.value = '';
 
+                    // 🚀 Oculta a caixa e volta ao Modo de Leitura após apagar
                     Workspace.Feed.cancelarEdicaoBio();
                     
                     if(Workspace.mostrarAviso) Workspace.mostrarAviso("Frase removida com sucesso!", "success");
@@ -1654,6 +2462,9 @@ Workspace.Feed = {
         });
     },
 
+// ============================================================================
+    // 🚀 LÓGICA DO DESAFIO DIRETO DO FEED (MATCHMAKING)
+    // ============================================================================
     enviarDesafioDireto: async (desafiadoNome, minutos, postId) => {
         const btn = document.getElementById(`btn-desafio-${postId}`);
         if (btn) {
@@ -1668,13 +2479,14 @@ Workspace.Feed = {
                 desafianteNome: Workspace.usuario.nome || Workspace.usuario.login,
                 escolaId: Workspace.usuario.escolaId,
                 minutos: minutos,
-                postId: postId 
+                postId: postId // 🚀 A PASSAGEM DO TESTEMUNHO
             });
 
             if (res && res.success) {
                 if (btn) btn.innerHTML = 'A aguardar que oponente aceite... ⏳';
                 Workspace.Feed._ultimoBotaoDesafioPendente = `btn-desafio-${postId}`;
                 
+                // Retoque: desiste em 60 segundos
                 setTimeout(() => {
                     const btnAtrasado = document.getElementById(`btn-desafio-${postId}`);
                     if (btnAtrasado && btnAtrasado.innerHTML.includes('A aguardar')) {
@@ -1695,6 +2507,7 @@ Workspace.Feed = {
                 btn.style.opacity = '1';
             }
             if (window.Workspace && Workspace.mostrarAviso) {
+                // Se a sala estiver ocupada, exibe o nosso aviso elegante do backend
                 Workspace.mostrarAviso(error.message || "Erro ao enviar o convite.", "error");
             }
         }
