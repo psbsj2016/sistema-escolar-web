@@ -2064,7 +2064,7 @@ abrirPerfilUsuario: async (autorNome) => {
         `;
     },
 
-    // 🚀 O ALUNO CLICOU NUM CARD DA MONTRA: A IA ARRANCA!
+// 🚀 O ALUNO CLICOU NUM CARD DA MONTRA: A IA ARRANCA!
     iniciarTreinoDaMusica: async (postId) => {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         
@@ -2096,9 +2096,9 @@ abrirPerfilUsuario: async (autorNome) => {
                 </div>
             `;
         }
-    },
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
 
-   gerarHTMLDiaMusical: (dia) => {
+    gerarHTMLDiaMusical: (dia) => {
         const idAreaConstrucao = `area-construcao-${dia.dia}`;
         const idBancoPalavras = `banco-palavras-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
@@ -2121,7 +2121,7 @@ abrirPerfilUsuario: async (autorNome) => {
             htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${Workspace.Feed.limparTexto(palavra)}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${Workspace.Feed.limparTexto(palavra)}</button>`;
         });
 
-        // E passamos a frase em Base64 para ser à prova de bala contra aspas quebradas!
+        // 🚀 BLINDAGEM BASE64: Usa encodeURIComponent para não rebentar com emojis ou caracteres especiais
         const fraseOcultaSegura = btoa(encodeURIComponent(dia.fraseOriginal));
 
         return `
@@ -2162,7 +2162,7 @@ abrirPerfilUsuario: async (autorNome) => {
                 </div>
             </div>
         `;
-    },
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
 
     // 🚀 A MÁGICA VISUAL: Mover a palavra entre o Banco e a Área de Construção
     moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
@@ -2199,7 +2199,7 @@ abrirPerfilUsuario: async (autorNome) => {
         const feedback = document.getElementById(`feedback-musica-dia-${diaId}`);
         if (feedback) feedback.innerHTML = '';
         areaConstrucao.style.borderColor = '#3f3f46';
-    },
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
 
     // 🚀 O MOTOR DE VALIDAÇÃO (Substitui o antigo verificarBlankMusical)
     verificarFraseMusical: (idAreaConstrucao, fraseOcultaBase64, idFeedback, diaId) => {
@@ -2210,7 +2210,7 @@ abrirPerfilUsuario: async (autorNome) => {
         
         if (!areaConstrucao || !feedback) return;
 
-        // Descodifica a frase original perfeita vinda do servidor
+        // 🚀 Descodificação ciente de Emojis!
         const fraseOriginal = decodeURIComponent(atob(fraseOcultaBase64)).replace(/[.,!?;:]/g, '').toLowerCase().trim();
         
         // Recolhe todas as palavras que o aluno arrastou para a área
@@ -2257,7 +2257,7 @@ abrirPerfilUsuario: async (autorNome) => {
             setTimeout(() => areaConstrucao.style.transform = 'translateX(-5px)', 100);
             setTimeout(() => areaConstrucao.style.transform = 'translateX(0)', 150);
         }
-    },
+    }, // <-- 🚀 VÍRGULA GARANTIDA AQUI
 
  // 🚀 O NOVO MOTOR DE AVALIAÇÃO DE PRONÚNCIA (Com Injeção de Dopamina)
     treinarPronunciaMusical: (dia, fraseOriginal) => {
