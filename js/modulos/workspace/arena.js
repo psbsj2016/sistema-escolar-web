@@ -200,24 +200,43 @@ Workspace.Arena = {
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value; 
 
+        // Desativa o botão temporariamente para evitar duplo clique
         btn.disabled = true; btn.style.opacity = '0.5';
-        status.style.display = 'block'; status.innerText = 'A vasculhar a escola à procura de um oponente... ⏳';
+        status.style.display = 'block'; 
+        status.style.color = '#f59e0b';
+        status.innerText = 'A lançar o Sinalizador para toda a escola... 🚀';
 
         try {
-            const res = await Workspace.api('/workspace/arena/procurar', 'POST', {
-                alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, escolaId: Workspace.usuario.escolaId,
-                limiteMinutos: tempo
+            // 🚀 NOVA ROTA: O Sinalizador de Desafio (Broadcast)
+            const res = await Workspace.api('/workspace/arena/desafio-aleatorio', 'POST', {
+                desafianteNome: Workspace.usuario.nome || Workspace.usuario.login, 
+                escolaId: Workspace.usuario.escolaId,
+                minutos: tempo
             });
 
             if (res && res.success) {
-                Workspace.Arena.salaAtual = res.salaId;
-                if (!res.mensagem.includes('A aguardar')) {
-                    status.style.color = '#10b981'; status.innerText = '🔥 Oponente Encontrado! A preparar a Arena...';
-                } else {
-                    status.innerText = 'Você é o primeiro na fila. A aguardar oponente... ⏳';
-                }
+                status.style.color = '#f59e0b'; 
+                status.innerHTML = 'Sinalizador no ar! O primeiro a aceitar entra na batalha... ⏳<br><span style="font-size:12px; color:#94a3b8;">Fique atento, a batalha começará automaticamente!</span>';
+                
+                // 🎨 Efeito visual no botão para indicar modo de espera
+                btn.innerHTML = '🚨 A aguardar oponentes...';
+                btn.style.background = 'transparent';
+                btn.style.border = '1px solid #f59e0b';
+                btn.style.color = '#f59e0b';
+            } else {
+                throw new Error(res?.error || "Falha ao enviar o sinalizador.");
             }
-        } catch (error) { status.style.color = '#ef4444'; status.innerText = 'Erro de ligação com a Arena.'; btn.disabled = false; btn.style.opacity = '1'; }
+        } catch (error) { 
+            // Em caso de falha, reverte o botão ao estado original
+            status.style.color = '#ef4444'; 
+            status.innerText = error.message || 'Erro de ligação com a Arena.'; 
+            btn.disabled = false; 
+            btn.style.opacity = '1'; 
+            btn.innerHTML = '🎲 Procurar Oponente Aleatório';
+            btn.style.background = '#3b82f6';
+            btn.style.border = 'none';
+            btn.style.color = 'white';
+        }
     },
 
     convidarColega: async () => {

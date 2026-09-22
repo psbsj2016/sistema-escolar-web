@@ -150,8 +150,7 @@ Workspace.Feed = {
         }
     },
 
-    conectarTempoReal: () => {
-        // Encerra conexão fantasma anterior
+  conectarTempoReal: () => {
         if (Workspace.Feed._evtSource) Workspace.Feed._evtSource.close();
         
         const escolaId = Workspace.usuario ? Workspace.usuario.escolaId : 'DEFAULT';
@@ -168,10 +167,35 @@ Workspace.Feed = {
                     if (elementoHTML) elementoHTML.remove(); 
                     Workspace.Feed._removerPostDosCaches(idDoPost);
                 }
+
+                // 🚀 RECETOR DO SINALIZADOR DA ARENA
+                if (dados.type === 'DESAFIO_ALEATORIO_BROADCAST') {
+                    const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                    // Só mostra o popup se EU NÃO FOR o desafiante
+                    if (dados.desafianteNome !== meuNome) {
+                        Workspace.Feed.exibirConviteAleatorio(dados);
+                    }
+                }
+
+                // 🚀 FECHO DO SINALIZADOR (QUANDO ALGUÉM ACEITA)
+                if (dados.type === 'DESAFIO_ALEATORIO_FECHADO') {
+                    const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                    
+                    // 1. Remove o popup de todos os ecrãs
+                    const conviteUI = document.getElementById(`convite-rnd-${dados.desafioId}`);
+                    if (conviteUI) conviteUI.remove();
+
+                    // 2. Se EU lancei o desafio, a plataforma puxa-me para a batalha!
+                    if (dados.desafianteNome === meuNome) {
+                        if (window.Workspace && Workspace.Arena) {
+                            Workspace.mostrarAviso(`⚔️ O(A) ${dados.desafiadoNome} aceitou o seu desafio!`, "success", 6000);
+                            Workspace.Arena.entrarEmBatalhaDireta(dados.desafiadoNome, 10);
+                        }
+                    }
+                }
             } catch (err) {}
         };
 
-        // Retry com Backoff Exponencial
         Workspace.Feed._evtSource.onerror = () => {
             Workspace.Feed._evtSource.close();
             Workspace.Feed._retrySSECount = (Workspace.Feed._retrySSECount || 0) + 1;
@@ -179,12 +203,73 @@ Workspace.Feed = {
             setTimeout(Workspace.Feed.conectarTempoReal, timeout);
         };
 
-        // Desliga a torneira se o utilizador fechar ou sair da aba
         if (!Workspace.Feed._listenerUnloadConfigurado) {
             window.addEventListener('beforeunload', () => {
                 if (Workspace.Feed._evtSource) Workspace.Feed._evtSource.close();
             });
             Workspace.Feed._listenerUnloadConfigurado = true;
+        }
+    },
+
+    // 🚀 DESENHA O POP-UP GIGANTE NO ECRÃ
+    exibirConviteAleatorio: (dados) => {
+        if (document.getElementById(`convite-rnd-${dados.desafioId}`)) return;
+
+        const convite = document.createElement('div');
+        convite.id = `convite-rnd-${dados.desafioId}`;
+        convite.style.cssText = `
+            position: fixed; top: 80px; left: 50%; transform: translateX(-50%);
+            background: linear-gradient(135deg, #1e293b, #0f172a); border: 2px solid #ea580c;
+            color: white; padding: 20px 25px; border-radius: 16px; z-index: 999999;
+            box-shadow: 0 15px 35px rgba(234, 88, 12, 0.5); display: flex; flex-direction: column;
+            align-items: center; gap: 15px; animation: popDown 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            min-width: 320px;
+        `;
+
+        convite.innerHTML = `
+            <div style="text-align: center;">
+                <div style="font-size: 35px; animation: pulse 1s infinite;">🚨</div>
+                <h3 style="margin: 10px 0 5px 0; color: #f97316;">Desafio Rápido na Arena!</h3>
+                <p style="margin: 0; font-size: 14px; color: #cbd5e1;"><strong>${Workspace.Feed.limparTexto(dados.desafianteNome)}</strong> quer um duelo de ${dados.minutos} minutos agora mesmo!</p>
+            </div>
+            <div style="display: flex; gap: 10px; width: 100%;">
+                <button onclick="this.parentNode.parentNode.remove()" style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #475569; background: transparent; color: #94a3b8; cursor: pointer; font-weight: bold;">Ignorar</button>
+                <button id="btn-aceitar-rnd-${dados.desafioId}" onclick="Workspace.Feed.aceitarDesafioAleatorio('${dados.desafioId}')" style="flex: 2; padding: 10px; border-radius: 8px; border: none; background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; cursor: pointer; font-weight: bold; box-shadow: 0 4px 10px rgba(234, 88, 12, 0.4);">Lutar! ⚔️</button>
+            </div>
+        `;
+
+        document.body.appendChild(convite);
+
+        // Desaparece automaticamente após 20 segundos
+        setTimeout(() => { if (document.body.contains(convite)) convite.remove(); }, 20000);
+    },
+
+    // 🚀 GERE A CORRIDA (QUEM CLICAR PRIMEIRO VENCE)
+    aceitarDesafioAleatorio: async (desafioId) => {
+        const btn = document.getElementById(`btn-aceitar-rnd-${desafioId}`);
+        if (btn) { btn.innerText = 'A conectar... ⏳'; btn.disabled = true; }
+
+        try {
+            const res = await Workspace.api('/workspace/arena/desafio-aleatorio/aceitar', 'POST', {
+                desafioId: desafioId, desafiadoNome: Workspace.usuario.nome || Workspace.usuario.login, escolaId: Workspace.usuario.escolaId
+            });
+
+            if (res && res.success) {
+                const conviteUI = document.getElementById(`convite-rnd-${desafioId}`);
+                if (conviteUI) conviteUI.remove();
+
+                // Teletransporta o aluno que aceitou diretamente para a batalha contra o criador
+                if (window.Workspace && Workspace.Arena) {
+                    Workspace.mostrarAviso(`⚔️ Entrou na batalha contra ${res.desafianteNome}!`, "success", 4000);
+                    Workspace.Arena.entrarEmBatalhaDireta(res.desafianteNome, 10);
+                }
+            } else {
+                Workspace.mostrarAviso(res.error || "Erro ao aceitar o desafio.", "error");
+                if (btn) btn.parentNode.parentNode.remove();
+            }
+        } catch (e) {
+            Workspace.mostrarAviso("Falha de rede. O desafio já não está disponível.", "error");
+            if (btn) btn.parentNode.parentNode.remove();
         }
     },
 
