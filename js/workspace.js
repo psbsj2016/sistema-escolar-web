@@ -83,8 +83,9 @@ Object.assign(Workspace, {
 
         encerrarSessao: () => {
             console.log("Sessão expirada. Redirecionando para login...");
-            Workspace.mostrarAviso("A sua sessão expirou por inatividade. Faça login novamente.", "warning");
-            Workspace.logout(true); // Desloga e vai para o Ecrã Inicial
+            // 🚀 SALVA O AVISO PARA O PRÓXIMO RELOAD E FORÇA A LIMPEZA TOTAL DA MEMÓRIA
+            sessionStorage.setItem('ws_aviso_expirado', 'A sua sessão expirou por inatividade. Faça login novamente.');
+            Workspace.logout(false); 
         }
     },
 
@@ -220,8 +221,8 @@ Object.assign(Workspace, {
             const res = await fetch(`/api${endpoint}`, options);
             
             if (res.status === 401 && endpoint !== '/auth/login') {
-                Workspace.mostrarAviso("A sua sessão expirou por segurança. Faça login novamente.", "warning");
-                Workspace.logout(true); 
+                sessionStorage.setItem('ws_aviso_expirado', 'A sua sessão expirou por segurança. Faça login novamente.');
+                Workspace.logout(false); // O false destrói os "memory leaks" recarregando a página
                 return null;
             }
             
@@ -252,7 +253,16 @@ Object.assign(Workspace, {
    // ============================================================================
     // 🚀 INICIALIZADOR MESTRE DA PLATAFORMA (VELOCIDADE DA LUZ)
     // ============================================================================
-    init: async () => {
+   init: async () => {
+        // 🚀 VERIFICA SE HOUVE UM LOGOUT FORÇADO E MOSTRA A NOTIFICAÇÃO PENDENTE
+        const avisoExpirado = sessionStorage.getItem('ws_aviso_expirado');
+        if (avisoExpirado) {
+            setTimeout(() => {
+                if (Workspace.mostrarAviso) Workspace.mostrarAviso(avisoExpirado, "warning", 6000);
+            }, 800);
+            sessionStorage.removeItem('ws_aviso_expirado');
+        }
+
         const cacheUser = localStorage.getItem('ws_usuario_logado');
         
         if (!cacheUser) {

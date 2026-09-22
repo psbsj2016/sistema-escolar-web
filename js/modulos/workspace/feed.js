@@ -1790,7 +1790,6 @@ Workspace.Feed = {
         let isTag = false;
         let textoAExibir = '';
 
-        // O cursor piscante no fim do texto
         const cursor = document.createElement('span');
         cursor.innerHTML = '▋';
         cursor.style.color = '#38bdf8';
@@ -1807,22 +1806,21 @@ Workspace.Feed = {
                 
                 if (char === '>') {
                     isTag = false;
-                    digitar(); // Ignora a pausa de tempo quando fecha a tag
+                    digitar(); 
                     return;
                 }
 
                 if (isTag) {
-                    digitar(); // Voa através das tags HTML invisivelmente
+                    digitar(); 
                 } else {
                     elementoDestino.innerHTML = textoAExibir;
                     elementoDestino.appendChild(cursor);
                     
-                    // Pequeno truque para que vírgulas e pontos pareçam mais humanos
-                    let pausaExtra = (char === '.' || char === '!' || char === '?') ? 300 : 0;
+                    let pausaExtra = (char === '.' || char === '!' || char === '?') ? 250 : 0;
                     setTimeout(digitar, velocidade + pausaExtra);
                 }
             } else {
-                cursor.remove(); // Terminou a digitação, remove o bloco piscante
+                cursor.remove(); 
             }
         }
         digitar();
@@ -1841,9 +1839,7 @@ Workspace.Feed = {
                     <h3 style="color: #38bdf8; margin-top: 40px; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 22px;">🎯 Quiz de Evolução</h3>
                     <div id="ws-imersao-lista-perguntas">
             `;
-            dados.quiz.forEach((q, index) => {
-                htmlQuiz += Workspace.Feed.gerarHTMLPerguntaQuiz(q, index);
-            });
+            dados.quiz.forEach((q, index) => { htmlQuiz += Workspace.Feed.gerarHTMLPerguntaQuiz(q, index); });
             htmlQuiz += `
                     </div>
                     <div style="text-align: center; margin-top: 20px;">
@@ -1868,29 +1864,29 @@ Workspace.Feed = {
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados, dados.materiaisExtras);
 
-        // Renderização Inicial (Sem o texto do resumo, apenas com a caixa)
+        // 🚀 O NOVO PAINEL DE VISUALIZAÇÃO (Sem o texto, apenas a "tela branca" à espera da IA)
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.formatarIA(dados.titulo || 'Aula Imersiva')}</h1>
                 
                 <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px; color: #e2e8f0; line-height: 1.6;">
-                    <div id="ws-imersao-resumo-texto"></div> <!-- 🚀 ONDE A MÁGICA DE DIGITAÇÃO ACONTECE -->
+                    <div id="ws-imersao-resumo-texto"></div> <!-- 🚀 A MÁQUINA DE ESCREVER ENTRA AQUI -->
                 </div>
                 
-                <div id="ws-imersao-recursos-container" style="display: none;">${htmlRecursos}</div>
+                <div id="ws-imersao-recursos-container" style="display: none; animation: fadeIn 1s ease;">${htmlRecursos}</div>
                 ${htmlNota}
                 ${htmlQuiz}
             </div>
         `;
 
-        // 🚀 O DISPARO DA UX: Arranca a digitação automática
+        // 🚀 O DISPARO DA ANIMAÇÃO: Inicia a Digitação e esconde o resto até estar pronto!
         const containerResumo = document.getElementById('ws-imersao-resumo-texto');
         const htmlLimpo = Workspace.Feed.formatarIA(resumoSeguro);
         
         if (containerResumo) {
             Workspace.Feed.efeitoDigitacaoHTML(containerResumo, htmlLimpo, 12);
             
-            // Calcula o tempo que a digitação vai demorar (aproximadamente) e mostra os extras a seguir
+            // Calcula o tempo que a IA vai demorar a digitar e mostra o Quiz e os Recursos no fim!
             const tempoEstimadoDigitar = (htmlLimpo.replace(/<[^>]*>?/gm, '').length * 12) + 2000;
             
             setTimeout(() => {
@@ -1901,9 +1897,9 @@ Workspace.Feed = {
                 if (elRecursos && htmlRecursos !== '') elRecursos.style.display = 'block';
                 if (elNota) elNota.style.display = 'block';
                 if (elQuiz) elQuiz.style.display = 'block';
-            }, Math.min(tempoEstimadoDigitar, 6000)); // Limite máximo de 6 segundos de espera para mostrar o resto
+            }, Math.min(tempoEstimadoDigitar, 7000)); // Limite máximo de 7 segundos de espera
         }
-    },    
+    },
 
     verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
         const quizCache = Workspace.Feed._quizImersaoCache;
