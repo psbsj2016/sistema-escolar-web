@@ -2435,5 +2435,108 @@ Workspace.Feed = {
                 Workspace.mostrarAviso(error.message || "Erro ao enviar o convite.", "error");
             }
         }
+    },
+
+// (Atenção: Adicione uma vírgula na função anterior a esta, caso não tenha)
+
+    // ============================================================================
+    // 🎨 RENDERIZADOR DA IMERSÃO MUSICAL E GESTOR DE DIAS CONTÍNUOS
+    // ============================================================================
+    renderizarImersaoMusical: (plano, postOriginal) => {
+        const conteudo = document.getElementById('ws-imersao-musical-conteudo');
+        if (!conteudo) return;
+
+        // Se o plano vier direto como array (ex: no "Mais Dias"), ajusta a estrutura
+        const listaDias = Array.isArray(plano) ? plano : (plano.planoEstudos || []);
+        const titulo = plano.tituloMusica || 'Treino Musical';
+
+        let htmlSuperior = `
+            <div style="animation: fadeIn 0.5s ease;">
+                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 12px; border: 1px solid #3f3f46;">
+                    <div style="font-size: 30px;">🎧</div>
+                    <div>
+                        <div style="color: #ec4899; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Treino Ativo</div>
+                        <h2 style="color: #fff; margin: 0; font-size: 20px;">${Workspace.Feed.limparTexto(titulo)}</h2>
+                    </div>
+                </div>
+        `;
+
+        // Renderiza o vídeo/áudio original para o aluno ouvir enquanto estuda
+        if (postOriginal && postOriginal.texto) {
+            htmlSuperior += `
+                <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 30px; border: 1px solid #27272a;">
+                    <div style="color: #a1a1aa; font-size: 12px; margin-bottom: 10px; font-weight: bold;">MÚSICA ORIGINAL:</div>
+                    ${Workspace.Feed.renderizarAnexos(postOriginal.anexos, postOriginal.id)}
+                    <div style="margin-top: 10px;">${Workspace.Feed.processarTextoComEmbeds(postOriginal.texto)}</div>
+                </div>
+            `;
+        }
+
+        let htmlDias = '<div id="ws-imersao-musical-dias" style="display: flex; flex-direction: column; gap: 20px;">';
+        listaDias.forEach(dia => {
+            htmlDias += Workspace.Feed.gerarHTMLDiaMusical(dia);
+        });
+        htmlDias += '</div>';
+
+        // O botão inteligente que sabe qual é o último dia para pedir à IA os seguintes!
+        const ultimoDiaGerado = listaDias.length > 0 ? listaDias[listaDias.length - 1].dia : 0;
+        
+        let htmlMaisDias = `
+            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
+                <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica('${postOriginal ? postOriginal.id : ''}', ${ultimoDiaGerado})" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">
+                    ➕ Desbloquear Mais Dias
+                </button>
+            </div>
+            </div>
+        `;
+
+        // LÓGICA DE INJEÇÃO: Se o painel de dias já existe, apenas acrescenta os novos!
+        const containerDiasExistente = document.getElementById('ws-imersao-musical-dias');
+        if (containerDiasExistente) {
+            let novosDiasHtml = '';
+            listaDias.forEach(dia => { novosDiasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia); });
+            containerDiasExistente.insertAdjacentHTML('beforeend', novosDiasHtml);
+            
+            const btnMaisDias = document.getElementById('ws-btn-mais-dias-musica');
+            if (btnMaisDias) btnMaisDias.setAttribute('onclick', `Workspace.Feed.gerarMaisDiasMusica('${postOriginal.id}', ${ultimoDiaGerado})`);
+        } else {
+            // Se for a primeira vez, desenha tudo!
+            conteudo.innerHTML = htmlSuperior + htmlDias + htmlMaisDias;
+        }
+    },
+
+    gerarMaisDiasMusica: async (postId, ultimoDia) => {
+        const btn = document.getElementById('ws-btn-mais-dias-musica');
+        if (btn) {
+            btn.innerHTML = '⏳ A invocar a IA para gerar novos dias...';
+            btn.disabled = true;
+            btn.style.opacity = '0.7';
+        }
+
+        try {
+            const res = await Workspace.api('/workspace/posts/imersao-musical/mais-dias', 'POST', {
+                escolaId: Workspace.usuario.escolaId,
+                postId: postId,
+                ultimoDia: parseInt(ultimoDia)
+            });
+
+            if (res && res.success && res.plano) {
+                // Reutilizamos a nossa função de renderização! Ela é inteligente e vai apenas anexar.
+                Workspace.Feed.renderizarImersaoMusical(res.plano, { id: postId }); 
+            } else {
+                throw new Error(res?.error || 'A IA não conseguiu gerar mais dias.');
+            }
+        } catch (error) {
+            if (window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso(error.message || "Erro ao gerar novos dias.", "error");
+            }
+        } finally {
+            if (btn) {
+                btn.innerHTML = '➕ Desbloquear Mais Dias';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+            }
+        }
     }
+
 };
