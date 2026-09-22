@@ -393,6 +393,27 @@ Workspace.Arena = {
                     }
                 }
 
+                // 🚀 NOVO: O ADVERSÁRIO ESCOLHEU UM PAPEL (BLOQUEIO VISUAL)
+                    if (dados.type === 'ARENA_PAPEL_BLOQUEADO' && Workspace.Arena.salaAtual === dados.salaId) {
+                        const btn1 = document.getElementById('ws-btn-papel-1');
+                        const btn2 = document.getElementById('ws-btn-papel-2');
+                        
+                        // Verifica qual botão tem o nome do papel bloqueado e desativa-o visualmente
+                        if (btn1 && btn1.innerText.includes(dados.papelBloqueado)) {
+                            btn1.disabled = true;
+                            btn1.style.background = '#475569'; // Fica cinzento
+                            btn1.style.opacity = '0.5';
+                            btn1.style.transform = 'scale(0.95)';
+                            btn1.innerText = `🔒 Escapou! (Escolhido pelo Oponente)`;
+                        } else if (btn2 && btn2.innerText.includes(dados.papelBloqueado)) {
+                            btn2.disabled = true;
+                            btn2.style.background = '#475569'; // Fica cinzento
+                            btn2.style.opacity = '0.5';
+                            btn2.style.transform = 'scale(0.95)';
+                            btn2.innerText = `🔒 Escapou! (Escolhido pelo Oponente)`;
+                        }
+                    }
+
                 // (Eventos que não dependem do array de destinatários)
                 if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
                     if (dados.fala.autorNome !== meuNome) {
@@ -401,22 +422,19 @@ Workspace.Arena = {
                     }
                 }
                
-                // Se o adversário clicou no personagem primeiro, o Servidor avisa-nos automaticamente para arrancarmos!
+                // Se o adversário clicou no personagem primeiro...
                 if (dados.type === 'ARENA_PAPEIS_DEFINIDOS' && Workspace.Arena.salaAtual === dados.salaId) {
-                if (!Workspace.Arena.papelAtual) { // Só executa se eu ainda estiver na tela de escolha
-                    Workspace.Arena.papelAtual = dados.seuPapel;
-                    if (window.Toast) Toast.show({ message: `O oponente escolheu rápido! Você será: ${dados.seuPapel}`, type: 'info' });
-                    Workspace.Arena.comecarCombateReal(dados.seuPapel);
+                    if (!Workspace.Arena.papelAtual) { 
+                        Workspace.Arena.papelAtual = dados.seuPapel;
+                        if (window.Toast) Toast.show({ message: `O oponente escolheu rápido! Você será: ${dados.seuPapel}`, type: 'info' });
+                        Workspace.Arena.comecarCombateReal(dados.seuPapel);
+                    }
                 }
-            }
 
+                // 🚀 NOVO: O Mestre da Guilda agora fala no chat como um personagem (NPC)!
                 if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
-                    Workspace.Arena.desenharDicaDoMestre(dados.dica);
-                }
-
-                // 🚀 NOVO: Captura o Plot Twist em tempo real!
-                if (dados.type === 'ARENA_PLOT_TWIST' && Workspace.Arena.salaAtual === dados.salaId) {
-                    Workspace.Arena.desenharPlotTwist(dados.twist);
+                    // Usamos a função normal desenharBalao, passamos 'false' para aparecer do lado esquerdo (como oponente)
+                    Workspace.Arena.desenharBalao('🧙‍♂️ Mestre da Guilda', dados.dica, false);
                 }
 
                 if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
@@ -760,7 +778,7 @@ Workspace.Arena = {
         document.body.appendChild(painel);
     },
 
-    pedirAjudaMestre: async () => {
+   pedirAjudaMestre: async () => {
         if (!Workspace.Arena.salaAtual) return;
         const btn = document.getElementById('ws-btn-lifeline');
         const box = document.getElementById('ws-arena-sugestoes-box');
@@ -768,12 +786,16 @@ Workspace.Arena = {
         if (btn) { btn.disabled = true; btn.style.opacity = '0.5'; btn.innerText = '⏳'; }
 
         try {
-            const res = await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/ajuda`, 'POST', {});
+            // 🚀 AGORA ENVIAMOS O CENÁRIO E O PAPEL PARA A IA!
+            const res = await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/ajuda`, 'POST', {
+                cenario: Workspace.Arena.cenarioAtual ? Workspace.Arena.cenarioAtual.t : 'Conversa Livre',
+                papel: Workspace.Arena.papelAtual || 'Guerreiro'
+            });
 
             if (res && res.success && res.sugestoes) {
                 Workspace.Arena.tocarSom('mensagem');
                 
-                let html = `<h4 style="color: #d8b4fe; margin: 0 0 15px 0; text-align: center; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">🪄 Sugestões do Mestre</h4><div style="display: flex; flex-direction: column; gap: 10px;">`;
+                let html = `<h4 style="color: #d8b4fe; margin: 0 0 15px 0; text-align: center; font-size: 13px; text-transform: uppercase; letter-spacing: 1px;">🪄 Sugestões para ${Workspace.Arena.papelAtual || 'ti'}</h4><div style="display: flex; flex-direction: column; gap: 10px;">`;
 
                 res.sugestoes.forEach(sugestao => {
                     const sugestaoSegura = window.Workspace.escapeHTML ? Workspace.escapeHTML(sugestao) : sugestao;
@@ -842,61 +864,6 @@ Workspace.Arena = {
         const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span><div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div></div>`;
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
-    },
-
-    desenharDicaDoMestre: (dica) => {
-        const log = document.getElementById('ws-arena-chat-log');
-        if (!log) return;
-        
-        // O texto vem diretamente da IA. Usamos escapeHTML para evitar quebra de código.
-        const textoLimpo = window.Workspace && Workspace.escapeHTML ? Workspace.escapeHTML(dica) : dica;
-
-        // O Design Dourado Mágico
-        const html = `
-            <div style="display: flex; justify-content: center; width: 100%; margin: 15px 0; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
-                <div style="background: linear-gradient(135deg, #f59e0b, #ea580c); color: white; padding: 15px 25px; border-radius: 20px; max-width: 85%; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.4); border: 2px solid #fde68a; text-align: center; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -10px; left: -10px; font-size: 50px; opacity: 0.1; transform: rotate(-15deg);">🧙‍♂️</div>
-                    <div style="font-size: 11px; text-transform: uppercase; letter-spacing: 1.5px; font-weight: 900; margin-bottom: 6px; color: #fef3c7; position: relative; z-index: 1;">✨ O Mestre da Guilda sussurra:</div>
-                    <div style="font-size: 15px; line-height: 1.6; font-weight: 700; position: relative; z-index: 1;">"${textoLimpo}"</div>
-                </div>
-            </div>
-        `;
-        
-        log.insertAdjacentHTML('beforeend', html);
-        log.scrollTop = log.scrollHeight;
-        
-        // Toca o som de notificação padrão para alertar os alunos
-        Workspace.Arena.tocarSom('mensagem');
-    },
-
-    // ============================================================================
-    // 🌪️ O RENDERIZADOR DO PLOT TWIST
-    // ============================================================================
-    desenharPlotTwist: (twistTexto) => {
-        const log = document.getElementById('ws-arena-chat-log');
-        if (!log) return;
-        
-        // Limpa o texto por segurança
-        const textoLimpo = window.Workspace && Workspace.escapeHTML ? Workspace.escapeHTML(twistTexto) : twistTexto;
-
-        // Desenha uma caixa vermelha vibrante e pulsante
-        const html = `
-            <div style="display: flex; justify-content: center; width: 100%; margin: 20px 0; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
-                <div style="background: linear-gradient(135deg, #ef4444, #991b1b); color: white; padding: 20px 25px; border-radius: 20px; max-width: 85%; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5); border: 2px solid #fca5a5; text-align: center; position: relative; overflow: hidden;">
-                    <div style="position: absolute; top: -10px; right: -10px; font-size: 60px; opacity: 0.1; transform: rotate(15deg);">🌪️</div>
-                    <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 2px; font-weight: 900; margin-bottom: 8px; color: #fecaca; position: relative; z-index: 1; display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <span style="animation: pulse 1s infinite;">🚨</span> PLOT TWIST <span style="animation: pulse 1s infinite;">🚨</span>
-                    </div>
-                    <div style="font-size: 16px; line-height: 1.6; font-weight: 700; position: relative; z-index: 1;">"${textoLimpo}"</div>
-                </div>
-            </div>
-        `;
-        
-        log.insertAdjacentHTML('beforeend', html);
-        log.scrollTop = log.scrollHeight;
-        
-        // Dispara o som de mensagem normal, mas o visual já vai assustar o suficiente!
-        Workspace.Arena.tocarSom('mensagem');
     },
 
     abandonarPartida: () => {
