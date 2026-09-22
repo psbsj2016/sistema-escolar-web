@@ -1783,6 +1783,51 @@ Workspace.Feed = {
         `;
     },
 
+    // 🚀 NOVO: O "Digitador" de IA que compreende e respeita tags HTML
+    efeitoDigitacaoHTML: (elementoDestino, htmlCompleto, velocidade = 12) => {
+        elementoDestino.innerHTML = '';
+        let i = 0;
+        let isTag = false;
+        let textoAExibir = '';
+
+        // O cursor piscante no fim do texto
+        const cursor = document.createElement('span');
+        cursor.innerHTML = '▋';
+        cursor.style.color = '#38bdf8';
+        cursor.style.animation = 'pulse 1s infinite';
+        
+        function digitar() {
+            if (i < htmlCompleto.length) {
+                let char = htmlCompleto.charAt(i);
+                
+                if (char === '<') isTag = true;
+                
+                textoAExibir += char;
+                i++;
+                
+                if (char === '>') {
+                    isTag = false;
+                    digitar(); // Ignora a pausa de tempo quando fecha a tag
+                    return;
+                }
+
+                if (isTag) {
+                    digitar(); // Voa através das tags HTML invisivelmente
+                } else {
+                    elementoDestino.innerHTML = textoAExibir;
+                    elementoDestino.appendChild(cursor);
+                    
+                    // Pequeno truque para que vírgulas e pontos pareçam mais humanos
+                    let pausaExtra = (char === '.' || char === '!' || char === '?') ? 300 : 0;
+                    setTimeout(digitar, velocidade + pausaExtra);
+                }
+            } else {
+                cursor.remove(); // Terminou a digitação, remove o bloco piscante
+            }
+        }
+        digitar();
+    },
+
     renderizarImersao: (dados) => {
         const conteudo = document.getElementById('ws-imersao-conteudo');
         Workspace.Feed._quizImersaoCache = dados.quiz || []; 
@@ -1792,7 +1837,7 @@ Workspace.Feed = {
         let htmlQuiz = '';
         if (dados.quiz && dados.quiz.length > 0) {
             htmlQuiz = `
-                <div id="ws-imersao-quiz-container">
+                <div id="ws-imersao-quiz-container" style="display: none; animation: fadeIn 1s ease;">
                     <h3 style="color: #38bdf8; margin-top: 40px; border-bottom: 1px solid #334155; padding-bottom: 10px; font-size: 22px;">🎯 Quiz de Evolução</h3>
                     <div id="ws-imersao-lista-perguntas">
             `;
@@ -1811,7 +1856,7 @@ Workspace.Feed = {
         let htmlNota = '';
         if (dados.tituloNota && dados.conteudoParaNota) {
             htmlNota = `
-                <div style="background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 25px; border-radius: 16px; margin: 30px 0; text-align: center; animation: fadeIn 0.8s ease;">
+                <div id="ws-imersao-nota-container" style="display: none; background: rgba(16, 185, 129, 0.05); border: 1px solid rgba(16, 185, 129, 0.2); padding: 25px; border-radius: 16px; margin: 30px 0; text-align: center; animation: fadeIn 0.8s ease;">
                     <div style="font-size: 35px; margin-bottom: 15px; animation: ws-float 3s ease-in-out infinite;">🧰</div>
                     <h3 style="color: #34d399; margin: 0 0 10px 0; font-size: 19px;">Guardar Resumo no Baú das Memórias?</h3>
                     <p style="color: #94a3b8; font-size: 15px; margin-bottom: 20px; max-width: 500px; margin-left: auto; margin-right: auto;">A Inteligência Artificial preparou um material focado nas suas necessidades. Clique abaixo para guardá-lo permanentemente nas suas Anotações!</p>
@@ -1823,18 +1868,42 @@ Workspace.Feed = {
         let resumoSeguro = dados.resumo ? dados.resumo.replace(/```html/g, '').replace(/```/g, '') : '';
         let htmlRecursos = Workspace.Feed.gerarHTMLRecursosImersao(dados.postsRelacionados, dados.materiaisExtras);
 
+        // Renderização Inicial (Sem o texto do resumo, apenas com a caixa)
         conteudo.innerHTML = `
             <div style="animation: fadeIn 0.5s ease;">
                 <h1 style="color: #fff; font-size: 32px; margin-bottom: 20px; background: -webkit-linear-gradient(#60a5fa, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">${Workspace.Feed.formatarIA(dados.titulo || 'Aula Imersiva')}</h1>
+                
                 <div style="background: rgba(59, 130, 246, 0.05); padding: 25px; border-radius: 16px; margin-bottom: 20px; border-left: 4px solid #3b82f6; font-size: 17px; color: #e2e8f0; line-height: 1.6;">
-                    ${Workspace.Feed.formatarIA(resumoSeguro)}
+                    <div id="ws-imersao-resumo-texto"></div> <!-- 🚀 ONDE A MÁGICA DE DIGITAÇÃO ACONTECE -->
                 </div>
+                
+                <div id="ws-imersao-recursos-container" style="display: none;">${htmlRecursos}</div>
                 ${htmlNota}
-                ${htmlRecursos}
                 ${htmlQuiz}
             </div>
         `;
-    },
+
+        // 🚀 O DISPARO DA UX: Arranca a digitação automática
+        const containerResumo = document.getElementById('ws-imersao-resumo-texto');
+        const htmlLimpo = Workspace.Feed.formatarIA(resumoSeguro);
+        
+        if (containerResumo) {
+            Workspace.Feed.efeitoDigitacaoHTML(containerResumo, htmlLimpo, 12);
+            
+            // Calcula o tempo que a digitação vai demorar (aproximadamente) e mostra os extras a seguir
+            const tempoEstimadoDigitar = (htmlLimpo.replace(/<[^>]*>?/gm, '').length * 12) + 2000;
+            
+            setTimeout(() => {
+                const elRecursos = document.getElementById('ws-imersao-recursos-container');
+                const elNota = document.getElementById('ws-imersao-nota-container');
+                const elQuiz = document.getElementById('ws-imersao-quiz-container');
+                
+                if (elRecursos && htmlRecursos !== '') elRecursos.style.display = 'block';
+                if (elNota) elNota.style.display = 'block';
+                if (elQuiz) elQuiz.style.display = 'block';
+            }, Math.min(tempoEstimadoDigitar, 6000)); // Limite máximo de 6 segundos de espera para mostrar o resto
+        }
+    },    
 
     verificarQuizImersao: (perguntaIndex, opcaoClicada) => {
         const quizCache = Workspace.Feed._quizImersaoCache;
