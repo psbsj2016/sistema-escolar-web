@@ -826,7 +826,11 @@ Workspace.Arena = {
 
     usarSugestao: (texto) => {
         document.getElementById('ws-arena-sugestoes-box').style.display = 'none';
-        Workspace.Arena.enviarFala(texto);
+        
+        // 🚀 O SELO DE TRANSPARÊNCIA: Adiciona a etiqueta à mensagem original
+        const textoComSelo = `${texto} 💡 (Ideia do Mestre)`;
+        
+        Workspace.Arena.enviarFala(textoComSelo);
     },
 
     iniciarRelogio: () => {
