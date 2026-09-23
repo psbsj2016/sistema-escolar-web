@@ -873,7 +873,7 @@ Workspace.Arena = {
              nomeDisplay = isMinha ? `${nome} 🎭 (${Workspace.Arena.papelAtual})` : `${nome} 🎭 (${oponentePapel})`;
         }
 
-        const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span><div style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">${texto}</div></div>`;
+        const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span><div onmouseup="Workspace.Arena.capturarToqueTexto(event, this)" style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: text;">${texto}</div></div>`;
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
     },
@@ -1175,6 +1175,127 @@ Workspace.Arena = {
             }
         } catch (error) {
             if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao partilhar no Feed.", "error");
+        }
+    },
+
+// ============================================================================
+    // 🌍 SISTEMA DE TOQUE INTELIGENTE (SMART TOUCH - TRADUTOR)
+    // ============================================================================
+    
+    // 1. O Detetive de Toques
+    capturarToqueTexto: (event, elemento) => {
+        // Evita abrir a caixa de tradução se o aluno clicar num botão (ex: botão de dica)
+        if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') return;
+
+        // Damos um atraso de 50 milissegundos para garantir que o sistema operativo 
+        // teve tempo de "pintar" a seleção a azul, caso o aluno tenha arrastado o dedo.
+        setTimeout(() => {
+            let textoCapturado = "";
+            const selecao = window.getSelection();
+
+            // Modo A: Frase Completa Selecionada
+            if (selecao && selecao.toString().trim().length > 0) {
+                textoCapturado = selecao.toString().trim();
+            } 
+            // Modo B: Palavra Única (Toque rápido)
+            else {
+                textoCapturado = Workspace.Arena.extrairPalavraDoClique(event);
+            }
+
+            if (textoCapturado && textoCapturado.length > 1) {
+                // Abre a caixa mágica nas coordenadas exatas do rato/dedo!
+                Workspace.Arena.exibirCaixaTraducao(textoCapturado, event.clientX, event.clientY);
+                
+                // Limpa a seleção a azul do ecrã para ficar mais limpo
+                if (selecao) selecao.removeAllRanges();
+            }
+        }, 50); 
+    },
+
+    // 2. O Extrator Matemático de Palavras
+    extrairPalavraDoClique: (event) => {
+        let range;
+        // Pede ao navegador para descobrir em que letra exata o pixel tocou
+        if (document.caretRangeFromPoint) {
+            range = document.caretRangeFromPoint(event.clientX, event.clientY);
+        } else if (event.rangeParent) {
+            range = document.createRange();
+            range.setStart(event.rangeParent, event.rangeOffset);
+        }
+        
+        // Se tocou fora de um texto, cancela
+        if (!range || range.startContainer.nodeType !== Node.TEXT_NODE) return null;
+
+        const textoOriginal = range.startContainer.nodeValue;
+        let inicio = range.startOffset;
+        let fim = range.startOffset;
+
+        // O Algoritmo expande para a esquerda até encontrar um espaço
+        while (inicio > 0 && !textoOriginal[inicio - 1].match(/\s/)) {
+            inicio--;
+        }
+        // O Algoritmo expande para a direita até encontrar um espaço
+        while (fim < textoOriginal.length && !textoOriginal[fim].match(/\s/)) {
+            fim++;
+        }
+
+        // Corta a palavra limpa sem pontuações coladas (ex: "apple!" vira "apple")
+        return textoOriginal.slice(inicio, fim).replace(/[.,!?;:"'()]/g, '').trim();
+    },
+
+    // 3. O Desenhista da Caixa Flutuante
+    exibirCaixaTraducao: async (texto, coordX, coordY) => {
+        // Se já existir uma caixa aberta, destroi a antiga
+        const caixaAntiga = document.getElementById('ws-arena-caixa-traducao');
+        if (caixaAntiga) caixaAntiga.remove();
+
+        const caixa = document.createElement('div');
+        caixa.id = 'ws-arena-caixa-traducao';
+        
+        // Proteções matemáticas para a caixa não sair do ecrã
+        let posX = coordX;
+        let posY = coordY + 20; // 20 pixels abaixo do dedo para não tapar o texto
+
+        caixa.style.cssText = `position: fixed; left: ${posX}px; top: ${posY}px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid #3b82f6; border-radius: 16px; padding: 15px; color: white; z-index: 1000500; box-shadow: 0 15px 40px rgba(0,0,0,0.6); min-width: 220px; max-width: 320px; font-size: 14px; animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateX(-50%);`;
+
+        // Desenha o estado de "A carregar"
+        caixa.innerHTML = `
+            <div style="position: absolute; top: 8px; right: 12px; cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px;" onclick="this.parentElement.remove()">×</div>
+            <div style="color: #60a5fa; font-weight: 900; margin-bottom: 5px; font-size: 11px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 5px;"><span style="animation: pulse 1s infinite;">🧠</span> Analisando texto...</div>
+            <div style="text-align: center; margin: 15px 0;"><div style="font-size: 24px; color: #94a3b8; font-style: italic;">"${Workspace.Feed.limparTexto(texto)}"</div></div>
+        `;
+        document.body.appendChild(caixa);
+
+        // Previne que a caixa fique cortada se tocar muito perto das bordas laterais do telemóvel
+        const rect = caixa.getBoundingClientRect();
+        if (rect.right > window.innerWidth) caixa.style.left = `${window.innerWidth - rect.width / 2 - 10}px`;
+        if (rect.left < 0) caixa.style.left = `${rect.width / 2 + 10}px`;
+        if (rect.bottom > window.innerHeight) caixa.style.top = `${coordY - rect.height - 20}px`;
+
+        try {
+            // Envia para o nosso novo motor no Backend
+            const res = await Workspace.api('/workspace/arena/traduzir', 'POST', { texto: texto });
+            
+            if (res && res.success) {
+                // Sucesso! Atualiza a caixa com a Tradução e Pronúncia
+                caixa.innerHTML = `
+                    <div style="position: absolute; top: 8px; right: 12px; cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px; transition: 0.2s;" onmouseover="this.style.color='#ef4444'" onmouseout="this.style.color='#94a3b8'" onclick="this.parentElement.remove()">×</div>
+                    <div style="color: #38bdf8; font-weight: 800; margin-bottom: 8px; font-size: 14px; border-bottom: 1px solid #334155; padding-bottom: 6px; padding-right: 20px;">🌍 Tradução Oficial</div>
+                    <div style="font-size: 16px; margin-bottom: 15px; color: #f8fafc; line-height: 1.4;">${res.traducao}</div>
+                    
+                    <div style="color: #a855f7; font-weight: 800; margin-bottom: 6px; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">🗣️ Como Pronunciar:</div>
+                    <div style="font-size: 15px; color: #ddd6fe; font-style: italic; background: rgba(168, 85, 247, 0.15); padding: 10px; border-radius: 8px; border: 1px solid rgba(168, 85, 247, 0.3); display: flex; align-items: center; gap: 8px;">
+                        <span>🎙️</span> "${res.pronuncia}"
+                    </div>
+                `;
+            } else {
+                throw new Error('Falha no Backend');
+            }
+        } catch (err) {
+            caixa.innerHTML = `
+                <div style="position: absolute; top: 8px; right: 12px; cursor: pointer; color: #94a3b8; font-weight: bold; font-size: 18px;" onclick="this.parentElement.remove()">×</div>
+                <div style="color: #ef4444; font-weight: bold; text-align: center; margin-top: 15px; padding-bottom: 5px;">❌ A IA perdeu o foco. Tente de novo!</div>
+            `;
         }
     }
 
