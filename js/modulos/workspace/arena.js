@@ -393,26 +393,35 @@ Workspace.Arena = {
                     }
                 }
 
-                // 🚀 NOVO: O ADVERSÁRIO ESCOLHEU UM PAPEL (BLOQUEIO VISUAL)
-                    if (dados.type === 'ARENA_PAPEL_BLOQUEADO' && Workspace.Arena.salaAtual === dados.salaId) {
-                        const btn1 = document.getElementById('ws-btn-papel-1');
-                        const btn2 = document.getElementById('ws-btn-papel-2');
-                        
-                        // Verifica qual botão tem o nome do papel bloqueado e desativa-o visualmente
+               // 🚀 NOVO: O ADVERSÁRIO ESCOLHEU UM PAPEL (BLOQUEIO VISUAL DO SOBRANTE)
+                if (dados.type === 'ARENA_PAPEL_BLOQUEADO' && Workspace.Arena.salaAtual === dados.salaId) {
+                    const btn1 = document.getElementById('ws-btn-papel-1');
+                    const btn2 = document.getElementById('ws-btn-papel-2');
+                    
+                    // Se este jogador ainda não escolheu nada, vê o botão bloqueado a cinzento!
+                    if (!Workspace.Arena.papelAtual) {
                         if (btn1 && btn1.innerText.includes(dados.papelBloqueado)) {
                             btn1.disabled = true;
-                            btn1.style.background = '#475569'; // Fica cinzento
-                            btn1.style.opacity = '0.5';
+                            btn1.style.background = '#475569'; 
+                            btn1.style.opacity = '0.4';
                             btn1.style.transform = 'scale(0.95)';
-                            btn1.innerText = `🔒 Escapou! (Escolhido pelo Oponente)`;
+                            btn1.innerText = `🔒 (Escolhido pelo Oponente)`;
                         } else if (btn2 && btn2.innerText.includes(dados.papelBloqueado)) {
                             btn2.disabled = true;
-                            btn2.style.background = '#475569'; // Fica cinzento
-                            btn2.style.opacity = '0.5';
+                            btn2.style.background = '#475569'; 
+                            btn2.style.opacity = '0.4';
                             btn2.style.transform = 'scale(0.95)';
-                            btn2.innerText = `🔒 Escapou! (Escolhido pelo Oponente)`;
+                            btn2.innerText = `🔒 (Escolhido pelo Oponente)`;
                         }
                     }
+                }
+
+                // 🎯 O TIRO DE PARTIDA! Ambos escolheram. Entram na Arena na mesma fração de segundo!
+                if (dados.type === 'ARENA_TODOS_PRONTOS' && Workspace.Arena.salaAtual === dados.salaId) {
+                    if (Workspace.Arena.papelAtual) {
+                        Workspace.Arena.comecarCombateReal(Workspace.Arena.papelAtual);
+                    }
+                }
 
                 // (Eventos que não dependem do array de destinatários)
                 if (dados.type === 'ARENA_NOVA_FALA' && Workspace.Arena.salaAtual === dados.salaId) {
@@ -421,19 +430,9 @@ Workspace.Arena = {
                         Workspace.Arena.tempoUltimaRececao = Date.now();
                     }
                 }
-               
-                // Se o adversário clicou no personagem primeiro...
-                if (dados.type === 'ARENA_PAPEIS_DEFINIDOS' && Workspace.Arena.salaAtual === dados.salaId) {
-                    if (!Workspace.Arena.papelAtual) { 
-                        Workspace.Arena.papelAtual = dados.seuPapel;
-                        if (window.Toast) Toast.show({ message: `O oponente escolheu rápido! Você será: ${dados.seuPapel}`, type: 'info' });
-                        Workspace.Arena.comecarCombateReal(dados.seuPapel);
-                    }
-                }
 
-                // 🚀 NOVO: O Mestre da Guilda agora fala no chat como um personagem (NPC)!
+                // O Mestre da Guilda atua como NPC!
                 if (dados.type === 'ARENA_DICA_MESTRE' && Workspace.Arena.salaAtual === dados.salaId) {
-                    // Usamos a função normal desenharBalao, passamos 'false' para aparecer do lado esquerdo (como oponente)
                     Workspace.Arena.desenharBalao('🧙‍♂️ Mestre da Guilda', dados.dica, false);
                 }
 
@@ -507,29 +506,38 @@ Workspace.Arena = {
     escolherPapel: async (numeroPapel) => {
         const cenario = Workspace.Arena.cenarioAtual;
         const meuPapel = numeroPapel === 1 ? cenario.p1 : cenario.p2;
-        const papelRestante = numeroPapel === 1 ? cenario.p2 : cenario.p1;
 
-        // Tranca os botões para não clicar duas vezes
-        document.getElementById('ws-btn-papel-1').disabled = true;
-        document.getElementById('ws-btn-papel-2').disabled = true;
+        const btn1 = document.getElementById('ws-btn-papel-1');
+        const btn2 = document.getElementById('ws-btn-papel-2');
         const status = document.getElementById('ws-arena-status-escolha');
+
+        // 1. Trava os botões localmente na mesma fração de segundo!
+        if (btn1) btn1.disabled = true;
+        if (btn2) btn2.disabled = true;
+
+        // 2. Dá feedback visual imediato ao aluno sobre o que ele clicou
+        if (numeroPapel === 1) {
+            if (btn1) { btn1.style.background = '#10b981'; btn1.style.transform = 'scale(1.05)'; btn1.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.5)'; }
+            if (btn2) { btn2.style.opacity = '0.3'; btn2.style.background = '#1e293b'; }
+        } else {
+            if (btn2) { btn2.style.background = '#10b981'; btn2.style.transform = 'scale(1.05)'; btn2.style.boxShadow = '0 0 20px rgba(16, 185, 129, 0.5)'; }
+            if (btn1) { btn1.style.opacity = '0.3'; btn1.style.background = '#1e293b'; }
+        }
+
         status.style.display = 'block';
+        status.innerText = 'A aguardar que o oponente escolha... ⏳';
+        status.style.color = '#f59e0b';
+
+        // 3. Guarda o papel na memória (mas o jogo não arranca aqui!)
+        Workspace.Arena.papelAtual = meuPapel;
 
         try {
-            const res = await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/escolher-papel`, 'POST', {
+            await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/escolher-papel`, 'POST', {
                 alunoId: Workspace.usuario.id,
-                papelEscolhido: meuPapel,
-                papelRestante: papelRestante,
-                cenarioTexto: cenario.t
+                papelEscolhido: meuPapel
             });
-
-            if (res && res.success) {
-                // Se o res.papel for diferente do que ele clicou, é porque o adversário foi milissegundos mais rápido!
-                Workspace.Arena.papelAtual = res.papel;
-                Workspace.Arena.comecarCombateReal(res.papel);
-            }
         } catch(e) {
-            status.style.color = '#ef4444'; status.innerText = 'Erro ao conectar. O duelo começará em breve.';
+            status.style.color = '#ef4444'; status.innerText = 'Erro de comunicação. Tente novamente.';
         }
     },
 
