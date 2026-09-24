@@ -22,7 +22,8 @@ const Workspace = window.Workspace;
 Workspace.atualizarCacheAvatares = async function() {
     try {
         // Faz o pedido "fantasma" (em segundo plano) à nossa rota do servidor
-        const resposta = await Workspace.api('/avatars', 'GET');
+        // 🚀 CORREÇÃO: Caminho corrigido para '/workspace/avatars'
+        const resposta = await Workspace.api('/workspace/avatars', 'GET');
         
         // Se o servidor devolver os dados com sucesso, substituímos a memória antiga
         if (resposta && !resposta.error) {
