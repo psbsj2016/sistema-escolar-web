@@ -185,11 +185,10 @@ Workspace.Feed = {
                     const conviteUI = document.getElementById(`convite-rnd-${dados.desafioId}`);
                     if (conviteUI) conviteUI.remove();
 
-                    // 2. Se EU lancei o desafio, a plataforma puxa-me para a batalha!
+                    // 2. A plataforma avisa e a arena.js puxa o jogador a seguir!
                     if (dados.desafianteNome === meuNome) {
-                        if (window.Workspace && Workspace.Arena) {
-                            Workspace.mostrarAviso(`⚔️ O(A) ${dados.desafiadoNome} aceitou o seu desafio!`, "success", 6000);
-                            Workspace.Arena.entrarEmBatalhaDireta(dados.desafiadoNome, 10);
+                        if (window.Workspace && Workspace.mostrarAviso) {
+                            Workspace.mostrarAviso(`⚔️ O(A) ${dados.desafiadoNome} aceitou o seu desafio! A ligar...`, "success", 6000);
                         }
                     }
                 }
@@ -258,11 +257,10 @@ Workspace.Feed = {
                 const conviteUI = document.getElementById(`convite-rnd-${desafioId}`);
                 if (conviteUI) conviteUI.remove();
 
-                // Teletransporta o aluno que aceitou diretamente para a batalha contra o criador
-                if (window.Workspace && Workspace.Arena) {
-                    Workspace.mostrarAviso(`⚔️ Entrou na batalha contra ${res.desafianteNome}!`, "success", 4000);
-                    Workspace.Arena.entrarEmBatalhaDireta(res.desafianteNome, 10);
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso(`⚔️ Batalha iminente contra ${res.desafianteNome}! A preparar a Arena...`, "success", 4000);
                 }
+                // A navegação automática agora é controlada pela arena.js via evento ARENA_MATCH_ENCONTRADO
             } else {
                 Workspace.mostrarAviso(res.error || "Erro ao aceitar o desafio.", "error");
                 if (btn) btn.parentNode.parentNode.remove();
