@@ -733,14 +733,39 @@ atualizarInterface: () => {
                 }
             }, 600);
         }
+        // ========================================================================
+        // 🚀 ROTEADOR INTELIGENTE (PROFESSOR VS ALUNO)
+        // ========================================================================
         else if (origem === 'avaliacao_escrita') {
-            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_escrita');
+            if (window.Workspace && Workspace.navegarPara) {
+                // Se for Professor ou Gestor, vai para a Central de Correções
+                if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
+                    Workspace.navegarPara('avaliacoes_prof'); 
+                } else {
+                    // Se for Aluno, vai fazer o teste
+                    Workspace.navegarPara('avaliacoes_escrita'); 
+                }
+            }
         }
         else if (origem === 'avaliacao_oral') {
-            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_oral');
+            if (window.Workspace && Workspace.navegarPara) {
+                if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
+                    Workspace.navegarPara('avaliacoes_prof');
+                } else {
+                    Workspace.navegarPara('avaliacoes_oral');
+                }
+            }
         }
-        else if (origem === 'online' || origem === 'online_edit') {
-            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('avaliacoes_online');
+        else if (origem === 'online' || origem === 'online_edit' || origem === 'acesso_online' || origem === 'sessao_vivo') {
+            if (window.Workspace && Workspace.navegarPara) {
+                if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
+                    // 🚀 ALVO CERTO: Leva o Professor diretamente para o "Painel do Professor: Sala de Acessos"
+                    Workspace.navegarPara('encontros_prof');
+                } else {
+                    // Leva o Aluno para a lista de aulas online
+                    Workspace.navegarPara('avaliacoes_online');
+                }
+            }
         }
         else if (origem === 'bau') {
             if (Workspace.Bau && Workspace.Bau.irParaCalendarioDoBau) Workspace.Bau.irParaCalendarioDoBau(Number(origemId));
