@@ -7,8 +7,11 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: 'prompt', // 🚀 A REGRA DE OURO: Agora o PWA espera pela permissão do usuário
-      includeAssets: ['assets/icone.png'],
-      manifest: {
+      
+      // 🚀 O PASSAPORTE DOS ÁUDIOS: Ensinamos o PWA a reconhecer e autorizar os sons da Arena!
+      includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
+      
+      manifest: {        
         name: "Gestão Escolar SaaS",
         short_name: "Gestão Escolar",
         description: "Sistema completo de Gestão Escolar e Financeira",

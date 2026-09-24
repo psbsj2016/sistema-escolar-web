@@ -26,10 +26,10 @@ Workspace.Arena = {
     // 🎵 MOTOR DE ÁUDIO E EFEITOS SONOROS 
     // ============================================================================
     sons: {
-        inicio: '/audios/arena-inicio.mp3',       
-        mensagem: '/audios/arena-pop.mp3',        
-        tempoEsgotado: '/audios/arena-tempo.mp3', 
-        vitoria: '/audios/arena-vitoria.mp3'      
+        inicio: './audios/arena-inicio.mp3',       
+        mensagem: './audios/arena-pop.mp3',        
+        tempoEsgotado: './audios/arena-tempo.mp3', 
+        vitoria: './audios/arena-vitoria.mp3'      
     },
 
     audiosAtivos: [], 
