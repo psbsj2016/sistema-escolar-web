@@ -648,6 +648,13 @@ Workspace.Arena = {
        Workspace.Arena.reconhecimentoVoz.onresult = async (event) => {
             let transcricaoBruta = event.results[0][0].transcript;
             const agora = Date.now();
+            
+            // 🛡️ PROTEÇÃO CONTRA O ERRO 400: 
+            // Se o microfone captar apenas ruído ou ficar em branco, paramos o processo aqui mesmo.
+            if (!transcricaoBruta || transcricaoBruta.trim() === '') {
+                return; 
+            }
+
             if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) {
                 return; 
             }
