@@ -445,7 +445,7 @@ Workspace.Arena = {
         };
     },
 
-  iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSoloOpcional) => {
+ iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSoloOpcional) => {
         Workspace.Arena.salaAtual = salaId;
         Workspace.Arena.oponenteNome = oponente;
         Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50;
@@ -460,23 +460,7 @@ Workspace.Arena = {
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
-        // 🚀 PROTEÇÃO PARA O MODO SOLO: A IA não clica em botões, por isso saltamos o ecrã de escolha!
-        if (oponente.includes('Mestre da Guilda')) {
-            Workspace.Arena.papelAtual = "Guerreiro Solitário";
-            document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${oponente}`;
-            const log = document.getElementById('ws-arena-chat-log');
-            log.innerHTML = `
-                <div style="text-align: center; color: #cbd5e1; font-size: 14px; margin-bottom: 25px; background: rgba(255,255,255,0.05); padding: 20px; border-radius: 15px; border: 1px dashed #8b5cf6; animation: popUp 0.5s ease;">
-                    <strong style="color: #a855f7; font-size: 16px; display: block; margin-bottom: 5px;">🤖 TREINO SOLO:</strong> 
-                    <span style="color:#fff; font-size: 15px;">${cenarioSoloOpcional || 'Conversa Livre com a Inteligência Artificial.'}</span><br><br>
-                    <div style="background: #8b5cf6; color: white; display: inline-block; padding: 6px 15px; border-radius: 20px; font-weight: bold; margin-top: 15px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.4);">O Mestre aguarda a sua voz! Liguem os microfones.</div>
-                </div>`;
-            Workspace.Arena.tocarSom('inicio');
-            Workspace.Arena.iniciarRelogio();
-            return; // Sai da função para não carregar a mecânica de escolher papéis
-        }
-
-        // 🎭 Se for contra um humano, roda a Magia Determinística do Roleplay!
+        // 🎭 A MÁGICA DETERMINÍSTICA AGORA É PARA TODOS (HUMANOS E IA)
         const cenarios = [
             { t: "No restaurante, a comida chegou fria e atrasada.", p1: "Cliente Faminto", p2: "Empregado de Mesa" },
             { t: "Entrevista de emprego para uma vaga na área de tecnologia.", p1: "Candidato Nervoso", p2: "Entrevistador Frio" },
@@ -506,6 +490,7 @@ Workspace.Arena = {
     escolherPapel: async (numeroPapel) => {
         const cenario = Workspace.Arena.cenarioAtual;
         const meuPapel = numeroPapel === 1 ? cenario.p1 : cenario.p2;
+        const papelRestante = numeroPapel === 1 ? cenario.p2 : cenario.p1; // 🚀 Calcula o que sobrou para a IA
 
         const btn1 = document.getElementById('ws-btn-papel-1');
         const btn2 = document.getElementById('ws-btn-papel-2');
@@ -528,13 +513,14 @@ Workspace.Arena = {
         status.innerText = 'A aguardar que o oponente escolha... ⏳';
         status.style.color = '#f59e0b';
 
-        // 3. Guarda o papel na memória (mas o jogo não arranca aqui!)
+        // 3. Guarda o papel na memória
         Workspace.Arena.papelAtual = meuPapel;
 
         try {
             await Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/escolher-papel`, 'POST', {
                 alunoId: Workspace.usuario.id,
-                papelEscolhido: meuPapel
+                papelEscolhido: meuPapel,
+                papelRestante: papelRestante // 🚀 Envia o papel sobrante para o Backend!
             });
         } catch(e) {
             status.style.color = '#ef4444'; status.innerText = 'Erro de comunicação. Tente novamente.';
@@ -979,7 +965,20 @@ Workspace.Arena = {
             });
         }
 
-        // 🚀 O titulo foi ajustado com clamp(20px, 5vw, 32px) para não cortar em telemóveis!
+        // 🚀 Lógica Condicional dos Botões (AGORA FORA DO HTML)
+        let botoesFinais = '';
+        if (Workspace.Arena.oponenteNome.includes('Mestre da Guilda')) {
+            botoesFinais = `
+                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="background: #3b82f6; color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Concluir Treino</button>
+            `;
+        } else {
+            botoesFinais = `
+                <button onclick="Workspace.Arena.compartilharEDesafiar('${window.Workspace.escapeHTML ? Workspace.escapeHTML(oponenteNomeParaFeed) : oponenteNomeParaFeed}', '${meuCristalParaFeed}')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">📢 Partilhar e Desafiar</button>
+                <button onclick="Workspace.Arena.destruirPainelBatalha()" style="background: #3b82f6; color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Recolher Cristais e Voltar</button>
+            `;
+        }
+
+        // 🚀 A injeção final do HTML perfeitamente formatada
         painel.innerHTML = `
             ${estiloCristais}
             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; padding: 20px; text-align: center; background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%); animation: fadeIn 0.8s ease; overflow-y: auto;">
@@ -991,11 +990,8 @@ Workspace.Arena = {
                     ${htmlJogadores}
                 </div>
                 
-                <!-- 🚀 Os Botões (Partilhar e Voltar) -->
                 <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap; margin-top: 40px; width: 100%;">
-                    <button onclick="Workspace.Arena.compartilharEDesafiar('${window.Workspace.escapeHTML ? Workspace.escapeHTML(oponenteNomeParaFeed) : oponenteNomeParaFeed}', '${meuCristalParaFeed}')" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(16, 185, 129, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">📢 Partilhar e Desafiar</button>
-                    
-                    <button onclick="Workspace.Arena.destruirPainelBatalha()" style="background: #3b82f6; color: white; border: none; padding: 16px 30px; border-radius: 15px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; box-shadow: 0 10px 25px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Recolher Cristais e Voltar</button>
+                    ${botoesFinais}
                 </div>
             </div>
         `;
