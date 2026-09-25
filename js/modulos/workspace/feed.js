@@ -2269,7 +2269,17 @@ Workspace.Feed = {
         }
     },
 
-   gerarHTMLDiaMusical: (dia) => {
+   // 🚀 O RÁDIO NATIVO: Lê os textos em inglês usando a IA do Navegador
+    falarTextoIngles: (texto) => {
+        if (!('speechSynthesis' in window)) return;
+        window.speechSynthesis.cancel(); // Para qualquer áudio anterior para não sobrepor
+        const utterance = new SpeechSynthesisUtterance(texto);
+        utterance.lang = 'en-US'; // Sotaque Americano (Pode mudar para en-GB para Britânico)
+        utterance.rate = 0.85; // Ligeiramente mais lento para o aluno conseguir entender a fonética
+        window.speechSynthesis.speak(utterance);
+    },
+
+    gerarHTMLDiaMusical: (dia) => {
         const idAreaConstrucao = `area-construcao-${dia.dia}`;
         const idBancoPalavras = `banco-palavras-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
@@ -2338,9 +2348,13 @@ Workspace.Feed = {
         `;
     },
 
-    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
+    // 🚀 A MÁGICA VISUAL E SONORA: Mover a palavra entre o Banco e a Área de Construção
+    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId, palavra) => {
         const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
         if (btnVerificar && btnVerificar.disabled) return;
+
+        // BÓNUS: Quando clica no bloco, o sistema diz a palavra isolada!
+        Workspace.Feed.falarTextoIngles(palavra);
 
         const areaConstrucao = document.getElementById(idAreaConstrucao);
         const bancoPalavras = document.getElementById(idBancoPalavras);
@@ -2369,19 +2383,16 @@ Workspace.Feed = {
         areaConstrucao.style.borderColor = '#3f3f46';
     },
 
-   verificarFraseMusical: (idAreaConstrucao, fraseOcultaBase64, idFeedback, diaId) => {
+    verificarFraseMusical: (idAreaConstrucao, fraseOcultaBase64, idFeedback, diaId) => {
         const areaConstrucao = document.getElementById(idAreaConstrucao);
         const feedback = document.getElementById(idFeedback);
         const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
         const btnMic = document.getElementById(`btn-mic-dia-${diaId}`);
-        // 🚀 1. Capturamos a div do Banco de Palavras que vai ficar vazia
         const bancoPalavras = document.getElementById(`banco-palavras-${diaId}`); 
 
         if (!areaConstrucao || !feedback) return;
 
-        // 🚀 2. Descodificamos a frase original mantendo as letras maiúsculas e a pontuação perfeitas para o ecrã
         const fraseFormatada = decodeURIComponent(atob(fraseOcultaBase64)).trim();
-        // Transformamos numa versão minúscula e sem pontuação apenas para a matemática da validação
         const fraseOriginal = fraseFormatada.replace(/[.,!?;:]/g, '').toLowerCase();
 
         const botoesConstrucao = Array.from(areaConstrucao.children);
@@ -2389,7 +2400,7 @@ Workspace.Feed = {
 
         if (botoesConstrucao.length === 0) {
             feedback.style.color = '#f59e0b';
-            feedback.innerHTML = '⚠️ Monte a frase clicando nas palavras abaixo!';
+            feedback.innerHTML = '⚠️ Ouça a frase e clique nas palavras para montar a estrutura!';
             return;
         }
 
@@ -2397,11 +2408,15 @@ Workspace.Feed = {
             areaConstrucao.style.borderColor = '#10b981';
             areaConstrucao.style.background = 'rgba(16, 185, 129, 0.1)';
             feedback.style.color = '#10b981';
-            feedback.innerHTML = '✅ Brilhante! A estrutura está perfeita.';
+            feedback.innerHTML = '✅ Brilhante! A gramática está perfeita.';
 
             botoesConstrucao.forEach(b => { b.style.cursor = 'default'; b.style.pointerEvents = 'none'; });
-            if (btnVerificar) btnVerificar.style.display = 'none';
+            if (btnVerificar) {
+                btnVerificar.disabled = true;
+                btnVerificar.style.display = 'none';
+            }
 
+            // 🚀 LIBERTA A FASE 3: O Treino de Pronúncia!
             if (btnMic) {
                 btnMic.style.display = 'flex';
                 btnMic.style.animation = 'popUp 0.5s ease';
@@ -2410,7 +2425,6 @@ Workspace.Feed = {
             areaConstrucao.style.transform = 'scale(1.02)';
             setTimeout(() => areaConstrucao.style.transform = 'scale(1)', 200);
 
-            // 🚀 3. A MAGIA VISUAL: Transforma a caixa vazia num belo painel de leitura
             if (bancoPalavras) {
                 bancoPalavras.innerHTML = `
                     <div style="width: 100%; text-align: center; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
@@ -2418,7 +2432,6 @@ Workspace.Feed = {
                         <div style="color: #fff; font-size: 19px; font-weight: 800; font-style: italic; letter-spacing: 0.5px; text-shadow: 0 2px 4px rgba(0,0,0,0.5);">"${fraseFormatada}"</div>
                     </div>
                 `;
-                // Aplica um design de destaque musical ao fundo
                 bancoPalavras.style.background = 'linear-gradient(135deg, rgba(236, 72, 153, 0.15), rgba(190, 24, 93, 0.2))';
                 bancoPalavras.style.border = '1px solid rgba(244, 114, 182, 0.4)';
                 bancoPalavras.style.boxShadow = '0 10px 25px rgba(236, 72, 153, 0.2)';
@@ -2429,7 +2442,7 @@ Workspace.Feed = {
         } else {
             areaConstrucao.style.borderColor = '#ef4444';
             feedback.style.color = '#ef4444';
-            feedback.innerHTML = '❌ Não é bem essa a ordem... Tente novamente!';
+            feedback.innerHTML = '❌ Não é bem essa a ordem... Ouça a frase novamente!';
 
             areaConstrucao.style.transform = 'translateX(-5px)';
             setTimeout(() => areaConstrucao.style.transform = 'translateX(5px)', 50);
