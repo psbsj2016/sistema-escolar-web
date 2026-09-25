@@ -455,13 +455,22 @@ buscarNotificacoes: async () => {
                                 });
                             }
 
-                            // 3. EXERCÍCIOS / TAREFAS
-                            else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio') {
+                           // 3. EXERCÍCIOS E ACESSOS ÀS SESSÕES (Professor)
+                            else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio' || novaNoti.origem === 'acesso_online') {
                                 const ehProfessor = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
+                                
+                                let subtitulo = "Novo Exercício 📝";
+                                let msgCorpo = `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.`;
+                                
+                                if (ehProfessor) {
+                                    subtitulo = novaNoti.origem === 'acesso_online' ? "Presença Registada 🖥️" : "Sala de Acessos 🖥️";
+                                    msgCorpo = `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}`;
+                                }
+
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
-                                    subtitulo: ehProfessor ? "Sala de Acessos 🖥️" : "Novo Exercício 📝",
-                                    mensagemCorpo: ehProfessor ? `O aluno(a) <strong>${novaNoti.remetenteNome}</strong> ${novaNoti.mensagem}` : `Há um novo exercício disponível para você: <strong>"${titulo}"</strong>.`
+                                    subtitulo: subtitulo,
+                                    mensagemCorpo: msgCorpo
                                 }, 'tarefa', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
@@ -772,7 +781,7 @@ atualizarInterface: () => {
                     // 🚀 Leva o Aluno para a lista de aulas online
                     Workspace.navegarPara('avaliacoes_online');
                     
-                    // 🚀 A MÁGICA DO ALUNO: Rola a página até ao cartão exato da sessão!
+                    // 🚀 A MÁGICA DO ALUNO: Rola a página até ao cartão exato da sessão usando a ID que injetou!
                     setTimeout(() => {
                         const cartaoSessao = document.getElementById(`sessao-online-${origemId}`);
                         if (cartaoSessao) {
