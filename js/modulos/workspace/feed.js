@@ -2269,28 +2269,32 @@ Workspace.Feed = {
         }
     },
 
-    gerarHTMLDiaMusical: (dia) => {
+   gerarHTMLDiaMusical: (dia) => {
         const idAreaConstrucao = `area-construcao-${dia.dia}`;
         const idBancoPalavras = `banco-palavras-${dia.dia}`;
         const idFeedback = `feedback-musica-dia-${dia.dia}`;
         
-        const fraseOriginalBase = dia.fraseOriginal || dia.fraseOculta || dia.palavraEscondida || 'System Error Missing Sentence';
+        // 🚀 O BARALHADOR SINTÁTICO: Separa a frase original em palavras e baralha
+        const fraseLimpaParaJs = dia.fraseOriginal.replace(/(['"\\/])/g, '\\$1'); // Preserva a pontuação
+        const palavrasOriginais = dia.fraseOriginal.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
         
-        const fraseLimpaParaJs = fraseOriginalBase.replace(/(['"\\/])/g, '\\$1'); 
-        const palavrasOriginais = fraseOriginalBase.replace(/[.,!?;:]/g, '').split(/\s+/).filter(p => p.trim().length > 0);
-        
+        // Algoritmo Fisher-Yates para baralhar as palavras na perfeição
         const palavrasBaralhadas = [...palavrasOriginais];
         for (let i = palavrasBaralhadas.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [palavrasBaralhadas[i], palavrasBaralhadas[j]] = [palavrasBaralhadas[j], palavrasBaralhadas[i]];
         }
 
+        // 🚀 CONSTRUTOR DOS BOTÕES DO BANCO (WORD BANK)
         let htmlBotoesBanco = '';
         palavrasBaralhadas.forEach((palavra, indice) => {
-            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${Workspace.Feed.limparTexto(palavra)}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${Workspace.Feed.limparTexto(palavra)}</button>`;
+            const palavraLimpa = Workspace.Feed.limparTexto(palavra);
+            // O botão guarda a palavra e chama a função de movimento + áudio!
+            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${palavraLimpa}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia}, '${palavraLimpa}')" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${palavraLimpa}</button>`;
         });
 
-        const fraseOcultaSegura = btoa(encodeURIComponent(fraseOriginalBase));
+        // Criptografamos a frase original em Base64 para que o HTML não parta com aspas ou pontuação
+        const fraseOcultaSegura = btoa(encodeURIComponent(dia.fraseOriginal));
 
         return `
             <div style="background: #27272a; border-left: 5px solid #ec4899; padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.3); animation: fadeIn 0.5s ease;">
@@ -2299,31 +2303,36 @@ Workspace.Feed = {
                     <span style="background: rgba(236, 72, 153, 0.2); color: #f9a8d4; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;">Sentence Unscramble 🧩</span>
                 </div>
                 
-                <div style="background: rgba(0,0,0,0.3); min-height: 60px; border-radius: 12px; border: 2px dashed #3f3f46; margin-bottom: 15px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center;" id="${idAreaConstrucao}">
+                <!-- 🚀 O NOVO RÁDIO DIDÁTICO PARA LISTENING -->
+                <div style="text-align: center; margin-bottom: 25px;">
+                    <button onclick="Workspace.Feed.falarTextoIngles('${fraseLimpaParaJs}')" style="background: linear-gradient(135deg, #3b82f6, #8b5cf6); color: white; border: none; padding: 12px 24px; border-radius: 30px; font-weight: bold; font-size: 15px; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+                        <span style="font-size: 18px;">🔊</span> Ouvir a Frase
+                    </button>
                 </div>
 
+                <!-- 🚀 ÁREA DE CONSTRUÇÃO (Drop Zone) -->
+                <div style="background: rgba(0,0,0,0.3); min-height: 60px; border-radius: 12px; border: 2px dashed #3f3f46; margin-bottom: 15px; padding: 10px; display: flex; flex-wrap: wrap; gap: 8px; align-items: center; justify-content: center;" id="${idAreaConstrucao}">
+                    <!-- Os tijolos voam para aqui -->
+                </div>
+
+                <!-- 🚀 BANCO DE PALAVRAS (Word Bank) -->
                 <div style="background: rgba(0,0,0,0.1); border-radius: 12px; padding: 15px; display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-bottom: 20px; min-height: 50px;" id="${idBancoPalavras}">
                     ${htmlBotoesBanco}
                 </div>
                 
                 <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px; border-bottom: 1px dashed #3f3f46; padding-bottom: 15px; flex-wrap: wrap;">
                     <button id="btn-verificar-musica-${dia.dia}" onclick="Workspace.Feed.verificarFraseMusical('${idAreaConstrucao}', '${fraseOcultaSegura}', '${idFeedback}', ${dia.dia})" style="background: #ec4899; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 10px rgba(236, 72, 153, 0.3);" onmouseover="this.style.background='#be185d'" onmouseout="this.style.background='#ec4899'">🧩 Verificar Frase</button>
-                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: none; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Treinar Pronúncia</button>
+                    <button id="btn-mic-dia-${dia.dia}" onclick="Workspace.Feed.treinarPronunciaMusical(${dia.dia}, '${fraseLimpaParaJs}')" style="background: #8b5cf6; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; display: none; align-items: center; gap: 5px; box-shadow: 0 4px 10px rgba(139, 92, 246, 0.3);" onmouseover="this.style.background='#7c3aed'" onmouseout="this.style.background='#8b5cf6'"><span style="font-size: 16px;">🎙️</span> Agora, cante a frase!</button>
                     <span id="${idFeedback}" style="font-size: 15px; font-weight: bold; flex: 1;"></span>
                 </div>
 
                 <div id="feedback-mic-dia-${dia.dia}" style="display: none; margin-bottom: 15px; padding: 12px; border-radius: 8px; font-size: 14px; background: rgba(139, 92, 246, 0.1); border: 1px solid rgba(139, 92, 246, 0.3); color: #ddd6fe;"></div>
 
-                <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">Tradução: ${Workspace.Feed.formatarIA(dia.traducao)}</div>
+                <div style="font-size: 15px; color: #a1a1aa; margin-bottom: 15px;">💡 Dica (Tradução): ${Workspace.Feed.formatarIA(dia.traducao)}</div>
                 
                 <div style="margin-bottom: 15px;">
                     <strong style="color: #ec4899; font-size: 14px;">👩‍🏫 Foco da IA:</strong>
                     <div style="color: #d4d4d8; font-size: 15px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.explicacao)}</div>
-                </div>
-                
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 8px; border: 1px solid #3f3f46;">
-                    <strong style="color: #fb7185; font-size: 14px;">🔥 O Seu Desafio:</strong>
-                    <div style="color: #e4e4e7; font-size: 14px; margin-top: 5px;">${Workspace.Feed.formatarIA(dia.desafio)}</div>
                 </div>
             </div>
         `;

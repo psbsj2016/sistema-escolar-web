@@ -759,11 +759,29 @@ atualizarInterface: () => {
         else if (origem === 'online' || origem === 'online_edit' || origem === 'acesso_online' || origem === 'sessao_vivo') {
             if (window.Workspace && Workspace.navegarPara) {
                 if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
-                    // 🚀 ALVO CERTO: Leva o Professor diretamente para o "Painel do Professor: Sala de Acessos"
+                    // 🚀 Leva o Professor para a aba de Gestão de Encontros
                     Workspace.navegarPara('encontros_prof');
+                    
+                    // 🚀 A MÁGICA: Aguarda meio segundo e abre o painel preto de Gestão de Acessos por cima!
+                    setTimeout(() => {
+                        if (Workspace.Avaliacoes && Workspace.Avaliacoes.abrirModalAcessos) {
+                            Workspace.Avaliacoes.abrirModalAcessos(origemId, 'global');
+                        }
+                    }, 500);
                 } else {
-                    // Leva o Aluno para a lista de aulas online
+                    // 🚀 Leva o Aluno para a lista de aulas online
                     Workspace.navegarPara('avaliacoes_online');
+                    
+                    // 🚀 A MÁGICA DO ALUNO: Rola a página até ao cartão exato da sessão!
+                    setTimeout(() => {
+                        const cartaoSessao = document.getElementById(`sessao-online-${origemId}`);
+                        if (cartaoSessao) {
+                            cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                            cartaoSessao.classList.remove('ws-highlight-magic');
+                            void cartaoSessao.offsetWidth; // Força reinício da animação
+                            cartaoSessao.classList.add('ws-highlight-magic');
+                        }
+                    }, 600);
                 }
             }
         }
