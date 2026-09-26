@@ -894,11 +894,30 @@ Object.assign(Workspace, {
         finally { btn.innerText = txt; btn.disabled = false; }
     },
 
-  logout: async (forcado = false) => {
+  // ============================================================================
+    // 🚪 SISTEMA DE LOGOUT E "AMNÉSIA" DE NAVEGAÇÃO SEGURA
+    // ============================================================================
+    logout: async (forcado = false) => {
+        // 1. Desliga o radar de notificações para poupar internet
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
+        
+        // 2. Apaga o utilizador logado
         localStorage.removeItem('ws_usuario_logado');
         
-        if(forcado) {
+        // 3. A NOVA MÁGICA: A "Amnésia Seletiva" para computadores partilhados
+        // Listamos aqui todas as "pegadas" de navegação que o sistema guarda
+        const chavesDeNavegacao = [
+            'ws_ultima_tela_global', 
+            'ws_avaliacoes_prof_subtela',
+            'ws_bau_aba_ativa',
+            'ws_aba_encontros_arquivo'
+        ];
+        
+        // Varremos a lista e apagamos cada uma da memória do navegador
+        chavesDeNavegacao.forEach(chave => localStorage.removeItem(chave));
+        
+        // 4. Lógica visual e redirecionamento
+        if (forcado) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
@@ -914,7 +933,7 @@ Object.assign(Workspace, {
         } else {
             window.location.reload(); 
         }
-    }, // <--- 🚀 A VÍRGULA MÁGICA QUE FALTAVA ESTÁ AQUI!
+    }, // <--- 🚀 Fim da função logout
 
    // ============================================================================
     // 🧰 MOTOR DO BAÚ DAS MEMÓRIAS (Alarme Gigante, Notas Seguras e Integração com Sininho Global)
