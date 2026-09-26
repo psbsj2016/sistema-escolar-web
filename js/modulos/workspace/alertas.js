@@ -768,26 +768,47 @@ atualizarInterface: () => {
         else if (origem === 'online' || origem === 'online_edit' || origem === 'acesso_online' || origem === 'sessao_vivo') {
             if (window.Workspace && Workspace.navegarPara) {
                 if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
-                    // 🚀 Leva o Professor para o Hub de Encontros
+                    // 1. Leva o Professor para o Hub de Encontros
                     Workspace.navegarPara('encontros_prof');
                     
-                    // 🚀 A CORREÇÃO: Aguarda meio segundo e abre apenas a Lista de Sessões Ativas
+                    // 2. Aguarda e abre a Lista de Sessões Ativas
                     setTimeout(() => {
                         if (Workspace.Avaliacoes && Workspace.Avaliacoes.abrirGerenciador) {
                             Workspace.Avaliacoes.abrirGerenciador();
+                            
+                            // 🚀 3. O RADAR DO EFEITO VISUAL (PISCAR AMARELO)
+                            // Fica a procurar o cartão enquanto a internet carrega a lista
+                            let tentativas = 0;
+                            const radarPisca = setInterval(() => {
+                                const containerProf = document.getElementById('ws-prof-gerir-lista');
+                                // Encontra o cartão exato da sessão independentemente do prefixo
+                                const cartaoSessao = containerProf ? containerProf.querySelector(`[id$="${origemId}"]`) : null;
+                                
+                                if (cartaoSessao) {
+                                    clearInterval(radarPisca); // Encontrou! Para o radar.
+                                    
+                                    // Rola a página até ao cartão e faz a magia do amarelo
+                                    cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    cartaoSessao.classList.remove('ws-highlight-magic');
+                                    void cartaoSessao.offsetWidth; // Força o reinício da animação CSS
+                                    cartaoSessao.classList.add('ws-highlight-magic');
+                                }
+                                
+                                tentativas++;
+                                if (tentativas > 20) clearInterval(radarPisca); // Desiste após 4 segundos se a internet falhar
+                            }, 200);
                         }
                     }, 500);
                 } else {
-                    // 🚀 Leva o Aluno para a lista de aulas online
+                    // 🚀 Lógica do Aluno (Mantida intacta)
                     Workspace.navegarPara('avaliacoes_online');
                     
-                    // 🚀 A MÁGICA DO ALUNO: Rola a página até ao cartão exato da sessão usando a ID
                     setTimeout(() => {
                         const cartaoSessao = document.getElementById(`sessao-online-${origemId}`);
                         if (cartaoSessao) {
                             cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             cartaoSessao.classList.remove('ws-highlight-magic');
-                            void cartaoSessao.offsetWidth; // Força reinício da animação
+                            void cartaoSessao.offsetWidth;
                             cartaoSessao.classList.add('ws-highlight-magic');
                         }
                     }, 600);
