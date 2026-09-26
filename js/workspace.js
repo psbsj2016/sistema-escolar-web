@@ -1534,9 +1534,10 @@ Object.assign(Workspace, {
     // ============================================================================
     // 🚀 MOTOR DE COMANDO UNIVERSAL (SPOTLIGHT / CTRL + K)
     // ============================================================================
-    ComandoMágico: {
+   ComandoMágico: {
         aberto: false,
         indiceFocado: 0,
+        timerDebounce: null, // ⏳ Guarda o relógio do nosso amortecedor
         atalhos: [
             { id: 'feed', titulo: 'Página Inicial (Feed)', icone: '🏠', tela: 'feed' },
             { id: 'perfil', titulo: 'Meu Perfil', icone: '🙍', tela: 'perfil' },
@@ -1563,10 +1564,21 @@ Object.assign(Workspace, {
                 }
             });
 
-            // Configura a caixa de pesquisa
+           // ============================================================================
+            // 🚀 OTIMIZAÇÃO (DEBOUNCE): Configura a caixa de pesquisa com Amortecedor
+            // ============================================================================
             const input = document.getElementById('ws-spotlight-input');
             if (input) {
-                input.addEventListener('input', (e) => Workspace.ComandoMágico.filtrar(e.target.value));
+                input.addEventListener('input', (e) => {
+                    // 1. Cancela o "pedido" anterior se o utilizador ainda estiver a digitar
+                    clearTimeout(Workspace.ComandoMágico.timerDebounce);
+                    
+                    // 2. Cria um novo "pedido" com um atraso de 250 milissegundos
+                    Workspace.ComandoMágico.timerDebounce = setTimeout(() => {
+                        Workspace.ComandoMágico.filtrar(e.target.value);
+                    }, 250);
+                });
+                
                 input.addEventListener('keydown', Workspace.ComandoMágico.navegarTeclado);
             }
 
