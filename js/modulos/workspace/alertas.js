@@ -771,41 +771,39 @@ atualizarInterface: () => {
                     // 1. Leva o Professor para a área de Encontros
                     Workspace.navegarPara('encontros_prof');
                     
-                    // 2. Aguarda a transição e abre a Lista de Sessões Ativas (Gerenciador)
+                    // 2. Chama a função que vai carregar os dados na Base de Dados
                     setTimeout(() => {
                         if (Workspace.Avaliacoes && Workspace.Avaliacoes.abrirGerenciador) {
                             Workspace.Avaliacoes.abrirGerenciador();
                             
-                            // 🚀 3. O RADAR DE PRECISÃO (Procura flexível pelo ID)
+                            // 🚀 3. O RADAR DE LONGA DURAÇÃO (Até 20 segundos de paciência)
                             let tentativas = 0;
                             const radarPisca = setInterval(() => {
-                                // O Seletor Coringa: *= significa "que contém esta parte de texto"
                                 const cartaoSessao = document.querySelector(`[id*="${origemId}"]`);
                                 
-                                // Verifica se encontrou E se o cartão está realmente visível (offsetParent !== null)
+                                // Se encontrou o cartão E o "Carregando Painel..." já desapareceu
                                 if (cartaoSessao && cartaoSessao.offsetParent !== null) {
-                                    clearInterval(radarPisca); // Desliga o radar pois já encontrou o alvo
+                                    clearInterval(radarPisca); // Missão cumprida, desliga o radar!
                                     
-                                    // Desliza a tela suavemente até o cartão
+                                    // Desliza suavemente até o cartão
                                     cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                                    
-                                    // O Truque do Pintor: Limpa a classe se já existir
                                     cartaoSessao.classList.remove('ws-highlight-magic');
                                     
-                                    // Um micro-atraso (50ms) permite ao navegador "respirar" e redesenhar antes de aplicar o amarelo
+                                    // Pequeno atraso para o navegador aplicar a pintura amarela
                                     setTimeout(() => {
                                         cartaoSessao.classList.add('ws-highlight-magic');
-                                    }, 50);
+                                    }, 100);
                                 }
                                 
                                 tentativas++;
-                                // Se a internet falhar e demorar mais de 5 segundos, desiste para poupar memória
-                                if (tentativas > 25) clearInterval(radarPisca); 
-                            }, 200);
+                                // 80 tentativas a cada 250ms = 20 segundos de espera máxima!
+                                // Garante que o radar não fica a correr para sempre se houver um erro.
+                                if (tentativas > 80) clearInterval(radarPisca); 
+                            }, 250);
                         }
                     }, 500);
                 } else {
-                    // 🚀 Lógica do Aluno (Mantida intacta e com o truque do pintor aplicado)
+                    // 🚀 Lógica do Aluno (Mantida intacta)
                     Workspace.navegarPara('avaliacoes_online');
                     
                     setTimeout(() => {
