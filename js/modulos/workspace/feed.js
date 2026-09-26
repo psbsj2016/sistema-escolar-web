@@ -2299,8 +2299,8 @@ Workspace.Feed = {
         let htmlBotoesBanco = '';
         palavrasBaralhadas.forEach((palavra, indice) => {
             const palavraLimpa = Workspace.Feed.limparTexto(palavra);
-            // O botão guarda a palavra e chama a função de movimento + áudio!
-            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${palavraLimpa}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia}, '${palavraLimpa}')" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${palavraLimpa}</button>`;
+            // 🚀 CORREÇÃO CIRÚRGICA: Retirámos a palavra do 'onclick' para evitar quebra com apóstrofos (ex: don't)
+            htmlBotoesBanco += `<button id="word-btn-${dia.dia}-${indice}" data-palavra="${palavraLimpa}" onclick="Workspace.Feed.moverPalavraMusical(this, '${idAreaConstrucao}', '${idBancoPalavras}', ${dia.dia})" style="background: rgba(236, 72, 153, 0.2); color: #fdf2f8; border: 1px solid #ec4899; padding: 10px 16px; border-radius: 8px; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);" onmouseover="this.style.background='rgba(236, 72, 153, 0.4)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.2)'">${palavraLimpa}</button>`;
         });
 
         // Criptografamos a frase original em Base64 para que o HTML não parta com aspas ou pontuação
@@ -2349,9 +2349,12 @@ Workspace.Feed = {
     },
 
     // 🚀 A MÁGICA VISUAL E SONORA: Mover a palavra entre o Banco e a Área de Construção
-    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId, palavra) => {
+    moverPalavraMusical: (botao, idAreaConstrucao, idBancoPalavras, diaId) => {
         const btnVerificar = document.getElementById(`btn-verificar-musica-${diaId}`);
         if (btnVerificar && btnVerificar.disabled) return;
+
+        // 🚀 O TRUQUE DE MESTRE: Lemos a palavra diretamente do botão de forma 100% segura!
+        const palavra = botao.getAttribute('data-palavra') || '';
 
         // BÓNUS: Quando clica no bloco, o sistema diz a palavra isolada!
         Workspace.Feed.falarTextoIngles(palavra);
