@@ -68,9 +68,59 @@ Object.assign(Workspace.Avaliacoes, {
  init: () => {
         console.log("📝 Motor de Avaliações e Frequência Inteligente Ativado.");
         Workspace.Avaliacoes.injetarCSSAvaliacoes(); // 🚀 Injeta a nova barra de rolagem
+        
         if (Workspace.usuario && Workspace.usuario.tipo === 'Aluno') {
             Workspace.Avaliacoes.carregarLobbies();
             Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
+        } else if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
+            // 🚀 Acorda o "Detetive de Memória" para o Professor
+            Workspace.Avaliacoes.restaurarTelaProfessor();
+            // 🚀 Liga o radar também para o professor para atualizar números em tempo real
+            Workspace.Avaliacoes.iniciarRadarAvaliacoes(); 
+        }
+    },
+
+    // ========================================================================
+    // 🧠 MEMÓRIA FOTOGRÁFICA DO PROFESSOR (Restauração de Tela)
+    // ========================================================================
+    restaurarTelaProfessor: () => {
+        // 1. Pergunta ao navegador: "Onde é que o professor estava?"
+        const telaSalva = localStorage.getItem('ws_avaliacoes_prof_subtela');
+        
+        if (!telaSalva || telaSalva === 'menu') {
+            if (Workspace.Avaliacoes.voltarMenuProf) Workspace.Avaliacoes.voltarMenuProf(true);
+            return;
+        }
+
+        // 2. O Roteador Automático: Executa a função correspondente de forma silenciosa (restauro = true)
+        switch (telaSalva) {
+            case 'submenu_criar':
+                if (Workspace.Avaliacoes.mostrarSubmenuCriar) Workspace.Avaliacoes.mostrarSubmenuCriar(true);
+                break;
+            case 'submenu_gestao':
+                if (Workspace.Avaliacoes.mostrarSubmenuGestao) Workspace.Avaliacoes.mostrarSubmenuGestao(true);
+                break;
+            case 'nova_escrita':
+                if (Workspace.Avaliacoes.abrirNovaEscrita) Workspace.Avaliacoes.abrirNovaEscrita(true);
+                break;
+            case 'nova_oral':
+                if (Workspace.Avaliacoes.abrirNovaOral) Workspace.Avaliacoes.abrirNovaOral(true);
+                break;
+            case 'nova_online':
+                if (Workspace.Avaliacoes.abrirNovaOnline) Workspace.Avaliacoes.abrirNovaOnline(true);
+                break;
+            case 'gerir':
+                // Lê também se o professor estava nas Ativas ou nas Arquivadas
+                const abaGestao = localStorage.getItem('ws_aba_encontros_arquivo') || 'ativas';
+                Workspace.Avaliacoes.abaEncontrosArquivo = abaGestao;
+                if (Workspace.Avaliacoes.abrirGerenciador) Workspace.Avaliacoes.abrirGerenciador(true);
+                break;
+            case 'recebidas':
+                if (Workspace.Avaliacoes.abrirRecebidas) Workspace.Avaliacoes.abrirRecebidas(true);
+                break;
+            default:
+                if (Workspace.Avaliacoes.voltarMenuProf) Workspace.Avaliacoes.voltarMenuProf(true);
+                break;
         }
     },
 
