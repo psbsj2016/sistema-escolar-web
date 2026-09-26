@@ -768,39 +768,44 @@ atualizarInterface: () => {
         else if (origem === 'online' || origem === 'online_edit' || origem === 'acesso_online' || origem === 'sessao_vivo') {
             if (window.Workspace && Workspace.navegarPara) {
                 if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
-                    // 1. Leva o Professor para o Hub de Encontros
+                    // 1. Leva o Professor para a área de Encontros
                     Workspace.navegarPara('encontros_prof');
                     
-                    // 2. Aguarda e abre a Lista de Sessões Ativas
+                    // 2. Aguarda a transição e abre a Lista de Sessões Ativas (Gerenciador)
                     setTimeout(() => {
                         if (Workspace.Avaliacoes && Workspace.Avaliacoes.abrirGerenciador) {
                             Workspace.Avaliacoes.abrirGerenciador();
                             
-                            // 🚀 3. O RADAR DO EFEITO VISUAL (PISCAR AMARELO)
-                            // Fica a procurar o cartão enquanto a internet carrega a lista
+                            // 🚀 3. O RADAR DE PRECISÃO (Procura flexível pelo ID)
                             let tentativas = 0;
                             const radarPisca = setInterval(() => {
-                                const containerProf = document.getElementById('ws-prof-gerir-lista');
-                                // Encontra o cartão exato da sessão independentemente do prefixo
-                                const cartaoSessao = containerProf ? containerProf.querySelector(`[id$="${origemId}"]`) : null;
+                                // O Seletor Coringa: *= significa "que contém esta parte de texto"
+                                const cartaoSessao = document.querySelector(`[id*="${origemId}"]`);
                                 
-                                if (cartaoSessao) {
-                                    clearInterval(radarPisca); // Encontrou! Para o radar.
+                                // Verifica se encontrou E se o cartão está realmente visível (offsetParent !== null)
+                                if (cartaoSessao && cartaoSessao.offsetParent !== null) {
+                                    clearInterval(radarPisca); // Desliga o radar pois já encontrou o alvo
                                     
-                                    // Rola a página até ao cartão e faz a magia do amarelo
+                                    // Desliza a tela suavemente até o cartão
                                     cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                                    
+                                    // O Truque do Pintor: Limpa a classe se já existir
                                     cartaoSessao.classList.remove('ws-highlight-magic');
-                                    void cartaoSessao.offsetWidth; // Força o reinício da animação CSS
-                                    cartaoSessao.classList.add('ws-highlight-magic');
+                                    
+                                    // Um micro-atraso (50ms) permite ao navegador "respirar" e redesenhar antes de aplicar o amarelo
+                                    setTimeout(() => {
+                                        cartaoSessao.classList.add('ws-highlight-magic');
+                                    }, 50);
                                 }
                                 
                                 tentativas++;
-                                if (tentativas > 20) clearInterval(radarPisca); // Desiste após 4 segundos se a internet falhar
+                                // Se a internet falhar e demorar mais de 5 segundos, desiste para poupar memória
+                                if (tentativas > 25) clearInterval(radarPisca); 
                             }, 200);
                         }
                     }, 500);
                 } else {
-                    // 🚀 Lógica do Aluno (Mantida intacta)
+                    // 🚀 Lógica do Aluno (Mantida intacta e com o truque do pintor aplicado)
                     Workspace.navegarPara('avaliacoes_online');
                     
                     setTimeout(() => {
@@ -808,8 +813,9 @@ atualizarInterface: () => {
                         if (cartaoSessao) {
                             cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
                             cartaoSessao.classList.remove('ws-highlight-magic');
-                            void cartaoSessao.offsetWidth;
-                            cartaoSessao.classList.add('ws-highlight-magic');
+                            setTimeout(() => {
+                                cartaoSessao.classList.add('ws-highlight-magic');
+                            }, 50);
                         }
                     }, 600);
                 }
