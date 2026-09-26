@@ -300,11 +300,11 @@ Object.assign(Workspace, {
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
         if (Workspace.Upload) Workspace.Upload.init();
 
-        // 🚀 PASSO 2: LIGA AS LUZES (Navega para a tela antes de pedir os dados pesados)
-        let telaDestino = 'feed'; 
+        // 🚀 PASSO 2: LIGA AS LUZES E LÊ A MEMÓRIA GLOBAL
+        let telaDestino = localStorage.getItem('ws_ultima_tela_global') || 'feed'; 
         let postAlvo = null;      
         
-        if (window.location.hash) {
+        if (window.location.hash && window.location.hash !== '#') {
             if (window.location.hash.includes('post-')) {
                 telaDestino = 'feed'; 
                 postAlvo = window.location.hash.replace('#post-', ''); 
@@ -312,7 +312,7 @@ Object.assign(Workspace, {
                 telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
             }
         }
-        Workspace.navegarPara(telaDestino, true);
+        Workspace.navegarPara(telaDestino, true, true); // O 'true' final avisa o sistema que é o carregamento inicial!
 
         // 🚀 PASSO 3: PUXA OS MÓVEIS (Dados pesados carregados em Background sem o 'await')
         if (Workspace.Feed) Workspace.Feed.init(); 
@@ -359,7 +359,12 @@ Object.assign(Workspace, {
  // ============================================================================
     // 🗺️ O NOVO ROTEADOR INTELIGENTE (Velocidade da Luz & Anti-Amnésia)
     // ============================================================================
-    navegarPara: async (tela, registarNoHistorico = true) => {
+    navegarPara: async (tela, registarNoHistorico = true, isInitialLoad = false) => {
+        
+        // 🚀 Salva o ecrã atual na memória global para resistir ao F5
+        if (!isInitialLoad && tela !== 'perfil') {
+            localStorage.setItem('ws_ultima_tela_global', tela);
+        }
         
         // 🚀 O SILENCIADOR GLOBAL
         if ('speechSynthesis' in window) {
@@ -389,10 +394,15 @@ Object.assign(Workspace, {
         if (tela === 'avaliacoes') tela = Workspace.usuario.tipo === 'Aluno' ? 'avaliacoes_aluno' : 'avaliacoes_prof';
 
         if (tela === 'encontros_prof') {
-            tela = 'avaliacoes_prof';
-            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('encontros');
+            // 🚀 Proteção: Não força o reset da tela se for o F5 (isInitialLoad)
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf && !isInitialLoad) {
+                Workspace.Avaliacoes.setContextoProf('encontros');
+            }
         } else if (tela === 'avaliacoes_prof') {
-            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf) Workspace.Avaliacoes.setContextoProf('avaliacoes');
+            // 🚀 Proteção: Não força o reset da tela se for o F5 (isInitialLoad)
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.setContextoProf && !isInitialLoad) {
+                Workspace.Avaliacoes.setContextoProf('avaliacoes');
+            }
         }
 
        if (tela === 'perfil' && Workspace.usuario) {
@@ -474,6 +484,13 @@ Object.assign(Workspace, {
 
         if (tela === 'tarefas_aluno' && Workspace.Sidebar) Workspace.Sidebar.carregarTarefas();
         if (tela === 'tarefas_prof' && Workspace.Sidebar) Workspace.Sidebar.voltarMenuTarefasProf();
+
+        // 🚀 O TOQUE DE MESTRE: Acorda a memória do professor instantaneamente sem o ecrã piscar!
+        if ((tela === 'avaliacoes_prof' || tela === 'encontros_prof') && isInitialLoad) {
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.restaurarTelaProfessor) {
+                Workspace.Avaliacoes.restaurarTelaProfessor();
+            }
+        }
     },
 
     fazerLogin: async () => {
