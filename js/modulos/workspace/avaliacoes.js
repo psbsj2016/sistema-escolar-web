@@ -1234,7 +1234,7 @@ Object.assign(Workspace.Avaliacoes, {
                     : '<div style="font-size: 12px; color: #999; font-style: italic;">Não houve ausências!</div>';
 
                 return `
-                <div style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
+                <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
                         <div style="flex: 1;">
                             <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">📂 ${a.titulo} (Relatório de Sessão)</h4>
@@ -1285,8 +1285,8 @@ Object.assign(Workspace.Avaliacoes, {
 
                 let btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
 
-                return `
-                <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+               return `
+                <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
                     <div style="display: flex; justify-content: space-between; align-items: flex-start;">
                         <div style="display: flex; gap: 12px; align-items: flex-start;">
                             <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db; margin-top: 5px;">
@@ -2681,7 +2681,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 document.addEventListener('DOMContentLoaded', () => {
     setTimeout(() => {
         if (Workspace.usuario && Workspace.usuario.tipo !== 'Aluno') {
+            // Carrega as turmas da Lousa
             if (Workspace.Avaliacoes.carregarTurmasLousaProf) Workspace.Avaliacoes.carregarTurmasLousaProf();
+            
+            // 🚀 GATILHO DA MEMÓRIA: Chama o detetive assim que a página termina de carregar!
+            if (Workspace.Avaliacoes.restaurarTelaProfessor) {
+                Workspace.Avaliacoes.restaurarTelaProfessor();
+            }
         }
-    }, 1500);
+    }, 1500); // Aguarda o Workspace base carregar (1.5s) e ativa a memória
 });
