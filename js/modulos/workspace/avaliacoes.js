@@ -1014,25 +1014,60 @@ Object.assign(Workspace.Avaliacoes, {
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-   abrirGerenciador: async (restauro = false) => {
+  abrirGerenciador: async (restauro = false) => {
         if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'gerir');
-        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; document.getElementById('ws-prof-menu-encontros').style.display = 'none'; document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
-        const container = document.getElementById('ws-prof-gerir-lista'); container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando Painel Inteligente... ⏳</div>';
+        
+        // 🚀 1. Exibe a estrutura da tela IMEDIATAMENTE
+        document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; 
+        document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; 
+        document.getElementById('ws-prof-menu-encontros').style.display = 'none'; 
+        document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
+        
+        // 🚀 2. OPTIMISTIC UI: Se já houver dados na cache, desenha-os num milissegundo!
+        if (Workspace.Avaliacoes.avaliacoesGerenciadorCache && Workspace.Avaliacoes.avaliacoesGerenciadorCache.length > 0) {
+            Workspace.Avaliacoes.renderizarListaGerenciador();
+        } else {
+            // Se for o 1º clique do dia e não houver memória, mostra o aviso
+            const container = document.getElementById('ws-prof-gerir-lista'); 
+            if (container) container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando dados da nuvem... ⏳</div>';
+        }
+
+        // 🚀 3. OPERAÇÃO EM SEGUNDO PLANO (Silenciosa)
         try {
-            const resAlunos = await Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
+            // Promessas paralelas para ser 3x mais rápido
+            const pAlunos = Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
+            const pAvals = Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
+            const pEntregas = Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
+            
+            const [resAlunos, resAvals, resEntregas] = await Promise.all([pAlunos, pAvals, pEntregas]);
+
+            let houveMudanca = false;
+
             if (resAlunos && !resAlunos.error) {
                 Workspace.Avaliacoes.todosAlunosCache = resAlunos;
+                houveMudanca = true;
+            }
+            if (resAvals && resAvals.success) {
+                Workspace.Avaliacoes.avaliacoesGerenciadorCache = resAvals.avaliacoes || [];
+                houveMudanca = true;
+            }
+            if (resEntregas && resEntregas.success) {
+                Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas || [];
+                houveMudanca = true;
             }
 
-            const res = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
-            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET'); 
-            if(res && res.success) {
-                Workspace.Avaliacoes.avaliacoesGerenciadorCache = res.avaliacoes || [];
-                if(resEntregas && resEntregas.success) Workspace.Avaliacoes.entregasEmCache = resEntregas.entregas || [];
+            // Apenas re-desenha se chegou informação fresca
+            if (houveMudanca) {
                 Workspace.Avaliacoes.renderizarListaGerenciador();
             }
-        } catch(e) { container.innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao carregar provas.</div>'; }
-    }, // <--- 🚨 ESTA VÍRGULA E CHAVETA SÃO VITAIS!
+
+        } catch(e) { 
+            console.error("Erro no background:", e);
+            if (!Workspace.Avaliacoes.avaliacoesGerenciadorCache || Workspace.Avaliacoes.avaliacoesGerenciadorCache.length === 0) {
+                document.getElementById('ws-prof-gerir-lista').innerHTML = '<div style="text-align: center; padding: 40px; color: #e74c3c;">Erro ao conectar à nuvem. Verifique a internet.</div>'; 
+            }
+        }
+    }, // <--- 🚨 VÍRGULA VITAL!
 
     renderizarListaGerenciador: (termoBusca = null) => {
         const container = document.getElementById('ws-prof-gerir-lista');
