@@ -324,25 +324,33 @@ Object.assign(Workspace, {
         Workspace.Sessao.init(); 
         Workspace.iniciarRadarOnline(); 
 
-        // Configuração dos Menus e Navegação de Histórico
-        document.addEventListener('click', (e) => {
-            const menuContainer = document.getElementById('ws-menu-left-container');
-            const menuDropdown = document.getElementById('ws-main-menu-dropdown');
-            if (menuContainer && menuDropdown && !menuContainer.contains(e.target)) {
-                menuDropdown.style.display = 'none';
-            }
-        });
+        // ============================================================================
+        // 🛡️ PROTEÇÃO ANTI-ECO: Configuração dos Menus e Navegação de Histórico
+        // ============================================================================
+        if (!Workspace._eventosGlobaisConfigurados) {
+            
+            document.addEventListener('click', (e) => {
+                const menuContainer = document.getElementById('ws-menu-left-container');
+                const menuDropdown = document.getElementById('ws-main-menu-dropdown');
+                if (menuContainer && menuDropdown && !menuContainer.contains(e.target)) {
+                    menuDropdown.style.display = 'none';
+                }
+            });
 
-        window.addEventListener('popstate', (e) => {
-            if (e.state && e.state.tela) {
-                Workspace.navegarPara(e.state.tela, false); 
-            } else if (window.location.hash) {
-                const telaHash = window.location.hash.replace('#', '').replace(/-/g, '_');
-                Workspace.navegarPara(telaHash, false);
-            } else {
-                Workspace.navegarPara('feed', false);
-            }
-        });
+            window.addEventListener('popstate', (e) => {
+                if (e.state && e.state.tela) {
+                    Workspace.navegarPara(e.state.tela, false, false); 
+                } else if (window.location.hash) {
+                    const telaHash = window.location.hash.replace('#', '').replace(/-/g, '_');
+                    Workspace.navegarPara(telaHash, false, false);
+                } else {
+                    Workspace.navegarPara('feed', false, false);
+                }
+            });
+
+            // Levanta a bandeira para garantir que o navegador nunca repita estes comandos!
+            Workspace._eventosGlobaisConfigurados = true;
+        }
     },
 
     abrirEncontroOnline: (btn) => {
