@@ -442,6 +442,13 @@ Workspace.Arena = {
                 if (dados.type === 'ARENA_RESULTADO_FINAL' && Workspace.Arena.salaAtual === dados.salaId) {
                     Workspace.Arena.exibirPainelResultadoFinal(dados.resultado);
                 }
+
+                // 🚀 NOVO: Captura a fuga do oponente em tempo real!
+                if (dados.type === 'ARENA_OPONENTE_FUGIU' && Workspace.Arena.salaAtual === dados.salaId) {
+                    if (dados.fugitivoNome !== meuNome) {
+                        Workspace.Arena.lidarComFugaDoOponente(dados.fugitivoNome);
+                    }
+                }
             } catch (err) {
                 // Silencia erros de parse para não quebrar a conexão
             }
@@ -901,6 +908,34 @@ Workspace.Arena = {
         };
     },
 
+    lidarComFugaDoOponente: (fugitivoNome) => {
+        const log = document.getElementById('ws-arena-chat-log');
+        if (log) {
+            // Desenha um cartão vermelho dramático na tela de quem ficou
+            const html = `
+                <div style="display: flex; justify-content: center; width: 100%; margin: 20px 0; animation: popUp 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);">
+                    <div style="background: linear-gradient(135deg, #ef4444, #991b1b); color: white; padding: 20px 25px; border-radius: 20px; max-width: 85%; box-shadow: 0 10px 30px rgba(239, 68, 68, 0.5); border: 2px solid #fca5a5; text-align: center;">
+                        <div style="font-size: 40px; margin-bottom: 10px;">🏃💨</div>
+                        <div style="font-size: 14px; text-transform: uppercase; letter-spacing: 1px; font-weight: 900; margin-bottom: 8px; color: #fecaca;">Batalha Encerrada</div>
+                        <div style="font-size: 16px; line-height: 1.6; font-weight: 700;">O(a) guerreiro(a) <strong>${Workspace.escapeHTML(fugitivoNome)}</strong> fugiu da arena!</div>
+                        <div style="margin-top: 15px; font-size: 13px; color: #fecaca;">Você obteve uma vitória moral. Pode fechar o combate.</div>
+                    </div>
+                </div>
+            `;
+            log.insertAdjacentHTML('beforeend', html);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        // Efeitos de finalização
+        Workspace.Arena.tocarSom('vitoria'); // Som de recompensa para quem teve a coragem de ficar!
+        clearInterval(Workspace.Arena.timerInterval); // Pára o relógio
+        
+        if (Workspace.Arena.reconhecimentoVoz) { try { Workspace.Arena.reconhecimentoVoz.stop(); } catch(e){} }
+        
+        // Bloqueia a Sala na memória para que a avaliação não seja disparada acidentalmente
+        Workspace.Arena.salaAtual = null;
+    },
+
     encerrarPartidaViaTempo: async () => {
         const log = document.getElementById('ws-arena-chat-log');
         if (log) {
@@ -1046,6 +1081,17 @@ Workspace.Arena = {
 
     destruirPainelBatalha: () => {
         Workspace.Arena.pararSons();
+
+        // 🚀 AVISA O SERVIDOR DA FUGA (Se ainda houver uma sala ativa)
+        if (Workspace.Arena.salaAtual) {
+            try {
+                // Não usamos "await" para não atrasar o fecho imediato da tela
+                Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/abandonar`, 'POST', {
+                    alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                    escolaId: Workspace.usuario.escolaId
+                });
+            } catch (e) {}
+        }
 
         const painel = document.getElementById('ws-painel-batalha');
         if (painel) {
