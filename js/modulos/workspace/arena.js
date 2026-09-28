@@ -1249,7 +1249,7 @@ Workspace.Arena = {
         return textoOriginal.slice(inicio, fim).replace(/[.,!?;:"'()]/g, '').trim();
     },
 
-    // 3. O Desenhista da Caixa Flutuante
+    // 3. O Desenhista da Caixa Flutuante (Agora com Smart Positioning)
     exibirCaixaTraducao: async (texto, coordX, coordY) => {
         // Se já existir uma caixa aberta, destroi a antiga
         const caixaAntiga = document.getElementById('ws-arena-caixa-traducao');
@@ -1258,11 +1258,33 @@ Workspace.Arena = {
         const caixa = document.createElement('div');
         caixa.id = 'ws-arena-caixa-traducao';
         
-        // Proteções matemáticas para a caixa não sair do ecrã
-        let posX = coordX;
-        let posY = coordY + 20; // 20 pixels abaixo do dedo para não tapar o texto
+        // 🚀 O SEGREDO DO POSICIONAMENTO INTELIGENTE (Smart Bounding Box)
+        // Descobrimos se o clique foi na metade de cima ou de baixo da tela
+        const metadeDaTelaY = window.innerHeight / 2;
+        const clicouEmBaixo = coordY > metadeDaTelaY;
 
-        caixa.style.cssText = `position: fixed; left: ${posX}px; top: ${posY}px; background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid #3b82f6; border-radius: 16px; padding: 15px; color: white; z-index: 1000500; box-shadow: 0 15px 40px rgba(0,0,0,0.6); min-width: 220px; max-width: 320px; font-size: 14px; animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: translateX(-50%);`;
+        // Se clicou na parte de baixo, a caixa fixa o "bottom" e cresce para CIMA.
+        // Se clicou em cima, fixa o "top" e cresce para BAIXO.
+        let posicaoYCSS = clicouEmBaixo 
+            ? `bottom: ${window.innerHeight - coordY + 20}px; top: auto;` 
+            : `top: ${coordY + 20}px; bottom: auto;`;
+
+        // Prevenção lateral (evita que a caixa saia pelas bordas em telemóveis)
+        let posX = coordX;
+        let transformX = 'translateX(-50%)'; // Centralizado no dedo por defeito
+        
+        // Se estiver muito à esquerda
+        if (coordX < 160) {
+            posX = 20;
+            transformX = 'translateX(0)';
+        } 
+        // Se estiver muito à direita
+        else if (coordX > window.innerWidth - 160) {
+            posX = window.innerWidth - 20;
+            transformX = 'translateX(-100%)';
+        }
+
+        caixa.style.cssText = `position: fixed; left: ${posX}px; ${posicaoYCSS} background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(12px); border: 1px solid #3b82f6; border-radius: 16px; padding: 15px; color: white; z-index: 1000500; box-shadow: 0 15px 40px rgba(0,0,0,0.6); min-width: 220px; max-width: 320px; font-size: 14px; animation: popUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); transform: ${transformX}; display: flex; flex-direction: column;`;
 
         // Desenha o estado de "A carregar"
         caixa.innerHTML = `
@@ -1272,14 +1294,8 @@ Workspace.Arena = {
         `;
         document.body.appendChild(caixa);
 
-        // Previne que a caixa fique cortada se tocar muito perto das bordas laterais do telemóvel
-        const rect = caixa.getBoundingClientRect();
-        if (rect.right > window.innerWidth) caixa.style.left = `${window.innerWidth - rect.width / 2 - 10}px`;
-        if (rect.left < 0) caixa.style.left = `${rect.width / 2 + 10}px`;
-        if (rect.bottom > window.innerHeight) caixa.style.top = `${coordY - rect.height - 20}px`;
-
         try {
-            // Envia para o nosso novo motor no Backend
+            // Envia para o nosso motor no Backend
             const res = await Workspace.api('/workspace/arena/traduzir', 'POST', { texto: texto });
             
             if (res && res.success) {
