@@ -428,6 +428,9 @@ Workspace.Arena = {
                     if (dados.fala.autorNome !== meuNome) {
                         Workspace.Arena.desenharBalao(dados.fala.autorNome, dados.fala.texto, false, dados.fala.combo);
                         Workspace.Arena.tempoUltimaRececao = Date.now();
+                        
+                        // 🚀 A CORREÇÃO: Dispara o som de nova mensagem sempre que o oponente fala!
+                        Workspace.Arena.tocarSom('mensagem');
                     }
                 }
 
