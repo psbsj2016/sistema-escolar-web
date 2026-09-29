@@ -83,6 +83,17 @@ Workspace.Arena = {
         Workspace.Arena.configurarMicrofone();
     },
 
+    // 🚀 RASTREADOR DE FUGA NINJA: Deteta o fecho da aba e dispara um aviso em milissegundos
+    _onBeforeUnload: () => {
+        if (Workspace.Arena.salaAtual) {
+            const payload = JSON.stringify({
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                escolaId: Workspace.usuario.escolaId
+            });
+            navigator.sendBeacon(`/api/workspace/arena/${Workspace.Arena.salaAtual}/abandonar`, new Blob([payload], { type: 'application/json' }));
+        }
+    },
+
     injetarModalFila: () => {
         if (document.getElementById('ws-modal-arena')) return;
         const modal = document.createElement('div');
@@ -462,6 +473,9 @@ Workspace.Arena = {
         Workspace.Arena.papelAtual = null;
         Workspace.Arena.cenarioAtual = null;
         
+        // 🚀 Arma o detetive de abas assim que o jogador entra na Arena
+        window.addEventListener('beforeunload', Workspace.Arena._onBeforeUnload);
+
         const modal = document.getElementById('ws-modal-arena');
         if (modal) modal.style.display = 'none';
 
@@ -1082,15 +1096,16 @@ Workspace.Arena = {
     destruirPainelBatalha: () => {
         Workspace.Arena.pararSons();
 
-        // 🚀 AVISA O SERVIDOR DA FUGA (Se ainda houver uma sala ativa)
+        // 🚀 Remove o detetive de abas, pois estamos a fechar a sala de forma legítima
+        window.removeEventListener('beforeunload', Workspace.Arena._onBeforeUnload);
+
+        // AVISA O SERVIDOR DA FUGA (Usamos o Beacon que garante o envio mesmo que o ecrã desabe)
         if (Workspace.Arena.salaAtual) {
-            try {
-                // Não usamos "await" para não atrasar o fecho imediato da tela
-                Workspace.api(`/workspace/arena/${Workspace.Arena.salaAtual}/abandonar`, 'POST', {
-                    alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                    escolaId: Workspace.usuario.escolaId
-                });
-            } catch (e) {}
+            const payload = JSON.stringify({
+                alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+                escolaId: Workspace.usuario.escolaId
+            });
+            navigator.sendBeacon(`/api/workspace/arena/${Workspace.Arena.salaAtual}/abandonar`, new Blob([payload], { type: 'application/json' }));
         }
 
         const painel = document.getElementById('ws-painel-batalha');
