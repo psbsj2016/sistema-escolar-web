@@ -176,12 +176,11 @@ Workspace.Arena = {
         }
     },
 
-    // 🚀 RASTREADOR DE EVENTOS DE JANELA: Desativado temporariamente para permitir F5.
-    // O sistema dependerá da "Caixa Negra" e da saída explícita via botão para gerir as fugas.
+  // 🚀 RASTREADOR DE JANELA FECHADA: Desativado cirurgicamente!
+    // O navegador não sabe a diferença entre fechar a aba e atualizar (F5).
+    // Ao esvaziar esta função, impedimos que o F5 mate a partida. A Caixa Negra trata do resto!
     _onBeforeUnload: () => {
-        // Se quisermos que o F5 mantenha o jogador na sala, NÃO podemos enviar o pedido de abandono aqui.
-        // O navegador destrói a página, mas o sessionStorage mantém os dados.
-        // Quando a página recarregar, a função 'restaurarCaixaNegra' puxa-o de volta.
+        // Deixamos vazio intencionalmente para o F5 sobreviver à recarga da página!
     },
 
     injetarModalFila: () => {
@@ -749,19 +748,14 @@ Workspace.Arena = {
             let transcricaoBruta = event.results[0][0].transcript;
             const agora = Date.now();
             
-            // 🛡️ PROTEÇÃO CONTRA O ERRO 400: 
-            // Se o microfone captar apenas ruído ou ficar em branco, paramos o processo aqui mesmo.
-            if (!transcricaoBruta || transcricaoBruta.trim() === '') {
-                return; 
-            }
+            // 🛡️ PROTEÇÃO CONTRA O ERRO 400
+            if (!transcricaoBruta || transcricaoBruta.trim() === '') return; 
 
-            if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) {
-                return; 
-            }
+            if (Workspace.Arena.ultimaFala === transcricaoBruta && (agora - Workspace.Arena.ultimoTempoFala) < 2000) return; 
+            
             Workspace.Arena.ultimaFala = transcricaoBruta;
             Workspace.Arena.ultimoTempoFala = agora;
             
-            // 🚀 UX PREMIUM: Mostra ao aluno que a IA está a processar a gramática!
             const btn = document.getElementById('ws-btn-mic-arena');
             if(btn) { 
                 btn.innerHTML = '⏳'; 
@@ -769,29 +763,42 @@ Workspace.Arena = {
                 btn.style.animation = 'none'; 
             }
             
+            // 🚀 SALVA-VIDAS AUTOMÁTICO (Temporizador de 7 segundos)
+            // Se a IA demorar muito ou a rede falhar, envia a mensagem original e destrava o mic!
+            let iaRespondeu = false;
+            const timerSalvaVidas = setTimeout(() => {
+                if (!iaRespondeu) {
+                    iaRespondeu = true;
+                    const textoSeguro = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
+                    Workspace.Arena.enviarFala(textoSeguro);
+                    if(btn) { btn.innerHTML = '🎙️'; btn.style.background = '#3b82f6'; }
+                }
+            }, 7000);
+            
            try {
-                // 1. Chama o nosso novo Revisor Inteligente na Nuvem
                 const res = await Workspace.api('/workspace/ingles/transcricao/corrigir', 'POST', { textoCru: transcricaoBruta });
+                if (iaRespondeu) return; // Se o salva-vidas já atuou, ignora a resposta atrasada
+                iaRespondeu = true;
+                clearTimeout(timerSalvaVidas);
                 
                 let textoFinal = transcricaoBruta;
                 if (res && res.success && res.textoCorrigido) {
-                    textoFinal = res.textoCorrigido; // A frase perfeita chega aqui!
+                    textoFinal = res.textoCorrigido; 
                 } else {
                     textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
                 }
-                
-                // 2. Envia a fala polida para o Chat e para o Sistema de Combo
                 Workspace.Arena.enviarFala(textoFinal);
                 
             } catch (e) {
+                if (iaRespondeu) return;
+                iaRespondeu = true;
+                clearTimeout(timerSalvaVidas);
                 const textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(transcricaoBruta);
                 Workspace.Arena.enviarFala(textoFinal);
             } finally {
-                // 🚀 Retorna o botão ao estado normal SÓ QUANDO a IA terminar o serviço!
-                if(btn) { 
+                if(btn && btn.innerHTML !== '🔴') { 
                     btn.innerHTML = '🎙️'; 
                     btn.style.background = '#3b82f6'; 
-                    btn.style.animation = 'none'; 
                 }
             }
         };
@@ -807,26 +814,26 @@ Workspace.Arena = {
         };
     },
 
-    alternarMicrofone: () => {
+   alternarMicrofone: () => {
         const btn = document.getElementById('ws-btn-mic-arena');
         
-        // 🚀 O BOTÃO DE PÂNICO: Se estiver encravado na ampulheta, o clique força o destravamento!
-        if (btn && btn.innerHTML.includes('⏳')) {
+        // 🚀 BOTÃO DE PÂNICO BLINDADO: Se detetar travamento, força o aborto e reinicia
+        if (btn && (btn.innerHTML.includes('⏳') || btn.innerHTML.includes('🔴'))) {
             if (Workspace.Arena.reconhecimentoVoz) {
-                try { Workspace.Arena.reconhecimentoVoz.abort(); } catch(e){} // Mata a gravação à força
+                try { Workspace.Arena.reconhecimentoVoz.abort(); } catch(e){} 
             }
             btn.innerHTML = '🎙️'; 
             btn.style.background = '#3b82f6'; 
             btn.style.animation = 'none'; 
-            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Microfone destravado com sucesso!", "success");
-            return; // Sai da função para que o aluno possa tentar novamente
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Microfone reiniciado e pronto a usar!", "success");
+            return; 
         }
 
         if (!Workspace.Arena.reconhecimentoVoz) {
             if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Navegador não suporta microfone. Use o Chrome.", "error");
             return;
         }
-        try { Workspace.Arena.reconhecimentoVoz.start(); } catch (e) { Workspace.Arena.reconhecimentoVoz.stop(); }
+        try { Workspace.Arena.reconhecimentoVoz.start(); } catch (e) { try { Workspace.Arena.reconhecimentoVoz.abort(); } catch(err){} }
     },
 
     enviarFala: async (texto) => {
