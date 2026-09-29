@@ -176,15 +176,12 @@ Workspace.Arena = {
         }
     },
 
-    // 🚀 RASTREADOR DE FUGA NINJA: Deteta o fecho da aba e dispara um aviso em milissegundos
+    // 🚀 RASTREADOR DE EVENTOS DE JANELA: Desativado temporariamente para permitir F5.
+    // O sistema dependerá da "Caixa Negra" e da saída explícita via botão para gerir as fugas.
     _onBeforeUnload: () => {
-        if (Workspace.Arena.salaAtual) {
-            const payload = JSON.stringify({
-                alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
-                escolaId: Workspace.usuario.escolaId
-            });
-            navigator.sendBeacon(`/api/workspace/arena/${Workspace.Arena.salaAtual}/abandonar`, new Blob([payload], { type: 'application/json' }));
-        }
+        // Se quisermos que o F5 mantenha o jogador na sala, NÃO podemos enviar o pedido de abandono aqui.
+        // O navegador destrói a página, mas o sessionStorage mantém os dados.
+        // Quando a página recarregar, a função 'restaurarCaixaNegra' puxa-o de volta.
     },
 
     injetarModalFila: () => {

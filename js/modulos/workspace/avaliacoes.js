@@ -2567,18 +2567,24 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
-    mudarTurmaLousaIframe: async (turmaId) => {
-        // 🚀 O SEGREDO 2: Força o encerramento quando o professor muda de turma!
-        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { 
-            turmaId: turmaId, ativa: false, recursos: false, escolaId: Workspace.usuario?.escolaId || 'DEFAULT' 
-        });
-
-        Workspace.Avaliacoes._lousaProfState = { turmaId: turmaId, ativa: false, recursos: false };
-        
-        const iframe = document.getElementById('iframeLousaProf');
-        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(turmaId)}`);
-        Workspace.Avaliacoes.renderizarBotoesLousaProf();
-    },
+   mudarTurmaLousaIframe: async (turmaId) => {
+    // Apenas troca o iframe, mantém o estado salvo no banco
+    const iframe = document.getElementById('iframeLousaProf');
+    if (iframe) iframe.src = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(turmaId)}`;
+    
+    // Busca o estado real do banco pra atualizar os botões
+    try {
+        const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
+        if(res?.success){
+            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: !!res.ativa, recursos: !!res.recursos };
+        } else {
+            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: false, recursos: false };
+        }
+    } catch(e){
+        Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: false, recursos: false };
+    }
+    Workspace.Avaliacoes.renderizarBotoesLousaProf();
+},
 
  renderizarBotoesLousaProf: () => {
         const btnView = document.getElementById('btn-toggle-view');
@@ -2601,11 +2607,12 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-    toggleVisualizacao: async () => {
-        const { turmaId, ativa } = Workspace.Avaliacoes._lousaProfState;
-        const novoEstado = !ativa;
-        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstado, false);
-    },
+   toggleVisualizacao: async () => {
+    const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
+    const novoEstado = !ativa;
+    // mantém o recursos que já estava, não força false
+    await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstado, recursos);
+},
 
     toggleRecursos: async () => {
         const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
@@ -2614,32 +2621,36 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     },
 
     enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
-        const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-        try {
-            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
-            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
-            Workspace.Avaliacoes.renderizarBotoesLousaProf();
-            
-            // Avisa o iframe do professor para trancar/destrancar as suas próprias ferramentas
-            const iframeProf = document.getElementById('iframeLousaProf');
-            if(iframeProf && iframeProf.contentWindow){
-                try{ iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: !recursos }, '*'); }catch{}
-            }
-        } catch(e) { Workspace.mostrarAviso('Erro ao comunicar com a Lousa.', 'error'); }
-    },
+    const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+    try {
+        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
+        Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
+        
+        // FIX: Professor SEMPRE com ferramentas, só aluno é travado
+        // Então para o iframe do PROFESSOR, mande locked = false sempre
+        const iframeProf = document.getElementById('iframeLousaProf');
+        if(iframeProf && iframeProf.contentWindow){
+            try{ 
+                iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: false }, '*'); 
+                // força recalcular tamanho depois de ativar (resolve toolbar sumindo)
+                setTimeout(() => {
+                    iframeProf.contentWindow.dispatchEvent(new Event('resize'));
+                }, 200);
+            }catch{}
+        }
+    } catch(e) { Workspace.mostrarAviso('Erro ao comunicar com a Lousa.', 'error'); }
+},
 
     fecharLousaProfessor: async () => {
-        const modal = document.getElementById('ws-modal-lousa-prof');
-        const iframe = document.getElementById('iframeLousaProf');
-        
-        // Encerra a projeção atual como medida de segurança!
-        const { turmaId } = Workspace.Avaliacoes._lousaProfState;
-        if (turmaId) await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, false, false);
-
-        if(modal) modal.style.display = 'none';
-        if(iframe) iframe.setAttribute('src', '');
-        document.body.style.overflow = '';
-    },
+    const modal = document.getElementById('ws-modal-lousa-prof');
+    const iframe = document.getElementById('iframeLousaProf');
+    // NÃO desativa mais automaticamente - a lousa continua ativa pro aluno mesmo com modal fechado
+    // Só limpa o iframe
+    if(modal) modal.style.display = 'none';
+    if(iframe) iframe.src = '';
+    document.body.style.overflow = '';
+},
 
     abrirLousaFullscreen: () => {
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
