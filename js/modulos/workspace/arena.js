@@ -74,13 +74,106 @@ Workspace.Arena = {
     },
     // ============================================================================
 
-    init: () => {
+ init: async () => { // 🚀 A função agora é assíncrona
         if (Workspace.Arena.isInitialized) return; 
         Workspace.Arena.isInitialized = true;
         Workspace.Arena.injetarModalFila();
         Workspace.Arena.injetarPainelBatalha();
         Workspace.Arena.escutarEventosTempoReal();
         Workspace.Arena.configurarMicrofone();
+
+        // 🚀 Tenta ressuscitar uma arena perdida se o aluno tiver dado um F5 acidental
+        await Workspace.Arena.restaurarCaixaNegra();
+    },
+
+     // ============================================================================
+    // 🧰 CAIXA NEGRA: SOBREVIVÊNCIA A F5 E QUEDAS DE REDE
+    // ============================================================================
+    salvarCaixaNegra: () => {
+        if (!Workspace.Arena.salaAtual) return;
+        const estado = {
+            salaAtual: Workspace.Arena.salaAtual,
+            oponenteNome: Workspace.Arena.oponenteNome,
+            minutosRestantes: Workspace.Arena.minutosRestantes,
+            segundosRestantes: Workspace.Arena.segundosRestantes,
+            papelAtual: Workspace.Arena.papelAtual,
+            cenarioAtual: Workspace.Arena.cenarioAtual
+        };
+        sessionStorage.setItem('ws_arena_backup', JSON.stringify(estado));
+    },
+
+    limparCaixaNegra: () => {
+        sessionStorage.removeItem('ws_arena_backup');
+    },
+
+    restaurarCaixaNegra: async () => {
+        const backup = sessionStorage.getItem('ws_arena_backup');
+        if (!backup) return false;
+        
+        try {
+            const estado = JSON.parse(backup);
+            if (!estado.salaAtual) return false;
+
+            // 1. Consulta o servidor para ver se a sala ainda está de pé e busca o chat
+            const res = await Workspace.api(`/workspace/arena/${estado.salaAtual}/estado`, 'GET');
+            if (!res || !res.success || res.sala.status === 'finalizado' || res.sala.status === 'cancelado') {
+                Workspace.Arena.limparCaixaNegra();
+                return false;
+            }
+
+            // 2. Restaura o Cérebro da Arena
+            Workspace.Arena.salaAtual = estado.salaAtual;
+            Workspace.Arena.oponenteNome = estado.oponenteNome;
+            Workspace.Arena.minutosRestantes = estado.minutosRestantes;
+            Workspace.Arena.segundosRestantes = estado.segundosRestantes;
+            Workspace.Arena.papelAtual = estado.papelAtual;
+            Workspace.Arena.cenarioAtual = estado.cenarioAtual;
+
+            // 3. Reconstrói o Painel Silenciosamente (sem mostrar o Modal da fila)
+            Workspace.Arena.injetarPainelBatalha();
+            const modal = document.getElementById('ws-modal-arena');
+            if (modal) modal.style.display = 'none';
+            
+            const painel = document.getElementById('ws-painel-batalha');
+            painel.style.display = 'flex';
+            painel.style.opacity = '1';
+
+            // 4. Repopula o Chat Histórico
+            const log = document.getElementById('ws-arena-chat-log');
+            log.innerHTML = `<div style="text-align: center; color: #10b981; font-size: 13px; margin: 15px 0; background: rgba(16, 185, 129, 0.1); padding: 8px; border-radius: 8px; animation: popUp 0.5s ease;">🔄 Ligação restabelecida com sucesso!</div>`;
+            
+            if (res.sala.historico && res.sala.historico.length > 0) {
+                res.sala.historico.forEach(fala => {
+                    const isMinha = fala.autorId === Workspace.usuario.id;
+                    // Se for o Mestre, a lógica de balão adapta-se automaticamente
+                    Workspace.Arena.desenharBalao(fala.autorNome, fala.texto, isMinha);
+                });
+            }
+
+            // 5. Devolve o jogador à fase certa (Escolha de Papel ou Combate Ativo)
+            if (Workspace.Arena.papelAtual) {
+                document.getElementById('ws-arena-selecao-personagem').style.display = 'none';
+                const cenario = Workspace.Arena.cenarioAtual;
+                const oponentePapel = (Workspace.Arena.papelAtual === cenario.p1) ? cenario.p2 : cenario.p1;
+                document.getElementById('ws-arena-oponente-nome').innerText = `Contra: ${Workspace.Arena.oponenteNome} (${oponentePapel})`;
+                Workspace.Arena.iniciarRelogio();
+            } else {
+                const cenario = Workspace.Arena.cenarioAtual;
+                document.getElementById('ws-arena-cenario-texto').innerText = `"${cenario.t}"`;
+                document.getElementById('ws-btn-papel-1').innerText = `🎭 ${cenario.p1}`;
+                document.getElementById('ws-btn-papel-2').innerText = `🎭 ${cenario.p2}`;
+                document.getElementById('ws-btn-papel-1').disabled = false;
+                document.getElementById('ws-btn-papel-2').disabled = false;
+                document.getElementById('ws-arena-selecao-personagem').style.display = 'flex';
+            }
+
+            // 6. Rearma o detetive de aba
+            window.addEventListener('beforeunload', Workspace.Arena._onBeforeUnload);
+            return true;
+        } catch (e) {
+            Workspace.Arena.limparCaixaNegra();
+            return false;
+        }
     },
 
     // 🚀 RASTREADOR DE FUGA NINJA: Deteta o fecho da aba e dispara um aviso em milissegundos
@@ -718,6 +811,20 @@ Workspace.Arena = {
     },
 
     alternarMicrofone: () => {
+        const btn = document.getElementById('ws-btn-mic-arena');
+        
+        // 🚀 O BOTÃO DE PÂNICO: Se estiver encravado na ampulheta, o clique força o destravamento!
+        if (btn && btn.innerHTML.includes('⏳')) {
+            if (Workspace.Arena.reconhecimentoVoz) {
+                try { Workspace.Arena.reconhecimentoVoz.abort(); } catch(e){} // Mata a gravação à força
+            }
+            btn.innerHTML = '🎙️'; 
+            btn.style.background = '#3b82f6'; 
+            btn.style.animation = 'none'; 
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Microfone destravado com sucesso!", "success");
+            return; // Sai da função para que o aluno possa tentar novamente
+        }
+
         if (!Workspace.Arena.reconhecimentoVoz) {
             if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Navegador não suporta microfone. Use o Chrome.", "error");
             return;
@@ -874,6 +981,9 @@ Workspace.Arena = {
             const m = Workspace.Arena.minutosRestantes.toString().padStart(2, '0');
             const s = Workspace.Arena.segundosRestantes.toString().padStart(2, '0');
             timerElement.innerText = `${m}:${s}`;
+
+            // 🚀 O CORAÇÃO DA CAIXA NEGRA: Guarda o tempo atualizado a cada segundo!
+            Workspace.Arena.salvarCaixaNegra();
         }, 1000);
     },
 
@@ -923,6 +1033,7 @@ Workspace.Arena = {
     },
 
     lidarComFugaDoOponente: (fugitivoNome) => {
+        Workspace.Arena.limparCaixaNegra(); // 🚀 Elimina o histórico da RAM local
         const log = document.getElementById('ws-arena-chat-log');
         if (log) {
             // Desenha um cartão vermelho dramático na tela de quem ficou
@@ -966,6 +1077,7 @@ Workspace.Arena = {
     },
 
   exibirPainelResultadoFinal: (resultado) => {
+        Workspace.Arena.limparCaixaNegra(); // 🚀 Elimina o histórico da RAM local
         const painel = document.getElementById('ws-painel-batalha');
         if (!painel) return;
 
@@ -1093,10 +1205,9 @@ Workspace.Arena = {
         }
     },
 
-    destruirPainelBatalha: () => {
+   destruirPainelBatalha: () => {
+        Workspace.Arena.limparCaixaNegra(); // 🚀 Elimina o histórico da RAM local
         Workspace.Arena.pararSons();
-
-        // 🚀 Remove o detetive de abas, pois estamos a fechar a sala de forma legítima
         window.removeEventListener('beforeunload', Workspace.Arena._onBeforeUnload);
 
         // AVISA O SERVIDOR DA FUGA (Usamos o Beacon que garante o envio mesmo que o ecrã desabe)
