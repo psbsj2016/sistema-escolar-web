@@ -2,13 +2,19 @@
 <html lang="pt-BR">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
   <title>Lousa Interativa Tldraw</title>
   <style>
     *,*::before,*::after{box-sizing:border-box}
-    html,body,#root{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#f8fafc;}
-    /* 🚀 A Tela Preta Estilizada (Prisão do Aluno) */
-    .tela-preta { position:fixed; inset:0; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; text-align:center; padding:20px; z-index: 999999; }
+    html,body{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#f8fafc;overscroll-behavior:none;}
+    /* FIX: altura real dentro da plataforma (iframe) */
+    #root{width:100%;height:100vh;height:100dvh;min-height:480px;display:flex;flex-direction:column;position:relative;background:#f8fafc;isolation:isolate;}
+    .tldraw-wrapper{position:relative;flex:1;width:100%;height:100%;min-height:480px;overflow:hidden;display:flex;}
+    .tldraw-wrapper > div{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;}
+    /* FIX: impede CSS da plataforma esconder a toolbar */
+    .tlui-toolbar, .tlui-style-panel{visibility:visible !important;opacity:1 !important;pointer-events:auto !important;}
+    .tela-preta { position:absolute; inset:0; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; text-align:center; padding:20px; z-index:50; width:100%; height:100%; }
+    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
   </style>
 </head>
 <body>
@@ -20,24 +26,64 @@
     import { Tldraw } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
 
-    const params = new URLSearchParams(window.location.search);
-    const role = params.get('role') || 'professor';
-    const roomId = params.get('room') || 'global';
+    function getInitialParams() {
+      let role = 'professor', roomId = 'global';
+      try {
+        const p = new URLSearchParams(window.location.search);
+        if (p.get('role')) role = p.get('role');
+        if (p.get('room') || p.get('turma')) roomId = p.get('room') || p.get('turma');
+        // fallback: tenta parent se a plataforma tira a query
+        if (window.parent && window.parent !== window) {
+          try {
+            const pp = new URLSearchParams(window.parent.location.search);
+            if (!p.get('role') && pp.get('role')) role = pp.get('role');
+            if (!p.get('room') && (pp.get('room') || pp.get('turma'))) roomId = pp.get('room') || pp.get('turma');
+          } catch(e){}
+        }
+      } catch(e){}
+      return { role, roomId };
+    }
+    const init = getInitialParams();
 
     function App() {
         const [editor, setEditor] = useState(null);
-        // O Aluno nasce Bloqueado (false), o Professor nasce Livre (true)
-        const [isAllowed, setIsAllowed] = useState(role !== 'aluno');
-        const [dynamicLocked, setDynamicLocked] = useState(true);
+        const [isAllowed, setIsAllowedState] = useState(init.role !== 'aluno');
+        const [dynamicLocked, setDynamicLockedState] = useState(true);
+
+        // REFS - correção do bug de closure que travava a lousa
+        const roleRef = useRef(init.role);
+        const roomIdRef = useRef(init.roomId);
+        const isAllowedRef = useRef(init.role !== 'aluno');
+        const dynamicLockedRef = useRef(true);
         const isRemoteUpdateRef = useRef(false);
         const saveTimeoutRef = useRef(null);
 
-        // 1. Polling de Segurança para o Aluno
+        const setIsAllowed = useCallback((v) => { isAllowedRef.current = !!v; setIsAllowedState(!!v); }, []);
+        const setDynamicLocked = useCallback((v) => { dynamicLockedRef.current = !!v; setDynamicLockedState(!!v); }, []);
+
+        // Recebe INIT da plataforma se ela enviar via postMessage
         useEffect(() => {
-            if (role !== 'aluno') return;
+            const onInit = (e) => {
+                const d = e.data || {};
+                if (d.type === 'INIT_LOUSA' || d.type === 'LOUSA_INIT') {
+                  if (d.role) roleRef.current = d.role;
+                  if (d.room || d.roomId || d.turmaId) roomIdRef.current = d.room || d.roomId || d.turmaId;
+                  if (d.role && d.role !== 'aluno') setIsAllowed(true);
+                }
+                if (d.type === 'LOCK_STATE') setDynamicLocked(!!d.locked);
+                if (d.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud();
+            };
+            window.addEventListener('message', onInit);
+            try { window.parent?.postMessage({ type: 'LOUSA_READY' }, '*'); } catch(e){}
+            return () => window.removeEventListener('message', onInit);
+        }, [setIsAllowed, setDynamicLocked]);
+
+        // 1. Polling de Segurança para o Aluno (MANTIDO)
+        useEffect(() => {
+            if (roleRef.current !== 'aluno') return;
             const check = async () => {
                 try {
-                    const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomId)}`);
+                    const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdRef.current)}`, { cache: 'no-store' });
                     const data = await res.json();
                     if (data?.success && data.ativa) {
                         setIsAllowed(true);
@@ -50,9 +96,9 @@
             check();
             const inv = setInterval(check, 2500);
             return () => clearInterval(inv);
-        }, [roomId]);
+        }, [setIsAllowed, setDynamicLocked]);
 
-        // 2. Ouve Comandos em Tempo Real (Painel do Professor)
+        // 2. Ouve Comandos em Tempo Real (MANTIDO)
         useEffect(() => {
             const onMsg = (e) => {
                 if (e.data?.type === 'LOCK_STATE') setDynamicLocked(!!e.data.locked);
@@ -60,26 +106,29 @@
             };
             window.addEventListener('message', onMsg);
             return () => window.removeEventListener('message', onMsg);
-        }, []);
+        }, [setDynamicLocked]);
 
-        // 3. Aplica o Cadeado às Ferramentas
+        // 3. Aplica o Cadeado às Ferramentas (MANTIDO, agora com ref)
         useEffect(() => {
-            if (editor) editor.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
+            if (editor) {
+              try { editor.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current }); } catch(e){}
+            }
         }, [editor, dynamicLocked]);
 
-        // 4. Arranque da Tldraw e Sincronização Perfeita
+        // 4. Arranque da Tldraw - FIX PRINCIPAL: callback estável
         const onMount = useCallback((ed) => {
             setEditor(ed);
-            ed.updateInstanceState({ isReadonly: role === 'aluno' && dynamicLocked });
+            try { ed.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current }); } catch(e){}
 
             const loadCloud = async () => {
-                if(role === 'aluno' && !isAllowed) return; 
+                if(roleRef.current === 'aluno' && !isAllowedRef.current) return; 
                 try {
-                    const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`);
+                    const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}`, { cache: 'no-store' });
                     const data = await res.json();
                     if (data?.success && data.records?.length > 0) {
                         isRemoteUpdateRef.current = true;
                         ed.store.mergeRemoteChanges(() => { try { ed.store.put(data.records); } catch(e){} });
+                        setTimeout(() => { try { ed.zoomToFit(); } catch(e){} }, 100);
                         isRemoteUpdateRef.current = false;
                     }
                 } catch(e) {}
@@ -88,43 +137,51 @@
             window._loadCloud = loadCloud;
             loadCloud();
 
-            // Gravação Otimizada para o Servidor
-            ed.store.listen((entry) => {
+            // FIX: recalcula tamanho quando a plataforma redimensiona o iframe
+            const ro = new ResizeObserver(() => {
+              try { window.dispatchEvent(new Event('resize')); ed.updateViewportScreenBounds(); } catch(e){}
+            });
+            try { ro.observe(document.getElementById('root')); } catch(e){}
+
+            const unsub = ed.store.listen((entry) => {
                 if (entry.source !== 'user') return;
                 if (isRemoteUpdateRef.current) return;
-                if (role === 'aluno' && dynamicLocked) return;
+                if (roleRef.current === 'aluno' && dynamicLockedRef.current) return;
 
                 clearTimeout(saveTimeoutRef.current);
                 saveTimeoutRef.current = setTimeout(() => {
                     const records = ed.store.allRecords();
-                    fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomId)}`, {
+                    fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}`, {
                         method: 'PUT', headers: {'Content-Type': 'application/json'},
                         body: JSON.stringify({ records })
                     }).catch(()=>{});
                 }, 350); 
             }, { scope: 'document', source: 'user' });
             
-        }, [dynamicLocked, isAllowed, roomId]);
+            return () => { try{ro.disconnect()}catch(e){} try{unsub()}catch(e){} clearTimeout(saveTimeoutRef.current); };
+        }, []); // << VAZIO DE PROPÓSITO - não remonta mais e não some as ferramentas
 
-        // 5. Escutador SSE (Para o aluno ver o risco em tempo real)
+        // 5. Escutador SSE (MANTIDO)
         useEffect(() => {
             let escolaId = 'DEFAULT';
-            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){}
-            const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-            es.onmessage = (event) => {
-                try {
-                    const data = JSON.parse(event.data);
-                    if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomId || data.turmaId === 'global')) {
-                        if (window._loadCloud) window._loadCloud();
-                    }
-                } catch(e){}
-            };
-            return () => es.close();
-        }, [roomId]);
+            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){
+              try { const p = new URLSearchParams(window.location.search); if(p.get('escolaId')) escolaId = p.get('escolaId'); } catch(e2){}
+            }
+            let es;
+            try {
+              es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+              es.onmessage = (event) => {
+                  try {
+                      const data = JSON.parse(event.data);
+                      if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomIdRef.current || data.turmaId === 'global')) {
+                          if (window._loadCloud) window._loadCloud();
+                      }
+                  } catch(e){}
+              };
+            } catch(e){}
+            return () => { try{es?.close()}catch(e){} };
+        }, []);
 
-        // ===============================================
-        // 🎨 INTERFACES VISUAIS (TELA PRETA VS TLDRAW)
-        // ===============================================
         if (!isAllowed) {
             return React.createElement('div', { className: 'tela-preta' },
                 React.createElement('div', {style:{fontSize:'60px', filter:'grayscale(100%) opacity(0.5)', animation:'pulse 2s infinite'}}, '⏳'),
@@ -134,9 +191,8 @@
             );
         }
 
-        // TLDRAW COMPLETO E LIMPO (Ocupa 100% do iframe, as ferramentas ficam na base)
-        return React.createElement('div', {style:{position: 'absolute', inset: 0}},
-            React.createElement(Tldraw, { onMount: onMount, inferDarkMode: false })
+        return React.createElement('div', {className: 'tldraw-wrapper'},
+            React.createElement(Tldraw, { onMount: onMount, inferDarkMode: false, autoFocus: true })
         );
     }
 
