@@ -106,6 +106,26 @@ Workspace.Arena = {
         sessionStorage.removeItem('ws_arena_backup');
     },
 
+    // ============================================================================
+    // 🧠 MEMÓRIA ANTI-REPETIÇÃO (7 DIAS)
+    // ============================================================================
+    _getCenariosJogados: () => {
+        const memoria = JSON.parse(localStorage.getItem('ws_arena_history') || '[]');
+        const seteDiasMs = 7 * 24 * 60 * 60 * 1000;
+        const agora = Date.now();
+        // Limpa automaticamente os cenários que já têm mais de 7 dias
+        const validos = memoria.filter(item => (agora - item.data) < seteDiasMs);
+        localStorage.setItem('ws_arena_history', JSON.stringify(validos));
+        return validos.map(item => item.id);
+    },
+
+    _addCenarioJogado: (id) => {
+        if(!id) return;
+        const memoria = JSON.parse(localStorage.getItem('ws_arena_history') || '[]');
+        memoria.push({ id, data: Date.now() });
+        localStorage.setItem('ws_arena_history', JSON.stringify(memoria));
+    },
+
     restaurarCaixaNegra: async () => {
         const backup = sessionStorage.getItem('ws_arena_backup');
         if (!backup) return false;
@@ -183,7 +203,7 @@ Workspace.Arena = {
         // Deixamos vazio intencionalmente para o F5 sobreviver à recarga da página!
     },
 
-    injetarModalFila: () => {
+   injetarModalFila: () => {
         if (document.getElementById('ws-modal-arena')) return;
         const modal = document.createElement('div');
         modal.id = 'ws-modal-arena';
@@ -205,10 +225,18 @@ Workspace.Arena = {
                 </div>
 
               <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <!-- 🚀 O NOVO BOTÃO DO MODO SOLO -->
-                    <button id="ws-btn-solo" onclick="Workspace.Arena.iniciarTreinoSolo()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
+                    <!-- 🚀 O NOVO SELETOR DO MODO SOLO -->
+                    <button id="ws-btn-solo" onclick="Workspace.Arena.abrirMenuSolo()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
                         <span style="font-size: 20px;">🤖</span> Treinar Solo com a IA
                     </button>
+                    
+                    <!-- Menu de Dificuldades (Escondido inicialmente) -->
+                    <div id="ws-arena-solo-options" style="display: none; flex-direction: column; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid #475569;">
+                        <strong style="color: #cbd5e1; font-size: 13px; margin-bottom: 5px;">Escolha o Nível de Dificuldade:</strong>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('A1_A2')" style="background: #10b981; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟢 Iniciante (A1/A2)</button>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('B1_B2')" style="background: #f59e0b; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟡 Intermediário (B1/B2)</button>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('C1_C2')" style="background: #ef4444; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔴 Avançado (C1/C2)</button>
+                    </div>
 
                     <button id="ws-btn-procurar" onclick="Workspace.Arena.procurarAleatorio()" style="background: #3b82f6; color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#2563eb'">
                         🎲 Procurar Oponente Aleatório
@@ -226,6 +254,12 @@ Workspace.Arena = {
             </div>
         `;
         document.body.appendChild(modal);
+    },
+
+    abrirMenuSolo: () => {
+        document.getElementById('ws-btn-solo').style.display = 'none';
+        document.getElementById('ws-arena-solo-options').style.display = 'flex';
+        document.getElementById('ws-btn-procurar').style.display = 'none'; // Esconde para focar
     },
 
     abrirPainel: () => { 
@@ -373,42 +407,39 @@ Workspace.Arena = {
         }
     },
 
-  iniciarTreinoSolo: async () => {
-        // 🛡️ BLINDAGEM DE SESSÃO: Evita que o sistema crashe se a sessão expirou por inatividade
+  iniciarTreinoSolo: async (nivelDificuldade) => {
         if (!Workspace.usuario || !Workspace.usuario.id) {
-            if (window.Workspace && Workspace.mostrarAviso) {
-                Workspace.mostrarAviso("A sua sessão expirou. Por favor, recarregue a página e faça login novamente.", "error");
-            }
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("A sua sessão expirou. Recarregue a página.", "error");
             return;
         }
 
         Workspace.Arena.desbloquearAudioNavegador(); 
-        const btn = document.getElementById('ws-btn-solo');
         const status = document.getElementById('ws-arena-status');
         const tempo = document.getElementById('ws-arena-input-tempo').value; 
-
-        btn.disabled = true; btn.style.opacity = '0.5';
+        
+        document.getElementById('ws-arena-solo-options').style.display = 'none';
         status.style.display = 'block'; 
         status.style.color = '#8b5cf6'; 
-        status.innerText = 'A evocar o Mestre da Guilda... ⚡';
+        status.innerText = 'A invocar o Mestre da Guilda e a gerar cenário... ⚡';
 
         try {
             const res = await Workspace.api('/workspace/arena/solo', 'POST', {
                 alunoId: Workspace.usuario.id, 
                 alunoNome: Workspace.usuario.nome || Workspace.usuario.login, 
                 escolaId: Workspace.usuario.escolaId,
-                limiteMinutos: tempo
+                limiteMinutos: tempo,
+                nivel: nivelDificuldade, // 🚀 Informa a IA do nível escolhido
+                jogados: Workspace.Arena._getCenariosJogados() // 🚀 Envia a memória anti-repetição
             });
 
             if (res && res.success) {
-                // Arranca o ecrã instantaneamente
-                Workspace.Arena.iniciarPartida(res.salaId, 'Mestre da Guilda 🤖', tempo, res.cenario);
+                // Arranca o ecrã instantaneamente com o OBJETO do cenário
+                Workspace.Arena.iniciarPartida(res.salaId, 'Mestre da Guilda 🤖', tempo, res.cenarioObj);
             }
         } catch (error) { 
             status.style.color = '#ef4444'; 
-            status.innerText = 'Erro ao contactar a IA.'; 
-            btn.disabled = false; 
-            btn.style.opacity = '1'; 
+            status.innerText = 'Erro ao contactar a IA. Tente novamente.'; 
+            document.getElementById('ws-btn-solo').style.display = 'flex';
         }
     },
 
@@ -488,8 +519,8 @@ Workspace.Arena = {
                             Workspace.Feed._ultimoBotaoDesafioPendente = null;
                         }
 
-                        // INICIA A MAGIA!
-                        Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos, dados.cenario);
+                        // INICIA A MAGIA! 🚀 (Passamos dados.cenarioObj em vez de dados.cenario)
+                        Workspace.Arena.iniciarPartida(dados.salaId, oponenteReal, dados.limiteMinutos, dados.cenarioObj);
                     }
                 }
 
@@ -555,39 +586,46 @@ Workspace.Arena = {
         };
     },
 
- iniciarPartida: (salaId, oponente, limiteMinutos, cenarioSoloOpcional) => {
+ iniciarPartida: (salaId, oponente, limiteMinutos, cenarioObj) => {
         Workspace.Arena.salaAtual = salaId;
         Workspace.Arena.oponenteNome = oponente;
         Workspace.Arena.minutosRestantes = parseInt(limiteMinutos) || 50;
         Workspace.Arena.papelAtual = null;
         Workspace.Arena.cenarioAtual = null;
         
-        // 🚀 Arma o detetive de abas assim que o jogador entra na Arena
+        // Arma o detetive de abas
         window.addEventListener('beforeunload', Workspace.Arena._onBeforeUnload);
 
         const modal = document.getElementById('ws-modal-arena');
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.style.display = 'none';
+            // Reseta a interface do menu Solo para a próxima vez
+            const btnSolo = document.getElementById('ws-btn-solo');
+            const menuSolo = document.getElementById('ws-arena-solo-options');
+            const btnProcurar = document.getElementById('ws-btn-procurar');
+            if(btnSolo) btnSolo.style.display = 'flex';
+            if(menuSolo) menuSolo.style.display = 'none';
+            if(btnProcurar) btnProcurar.style.display = 'block';
+            document.getElementById('ws-arena-status').style.display = 'none';
+        }
 
         Workspace.Arena.injetarPainelBatalha();
         const painel = document.getElementById('ws-painel-batalha');
         painel.style.display = 'flex';
         requestAnimationFrame(() => painel.style.opacity = '1');
 
-        // 🎭 A MÁGICA DETERMINÍSTICA AGORA É PARA TODOS (HUMANOS E IA)
-        const cenarios = [
-            { t: "No restaurante, a comida chegou fria e atrasada.", p1: "Cliente Faminto", p2: "Empregado de Mesa" },
-            { t: "Entrevista de emprego para uma vaga na área de tecnologia.", p1: "Candidato Nervoso", p2: "Entrevistador Frio" },
-            { t: "Devolução de um produto com defeito na loja.", p1: "Cliente Irritado", p2: "Gerente da Loja" },
-            { t: "Dois amigos perdidos numa viagem de carro.", p1: "Motorista Teimoso", p2: "Passageiro com o Mapa" },
-            { t: "No aeroporto, o voo foi cancelado.", p1: "Passageiro Desesperado", p2: "Agente de Embarque" },
-            { t: "Ligação para cancelar a internet de casa.", p1: "Cliente Farto", p2: "Atendente que não quer cancelar" }
-        ];
-        
-        let soma = 0;
-        for(let i=0; i < salaId.length; i++) soma += salaId.charCodeAt(i);
-        Workspace.Arena.cenarioAtual = cenarios[soma % cenarios.length];
+        // 🚀 A CORREÇÃO DO ÁUDIO: Toca exatamente quando a luz da Arena se acende!
+        Workspace.Arena.tocarSom('inicio');
 
-        // Monta a tela de escolhas e garante que os botões estão destrancados
+        // 🚀 O NOVO MOTOR CEREBRAL: Aceita o cenário enviado pelo servidor
+        Workspace.Arena.cenarioAtual = cenarioObj || { t: "Conversa Livre", p1: "Participante 1", p2: "Participante 2" };
+
+        // 🚀 MEMÓRIA ANTI-REPETIÇÃO: Grava este cenário para não voltar a aparecer em 7 dias
+        if (Workspace.Arena.cenarioAtual && Workspace.Arena.cenarioAtual.id) {
+            Workspace.Arena._addCenarioJogado(Workspace.Arena.cenarioAtual.id);
+        }
+
+        // Monta a tela de escolhas
         document.getElementById('ws-arena-cenario-texto').innerText = `"${Workspace.Arena.cenarioAtual.t}"`;
         document.getElementById('ws-btn-papel-1').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p1}`;
         document.getElementById('ws-btn-papel-2').innerText = `🎭 ${Workspace.Arena.cenarioAtual.p2}`;
@@ -595,7 +633,7 @@ Workspace.Arena = {
         document.getElementById('ws-btn-papel-2').disabled = false;
         document.getElementById('ws-arena-status-escolha').style.display = 'none';
         
-        // Exibe a tela de escolha. O relógio só começa depois de escolher!
+        // Exibe a tela de escolha.
         document.getElementById('ws-arena-selecao-personagem').style.display = 'flex';
     },
 
