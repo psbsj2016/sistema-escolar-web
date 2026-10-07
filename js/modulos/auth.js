@@ -165,13 +165,6 @@ Object.assign(App, {
             if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
             if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
 
-            const hashSalvo = window.location.hash.replace('#', '');
-            if (hashSalvo && hashSalvo !== 'login') {
-                setTimeout(() => { if(typeof App.renderizarTela === 'function') App.renderizarTela(hashSalvo, true); }, 10);
-            } else {
-                if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
-            }
-
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); 
                 if (!escola || escola.error) {
@@ -291,8 +284,13 @@ Object.assign(App, {
         if (typeof App.carregarDadosEscola === 'function') await App.carregarDadosEscola(true);
         
         const telaSistema = document.getElementById('tela-sistema');
-        if (telaSistema && telaSistema.style.display !== 'none' && !window.location.hash) {
-            if(typeof App.renderizarInicio === 'function') App.renderizarInicio();
+        if (telaSistema && telaSistema.style.display !== 'none') {
+            // 🚀 Em vez de mandar para o Início cegamente, chamamos o Roteador Inteligente!
+            if(typeof App.iniciarRoteadorGlobal === 'function') {
+                App.iniciarRoteadorGlobal();
+            } else if (typeof App.renderizarInicio === 'function') {
+                App.renderizarInicio();
+            }
         }
     },
 
@@ -307,8 +305,13 @@ Object.assign(App, {
             }
         } catch(e) { console.warn("Logout silencioso."); }
 
-        localStorage.clear();
+       localStorage.clear();
         sessionStorage.clear();
+        
+        // 🚀 Remove as pegadas temporárias associadas ao ID do Tenant
+        const chaveTenant = App.getTenantKey ? App.getTenantKey('ultima_tela') : 'ultima_tela_convidado';
+        localStorage.removeItem(chaveTenant);
+        
         App.usuario = null;
         App.listaCache = [];
 

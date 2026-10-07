@@ -359,6 +359,31 @@ validarCadastroInst: async () => {
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
 },
     
+ // =========================================================
+    // 🗺️ MOTOR DE ROTEAMENTO GLOBAL (O SALVA-VIDAS DO F5)
+    // =========================================================
+    iniciarRoteadorGlobal: () => {
+        if (!App.usuario) return;
+
+        let telaAlvo = 'inicio';
+
+        // 1. Prioridade Máxima: A URL atual (se o aluno deu F5 ou clicou num link direto)
+        const hashAtual = window.location.hash.replace('#', '').trim();
+        if (hashAtual && hashAtual !== 'login') {
+            telaAlvo = hashAtual;
+        } 
+        // 2. Prioridade Secundária: A última tela visitada (memória do navegador)
+        else {
+            const ultimaTela = localStorage.getItem(App.getTenantKey('ultima_tela'));
+            if (ultimaTela && ultimaTela !== 'login') {
+                telaAlvo = ultimaTela;
+            }
+        }
+
+        // Dispara a renderização
+        App.renderizarTela(telaAlvo, true);
+    },
+
    // Adicionamos o parâmetro 'veioDoHistorico'
     renderizarTela: async (tela, veioDoHistorico = false) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
@@ -378,11 +403,16 @@ validarCadastroInst: async () => {
             App.showToast("🚫 Acesso restrito. Perfil de Secretaria não tem permissão para esta área.", "error"); return App.renderizarInicio();
         }
 
-        // 👇 A MÁGICA DA NAVEGAÇÃO ENTRA AQUI 👇
+   // 👇 A MÁGICA DA NAVEGAÇÃO ENTRA AQUI 👇
         if (!veioDoHistorico && tela !== 'login' && tela !== 'inicio') {
             window.history.pushState({ tela: tela }, '', `#${tela}`);
         } else if (!veioDoHistorico && tela === 'inicio') {
             window.history.pushState({ tela: 'inicio' }, '', window.location.pathname);
+        }
+
+        // 🚀 NOVO: HIDRATAÇÃO DE ESTADO (A "Pegada" invisível para o F5)
+        if (tela !== 'login') {
+            localStorage.setItem(App.getTenantKey('ultima_tela'), tela);
         }
 
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
