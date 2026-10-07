@@ -37,6 +37,51 @@ window.LISTA_FUNCIONALIDADES = [
 Object.assign(App, {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     
+// =========================================================
+    // 🗺️ MOTOR DE ROTEAMENTO GLOBAL PROFUNDO (STATE HYDRATION)
+    // =========================================================
+    salvarEstadoNavegacao: (camada, valor) => {
+        if (!App.usuario) return;
+        let estadoAtual = JSON.parse(localStorage.getItem(App.getTenantKey('estado_navegacao'))) || {};
+        
+        if (camada === 'fundo') {
+            estadoAtual.fundo = valor; // Guarda se é uma 'tela' ou 'lista'
+        } else if (camada === 'modal') {
+            if (valor) estadoAtual.modal = valor; // Guarda o modal aberto
+            else delete estadoAtual.modal; // Apaga o modal da memória se for fechado
+        }
+        
+        localStorage.setItem(App.getTenantKey('estado_navegacao'), JSON.stringify(estadoAtual));
+    },
+
+    iniciarRoteadorGlobal: () => {
+        if (!App.usuario) return;
+        
+        const estadoSalvo = localStorage.getItem(App.getTenantKey('estado_navegacao'));
+        
+        if (estadoSalvo) {
+            const estado = JSON.parse(estadoSalvo);
+            
+            // 1. RECONSTRÓI A BASE DO ECRÃ (Lista ou Tela)
+            if (estado.fundo && estado.fundo.tipo === 'lista') {
+                App.renderizarLista(estado.fundo.alvo, true);
+            } else if (estado.fundo && estado.fundo.tipo === 'tela') {
+                App.renderizarTela(estado.fundo.alvo, true);
+            } else {
+                App.renderizarInicio();
+            }
+            
+            // 2. RECONSTRÓI A JANELA MODAL POR CIMA (Se estivesse aberta)
+            if (estado.modal) {
+                setTimeout(() => {
+                    App.abrirModalCadastro(estado.modal.tipo, estado.modal.id);
+                }, 600); // Aguarda 0.6s para a tabela de fundo acabar de desenhar
+            }
+        } else {
+            App.renderizarInicio();
+        }
+    },
+
     // =========================================================
     // 📶 MÓDULO OFFLINE (Fila de Sincronização) - AS FUNÇÕES QUE FALTAVAM!
     // =========================================================
@@ -319,8 +364,13 @@ Object.assign(App, {
         document.querySelectorAll('.submenu').forEach(el => { if (el.id !== id) el.style.display = 'none'; });
         const el = document.getElementById(id); if (el) el.style.display = (el.style.display === 'block') ? 'none' : 'block';
     },
+
     fecharModal: () => {
         document.getElementById('modal-overlay').style.display = 'none';
+        
+        // 🚀 APAGA A JANELA MODAL DA MEMÓRIA AO FECHAR
+        App.salvarEstadoNavegacao('modal', null);
+
         const btn = document.querySelector('.btn-confirm');
         if(btn) { btn.style.display = 'inline-flex'; btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
     },
@@ -359,31 +409,6 @@ validarCadastroInst: async () => {
     } catch(e) { App.showToast('Erro de servidor.', 'error'); } finally { btn.innerText = txt; btn.disabled = false; }
 },
     
- // =========================================================
-    // 🗺️ MOTOR DE ROTEAMENTO GLOBAL (O SALVA-VIDAS DO F5)
-    // =========================================================
-    iniciarRoteadorGlobal: () => {
-        if (!App.usuario) return;
-
-        let telaAlvo = 'inicio';
-
-        // 1. Prioridade Máxima: A URL atual (se o aluno deu F5 ou clicou num link direto)
-        const hashAtual = window.location.hash.replace('#', '').trim();
-        if (hashAtual && hashAtual !== 'login') {
-            telaAlvo = hashAtual;
-        } 
-        // 2. Prioridade Secundária: A última tela visitada (memória do navegador)
-        else {
-            const ultimaTela = localStorage.getItem(App.getTenantKey('ultima_tela'));
-            if (ultimaTela && ultimaTela !== 'login') {
-                telaAlvo = ultimaTela;
-            }
-        }
-
-        // Dispara a renderização
-        App.renderizarTela(telaAlvo, true);
-    },
-
    // Adicionamos o parâmetro 'veioDoHistorico'
     renderizarTela: async (tela, veioDoHistorico = false) => {
         if (!App.usuario && tela !== 'login') { App.showToast("Sessão expirada. Faça login novamente.", "error"); App.logout(); return; }
@@ -410,9 +435,9 @@ validarCadastroInst: async () => {
             window.history.pushState({ tela: 'inicio' }, '', window.location.pathname);
         }
 
-        // 🚀 NOVO: HIDRATAÇÃO DE ESTADO (A "Pegada" invisível para o F5)
+        // 🚀 GRAVA O ESTADO PROFUNDO PARA SOBREVIVER AO F5
         if (tela !== 'login') {
-            localStorage.setItem(App.getTenantKey('ultima_tela'), tela);
+            App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: tela });
         }
 
         if (typeof gtag === 'function') gtag('event', 'page_view', { page_title: 'Tela: ' + tela, page_location: window.location.href + '#' + tela, page_path: '/' + tela });
@@ -601,11 +626,15 @@ validarCadastroInst: async () => {
         }
     },
 
-    abrirModalCadastro: async (tipo, id) => { 
+   abrirModalCadastro: async (tipo, id) => { 
         if (!id && (tipo === 'aluno')) {
             const podeCadastrar = await App.verificarLimites('aluno');
             if (!podeCadastrar) return; 
         }
+        
+        // 🚀 GRAVA A JANELA MODAL NA MEMÓRIA AO ABRIR
+        App.salvarEstadoNavegacao('modal', { tipo: tipo, id: id });
+
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
 
@@ -1084,10 +1113,14 @@ validarCadastroInst: async () => {
         }
     },
 
-    renderizarLista: async (tipo) => {
+   renderizarLista: async (tipo, veioDoRoteador = false) => {
         if (!App.usuario) { App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
+
+        // 🚀 GRAVA A LISTA NA MEMÓRIA PARA SOBREVIVER AO F5
+        App.salvarEstadoNavegacao('fundo', { tipo: 'lista', alvo: tipo });
+        if (!veioDoRoteador) window.history.pushState({ lista: tipo }, '', `#${tipo}`);
 
         App.entidadeAtual = tipo; const titulo = tipo.charAt(0).toUpperCase() + tipo.slice(1) + 's'; App.setTitulo(`Gerenciar ${titulo}`); const div = document.getElementById('app-content'); const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
 
