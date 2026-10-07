@@ -154,6 +154,54 @@ Object.assign(App, {
     motorTempoRealLigado: false,
     calendarState: { month: new Date().getMonth(), year: new Date().getFullYear() },
 
+    // =========================================================
+    // 🗺️ MOTOR DE ESTADO PROFUNDO (STATE HYDRATION PARA F5)
+    // =========================================================
+    salvarEstadoNavegacao: (camada, valor) => {
+        if (!App.usuario) return;
+        let estadoAtual = JSON.parse(localStorage.getItem(App.getTenantKey('estado_navegacao'))) || {};
+        
+        if (camada === 'fundo') {
+            estadoAtual.fundo = valor; // Guarda se é uma 'tela' ou 'lista'
+        } else if (camada === 'modal') {
+            if (valor) estadoAtual.modal = valor; // Guarda o modal aberto
+            else delete estadoAtual.modal; // Apaga se for fechado
+        }
+        
+        localStorage.setItem(App.getTenantKey('estado_navegacao'), JSON.stringify(estadoAtual));
+    },
+
+    iniciarRoteadorGlobal: () => {
+        if (!App.usuario) return;
+        
+        const estadoSalvo = localStorage.getItem(App.getTenantKey('estado_navegacao'));
+        
+        if (estadoSalvo) {
+            const estado = JSON.parse(estadoSalvo);
+            
+            // 1. RECONSTRÓI A BASE DO ECRÃ (Lista ou Tela)
+            if (estado.fundo && estado.fundo.tipo === 'lista') {
+                App.renderizarLista(estado.fundo.alvo, true);
+            } else if (estado.fundo && estado.fundo.tipo === 'tela') {
+                App.renderizarTela(estado.fundo.alvo, true);
+            } else {
+                App.renderizarInicio();
+            }
+            
+            // 2. RECONSTRÓI A JANELA MODAL POR CIMA (Se estivesse aberta)
+            if (estado.modal && estado.modal.tipo) {
+                setTimeout(() => {
+                    App.abrirModalCadastro(estado.modal.tipo, estado.modal.id);
+                }, 500); // Dá tempo para a lista desenhar primeiro
+            }
+        } else {
+            // Fallback para URL ou Início
+            const hashAtual = window.location.hash.replace('#', '').trim();
+            if (hashAtual && hashAtual !== 'login') App.renderizarTela(hashAtual, true);
+            else App.renderizarInicio();
+        }
+    },
+
     escapeHTML: (str) => {
         if (str === null || str === undefined) return '';
         return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
@@ -368,8 +416,8 @@ Object.assign(App, {
     fecharModal: () => {
         document.getElementById('modal-overlay').style.display = 'none';
         
-        // 🚀 APAGA A JANELA MODAL DA MEMÓRIA AO FECHAR
-        App.salvarEstadoNavegacao('modal', null);
+        // 🚀 APAGA O MODAL DA MEMÓRIA AO FECHAR
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', null);
 
         const btn = document.querySelector('.btn-confirm');
         if(btn) { btn.style.display = 'inline-flex'; btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
@@ -435,7 +483,7 @@ validarCadastroInst: async () => {
             window.history.pushState({ tela: 'inicio' }, '', window.location.pathname);
         }
 
-        // 🚀 GRAVA O ESTADO PROFUNDO PARA SOBREVIVER AO F5
+        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
         if (tela !== 'login') {
             App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: tela });
         }
@@ -632,8 +680,8 @@ validarCadastroInst: async () => {
             if (!podeCadastrar) return; 
         }
         
-        // 🚀 GRAVA A JANELA MODAL NA MEMÓRIA AO ABRIR
-        App.salvarEstadoNavegacao('modal', { tipo: tipo, id: id });
+        // 🚀 GRAVA O MODAL ABERTO NA MEMÓRIA PROFUNDA
+        App.salvarEstadoNavegacao('modal', { tipo: tipo, id: id || null });
 
         if (typeof App.abrirModalCadastroModulo === 'function') { App.abrirModalCadastroModulo(tipo, id); } 
     },
@@ -1118,7 +1166,7 @@ validarCadastroInst: async () => {
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🚀 GRAVA A LISTA NA MEMÓRIA PARA SOBREVIVER AO F5
+        // 🚀 GRAVA A LISTA NA MEMÓRIA PROFUNDA
         App.salvarEstadoNavegacao('fundo', { tipo: 'lista', alvo: tipo });
         if (!veioDoRoteador) window.history.pushState({ lista: tipo }, '', `#${tipo}`);
 
@@ -1944,9 +1992,22 @@ validarCadastroInst: async () => {
 }); // <--- O OBJETO APP FECHA AQUI!
 
 // =========================================================
-// EVENTOS DE ARRANQUE E PWA
+// 🚀 EVENTOS DE ARRANQUE BLINDADOS (CORREÇÃO DO BUG DO F5)
 // =========================================================
-document.addEventListener('DOMContentLoaded', App.init);
+const arrancarSistema = () => {
+    // Garante que o ficheiro auth.js já carregou a função init antes de a chamar!
+    if (typeof App.init === 'function') {
+        App.init();
+    } else {
+        setTimeout(arrancarSistema, 50); // Se não carregou, tenta de novo em 50 milissegundos
+    }
+};
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', arrancarSistema);
+} else {
+    arrancarSistema();
+}
 
 // =========================================================
 // MOTOR DE NAVEGAÇÃO (BOTÕES VOLTAR / AVANÇAR DO NAVEGADOR)
