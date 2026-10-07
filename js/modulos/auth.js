@@ -165,6 +165,13 @@ Object.assign(App, {
             if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
             if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
 
+            // 🚀 A BÚSSOLA DO F5: Invoca o Roteador Global que criámos no app.js
+            if (typeof App.iniciarRoteadorGlobal === 'function') {
+                setTimeout(() => { App.iniciarRoteadorGlobal(); }, 50);
+            } else if (typeof App.renderizarInicio === 'function') {
+                App.renderizarInicio();
+            }
+
             setTimeout(async () => {
                 let escola = await App.api('/escola', 'GET', null, true); 
                 if (!escola || escola.error) {
