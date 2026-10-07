@@ -2019,8 +2019,11 @@ Workspace.Feed = {
         
         const exp = document.getElementById(`quiz-exp-${perguntaIndex}`);
         if (exp) {
+            // 🚀 SALVA-VIDAS DA EXPLICAÇÃO: Cobre falhas ou alucinações de nomenclatura da IA
+            const textoExplicacao = pergunta.explicacao || pergunta.justificativa || pergunta.explanation || `A opção correta é a número ${correta + 1}.`;
+            
             exp.style.display = 'block';
-            exp.innerHTML = `💡 <strong>Explicação:</strong> ${Workspace.Feed.formatarIA(pergunta.explicacao)}`;
+            exp.innerHTML = `💡 <strong>Explicação:</strong> ${Workspace.Feed.formatarIA(textoExplicacao)}`;
             exp.style.animation = 'fadeIn 0.3s ease';
         }
     },
