@@ -38,23 +38,6 @@ Object.assign(App, {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     
     // =========================================================
-    // 🗺️ MOTOR DE ROTEAMENTO GLOBAL PROFUNDO (STATE HYDRATION)
-    // =========================================================
-    salvarEstadoNavegacao: (camada, valor) => {
-        if (!App.usuario) return;
-        let estadoAtual = JSON.parse(localStorage.getItem(App.getTenantKey('estado_navegacao'))) || {};
-        
-        if (camada === 'fundo') {
-            estadoAtual.fundo = valor; // Guarda se é uma 'tela' ou 'lista'
-        } else if (camada === 'modal') {
-            if (valor) estadoAtual.modal = valor; // Guarda o modal aberto
-            else delete estadoAtual.modal; // Apaga o modal da memória se for fechado
-        }
-        
-        localStorage.setItem(App.getTenantKey('estado_navegacao'), JSON.stringify(estadoAtual));
-    },
-
-    // =========================================================
     // 📝 AUTO-RASCUNHO PARA FORMULÁRIOS (Prevenção de Perda de Dados)
     // =========================================================
     salvarRascunhoModal: () => {
@@ -124,34 +107,6 @@ Object.assign(App, {
             });
             // Liga o detetive a observar alterações dentro da caixa do modal
             observer.observe(container, { childList: true, subtree: true });
-        }
-    },
-
-    iniciarRoteadorGlobal: () => {
-        if (!App.usuario) return;
-        
-        const estadoSalvo = localStorage.getItem(App.getTenantKey('estado_navegacao'));
-        
-        if (estadoSalvo) {
-            const estado = JSON.parse(estadoSalvo);
-            
-            // 1. RECONSTRÓI A BASE DO ECRÃ (Lista ou Tela)
-            if (estado.fundo && estado.fundo.tipo === 'lista') {
-                App.renderizarLista(estado.fundo.alvo, true);
-            } else if (estado.fundo && estado.fundo.tipo === 'tela') {
-                App.renderizarTela(estado.fundo.alvo, true);
-            } else {
-                App.renderizarInicio();
-            }
-            
-            // 2. RECONSTRÓI A JANELA MODAL POR CIMA (Se estivesse aberta)
-            if (estado.modal) {
-                setTimeout(() => {
-                    App.abrirModalCadastro(estado.modal.tipo, estado.modal.id);
-                }, 600); // Aguarda 0.6s para a tabela de fundo acabar de desenhar
-            }
-        } else {
-            App.renderizarInicio();
         }
     },
 
