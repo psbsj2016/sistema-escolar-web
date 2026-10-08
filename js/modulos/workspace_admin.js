@@ -363,17 +363,27 @@ Object.assign(App, {
             // 5. CONSTRUÇÃO DA LISTA VISUAL: Mescla a Conta Ativa com o status do Radar
             const listaMonitoramento = contasAtivas.map(conta => {
                 const alunoFicha = alunosAtivos.find(a => a.id === conta.alunoRefId) || {};
-                const statusRadar = radarDados.find(r => r.login === conta.login) || {};
+                
+                // 🚀 O NOVO MOTOR DE IDENTIFICAÇÃO MULTI-CHAVE (Cross-Reference Seguro)
+                // Testa todas as possibilidades devolvidas pelo servidor para garantir que a bolinha liga à pessoa certa
+                const statusRadar = radarDados.find(r => 
+                    (r.id && String(r.id) === String(conta.id)) ||
+                    (r.usuarioId && String(r.usuarioId) === String(conta.id)) ||
+                    (r.alunoRefId && String(r.alunoRefId) === String(alunoFicha.id)) ||
+                    (r.login && conta.login && r.login.toLowerCase() === conta.login.toLowerCase()) ||
+                    (r.nome && alunoFicha.nome && r.nome.trim().toLowerCase() === alunoFicha.nome.trim().toLowerCase())
+                ) || {};
                 
                 return {
                     nome: alunoFicha.nome || conta.nome || conta.login,
                     login: conta.login,
-                    isOnline: statusRadar.isOnline || false,
+                    // Garante que o status booleano é lido corretamente, seja boolean ou string
+                    isOnline: statusRadar.isOnline === true || String(statusRadar.isOnline) === 'true',
                     ultimoAcesso: statusRadar.ultimoAcesso || null
                 };
             });
 
-            // Ordena: Alunos Online no topo, seguidos por ordem alfabética
+            // Ordena: Alunos Online no topo (com a bolinha a piscar), seguidos por ordem alfabética
             listaMonitoramento.sort((a, b) => {
                 if (b.isOnline === a.isOnline) return a.nome.localeCompare(b.nome);
                 return b.isOnline ? 1 : -1;
