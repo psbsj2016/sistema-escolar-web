@@ -37,7 +37,7 @@ window.LISTA_FUNCIONALIDADES = [
 Object.assign(App, {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     
-// =========================================================
+    // =========================================================
     // 🗺️ MOTOR DE ROTEAMENTO GLOBAL PROFUNDO (STATE HYDRATION)
     // =========================================================
     salvarEstadoNavegacao: (camada, valor) => {
@@ -52,6 +52,79 @@ Object.assign(App, {
         }
         
         localStorage.setItem(App.getTenantKey('estado_navegacao'), JSON.stringify(estadoAtual));
+    },
+
+    // =========================================================
+    // 📝 AUTO-RASCUNHO PARA FORMULÁRIOS (Prevenção de Perda de Dados)
+    // =========================================================
+    salvarRascunhoModal: () => {
+        const container = document.getElementById('modal-form-content');
+        if (!container) return;
+
+        const inputs = container.querySelectorAll('input, select, textarea');
+        let rascunho = {};
+        
+        inputs.forEach(inp => {
+            // Só guarda se o campo tiver ID e NÃO for uma password
+            if (inp.id && inp.type !== 'password') {
+                rascunho[inp.id] = inp.type === 'checkbox' ? inp.checked : inp.value;
+            }
+        });
+        
+        sessionStorage.setItem('ws_rascunho_modal', JSON.stringify(rascunho));
+    },
+
+    restaurarRascunhoModal: () => {
+        const rascunhoStr = sessionStorage.getItem('ws_rascunho_modal');
+        if (!rascunhoStr) return;
+
+        try {
+            const rascunho = JSON.parse(rascunhoStr);
+            const container = document.getElementById('modal-form-content');
+            if (!container) return;
+
+            let restaurouAlgo = false;
+            for (const [id, valor] of Object.entries(rascunho)) {
+                const inp = container.querySelector(`#${id}`);
+                if (inp) {
+                    if (inp.type === 'checkbox') inp.checked = valor;
+                    else inp.value = valor;
+                    restaurouAlgo = true;
+                }
+            }
+            
+            // Mostra um aviso elegante para o utilizador saber que foi salvo!
+            if (restaurouAlgo && !App._rascunhoAvisado) {
+                App.showToast("Rascunho recuperado automaticamente! 📝", "info");
+                App._rascunhoAvisado = true; 
+                setTimeout(() => { App._rascunhoAvisado = false; }, 3500);
+            }
+        } catch (e) { console.warn("Erro ao ler rascunho."); }
+    },
+
+    iniciarRastreadorRascunho: () => {
+        // 1. Grava os dados sempre que o utilizador digita algo no Modal
+        document.addEventListener('input', (e) => {
+            const container = document.getElementById('modal-form-content');
+            if (container && container.contains(e.target)) {
+                App.salvarRascunhoModal();
+            }
+        });
+
+        // 2. O Detetive: Fica a vigiar quando o formulário é injetado no HTML
+        const container = document.getElementById('modal-form-content');
+        if (container) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    // Se novos elementos (inputs) foram desenhados na tela, tenta restaurar!
+                    if (mutation.addedNodes && mutation.addedNodes.length > 0) {
+                        App.restaurarRascunhoModal();
+                    }
+                });
+            });
+            // Liga o detetive a observar alterações dentro da caixa do modal
+            observer.observe(container, { childList: true, subtree: true });
+        }
     },
 
     iniciarRoteadorGlobal: () => {
@@ -416,8 +489,9 @@ Object.assign(App, {
     fecharModal: () => {
         document.getElementById('modal-overlay').style.display = 'none';
         
-        // 🚀 APAGA O MODAL DA MEMÓRIA AO FECHAR
+        // 🚀 APAGA O RASCUNHO E O MODAL DA MEMÓRIA
         if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', null);
+        sessionStorage.removeItem('ws_rascunho_modal');
 
         const btn = document.querySelector('.btn-confirm');
         if(btn) { btn.style.display = 'inline-flex'; btn.setAttribute('onclick', 'App.salvarCadastro()'); btn.innerHTML = "💾 Salvar Registro"; }
@@ -2109,4 +2183,13 @@ window.addEventListener('appinstalled', () => {
     const installBanner = document.getElementById('pwa-install-banner'); if (installBanner) installBanner.style.display = 'none'; deferredPrompt = null; 
     if (typeof gtag === 'function') gtag('event', 'app_install', { platform: 'PWA Web' });
     App.showToast('App instalada com sucesso! 🎉', 'success'); 
+});
+
+// =========================================================
+// 🚀 INICIALIZAÇÃO DE SERVIÇOS GLOBAIS (Rastreador)
+// =========================================================
+document.addEventListener('DOMContentLoaded', () => {
+    if (typeof App.iniciarRastreadorRascunho === 'function') {
+        App.iniciarRastreadorRascunho();
+    }
 });
