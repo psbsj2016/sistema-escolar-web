@@ -16,9 +16,9 @@ const CardEstatistica = (titulo, valor, icone) => `
     </div>
 `;
 
-// Componente 2: Cartão de Aluno Inadimplente (AGORA INTERATIVO!)
+// Componente 2: Cartão de Aluno Inadimplente (AGORA INTERATIVO E SEGURO!)
 const CardInadimplente = (idFatura, nome, dataBr, valFmt, zap) => `
-    <div onclick="App.irParaFinanceiroDestacado('${idFatura}', '${App.escapeHTML(nome)}')" style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(231,76,60,0.2)'; this.style.borderColor='#e74c3c';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.borderColor='#f5b7b1';">
+    <div onclick="App.irParaFinanceiroDestacado('${idFatura}')" style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(231,76,60,0.2)'; this.style.borderColor='#e74c3c';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.borderColor='#f5b7b1';">
         <div>
             <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${App.escapeHTML(nome)}</div>
             <div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div>
@@ -177,22 +177,29 @@ export const cobrarWhatsAppDashboard = (nomeAluno, telefone, dataVencimento, val
 // =========================================================
 // 🔦 NAVEGADOR INTELIGENTE (EFEITO HOLOFOTE NO FINANCEIRO)
 // =========================================================
-App.irParaFinanceiroDestacado = async (idFatura, nomeAluno) => { // 🚀 Adicionámos o "async"
+App.irParaFinanceiroDestacado = async (idFatura) => { 
     
-    // 1. Aciona o Roteador e ESPERA (await) a lista carregar 100%, independentemente da velocidade da internet
+    // 1. Aciona o Roteador e ESPERA a lista carregar 100%
     if (typeof App.renderizarLista === 'function') {
         await App.renderizarLista('financeiro');
     }
     
-    // 2. Injeta a Pesquisa Automática (A tabela já existe garantidamente aqui)
+    // 2. Busca o nome exato na memória para evitar bugs de caracteres especiais na pesquisa
+    let nomeParaBusca = '';
+    if (App.listaCache && App.listaCache.length > 0) {
+        const fatura = App.listaCache.find(f => f.id === idFatura);
+        if (fatura) nomeParaBusca = fatura.alunoNome || '';
+    }
+
+    // 3. Injeta a Pesquisa Automática com o nome perfeito
     const inputBusca = document.getElementById('input-busca');
-    if (inputBusca) {
-        inputBusca.value = nomeAluno;
-        sessionStorage.setItem('ws_filtro_financeiro', nomeAluno);
+    if (inputBusca && nomeParaBusca) {
+        inputBusca.value = nomeParaBusca;
+        sessionStorage.setItem('ws_filtro_financeiro', nomeParaBusca);
         if (typeof App.filtrarTabelaReativa === 'function') App.filtrarTabelaReativa();
     }
 
-    // 3. Aguarda apenas uma fração de segundo para o HTML da tabela se desenhar após o filtro
+    // 4. Aguarda o DOM redesenhar a tabela (300ms é o "sweet spot" de segurança)
     setTimeout(() => {
         const checkboxLinha = document.querySelector(`.chk-cadastro[value="${idFatura}"]`);
         if (checkboxLinha) {
@@ -201,16 +208,16 @@ App.irParaFinanceiroDestacado = async (idFatura, nomeAluno) => { // 🚀 Adicion
                 // Rola o ecrã até à fatura
                 linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
-                // 🌟 A Magia: Pinta os <td> (Células) individualmente, o que funciona em qualquer navegador!
+                // 🌟 A Magia: Pinta as células com o Amarelo Neon
                 const celulas = linha.querySelectorAll('td');
                 celulas.forEach(td => {
                     td.style.transition = 'background-color 0.4s ease, border 0.4s ease';
-                    td.style.backgroundColor = '#fff3cd'; // Amarelo brilhante
-                    td.style.borderTop = '2px solid #f1c40f'; // Borda superior destacada
-                    td.style.borderBottom = '2px solid #f1c40f'; // Borda inferior destacada
+                    td.style.backgroundColor = '#fff3cd'; 
+                    td.style.borderTop = '2px solid #f1c40f'; 
+                    td.style.borderBottom = '2px solid #f1c40f'; 
                 });
 
-                // Desliga o holofote após 3 segundos, voltando ao design original
+                // Desliga o holofote após 3 segundos
                 setTimeout(() => {
                     celulas.forEach(td => {
                         td.style.backgroundColor = 'transparent';
@@ -219,9 +226,6 @@ App.irParaFinanceiroDestacado = async (idFatura, nomeAluno) => { // 🚀 Adicion
                     });
                 }, 3000);
             }
-        } else {
-            // Caso a fatura já tenha sido paga noutro separador, por exemplo
-            App.showToast("Fatura selecionada já não está na lista.", "info");
         }
-    }, 150); 
+    }, 300); 
 };
