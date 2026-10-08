@@ -451,3 +451,95 @@ App.excluirEmLoteCadastros = (tipo) => {
         };
     }
 };
+
+// =======================================================================
+// 📄 VISUALIZADOR DE FICHA DE ALUNO (READ-ONLY)
+// =======================================================================
+App.abrirFichaAluno = async (id) => {
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+    const btnConfirm = document.querySelector('.btn-confirm');
+    
+    if(titulo) titulo.innerText = "Ficha do Aluno";
+    if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">A carregar ficha completa... ⏳</p>';
+    
+    // 🛡️ Esconde o botão de Salvar pois é um modo apenas de leitura
+    if(btnConfirm) btnConfirm.style.display = 'none';
+
+    try {
+        const dados = await App.api(`/alunos/${id}`);
+        
+        // Função auxiliar para campos vazios
+        const d = (val) => val ? App.escapeHTML(val) : '<span style="color:#aaa;">Não informado</span>';
+        const statusCor = dados.status === 'Cancelado' ? '#e74c3c' : (dados.status === 'Trancado' ? '#f39c12' : '#27ae60');
+
+        const html = `
+            <div style="padding: 5px;">
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:15px;">
+                    <div style="font-size:35px; background:#f4f6f7; width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:50%; border:2px solid #bdc3c7;">🎓</div>
+                    <div>
+                        <h2 style="margin:0; color:#2c3e50; font-size:20px;">${d(dados.nome)}</h2>
+                        <div style="margin-top:4px;">
+                            <span style="background:${statusCor}20; color:${statusCor}; padding:4px 8px; border-radius:4px; font-size:11px; font-weight:bold; border: 1px solid ${statusCor}50;">${d(dados.status || 'Ativo')}</span>
+                            <span style="color:#7f8c8d; font-size:12px; margin-left:10px;"><b>Matrícula:</b> ${dados.id.slice(-6).toUpperCase()}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px;">
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                        <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">📞 Contactos</h4>
+                        <div style="font-size:13px; color:#555; line-height:1.6;">
+                            <div><b>WhatsApp:</b> ${d(dados.whatsapp)}</div>
+                            <div><b>E-mail:</b> ${d(dados.email)}</div>
+                        </div>
+                    </div>
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                        <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">🏫 Turma / Curso</h4>
+                        <div style="font-size:13px; color:#555; line-height:1.6;">
+                            <div><b>Turma:</b> ${d(dados.turma)}</div>
+                            <div><b>Curso:</b> ${d(dados.curso)}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom:15px;">
+                    <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">📄 Documentos & Pessoal</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; color:#555;">
+                        <div><b>CPF:</b> ${d(dados.cpf)}</div>
+                        <div><b>RG:</b> ${d(dados.rg)}</div>
+                        <div><b>Nascimento:</b> ${dados.nascimento ? dados.nascimento.split('-').reverse().join('/') : '<span style="color:#aaa;">Não informada</span>'}</div>
+                        <div><b>Sexo:</b> ${d(dados.sexo)}</div>
+                        <div><b>Profissão:</b> ${d(dados.profissao)}</div>
+                    </div>
+                </div>
+
+                <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee; margin-bottom: ${dados.resp_nome ? '15px' : '0'};">
+                    <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">📍 Endereço</h4>
+                    <div style="font-size:13px; color:#555; line-height:1.5;">
+                        ${d(dados.rua)}, Nº ${d(dados.numero)}<br>
+                        ${d(dados.bairro)} - ${d(dados.cidade)} / ${d(dados.estado)}
+                    </div>
+                </div>
+                
+                ${dados.resp_nome ? `
+                <div style="background:#fff3e0; padding:15px; border-radius:8px; border:1px solid #fdebd0;">
+                    <h4 style="margin:0 0 10px 0; color:#d35400; font-size:12px; text-transform:uppercase;">👤 Responsável Legal (Menor)</h4>
+                    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:13px; color:#555;">
+                        <div><b>Nome:</b> ${d(dados.resp_nome)}</div>
+                        <div><b>Vínculo:</b> ${d(dados.resp_parentesco)}</div>
+                        <div><b>CPF:</b> ${d(dados.resp_cpf)}</div>
+                        <div><b>WhatsApp:</b> ${d(dados.resp_zap)}</div>
+                    </div>
+                </div>` : ''}
+            </div>
+        `;
+        
+        conteudo.innerHTML = html;
+    } catch(e) {
+        conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a ficha do aluno.</p>';
+    }
+};
