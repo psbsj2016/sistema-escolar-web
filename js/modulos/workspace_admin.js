@@ -2,11 +2,34 @@
 window.App = window.App || {};
 const App = window.App;
 
+// 🚀 INJEÇÃO DINÂMICA: Ensina o Roteador Global do app.js a reconhecer estas telas sem alterá-lo!
+const originalRenderizarTela = App.renderizarTela;
+App.renderizarTela = async (tela, veioDoHistorico = false) => {
+    if (tela === 'workspace_admin') return App.renderizarWorkspaceAdmin(veioDoHistorico);
+    if (tela === 'workspace_acessos') return App.renderizarWorkspaceAcessos(veioDoHistorico);
+    if (tela === 'workspace_monitoramento') return App.renderizarWorkspaceMonitoramento(veioDoHistorico);
+    if (originalRenderizarTela) return originalRenderizarTela(tela, veioDoHistorico);
+};
+
+// 🚀 INJEÇÃO DINÂMICA: Ensina o restaurador de Modais a abrir a janela de acesso no F5!
+const originalModalModulo = App.abrirModalCadastroModulo;
+App.abrirModalCadastroModulo = (tipo, id) => {
+    if (tipo === 'ws_acesso' && App.workspaceCache) {
+        const aluno = App.workspaceCache.alunos.find(a => a.id === id);
+        if (aluno) return App.abrirModalAcessoWorkspace(aluno.id, aluno.nome);
+    }
+    if (originalModalModulo) return originalModalModulo(tipo, id);
+};
+
 Object.assign(App, {
     // =========================================================
     // 🎓 1. HUB CENTRAL DO WORKSPACE (MENU DE 2 BOTÕES)
     // =========================================================
-    renderizarWorkspaceAdmin: () => {
+    renderizarWorkspaceAdmin: (veioDoHistorico = false) => {
+        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
+        if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_admin' }, '', '#workspace_admin');
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_admin' });
+
         App.setTitulo("Gestão do Workspace");
         const div = document.getElementById('app-content');
         
@@ -40,10 +63,14 @@ Object.assign(App, {
     // =========================================================
     // 🔐 2. TELA DE GESTÃO DE ACESSOS (SISTEMA ORIGINAL)
     // =========================================================
-    renderizarWorkspaceAcessos: async () => {
+    renderizarWorkspaceAcessos: async (veioDoHistorico = false) => {
+        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
+        if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_acessos' }, '', '#workspace_acessos');
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_acessos' });
+
         App.setTitulo("Acessos ao Portal");
         const div = document.getElementById('app-content');
-        div.innerHTML = '<p style="text-align:center; padding:40px; color:#666;">A carregar lista de alunos e acessos... ⏳</p>';
+        div.innerHTML = '<p style="text-align:center; padding:40px; color:#666;">Carregando lista de alunos e acessos... ⏳</p>';
 
         try {
             const alunosRes = await App.api('/alunos');
@@ -82,6 +109,15 @@ Object.assign(App, {
 
             App.filtrarWorkspaceAdmin();
 
+            // 🚀 HIDRATAÇÃO DO FILTRO: Injeta a pesquisa salva antes de filtrar
+            const termoSalvo = sessionStorage.getItem('ws_filtro_admin_acessos');
+            if (termoSalvo) {
+                const inputBusca = document.getElementById('ws-busca-aluno');
+                if (inputBusca) inputBusca.value = termoSalvo;
+            }
+
+            App.filtrarWorkspaceAdmin();
+
         } catch (e) {
             console.error("Erro na gestão:", e);
             div.innerHTML = '<p style="color:#e74c3c; text-align:center; padding:40px;">Erro ao carregar a lista de alunos.</p>';
@@ -89,7 +125,12 @@ Object.assign(App, {
     },
 
     filtrarWorkspaceAdmin: () => {
-        const termo = (document.getElementById('ws-busca-aluno')?.value || '').toLowerCase();
+        const input = document.getElementById('ws-busca-aluno');
+        const termo = (input?.value || '').toLowerCase();
+        
+        // 🚀 MEMÓRIA DA PESQUISA: Grava na sessão
+        sessionStorage.setItem('ws_filtro_admin_acessos', input?.value || '');
+
         const container = document.getElementById('ws-admin-tabela-container');
         if (!container || !App.workspaceCache) return;
 
@@ -141,6 +182,8 @@ Object.assign(App, {
     },
 
     abrirModalAcessoWorkspace: (alunoId, nomeAluno) => {
+        // 🚀 GRAVA O MODAL ABERTO NA MEMÓRIA PROFUNDA
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', { tipo: 'ws_acesso', id: alunoId });
         let modal = document.getElementById('modal-acesso-ws');
         if (!modal) {
             modal = document.createElement('div');
@@ -170,7 +213,7 @@ Object.assign(App, {
                 </div>
 
                 <div style="display:flex; gap:10px;">
-                    <button class="btn-cancel" style="flex:1; justify-content:center; padding:12px; border-radius:8px;" onclick="document.getElementById('modal-acesso-ws').style.display='none'">Cancelar</button>
+                    <button class="btn-cancel" style="flex:1; justify-content:center; padding:12px; border-radius:8px;" onclick="document.getElementById('modal-acesso-ws').style.display='none'; if(App.salvarEstadoNavegacao) App.salvarEstadoNavegacao('modal', null);">Cancelar</button>
                     <button class="btn-primary" id="ws-btn-salvar-acesso" style="flex:1; justify-content:center; padding:12px; border-radius:8px; background:#27ae60; border:none;" onclick="App.salvarAcessoWorkspace('${alunoId}', '${nomeAluno.replace(/'/g, "\\'")}')">💾 Guardar</button>
                 </div>
             </div>
@@ -197,7 +240,8 @@ Object.assign(App, {
             } else {
                 App.showToast("✅ Acesso criado com sucesso!", "success");
                 document.getElementById('modal-acesso-ws').style.display = 'none';
-                App.renderizarWorkspaceAcessos(); // 🚀 CORRIGIDO: Volta para a lista de acessos e não para o Hub
+                if(typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', null); // 🚀 Limpa a memória
+                App.renderizarWorkspaceAcessos();
             }
         } catch (e) { App.showToast("Erro de ligação.", "error"); } 
         finally { btn.innerHTML = originalText; btn.disabled = false; }
@@ -224,7 +268,11 @@ Object.assign(App, {
     // =========================================================
     radarMonitoramentoInterval: null,
 
-    renderizarWorkspaceMonitoramento: async () => {
+   renderizarWorkspaceMonitoramento: async (veioDoHistorico = false) => {
+        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
+        if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_monitoramento' }, '', '#workspace_monitoramento');
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_monitoramento' });
+
         App.setTitulo("Monitoramento Online");
         const div = document.getElementById('app-content');
         
@@ -272,9 +320,9 @@ Object.assign(App, {
         }, 10000);
     },
 
-   atualizarDadosRadar: async (silencioso = false) => {
+  atualizarDadosRadar: async (silencioso = false) => {
         try {
-            // 🚀 INJEÇÃO INTELIGENTE: Puxa o ID da escola para não misturar alunos de outras escolas
+            // 1. Puxa o ID da escola (Para não misturar dados de outras instituições)
             let escolaId = 'DEFAULT';
             if (App.usuario && App.usuario.escolaId) {
                 escolaId = App.usuario.escolaId;
@@ -283,17 +331,38 @@ Object.assign(App, {
                 escolaId = escolaCache.id || 'DEFAULT';
             }
 
-            // 🚀 ROTA CORRIGIDA: Agora pedimos o status com o ID da escola no final da URL
-            const dados = await App.api(`/workspace/monitoramento/status?escolaId=${escolaId}`, 'GET', null, silencioso);
+            // 2. BUSCA SIMULTÂNEA (Cross-Reference): Radar + Secretaria + Usuários
+            // Usamos Promise.all para que o sistema busque os 3 dados ao mesmo tempo, mantendo a velocidade máxima.
+            const [radarRes, alunosRes, usuariosRes] = await Promise.all([
+                App.api(`/workspace/monitoramento/status?escolaId=${escolaId}`, 'GET', null, silencioso),
+                App.api('/alunos', 'GET', null, true),   // Busca silenciosa
+                App.api('/usuarios', 'GET', null, true)  // Busca silenciosa
+            ]);
             
             const container = document.getElementById('lista-monitoramento');
             if (!container) return;
 
-            if (!dados || dados.error || dados.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno registado ou histórico de navegação encontrado.</p>';
+            // 3. O FILTRO DE OURO: Separar apenas os alunos estritamente ATIVOS
+            const alunosAtivosIds = (Array.isArray(alunosRes) ? alunosRes : [])
+                .filter(a => !a.status || a.status === 'Ativo')
+                .map(a => a.id);
+                
+            // Cruzamos os IDs ativos para descobrir os logins de acesso (usuários) correspondentes
+            const loginsValidos = (Array.isArray(usuariosRes) ? usuariosRes : [])
+                .filter(u => alunosAtivosIds.includes(u.alunoRefId))
+                .map(u => u.login);
+
+            // 4. LIMPEZA FINAL DO RADAR: Só passa para o ecrã quem está na lista de logins válidos!
+            const dadosBrutos = Array.isArray(radarRes) ? radarRes : [];
+            const dadosLimpos = dadosBrutos.filter(u => loginsValidos.includes(u.login));
+
+            // Se, após o filtro, a lista ficar vazia, mostramos a mensagem de ausência
+            if (dadosLimpos.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno ativo registado ou histórico de navegação encontrado.</p>';
                 return;
             }
 
+            // 5. DESENHAR A TABELA NO ECRÃ
             let html = '<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; text-align:left;">';
             html += '<thead><tr style="background: #fff; border-bottom: 2px solid #eee; color:#64748b; font-size: 13px; text-transform: uppercase;">';
             html += '<th style="padding:15px 20px;">Identificação do Aluno</th>';
@@ -301,10 +370,10 @@ Object.assign(App, {
             html += '<th style="padding:15px 20px; text-align:right;">Última Interação Registada</th>';
             html += '</tr></thead><tbody>';
 
-            // Os online aparecem no topo
-            dados.sort((a, b) => (b.isOnline === a.isOnline) ? 0 : b.isOnline ? 1 : -1);
+            // Ordena para que as bolinhas verdes (online) apareçam sempre no topo da lista
+            dadosLimpos.sort((a, b) => (b.isOnline === a.isOnline) ? 0 : b.isOnline ? 1 : -1);
 
-            dados.forEach(aluno => {
+            dadosLimpos.forEach(aluno => {
                 const isOnline = aluno.isOnline; 
                 const corBola = isOnline ? '#27ae60' : '#e74c3c';
                 const txtStatus = isOnline ? 'Online Agora' : 'Offline';
@@ -340,7 +409,7 @@ Object.assign(App, {
             container.innerHTML = html;
 
         } catch (e) {
-            // Falha invisível (para não perturbar a UX)
+            // Falha invisível (para não perturbar a UX em caso de instabilidade de internet do utilizador)
         }
     }
 });
