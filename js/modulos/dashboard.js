@@ -16,14 +16,14 @@ const CardEstatistica = (titulo, valor, icone) => `
     </div>
 `;
 
-// Componente 2: Cartão de Aluno Inadimplente
-const CardInadimplente = (nome, dataBr, valFmt, zap) => `
-    <div style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02);">
+// Componente 2: Cartão de Aluno Inadimplente (AGORA INTERATIVO!)
+const CardInadimplente = (idFatura, nome, dataBr, valFmt, zap) => `
+    <div onclick="App.irParaFinanceiroDestacado('${idFatura}', '${App.escapeHTML(nome)}')" style="background:#fff; border:1px solid #f5b7b1; padding:12px; border-radius:8px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 2px 4px rgba(0,0,0,0.02); cursor:pointer; transition:all 0.2s;" onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 5px 15px rgba(231,76,60,0.2)'; this.style.borderColor='#e74c3c';" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.02)'; this.style.borderColor='#f5b7b1';">
         <div>
             <div style="font-size:13px; font-weight:bold; color:#333; margin-bottom:4px;">${App.escapeHTML(nome)}</div>
             <div style="font-size:11px; color:#c0392b; font-weight:600;">Venc: ${dataBr} • R$ ${valFmt}</div>
         </div>
-        <button onclick="App.cobrarWhatsAppDashboard('${App.escapeHTML(nome)}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+        <button onclick="event.stopPropagation(); App.cobrarWhatsAppDashboard('${App.escapeHTML(nome)}', '${zap}', '${dataBr}', '${valFmt}')" style="background:#25D366; color:white; border:none; padding:8px 12px; border-radius:6px; font-size:11px; cursor:pointer; font-weight:bold; white-space:nowrap; box-shadow:0 2px 4px rgba(37,211,102,0.3); display:flex; align-items:center; gap:5px; transition:transform 0.2s;" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
             <span>💬</span> Cobrar
         </button>
     </div>
@@ -33,12 +33,14 @@ const CardInadimplente = (nome, dataBr, valFmt, zap) => `
 // ⚙️ MÓDULO DASHBOARD - LÓGICA DE NEGÓCIO
 // =========================================================
 
-export const renderizarInicio = async () => {
+export const renderizarInicio = async (veioDoHistorico = false) => {
+    // 🚀 BLINDAGEM DO F5: Grava o Dashboard na Memória Profunda imediatamente
+    if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'inicio' });
+    if (!veioDoHistorico) window.history.pushState({ tela: 'inicio' }, '', '#inicio');
+
     App.verificarNotificacoes(); 
-    
-    // 🚀 AÇÃO IMEDIATA 1: Atualiza o título no exato milissegundo do clique
     App.setTitulo("Dashboard"); 
-    const div = document.getElementById('app-content'); 
+    const div = document.getElementById('app-content');
     
     const nomeUsuario = App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor');
 
@@ -90,7 +92,8 @@ export const renderizarInicio = async () => {
                 const zap = alunoInfo.whatsapp || ''; 
                 const dataBr = f.vencimento.split('-').reverse().join('/'); 
                 const valFmt = formatarMoeda(parseFloat(f.valor));
-                return CardInadimplente(f.alunoNome || 'Desconhecido', dataBr, valFmt, zap);
+                // 🚀 PASSAMOS O ID DA FATURA AQUI (f.id)
+                return CardInadimplente(f.id, f.alunoNome || 'Desconhecido', dataBr, valFmt, zap);
             }).join('');
 
         let idsAtalhos = JSON.parse(localStorage.getItem(App.getTenantKey('escola_atalhos')));
@@ -169,4 +172,52 @@ export const cobrarWhatsAppDashboard = (nomeAluno, telefone, dataVencimento, val
     const msg = `🔔 *LEMBRETE DE VENCIMENTO*\nOlá, ${nomeAluno}!\n\nConsta no nosso sistema que a sua mensalidade venceu no dia ${dataVencimento}. Para realizar o pagamento de forma rápida, basta enviar o valor de *R$ ${valorFmt}* para a chave PIX abaixo:\n\n*Instituição:* ${nomeEscola}\n*Banco:* ${bancoPix}\n*Chave PIX:* ${chavePix}\n\n*Obs.:* _Após o pagamento, por favor, envie o comprovante por aqui para podermos dar baixa no sistema._\n\n🙏 Agradecemos desde já e desejamos-lhe um excelente dia! 😉✅`;
     
     window.open(`https://wa.me/${numero}?text=${encodeURIComponent(msg)}`, '_blank');
+};
+
+// =========================================================
+// 🔦 NAVEGADOR INTELIGENTE (EFEITO HOLOFOTE NO FINANCEIRO)
+// =========================================================
+App.irParaFinanceiroDestacado = (idFatura, nomeAluno) => {
+    // 1. Aciona o Roteador Global para mudar para a lista do Financeiro
+    if (typeof App.renderizarLista === 'function') {
+        App.renderizarLista('financeiro');
+    }
+    
+    // 2. Aguarda um momento para o ecrã desenhar e injeta a Pesquisa Automática
+    setTimeout(() => {
+        const inputBusca = document.getElementById('input-busca');
+        if (inputBusca) {
+            inputBusca.value = nomeAluno;
+            sessionStorage.setItem('ws_filtro_financeiro', nomeAluno);
+            if (typeof App.filtrarTabelaReativa === 'function') App.filtrarTabelaReativa();
+        }
+
+        // 3. Aguarda os dados chegarem da API
+        setTimeout(() => {
+            // O ID da fatura fica guardado no checkbox da linha
+            const checkboxLinha = document.querySelector(`.chk-cadastro[value="${idFatura}"]`);
+            if (checkboxLinha) {
+                const linha = checkboxLinha.closest('tr');
+                if (linha) {
+                    // 🌟 A Mágica: Rolagem suave e Efeito Holofote (Amarelo Neon)
+                    linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    linha.style.transition = 'all 0.5s ease';
+                    linha.style.backgroundColor = '#fff3cd'; 
+                    linha.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.4)';
+                    linha.style.transform = 'scale(1.02)';
+                    linha.style.position = 'relative';
+                    linha.style.zIndex = '10';
+
+                    // Desliga o holofote após 3 segundos
+                    setTimeout(() => {
+                        linha.style.backgroundColor = 'transparent';
+                        linha.style.boxShadow = 'none';
+                        linha.style.transform = 'scale(1)';
+                        linha.style.zIndex = '1';
+                    }, 3000);
+                }
+            }
+        }, 600); // Delay do Servidor
+    }, 50); // Delay do Frontend
 };
