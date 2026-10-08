@@ -35,12 +35,29 @@ const CardInadimplente = (nome, dataBr, valFmt, zap) => `
 
 export const renderizarInicio = async () => {
     App.verificarNotificacoes(); 
+    
+    // 🚀 AÇÃO IMEDIATA 1: Atualiza o título no exato milissegundo do clique
     App.setTitulo("Dashboard"); 
     const div = document.getElementById('app-content'); 
     
+    const nomeUsuario = App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor');
+
+    // 🚀 AÇÃO IMEDIATA 2: Desenha a Saudação e o Esqueleto de Carregamento (Sem esperar pela rede!)
+    div.innerHTML = `
+        <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${nomeUsuario}! 👋</h3>
+        <div id="dashboard-dinamico">
+            <div style="text-align:center; padding: 60px; color:#94a3b8; background: #fff; border-radius: 12px; border: 1px solid #eee;">
+                <span style="font-size: 35px; display: block; margin-bottom: 15px; animation: piscarSuave 1s infinite;">⏳</span>
+                <span style="font-weight: bold; font-size: 15px;">A processar métricas e gráficos...</span>
+                <p style="font-size: 12px; color: #aaa; margin-top: 5px;">Isto leva apenas um segundo.</p>
+            </div>
+        </div>
+    `;
     
     try {
+        // 🚀 BUSCA SILENCIOSA: O ecrã já está desenhado enquanto aguardamos estes dados pesados
         const [alunos, financeiro, turmas, cursos] = await Promise.all([ App.api('/alunos'), App.api('/financeiro'), App.api('/turmas'), App.api('/cursos') ]);
+        
         const todosAlunos = Array.isArray(alunos) ? alunos : [];
         const listaAlunos = todosAlunos.filter(a => !a.status || a.status === 'Ativo'); 
         const listaFin = Array.isArray(financeiro) ? financeiro : []; 
@@ -66,7 +83,6 @@ export const renderizarInicio = async () => {
         const tipoUtilizador = App.usuario ? App.usuario.tipo : 'Gestor';
         const mostraFinanceiro = tipoUtilizador !== 'Professor'; 
 
-        // Gerar o HTML usando o nosso Componente CardInadimplente!
         const htmlInadimplentes = inadimplentesList.length === 0 
             ? '<div style="text-align:center; padding:20px; color:#27ae60; font-weight:bold; font-size:14px;">🎉 Excelente! Nenhum título em atraso.</div>' 
             : inadimplentesList.map(f => {
@@ -88,44 +104,50 @@ export const renderizarInicio = async () => {
             return ''; 
         }).join('');
 
-        // Repare como este innerHTML ficou muito mais limpo usando o CardEstatistica!
-        div.innerHTML = `
-            <h3 style="opacity:0.7; margin-top:0; margin-bottom:20px;">Olá, ${App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor')}! 👋</h3>
-            <div class="dashboard-grid">
-                <div class="stat-card card-blue" style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:15px; padding:20px;">
-                    ${CardEstatistica('Total Alunos', listaAlunos.length, '🎓')}
-                    ${CardEstatistica('Total Turmas', listaTurmas.length, '🏫')}
-                    ${CardEstatistica('Total Cursos', listaCursos.length, '📚')}
-                </div>
-                ${mostraFinanceiro ? `
-                <div class="stat-card card-green" style="display:block; position:relative;">
-                    <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
-                        <div class="stat-info"><h4>Receita (${mesAtual}/${anoAtual})</h4><p style="color:#27ae60; font-size:20px;">R$ ${formatarMoeda(totalRecebido)}</p></div>
-                        <div class="stat-icon" style="font-size:24px;">💰</div>
+        // 🚀 SUBSTITUIÇÃO SUAVE: Os dados chegaram! Trocamos o esqueleto pelo Dashboard real.
+        const containerDinamico = document.getElementById('dashboard-dinamico');
+        if (containerDinamico) {
+            containerDinamico.innerHTML = `
+                <div class="dashboard-grid">
+                    <div class="stat-card card-blue" style="display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:15px; padding:20px;">
+                        ${CardEstatistica('Total Alunos', listaAlunos.length, '🎓')}
+                        ${CardEstatistica('Total Turmas', listaTurmas.length, '🏫')}
+                        ${CardEstatistica('Total Cursos', listaCursos.length, '📚')}
                     </div>
-                    <div style="height:140px; width:100%; display:flex; justify-content:center; align-items:center;"><canvas id="graficoFinanceiro"></canvas></div>
-                    <div style="text-align:center; font-size:11px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:5px;">Pendente no mês: <span style="color:#e74c3c; font-weight:bold;">R$ ${formatarMoeda(totalPendente)}</span></div>
-                </div>
-                <div class="stat-card card-red" style="display:flex; flex-direction:column; align-items:stretch; padding:15px; height:100%;">
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fdedec; padding-bottom:8px;">
-                        <h4 style="margin:0; font-size:14px; color:#e74c3c; text-transform:uppercase; font-weight:bold;">⚠️ Títulos em Atraso (${inadimplentesList.length})</h4>
+                    ${mostraFinanceiro ? `
+                    <div class="stat-card card-green" style="display:block; position:relative;">
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px;">
+                            <div class="stat-info"><h4>Receita (${mesAtual}/${anoAtual})</h4><p style="color:#27ae60; font-size:20px;">R$ ${formatarMoeda(totalRecebido)}</p></div>
+                            <div class="stat-icon" style="font-size:24px;">💰</div>
+                        </div>
+                        <div style="height:140px; width:100%; display:flex; justify-content:center; align-items:center;"><canvas id="graficoFinanceiro"></canvas></div>
+                        <div style="text-align:center; font-size:11px; color:#666; margin-top:10px; border-top:1px solid #eee; padding-top:5px;">Pendente no mês: <span style="color:#e74c3c; font-weight:bold;">R$ ${formatarMoeda(totalPendente)}</span></div>
                     </div>
-                    <div class="lista-atrasados" style="flex:1; overflow-y:auto; max-height: 300px; display:flex; flex-direction:column; gap:10px; padding-right:5px;">
-                        ${htmlInadimplentes}
+                    <div class="stat-card card-red" style="display:flex; flex-direction:column; align-items:stretch; padding:15px; height:100%;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #fdedec; padding-bottom:8px;">
+                            <h4 style="margin:0; font-size:14px; color:#e74c3c; text-transform:uppercase; font-weight:bold;">⚠️ Títulos em Atraso (${inadimplentesList.length})</h4>
+                        </div>
+                        <div class="lista-atrasados" style="flex:1; overflow-y:auto; max-height: 300px; display:flex; flex-direction:column; gap:10px; padding-right:5px;">
+                            ${htmlInadimplentes}
+                        </div>
                     </div>
+                    ` : ''}
                 </div>
-                ` : ''}
-            </div>
-            <h3 style="color:var(--card-text); font-size:16px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Acesso Rápido</h3>
-            <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado ou permitido.</p>'}</div>`;
+                <h3 style="color:var(--card-text); font-size:16px; margin-bottom:15px; border-bottom:1px solid #eee; padding-bottom:10px;">Acesso Rápido</h3>
+                <div class="shortcuts-grid">${htmlAtalhos || '<p style="color:#666;">Nenhum atalho selecionado ou permitido.</p>'}</div>`;
 
-        if (mostraFinanceiro) {
-            const ctx = document.getElementById('graficoFinanceiro');
-            if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
-                new Chart(ctx, { type: 'doughnut', data: { labels: ['Recebido', 'Pendente'], datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' } });
-            } else if (ctx) { new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [1], backgroundColor: ['#eee'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' } }); }
+            if (mostraFinanceiro) {
+                const ctx = document.getElementById('graficoFinanceiro');
+                if(ctx && (totalRecebido > 0 || totalPendente > 0)) {
+                    new Chart(ctx, { type: 'doughnut', data: { labels: ['Recebido', 'Pendente'], datasets: [{ data: [totalRecebido, totalPendente], backgroundColor: ['#27ae60', '#e74c3c'], borderWidth: 0, hoverOffset: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '75%' } });
+                } else if (ctx) { new Chart(ctx, { type: 'doughnut', data: { datasets: [{ data: [1], backgroundColor: ['#eee'], borderWidth: 0 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false }, tooltip: { enabled: false } }, cutout: '75%' } }); }
+            }
         }
-    } catch(e) { console.error(e); div.innerHTML = "<p>Erro ao carregar dashboard.</p>"; }
+    } catch(e) { 
+        console.error(e); 
+        const containerDinamico = document.getElementById('dashboard-dinamico');
+        if(containerDinamico) containerDinamico.innerHTML = "<p style='color:red;'>Erro ao carregar dashboard. Tente atualizar a página.</p>"; 
+    }
 };
 
 export const cobrarWhatsAppDashboard = (nomeAluno, telefone, dataVencimento, valorFmt) => {
