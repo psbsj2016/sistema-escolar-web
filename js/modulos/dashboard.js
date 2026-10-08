@@ -177,47 +177,51 @@ export const cobrarWhatsAppDashboard = (nomeAluno, telefone, dataVencimento, val
 // =========================================================
 // 🔦 NAVEGADOR INTELIGENTE (EFEITO HOLOFOTE NO FINANCEIRO)
 // =========================================================
-App.irParaFinanceiroDestacado = (idFatura, nomeAluno) => {
-    // 1. Aciona o Roteador Global para mudar para a lista do Financeiro
+App.irParaFinanceiroDestacado = async (idFatura, nomeAluno) => { // 🚀 Adicionámos o "async"
+    
+    // 1. Aciona o Roteador e ESPERA (await) a lista carregar 100%, independentemente da velocidade da internet
     if (typeof App.renderizarLista === 'function') {
-        App.renderizarLista('financeiro');
+        await App.renderizarLista('financeiro');
     }
     
-    // 2. Aguarda um momento para o ecrã desenhar e injeta a Pesquisa Automática
+    // 2. Injeta a Pesquisa Automática (A tabela já existe garantidamente aqui)
+    const inputBusca = document.getElementById('input-busca');
+    if (inputBusca) {
+        inputBusca.value = nomeAluno;
+        sessionStorage.setItem('ws_filtro_financeiro', nomeAluno);
+        if (typeof App.filtrarTabelaReativa === 'function') App.filtrarTabelaReativa();
+    }
+
+    // 3. Aguarda apenas uma fração de segundo para o HTML da tabela se desenhar após o filtro
     setTimeout(() => {
-        const inputBusca = document.getElementById('input-busca');
-        if (inputBusca) {
-            inputBusca.value = nomeAluno;
-            sessionStorage.setItem('ws_filtro_financeiro', nomeAluno);
-            if (typeof App.filtrarTabelaReativa === 'function') App.filtrarTabelaReativa();
-        }
+        const checkboxLinha = document.querySelector(`.chk-cadastro[value="${idFatura}"]`);
+        if (checkboxLinha) {
+            const linha = checkboxLinha.closest('tr');
+            if (linha) {
+                // Rola o ecrã até à fatura
+                linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                
+                // 🌟 A Magia: Pinta os <td> (Células) individualmente, o que funciona em qualquer navegador!
+                const celulas = linha.querySelectorAll('td');
+                celulas.forEach(td => {
+                    td.style.transition = 'background-color 0.4s ease, border 0.4s ease';
+                    td.style.backgroundColor = '#fff3cd'; // Amarelo brilhante
+                    td.style.borderTop = '2px solid #f1c40f'; // Borda superior destacada
+                    td.style.borderBottom = '2px solid #f1c40f'; // Borda inferior destacada
+                });
 
-        // 3. Aguarda os dados chegarem da API
-        setTimeout(() => {
-            // O ID da fatura fica guardado no checkbox da linha
-            const checkboxLinha = document.querySelector(`.chk-cadastro[value="${idFatura}"]`);
-            if (checkboxLinha) {
-                const linha = checkboxLinha.closest('tr');
-                if (linha) {
-                    // 🌟 A Mágica: Rolagem suave e Efeito Holofote (Amarelo Neon)
-                    linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    linha.style.transition = 'all 0.5s ease';
-                    linha.style.backgroundColor = '#fff3cd'; 
-                    linha.style.boxShadow = '0 0 20px rgba(241, 196, 15, 0.4)';
-                    linha.style.transform = 'scale(1.02)';
-                    linha.style.position = 'relative';
-                    linha.style.zIndex = '10';
-
-                    // Desliga o holofote após 3 segundos
-                    setTimeout(() => {
-                        linha.style.backgroundColor = 'transparent';
-                        linha.style.boxShadow = 'none';
-                        linha.style.transform = 'scale(1)';
-                        linha.style.zIndex = '1';
-                    }, 3000);
-                }
+                // Desliga o holofote após 3 segundos, voltando ao design original
+                setTimeout(() => {
+                    celulas.forEach(td => {
+                        td.style.backgroundColor = 'transparent';
+                        td.style.borderTop = '1px solid #eee'; 
+                        td.style.borderBottom = '1px solid #eee';
+                    });
+                }, 3000);
             }
-        }, 600); // Delay do Servidor
-    }, 50); // Delay do Frontend
+        } else {
+            // Caso a fatura já tenha sido paga noutro separador, por exemplo
+            App.showToast("Fatura selecionada já não está na lista.", "info");
+        }
+    }, 150); 
 };
