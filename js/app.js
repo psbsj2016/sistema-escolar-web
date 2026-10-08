@@ -1214,45 +1214,69 @@ validarCadastroInst: async () => {
         }
     },
 
-   renderizarLista: async (tipo, veioDoRoteador = false) => {
+    renderizarLista: async (tipo, veioDoRoteador = false) => {
         if (!App.usuario) { App.logout(); return; }
         if(document.querySelector('.sidebar')) document.querySelector('.sidebar').classList.remove('active');
         if(document.querySelector('.mobile-overlay')) document.querySelector('.mobile-overlay').classList.remove('active');
 
-        // 🚀 GRAVA A LISTA NA MEMÓRIA PROFUNDA
+        // 🚀 GRAVA A LISTA NA MEMÓRIA PROFUNDA IMEDIATAMENTE
         App.salvarEstadoNavegacao('fundo', { tipo: 'lista', alvo: tipo });
         if (!veioDoRoteador) window.history.pushState({ lista: tipo }, '', `#${tipo}`);
 
-        App.entidadeAtual = tipo; const titulo = tipo.charAt(0).toUpperCase() + tipo.slice(1) + 's'; App.setTitulo(`Gerenciar ${titulo}`); const div = document.getElementById('app-content'); const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+        App.entidadeAtual = tipo; 
+        const titulo = tipo.charAt(0).toUpperCase() + tipo.slice(1) + 's'; 
+        
+        // 🚀 AÇÃO IMEDIATA 1: Atualiza o título no exato milissegundo do clique
+        App.setTitulo(`Gerenciar ${titulo}`); 
+        
+        const div = document.getElementById('app-content'); 
+        const endpoint = tipo === 'financeiro' ? 'financeiro' : tipo + 's';
+        const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
+
+        // 🚀 AÇÃO IMEDIATA 2: Constrói a Barra de Pesquisa e a Tabela Fantasma (Skeleton Loading)
+        const barraBusca = `
+            <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left; flex-wrap:wrap;">
+                <div class="search-wrapper" style="flex: 1; min-width:250px; position: relative;">
+                    <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
+                    <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
+                </div>
+                <button class="btn-cancel" style="color:#c0392b; border: 1px solid #c0392b; background: transparent; padding: 0 20px; height: 45px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;" onclick="App.excluirEmLoteCadastros('${tipo}')">🗑️ Excluir Vários</button>
+                <button class="btn-new-modern" onclick="${acaoNovo}"><span>＋</span> NOVO REGISTRO</button>
+            </div>`;
+        
+        // Injeta a carcaça da página antes de pedir os dados ao servidor
+        div.innerHTML = `
+            <div style="text-align:center; margin-bottom:30px;">
+                ${App.UI ? App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%') : barraBusca}
+            </div>
+            <div id="container-tabela">
+                <div style="text-align:center; padding: 60px; color:#94a3b8;">
+                    <span style="font-size: 35px; display: block; margin-bottom: 15px; animation: piscarSuave 1s infinite;">⏳</span>
+                    <span style="font-weight: bold;">A buscar dados no servidor...</span>
+                </div>
+            </div>`;
+
+        // 🚀 HIDRATAÇÃO DO FILTRO (Preenche a caixa com a memória antes dos dados chegarem)
+        const termoSalvo = sessionStorage.getItem(`ws_filtro_${tipo}`);
+        if (termoSalvo) {
+            const inputBusca = document.getElementById('input-busca');
+            if (inputBusca) inputBusca.value = termoSalvo;
+        }
 
         try {
+            // 🚀 BUSCA SILENCIOSA: Agora o utilizador já está a ver o ecrã enquanto o servidor trabalha!
             App.listaCache = await App.api(`/${endpoint}`);
-            const acaoNovo = tipo === 'financeiro' ? "App.renderizarTela('mensalidades')" : `App.abrirModalCadastro('${tipo}')`;
             
-            const barraBusca = `
-                <div class="toolbar" style="max-width: 800px; margin: 0 auto; display: flex; gap: 15px; text-align: left; flex-wrap:wrap;">
-                    <div class="search-wrapper" style="flex: 1; min-width:250px; position: relative;">
-                        <span class="search-icon" style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
-                        <input type="text" id="input-busca" class="search-input-modern" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee;" placeholder="Pesquisar..." oninput="App.filtrarTabelaReativa()">
-                    </div>
-                    <button class="btn-cancel" style="color:#c0392b; border: 1px solid #c0392b; background: transparent; padding: 0 20px; height: 45px; border-radius: 8px; font-weight: 600; display: inline-flex; align-items: center; gap: 8px;" onclick="App.excluirEmLoteCadastros('${tipo}')">🗑️ Excluir Vários</button>
-                    <button class="btn-new-modern" onclick="${acaoNovo}"><span>＋</span> NOVO REGISTRO</button>
-                </div>`;
-            
-            div.innerHTML = `<div style="text-align:center; margin-bottom:30px;">${App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%')}</div><div id="container-tabela"></div>`;
-            
-            // 🚀 HIDRATAÇÃO DO FILTRO: Devolve o texto à caixa de pesquisa se existir memória
-            const termoSalvo = sessionStorage.getItem(`ws_filtro_${tipo}`);
-            if (termoSalvo) {
-                const inputBusca = document.getElementById('input-busca');
-                if (inputBusca) inputBusca.value = termoSalvo;
-            }
-
-            // O filtro corre automaticamente, lendo o valor que acabámos de injetar
+            // Quando a lista chega, dispara o motor de filtragem que preenche o container-tabela
             App.filtrarTabelaReativa();
             
-        } catch(e) { div.innerHTML = "Erro ao carregar lista."; }
-    },
+        } catch(e) { 
+            const errorContainer = document.getElementById('container-tabela');
+            if(errorContainer) {
+                errorContainer.innerHTML = `<p style="text-align:center; padding:30px; color:#e74c3c;">Falha na comunicação com o servidor.</p>`;
+            }
+        }
+    },   
 
     filtrarTabelaReativa: () => {
         const campoBusca = document.querySelector('input[placeholder*="Pesquisar"], #busca-tabela');
