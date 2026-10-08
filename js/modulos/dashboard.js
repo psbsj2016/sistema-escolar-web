@@ -175,46 +175,49 @@ export const cobrarWhatsAppDashboard = (nomeAluno, telefone, dataVencimento, val
 };
 
 // =========================================================
-// 🔦 NAVEGADOR INTELIGENTE (EFEITO HOLOFOTE NO FINANCEIRO)
+// 🔦 NAVEGADOR INTELIGENTE (EFEITO HOLOFOTE NO FINANCEIRO PRO)
 // =========================================================
 App.irParaFinanceiroDestacado = async (idFatura) => { 
     
-    // 1. Aciona o Roteador e ESPERA a lista carregar 100%
-    if (typeof App.renderizarLista === 'function') {
+    // 1. Aciona o Roteador e ESPERA o ecrã Financeiro Pro carregar
+    if (typeof App.renderizarHistoricoFinanceiro === 'function') {
+        await App.renderizarHistoricoFinanceiro();
+    } else if (typeof App.renderizarLista === 'function') {
         await App.renderizarLista('financeiro');
     }
     
-    // 2. Busca o nome exato na memória para evitar bugs de caracteres especiais na pesquisa
+    // 2. Busca o nome exato na memória para evitar problemas com espaços ou acentos
     let nomeParaBusca = '';
-    if (App.listaCache && App.listaCache.length > 0) {
-        const fatura = App.listaCache.find(f => f.id === idFatura);
+    if (App.financeiroCache && App.financeiroCache.length > 0) {
+        const fatura = App.financeiroCache.find(f => f.id === idFatura);
         if (fatura) nomeParaBusca = fatura.alunoNome || '';
     }
 
-    // 3. Injeta a Pesquisa Automática com o nome perfeito
-    const inputBusca = document.getElementById('input-busca');
-    if (inputBusca && nomeParaBusca) {
-        inputBusca.value = nomeParaBusca;
-        sessionStorage.setItem('ws_filtro_financeiro', nomeParaBusca);
-        if (typeof App.filtrarTabelaReativa === 'function') App.filtrarTabelaReativa();
+    // 3. Injeta a Pesquisa na Barra Específica do Financeiro (fin-busca)
+    const inputBuscaPro = document.getElementById('fin-busca');
+    if (inputBuscaPro && nomeParaBusca) {
+        inputBuscaPro.value = nomeParaBusca;
+        // Aciona o motor de filtragem próprio do módulo Financeiro
+        if (typeof App.filtrarFinanceiro === 'function') App.filtrarFinanceiro();
     }
 
-    // 4. Aguarda o DOM redesenhar a tabela (300ms é o "sweet spot" de segurança)
+    // 4. Aguarda a tabela "fin-lista-area" redesenhar as linhas (300ms de segurança)
     setTimeout(() => {
-        const checkboxLinha = document.querySelector(`.chk-cadastro[value="${idFatura}"]`);
+        // Encontra o checkbox específico da sua tabela financeira
+        const checkboxLinha = document.querySelector(`.fin-check[value="${idFatura}"]`);
         if (checkboxLinha) {
             const linha = checkboxLinha.closest('tr');
             if (linha) {
                 // Rola o ecrã até à fatura
                 linha.scrollIntoView({ behavior: 'smooth', block: 'center' });
                 
-                // 🌟 A Magia: Pinta as células com o Amarelo Neon
+                // 🌟 A Magia: Pinta as células (td) para que a cor brilhe no Chrome/Safari
                 const celulas = linha.querySelectorAll('td');
                 celulas.forEach(td => {
                     td.style.transition = 'background-color 0.4s ease, border 0.4s ease';
-                    td.style.backgroundColor = '#fff3cd'; 
-                    td.style.borderTop = '2px solid #f1c40f'; 
-                    td.style.borderBottom = '2px solid #f1c40f'; 
+                    td.style.backgroundColor = '#fff3cd'; // Amarelo Neon
+                    td.style.borderTop = '2px solid #f1c40f'; // Destaque na borda superior
+                    td.style.borderBottom = '2px solid #f1c40f'; // Destaque na borda inferior
                 });
 
                 // Desliga o holofote após 3 segundos
