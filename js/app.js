@@ -531,11 +531,35 @@ validarCadastroInst: async () => {
         else if (tela === 'aparencia') { App.renderizarConfiguracoesAparencia(); } 
         else if (tela === 'backup') { App.renderizarBackup(); }
         else if (tela === 'plano') { App.renderizarMeuPlano(); } 
+        
+        // 👇 A MÁGICA DA MEMÓRIA PARA RELATÓRIOS E CONTA 👇
+        else if (tela === 'conta') { 
+            if (typeof App.renderizarMinhaConta === 'function') App.renderizarMinhaConta(); 
+        }
+        else if (tela.startsWith('rel_')) { 
+            const tipoRelatorio = tela.replace('rel_', ''); // Limpa o prefixo para saber qual é o relatório
+            
+            // Verifica a permissão (Dossiê é restrito) antes de desenhar
+            if (tipoRelatorio === 'dossie' && typeof App.verificarPermissao === 'function' && !App.verificarPermissao('dossie')) {
+                return App.renderizarInicio();
+            }
+            if (typeof App.renderizarRelatorioModulo === 'function') {
+                App.renderizarRelatorioModulo(tipoRelatorio);
+            }
+        }
+        // 👆 FIM DA NOVA MÁGICA 👆
+
         else { App.renderizarInicio(); }
     },
     
-    renderizarConfig: (t) => { if(t==='perfil') App.renderizarTela('configuracoes'); else if(t==='aparencia') App.renderizarTela('aparencia'); else if(t==='conta') App.renderizarMinhaConta(); else if(t==='backup') App.renderizarTela('backup'); },
-    renderizarRelatorio: (t) => { if (t === 'dossie' && !App.verificarPermissao('dossie')) return; if (typeof App.renderizarRelatorioModulo === 'function') App.renderizarRelatorioModulo(t); },
+    // 🚀 REDIRECIONA TUDO PARA O ROTEADOR PRINCIPAL (Para ganhar a memória do F5)
+    renderizarConfig: (t) => { 
+        if(t==='perfil') App.renderizarTela('configuracoes'); 
+        else if(t==='aparencia') App.renderizarTela('aparencia'); 
+        else if(t==='conta') App.renderizarTela('conta'); 
+        else if(t==='backup') App.renderizarTela('backup'); 
+    },
+    renderizarRelatorio: (t) => { App.renderizarTela('rel_' + t); },
 
     // =========================================================
     // 💎 O MEU PLANO (PAINEL INTERNO)
