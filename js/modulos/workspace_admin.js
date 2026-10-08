@@ -322,7 +322,7 @@ Object.assign(App, {
 
   atualizarDadosRadar: async (silencioso = false) => {
         try {
-            // 1. Puxa o ID da escola (Para não misturar dados de outras instituições)
+            // 1. Puxa o ID da escola
             let escolaId = 'DEFAULT';
             if (App.usuario && App.usuario.escolaId) {
                 escolaId = App.usuario.escolaId;
@@ -349,23 +349,20 @@ Object.assign(App, {
             const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
             const alunosAtivosIds = alunosAtivos.map(a => a.id);
 
-            // 4. Isola apenas os utilizadores (contas) que pertencem a esses alunos ativos
+            // 4. Isola apenas os utilizadores (contas) que pertencem a alunos ativos
             const contasAtivas = usuarios.filter(u => 
                 (u.tipo === 'Aluno' || u.alunoRefId) && alunosAtivosIds.includes(u.alunoRefId)
             );
 
-            // Se nenhum aluno ativo tiver conta criada, exibe a mensagem correta
             if (contasAtivas.length === 0) {
                 container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno ativo possui acesso ao Workspace no momento.</p>';
                 return;
             }
 
-            // 5. CONSTRUÇÃO DA LISTA VISUAL: Mescla a Conta Ativa com o status do Radar
+            // 5. CONSTRUÇÃO DA LISTA VISUAL: Nomes Sociais e Fotos
             const listaMonitoramento = contasAtivas.map(conta => {
                 const alunoFicha = alunosAtivos.find(a => a.id === conta.alunoRefId) || {};
                 
-                // 🚀 O NOVO MOTOR DE IDENTIFICAÇÃO MULTI-CHAVE (Cross-Reference Seguro)
-                // Testa todas as possibilidades devolvidas pelo servidor para garantir que a bolinha liga à pessoa certa
                 const statusRadar = radarDados.find(r => 
                     (r.id && String(r.id) === String(conta.id)) ||
                     (r.usuarioId && String(r.usuarioId) === String(conta.id)) ||
@@ -375,21 +372,22 @@ Object.assign(App, {
                 ) || {};
                 
                 return {
-                    nome: alunoFicha.nome || conta.nome || conta.login,
+                    // 🚀 PRIORIDADE INVERTIDA: O nome do Workspace manda aqui!
+                    nome: conta.nome || alunoFicha.nome || conta.login,
                     login: conta.login,
-                    // Garante que o status booleano é lido corretamente, seja boolean ou string
+                    avatar: conta.avatar || null, // 🚀 Puxa a foto guardada no perfil do aluno
                     isOnline: statusRadar.isOnline === true || String(statusRadar.isOnline) === 'true',
                     ultimoAcesso: statusRadar.ultimoAcesso || null
                 };
             });
 
-            // Ordena: Alunos Online no topo (com a bolinha a piscar), seguidos por ordem alfabética
+            // Ordena: Alunos Online no topo, seguidos por ordem alfabética
             listaMonitoramento.sort((a, b) => {
                 if (b.isOnline === a.isOnline) return a.nome.localeCompare(b.nome);
                 return b.isOnline ? 1 : -1;
             });
 
-            // 6. RENDERIZAÇÃO DA TABELA
+            // 6. RENDERIZAÇÃO DA TABELA (Agora com Fotos!)
             let html = '<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; text-align:left;">';
             html += '<thead><tr style="background: #fff; border-bottom: 2px solid #eee; color:#64748b; font-size: 13px; text-transform: uppercase;">';
             html += '<th style="padding:15px 20px;">Identificação do Aluno</th>';
@@ -408,11 +406,21 @@ Object.assign(App, {
                     ? new Date(aluno.ultimoAcesso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
                     : 'Nunca acessou';
 
+                // 🚀 RENDERIZAÇÃO INTELIGENTE DO AVATAR
+                let avatarHtml = '';
+                if (aluno.avatar) {
+                    avatarHtml = `<img src="${aluno.avatar}" style="width:35px; height:35px; min-width:35px; border-radius:50%; object-fit:cover; border: 2px solid #e2e8f0; cursor: zoom-in; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="App.verFotoRadar('${aluno.avatar}', '${App.escapeHTML(aluno.nome)}')">`;
+                } else {
+                    const inicial = App.escapeHTML(aluno.nome).charAt(0).toUpperCase();
+                    // Gera uma cor suave para quem não tem foto, e mostra a inicial
+                    avatarHtml = `<div style="width:35px; height:35px; min-width:35px; background:#3498db; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${inicial}</div>`;
+                }
+
                 html += `
                     <tr style="border-bottom:1px solid #f0f2f5; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
                         <td style="padding:15px 20px; font-weight:bold; color:#1e293b; font-size: 14px;">
                             <div style="display: flex; align-items: center; gap: 12px;">
-                                <div style="width:35px; height:35px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">👤</div>
+                                ${avatarHtml}
                                 ${App.escapeHTML(aluno.nome)}
                                 <span style="font-size: 10px; color: #94a3b8; font-weight: normal; margin-left: 5px;">(@${App.escapeHTML(aluno.login)})</span>
                             </div>
@@ -436,5 +444,37 @@ Object.assign(App, {
         } catch (e) {
             // Falha invisível
         }
+    },
+       
+       // =========================================================
+    // 📸 4. VISUALIZADOR DE FOTOS DO RADAR (ZOOM DA IMAGEM)
+    // =========================================================
+    verFotoRadar: (url, nome) => {
+        const id = 'admin-foto-viewer';
+        let viewer = document.getElementById(id);
+        if (viewer) viewer.remove(); // Evita duplicações
+
+        // Cria a "tela de cinema" de fundo escuro com efeito de desfoque
+        viewer = document.createElement('div');
+        viewer.id = id;
+        viewer.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(5px);";
+
+        // HTML do botão fechar e da imagem centralizada
+        viewer.innerHTML = `
+            <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); box-sizing: border-box;">
+                <span style="color: white; font-weight: 500; font-size: 16px;">Foto de Perfil: ${App.escapeHTML(nome)}</span>
+                <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 200)" style="background: transparent; border: none; color: white; font-size: 35px; cursor: pointer; padding: 0; line-height: 1;">&times;</button>
+            </div>
+            <img src="${url}" style="max-width: 90vw; max-height: 80vh; object-fit: contain; box-shadow: 0 5px 25px rgba(0,0,0,0.5); border-radius: 8px; transform: scale(0.9); transition: transform 0.2s ease;" id="admin-viewer-img">
+        `;
+
+        document.body.appendChild(viewer);
+        
+        // Dispara a animação suave para revelar a foto
+        requestAnimationFrame(() => {
+            viewer.style.opacity = '1';
+            document.getElementById('admin-viewer-img').style.transform = 'scale(1)';
+        });
     }
+
 });

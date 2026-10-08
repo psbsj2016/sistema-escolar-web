@@ -1543,7 +1543,7 @@ App.excluirLancamentoChamada = (id) => {
 // 5. CALENDÁRIO (BLINDADO COM GRID CSS INLINE E PÍLULAS)
 // ---------------------------------------------------------
 App.renderizarCalendarioPro = async () => { 
-    App.setTitulo("Calendário");
+    App.setTitulo("Calendário e Agenda");
     const div = document.getElementById('app-content'); div.innerHTML = 'Carregando calendário...'; 
     if (!App.calendarState) App.calendarState = { month: new Date().getMonth(), year: new Date().getFullYear() }; 
     
