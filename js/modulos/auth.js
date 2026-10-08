@@ -428,10 +428,14 @@ Object.assign(App, {
         return bytes;
     },
 
-    renderizarMinhaConta: async () => {
+    renderizarMinhaConta: async (veioDoHistorico = false) => {
+        // 🚀 1. GRAVA A TELA NA MEMÓRIA PROFUNDA E NA URL
+        if (!veioDoHistorico) window.history.pushState({ tela: 'conta' }, '', '#conta');
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'conta' });
+
         if (typeof App.setTitulo === 'function') App.setTitulo("Gestão de Usuários"); 
         const div = document.getElementById('app-content'); 
-        App.idEdicaoUsuario = null; 
+        App.idEdicaoUsuario = null;
         const meuLogin = App.usuario ? App.usuario.login : ''; 
         const meuEmail = (App.usuario && App.usuario.email) ? App.usuario.email : '';
         
@@ -491,6 +495,19 @@ Object.assign(App, {
                         </div>
                     </div>
                 </div>`; 
+
+            // 🚀 2. HIDRATAÇÃO: Restaura o modo de edição se tiver havido um F5
+            const keyEstado = App.getTenantKey ? App.getTenantKey('estado_navegacao') : 'estado_navegacao';
+            const estadoProfundo = JSON.parse(localStorage.getItem(keyEstado)) || {};
+            
+            if (estadoProfundo.subtela_conta && estadoProfundo.subtela_conta.acao === 'editar') {
+                const uEdit = listaUsers.find(u => u.id === estadoProfundo.subtela_conta.id);
+                if (uEdit) {
+                    // Passamos 'true' no final para avisar que viemos de um F5 (assim não apagamos o auto-rascunho!)
+                    App.preencherEdicaoUsuario(uEdit.id, uEdit.nome, uEdit.login, uEdit.tipo, true);
+                }
+            }
+
         } catch(e) { div.innerHTML = "Erro ao carregar usuários."; } 
     },
 
@@ -752,6 +769,10 @@ Object.assign(App, {
                 App.showToast(res.error, "error");
             } else {
                 App.showToast(App.idEdicaoUsuario ? "Atualizado com sucesso!" : "Criado com sucesso!", "success");
+                
+                // 🚀 LIMPA A MEMÓRIA PROFUNDA APÓS SALVAR
+                if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('subtela_conta', null);
+                
                 App.renderizarMinhaConta();
             }
         } catch(e) { 
@@ -762,8 +783,40 @@ Object.assign(App, {
         }
     },
 
-    preencherEdicaoUsuario: (id, nome, login, tipo) => { App.idEdicaoUsuario = id; document.getElementById('new-nome').value = nome; document.getElementById('new-login').value = login; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = tipo; document.getElementById('titulo-form-user').innerText = "Editar Usuário"; document.getElementById('btn-save-user').innerText = "ATUALIZAR"; document.getElementById('btn-cancel-user').style.display = "inline-flex"; },
-    cancelarEdicaoUsuario: () => { App.idEdicaoUsuario = null; document.getElementById('new-nome').value = ''; document.getElementById('new-login').value = ''; document.getElementById('new-senha').value = ''; document.getElementById('new-tipo').value = 'Gestor'; document.getElementById('titulo-form-user').innerText = "Novo Usuário"; document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; document.getElementById('btn-cancel-user').style.display = "none"; },
+    preencherEdicaoUsuario: (id, nome, login, tipo, veioDoF5 = false) => { 
+        App.idEdicaoUsuario = id; 
+        
+        // 🚀 Proteção de Rascunho: Só preenche os dados oficiais se NÃO for um recarregamento F5
+        if (!veioDoF5) {
+            document.getElementById('new-nome').value = nome; 
+            document.getElementById('new-login').value = login; 
+            document.getElementById('new-senha').value = ''; 
+            document.getElementById('new-tipo').value = tipo; 
+        }
+        
+        document.getElementById('titulo-form-user').innerText = "Editar Usuário"; 
+        document.getElementById('btn-save-user').innerText = "ATUALIZAR"; 
+        document.getElementById('btn-cancel-user').style.display = "inline-flex"; 
+
+        // 🚀 GRAVA A CÂMARA FOTOGRÁFICA DO MODO EDIÇÃO
+        if (typeof App.salvarEstadoNavegacao === 'function' && !veioDoF5) {
+            App.salvarEstadoNavegacao('subtela_conta', { acao: 'editar', id: id });
+        }
+    },
+
+    cancelarEdicaoUsuario: () => { 
+        App.idEdicaoUsuario = null; 
+        document.getElementById('new-nome').value = ''; 
+        document.getElementById('new-login').value = ''; 
+        document.getElementById('new-senha').value = ''; 
+        document.getElementById('new-tipo').value = 'Gestor'; 
+        document.getElementById('titulo-form-user').innerText = "Novo Usuário"; 
+        document.getElementById('btn-save-user').innerText = "CRIAR USUÁRIO"; 
+        document.getElementById('btn-cancel-user').style.display = "none"; 
+        
+        // 🚀 LIMPA A MEMÓRIA QUANDO O UTILIZADOR CANCELA
+        if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('subtela_conta', null);
+    },
     
 excluirUsuario: (id) => { 
         App.abrirModalConfirmacao(
