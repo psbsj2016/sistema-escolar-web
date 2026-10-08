@@ -331,38 +331,55 @@ Object.assign(App, {
                 escolaId = escolaCache.id || 'DEFAULT';
             }
 
-            // 2. BUSCA SIMULTÂNEA (Cross-Reference): Radar + Secretaria + Usuários
-            // Usamos Promise.all para que o sistema busque os 3 dados ao mesmo tempo, mantendo a velocidade máxima.
+            // 2. BUSCA SIMULTÂNEA: Radar + Secretaria + Usuários
             const [radarRes, alunosRes, usuariosRes] = await Promise.all([
                 App.api(`/workspace/monitoramento/status?escolaId=${escolaId}`, 'GET', null, silencioso),
-                App.api('/alunos', 'GET', null, true),   // Busca silenciosa
-                App.api('/usuarios', 'GET', null, true)  // Busca silenciosa
+                App.api('/alunos', 'GET', null, true),
+                App.api('/usuarios', 'GET', null, true)
             ]);
             
             const container = document.getElementById('lista-monitoramento');
             if (!container) return;
 
-            // 3. O FILTRO DE OURO: Separar apenas os alunos estritamente ATIVOS
-            const alunosAtivosIds = (Array.isArray(alunosRes) ? alunosRes : [])
-                .filter(a => !a.status || a.status === 'Ativo')
-                .map(a => a.id);
-                
-            // Cruzamos os IDs ativos para descobrir os logins de acesso (usuários) correspondentes
-            const loginsValidos = (Array.isArray(usuariosRes) ? usuariosRes : [])
-                .filter(u => alunosAtivosIds.includes(u.alunoRefId))
-                .map(u => u.login);
+            const alunos = Array.isArray(alunosRes) ? alunosRes : [];
+            const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
+            const radarDados = Array.isArray(radarRes) ? radarRes : [];
 
-            // 4. LIMPEZA FINAL DO RADAR: Só passa para o ecrã quem está na lista de logins válidos!
-            const dadosBrutos = Array.isArray(radarRes) ? radarRes : [];
-            const dadosLimpos = dadosBrutos.filter(u => loginsValidos.includes(u.login));
+            // 3. O FILTRO DE OURO: Isola apenas os alunos estritamente ATIVOS
+            const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+            const alunosAtivosIds = alunosAtivos.map(a => a.id);
 
-            // Se, após o filtro, a lista ficar vazia, mostramos a mensagem de ausência
-            if (dadosLimpos.length === 0) {
-                container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno ativo registado ou histórico de navegação encontrado.</p>';
+            // 4. Isola apenas os utilizadores (contas) que pertencem a esses alunos ativos
+            const contasAtivas = usuarios.filter(u => 
+                (u.tipo === 'Aluno' || u.alunoRefId) && alunosAtivosIds.includes(u.alunoRefId)
+            );
+
+            // Se nenhum aluno ativo tiver conta criada, exibe a mensagem correta
+            if (contasAtivas.length === 0) {
+                container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno ativo possui acesso ao Workspace no momento.</p>';
                 return;
             }
 
-            // 5. DESENHAR A TABELA NO ECRÃ
+            // 5. CONSTRUÇÃO DA LISTA VISUAL: Mescla a Conta Ativa com o status do Radar
+            const listaMonitoramento = contasAtivas.map(conta => {
+                const alunoFicha = alunosAtivos.find(a => a.id === conta.alunoRefId) || {};
+                const statusRadar = radarDados.find(r => r.login === conta.login) || {};
+                
+                return {
+                    nome: alunoFicha.nome || conta.nome || conta.login,
+                    login: conta.login,
+                    isOnline: statusRadar.isOnline || false,
+                    ultimoAcesso: statusRadar.ultimoAcesso || null
+                };
+            });
+
+            // Ordena: Alunos Online no topo, seguidos por ordem alfabética
+            listaMonitoramento.sort((a, b) => {
+                if (b.isOnline === a.isOnline) return a.nome.localeCompare(b.nome);
+                return b.isOnline ? 1 : -1;
+            });
+
+            // 6. RENDERIZAÇÃO DA TABELA
             let html = '<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; text-align:left;">';
             html += '<thead><tr style="background: #fff; border-bottom: 2px solid #eee; color:#64748b; font-size: 13px; text-transform: uppercase;">';
             html += '<th style="padding:15px 20px;">Identificação do Aluno</th>';
@@ -370,10 +387,7 @@ Object.assign(App, {
             html += '<th style="padding:15px 20px; text-align:right;">Última Interação Registada</th>';
             html += '</tr></thead><tbody>';
 
-            // Ordena para que as bolinhas verdes (online) apareçam sempre no topo da lista
-            dadosLimpos.sort((a, b) => (b.isOnline === a.isOnline) ? 0 : b.isOnline ? 1 : -1);
-
-            dadosLimpos.forEach(aluno => {
+            listaMonitoramento.forEach(aluno => {
                 const isOnline = aluno.isOnline; 
                 const corBola = isOnline ? '#27ae60' : '#e74c3c';
                 const txtStatus = isOnline ? 'Online Agora' : 'Offline';
@@ -389,7 +403,8 @@ Object.assign(App, {
                         <td style="padding:15px 20px; font-weight:bold; color:#1e293b; font-size: 14px;">
                             <div style="display: flex; align-items: center; gap: 12px;">
                                 <div style="width:35px; height:35px; background:#e2e8f0; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px;">👤</div>
-                                ${App.escapeHTML(aluno.nome || aluno.login)}
+                                ${App.escapeHTML(aluno.nome)}
+                                <span style="font-size: 10px; color: #94a3b8; font-weight: normal; margin-left: 5px;">(@${App.escapeHTML(aluno.login)})</span>
                             </div>
                         </td>
                         <td style="padding:15px 20px; text-align:center;">
@@ -409,7 +424,7 @@ Object.assign(App, {
             container.innerHTML = html;
 
         } catch (e) {
-            // Falha invisível (para não perturbar a UX em caso de instabilidade de internet do utilizador)
+            // Falha invisível
         }
     }
 });
