@@ -1187,7 +1187,17 @@ validarCadastroInst: async () => {
                 </div>`;
             
             div.innerHTML = `<div style="text-align:center; margin-bottom:30px;">${App.UI.card(`Consultar ${titulo}`, 'Utilize o campo abaixo para localizar registros.', barraBusca, '100%')}</div><div id="container-tabela"></div>`;
+            
+            // 🚀 HIDRATAÇÃO DO FILTRO: Devolve o texto à caixa de pesquisa se existir memória
+            const termoSalvo = sessionStorage.getItem(`ws_filtro_${tipo}`);
+            if (termoSalvo) {
+                const inputBusca = document.getElementById('input-busca');
+                if (inputBusca) inputBusca.value = termoSalvo;
+            }
+
+            // O filtro corre automaticamente, lendo o valor que acabámos de injetar
             App.filtrarTabelaReativa();
+            
         } catch(e) { div.innerHTML = "Erro ao carregar lista."; }
     },
 
@@ -1203,6 +1213,11 @@ validarCadastroInst: async () => {
         }
 
         const termo = campoBusca.value.toLowerCase();
+        
+        // 🚀 MEMÓRIA DA PESQUISA: Grava cada letra digitada na sessão da tabela atual
+        if (App.entidadeAtual) {
+            sessionStorage.setItem(`ws_filtro_${App.entidadeAtual}`, campoBusca.value);
+        }
         
         if (!Array.isArray(App.listaCache)) { 
             container.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">Nenhum registro encontrado ou carregamento falhou.</p>'; 
