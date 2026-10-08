@@ -36,6 +36,63 @@ Workspace.atualizarCacheAvatares = async function() {
 };
 
 Object.assign(Workspace, {
+    // ============================================================================
+    // 🗺️ MOTOR DE ESTADO PROFUNDO E AUTO-RASCUNHO (STATE HYDRATION & ANTI-AMNÉSIA)
+    // ============================================================================
+    salvarEstadoNavegacao: (camada, valor) => {
+        if (!Workspace.usuario) return;
+        let estado = JSON.parse(localStorage.getItem('ws_estado_profundo')) || {};
+        if (valor === null) {
+            delete estado[camada];
+        } else {
+            estado[camada] = valor;
+        }
+        localStorage.setItem('ws_estado_profundo', JSON.stringify(estado));
+    },
+
+    Rascunho: {
+        salvar: () => {
+            // Capta inputs, textareas e as caixas de Texto Rico (como o editor de Notas do Baú)
+            const inputs = document.querySelectorAll('input:not([type="password"]), textarea, [contenteditable="true"]');
+            let rascunho = {};
+            inputs.forEach(el => {
+                if (el.id && el.offsetParent !== null) { // Só guarda os que estão visíveis
+                    if (el.isContentEditable) rascunho[el.id] = { tipo: 'html', valor: el.innerHTML };
+                    else if (el.type === 'checkbox') rascunho[el.id] = { tipo: 'check', valor: el.checked };
+                    else rascunho[el.id] = { tipo: 'text', valor: el.value };
+                }
+            });
+            sessionStorage.setItem('ws_rascunho_global', JSON.stringify(rascunho));
+        },
+        restaurar: () => {
+            const salvo = sessionStorage.getItem('ws_rascunho_global');
+            if (!salvo) return;
+            try {
+                const rascunho = JSON.parse(salvo);
+                let restaurouAlgo = false;
+                for (const [id, dados] of Object.entries(rascunho)) {
+                    const el = document.getElementById(id);
+                    if (el && dados.valor) {
+                        // Injeta apenas se o campo estiver vazio, para não apagar o que o aluno já começou a escrever pós-F5
+                        if (dados.tipo === 'html' && (el.innerHTML.trim() === '' || el.innerHTML === '<br>')) { el.innerHTML = dados.valor; restaurouAlgo = true; }
+                        else if (dados.tipo === 'check' && el.checked !== dados.valor) { el.checked = dados.valor; restaurouAlgo = true; }
+                        else if (dados.tipo === 'text' && el.value === '') { el.value = dados.valor; restaurouAlgo = true; }
+                    }
+                }
+                if (restaurouAlgo && !Workspace._avisoRascunhoMostrado) {
+                    Workspace.mostrarAviso("Rascunho recuperado automaticamente! 📝", "info");
+                    Workspace._avisoRascunhoMostrado = true;
+                    setTimeout(() => { Workspace._avisoRascunhoMostrado = false; }, 4000);
+                }
+            } catch(e) {}
+        },
+        init: () => {
+            document.addEventListener('input', Workspace.Rascunho.salvar);
+            const observer = new MutationObserver(() => Workspace.Rascunho.restaurar());
+            observer.observe(document.body, { childList: true, subtree: true });
+        }
+    },
+
     usuario: null,
     avatarsCache: {}, 
     deferredPrompt: null,
@@ -318,6 +375,31 @@ Object.assign(Workspace, {
         if (Workspace.Feed) Workspace.Feed.init(); 
         if (Workspace.Sidebar) Workspace.Sidebar.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
+            // 🚀 O MOTOR DE RESTAURO PROFUNDO (Anti-Amnésia de Subtelas e Modais)
+        const estadoProfundo = JSON.parse(localStorage.getItem('ws_estado_profundo'));
+        if (estadoProfundo) {
+            setTimeout(() => {
+                if (estadoProfundo.modal) {
+                    if (estadoProfundo.modal.id === 'alarme' && Workspace.Bau.abrirModalAgendamento) {
+                        Workspace.Bau.abrirModalAgendamento(estadoProfundo.modal.ano, estadoProfundo.modal.mes, estadoProfundo.modal.dia);
+                    } else if (estadoProfundo.modal === 'senha') {
+                        Workspace.abrirModalSenha();
+                    }
+                }
+                
+                if (estadoProfundo.subtela_bau && Workspace.Bau && Workspace.Bau.notasCache.length > 0) {
+                    const subtela = estadoProfundo.subtela_bau;
+                    if (subtela.tipo === 'leitura') Workspace.Bau.abrirNota(subtela.id);
+                    else if (subtela.tipo === 'edicao') {
+                        if (subtela.id === 'nova') Workspace.Bau.novaNota();
+                        else {
+                            Workspace.Bau.notaAbertaId = subtela.id;
+                            Workspace.Bau.editarNotaAtual();
+                        }
+                    }
+                }
+            }, 800); // Dá tempo para as listas da Base de Dados carregarem na memória primeiro
+        }
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Arena) Workspace.Arena.init();        
 
@@ -860,6 +942,7 @@ Object.assign(Workspace, {
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 
     abrirModalSenha: () => {
+        Workspace.salvarEstadoNavegacao('modal', 'senha');
         document.getElementById('ws-senha-modal').style.display = 'flex';
         document.getElementById('ws-senha-atual').value = '';
         document.getElementById('ws-nova-senha').value = '';
@@ -1065,6 +1148,7 @@ Object.assign(Workspace, {
         },
 
         novaNota: () => {
+            Workspace.salvarEstadoNavegacao('subtela_bau', { tipo: 'edicao', id: 'nova' });
             Workspace.Bau.notaAbertaId = 'nova';
             document.getElementById('ws-bau-edicao-titulo').value = '';
             document.getElementById('ws-bau-edicao-texto').innerHTML = '';
@@ -1076,6 +1160,7 @@ Object.assign(Workspace, {
         },
 
         abrirNota: (id) => {
+            Workspace.salvarEstadoNavegacao('subtela_bau', { tipo: 'leitura', id: id });
             const nota = Workspace.Bau.notasCache.find(n => n.id === id);
             if(!nota) return;
             Workspace.Bau.notaAbertaId = id;
@@ -1088,6 +1173,7 @@ Object.assign(Workspace, {
         },
 
         editarNotaAtual: () => {
+            Workspace.salvarEstadoNavegacao('subtela_bau', { tipo: 'edicao', id: Workspace.Bau.notaAbertaId });
             const nota = Workspace.Bau.notasCache.find(n => n.id === Workspace.Bau.notaAbertaId);
             if(!nota) return;
             document.getElementById('ws-bau-edicao-titulo').value = nota.titulo;
@@ -1099,6 +1185,7 @@ Object.assign(Workspace, {
         },
 
         voltarListaNotas: () => {
+            Workspace.salvarEstadoNavegacao('subtela_bau', null);
             document.getElementById('ws-bau-tela-leitura').style.display = 'none';
             document.getElementById('ws-bau-tela-edicao').style.display = 'none';
             document.getElementById('ws-bau-tela-lista').style.display = 'block';
@@ -1121,6 +1208,7 @@ Object.assign(Workspace, {
         },
 
         salvarESairNota: async () => {
+            sessionStorage.removeItem('ws_rascunho_global'); // Apaga rascunho porque já salvámos na nuvem!
             clearTimeout(Workspace.Bau.salvamentoTimer);
             const status = document.getElementById('ws-bau-status-salvamento');
             if(status) status.innerText = 'Guardando... ⏳';
@@ -1246,6 +1334,7 @@ Object.assign(Workspace, {
         },
 
         abrirModalAgendamento: (ano, mes, dia) => {
+            Workspace.salvarEstadoNavegacao('modal', { id: 'alarme', ano, mes, dia });
             const modal = document.getElementById('ws-modal-alarme');
             if(!modal) return;
             document.getElementById('ws-alarme-ano').value = ano;
@@ -1260,6 +1349,7 @@ Object.assign(Workspace, {
         },
 
         confirmarAgendamento: async () => {
+            Workspace.salvarEstadoNavegacao('modal', null);
             const ano = document.getElementById('ws-alarme-ano').value;
             const mes = document.getElementById('ws-alarme-mes').value;
             const dia = document.getElementById('ws-alarme-dia').value;
@@ -1688,4 +1778,11 @@ Object.assign(Workspace, {
 
 });
 
-document.addEventListener('DOMContentLoaded', Workspace.init);
+// ============================================================================
+// 🚀 INICIALIZAÇÃO BLINDADA DO WORKSPACE
+// ============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+    Workspace.init();
+    // Liga o detetive invisível de Rascunhos!
+    if (Workspace.Rascunho) Workspace.Rascunho.init();
+});
