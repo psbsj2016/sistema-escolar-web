@@ -190,22 +190,22 @@
             </div>
             <div class="menu-scroll" style="flex:1; overflow-y:auto;">
                 <ul class="menu-lista">
-                    <li><button onclick="App.renderizarInicio()">🏠 Início</button></li>
+                    <li><button onclick="App.renderizarInicio()">📊 Dashboard</button></li>
                     
-                   <li><button onclick="App.renderizarHubContratos()" style="background: linear-gradient(135deg, #3498db, #2980b9); color: white; margin-top: 10px; margin-bottom: 5px; border-radius: 8px; font-weight: bold; box-shadow: 0 4px 10px rgba(52,152,219,0.3);">🗳️ Hub de Contratos e Matrículas</button></li>
+                   <li><button onclick="App.renderizarHubContratos()">🗃️ Hub de Contratos e Matrículas</button></li>
 
                    <li><button onclick="App.renderizarWorkspaceAdmin()">🌐 Workspace</button></li>
 
                    <li><button onclick="App.toggleSub('sub-alunos')">👩‍🎓 Alunos ▼</button></li>
                     <ul id="sub-alunos" class="submenu" style="display:none;">
                         <li><button onclick="App.abrirModalCadastro('aluno')">➕ Novo Aluno</button></li>
-                        <li><button onclick="App.renderizarLista('aluno')">📋 Gerenciar Lista</button></li>       
+                        <li><button onclick="App.renderizarLista('aluno')">📋 Gerenciar Alunos</button></li>       
                     </ul>
 
                     <li><button onclick="App.toggleSub('sub-turmas')">🏫 Turmas ▼</button></li>
                     <ul id="sub-turmas" class="submenu" style="display:none;">
                         <li><button onclick="App.abrirModalCadastro('turma')">➕ Nova Turma</button></li>
-                        <li><button onclick="App.renderizarLista('turma')">📋 Ver Turmas</button></li>
+                        <li><button onclick="App.renderizarLista('turma')">📋 Gerenciar Turmas</button></li>
                     </ul>
 
                     <li><button onclick="App.toggleSub('sub-cursos')">📚 Cursos ▼</button></li>
@@ -216,9 +216,9 @@
 
                     <li><button onclick="App.toggleSub('sub-pedagogico')">🍎 Pedagógico ▼</button></li>
                     <ul id="sub-pedagogico" class="submenu" style="display:none;">
-                        <li><button onclick="App.renderizarTela('planejamento')">📅 Planejamento Pedagógico</button></li>
+                        <li><button onclick="App.renderizarTela('planejamento')">📋 Planejamento Pedagógico</button></li>
                         <li><button onclick="App.renderizarTela('calendario')">📆 Calendário e Agenda</button></li>
-                        <li><button onclick="App.renderizarTela('chamada')">📝 Chamada / Frequência</button></li>
+                        <li><button onclick="App.renderizarTela('chamada')">📝 Gestão de Frequência</button></li>
                         <li><button onclick="App.renderizarTela('avaliacoes')">✅ Notas e Avaliações</button></li>
                         <li><button onclick="App.renderizarTela('boletins')">📊 Emitir Boletins</button></li>
                     </ul>
@@ -238,7 +238,7 @@
                         <li><button onclick="App.renderizarRelatorio('documentos')"><span>🎓</span> Certificados e Documentos</button></li>
                     </ul>
                    
-                    <li><button onclick="App.renderizarLista('estoque')">📦 Estoque de Materiais</button></li>
+                    <li><button onclick="App.renderizarLista('estoque')">📦 Estoque</button></li>
       
                     <li><button onclick="App.toggleSub('sub-config')">⚙️ Configurações ▼</button></li>
                     <ul id="sub-config" class="submenu" style="display:none;">

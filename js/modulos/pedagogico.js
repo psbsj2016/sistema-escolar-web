@@ -785,7 +785,7 @@ App.salvarConfigNotas = () => {
 };
 
 App.renderizarAvaliacoesPro = async () => {
-    App.setTitulo("Avaliações e Notas");
+    App.setTitulo("Notas e Avaliações");
     const div = document.getElementById('app-content');
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando dados...</p>';
     
@@ -1101,7 +1101,7 @@ App.datasLancamentoChamada = [];
 App.filaEdicaoChamada = []; // 🧠 Nova Memória do Wizard de Edição
 
 App.renderizarChamadaPro = async () => { 
-    App.setTitulo("Controle de Presença");
+    App.setTitulo("Gestão de Frequência");
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando os dados rapidamente... ⚡</p>';
     

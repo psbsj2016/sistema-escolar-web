@@ -35,7 +35,7 @@ const CardInadimplente = (nome, dataBr, valFmt, zap) => `
 
 export const renderizarInicio = async () => {
     App.verificarNotificacoes(); 
-    App.setTitulo("Visão Geral"); 
+    App.setTitulo("Dashboard"); 
     const div = document.getElementById('app-content'); 
     
     
