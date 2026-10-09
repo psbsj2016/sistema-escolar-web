@@ -9,6 +9,7 @@ App.renderizarRelatorioModulo = async (tipo) => {
     if (tipo === 'dossie') { App.renderizarDossie(); return; }
     if (tipo === 'ficha') { App.gerarFichaSetup(); return; }
     if (tipo === 'documentos') { App.renderizarGeradorDocumentos(); return; }
+    if (tipo === 'diario') { App.renderizarDiarioSetup(); return; } // 🚀 NOVA ROTA AQUI
 };
 
 // 🧱 ATALHOS GERAIS PARA O MÓDULO DE RELATÓRIOS
@@ -192,6 +193,7 @@ App.gerarRelatorioAnual = async () => {
         });
 
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        App.dadosRelatorioCache = dados; // 🧠 Guarda os dados filtrados na memória para o Excel
         
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
 
@@ -205,6 +207,7 @@ App.gerarRelatorioAnual = async () => {
             <div class="no-print" style="margin-bottom:20px; text-align:center;">
                 <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px; margin-bottom:10px;">⬅ VOLTAR</button>
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR EXTRATO ANUAL</button>
+<button onclick="App.baixarExcelRelatorio('Anual')" class="btn-primary" style="background:#27ae60; border:none; width:auto; padding:10px 20px; margin-bottom:10px; margin-left:10px;">📊 BAIXAR EXCEL</button>
             </div>
             
             <div class="print-sheet">
@@ -307,6 +310,7 @@ App.gerarRelatorioMensal = async () => {
         });
 
         dados.sort((a,b) => new Date(a.vencimento) - new Date(b.vencimento));
+        App.dadosRelatorioCache = dados; // 🧠 Guarda os dados filtrados na memória para o Excel
         
         const getVal = (f) => parseFloat(f.valorPago1 || f.valor || 0) + parseFloat(f.valorPago2 || 0);
 
@@ -319,7 +323,8 @@ App.gerarRelatorioMensal = async () => {
             ${reportStyles}
             <div class="no-print" style="margin-bottom:20px; text-align:center;">
                 <button onclick="App.renderizarSelecaoRelatorio()" class="btn-cancel" style="padding:10px 20px; margin-right:10px; margin-bottom:10px;">⬅ VOLTAR</button>
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR MÊS</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; margin-bottom:10px;">🖨️ IMPRIMIR EXTRATO MENSAL</button>
+<button onclick="App.baixarExcelRelatorio('Mensal')" class="btn-primary" style="background:#27ae60; border:none; width:auto; padding:10px 20px; margin-bottom:10px; margin-left:10px;">📊 BAIXAR EXCEL</button>
             </div>
             
             <div class="print-sheet">
@@ -358,6 +363,39 @@ App.gerarRelatorioMensal = async () => {
                 </div>
             </div>`;
     } catch(e) { App.showToast("Erro ao gerar relatório mensal.", "error"); }
+};
+
+// 📊 MOTOR DE EXPORTAÇÃO EXCEL (CSV)
+App.baixarExcelRelatorio = (tipo) => {
+    if (!App.dadosRelatorioCache || App.dadosRelatorioCache.length === 0) {
+        return App.showToast("Não há dados para exportar.", "warning");
+    }
+
+    // Cria o cabeçalho do Excel
+    let csv = "Vencimento;Nome do Aluno;Descricao;Status;Valor\n";
+    
+    // Converte os dados linha a linha
+    App.dadosRelatorioCache.forEach(f => {
+        const venc = f.vencimento ? f.vencimento.split('-').reverse().join('/') : '';
+        const aluno = f.alunoNome || 'Desconhecido';
+        const desc = f.descricao || '';
+        const status = f.status === 'Pago' ? 'PAGO' : 'PENDENTE/ATRASADO';
+        
+        // Pega o valor exato (Pago ou Pendente)
+        const getVal = (item) => parseFloat(item.valorPago1 || item.valor || 0) + parseFloat(item.valorPago2 || 0);
+        const valorReal = f.status === 'Pago' ? getVal(f) : parseFloat(f.valor || 0);
+        const valorFmt = valorReal.toLocaleString('pt-BR', {minimumFractionDigits: 2}).replace(/\./g, ''); // Remove pontos de milhar para não quebrar o Excel BR
+
+        csv += `"${venc}";"${aluno}";"${desc}";"${status}";"${valorFmt}"\n`;
+    });
+
+    // Força o formato UTF-8 para os acentos funcionarem no Excel
+    const blob = new Blob(["\uFEFF" + csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = `Relatorio_Financeiro_${tipo}_${new Date().getTime()}.csv`;
+    link.click();
+    App.showToast("Download iniciado!", "success");
 };
 
 // ---------------------------------------------------------
@@ -803,6 +841,106 @@ App.gerarDossie = async () => {
         }, 300);
 
     } catch(e) { App.showToast("Erro ao gerar dossiê corporativo.", "error"); console.error(e); } 
+    finally { document.body.style.cursor = 'default'; }
+};
+
+// ---------------------------------------------------------
+// 📝 DIÁRIO DE CLASSE (PAUTA DE FREQUÊNCIA PARA PROFESSORES)
+// ---------------------------------------------------------
+App.renderizarDiarioSetup = async () => {
+    App.setTitulo("Diário de Classe");
+    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Carregando turmas... ⏳</p>';
+    
+    try {
+        const turmas = await App.api('/turmas');
+        const opTurmas = `<option value="">-- Selecione a Turma --</option>` + turmas.map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('');
+        
+        const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+        const opMeses = meses.map((m,i)=>`<option value="${m}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
+
+        const formFicha = `
+            <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 20px;">
+                ${relSelect('Turma:', 'diario-turma', opTurmas, 'style="min-width:250px;"')}
+                ${relSelect('Mês de Referência:', 'diario-mes', opMeses, 'style="min-width:150px;"')}
+                <button onclick="App.gerarDiarioImprimir()" class="btn-primary" style="height:41px; padding:0 25px; margin-bottom:5px;">GERAR DIÁRIO</button>
+            </div>
+        `;
+        
+        div.innerHTML = App.UI.card('📝 Gerar Pauta de Frequência', '', formFicha, '100%') + `<div id="diario-area" style="margin-top:30px;"></div>`;
+    } catch(e) { div.innerHTML = "Erro ao carregar as turmas."; }
+};
+
+App.gerarDiarioImprimir = async () => {
+    const nomeTurma = document.getElementById('diario-turma').value;
+    const mesRef = document.getElementById('diario-mes').value;
+    if(!nomeTurma) return App.showToast("Selecione uma turma.", "warning");
+    
+    const divArea = document.getElementById('diario-area'); 
+    divArea.innerHTML = '<p style="text-align:center;">Desenhando grelha... ⏳</p>';
+    document.body.style.cursor = 'wait';
+    
+    try {
+        const [alunos, escola, turmas] = await Promise.all([ App.api('/alunos'), App.api('/escola'), App.api('/turmas') ]);
+        const turmaObj = turmas.find(t => t.nome === nomeTurma) || { dia: '-', horario: '-', curso: '-' };
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:45px; object-fit:contain;">` : '';
+        
+        // Puxa apenas alunos ativos dessa turma
+        const alunosTurma = alunos.filter(a => a.turma === nomeTurma && (!a.status || a.status === 'Ativo'))
+                                  .sort((a,b) => a.nome.localeCompare(b.nome));
+
+        // Cria colunas para até 31 dias
+        let diasHtml = '';
+        for(let i=1; i<=31; i++) { diasHtml += `<th style="border: 1px solid #000; width: 2.5%; text-align: center; font-size: 10px; padding: 2px;">${i}</th>`; }
+
+        let linhasHtml = '';
+        if(alunosTurma.length === 0) {
+            linhasHtml = `<tr><td colspan="32" style="text-align:center; padding: 20px;">Nenhum aluno ativo matriculado nesta turma.</td></tr>`;
+        } else {
+            alunosTurma.forEach((aluno, idx) => {
+                let caixasDia = '';
+                for(let i=1; i<=31; i++) { caixasDia += `<td style="border: 1px solid #000;"></td>`; }
+                linhasHtml += `
+                    <tr>
+                        <td style="border: 1px solid #000; padding: 4px 6px; font-size: 11px;">${idx + 1}. ${App.escapeHTML(aluno.nome)}</td>
+                        ${caixasDia}
+                    </tr>`;
+            });
+        }
+
+        // Tabela A4 em Paisagem
+        divArea.innerHTML = `
+            ${reportStyles}
+            <style>
+                @media print { 
+                    @page { size: A4 landscape; margin: 10mm; }
+                    .print-sheet { max-width: 100% !important; }
+                }
+            </style>
+            <div class="no-print" style="text-align:center; margin-bottom:20px;">
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#2980b9; border:none;">🖨️ IMPRIMIR DIÁRIO (PAISAGEM)</button>
+            </div>
+            <div class="print-sheet" style="padding: 20px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
+                    <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; font-size:16px; text-transform:uppercase;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:11px;">Diário de Classe / Pauta de Frequência</div></div></div>
+                    <div style="text-align:right; font-size:12px; font-weight:bold;">
+                        Turma: <span style="color:#2980b9;">${App.escapeHTML(nomeTurma)}</span><br>
+                        Mês: <span style="color:#27ae60;">${mesRef}</span><br>
+                        Horário: ${App.escapeHTML(turmaObj.horario)}
+                    </div>
+                </div>
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                        <tr style="background: #f0f0f0;">
+                            <th style="border: 1px solid #000; text-align: left; padding: 5px; width: 25%; font-size: 11px;">NOME DO ALUNO</th>
+                            ${diasHtml}
+                        </tr>
+                    </thead>
+                    <tbody>${linhasHtml}</tbody>
+                </table>
+                <div style="margin-top: 15px; font-size: 10px; color: #555;">Legenda de Preenchimento: (P) Presente | (F) Falta | (J) Falta Justificada</div>
+            </div>
+        `;
+    } catch(e) { App.showToast("Erro ao gerar o Diário.", "error"); }
     finally { document.body.style.cursor = 'default'; }
 };
 
@@ -1359,9 +1497,17 @@ App.renderizarMenuCertificados = async () => {
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     
                     <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                        <div style="flex:2; min-width:250px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">1. Selecione o Aluno Titular:</label>
-                            <select id="cert-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer;">${alunosOptions}</select>
+                        <div style="flex:2; min-width:250px; text-align:left; background:#e8f4f8; padding:10px; border-radius:5px; border:1px solid #3498db;">
+                            <label style="font-weight:bold; font-size:12px; color:#2980b9; display:block; margin-bottom:5px;">1. Selecione Aluno OU Turma Inteira:</label>
+                            <div style="display:flex; gap:10px;">
+                                <select id="cert-aluno" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-turma').value='';">${alunosOptions}</select>
+                                <span style="font-weight:bold; color:#7f8c8d; align-self:center;">OU</span>
+                                <select id="cert-turma" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-aluno').value='';">
+                                    <option value="">-- Por Turma (Em Lote) --</option>
+                                    ${(await App.api('/turmas')).map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('')}
+                                </select>
+                            </div>
+                            <div style="font-size:10px; color:#555; margin-top:5px;">*Se selecionar a Turma, o sistema irá gerar o certificado de todos os alunos ativos dela numa só vez.</div>
                         </div>
                         <div style="flex:2; min-width:250px; text-align:left;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Design do Certificado:</label>
@@ -1413,9 +1559,10 @@ App.renderizarMenuCertificados = async () => {
     } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 };
 
-// Motor de Impressão EXCLUSIVO para Certificados (A4 Paisagem + 16 Temas CSS Dinâmicos)
+// Motor de Impressão EXCLUSIVO para Certificados (Suporta Individual e Lote por Turma)
 App.gerarCertificadoPrint = async () => {
     const idAluno = document.getElementById('cert-aluno').value;
+    const nomeTurmaLote = document.getElementById('cert-turma').value;
     const modelo = document.getElementById('cert-modelo').value;
     const cargaHoraria = document.getElementById('cert-carga').value || '40';
     
@@ -1426,16 +1573,25 @@ App.gerarCertificadoPrint = async () => {
     const dataHoje = new Date().toLocaleDateString('pt-BR');
     const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : dataHoje;
     
-    if (!idAluno) return App.showToast("Selecione um aluno na lista.", "warning");
+    if (!idAluno && !nomeTurmaLote) return App.showToast("Selecione um aluno ou uma turma inteira.", "warning");
 
     const btn = document.querySelector('button[onclick="App.gerarCertificadoPrint()"]');
     const txtOriginal = btn.innerText;
-    btn.innerText = "A Criar Obra de Arte... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    btn.innerText = "A Criar Obras de Arte... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
 
     try {
         const alunosLista = await App.api('/alunos');
-        const aluno = alunosLista.find(a => a.id === idAluno) || {};
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
+
+        // 🧠 LÓGICA DE LOTE: Descobre se é um aluno ou a turma toda
+        let alunosParaEmitir = [];
+        if (nomeTurmaLote) {
+            alunosParaEmitir = alunosLista.filter(a => a.turma === nomeTurmaLote && (!a.status || a.status === 'Ativo'));
+            if (alunosParaEmitir.length === 0) throw new Error("A turma selecionada não tem alunos ativos.");
+        } else {
+            const alunoUnico = alunosLista.find(a => a.id === idAluno);
+            if (alunoUnico) alunosParaEmitir.push(alunoUnico);
+        }
 
         const printContainer = document.getElementById('cert-area');
         printContainer.innerHTML = '<p style="text-align:center;">Aplicando Estilo Premium... ⏳</p>';
@@ -1603,7 +1759,8 @@ App.gerarCertificadoPrint = async () => {
             </style>
             
             <div class="scroll-wrapper">
-                <div class="print-sheet">
+                ${alunosParaEmitir.map(aluno => `
+                <div class="print-sheet" style="page-break-after: always; margin-bottom: 30px;">
                     <div class="cert-box">
                         
                         <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO DE CONCLUSÃO</h1>
@@ -1642,6 +1799,7 @@ App.gerarCertificadoPrint = async () => {
                         
                     </div>
                 </div>
+                `).join('')}
             </div>
         `;
     } catch (e) { App.showToast("Erro ao gerar o certificado.", "error"); } 
