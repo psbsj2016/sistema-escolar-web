@@ -1474,12 +1474,12 @@ App.gerarDocumentoOficialPrint = async () => {
 };
 
 // =========================================================
-// 🎓 4.3 AMBIENTE DE CERTIFICADOS (Coleção Top 10 Premium)
+// 🎓 4.3 AMBIENTE DE CERTIFICADOS (Coleção Top 15 Mega Premium)
 // =========================================================
 
 App.renderizarMenuCertificados = async () => {
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Preparando estúdio de design... 🎓</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Preparando estúdio de design avançado... 🎓</p>';
     
     try {
         const alunos = await App.api('/alunos');
@@ -1495,16 +1495,15 @@ App.renderizarMenuCertificados = async () => {
             <div class="card" style="max-width: 800px; margin: 0 auto; border-top: 4px solid #f39c12;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:25px;">
                     <h3 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; font-size:18px;">
-                        🎓 Emissão de Certificados (Coleção Elite)
+                        🎓 Emissão de Certificados (Coleção de Luxo)
                     </h3>
                     <button onclick="App.renderizarGeradorDocumentos()" style="background:#ecf0f1; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; color:#7f8c8d;">Voltar</button>
                 </div>
                 
-                <p style="font-size:13px; color:#666; margin-bottom:20px;">Selecione os dados e escolha um dos nossos 10 layouts de padrão internacional. Visualize no ecrã e descarregue em PDF (Alta Resolução).</p>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">Selecione os dados e escolha um dos nossos 15 layouts de design internacional extravagante. Visualize no ecrã e descarregue em PDF.</p>
                 
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     
-                    <!-- BLOCO 1: PÚBLICO ALVO -->
                     <div style="background:#e8f4f8; padding:15px; border-radius:8px; border:1px solid #3498db; width: 100%; box-sizing: border-box;">
                         <label style="font-weight:bold; font-size:14px; color:#2980b9; display:block; margin-bottom:10px;">1. Destinatário (Aluno Único OU Turma Inteira):</label>
                         <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:15px; align-items:center;">
@@ -1517,24 +1516,31 @@ App.renderizarMenuCertificados = async () => {
                         </div>
                     </div>
 
-                    <!-- BLOCO 2: ENGENHARIA DE DESIGN -->
                     <div style="background:#fffcf5; padding:15px; border-radius:8px; border:1px solid #e67e22; width: 100%; box-sizing: border-box;">
-                        <label style="font-weight:bold; font-size:14px; color:#d35400; display:block; margin-bottom:10px;">2. Coleção Top 10 Design Internacional:</label>
+                        <label style="font-weight:bold; font-size:14px; color:#d35400; display:block; margin-bottom:10px;">2. Coleção Top 15 Design Internacional:</label>
                         <select id="cert-modelo" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; font-size:15px; color: #2c3e50;">
-                            <option value="bluevintage">✨ 01. Blue Vintage Elegant (Modelo PDF Overlayer)</option>
-                            <option value="royalgold">👑 02. Executive Royal Gold (Luxo Corporativo Dourado)</option>
-                            <option value="moderntech">🚀 03. Modern Tech Innovator (Dark Mode & Neon Ciano)</option>
-                            <option value="vibrant">🎨 04. Creative Vibrant Splash (Gradiente Design/Artes)</option>
-                            <option value="emerald">🏛️ 05. Classic Emerald University (Verde Ivy League)</option>
-                            <option value="artdeco">🍸 06. Art Deco Glamour (Negro e Geometria Ouro 1920)</option>
-                            <option value="ruby">🔴 07. Ruby Prestige (Bordô Clássico com Barra Lateral)</option>
-                            <option value="startup">⚡ 08. Startup Neo-Brutalism (Impacto Amarelo e Sombras Duras)</option>
-                            <option value="ocean">🌊 09. Ocean Flow Abstract (Fluidez Abstrata Ciano)</option>
-                            <option value="botanical">🌿 10. Botanical Soft Nature (Verde Sálvia e Creme Bem-estar)</option>
+                            <optgroup label="🌟 Os 5 Novos Modelos Extravagantes">
+                                <option value="goldenwaves">🥇 11. Golden Waves Extravaganza (Ondas e Selo Ouro)</option>
+                                <option value="silvergeo">🥈 12. Silver Geometric Pro (Geometria e Selo Prata)</option>
+                                <option value="bronzeheritage">🥉 13. Bronze Heritage Classic (Tradição e Selo Bronze)</option>
+                                <option value="diamond">💎 14. Diamond Holographic (Prismas e Holografia)</option>
+                                <option value="imperial">👑 15. Imperial Crimson & Gold (Assimetria Imperial)</option>
+                            </optgroup>
+                            <optgroup label="✨ A Coleção Elite Anterior">
+                                <option value="bluevintage">✨ 01. Blue Vintage Elegant (Modelo PDF Overlayer)</option>
+                                <option value="royalgold">👑 02. Executive Royal Gold (Luxo Corporativo Dourado)</option>
+                                <option value="moderntech">🚀 03. Modern Tech Innovator (Dark Mode & Neon Ciano)</option>
+                                <option value="vibrant">🎨 04. Creative Vibrant Splash (Gradiente Design/Artes)</option>
+                                <option value="emerald">🏛️ 05. Classic Emerald University (Verde Ivy League)</option>
+                                <option value="artdeco">🍸 06. Art Deco Glamour (Negro e Geometria Ouro 1920)</option>
+                                <option value="ruby">🔴 07. Ruby Prestige (Bordô Clássico com Barra Lateral)</option>
+                                <option value="startup">⚡ 08. Startup Neo-Brutalism (Impacto Amarelo e Sombras Duras)</option>
+                                <option value="ocean">🌊 09. Ocean Flow Abstract (Fluidez Abstrata Ciano)</option>
+                                <option value="botanical">🌿 10. Botanical Soft Nature (Verde Sálvia e Creme Bem-estar)</option>
+                            </optgroup>
                         </select>
                     </div>
 
-                    <!-- BLOCO 3: DADOS DINÂMICOS -->
                     <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px dashed #ccc; display:flex; gap:15px; flex-wrap:wrap; width: 100%; box-sizing: border-box;">
                         <div style="flex:1; min-width:120px;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Carga Horária (h):</label>
@@ -1563,36 +1569,186 @@ App.renderizarMenuCertificados = async () => {
 };
 
 // -------------------------------------------------------------------------
-// 🏗️ FONTE ÚNICA DE VERDADE: O MEGA-ESTÚDIO DE DESIGN DOS 10 MODELOS
+// 🏗️ FONTE ÚNICA DE VERDADE: O MEGA-ESTÚDIO DE DESIGN (AGORA COM 15 MODELOS)
 // -------------------------------------------------------------------------
 App.construirArteCertificado = (aluno, modelo, cargaHoraria, dataInicioStr, dataFimStr, escola) => {
     
-    // O texto legal blindado
     const textoLegal = `inscrito no CPF <b>${App.escapeHTML(aluno.cpf || '___________')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Inglês')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || '___________')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.`;
-    const logoImg = escola.foto ? `<img src="${escola.foto}" style="max-height:80px; object-fit:contain;">` : `<div style="font-size:24px; font-weight:bold; letter-spacing:2px;">${App.escapeHTML(escola.nome)}</div>`;
+    const logoImg = escola.foto ? `<img src="${escola.foto}" style="max-height:80px; object-fit:contain; position:relative; z-index:10;">` : `<div style="font-size:24px; font-weight:bold; letter-spacing:2px; position:relative; z-index:10;">${App.escapeHTML(escola.nome)}</div>`;
 
-    // 01. BLUE VINTAGE ELEGANT (OVERLAYER)
-    if (modelo === 'bluevintage') {
+    // --- SVGs DE SELOS METÁLICOS (Ouro, Prata e Bronze) ---
+    const seloOuroSvg = `<svg width="110" height="110" viewBox="0 0 100 100"><defs><linearGradient id="gld" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#F9D423"/><stop offset="50%" stop-color="#FF4E50"/><stop offset="100%" stop-color="#F9D423"/></linearGradient></defs><circle cx="50" cy="50" r="46" fill="none" stroke="#d4af37" stroke-width="2"/><circle cx="50" cy="50" r="41" fill="none" stroke="#d4af37" stroke-width="1" stroke-dasharray="3 3"/><path d="M50 10 L58 35 L85 35 L62 52 L70 80 L50 62 L30 80 L38 52 L15 35 L42 35 Z" fill="url(#gld)" opacity="0.95"/><circle cx="50" cy="50" r="22" fill="#000"/><text x="50" y="52" font-size="8" font-family="Georgia" fill="#d4af37" text-anchor="middle" font-weight="bold">SELO</text><text x="50" y="60" font-size="5" font-family="Arial" fill="#d4af37" text-anchor="middle" letter-spacing="1">OFICIAL</text></svg>`;
+    
+    const seloPrataSvg = `<svg width="110" height="110" viewBox="0 0 100 100"><defs><linearGradient id="slv" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#FFFFFF"/><stop offset="50%" stop-color="#C0C0C0"/><stop offset="100%" stop-color="#707070"/></linearGradient></defs><circle cx="50" cy="50" r="46" fill="none" stroke="url(#slv)" stroke-width="3"/><circle cx="50" cy="50" r="41" fill="none" stroke="#999" stroke-width="1" stroke-dasharray="2 2"/><path d="M50 10 L58 35 L85 35 L62 52 L70 80 L50 62 L30 80 L38 52 L15 35 L42 35 Z" fill="url(#slv)" opacity="0.95"/><circle cx="50" cy="50" r="22" fill="#2c3e50"/><text x="50" y="52" font-size="8" font-family="Georgia" fill="#FFF" text-anchor="middle" font-weight="bold">PRATA</text><text x="50" y="60" font-size="5" font-family="Arial" fill="#FFF" text-anchor="middle" letter-spacing="1">PREMIUM</text></svg>`;
+    
+    const seloBronzeSvg = `<svg width="110" height="110" viewBox="0 0 100 100"><defs><linearGradient id="brz" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#CD7F32"/><stop offset="50%" stop-color="#8C7853"/><stop offset="100%" stop-color="#3b2f2f"/></linearGradient></defs><circle cx="50" cy="50" r="46" fill="none" stroke="url(#brz)" stroke-width="3"/><circle cx="50" cy="50" r="41" fill="none" stroke="#CD7F32" stroke-width="1" stroke-dasharray="4 4"/><path d="M50 10 L58 35 L85 35 L62 52 L70 80 L50 62 L30 80 L38 52 L15 35 L42 35 Z" fill="url(#brz)" opacity="0.95"/><circle cx="50" cy="50" r="22" fill="#3b2f2f"/><text x="50" y="52" font-size="8" font-family="Georgia" fill="#CD7F32" text-anchor="middle" font-weight="bold">BRONZE</text><text x="50" y="60" font-size="5" font-family="Arial" fill="#CD7F32" text-anchor="middle" letter-spacing="1">HERITAGE</text></svg>`;
+
+    // ==========================================
+    // 🌟 OS 5 NOVOS MODELOS EXTRAVAGANTES
+    // ==========================================
+
+    // 11. GOLDEN WAVES EXTRAVAGANZA
+    if (modelo === 'goldenwaves') {
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #fffdf5; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Georgia', serif; padding: 60px;">
+                <!-- Ondas de Fundo (Radiant Gradients Multiplos) -->
+                <div style="position:absolute; top:-200px; left:-200px; width:700px; height:700px; border-radius:50%; background: radial-gradient(circle, rgba(212,175,55,0.15) 0%, rgba(255,255,255,0) 70%);"></div>
+                <div style="position:absolute; bottom:-300px; right:-100px; width:900px; height:900px; border-radius:50%; background: radial-gradient(circle, rgba(212,175,55,0.2) 0%, rgba(255,255,255,0) 70%);"></div>
+                <div style="position:absolute; top:40px; left:40px; right:40px; bottom:40px; border: 2px solid #d4af37; z-index:2;"></div>
+                
+                <div style="z-index:10; margin-bottom: 20px;">${logoImg}</div>
+                <h1 style="z-index:10; font-size: 55px; color: #b8860b; letter-spacing: 5px; font-weight: normal; margin-bottom: 10px; text-transform: uppercase;">Certificado de Excelência</h1>
+                <p style="z-index:10; font-size: 22px; font-style: italic; color: #555; margin-bottom: 30px;">Temos a suprema honra de certificar</p>
+                
+                <h2 style="z-index:10; font-size: 60px; color: #000; border-bottom: 3px solid #d4af37; padding: 0 50px 10px 50px; margin-bottom: 30px; font-weight: normal; font-style: italic;">${App.escapeHTML(aluno.nome)}</h2>
+                
+                <p style="z-index:10; font-size: 20px; line-height: 1.8; color: #444; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
+                
+                <div style="z-index:10; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 60px; margin-top: auto; margin-bottom: 20px;">
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #b8860b; padding-top: 10px; color: #b8860b; font-size: 16px; font-style:italic;">O Corpo Diretivo</div>
+                    <div style="width: 150px; display: flex; justify-content: center; filter: drop-shadow(0 10px 15px rgba(212,175,55,0.4));">${seloOuroSvg}</div>
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #b8860b; padding-top: 10px; color: #b8860b; font-size: 16px; font-style:italic;">O Aluno Galardoado</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 12. SILVER GEOMETRIC PRO
+    else if (modelo === 'silvergeo') {
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #ffffff; color: #333; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Helvetica Neue', Arial, sans-serif; padding: 60px;">
+                <!-- Geometria de Fundo (Clip Path) -->
+                <div style="position:absolute; top:0; right:0; width:600px; height:100%; background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%); z-index:1;"></div>
+                <div style="position:absolute; bottom:0; left:0; width:400px; height:400px; background: #e2e2e2; clip-path: polygon(0 0, 0% 100%, 100% 100%); z-index:1;"></div>
+                
+                <div style="z-index:10; margin-bottom:20px; align-self:flex-start; margin-left: 40px;">${logoImg}</div>
+                
+                <h1 style="z-index:10; font-size: 65px; color: #2c3e50; letter-spacing: -2px; font-weight: 900; margin-bottom: 5px; align-self:flex-start; margin-left: 40px; text-transform: uppercase;">CERTIFICADO</h1>
+                <p style="z-index:10; font-size: 20px; color: #7f8c8d; margin-bottom: 40px; align-self:flex-start; margin-left: 40px; letter-spacing: 2px;">RECONHECIMENTO DE MÉRITO ACADÉMICO</p>
+                
+                <h2 style="z-index:10; font-size: 55px; color: #000; background: #fff; padding: 15px 40px; border-left: 8px solid #95a5a6; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); align-self:flex-start; margin-left: 40px; width:80%;">
+                    ${App.escapeHTML(aluno.nome)}
+                </h2>
+                
+                <p style="z-index:10; font-size: 19px; line-height: 1.8; color: #444; max-width: 900px; text-align: justify; margin-bottom: auto; background: rgba(255,255,255,0.85); padding: 20px; align-self:flex-start; margin-left: 40px;">${textoLegal}</p>
+                
+                <div style="z-index:10; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 60px; margin-top: auto; margin-bottom: 20px;">
+                    <div style="width: 250px; text-align: center; border-top: 2px solid #7f8c8d; padding-top: 10px; color: #2c3e50; font-size: 14px; font-weight:bold;">A DIREÇÃO</div>
+                    <div style="width: 150px; display: flex; justify-content: center;">${seloPrataSvg}</div>
+                    <div style="width: 250px; text-align: center; border-top: 2px solid #7f8c8d; padding-top: 10px; color: #2c3e50; font-size: 14px; font-weight:bold;">O ALUNO</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 13. BRONZE HERITAGE CLASSIC
+    else if (modelo === 'bronzeheritage') {
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #2b2118; color: #f4ecd8; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; padding: 60px;">
+                <div style="position: absolute; top: 25px; left: 25px; right: 25px; bottom: 25px; border: 6px double #CD7F32;"></div>
+                <div style="position: absolute; top: 40px; left: 40px; right: 40px; bottom: 40px; border: 1px solid rgba(205,127,50,0.5);"></div>
+                
+                <div style="z-index:10; margin-bottom:20px;">${logoImg.replace('<img', '<img style="max-height:80px; filter: sepia(1) hue-rotate(-30deg) saturate(1.5) brightness(0.8);"')}</div>
+                <h1 style="z-index:10; font-size: 55px; color: #CD7F32; letter-spacing: 8px; font-weight: normal; margin-bottom: 10px; text-transform: uppercase;">Diploma de Honra</h1>
+                <p style="z-index:10; font-size: 20px; font-style: italic; color: #b89f81; margin-bottom: 40px;">É com imenso prestígio que outorgamos este título a</p>
+                
+                <h2 style="z-index:10; font-size: 60px; color: #fff; border-bottom: 1px solid #CD7F32; padding: 0 60px 15px 60px; margin-bottom: 35px; font-weight: normal; font-style: italic; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">
+                    ${App.escapeHTML(aluno.nome)}
+                </h2>
+                
+                <p style="z-index:10; font-size: 19px; line-height: 1.8; color: #d3c4b1; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
+                
+                <div style="z-index:10; display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 50px; margin-top: auto; margin-bottom: 20px;">
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #CD7F32; padding-top: 10px; color: #CD7F32; font-size: 16px;">Assinatura do Diretor</div>
+                    <div style="width: 150px; display: flex; justify-content: center; filter: drop-shadow(0 5px 15px rgba(0,0,0,0.8));">${seloBronzeSvg}</div>
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #CD7F32; padding-top: 10px; color: #CD7F32; font-size: 16px;">Assinatura do Aluno</div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 14. DIAMOND HOLOGRAPHIC (GLASSMORPHISM)
+    else if (modelo === 'diamond') {
+        return `
+            <div style="width: 1122px; height: 793px; background: linear-gradient(45deg, #e6e6fa, #e0ffff, #ffb6c1, #fff0f5); box-sizing: border-box; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center; padding: 40px; font-family: 'Segoe UI', Tahoma, sans-serif;">
+                <!-- Prismas de Fundo -->
+                <div style="position:absolute; top:-100px; left:-50px; width:400px; height:400px; background: rgba(255,255,255,0.4); transform: rotate(45deg); z-index:1;"></div>
+                <div style="position:absolute; bottom:-150px; right:-100px; width:600px; height:600px; background: rgba(255,255,255,0.3); transform: rotate(30deg); border: 2px solid rgba(255,255,255,0.8); z-index:1;"></div>
+                
+                <!-- Painel de Vidro Central (Glassmorphism) -->
+                <div style="width: 100%; height: 100%; background: rgba(255, 255, 255, 0.55); border: 1px solid rgba(255,255,255,0.8); border-radius: 20px; z-index: 10; padding: 50px; display: flex; flex-direction: column; align-items: center; text-align: center; box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.1);">
+                    <div style="margin-bottom: 20px;">${logoImg}</div>
+                    <h1 style="font-size: 50px; color: #2c3e50; letter-spacing: 10px; font-weight: 300; margin-bottom: 10px; text-transform: uppercase;">CERTIFICADO</h1>
+                    <p style="font-size: 18px; color: #7f8c8d; letter-spacing: 3px; margin-bottom: 40px;">DIAMOND EXCELLENCE AWARD</p>
+                    
+                    <h2 style="font-size: 55px; color: #34495e; margin-bottom: 30px; font-weight: bold; background: linear-gradient(90deg, #8e44ad, #3498db); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">
+                        ${App.escapeHTML(aluno.nome)}
+                    </h2>
+                    
+                    <p style="font-size: 18px; line-height: 2; color: #444; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto; font-weight: 500;">${textoLegal}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 80px; margin-top: auto;">
+                        <div style="width: 250px; text-align: center; border-top: 2px solid #bdc3c7; padding-top: 10px; color: #2c3e50; font-size: 13px; font-weight:bold; letter-spacing:1px;">A DIREÇÃO</div>
+                        <div style="width: 250px; text-align: center; border-top: 2px solid #bdc3c7; padding-top: 10px; color: #2c3e50; font-size: 13px; font-weight:bold; letter-spacing:1px;">O ALUNO</div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // 15. IMPERIAL CRIMSON & GOLD
+    else if (modelo === 'imperial') {
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #5a0000; box-sizing: border-box; position: relative; overflow: hidden; display: flex; font-family: 'Times New Roman', serif;">
+                <!-- Faixas de Ouro Imperiais -->
+                <div style="position: absolute; top: -100px; left: 250px; width: 40px; height: 1200px; background: #d4af37; transform: rotate(20deg); z-index: 1;"></div>
+                <div style="position: absolute; top: -100px; left: 320px; width: 10px; height: 1200px; background: #f9d423; transform: rotate(20deg); z-index: 1;"></div>
+                
+                <!-- Bloco de Texto Principal -->
+                <div style="flex: 1; z-index: 10; background: rgba(255,255,255,0.95); margin: 30px 30px 30px 380px; padding: 60px; box-shadow: -15px 0 30px rgba(0,0,0,0.5); display: flex; flex-direction: column; justify-content: center; text-align: left;">
+                    
+                    <h1 style="font-size: 55px; color: #5a0000; margin-bottom: 5px; font-weight: bold; text-transform: uppercase; letter-spacing: 2px;">Certificado Imperial</h1>
+                    <p style="font-size: 20px; color: #666; font-style: italic; margin-bottom: 40px;">É concedida a honraria de conclusão a</p>
+                    
+                    <h2 style="font-size: 50px; color: #000; border-bottom: 3px solid #d4af37; padding-bottom: 15px; margin-bottom: 30px; display: inline-block; width: 100%;">
+                        ${App.escapeHTML(aluno.nome)}
+                    </h2>
+                    
+                    <p style="font-size: 18px; line-height: 1.9; color: #333; text-align: justify; margin-bottom: auto;">${textoLegal}</p>
+                    
+                    <div style="display: flex; justify-content: space-between; width: 100%; margin-top: auto; margin-bottom: 10px;">
+                        <div style="width: 200px; text-align: center; border-top: 1px solid #5a0000; padding-top: 10px; color: #5a0000; font-size: 15px; font-weight:bold;">A Direção Geral</div>
+                        <div style="width: 200px; text-align: center; border-top: 1px solid #5a0000; padding-top: 10px; color: #5a0000; font-size: 15px; font-weight:bold;">O Aluno Titular</div>
+                    </div>
+                </div>
+
+                <!-- Painel Esquerdo Escuro (Logo e Selo) -->
+                <div style="position: absolute; top: 0; left: 0; width: 380px; height: 100%; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 80px 0;">
+                    ${logoImg.replace('<img', '<img style="max-height:120px; filter: brightness(0) invert(1) drop-shadow(0 5px 10px rgba(0,0,0,0.5));"')}
+                    <div style="filter: drop-shadow(0 15px 20px rgba(0,0,0,0.8)); margin-bottom: 50px;">
+                        ${seloOuroSvg}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    // ==========================================
+    // ✨ A COLEÇÃO ELITE ANTERIOR (1 A 10)
+    // ==========================================
+    else if (modelo === 'bluevintage') {
         return `
             <div style="width: 1122px; height: 793px; position: relative; background-image: url('Blue Vintage Elegant Achievement Certificate.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #fdfbf7; box-sizing: border-box; overflow: hidden;">
                 <div style="position: absolute; top: 130px; width: 100%; text-align: center; color: #1e3799; font-size: 55px; letter-spacing: 5px; font-family: 'Times New Roman', serif;">CERTIFICADO</div>
                 <div style="position: absolute; top: 195px; width: 100%; text-align: center; color: #1e3799; font-size: 20px; letter-spacing: 2px; font-family: 'Times New Roman', serif;">DO CURSO DE INGLÊS</div>
                 <div style="position: absolute; top: 330px; width: 100%; text-align: center; color: #8B4513; font-size: 55px; font-style: italic; font-family: 'Georgia', serif; font-weight: bold;">${App.escapeHTML(aluno.nome)}</div>
                 <div style="position: absolute; top: 460px; left: 111px; width: 900px; text-align: center; color: #222; font-size: 19px; line-height: 1.8; font-family: 'Times New Roman', serif;">${textoLegal}</div>
-                
-                <div style="position: absolute; bottom: 120px; left: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
-                    <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do Diretor e Professor</b>
-                </div>
-                <div style="position: absolute; bottom: 120px; right: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
-                    <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do aluno</b>
-                </div>
+                <div style="position: absolute; bottom: 120px; left: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;"><div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do Diretor e Professor</b></div>
+                <div style="position: absolute; bottom: 120px; right: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;"><div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do aluno</b></div>
             </div>
         `;
     } 
-    
-    // 02. EXECUTIVE ROYAL GOLD
     else if (modelo === 'royalgold') {
-        const seloSvg = `<svg width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="46" fill="none" stroke="#d4af37" stroke-width="2"/><circle cx="50" cy="50" r="41" fill="none" stroke="#d4af37" stroke-width="1" stroke-dasharray="3 3"/><path d="M50 10 L58 35 L85 35 L62 52 L70 80 L50 62 L30 80 L38 52 L15 35 L42 35 Z" fill="#d4af37" opacity="0.9"/><circle cx="50" cy="50" r="22" fill="#051024"/><text x="50" y="52" font-size="8" font-family="Georgia" fill="#d4af37" text-anchor="middle" font-weight="bold">SELO</text><text x="50" y="60" font-size="5" font-family="Arial" fill="#d4af37" text-anchor="middle" letter-spacing="1">OFICIAL</text></svg>`;
         return `
             <div style="width: 1122px; height: 793px; background-color: #051024; color: #fff; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Georgia', serif; padding: 60px;">
                 <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 3px solid #d4af37;"></div>
@@ -1603,164 +1759,35 @@ App.construirArteCertificado = (aluno, modelo, cargaHoraria, dataInicioStr, data
                 <p style="font-size: 20px; line-height: 1.8; color: #ccc; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto; font-family: 'Times New Roman', serif;">${textoLegal}</p>
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 40px; margin-top: auto; margin-bottom: 20px;">
                     <div style="width: 250px; text-align: center; border-top: 1px solid #d4af37; padding-top: 10px; color: #d4af37; font-size: 16px;">A Direção</div>
-                    <div style="width: 150px; display: flex; justify-content: center;">${seloSvg}</div>
+                    <div style="width: 150px; display: flex; justify-content: center;">${seloOuroSvg}</div>
                     <div style="width: 250px; text-align: center; border-top: 1px solid #d4af37; padding-top: 10px; color: #d4af37; font-size: 16px;">O Aluno Titular</div>
                 </div>
             </div>
         `;
     }
-
-    // 03. MODERN TECH INNOVATOR
     else if (modelo === 'moderntech') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #0b0c10; color: #c5c6c7; font-family: 'Courier New', monospace; box-sizing: border-box; position: relative; overflow: hidden; padding: 60px; display:flex; flex-direction:column; align-items:center;">
-                <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 2px solid #66fcf1; box-shadow: 0 0 15px rgba(102,252,241,0.5) inset;"></div>
-                <div style="margin-bottom: 20px;">${logoImg.replace('<img', '<img style="max-height:60px; filter: brightness(0) invert(1) drop-shadow(0 0 5px #66fcf1);"')}</div>
-                <h1 style="color: #66fcf1; text-transform: uppercase; font-size: 45px; letter-spacing: 8px; margin-bottom: 10px;">CERTIFICADO_TECH</h1>
-                <p style="color: #45a29e; font-size: 18px; letter-spacing: 2px;">> RECONHECIMENTO DE CONCLUSÃO_</p>
-                <h2 style="color: #fff; font-size: 55px; border-bottom: 1px dashed #45a29e; display: inline-block; padding: 10px 40px; margin: 40px 0;">${App.escapeHTML(aluno.nome)}</h2>
-                <p style="font-family: Arial, sans-serif; font-size: 18px; line-height: 1.9; color: #c5c6c7; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
-                <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto; margin-bottom: 20px;">
-                    <div style="width: 250px; text-align: center; border-top: 1px solid #66fcf1; padding-top: 10px; color: #66fcf1; font-size: 14px; font-weight:bold;">> DIRETORIA_</div>
-                    <div style="width: 250px; text-align: center; border-top: 1px solid #66fcf1; padding-top: 10px; color: #66fcf1; font-size: 14px; font-weight:bold;">> ALUNO_</div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #0b0c10; color: #c5c6c7; font-family: 'Courier New', monospace; box-sizing: border-box; position: relative; overflow: hidden; padding: 60px; display:flex; flex-direction:column; align-items:center;"><div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 2px solid #66fcf1; box-shadow: 0 0 15px rgba(102,252,241,0.5) inset;"></div><div style="margin-bottom: 20px;">${logoImg.replace('<img', '<img style="max-height:60px; filter: brightness(0) invert(1) drop-shadow(0 0 5px #66fcf1);"')}</div><h1 style="color: #66fcf1; text-transform: uppercase; font-size: 45px; letter-spacing: 8px; margin-bottom: 10px;">CERTIFICADO_TECH</h1><p style="color: #45a29e; font-size: 18px; letter-spacing: 2px;">> RECONHECIMENTO DE CONCLUSÃO_</p><h2 style="color: #fff; font-size: 55px; border-bottom: 1px dashed #45a29e; display: inline-block; padding: 10px 40px; margin: 40px 0;">${App.escapeHTML(aluno.nome)}</h2><p style="font-family: Arial, sans-serif; font-size: 18px; line-height: 1.9; color: #c5c6c7; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto; margin-bottom: 20px;"><div style="width: 250px; text-align: center; border-top: 1px solid #66fcf1; padding-top: 10px; color: #66fcf1; font-size: 14px; font-weight:bold;">> DIRETORIA_</div><div style="width: 250px; text-align: center; border-top: 1px solid #66fcf1; padding-top: 10px; color: #66fcf1; font-size: 14px; font-weight:bold;">> ALUNO_</div></div></div>`;
     }
-
-    // 04. CREATIVE VIBRANT SPLASH
     else if (modelo === 'vibrant') {
-        return `
-            <div style="width: 1122px; height: 793px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); padding: 40px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;">
-                <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.92); border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); padding: 50px; text-align: center; position: relative; display:flex; flex-direction:column; align-items:center;">
-                    <div style="margin-bottom:20px;">${logoImg}</div>
-                    <h1 style="color: #ff758c; font-size: 45px; font-family: Arial, sans-serif; font-weight: 900; letter-spacing: 4px; margin-bottom:10px;">CERTIFICADO</h1>
-                    <h2 style="color: #333; font-size: 55px; font-family: 'Georgia', serif; font-style: italic; margin: 30px 0; border-bottom: 4px solid #ff758c; display: inline-block; padding-bottom:5px;">${App.escapeHTML(aluno.nome)}</h2>
-                    <p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
-                    <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto;">
-                        <div style="width: 250px; text-align: center; border-top: 2px solid #ff758c; padding-top: 10px; color: #ff758c; font-size: 14px; font-weight:bold;">A DIREÇÃO</div>
-                        <div style="width: 250px; text-align: center; border-top: 2px solid #ff758c; padding-top: 10px; color: #ff758c; font-size: 14px; font-weight:bold;">O ALUNO</div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background: linear-gradient(135deg, #ff9a9e 0%, #fecfef 99%, #fecfef 100%); padding: 40px; box-sizing: border-box; display: flex; align-items: center; justify-content: center;"><div style="width: 100%; height: 100%; background: rgba(255,255,255,0.92); border-radius: 30px; box-shadow: 0 20px 50px rgba(0,0,0,0.1); padding: 50px; text-align: center; position: relative; display:flex; flex-direction:column; align-items:center;"><div style="margin-bottom:20px;">${logoImg}</div><h1 style="color: #ff758c; font-size: 45px; font-family: Arial, sans-serif; font-weight: 900; letter-spacing: 4px; margin-bottom:10px;">CERTIFICADO</h1><h2 style="color: #333; font-size: 55px; font-family: 'Georgia', serif; font-style: italic; margin: 30px 0; border-bottom: 4px solid #ff758c; display: inline-block; padding-bottom:5px;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 800px; margin: 0 auto; font-family: Arial, sans-serif; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto;"><div style="width: 250px; text-align: center; border-top: 2px solid #ff758c; padding-top: 10px; color: #ff758c; font-size: 14px; font-weight:bold;">A DIREÇÃO</div><div style="width: 250px; text-align: center; border-top: 2px solid #ff758c; padding-top: 10px; color: #ff758c; font-size: 14px; font-weight:bold;">O ALUNO</div></div></div></div>`;
     }
-
-    // 05. CLASSIC EMERALD UNIVERSITY
     else if (modelo === 'emerald') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #0f4c3a; padding: 40px; box-sizing: border-box; font-family: 'Georgia', serif; position:relative;">
-                <div style="width: 100%; height: 100%; border: 4px solid #d4af37; padding: 10px; box-sizing: border-box;">
-                    <div style="width: 100%; height: 100%; border: 1px solid #d4af37; background: #fffcf5; padding: 50px; box-sizing: border-box; display:flex; flex-direction:column; align-items:center;">
-                        <div style="margin-bottom:15px;">${logoImg}</div>
-                        <h1 style="color: #0f4c3a; font-size: 45px; letter-spacing: 6px; margin-bottom: 10px;">CERTIFICADO</h1>
-                        <p style="color: #777; font-size: 18px; font-style: italic;">Concedido com todas as honras a</p>
-                        <h2 style="color: #0f4c3a; font-size: 55px; margin: 30px 0; font-weight: normal; border-bottom: 2px solid #d4af37; display: inline-block; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2>
-                        <p style="color: #333; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
-                        <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 40px; margin-top: auto;">
-                            <div style="width: 250px; text-align: center; border-top: 1px solid #0f4c3a; padding-top: 10px; color: #0f4c3a; font-size: 15px;">Membro da Direção</div>
-                            <div style="width: 250px; text-align: center; border-top: 1px solid #0f4c3a; padding-top: 10px; color: #0f4c3a; font-size: 15px;">Assinatura do Aluno</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #0f4c3a; padding: 40px; box-sizing: border-box; font-family: 'Georgia', serif; position:relative;"><div style="width: 100%; height: 100%; border: 4px solid #d4af37; padding: 10px; box-sizing: border-box;"><div style="width: 100%; height: 100%; border: 1px solid #d4af37; background: #fffcf5; padding: 50px; box-sizing: border-box; display:flex; flex-direction:column; align-items:center;"><div style="margin-bottom:15px;">${logoImg}</div><h1 style="color: #0f4c3a; font-size: 45px; letter-spacing: 6px; margin-bottom: 10px;">CERTIFICADO</h1><p style="color: #777; font-size: 18px; font-style: italic;">Concedido com todas as honras a</p><h2 style="color: #0f4c3a; font-size: 55px; margin: 30px 0; font-weight: normal; border-bottom: 2px solid #d4af37; display: inline-block; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #333; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 40px; margin-top: auto;"><div style="width: 250px; text-align: center; border-top: 1px solid #0f4c3a; padding-top: 10px; color: #0f4c3a; font-size: 15px;">Membro da Direção</div><div style="width: 250px; text-align: center; border-top: 1px solid #0f4c3a; padding-top: 10px; color: #0f4c3a; font-size: 15px;">Assinatura do Aluno</div></div></div></div></div>`;
     }
-
-    // 06. ART DECO GLAMOUR
     else if (modelo === 'artdeco') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #111; padding: 40px; box-sizing: border-box; position: relative; font-family: 'Trebuchet MS', sans-serif; display:flex; flex-direction:column; align-items:center;">
-                <div style="position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; border: 2px solid #f1c40f;"></div>
-                <div style="position: absolute; top: 45px; left: 45px; right: 45px; bottom: 45px; border: 1px solid #f1c40f;"></div>
-                <div style="margin-top:40px; margin-bottom:20px;">${logoImg.replace('<img', '<img style="max-height:70px; filter: brightness(0) invert(1) sepia(100%) hue-rotate(10deg) saturate(200%);"')}</div>
-                <h1 style="color: #f1c40f; font-size: 45px; letter-spacing: 12px; font-weight: 300; margin-bottom:10px;">CERTIFICADO</h1>
-                <h2 style="color: #fff; font-size: 50px; margin: 40px 0; font-weight: 300; border-bottom: 1px solid #f1c40f; display: inline-block; padding-bottom: 10px; font-family:'Georgia', serif; font-style:italic;">${App.escapeHTML(aluno.nome)}</h2>
-                <p style="color: #ccc; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto; font-family: Arial, sans-serif;">${textoLegal}</p>
-                <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 80px; margin-top: auto; margin-bottom: 40px;">
-                    <div style="width: 250px; text-align: center; border-top: 1px solid #f1c40f; padding-top: 10px; color: #f1c40f; font-size: 14px; letter-spacing:2px;">DIRETORIA</div>
-                    <div style="width: 250px; text-align: center; border-top: 1px solid #f1c40f; padding-top: 10px; color: #f1c40f; font-size: 14px; letter-spacing:2px;">ALUNO</div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #111; padding: 40px; box-sizing: border-box; position: relative; font-family: 'Trebuchet MS', sans-serif; display:flex; flex-direction:column; align-items:center;"><div style="position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; border: 2px solid #f1c40f;"></div><div style="position: absolute; top: 45px; left: 45px; right: 45px; bottom: 45px; border: 1px solid #f1c40f;"></div><div style="margin-top:40px; margin-bottom:20px;">${logoImg.replace('<img', '<img style="max-height:70px; filter: brightness(0) invert(1) sepia(100%) hue-rotate(10deg) saturate(200%);"')}</div><h1 style="color: #f1c40f; font-size: 45px; letter-spacing: 12px; font-weight: 300; margin-bottom:10px;">CERTIFICADO</h1><h2 style="color: #fff; font-size: 50px; margin: 40px 0; font-weight: 300; border-bottom: 1px solid #f1c40f; display: inline-block; padding-bottom: 10px; font-family:'Georgia', serif; font-style:italic;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #ccc; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto; font-family: Arial, sans-serif;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 80px; margin-top: auto; margin-bottom: 40px;"><div style="width: 250px; text-align: center; border-top: 1px solid #f1c40f; padding-top: 10px; color: #f1c40f; font-size: 14px; letter-spacing:2px;">DIRETORIA</div><div style="width: 250px; text-align: center; border-top: 1px solid #f1c40f; padding-top: 10px; color: #f1c40f; font-size: 14px; letter-spacing:2px;">ALUNO</div></div></div>`;
     }
-
-    // 07. RUBY PRESTIGE
     else if (modelo === 'ruby') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #fdfbf7; box-sizing: border-box; position: relative; display: flex;">
-                <div style="width: 280px; background-color: #780000; height: 100%; border-right: 12px solid #d4af37; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">
-                    ${logoImg.replace('<img', '<img style="max-height:100px; filter: brightness(0) invert(1);"')}
-                </div>
-                <div style="flex: 1; padding: 70px 60px; text-align: left; font-family: 'Georgia', serif; display:flex; flex-direction:column;">
-                    <h1 style="color: #780000; font-size: 55px; letter-spacing: 2px; margin-bottom: 10px; text-transform:uppercase;">Certificado</h1>
-                    <p style="color: #666; font-size: 20px; font-style: italic;">Certificamos com distinção que</p>
-                    <h2 style="color: #000; font-size: 50px; margin: 40px 0; border-bottom: 3px solid #d4af37; padding-bottom: 10px; display: inline-block; width:fit-content;">${App.escapeHTML(aluno.nome)}</h2>
-                    <p style="color: #333; font-size: 18px; line-height: 1.9; max-width: 700px; text-align: justify; margin-bottom: auto;">${textoLegal}</p>
-                    <div style="display: flex; justify-content: space-between; width: 100%; padding-right: 40px; margin-top: auto;">
-                        <div style="width: 250px; text-align: center; border-top: 1px solid #780000; padding-top: 10px; color: #780000; font-size: 15px;">Assinatura da Direção</div>
-                        <div style="width: 250px; text-align: center; border-top: 1px solid #780000; padding-top: 10px; color: #780000; font-size: 15px;">Assinatura do Aluno</div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #fdfbf7; box-sizing: border-box; position: relative; display: flex;"><div style="width: 280px; background-color: #780000; height: 100%; border-right: 12px solid #d4af37; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:20px;">${logoImg.replace('<img', '<img style="max-height:100px; filter: brightness(0) invert(1);"')}</div><div style="flex: 1; padding: 70px 60px; text-align: left; font-family: 'Georgia', serif; display:flex; flex-direction:column;"><h1 style="color: #780000; font-size: 55px; letter-spacing: 2px; margin-bottom: 10px; text-transform:uppercase;">Certificado</h1><p style="color: #666; font-size: 20px; font-style: italic;">Certificamos com distinção que</p><h2 style="color: #000; font-size: 50px; margin: 40px 0; border-bottom: 3px solid #d4af37; padding-bottom: 10px; display: inline-block; width:fit-content;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #333; font-size: 18px; line-height: 1.9; max-width: 700px; text-align: justify; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding-right: 40px; margin-top: auto;"><div style="width: 250px; text-align: center; border-top: 1px solid #780000; padding-top: 10px; color: #780000; font-size: 15px;">Assinatura da Direção</div><div style="width: 250px; text-align: center; border-top: 1px solid #780000; padding-top: 10px; color: #780000; font-size: 15px;">Assinatura do Aluno</div></div></div></div>`;
     }
-
-    // 08. STARTUP NEO-BRUTALISM
     else if (modelo === 'startup') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #f1c40f; padding: 50px; box-sizing: border-box; font-family: 'Arial Black', Arial, sans-serif;">
-                <div style="width: 100%; height: 100%; background: #fff; border: 8px solid #000; box-shadow: 15px 15px 0px #000; padding: 50px; box-sizing: border-box; display: flex; flex-direction: column; position:relative;">
-                    <div style="position:absolute; top:40px; right:40px;">${logoImg}</div>
-                    <h1 style="color: #000; font-size: 60px; text-transform: uppercase; margin: 0; letter-spacing: -2px;">CERTIFICADO_</h1>
-                    <p style="color: #000; font-size: 18px; font-weight: bold; margin-bottom: 40px;">PROJETO CONCLUÍDO COM SUCESSO</p>
-                    <h2 style="color: #e74c3c; font-size: 55px; border-bottom: 8px solid #000; display: inline-block; padding-bottom: 5px; margin-bottom: 30px; width:fit-content;">${App.escapeHTML(aluno.nome)}</h2>
-                    <p style="color: #000; font-size: 18px; font-family: Arial, sans-serif; font-weight: bold; line-height: 1.8; max-width: 850px; text-align:justify; margin-bottom:auto;">${textoLegal}</p>
-                    <div style="display: flex; justify-content: flex-start; gap:80px; width: 100%; margin-top: auto;">
-                        <div style="width: 250px; border-top: 4px solid #000; padding-top: 10px; color: #000; font-size: 16px; font-weight:900;">ADMINISTRAÇÃO //</div>
-                        <div style="width: 250px; border-top: 4px solid #000; padding-top: 10px; color: #000; font-size: 16px; font-weight:900;">ALUNO //</div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #f1c40f; padding: 50px; box-sizing: border-box; font-family: 'Arial Black', Arial, sans-serif;"><div style="width: 100%; height: 100%; background: #fff; border: 8px solid #000; box-shadow: 15px 15px 0px #000; padding: 50px; box-sizing: border-box; display: flex; flex-direction: column; position:relative;"><div style="position:absolute; top:40px; right:40px;">${logoImg}</div><h1 style="color: #000; font-size: 60px; text-transform: uppercase; margin: 0; letter-spacing: -2px;">CERTIFICADO_</h1><p style="color: #000; font-size: 18px; font-weight: bold; margin-bottom: 40px;">PROJETO CONCLUÍDO COM SUCESSO</p><h2 style="color: #e74c3c; font-size: 55px; border-bottom: 8px solid #000; display: inline-block; padding-bottom: 5px; margin-bottom: 30px; width:fit-content;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #000; font-size: 18px; font-family: Arial, sans-serif; font-weight: bold; line-height: 1.8; max-width: 850px; text-align:justify; margin-bottom:auto;">${textoLegal}</p><div style="display: flex; justify-content: flex-start; gap:80px; width: 100%; margin-top: auto;"><div style="width: 250px; border-top: 4px solid #000; padding-top: 10px; color: #000; font-size: 16px; font-weight:900;">ADMINISTRAÇÃO //</div><div style="width: 250px; border-top: 4px solid #000; padding-top: 10px; color: #000; font-size: 16px; font-weight:900;">ALUNO //</div></div></div></div>`;
     }
-
-    // 09. OCEAN FLOW ABSTRACT
     else if (modelo === 'ocean') {
-        return `
-            <div style="width: 1122px; height: 793px; background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); padding: 40px; box-sizing: border-box; display:flex; align-items:center; justify-content:center;">
-                <div style="width: 100%; height: 100%; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 60px; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; box-sizing: border-box; display:flex; flex-direction:column; align-items:center;">
-                    <div style="margin-bottom:20px;">${logoImg}</div>
-                    <h1 style="color: #3498db; font-size: 45px; font-weight: 300; letter-spacing: 5px; margin-bottom:10px;">CERTIFICADO</h1>
-                    <h2 style="color: #2c3e50; font-size: 55px; font-weight: bold; margin: 30px 0; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2>
-                    <p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
-                    <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto;">
-                        <div style="width: 250px; text-align: center; border-top: 1px solid #3498db; padding-top: 10px; color: #3498db; font-size: 14px; font-weight:bold;">A Direção</div>
-                        <div style="width: 250px; text-align: center; border-top: 1px solid #3498db; padding-top: 10px; color: #3498db; font-size: 14px; font-weight:bold;">O Aluno</div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background: linear-gradient(120deg, #e0c3fc 0%, #8ec5fc 100%); padding: 40px; box-sizing: border-box; display:flex; align-items:center; justify-content:center;"><div style="width: 100%; height: 100%; background: rgba(255,255,255,0.85); border-radius: 20px; padding: 60px; text-align: center; font-family: 'Segoe UI', Tahoma, sans-serif; box-sizing: border-box; display:flex; flex-direction:column; align-items:center;"><div style="margin-bottom:20px;">${logoImg}</div><h1 style="color: #3498db; font-size: 45px; font-weight: 300; letter-spacing: 5px; margin-bottom:10px;">CERTIFICADO</h1><h2 style="color: #2c3e50; font-size: 55px; font-weight: bold; margin: 30px 0; border-bottom: 2px solid #3498db; display: inline-block; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 60px; margin-top: auto;"><div style="width: 250px; text-align: center; border-top: 1px solid #3498db; padding-top: 10px; color: #3498db; font-size: 14px; font-weight:bold;">A Direção</div><div style="width: 250px; text-align: center; border-top: 1px solid #3498db; padding-top: 10px; color: #3498db; font-size: 14px; font-weight:bold;">O Aluno</div></div></div></div>`;
     }
-
-    // 10. BOTANICAL SOFT NATURE
     else if (modelo === 'botanical') {
-        return `
-            <div style="width: 1122px; height: 793px; background-color: #F8EFE6; padding: 50px; box-sizing: border-box; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;">
-                <div style="width: 100%; height: 100%; border: 2px solid #C1D5C0; padding: 15px; box-sizing: border-box;">
-                    <div style="width: 100%; height: 100%; border: 1px solid #C1D5C0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; box-sizing: border-box; text-align: center;">
-                        <div style="margin-bottom:15px;">${logoImg}</div>
-                        <h1 style="color: #5c715e; font-size: 40px; letter-spacing: 4px; margin-bottom: 10px; font-weight: normal;">CERTIFICADO DE CONCLUSÃO</h1>
-                        <h2 style="color: #333; font-size: 55px; margin: 30px 0; font-style: italic; font-weight: normal; border-bottom: 1px solid #8ba888; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2>
-                        <p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 750px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p>
-                        <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 40px; margin-top: auto;">
-                            <div style="width: 250px; text-align: center; border-top: 1px solid #C1D5C0; padding-top: 10px; color: #5c715e; font-size: 15px;">Membro da Direção</div>
-                            <div style="width: 250px; text-align: center; border-top: 1px solid #C1D5C0; padding-top: 10px; color: #5c715e; font-size: 15px;">O Aluno Titular</div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return `<div style="width: 1122px; height: 793px; background-color: #F8EFE6; padding: 50px; box-sizing: border-box; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif;"><div style="width: 100%; height: 100%; border: 2px solid #C1D5C0; padding: 15px; box-sizing: border-box;"><div style="width: 100%; height: 100%; border: 1px solid #C1D5C0; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 50px; box-sizing: border-box; text-align: center;"><div style="margin-bottom:15px;">${logoImg}</div><h1 style="color: #5c715e; font-size: 40px; letter-spacing: 4px; margin-bottom: 10px; font-weight: normal;">CERTIFICADO DE CONCLUSÃO</h1><h2 style="color: #333; font-size: 55px; margin: 30px 0; font-style: italic; font-weight: normal; border-bottom: 1px solid #8ba888; padding-bottom: 10px;">${App.escapeHTML(aluno.nome)}</h2><p style="color: #555; font-size: 18px; line-height: 1.9; max-width: 750px; text-align: justify; text-align-last: center; margin-bottom: auto;">${textoLegal}</p><div style="display: flex; justify-content: space-between; width: 100%; padding: 0 40px; margin-top: auto;"><div style="width: 250px; text-align: center; border-top: 1px solid #C1D5C0; padding-top: 10px; color: #5c715e; font-size: 15px;">Membro da Direção</div><div style="width: 250px; text-align: center; border-top: 1px solid #C1D5C0; padding-top: 10px; color: #5c715e; font-size: 15px;">O Aluno Titular</div></div></div></div></div>`;
     }
 };
 
@@ -1807,7 +1834,6 @@ App.abrirPreviewCertificado = async () => {
             document.body.appendChild(modal);
         }
 
-        // Motor de escala: A4 Paisagem (1122x793) ajustado para caber em qualquer monitor
         const scale = Math.min((window.innerWidth * 0.9) / 1122, (window.innerHeight * 0.75) / 793);
 
         modal.innerHTML = `
