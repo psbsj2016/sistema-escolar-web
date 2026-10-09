@@ -1473,10 +1473,10 @@ App.gerarDocumentoOficialPrint = async () => {
     finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
 };
 
-// --- 4.3 AMBIENTE DE CERTIFICADOS (Diplomas com 16 Modelos Premium) ---
+// --- 4.3 AMBIENTE DE CERTIFICADOS (Hub Premium com Preview e Geração PDF) ---
 App.renderizarMenuCertificados = async () => {
     const div = document.getElementById('app-content');
-    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Preparando ambiente... 🎓</p>';
+    div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Preparando estúdio de design... 🎓</p>';
     
     try {
         const alunos = await App.api('/alunos');
@@ -1485,26 +1485,25 @@ App.renderizarMenuCertificados = async () => {
             ? `<option value="">-- Selecione o Aluno Titular --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Curso: ${App.escapeHTML(a.curso || '-')})</option>`).join('')
             : `<option value="">Nenhum aluno ativo encontrado</option>`;
 
-        // Pega a data exata considerando o fuso horário local
         const dh = new Date();
         const dataHojeIso = new Date(dh.getTime() - (dh.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
         const formHTML = `
-            <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #f39c12;">
+            <div class="card" style="max-width: 800px; margin: 0 auto; border-top: 4px solid #f39c12;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:25px;">
                     <h3 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; font-size:18px;">
-                        🎓 Emissão de Certificados Premium
+                        🎓 Emissão de Certificados (Padrão Agência Premium)
                     </h3>
                     <button onclick="App.renderizarGeradorDocumentos()" style="background:#ecf0f1; border:none; padding:8px 15px; border-radius:5px; cursor:pointer; font-weight:bold; color:#7f8c8d;">Voltar</button>
                 </div>
                 
-                <p style="font-size:13px; color:#666; margin-bottom:20px;">Preencha os dados e escolha um dos nossos layouts exclusivos. O documento será renderizado em <b>A4 Paisagem (Horizontal)</b>.</p>
+                <p style="font-size:13px; color:#666; margin-bottom:20px;">Selecione os dados e escolha um dos nossos 3 layouts de padrão internacional. Poderá visualizar o documento antes de descarregar o ficheiro em alta qualidade (PDF).</p>
                 
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     
-                    <!-- BLOCO 1: SELEÇÃO DE PÚBLICO -->
+                    <!-- BLOCO 1: PÚBLICO ALVO -->
                     <div style="background:#e8f4f8; padding:15px; border-radius:8px; border:1px solid #3498db; width: 100%; box-sizing: border-box;">
-                        <label style="font-weight:bold; font-size:14px; color:#2980b9; display:block; margin-bottom:10px;">1. Selecione o Destinatário (Aluno Único OU Turma Inteira):</label>
+                        <label style="font-weight:bold; font-size:14px; color:#2980b9; display:block; margin-bottom:10px;">1. Destinatário (Aluno Único OU Turma Inteira):</label>
                         <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:15px; align-items:center;">
                             <select id="cert-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-turma').value='';">${alunosOptions}</select>
                             <span style="font-weight:bold; color:#7f8c8d; text-align:center;">OU</span>
@@ -1513,38 +1512,23 @@ App.renderizarMenuCertificados = async () => {
                                 ${(await App.api('/turmas')).map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('')}
                             </select>
                         </div>
-                        <div style="font-size:11px; color:#555; margin-top:8px;">*Se selecionar a Turma, o sistema irá processar e gerar o certificado para todos os alunos ativos da turma de uma só vez.</div>
                     </div>
 
-                    <!-- BLOCO 2: SELEÇÃO DE DESIGN -->
+                    <!-- BLOCO 2: ENGENHARIA DE DESIGN -->
                     <div style="background:#fffcf5; padding:15px; border-radius:8px; border:1px solid #e67e22; width: 100%; box-sizing: border-box;">
-                        <label style="font-weight:bold; font-size:14px; color:#d35400; display:block; margin-bottom:10px;">2. Escolha a Engenharia de Design:</label>
-                        <select id="cert-modelo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px;">
-                            <option value="bluevintage" style="background:#1e3799; color:white;">✨ 17. Blue Vintage Elegant (Modelo Canvas - Idêntico ao PDF Oficial)</option>
-                            <option value="padrao">01. Clássico (Padrão Original)</option>
-                            <option value="minimalista">02. Minimalista Premium (Clean/Branco)</option>
-                            <option value="corporate">03. Corporate Blue (Institucional)</option>
-                            <option value="darktech">04. Dark Tech Mode (Fundo Escuro/Neon)</option>
-                            <option value="gold">05. Classic Gold (Ouro de Alta Costura)</option>
-                            <option value="modern">06. Canva Modern (Gradiente Suave)</option>
-                            <option value="elegant">07. Elegant Burgundy (Bordô Aristocrático)</option>
-                            <option value="vintage">08. Vintage Parchment (Papiro/Antigo)</option>
-                            <option value="luxury">09. Black Luxury & Gold (Preto Absoluto)</option>
-                            <option value="nature">10. Emerald Nature (Verde Esmeralda)</option>
-                            <option value="ocean">11. Ocean Blue Flow (Gradiente Marítimo)</option>
-                            <option value="diploma">12. Traditional Diploma (Bordas Duplas Universitárias)</option>
-                            <option value="future">13. Future Silver (Prateado Futurista)</option>
-                            <option value="startup">14. Neo-Brutalism (Startup Color block)</option>
-                            <option value="creative">15. Creative Vibrant (Rosa/Criatividade)</option>
-                            <option value="geometric">16. Geometric Abstract (Padrão de Linhas)</option>
+                        <label style="font-weight:bold; font-size:14px; color:#d35400; display:block; margin-bottom:10px;">2. Coleção de Design Internacional:</label>
+                        <select id="cert-modelo" style="width:100%; padding:12px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; font-size:15px;">
+                            <option value="bluevintage">✨ 01. Blue Vintage Elegant (Modelo Baseado em PDF Overlayer)</option>
+                            <option value="royalgold">👑 02. Executive Royal Gold (Design de Alta Costura e Selo Ouro)</option>
+                            <option value="platinum">🕊️ 03. Platinum Minimalist (Padrão Agência Clean e Minimalista)</option>
                         </select>
                     </div>
 
                     <!-- BLOCO 3: DADOS DINÂMICOS -->
                     <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px dashed #ccc; display:flex; gap:15px; flex-wrap:wrap; width: 100%; box-sizing: border-box;">
                         <div style="flex:1; min-width:120px;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Carga Horária:</label>
-                            <input type="number" id="cert-carga" value="96" placeholder="Ex: 96" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#d35400;">
+                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Carga Horária (h):</label>
+                            <input type="number" id="cert-carga" value="96" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#d35400;">
                         </div>
                         <div style="flex:1; min-width:140px;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Início:</label>
@@ -1558,7 +1542,7 @@ App.renderizarMenuCertificados = async () => {
                 </div>
 
                 <div style="margin-top:30px; display:flex; gap:10px;">
-                    <button class="btn-primary" style="flex:1; padding:15px; font-size:14px; background:#f39c12; border:none; box-shadow:0 4px 10px rgba(243, 156, 18, 0.3); justify-content:center; border-radius:8px; cursor:pointer;" onclick="App.gerarCertificadoPrint()">🖨️ RENDERIZAR CERTIFICADO VIP</button>
+                    <button class="btn-primary" style="flex:1; padding:15px; font-size:16px; background:#2c3e50; border:none; box-shadow:0 4px 10px rgba(44, 62, 80, 0.3); justify-content:center; border-radius:8px; cursor:pointer;" onclick="App.abrirPreviewCertificado()">👁️ VISUALIZAR ARTE NO ECRÃ</button>
                 </div>
             </div>
             
@@ -1568,8 +1552,103 @@ App.renderizarMenuCertificados = async () => {
     } catch (e) { div.innerHTML = '<p>Erro ao carregar dados.</p>'; }
 };
 
-// Motor de Exportação EXCLUSIVO para PDF de Alta Resolução (Suporta Lote por Turma e Imagens Canvas)
-App.gerarCertificadoPrint = async () => {
+// -------------------------------------------------------------------------
+// 🏗️ FONTE ÚNICA DE VERDADE: FUNÇÃO QUE DESENHA OS MODELOS HTML
+// -------------------------------------------------------------------------
+App.construirArteCertificado = (aluno, modelo, cargaHoraria, dataInicioStr, dataFimStr, escola) => {
+    
+    // O texto oficial de certificação blindado
+    const textoLegal = `inscrito no CPF <b>${App.escapeHTML(aluno.cpf || '___________')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Inglês')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || '___________')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.`;
+
+    if (modelo === 'bluevintage') {
+        // ✨ O OVERLAYER: Desenhado para alinhar perfeitamente com a imagem do Canva
+        return `
+            <div style="width: 1122px; height: 793px; position: relative; background-image: url('Blue Vintage Elegant Achievement Certificate.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #fdfbf7; box-sizing: border-box; overflow: hidden;">
+                <div style="position: absolute; top: 130px; width: 100%; text-align: center; color: #1e3799; font-size: 55px; letter-spacing: 5px; font-family: 'Times New Roman', serif;">CERTIFICADO</div>
+                <div style="position: absolute; top: 195px; width: 100%; text-align: center; color: #1e3799; font-size: 20px; letter-spacing: 2px; font-family: 'Times New Roman', serif;">DO CURSO DE INGLÊS</div>
+                <div style="position: absolute; top: 330px; width: 100%; text-align: center; color: #8B4513; font-size: 55px; font-style: italic; font-family: 'Georgia', serif; font-weight: bold;">${App.escapeHTML(aluno.nome)}</div>
+                <div style="position: absolute; top: 460px; left: 111px; width: 900px; text-align: center; color: #222; font-size: 19px; line-height: 1.8; font-family: 'Times New Roman', serif;">${textoLegal}</div>
+                
+                <div style="position: absolute; bottom: 120px; left: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
+                    <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do Diretor e<br>Professor</b>
+                </div>
+                <div style="position: absolute; bottom: 120px; right: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
+                    <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div><b>Assinatura do aluno</b>
+                </div>
+            </div>
+        `;
+    } 
+    
+    else if (modelo === 'royalgold') {
+        // 👑 EXECUTIVE ROYAL GOLD: Desenhado via CSS Avançado e SVG
+        const seloSvg = `
+            <svg width="130" height="130" viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="#d4af37" stroke-width="2"/>
+                <circle cx="50" cy="50" r="41" fill="none" stroke="#d4af37" stroke-width="1" stroke-dasharray="3 3"/>
+                <path d="M50 10 L58 35 L85 35 L62 52 L70 80 L50 62 L30 80 L38 52 L15 35 L42 35 Z" fill="#d4af37" opacity="0.9"/>
+                <circle cx="50" cy="50" r="22" fill="#051024"/>
+                <text x="50" y="52" font-size="8" font-family="Georgia" fill="#d4af37" text-anchor="middle" font-weight="bold">SELO</text>
+                <text x="50" y="60" font-size="5" font-family="Arial" fill="#d4af37" text-anchor="middle" letter-spacing="1">OFICIAL</text>
+            </svg>
+        `;
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #051024; color: #fff; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Georgia', serif; padding: 60px;">
+                <!-- Molduras Duplas Douradas -->
+                <div style="position: absolute; top: 20px; left: 20px; right: 20px; bottom: 20px; border: 3px solid #d4af37;"></div>
+                <div style="position: absolute; top: 30px; left: 30px; right: 30px; bottom: 30px; border: 1px solid #d4af37;"></div>
+                
+                <h1 style="font-size: 50px; color: #d4af37; letter-spacing: 6px; font-weight: normal; margin-bottom: 5px; text-transform: uppercase;">Certificado de Conclusão</h1>
+                <p style="font-size: 22px; font-style: italic; color: #ccc; margin-bottom: 40px; font-family: 'Times New Roman', serif;">Atestamos com orgulho que</p>
+                
+                <h2 style="font-size: 55px; color: #fff; border-bottom: 2px solid #d4af37; padding: 0 60px 10px 60px; margin-bottom: 40px; font-weight: normal; font-style: italic;">${App.escapeHTML(aluno.nome)}</h2>
+                
+                <p style="font-size: 20px; line-height: 1.8; color: #ccc; max-width: 850px; text-align: justify; text-align-last: center; margin-bottom: auto; font-family: 'Times New Roman', serif;">
+                    ${textoLegal}
+                </p>
+                
+                <div style="display: flex; justify-content: space-between; align-items: flex-end; width: 100%; padding: 0 40px; margin-top: auto; margin-bottom: 20px;">
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #d4af37; padding-top: 10px; color: #d4af37; font-size: 16px;">Assinatura do Diretor</div>
+                    <div style="width: 150px; display: flex; justify-content: center;">${seloSvg}</div>
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #d4af37; padding-top: 10px; color: #d4af37; font-size: 16px;">Assinatura do Aluno</div>
+                </div>
+            </div>
+        `;
+    } 
+    
+    else {
+        // 🕊️ PLATINUM MINIMALIST: O Padrão Clean das Agências Modernas
+        const logoImg = escola.foto ? `<img src="${escola.foto}" style="max-height:80px; filter: grayscale(100%);">` : `<div style="font-size:24px; font-weight:300; letter-spacing:4px; color:#000;">${App.escapeHTML(escola.nome)}</div>`;
+        return `
+            <div style="width: 1122px; height: 793px; background-color: #ffffff; color: #000; box-sizing: border-box; position: relative; overflow: hidden; display: flex; flex-direction: column; align-items: center; justify-content: center; font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; padding: 80px;">
+                <!-- Moldura Fina Cirúrgica -->
+                <div style="position: absolute; top: 40px; left: 40px; right: 40px; bottom: 40px; border: 1px solid #bdc3c7;"></div>
+                
+                <div style="position: absolute; top: 80px; width: 100%; text-align: center;">
+                    ${logoImg}
+                </div>
+                
+                <h1 style="font-size: 38px; color: #2c3e50; letter-spacing: 8px; font-weight: 300; margin-top: 80px; margin-bottom: 10px; text-transform: uppercase;">Certificado</h1>
+                <p style="font-size: 16px; color: #7f8c8d; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 60px;">Confere-se o presente diploma a</p>
+                
+                <h2 style="font-size: 48px; color: #000; font-weight: 300; margin-bottom: 50px; font-family: 'Georgia', serif;">${App.escapeHTML(aluno.nome)}</h2>
+                
+                <p style="font-size: 16px; line-height: 2.2; color: #555; max-width: 800px; text-align: justify; text-align-last: center; margin-bottom: auto; font-weight: 300;">
+                    ${textoLegal}
+                </p>
+                
+                <div style="display: flex; justify-content: space-between; width: 100%; padding: 0 80px; margin-top: auto; margin-bottom: 20px;">
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #bdc3c7; padding-top: 15px; color: #2c3e50; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">A Direção</div>
+                    <div style="width: 250px; text-align: center; border-top: 1px solid #bdc3c7; padding-top: 15px; color: #2c3e50; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">O Aluno Titular</div>
+                </div>
+            </div>
+        `;
+    }
+};
+
+// -------------------------------------------------------------------------
+// 👁️ O CINEMA PRIVADO: FUNÇÃO PARA VISUALIZAR O CERTIFICADO NO ECRÃ
+// -------------------------------------------------------------------------
+App.abrirPreviewCertificado = async () => {
     const idAluno = document.getElementById('cert-aluno').value;
     const nomeTurmaLote = document.getElementById('cert-turma').value;
     const modelo = document.getElementById('cert-modelo').value;
@@ -1579,174 +1658,151 @@ App.gerarCertificadoPrint = async () => {
     const dataInicioStr = (inputInicio && inputInicio.value) ? inputInicio.value.split('-').reverse().join('/') : '-';
     
     const inputFim = document.getElementById('cert-data-fim');
-    const dataHoje = new Date().toLocaleDateString('pt-BR');
-    const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : dataHoje;
-    
-    if (!idAluno && !nomeTurmaLote) return App.showToast("Selecione um aluno ou uma turma inteira.", "warning");
+    const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
 
-    const btn = document.querySelector('button[onclick="App.gerarCertificadoPrint()"]');
-    const txtOriginal = btn.innerText;
-    btn.innerText = "A Gerar PDF de Alta Qualidade... ⏳"; btn.disabled = true; document.body.style.cursor = 'wait';
+    if (!idAluno && !nomeTurmaLote) return App.showToast("Selecione um aluno ou uma turma para visualizar.", "warning");
 
     try {
-        // 🛡️ Auditoria de Bibliotecas: Verifica se o Passo 1 foi feito corretamente
+        const [alunosLista, escola] = await Promise.all([ App.api('/alunos'), App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' } ]);
+
+        let alunoAmostra = null;
+        let infoLoteText = '';
+
+        if (nomeTurmaLote) {
+            const turmaBusca = nomeTurmaLote.trim().toLowerCase();
+            const alunosTurma = alunosLista.filter(a => a.turma && a.turma.trim().toLowerCase() === turmaBusca && (!a.status || a.status === 'Ativo'));
+            if (alunosTurma.length === 0) throw new Error("A turma selecionada não tem alunos ativos.");
+            alunoAmostra = alunosTurma[0]; // Pega o primeiro como amostra para a tela
+            infoLoteText = `(Mostrando 1 de ${alunosTurma.length} alunos da turma. O PDF gerará todos.)`;
+        } else {
+            alunoAmostra = alunosLista.find(a => a.id === idAluno);
+        }
+
+        // Pede a Arte à Função Central
+        const arteHtml = App.construirArteCertificado(alunoAmostra, modelo, cargaHoraria, dataInicioStr, dataFimStr, escola);
+
+        // Cria o Modal de Visualização (Se não existir)
+        let modal = document.getElementById('modal-preview-cert');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-preview-cert';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.85); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.3s;';
+            document.body.appendChild(modal);
+        }
+
+        // Encontra a escala perfeita para a resolução de tela do utilizador
+        const scale = Math.min((window.innerWidth * 0.9) / 1122, (window.innerHeight * 0.75) / 793);
+
+        modal.innerHTML = `
+            <div style="background: white; padding: 15px 30px; border-radius: 8px 8px 0 0; width: 100%; max-width: 1122px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box;">
+                <div style="color: #2c3e50; font-weight: bold; font-size: 16px;">👁️ Pré-Visualização ${infoLoteText}</div>
+                <button onclick="document.getElementById('modal-preview-cert').style.opacity='0'; setTimeout(()=>document.getElementById('modal-preview-cert').style.display='none', 300);" style="background: none; border: none; font-size: 20px; cursor: pointer; color: #c0392b;">✖</button>
+            </div>
+            
+            <div style="width: 100%; display: flex; justify-content: center; align-items: center; flex: 1; overflow: hidden; padding: 20px;">
+                <div style="width: 1122px; height: 793px; transform: scale(${scale}); transform-origin: center center; box-shadow: 0 15px 35px rgba(0,0,0,0.5);">
+                    ${arteHtml}
+                </div>
+            </div>
+
+            <div style="background: white; padding: 15px 30px; border-radius: 0 0 8px 8px; width: 100%; max-width: 1122px; display: flex; justify-content: center; gap: 20px; box-sizing: border-box;">
+                <button onclick="document.getElementById('modal-preview-cert').style.opacity='0'; setTimeout(()=>document.getElementById('modal-preview-cert').style.display='none', 300);" style="padding: 12px 25px; border-radius: 5px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-weight: bold; color: #555;">VOLTAR PARA EDIÇÃO</button>
+                <button onclick="App.gerarPdfAltaResolucao()" style="padding: 12px 25px; border-radius: 5px; border: none; background: #27ae60; cursor: pointer; font-weight: bold; color: white; box-shadow: 0 4px 10px rgba(39, 174, 96, 0.3);">📥 APROVAR E GERAR PDF</button>
+            </div>
+        `;
+
+        modal.style.display = 'flex';
+        // Pequeno atraso para a animação fade-in rodar suavemente
+        setTimeout(() => modal.style.opacity = '1', 50);
+
+    } catch (e) {
+        App.showToast(e.message || "Erro ao gerar pré-visualização.", "error");
+    }
+};
+
+// -------------------------------------------------------------------------
+// 🖨️ MOTOR INVISÍVEL: GERAÇÃO DE PDF EM LOTE (JSPDF + HTML2CANVAS)
+// -------------------------------------------------------------------------
+App.gerarPdfAltaResolucao = async () => {
+    // Esconde o modal durante o processamento
+    const modal = document.getElementById('modal-preview-cert');
+    if(modal) { modal.style.opacity = '0'; setTimeout(() => modal.style.display = 'none', 300); }
+
+    const idAluno = document.getElementById('cert-aluno').value;
+    const nomeTurmaLote = document.getElementById('cert-turma').value;
+    const modelo = document.getElementById('cert-modelo').value;
+    const cargaHoraria = document.getElementById('cert-carga').value || '40';
+    
+    const inputInicio = document.getElementById('cert-data-inicio');
+    const dataInicioStr = (inputInicio && inputInicio.value) ? inputInicio.value.split('-').reverse().join('/') : '-';
+    
+    const inputFim = document.getElementById('cert-data-fim');
+    const dataFimStr = (inputFim && inputFim.value) ? inputFim.value.split('-').reverse().join('/') : new Date().toLocaleDateString('pt-BR');
+
+    App.showToast("Iniciando Renderização Fotográfica. Aguarde... ⏳", "info");
+    document.body.style.cursor = 'wait';
+
+    try {
         if (!window.jspdf || !window.html2canvas) {
-            throw new Error("Bibliotecas de PDF não encontradas. Adicione os links no index.html!");
+            throw new Error("Bibliotecas de PDF não instaladas. Certifique-se de que colou os links no index.html!");
         }
 
         const [alunosLista, escola] = await Promise.all([ App.api('/alunos'), App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' } ]);
 
-        // 🧠 LÓGICA DE LOTE BLINDADA (Trim e LowerCase)
         let alunosParaEmitir = [];
         if (nomeTurmaLote) {
             const turmaBusca = nomeTurmaLote.trim().toLowerCase();
             alunosParaEmitir = alunosLista.filter(a => a.turma && a.turma.trim().toLowerCase() === turmaBusca && (!a.status || a.status === 'Ativo'));
-            if (alunosParaEmitir.length === 0) throw new Error("A turma selecionada não tem alunos ativos.");
         } else {
-            const alunoUnico = alunosLista.find(a => a.id === idAluno);
-            if (alunoUnico) alunosParaEmitir.push(alunoUnico);
+            alunosParaEmitir.push(alunosLista.find(a => a.id === idAluno));
         }
 
-        // 📸 O ESTÚDIO FOTOGRÁFICO INVISÍVEL
-        // Criamos uma div fora do ecrã com as proporções exatas de A4 em pixels (1122x793) a 96DPI
+        // Montar a Sala Fotográfica Invisível
         let studio = document.getElementById('pdf-photo-studio');
         if (!studio) {
             studio = document.createElement('div');
             studio.id = 'pdf-photo-studio';
-            studio.style.position = 'fixed';
-            studio.style.top = '-9999px'; // Escondido da visão do utilizador
-            studio.style.left = '-9999px';
+            studio.style.cssText = 'position:fixed; top:-9999px; left:-9999px; z-index:-1;';
             document.body.appendChild(studio);
         }
 
-        // 📄 Inicializar o Documento PDF (A4, Paisagem, milímetros)
         const { jsPDF } = window.jspdf;
         const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
 
-        const logoCert = escola.foto ? `<img src="${escola.foto}" style="max-height:100px; max-width:150px; object-fit:contain;">` : `<div style="font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center;">SELO</div>`;
-
-        // 🔄 Loop de Geração: Processa cada aluno como uma página do PDF
         for (let i = 0; i < alunosParaEmitir.length; i++) {
             const aluno = alunosParaEmitir[i];
             
-            // Limpa o estúdio para a nova "foto"
-            studio.innerHTML = '';
+            // Pede a Arte à mesma função central e injeta no estúdio invisível
+            studio.innerHTML = App.construirArteCertificado(aluno, modelo, cargaHoraria, dataInicioStr, dataFimStr, escola);
 
-            let templateHTML = '';
-
-            // ====================================================================
-            // 🌟 MOTOR DE IMAGEM REAL: MODELO 17 (BLUE VINTAGE ELEGANT DO CANVA)
-            // ====================================================================
-            if (modelo === 'bluevintage') {
-                templateHTML = `
-                    <div style="width: 1122px; height: 793px; position: relative; background-image: url('Blue Vintage Elegant Achievement Certificate.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat; background-color: #fdfbf7; box-sizing: border-box; overflow: hidden;">
-                        
-                        <!-- TÍTULO -->
-                        <div style="position: absolute; top: 130px; width: 100%; text-align: center; color: #1e3799; font-size: 55px; letter-spacing: 5px; font-family: 'Times New Roman', serif;">CERTIFICADO</div>
-                        <div style="position: absolute; top: 195px; width: 100%; text-align: center; color: #1e3799; font-size: 20px; letter-spacing: 2px; font-family: 'Times New Roman', serif;">DO CURSO DE INGLÊS</div>
-                        
-                        <!-- NOME DO ALUNO -->
-                        <div style="position: absolute; top: 330px; width: 100%; text-align: center; color: #8B4513; font-size: 55px; font-style: italic; font-family: 'Georgia', serif; font-weight: bold;">
-                            ${App.escapeHTML(aluno.nome)}
-                        </div>
-                        
-                        <!-- TEXTO LEGAL MILIMETRICAMENTE ALINHADO -->
-                        <div style="position: absolute; top: 460px; left: 111px; width: 900px; text-align: center; color: #222; font-size: 19px; line-height: 1.8; font-family: 'Times New Roman', serif;">
-                            inscrito no CPF <b>${App.escapeHTML(aluno.cpf || '___________')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Inglês')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || '___________')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
-                        </div>
-                        
-                        <!-- ASSINATURAS NOS CAMPOS INFERIORES -->
-                        <div style="position: absolute; bottom: 120px; left: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
-                            <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
-                            <b>Assinatura do Diretor e<br>Professor</b>
-                        </div>
-                        <div style="position: absolute; bottom: 120px; right: 160px; width: 300px; text-align: center; font-size: 15px; color: #333; font-family: 'Arial', sans-serif;">
-                            <div style="border-bottom: 1px solid #000; margin-bottom: 5px;"></div>
-                            <b>Assinatura do aluno</b>
-                        </div>
-                    </div>
-                `;
-            } 
-            // ====================================================================
-            // MODELOS CLÁSSICOS (ENGINE CSS CONVERTIDO PARA PDF)
-            // ====================================================================
-            else {
-                let themeCSS = '';
-                switch(modelo) {
-                    case 'minimalista': themeCSS = `border: 1px solid #ddd; padding: 60px; background: #fff; color: #333; font-family: 'Helvetica Neue', Arial, sans-serif; box-shadow: inset 0 0 0 20px #fff, inset 0 0 0 22px #ddd;`; break;
-                    case 'corporate': themeCSS = `border-top: 35px solid #2980b9; border-bottom: 35px solid #2980b9; border-left: 3px solid #2980b9; border-right: 3px solid #2980b9; background: #fdfdfd; font-family: 'Segoe UI', Tahoma, sans-serif;`; break;
-                    case 'darktech': themeCSS = `background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); border: 3px solid #00f2fe; outline: 8px solid #111; color: #fff; font-family: 'Courier New', Courier, monospace;`; break;
-                    case 'gold': themeCSS = `border: 20px solid #d4af37; outline: 3px solid #000; outline-offset: -25px; background: #fffcf5; font-family: 'Georgia', serif;`; break;
-                    case 'diploma': themeCSS = `border: 25px double #2c3e50; padding: 40px; outline: 6px solid #bdc3c7; outline-offset: -35px; font-family: 'Georgia', serif; background:#fff;`; break;
-                    default: themeCSS = `border: 15px solid #2c3e50; background: #fff; color: #000; font-family: 'Arial', sans-serif;`;
-                }
-
-                templateHTML = `
-                    <div style="width: 1122px; height: 793px; padding: 40px; box-sizing: border-box; display: flex; flex-direction: column; justify-content: center; position: relative; text-align: center; ${themeCSS}">
-                        <h1 style="font-size: 50px; margin-bottom: 10px; letter-spacing: 2px;">CERTIFICADO DE CONCLUSÃO</h1>
-                        <p style="font-size: 25px; margin-bottom: 30px; font-style: italic; opacity: 0.8;">Certificamos para os devidos fins que</p>
-                        
-                        <h2 style="margin: 0 auto 30px auto; display: inline-block; padding: 10px 50px; font-size: 45px; border-bottom: 2px solid currentColor;">
-                            ${App.escapeHTML(aluno.nome)}
-                        </h2>
-                        
-                        <p style="font-size: 22px; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
-                            inscrito no CPF <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || 'Não informado')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
-                        </p>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 20px; margin-bottom: 20px;">
-                            <div style="flex: 1; border-top: 1px solid currentColor; padding-top: 10px; margin: 0 30px; font-size: 18px;">
-                                <b>Assinatura do Diretor e Professor</b>
-                            </div>
-                            <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
-                                ${logoCert}
-                            </div>
-                            <div style="flex: 1; border-top: 1px solid currentColor; padding-top: 10px; margin: 0 30px; font-size: 18px;">
-                                <b>Assinatura do aluno</b>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-
-            // Injeta o HTML no estúdio invisível
-            studio.innerHTML = templateHTML;
-
-            // Aguarda meio segundo para garantir que a imagem e as fontes foram totalmente desenhadas pelo navegador
+            // Aguarda 500ms para a arte estabilizar na memória (fontes e imagens de fundo)
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // 📸 O Fotógrafo tira a foto em alta resolução
-            const elementToCapture = studio.children[0];
-            const canvas = await html2canvas(elementToCapture, {
-                scale: 2, // Multiplicador de resolução (qualidade de impressão)
-                useCORS: true, // Permite carregar imagens de fundo/logos
-                logging: false
+            // Fotografa em alta resolução (scale: 2)
+            const canvas = await html2canvas(studio.children[0], {
+                scale: 2, 
+                useCORS: true, 
+                logging: false,
+                backgroundColor: null // Mantém a cor original do design
             });
 
-            // Converte a foto para imagem JPEG comprimida
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
-            // Adiciona uma nova página ao PDF se não for o primeiro aluno
             if (i > 0) doc.addPage();
-            
-            // Cola a foto de ponta a ponta na folha A4 (297x210 mm)
             doc.addImage(imgData, 'JPEG', 0, 0, 297, 210);
+            
+            // Atualiza o progresso visual se for um lote grande
+            if (alunosParaEmitir.length > 5) App.showToast(`Processando ${i+1}/${alunosParaEmitir.length}...`, "info");
         }
 
-        // 📥 Entrega do Produto Final (Download)
         const nomeArquivo = alunosParaEmitir.length > 1 ? `Certificados_Lote_${nomeTurmaLote.replace(/\s+/g, '_')}.pdf` : `Certificado_${alunosParaEmitir[0].nome.replace(/\s+/g, '_')}.pdf`;
         doc.save(nomeArquivo);
-        App.showToast("PDF de Alta Qualidade gerado com sucesso!", "success");
+        App.showToast("✅ PDF de Luxo gerado com sucesso!", "success");
 
     } catch (e) { 
-        App.showToast(e.message || "Erro ao gerar o PDF. Verifique a consola.", "error"); 
-        console.error(e); 
+        App.showToast(e.message || "Erro na geração do PDF.", "error"); 
     } finally { 
-        btn.innerText = txtOriginal; 
-        btn.disabled = false; 
         document.body.style.cursor = 'default'; 
-        
-        // Limpeza: Destrói o estúdio fotográfico para não gastar memória
         const studioCleanup = document.getElementById('pdf-photo-studio');
         if (studioCleanup) studioCleanup.remove();
     }
