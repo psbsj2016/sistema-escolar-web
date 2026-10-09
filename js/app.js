@@ -1353,7 +1353,12 @@ validarCadastroInst: async () => {
                 
                 celulas += TB.td(linkNomeTurma) + TB.td(App.escapeHTML(item.dia || '-')) + TB.td(App.escapeHTML(item.horario || '-')) + TB.td(App.escapeHTML(item.curso || '-')); 
             }
-            else if (tipo === 'curso') { celulas += TB.td(App.escapeHTML(item.nome)) + TB.td(App.escapeHTML(item.carga || '-')); } 
+            else if (tipo === 'curso') { 
+                // Transforma o nome do curso num link clicável que abre a Ficha com a lista de turmas
+                const linkNomeCurso = `<a href="javascript:void(0)" onclick="App.abrirFichaCurso('${item.id}')" style="color:#2980b9; font-weight:bold; text-decoration:none; border-bottom:1px dashed #3498db; transition:color 0.2s;" onmouseover="this.style.color='#1abc9c'" onmouseout="this.style.color='#2980b9'">${App.escapeHTML(item.nome)}</a>`;
+                
+                celulas += TB.td(linkNomeCurso) + TB.td(App.escapeHTML(item.carga || '-')); 
+            } 
             else if (tipo === 'financeiro') { const dataBr = item.vencimento ? item.vencimento.split('-').reverse().join('/') : '-'; const valorFmt = `R$ ${parseFloat(item.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2})}`; const statusFmt = `<span style="color:${item.status === 'Pago' ? '#27ae60' : '#e74c3c'}; font-weight:bold; background:${item.status === 'Pago' ? '#eafaf1' : '#fdedec'}; padding:4px 8px; border-radius:4px; font-size:12px;">${App.escapeHTML(item.status)}</span>`; celulas += TB.td(App.escapeHTML(item.alunoNome || 'Sem Nome')) + TB.td(App.escapeHTML(item.descricao)) + TB.td(App.escapeHTML(dataBr)) + TB.td(App.escapeHTML(valorFmt)) + TB.td(statusFmt); }
             else if (tipo === 'estoque') { 
                 const qtd = parseInt(item.quantidade) || 0;

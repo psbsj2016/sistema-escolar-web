@@ -641,3 +641,101 @@ App.abrirFichaTurma = async (id) => {
         conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a ficha da turma.</p>';
     }
 };
+
+// =======================================================================
+// 📚 VISUALIZADOR DE FICHA DO CURSO COM LISTA DE TURMAS
+// =======================================================================
+App.abrirFichaCurso = async (id) => {
+    const modal = document.getElementById('modal-overlay');
+    if(modal) modal.style.display = 'flex';
+    
+    const titulo = document.getElementById('modal-titulo');
+    const conteudo = document.getElementById('modal-form-content');
+    const btnConfirm = document.querySelector('.btn-confirm');
+    
+    if(titulo) titulo.innerText = "Detalhes do Curso";
+    if(conteudo) conteudo.innerHTML = '<p style="padding:20px; text-align:center; color:#666;">A processar curso e turmas... ⏳</p>';
+    
+    // 🛡️ Esconde o botão de Salvar (Modo de Leitura)
+    if(btnConfirm) btnConfirm.style.display = 'none';
+
+    try {
+        // Busca o curso específico e TODAS as turmas em simultâneo
+        const [curso, todasTurmas] = await Promise.all([
+            App.api(`/cursos/${id}`),
+            App.api('/turmas')
+        ]);
+
+        // Inteligência de Cruzamento: Encontra as turmas vinculadas a este curso
+        const turmasDoCurso = todasTurmas.filter(t => t.curso === curso.nome);
+
+        const d = (val) => val ? App.escapeHTML(val) : '<span style="color:#aaa;">Não informado</span>';
+        const valorFormatado = curso.valor ? parseFloat(curso.valor).toLocaleString('pt-BR', {minimumFractionDigits: 2}) : '0,00';
+
+        // Constrói a sub-tabela de turmas
+        const htmlTurmas = turmasDoCurso.length === 0 
+            ? '<div style="padding:15px; text-align:center; color:#999; background:#fff; border:1px solid #eee; border-radius:8px; font-size:13px;">Nenhuma turma vinculada a este curso de momento.</div>'
+            : `<div style="max-height: 250px; overflow-y: auto; border: 1px solid #eee; border-radius: 8px; background: #fff;">
+                <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+                    <thead style="background: #f9f9f9; position: sticky; top: 0;">
+                        <tr>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #eee; color: #555;">Nome da Turma</th>
+                            <th style="padding: 10px; text-align: left; border-bottom: 2px solid #eee; color: #555;">Dias e Horário</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${turmasDoCurso.map(t => `
+                            <tr style="border-bottom: 1px solid #eee; transition: background 0.2s;" onmouseover="this.style.background='#fdfdfd'" onmouseout="this.style.background='transparent'">
+                                <td style="padding: 10px; color: #333; font-weight: 500;">
+                                    <span style="font-size:14px; margin-right:5px;">🏫</span> ${App.escapeHTML(t.nome)}
+                                </td>
+                                <td style="padding: 10px; color: #555;">
+                                    <div style="font-size: 11px; font-weight: bold; color: #2980b9;">${App.escapeHTML(t.dia || '-')}</div>
+                                    <div style="font-size: 12px; color: #e67e22;">${App.escapeHTML(t.horario || '-')}</div>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+               </div>`;
+
+        const html = `
+            <div style="padding: 5px;">
+                <div style="display:flex; align-items:center; gap:15px; margin-bottom:20px; border-bottom:2px solid #eee; padding-bottom:15px;">
+                    <div style="font-size:35px; background:#fff4e6; width:60px; height:60px; display:flex; align-items:center; justify-content:center; border-radius:12px; border:2px solid #e67e22;">📚</div>
+                    <div>
+                        <h2 style="margin:0; color:#2c3e50; font-size:20px;">${d(curso.nome)}</h2>
+                        <div style="margin-top:4px; color:#7f8c8d; font-size:12px;">
+                            <b>Carga Horária:</b> ${d(curso.carga)} Horas
+                        </div>
+                    </div>
+                </div>
+
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                        <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">💰 Mensalidade Padrão</h4>
+                        <div style="font-size:16px; color:#27ae60; font-weight:bold; margin-top:5px;">
+                            R$ ${valorFormatado}
+                        </div>
+                    </div>
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
+                        <h4 style="margin:0 0 10px 0; color:#2980b9; font-size:12px; text-transform:uppercase;">📝 Descrição</h4>
+                        <div style="font-size:13px; color:#555; line-height:1.5;">
+                            ${curso.descricao ? App.escapeHTML(curso.descricao) : '<i>Sem descrição.</i>'}
+                        </div>
+                    </div>
+                </div>
+
+                <h4 style="margin:0 0 10px 0; color:#2c3e50; font-size:14px; display:flex; justify-content:space-between; align-items:center;">
+                    <span>🏫 Turmas deste Curso</span>
+                    <span style="background:#e67e22; color:white; padding:2px 10px; border-radius:12px; font-size:11px; font-weight:bold;">${turmasDoCurso.length} Turma(s)</span>
+                </h4>
+                ${htmlTurmas}
+            </div>
+        `;
+        
+        conteudo.innerHTML = html;
+    } catch(e) {
+        conteudo.innerHTML = '<p style="color:red; text-align:center;">Erro ao carregar a ficha do curso.</p>';
+    }
+};
