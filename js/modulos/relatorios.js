@@ -2008,8 +2008,7 @@ App.ativarDragAndDrop = (elemento) => {
     elemento.ontouchstart = iniciarArrasto;
 
     function iniciarArrasto(e) {
-        e.preventDefault(); // Evita comportamentos estranhos de selecção
-        // Pega a posição inicial do rato ou do dedo
+        e.preventDefault();
         const clienteX = e.type.includes('mouse') ? e.clientX : e.touches[0].clientX;
         const clienteY = e.type.includes('mouse') ? e.clientY : e.touches[0].clientY;
         
@@ -2032,7 +2031,7 @@ App.ativarDragAndDrop = (elemento) => {
         pos3 = clienteX;
         pos4 = clienteY;
         
-        // 🧠 CÁLCULO DE ESCALA: Ajusta a velocidade do rato à escala do ecrã!
+        // CÁLCULO DE ESCALA DINÂMICO PARA DRAG & DROP
         const transformScale = document.getElementById('cert-preview-content').style.transform;
         const scaleMatch = transformScale.match(/scale\(([^)]+)\)/);
         const scale = scaleMatch ? parseFloat(scaleMatch[1]) : 1;
@@ -2046,10 +2045,9 @@ App.ativarDragAndDrop = (elemento) => {
         document.onmousemove = null;
         document.ontouchend = null;
         document.ontouchmove = null;
-        App.salvarRascunhoCertificado(); // Salva a nova posição da logo
+        App.salvarRascunhoCertificado(); 
     }
     
-    // Dica Secreta: Duplo Clique liga/desliga a transparência para fundos escuros
     elemento.ondblclick = () => {
         elemento.style.mixBlendMode = elemento.style.mixBlendMode === 'multiply' ? 'normal' : 'multiply';
         App.salvarRascunhoCertificado();
@@ -2065,7 +2063,6 @@ App.inserirLogoCertificado = async () => {
         const content = document.getElementById('cert-preview-content');
         if (!content) return;
 
-        // 🧠 mix-blend-mode: multiply; remove automaticamente fundos brancos em fundos claros!
         const imgNode = document.createElement('img');
         imgNode.src = escola.foto;
         imgNode.className = 'cert-logo-drag';
@@ -2091,7 +2088,6 @@ App.toggleEdicaoCertificado = () => {
         content.style.outline = "none";
         btn.innerHTML = "✏️ EDITAR TEXTO";
         btn.style.background = "#f39c12";
-        // Destaca as logos que podem ser arrastadas visualmente
         content.querySelectorAll('.cert-logo-drag').forEach(l => l.style.borderColor = 'transparent');
         App.showToast("Edição bloqueada. Arte pronta!", "success");
     } else {
@@ -2101,13 +2097,12 @@ App.toggleEdicaoCertificado = () => {
         content.focus();
         btn.innerHTML = "✅ FINALIZAR EDIÇÃO";
         btn.style.background = "#27ae60";
-        // Indica visualmente que as logos são manipuláveis
         content.querySelectorAll('.cert-logo-drag').forEach(l => l.style.borderColor = 'rgba(46, 204, 113, 0.5)');
         App.showToast("Modo Edição! Altere o texto ou arraste a logo.", "info");
     }
 };
 
-// 7. Abertura do Modal e Responsividade Mobile
+// 7. Abertura do Modal e Geometria da Caixa de Contenção (Bounding Box)
 App.abrirPreviewCertificado = async (isUpdate = false) => {
     const idAluno = document.getElementById('cert-aluno').value;
     const nomeTurmaLote = document.getElementById('cert-turma').value;
@@ -2140,15 +2135,21 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
 
         const arteHtml = App.construirArteCertificado(alunoAmostra, modelo, cargaHoraria, dataInicioStr, dataFimStr, escola);
         const nomeDoModelo = App.certModelsList.find(m => m.id === modelo).name;
-        const tituloPlacarHtml = `<span style="display:none;" id="mobile-hide-title">👁️ Estúdio Interativo - </span><b style="color:#d4af37; font-size:14px;">${nomeDoModelo}</b> ${infoLoteText}`;
+        const tituloPlacarHtml = `<span class="hide-on-mobile">👁️ Estúdio Interativo - </span><b style="color:#d4af37; font-size:14px;">${nomeDoModelo}</b> ${infoLoteText}`;
 
-        // 🧠 CÁLCULO DE RESPONSIVIDADE EXTREMA
-        const winWidth = window.innerWidth;
-        const winHeight = window.innerHeight;
-        // Permite que num telemóvel a escala fique menor mas enquadrada
-        const widthRatio = (winWidth * 0.95) / 1122;
-        const heightRatio = (winHeight * 0.65) / 793;
-        const scale = Math.min(widthRatio, heightRatio, 1);
+        // 🧠 A MATEMÁTICA DA CAIXA DE CONTENÇÃO (Resolve todos os bugs de sobreposição)
+        const espacoDisponivelLargura = window.innerWidth * 0.90; // 90% da largura da tela livre
+        const espacoDisponivelAltura = window.innerHeight - 200; // Altura da tela menos as duas barras
+
+        const proporcaoLargura = espacoDisponivelLargura / 1122;
+        const proporcaoAltura = espacoDisponivelAltura / 793;
+        
+        // A escala é o valor mínimo para caber inteiramente (limitado a 1x para não explodir no desktop)
+        const scale = Math.min(proporcaoLargura, proporcaoAltura, 1);
+        
+        // O tamanho exato do fantasma após a escala
+        const boxWidth = 1122 * scale;
+        const boxHeight = 793 * scale;
 
         if (isUpdate) {
             const content = document.getElementById('cert-preview-content');
@@ -2160,7 +2161,7 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
                 document.getElementById('btn-edit-cert').innerHTML = "✏️ EDITAR TEXTO";
                 document.getElementById('btn-edit-cert').style.background = "#f39c12";
                 document.getElementById('cert-modal-title').innerHTML = tituloPlacarHtml;
-                App.salvarRascunhoCertificado(); // Salva a base do novo modelo
+                App.salvarRascunhoCertificado(); 
             }
             return;
         }
@@ -2172,43 +2173,47 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
             document.body.appendChild(modal);
         }
 
-        // Estilos de Flexbox Avançado injetados
-        modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; justify-content:space-between; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s; padding:10px; box-sizing:border-box; overflow-y:auto; overflow-x:hidden;';
+        // Layout Flex de Estrutura Rígida
+        modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; padding:15px; box-sizing:border-box; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s; overflow:hidden;';
 
-        const btnArrowStyle = "background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; outline:none; flex-shrink:0; z-index:100;";
+        const btnArrowStyle = "background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; outline:none; flex-shrink:0; z-index:1000;";
         const btnToolbarStyle = "flex: 1; min-width:140px; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; border: none; font-size: 12px; text-align:center; transition: 0.3s;";
 
         modal.innerHTML = `
             <style>
                 @media (max-width: 768px) {
-                    #mobile-hide-title { display: none !important; }
+                    .hide-on-mobile { display: none !important; }
                     .cert-toolbar-mobile { flex-wrap: wrap !important; justify-content: center !important; gap: 8px !important; }
-                    .cert-wrapper-mobile { padding: 0 !important; margin-top: 20px; }
-                }
-                /* Garante que o scroll funciona no mobile se a arte for muito grande */
-                .cert-scroll-area {
-                    width: 100%; display: flex; justify-content: center; align-items: center; overflow: visible; position: relative; flex: 1; min-height: 50vh;
+                    .cert-arrow-left { left: 5px !important; width: 40px !important; height: 40px !important; font-size: 16px !important; }
+                    .cert-arrow-right { right: 5px !important; width: 40px !important; height: 40px !important; font-size: 16px !important; }
                 }
             </style>
             
-            <div style="background: white; padding: 15px 20px; border-radius: 8px; width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; margin-top:10px;">
+            <!-- Barra Superior Fixa -->
+            <div style="flex-shrink: 0; background: white; padding: 15px 20px; border-radius: 8px; width: 100%; max-width: 1200px; display: flex; justify-content: space-between; align-items: center; box-sizing: border-box; margin-bottom: 15px;">
                 <div id="cert-modal-title" style="color: #2c3e50; font-weight: bold; font-size: 14px; display:flex; align-items:center;">${tituloPlacarHtml}</div>
-                <button onclick="document.getElementById('modal-preview-cert').style.opacity='0'; setTimeout(()=>document.getElementById('modal-preview-cert').style.display='none', 300);" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #c0392b; line-height: 1;">✖</button>
+                <button onclick="document.getElementById('modal-preview-cert').style.opacity='0'; setTimeout(()=>document.getElementById('modal-preview-cert').style.display='none', 300);" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #c0392b; line-height: 1; padding: 0 5px;">✖</button>
             </div>
             
-            <div class="cert-scroll-area cert-wrapper-mobile">
-                <button onclick="App.navegarCertificado('prev')" style="${btnArrowStyle} position:absolute; left:10px;">❮</button>
+            <!-- Área do Certificado (Ocupa o centro livre) -->
+            <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
                 
-                <div style="display:flex; justify-content:center; align-items:center; transform-origin: top center; transform: scale(${scale}); margin-top: ${scale < 0.5 ? '20px' : '0'};">
-                    <div id="cert-preview-content" oninput="App.salvarRascunhoCertificado()" spellcheck="false" style="width: 1122px; height: 793px; position:relative; box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: box-shadow 0.3s; background:#fff;">
+                <button onclick="App.navegarCertificado('prev')" class="cert-arrow-left" style="${btnArrowStyle} position: absolute; left: 20px;">❮</button>
+                
+                <!-- A Bounding Box Mágica -->
+                <div style="width: ${boxWidth}px; height: ${boxHeight}px; position: relative;">
+                    <!-- O Documento Real (Escalado e Ancorado no Topo-Esquerdo da Bounding Box) -->
+                    <div id="cert-preview-content" oninput="App.salvarRascunhoCertificado()" spellcheck="false" style="width: 1122px; height: 793px; transform: scale(${scale}); transform-origin: top left; position: absolute; top: 0; left: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: box-shadow 0.3s; background:#fff;">
                         ${arteHtml}
                     </div>
                 </div>
 
-                <button onclick="App.navegarCertificado('next')" style="${btnArrowStyle} position:absolute; right:10px;">❯</button>
+                <button onclick="App.navegarCertificado('next')" class="cert-arrow-right" style="${btnArrowStyle} position: absolute; right: 20px;">❯</button>
+                
             </div>
 
-            <div class="cert-toolbar-mobile" style="background: white; padding: 15px; border-radius: 8px; width: 100%; max-width: 1200px; display: flex; gap: 10px; box-sizing: border-box; margin-bottom:10px;">
+            <!-- Barra Inferior Fixa -->
+            <div class="cert-toolbar-mobile" style="flex-shrink: 0; background: white; padding: 15px; border-radius: 8px; width: 100%; max-width: 1200px; display: flex; gap: 10px; box-sizing: border-box; margin-top: 15px;">
                 <button onclick="App.restaurarRascunhoCertificado()" style="${btnToolbarStyle} background: #8e44ad; box-shadow: 0 4px 10px rgba(142, 68, 173, 0.3);" title="Recupera o último certificado editado caso tenha fechado sem querer">💾 RESTAURAR</button>
                 
                 <button onclick="App.inserirLogoCertificado()" style="${btnToolbarStyle} background: #3498db; box-shadow: 0 4px 10px rgba(52, 152, 219, 0.3);">🖼️ INSERIR LOGO</button>
@@ -2222,7 +2227,7 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
         modal.style.display = 'flex';
         setTimeout(() => modal.style.opacity = '1', 50);
         
-        App.salvarRascunhoCertificado(); // Salva o estado inicial
+        App.salvarRascunhoCertificado(); 
 
     } catch (e) {
         App.showToast(e.message || "Erro ao gerar estúdio.", "error");
@@ -2234,7 +2239,6 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
 // -------------------------------------------------------------------------
 App.gerarPdfAltaResolucao = async () => {
     
-    // Tranca a edição para remover bordas visuais antes de fotografar
     const content = document.getElementById('cert-preview-content');
     if (content && content.isContentEditable) App.toggleEdicaoCertificado();
 
@@ -2257,7 +2261,6 @@ App.gerarPdfAltaResolucao = async () => {
             alunosParaEmitir.push(alunosLista.find(a => a.id === idAluno));
         }
 
-        // 🧠 A MAGIA: Pega no HTML atual (com logos movidas e textos alterados!)
         const templateBaseEditado = content.innerHTML;
 
         let studio = document.getElementById('pdf-photo-studio');
@@ -2276,7 +2279,6 @@ App.gerarPdfAltaResolucao = async () => {
             
             studio.innerHTML = templateBaseEditado;
             
-            // Atualiza os dados dinâmicos preservando a restante arte
             const elNome = studio.querySelector('.cert-live-nome');
             const elCpf = studio.querySelector('.cert-live-cpf');
             if (elNome) elNome.innerHTML = App.escapeHTML(aluno.nome);
@@ -2284,7 +2286,6 @@ App.gerarPdfAltaResolucao = async () => {
 
             await new Promise(resolve => setTimeout(resolve, 500));
 
-            // Fotografa em Alta Resolução
             const canvas = await html2canvas(studio.children[0], { scale: 2, useCORS: true, logging: false, backgroundColor: null });
             const imgData = canvas.toDataURL('image/jpeg', 0.95);
 
