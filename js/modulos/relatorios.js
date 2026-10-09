@@ -1592,7 +1592,7 @@ App.gerarCertificadoPrint = async () => {
         const alunosLista = await App.api('/alunos');
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
 
-       // 🧠 LÓGICA DE LOTE BLINDADA: Filtro à prova de espaços vazios e maiúsculas
+        // 🧠 LÓGICA DE LOTE BLINDADA: Filtro à prova de espaços vazios e maiúsculas
         let alunosParaEmitir = [];
         if (nomeTurmaLote) {
             const turmaBusca = nomeTurmaLote.trim().toLowerCase();
@@ -1605,9 +1605,10 @@ App.gerarCertificadoPrint = async () => {
 
         const printContainer = document.getElementById('cert-area');
         printContainer.innerHTML = '<p style="text-align:center;">Aplicando Estilo Premium... ⏳</p>';
+
         const logoCert = escola.foto ? `<img src="${escola.foto}" class="cert-logo">` : `<div class="cert-selo-default">SELO</div>`;
 
-        // 🎨 TEMA DOS OUTROS MODELOS BASEADOS EM CSS
+        // 🎨 DICIONÁRIO DOS 16 TEMAS CSS PREMIUM (ENGINE GRÁFICO)
         let themeCSS = '';
         switch(modelo) {
             case 'padrao': themeCSS = `.cert-box { border: 12px solid #2c3e50; outline: 3px solid #d4af37; outline-offset: -6px; background: #fff; color: #000; font-family: 'Times New Roman', serif; } .cert-title { color: #2c3e50; font-family: 'Times New Roman', serif; } .cert-nome { color: #b71c1c; border-bottom: 2px solid #ccc; font-family: Arial, sans-serif; } .cert-text { color: #333; } .cert-logo { max-height:100px; max-width:150px; object-fit:contain; } .cert-selo-default { font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center; }`; break;
@@ -1624,7 +1625,7 @@ App.gerarCertificadoPrint = async () => {
         const painelImpressao = `
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#f39c12; border:none; border-radius:5px; font-weight:bold; font-size:16px;">🖨️ IMPRIMIR CERTIFICADO</button>
-                <div style="font-size:12px; color:#999; margin-top:8px; font-weight:bold;">⚠️ ATENÇÃO: Nas definições da impressora, altere as margens para "Nenhuma" e ative "Gráficos de Fundo".</div>
+                <div style="font-size:12px; color:#999; margin-top:8px; font-weight:bold;">⚠️ ATENÇÃO: Nas definições da sua impressora, garanta que a opção "Orientação" está como "Paisagem". Se usar o modelo Blue Vintage, ative "Gráficos de Fundo".</div>
             </div>
         `;
 
@@ -1635,11 +1636,10 @@ App.gerarCertificadoPrint = async () => {
             <style>
                 @media print {
                     @page { size: A4 landscape; margin: 0; }
-                    body { background: #fff !important; margin:0; padding:0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+                    body { background: #fff !important; margin: 0; padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
                     .no-print { display: none !important; }
                     .scroll-wrapper { overflow: visible !important; padding: 0 !important; display: block !important; }
                     
-                    /* ⚠️ CORREÇÃO DE LOTE E OVERLAY: Block com altura exata da folha A4 permite a quebra perfeita */
                     .print-sheet { 
                         margin: 0 !important; 
                         padding: 0 !important; 
@@ -1655,9 +1655,9 @@ App.gerarCertificadoPrint = async () => {
                     }
                 }
                 
-                .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; display:flex; flex-direction:column; gap:30px; }
+                .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; display: flex; flex-direction: column; gap: 30px; }
                 
-                /* Container Base dos Modelos de CSS Normal */
+                /* Estilo base para os outros 16 temas */
                 .cert-box {
                     width: 297mm; height: 210mm;
                     margin: auto; padding: 40px; box-sizing: border-box; 
@@ -1672,44 +1672,37 @@ App.gerarCertificadoPrint = async () => {
                 ${alunosParaEmitir.map(aluno => {
                     
                     // =======================================================
-                    // 🌟 O NOVO MOTOR OVERLAYER: MODELO "BLUE VINTAGE ELEGANT"
+                    // 🌟 MOTOR OVERLAYER COM A SUA IMAGEM REAL
                     // =======================================================
                     if (modelo === 'bluevintage') {
                         return `
                         <div class="print-sheet">
-                            <!-- Container Exato A4 Paisagem -->
-                            <div style="position:relative; width: 297mm; height: 210mm; margin: 0 auto; overflow: hidden; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
+                            <!-- Contentor Rígido A4 Paisagem (297mm x 210mm) com a sua imagem -->
+                            <div style="position: relative; width: 297mm; height: 210mm; margin: 0 auto; overflow: hidden; background-image: url('Blue Vintage Elegant Achievement Certificate.jpg'); background-size: cover; background-position: center; background-repeat: no-repeat;">
                                 
-                                <!-- 🖼️ CAMADA 1: A ARTE DE FUNDO (Pode trocar o src='' por um link de imagem do Canva!) -->
-                                <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; border: 20px solid #1e3799; background: #fdfbf7; box-sizing: border-box; outline: 3px solid #d4af37; outline-offset: -28px;"></div>
-                                
-                                <!-- ✍️ CAMADA 2: O TEXTO POSICIONADO EXATAMENTE COMO NO SEU PDF -->
-                                <div style="position:relative; z-index:2; width: 100%; height: 100%; padding: 60px 80px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #1e3799;">
+                                <!-- CAMADA DE TEXTOS DINÂMICOS POSICIONADOS POR CIMA DA IMAGEM -->
+                                <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
                                     
-                                    <h1 style="font-family: 'Times New Roman', serif; font-size: 58px; margin: 0; letter-spacing: 5px; font-weight: normal; margin-top:20px;">CERTIFICADO</h1>
-                                    <div style="font-family: 'Times New Roman', serif; font-size: 22px; letter-spacing: 2px; margin-top: 5px; margin-bottom: 40px;">DO CURSO DE INGLÊS</div>
-                                    
-                                    <div style="font-family: 'Times New Roman', serif; font-size: 22px; font-style: italic; color: #333; margin-bottom: 10px;">Certificamos que o aluno</div>
-                                    
+                                    <!-- Espaçador superior para alinhar com o título fixo da sua imagem -->
+                                    <div style="height: 115px;"></div>
+
                                     <!-- NOME DO ALUNO -->
-                                    <div style="font-size: 42px; font-weight: bold; color: #000; font-family: 'Georgia', serif; font-style: italic; margin-bottom: 30px; display:inline-block; padding: 0 10px; width: 80%; text-align:center;">
+                                    <div style="font-size: 40px; font-weight: bold; color: #8B4513; font-family: 'Georgia', serif; font-style: italic; margin-top: 35px; margin-bottom: 25px; width: 75%; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                                         ${App.escapeHTML(aluno.nome)}
                                     </div>
                                     
-                                    <!-- TEXTO LEGAL IDÊNTICO AO PDF -->
-                                    <div style="font-family: 'Times New Roman', serif; font-size: 19px; line-height: 2; color: #111; max-width: 950px; text-align: justify; text-align-last: center; margin-bottom: auto;">
+                                    <!-- PARÁGRAFO DA LEI E DADOS DO ALUNO -->
+                                    <div style="font-family: 'Times New Roman', serif; font-size: 16.5px; line-height: 1.6; color: #222; max-width: 820px; text-align: justify; text-align-last: center; margin-bottom: auto; padding-top: 5px;">
                                         inscrito no CPF <b>${App.escapeHTML(aluno.cpf || '___________')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Inglês')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || '___________')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
                                     </div>
                                     
-                                    <!-- RODAPÉ DE ASSINATURAS IDÊNTICO AO PDF (SEM LOGO) -->
-                                    <div style="display: flex; justify-content: space-around; width: 100%; padding-bottom: 20px; font-family: 'Arial', sans-serif; color:#000;">
-                                        <div style="text-align: center; width: 350px;">
-                                            <div style="border-bottom: 1px solid #000; margin-bottom: 8px;"></div>
-                                            <b style="font-size: 15px;">Assinatura do Diretor e<br>Professor</b>
+                                    <!-- ASSINATURAS NO RODAPÉ -->
+                                    <div style="display: flex; justify-content: space-between; width: 78%; padding-bottom: 45px; font-family: 'Arial', sans-serif; color: #444;">
+                                        <div style="text-align: center; width: 260px;">
+                                            <div style="font-size: 13px; font-family: 'Times New Roman', serif;">Assinatura do Diretor e<br>Professor</div>
                                         </div>
-                                        <div style="text-align: center; width: 350px;">
-                                            <div style="border-bottom: 1px solid #000; margin-bottom: 8px;"></div>
-                                            <b style="font-size: 15px;">Assinatura do aluno</b><br>&nbsp;
+                                        <div style="text-align: center; width: 260px;">
+                                            <div style="font-size: 13px; font-family: 'Times New Roman', serif;">Assinatura do aluno</div>
                                         </div>
                                     </div>
                                     
@@ -1720,14 +1713,14 @@ App.gerarCertificadoPrint = async () => {
                     } 
                     
                     // =======================================================
-                    // O MOTOR ANTIGO PARA OS OUTROS 16 TEMAS CSS
+                    // MODELOS PADRÃO (CSS)
                     // =======================================================
                     else {
                         return `
                         <div class="print-sheet">
                             <div class="cert-box">
                                 <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO DE CONCLUSÃO</h1>
-                                <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity:0.8;">Certificamos para os devidos fins que</p>
+                                <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity: 0.8;">Certificamos para os devidos fins que</p>
                                 
                                 <h2 class="cert-nome" style="margin: 0 auto 20px auto; display: inline-block; padding: 5px 40px;">
                                     ${App.escapeHTML(aluno.nome)}
@@ -1738,13 +1731,13 @@ App.gerarCertificadoPrint = async () => {
                                 </p>
                                 
                                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
-                                    <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                    <div class="cert-text" style="flex: 1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
                                         <b>Assinatura do Diretor e Professor</b>
                                     </div>
-                                    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+                                    <div style="flex: 1; display: flex; justify-content: center; align-items: center;">
                                         ${logoCert}
                                     </div>
-                                    <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                    <div class="cert-text" style="flex: 1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
                                         <b>Assinatura do aluno</b>
                                     </div>
                                 </div>
@@ -1755,6 +1748,13 @@ App.gerarCertificadoPrint = async () => {
                 }).join('')}
             </div>
         `;
-    } catch (e) { App.showToast("Erro ao gerar o certificado.", "error"); } 
-    finally { btn.innerText = txtOriginal; btn.disabled = false; document.body.style.cursor = 'default'; }
+    } catch (e) { 
+        App.showToast("Erro ao gerar o certificado. Verifique os dados e tente novamente.", "error"); 
+        console.error(e); 
+    } 
+    finally { 
+        btn.innerText = txtOriginal; 
+        btn.disabled = false; 
+        document.body.style.cursor = 'default'; 
+    }
 };
