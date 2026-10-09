@@ -1502,53 +1502,55 @@ App.renderizarMenuCertificados = async () => {
                 
                 <div style="display:flex; flex-direction:column; gap:20px;">
                     
-                    <div style="display:flex; gap:15px; flex-wrap:wrap;">
-                        <div style="flex:2; min-width:250px; text-align:left; background:#e8f4f8; padding:10px; border-radius:5px; border:1px solid #3498db;">
-                            <label style="font-weight:bold; font-size:12px; color:#2980b9; display:block; margin-bottom:5px;">1. Selecione Aluno OU Turma Inteira:</label>
-                            <div style="display:flex; gap:10px;">
-                                <select id="cert-aluno" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-turma').value='';">${alunosOptions}</select>
-                                <span style="font-weight:bold; color:#7f8c8d; align-self:center;">OU</span>
-                                <select id="cert-turma" style="flex:1; padding:8px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-aluno').value='';">
-                                    <option value="">-- Por Turma (Em Lote) --</option>
-                                    ${(await App.api('/turmas')).map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div style="font-size:10px; color:#555; margin-top:5px;">*Se selecionar a Turma, o sistema irá gerar o certificado de todos os alunos ativos dela numa só vez.</div>
-                        </div>
-                        <div style="flex:2; min-width:250px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">2. Design do Certificado:</label>
-                            <select id="cert-modelo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; background:#fffcf5;">
-                                <option value="padrao">01. Clássico (Padrão Original)</option>
-                                <option value="minimalista">02. Minimalista Premium (Clean/Branco)</option>
-                                <option value="corporate">03. Corporate Blue (Institucional)</option>
-                                <option value="darktech">04. Dark Tech Mode (Fundo Escuro/Neon)</option>
-                                <option value="gold">05. Classic Gold (Ouro de Alta Costura)</option>
-                                <option value="modern">06. Canva Modern (Gradiente Suave)</option>
-                                <option value="elegant">07. Elegant Burgundy (Bordô Aristocrático)</option>
-                                <option value="vintage">08. Vintage Parchment (Papiro/Antigo)</option>
-                                <option value="luxury">09. Black Luxury & Gold (Preto Absoluto)</option>
-                                <option value="nature">10. Emerald Nature (Verde Esmeralda)</option>
-                                <option value="ocean">11. Ocean Blue Flow (Gradiente Marítimo)</option>
-                                <option value="diploma">12. Traditional Diploma (Bordas Duplas Universitárias)</option>
-                                <option value="future">13. Future Silver (Prateado Futurista)</option>
-                                <option value="startup">14. Neo-Brutalism (Startup Color block)</option>
-                                <option value="creative">15. Creative Vibrant (Rosa/Criatividade)</option>
-                                <option value="geometric">16. Geometric Abstract (Padrão de Linhas)</option>
-                                <option value="bluevintage">17. Blue Vintage Elegant (Modelo Oficial em PDF)</option>
+                    <!-- BLOCO 1: SELEÇÃO DE PÚBLICO -->
+                    <div style="background:#e8f4f8; padding:15px; border-radius:8px; border:1px solid #3498db; width: 100%; box-sizing: border-box;">
+                        <label style="font-weight:bold; font-size:14px; color:#2980b9; display:block; margin-bottom:10px;">1. Selecione o Destinatário (Aluno Único OU Turma Inteira):</label>
+                        <div style="display:grid; grid-template-columns: 1fr auto 1fr; gap:15px; align-items:center;">
+                            <select id="cert-aluno" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-turma').value='';">${alunosOptions}</select>
+                            <span style="font-weight:bold; color:#7f8c8d; text-align:center;">OU</span>
+                            <select id="cert-turma" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; cursor:pointer;" onchange="document.getElementById('cert-aluno').value='';">
+                                <option value="">-- Por Turma (Gerar em Lote) --</option>
+                                ${(await App.api('/turmas')).map(t => `<option value="${t.nome}">${App.escapeHTML(t.nome)}</option>`).join('')}
                             </select>
                         </div>
+                        <div style="font-size:11px; color:#555; margin-top:8px;">*Se selecionar a Turma, o sistema irá processar e gerar o certificado para todos os alunos ativos da turma de uma só vez.</div>
                     </div>
 
-                    <div style="background:#fffaf0; padding:15px; border-radius:5px; border:1px dashed #f39c12; display:flex; gap:15px; flex-wrap:wrap;">
-                        <div style="flex:1; min-width:120px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#d35400; display:block; margin-bottom:5px;">Carga Horária (Horas):</label>
-                            <input type="number" id="cert-carga" value="40" placeholder="Ex: 40" style="width:100%; padding:10px; border:1px solid #f39c12; border-radius:5px; font-weight:bold; color:#d35400;">
+                    <!-- BLOCO 2: SELEÇÃO DE DESIGN -->
+                    <div style="background:#fffcf5; padding:15px; border-radius:8px; border:1px solid #e67e22; width: 100%; box-sizing: border-box;">
+                        <label style="font-weight:bold; font-size:14px; color:#d35400; display:block; margin-bottom:10px;">2. Escolha a Engenharia de Design:</label>
+                        <select id="cert-modelo" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; cursor:pointer; font-size:14px;">
+                            <option value="bluevintage" style="background:#1e3799; color:white;">✨ 17. Blue Vintage Elegant (Modelo Canvas - Idêntico ao PDF Oficial)</option>
+                            <option value="padrao">01. Clássico (Padrão Original)</option>
+                            <option value="minimalista">02. Minimalista Premium (Clean/Branco)</option>
+                            <option value="corporate">03. Corporate Blue (Institucional)</option>
+                            <option value="darktech">04. Dark Tech Mode (Fundo Escuro/Neon)</option>
+                            <option value="gold">05. Classic Gold (Ouro de Alta Costura)</option>
+                            <option value="modern">06. Canva Modern (Gradiente Suave)</option>
+                            <option value="elegant">07. Elegant Burgundy (Bordô Aristocrático)</option>
+                            <option value="vintage">08. Vintage Parchment (Papiro/Antigo)</option>
+                            <option value="luxury">09. Black Luxury & Gold (Preto Absoluto)</option>
+                            <option value="nature">10. Emerald Nature (Verde Esmeralda)</option>
+                            <option value="ocean">11. Ocean Blue Flow (Gradiente Marítimo)</option>
+                            <option value="diploma">12. Traditional Diploma (Bordas Duplas Universitárias)</option>
+                            <option value="future">13. Future Silver (Prateado Futurista)</option>
+                            <option value="startup">14. Neo-Brutalism (Startup Color block)</option>
+                            <option value="creative">15. Creative Vibrant (Rosa/Criatividade)</option>
+                            <option value="geometric">16. Geometric Abstract (Padrão de Linhas)</option>
+                        </select>
+                    </div>
+
+                    <!-- BLOCO 3: DADOS DINÂMICOS -->
+                    <div style="background:#f9f9f9; padding:15px; border-radius:8px; border:1px dashed #ccc; display:flex; gap:15px; flex-wrap:wrap; width: 100%; box-sizing: border-box;">
+                        <div style="flex:1; min-width:120px;">
+                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Carga Horária:</label>
+                            <input type="number" id="cert-carga" value="96" placeholder="Ex: 96" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px; font-weight:bold; color:#d35400;">
                         </div>
-                        <div style="flex:1; min-width:140px; text-align:left;">
-                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Início do Curso:</label>
+                        <div style="flex:1; min-width:140px;">
+                            <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Início:</label>
                             <input type="date" id="cert-data-inicio" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
                         </div>
-                        <div style="flex:1; min-width:140px; text-align:left;">
+                        <div style="flex:1; min-width:140px;">
                             <label style="font-weight:bold; font-size:12px; color:#555; display:block; margin-bottom:5px;">Data de Conclusão:</label>
                             <input type="date" id="cert-data-fim" value="${dataHojeIso}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;">
                         </div>
@@ -1590,10 +1592,11 @@ App.gerarCertificadoPrint = async () => {
         const alunosLista = await App.api('/alunos');
         const escola = await App.api('/escola') || { nome: 'A INSTITUIÇÃO', cnpj: '00.000.000/0000-00' };
 
-        // 🧠 LÓGICA DE LOTE: Descobre se é um aluno ou a turma toda
+       // 🧠 LÓGICA DE LOTE BLINDADA: Filtro à prova de espaços vazios e maiúsculas
         let alunosParaEmitir = [];
         if (nomeTurmaLote) {
-            alunosParaEmitir = alunosLista.filter(a => a.turma === nomeTurmaLote && (!a.status || a.status === 'Ativo'));
+            const turmaBusca = nomeTurmaLote.trim().toLowerCase();
+            alunosParaEmitir = alunosLista.filter(a => a.turma && a.turma.trim().toLowerCase() === turmaBusca && (!a.status || a.status === 'Ativo'));
             if (alunosParaEmitir.length === 0) throw new Error("A turma selecionada não tem alunos ativos.");
         } else {
             const alunoUnico = alunosLista.find(a => a.id === idAluno);
@@ -1602,161 +1605,26 @@ App.gerarCertificadoPrint = async () => {
 
         const printContainer = document.getElementById('cert-area');
         printContainer.innerHTML = '<p style="text-align:center;">Aplicando Estilo Premium... ⏳</p>';
-
         const logoCert = escola.foto ? `<img src="${escola.foto}" class="cert-logo">` : `<div class="cert-selo-default">SELO</div>`;
 
-        // 🎨 DICIONÁRIO DOS 16 TEMAS CSS PREMIUM (ENGINE GRÁFICO)
+        // 🎨 TEMA DOS OUTROS MODELOS BASEADOS EM CSS
         let themeCSS = '';
         switch(modelo) {
-            case 'padrao': themeCSS = `
-                .cert-box { border: 12px solid #2c3e50; outline: 3px solid #d4af37; outline-offset: -6px; background: #fff; color: #000; font-family: 'Times New Roman', serif; }
-                .cert-title { color: #2c3e50; font-family: 'Times New Roman', serif; }
-                .cert-nome { color: #b71c1c; border-bottom: 2px solid #ccc; font-family: Arial, sans-serif; }
-                .cert-text { color: #333; }
-                .cert-logo { max-height:100px; max-width:150px; object-fit:contain; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.1)); }
-                .cert-selo-default { font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; display:flex; align-items:center; justify-content:center; width:80px; height:80px; }
-            `; break;
-            case 'minimalista': themeCSS = `
-                .cert-box { border: 1px solid #ddd; padding: 40px; background: #fff; color: #333; font-family: 'Helvetica Neue', Arial, sans-serif; box-shadow: inset 0 0 0 15px #fff, inset 0 0 0 16px #ddd; }
-                .cert-title { color: #111; letter-spacing: 8px; font-weight: 300; text-transform: uppercase; }
-                .cert-nome { color: #000; border-bottom: 1px solid #eee; font-weight: 300; font-size: 38px; }
-                .cert-text { color: #666; font-size: 17px; font-weight: 300; }
-                .cert-logo { max-height:90px; filter: grayscale(100%) opacity(0.8); }
-            `; break;
-            case 'corporate': themeCSS = `
-                .cert-box { border-top: 25px solid #2980b9; border-bottom: 25px solid #2980b9; border-left: 2px solid #2980b9; border-right: 2px solid #2980b9; background: #fdfdfd; font-family: 'Segoe UI', Tahoma, sans-serif; }
-                .cert-title { color: #2980b9; font-weight: 900; }
-                .cert-nome { color: #2c3e50; border-bottom: 2px solid #2980b9; font-weight: bold; }
-                .cert-text { color: #555; }
-                .cert-logo { max-height:110px; }
-            `; break;
-            case 'darktech': themeCSS = `
-                .cert-box { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); border: 2px solid #00f2fe; outline: 5px solid #111; color: #fff; font-family: 'Courier New', Courier, monospace; }
-                .cert-title { color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); }
-                .cert-nome { color: #fff; border-bottom: 2px dashed #00f2fe; font-family: 'Arial', sans-serif; }
-                .cert-text { color: #ccc; }
-                .cert-logo { max-height:90px; filter: drop-shadow(0 0 10px #00f2fe); }
-            `; break;
-            case 'gold': themeCSS = `
-                .cert-box { border: 15px solid #d4af37; outline: 2px solid #000; outline-offset: -20px; background: #fffcf5; font-family: 'Georgia', serif; }
-                .cert-title { color: #d4af37; font-weight: bold; text-shadow: 1px 1px 0px #000; }
-                .cert-nome { color: #000; border-bottom: 3px solid #d4af37; font-style: italic; }
-                .cert-text { color: #444; }
-                .cert-logo { max-height:100px; filter: sepia(100%) hue-rotate(10deg) saturate(200%); }
-            `; break;
-            case 'modern': themeCSS = `
-                .cert-box { background: linear-gradient(120deg, #fdfbfb 0%, #ebedee 100%); border-radius: 30px; border: none; box-shadow: inset 0 0 0 6px #ff9a9e; font-family: 'Helvetica', sans-serif; }
-                .cert-title { color: #ff9a9e; font-weight: bold; }
-                .cert-nome { color: #333; border-bottom: 3px solid #a18cd1; }
-                .cert-text { color: #555; }
-                .cert-logo { max-height:100px; border-radius: 15px; }
-            `; break;
-            case 'elegant': themeCSS = `
-                .cert-box { border: 10px solid #800020; background: #fffaf0; box-shadow: inset 0 0 0 5px #fffaf0, inset 0 0 0 6px #d4af37; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; }
-                .cert-title { color: #800020; }
-                .cert-nome { color: #d4af37; border-bottom: 1px solid #800020; font-size: 40px; }
-                .cert-text { color: #333; }
-                .cert-logo { max-height:100px; }
-            `; break;
-            case 'vintage': themeCSS = `
-                .cert-box { background: #f4ecd8; border: 8px double #5d4037; color: #3e2723; font-family: 'Times New Roman', serif; }
-                .cert-title { color: #3e2723; font-weight: normal; }
-                .cert-nome { color: #5d4037; border-bottom: 2px solid #5d4037; font-style: italic; font-size: 36px; }
-                .cert-text { color: #4e342e; }
-                .cert-logo { max-height:100px; filter: sepia(0.8); }
-            `; break;
-            case 'luxury': themeCSS = `
-                .cert-box { background: #111; color: #d4af37; border: 5px solid #d4af37; font-family: 'Arial', sans-serif; }
-                .cert-title { color: #fff; letter-spacing: 5px; }
-                .cert-nome { color: #d4af37; border-bottom: 1px solid #555; font-weight: 300; }
-                .cert-text { color: #aaa; }
-                .cert-logo { max-height:100px; filter: grayscale(100%) brightness(200%); }
-            `; break;
-            case 'nature': themeCSS = `
-                .cert-box { border: 12px solid #27ae60; background: #f9fff9; font-family: 'Verdana', sans-serif; }
-                .cert-title { color: #27ae60; }
-                .cert-nome { color: #2c3e50; border-bottom: 2px solid #2ecc71; }
-                .cert-text { color: #333; }
-                .cert-logo { max-height:100px; }
-            `; break;
-            case 'ocean': themeCSS = `
-                .cert-box { background: linear-gradient(to right, #e0eafc, #cfdef3); border: 5px solid #2980b9; font-family: 'Trebuchet MS', sans-serif; }
-                .cert-title { color: #2c3e50; }
-                .cert-nome { color: #2980b9; border-bottom: 2px solid #fff; }
-                .cert-text { color: #444; }
-                .cert-logo { max-height:100px; }
-            `; break;
-            case 'diploma': themeCSS = `
-                .cert-box { border: 20px double #2c3e50; padding: 20px; outline: 5px solid #bdc3c7; outline-offset: -25px; font-family: 'Georgia', serif; background:#fff; }
-                .cert-title { color: #2c3e50; font-size: 45px !important; }
-                .cert-nome { color: #000; font-size: 38px; font-weight: bold; }
-                .cert-text { color: #222; font-size: 20px !important; line-height: 2 !important; }
-                .cert-logo { max-height:110px; }
-            `; break;
-            case 'future': themeCSS = `
-                .cert-box { background: #f8f9fa; border: 2px solid #bdc3c7; color: #2c3e50; font-family: 'Courier New', monospace; box-shadow: inset 0 0 50px rgba(189, 195, 199, 0.5); }
-                .cert-title { color: #7f8c8d; font-weight: bold; letter-spacing: 2px; }
-                .cert-nome { color: #2c3e50; border-bottom: 1px solid #bdc3c7; }
-                .cert-text { color: #555; }
-                .cert-logo { max-height:90px; filter: grayscale(100%); }
-            `; break;
-            case 'startup': themeCSS = `
-                .cert-box { border: 8px solid #000; background: #ffeaa7; color: #000; font-family: 'Arial Black', sans-serif; box-shadow: inset -15px -15px 0px rgba(0,0,0,0.1); }
-                .cert-title { color: #000; text-transform: uppercase; font-weight: 900; }
-                .cert-nome { color: #e17055; border-bottom: 5px solid #000; }
-                .cert-text { color: #2d3436; font-family: 'Arial', sans-serif; font-weight: bold; }
-                .cert-logo { max-height:100px; }
-            `; break;
-            case 'creative': themeCSS = `
-                .cert-box { background: linear-gradient(45deg, #ff9a9e, #fecfef); border: 10px solid #fff; border-radius: 40px; font-family: 'Comic Sans MS', 'Chalkboard SE', sans-serif; }
-                .cert-title { color: #fff; text-shadow: 2px 2px 0px #ff758c; }
-                .cert-nome { color: #d63031; border-bottom: 4px dotted #fff; }
-                .cert-text { color: #fff; font-weight: bold; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); }
-                .cert-logo { max-height:100px; border-radius: 50%; border: 4px solid #fff; }
-            `; break;
-            case 'geometric': themeCSS = `
-                .cert-box { background: repeating-linear-gradient(45deg, #fff, #fff 10px, #f9f9f9 10px, #f9f9f9 20px); border: 15px solid #34495e; font-family: 'Arial', sans-serif; }
-                .cert-title { color: #34495e; background: #fff; display: inline-block; padding: 0 20px; }
-                .cert-nome { color: #e67e22; border-bottom: 3px solid #34495e; background: #fff; display: inline-block; padding: 0 10px; }
-                .cert-text { color: #2c3e50; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 5px; }
-                .cert-logo { max-height:100px; background:#fff; padding:10px; border-radius:10px; border:2px solid #eee; }
-            `; break;
-             case 'bluevintage': themeCSS = `
-                .cert-box { 
-                    border: 8px solid #1e3799; 
-                    outline: 2px solid #000; 
-                    outline-offset: -12px; 
-                    background: #fdfbf7; 
-                    font-family: 'Georgia', 'Times New Roman', serif; 
-                }
-                .cert-title { 
-                    color: #1e3799; 
-                    font-size: 55px !important; 
-                    margin-bottom: 25px !important; 
-                    letter-spacing: 4px; 
-                    font-weight: normal; 
-                }
-                .cert-nome { 
-                    color: #000; 
-                    border-bottom: 2px solid #000; 
-                    font-size: 38px; 
-                    padding: 5px 60px !important; 
-                    font-style: italic; 
-                }
-                .cert-text { 
-                    color: #2c3e50; 
-                    font-size: 20px !important; 
-                    line-height: 2 !important; 
-                }
-                .cert-logo { max-height:120px; }
-            `; break;
-            default: themeCSS = `.cert-box { border: 12px solid #2c3e50; background: #fff; color: #000; }`;
+            case 'padrao': themeCSS = `.cert-box { border: 12px solid #2c3e50; outline: 3px solid #d4af37; outline-offset: -6px; background: #fff; color: #000; font-family: 'Times New Roman', serif; } .cert-title { color: #2c3e50; font-family: 'Times New Roman', serif; } .cert-nome { color: #b71c1c; border-bottom: 2px solid #ccc; font-family: Arial, sans-serif; } .cert-text { color: #333; } .cert-logo { max-height:100px; max-width:150px; object-fit:contain; } .cert-selo-default { font-size:16px; font-weight:bold; color:#2c3e50; border:2px solid #2c3e50; padding:15px; border-radius:50%; width:80px; height:80px; display:flex; align-items:center; justify-content:center; }`; break;
+            case 'minimalista': themeCSS = `.cert-box { border: 1px solid #ddd; padding: 40px; background: #fff; color: #333; font-family: 'Helvetica Neue', Arial, sans-serif; box-shadow: inset 0 0 0 15px #fff, inset 0 0 0 16px #ddd; } .cert-title { color: #111; letter-spacing: 8px; font-weight: 300; text-transform: uppercase; } .cert-nome { color: #000; border-bottom: 1px solid #eee; font-weight: 300; font-size: 38px; } .cert-text { color: #666; font-size: 17px; font-weight: 300; } .cert-logo { max-height:90px; filter: grayscale(100%) opacity(0.8); }`; break;
+            case 'corporate': themeCSS = `.cert-box { border-top: 25px solid #2980b9; border-bottom: 25px solid #2980b9; border-left: 2px solid #2980b9; border-right: 2px solid #2980b9; background: #fdfdfd; font-family: 'Segoe UI', Tahoma, sans-serif; } .cert-title { color: #2980b9; font-weight: 900; } .cert-nome { color: #2c3e50; border-bottom: 2px solid #2980b9; font-weight: bold; } .cert-text { color: #555; } .cert-logo { max-height:110px; }`; break;
+            case 'darktech': themeCSS = `.cert-box { background: linear-gradient(135deg, #0f2027, #203a43, #2c5364); border: 2px solid #00f2fe; outline: 5px solid #111; color: #fff; font-family: 'Courier New', Courier, monospace; } .cert-title { color: #00f2fe; text-shadow: 0 0 10px rgba(0, 242, 254, 0.5); } .cert-nome { color: #fff; border-bottom: 2px dashed #00f2fe; font-family: 'Arial', sans-serif; } .cert-text { color: #ccc; } .cert-logo { max-height:90px; filter: drop-shadow(0 0 10px #00f2fe); }`; break;
+            case 'gold': themeCSS = `.cert-box { border: 15px solid #d4af37; outline: 2px solid #000; outline-offset: -20px; background: #fffcf5; font-family: 'Georgia', serif; } .cert-title { color: #d4af37; font-weight: bold; text-shadow: 1px 1px 0px #000; } .cert-nome { color: #000; border-bottom: 3px solid #d4af37; font-style: italic; } .cert-text { color: #444; } .cert-logo { max-height:100px; filter: sepia(100%) hue-rotate(10deg) saturate(200%); }`; break;
+            case 'elegant': themeCSS = `.cert-box { border: 10px solid #800020; background: #fffaf0; box-shadow: inset 0 0 0 5px #fffaf0, inset 0 0 0 6px #d4af37; font-family: 'Palatino Linotype', 'Book Antiqua', Palatino, serif; } .cert-title { color: #800020; } .cert-nome { color: #d4af37; border-bottom: 1px solid #800020; font-size: 40px; } .cert-text { color: #333; } .cert-logo { max-height:100px; }`; break;
+            case 'luxury': themeCSS = `.cert-box { background: #111; color: #d4af37; border: 5px solid #d4af37; font-family: 'Arial', sans-serif; } .cert-title { color: #fff; letter-spacing: 5px; } .cert-nome { color: #d4af37; border-bottom: 1px solid #555; font-weight: 300; } .cert-text { color: #aaa; } .cert-logo { max-height:100px; filter: grayscale(100%) brightness(200%); }`; break;
+            case 'diploma': themeCSS = `.cert-box { border: 20px double #2c3e50; padding: 20px; outline: 5px solid #bdc3c7; outline-offset: -25px; font-family: 'Georgia', serif; background:#fff; } .cert-title { color: #2c3e50; font-size: 45px !important; } .cert-nome { color: #000; font-size: 38px; font-weight: bold; } .cert-text { color: #222; font-size: 20px !important; line-height: 2 !important; } .cert-logo { max-height:110px; }`; break;
+            default: themeCSS = `.cert-box { border: 12px solid #2c3e50; background: #fff; color: #000; } .cert-logo { max-height:100px; }`;
         }
 
         const painelImpressao = `
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
                 <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#f39c12; border:none; border-radius:5px; font-weight:bold; font-size:16px;">🖨️ IMPRIMIR CERTIFICADO</button>
-                <div style="font-size:12px; color:#999; margin-top:8px; font-weight:bold;">⚠️ ATENÇÃO: Nas definições da sua impressora, garanta que a opção "Orientação" está como "Paisagem".</div>
+                <div style="font-size:12px; color:#999; margin-top:8px; font-weight:bold;">⚠️ ATENÇÃO: Nas definições da impressora, altere as margens para "Nenhuma" e ative "Gráficos de Fundo".</div>
             </div>
         `;
 
@@ -1771,88 +1639,120 @@ App.gerarCertificadoPrint = async () => {
                     .no-print { display: none !important; }
                     .scroll-wrapper { overflow: visible !important; padding: 0 !important; display: block !important; }
                     
-                    /* ⚠️ CORREÇÃO CRUCIAL DE LOTE: Removemos o display: flex global para permitir que o page-break funcione */
+                    /* ⚠️ CORREÇÃO DE LOTE E OVERLAY: Block com altura exata da folha A4 permite a quebra perfeita */
                     .print-sheet { 
                         margin: 0 !important; 
                         padding: 0 !important; 
                         box-shadow: none !important; 
                         background: transparent !important; 
                         border: none !important; 
-                        max-width: 100% !important; 
-                        width: 100% !important; 
-                        display: block !important; /* Block permite quebras de página */
+                        width: 100vw !important; 
                         height: 100vh !important;
-                        page-break-after: always !important; /* A Mágica acontece aqui */
+                        display: block !important; 
+                        page-break-after: always !important;
                         page-break-inside: avoid !important;
-                    }
-
-                    /* Centralização via Flex interno na folha (evita bugar a paginação externa) */
-                    .flex-center-page {
-                        display: flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 100%;
-                        height: 100%;
+                        overflow: hidden;
                     }
                 }
                 
-                .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; }
+                .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; display:flex; flex-direction:column; gap:30px; }
                 
-                /* ESTRUTURA BASE (Tamanho rígido da folha A4) */
+                /* Container Base dos Modelos de CSS Normal */
                 .cert-box {
-                    width: 260mm;     /* 📏 LARGURA A4 PAISAGEM */
-                    height: 180mm;    /* 📏 ALTURA A4 PAISAGEM */
-                    margin: auto;
-                    padding: 30px 40px;
-                    box-sizing: border-box; 
-                    display: flex;
-                    flex-direction: column;
-                    justify-content: center;
-                    position: relative;
-                    text-align: center;
+                    width: 297mm; height: 210mm;
+                    margin: auto; padding: 40px; box-sizing: border-box; 
+                    display: flex; flex-direction: column; justify-content: center;
+                    position: relative; text-align: center; background: #fff;
                 }
                 
-                /* INJEÇÃO DO TEMA ESCOLHIDO PELO USUÁRIO */
                 ${themeCSS}
             </style>
             
             <div class="scroll-wrapper">
-                ${alunosParaEmitir.map(aluno => `
-                <div class="print-sheet" style="margin-bottom: 30px;">
-                    <div class="flex-center-page">
-                        <div class="cert-box">
-                            
-                            <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO${modelo === 'bluevintage' ? '<br><span style="font-size: 20px; display:block; margin-top: 5px; letter-spacing: 1px;">DO CURSO DE INGLÊS</span>' : ' DE CONCLUSÃO'}</h1>
-                            <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity:0.8;">${modelo === 'bluevintage' ? 'Certificamos que o aluno' : 'Certificamos para os devidos fins que'}</p>
-                            
-                            <h2 class="cert-nome" style="margin: 0 auto 20px auto; display: inline-block; padding: 5px 40px;">
-                                ${App.escapeHTML(aluno.nome)}
-                            </h2>
-                            
-                            <p class="cert-text" style="font-size: 19px; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
-                                inscrito no CPF <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || 'Não informado')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
-                            </p>
-                            
-                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                ${alunosParaEmitir.map(aluno => {
+                    
+                    // =======================================================
+                    // 🌟 O NOVO MOTOR OVERLAYER: MODELO "BLUE VINTAGE ELEGANT"
+                    // =======================================================
+                    if (modelo === 'bluevintage') {
+                        return `
+                        <div class="print-sheet">
+                            <!-- Container Exato A4 Paisagem -->
+                            <div style="position:relative; width: 297mm; height: 210mm; margin: 0 auto; overflow: hidden; background: #fff; box-shadow: 0 0 10px rgba(0,0,0,0.1);">
                                 
-                                <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
-                                    <b>Assinatura do Diretor e<br>Professor</b>
+                                <!-- 🖼️ CAMADA 1: A ARTE DE FUNDO (Pode trocar o src='' por um link de imagem do Canva!) -->
+                                <div style="position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; border: 20px solid #1e3799; background: #fdfbf7; box-sizing: border-box; outline: 3px solid #d4af37; outline-offset: -28px;"></div>
+                                
+                                <!-- ✍️ CAMADA 2: O TEXTO POSICIONADO EXATAMENTE COMO NO SEU PDF -->
+                                <div style="position:relative; z-index:2; width: 100%; height: 100%; padding: 60px 80px; box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; color: #1e3799;">
+                                    
+                                    <h1 style="font-family: 'Times New Roman', serif; font-size: 58px; margin: 0; letter-spacing: 5px; font-weight: normal; margin-top:20px;">CERTIFICADO</h1>
+                                    <div style="font-family: 'Times New Roman', serif; font-size: 22px; letter-spacing: 2px; margin-top: 5px; margin-bottom: 40px;">DO CURSO DE INGLÊS</div>
+                                    
+                                    <div style="font-family: 'Times New Roman', serif; font-size: 22px; font-style: italic; color: #333; margin-bottom: 10px;">Certificamos que o aluno</div>
+                                    
+                                    <!-- NOME DO ALUNO -->
+                                    <div style="font-size: 42px; font-weight: bold; color: #000; font-family: 'Georgia', serif; font-style: italic; margin-bottom: 30px; display:inline-block; padding: 0 10px; width: 80%; text-align:center;">
+                                        ${App.escapeHTML(aluno.nome)}
+                                    </div>
+                                    
+                                    <!-- TEXTO LEGAL IDÊNTICO AO PDF -->
+                                    <div style="font-family: 'Times New Roman', serif; font-size: 19px; line-height: 2; color: #111; max-width: 950px; text-align: justify; text-align-last: center; margin-bottom: auto;">
+                                        inscrito no CPF <b>${App.escapeHTML(aluno.cpf || '___________')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Inglês')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || '___________')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
+                                    </div>
+                                    
+                                    <!-- RODAPÉ DE ASSINATURAS IDÊNTICO AO PDF (SEM LOGO) -->
+                                    <div style="display: flex; justify-content: space-around; width: 100%; padding-bottom: 20px; font-family: 'Arial', sans-serif; color:#000;">
+                                        <div style="text-align: center; width: 350px;">
+                                            <div style="border-bottom: 1px solid #000; margin-bottom: 8px;"></div>
+                                            <b style="font-size: 15px;">Assinatura do Diretor e<br>Professor</b>
+                                        </div>
+                                        <div style="text-align: center; width: 350px;">
+                                            <div style="border-bottom: 1px solid #000; margin-bottom: 8px;"></div>
+                                            <b style="font-size: 15px;">Assinatura do aluno</b><br>&nbsp;
+                                        </div>
+                                    </div>
+                                    
                                 </div>
-                                
-                                <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                                    ${modelo !== 'bluevintage' ? logoCert : ''}
-                                </div>
-                                
-                                <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
-                                    <b>Assinatura do aluno</b>
-                                </div>
-                                
                             </div>
-                            
                         </div>
-                    </div>
-                </div>
-                `).join('')}
+                        `;
+                    } 
+                    
+                    // =======================================================
+                    // O MOTOR ANTIGO PARA OS OUTROS 16 TEMAS CSS
+                    // =======================================================
+                    else {
+                        return `
+                        <div class="print-sheet">
+                            <div class="cert-box">
+                                <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO DE CONCLUSÃO</h1>
+                                <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity:0.8;">Certificamos para os devidos fins que</p>
+                                
+                                <h2 class="cert-nome" style="margin: 0 auto 20px auto; display: inline-block; padding: 5px 40px;">
+                                    ${App.escapeHTML(aluno.nome)}
+                                </h2>
+                                
+                                <p class="cert-text" style="font-size: 19px; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
+                                    inscrito no CPF <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || 'Não informado')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
+                                </p>
+                                
+                                <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                                    <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                        <b>Assinatura do Diretor e Professor</b>
+                                    </div>
+                                    <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+                                        ${logoCert}
+                                    </div>
+                                    <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                        <b>Assinatura do aluno</b>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        `;
+                    }
+                }).join('')}
             </div>
         `;
     } catch (e) { App.showToast("Erro ao gerar o certificado.", "error"); } 
