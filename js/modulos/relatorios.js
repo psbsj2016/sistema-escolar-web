@@ -99,12 +99,13 @@ App.renderizarSelecaoRelatorio = async () => {
         const meses = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
         const opMeses = meses.map((m,i)=>`<option value="${i+1}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
 
-        // 🧠 NOVO: Dropdown de Filtro Inteligente com a Nova Nomenclatura
+        // 🧠 NOVO: Dropdown de Filtro Inteligente (Agora com Inadimplentes e Pendentes Ativos)
         const opFiltro = `
-            <option value="geral" selected>🌟 GERAL (Ativos, Trancados, Cancelados e Excluídos)</option>
-            <option value="pagos">✅ PAGOS (Somente cadastrados no sistema)</option>
-            <option value="pendentes">⚠️ PENDENTES (Somente cadastrados no sistema)</option>
-            <option value="excluidos">🗑️ EXCLUÍDOS (Dados de cadastros que não estão no sistema)</option>
+            <option value="geral" selected>🌟 GERAL (Todos os alunos e status)</option>
+            <option value="pagos">✅ PAGOS (Mensalidades recebidas)</option>
+            <option value="pendentes">⚠️ PENDENTES (Alunos ATIVOS com faturas em aberto)</option>
+            <option value="inadimplentes">🚨 INADIMPLENTES (Alunos ATIVOS com faturas ATRASADAS)</option>
+            <option value="excluidos">🗑️ INATIVOS/EXCLUÍDOS (Faturas de alunos que já não estudam)</option>
         `;
 
         const formHTML = `
@@ -165,7 +166,7 @@ App.gerarRelatorioAnual = async () => {
         
         // 🛡️ APLICAÇÃO DO NOVO FILTRO INTELIGENTE
         dados = dados.filter(f => {
-            let statusAluno = 'desconhecido'; // Presume que não existe na base até provar o contrário
+            let statusAluno = 'desconhecido'; 
             
             if (f.idAluno && mapaStatusId[f.idAluno]) {
                 statusAluno = mapaStatusId[f.idAluno];
@@ -173,13 +174,19 @@ App.gerarRelatorioAnual = async () => {
                 statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
             }
 
-            const isExcluido = statusAluno === 'excluído' || statusAluno === 'desconhecido';
+            const isAtivo = statusAluno === 'ativo';
             const isPago = f.status === 'Pago';
+            
+            // Verifica se a mensalidade já venceu (Atrasada)
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const dataVenc = new Date(f.vencimento + 'T00:00:00');
+            const isAtrasado = !isPago && dataVenc < hoje;
 
-            if (filtroSelecionado === 'pagos') return isPago && !isExcluido;
-            if (filtroSelecionado === 'pendentes') return !isPago && !isExcluido;
-            if (filtroSelecionado === 'excluidos') return isExcluido;
-            if (filtroSelecionado === 'geral') return true; // Mostra tudo (Ativos, Trancados, Excluídos, etc)
+            if (filtroSelecionado === 'pagos') return isPago;
+            if (filtroSelecionado === 'pendentes') return !isPago && isAtivo; // Apenas alunos que ainda estudam
+            if (filtroSelecionado === 'inadimplentes') return isAtivo && isAtrasado; // Ativos E com fatura vencida
+            if (filtroSelecionado === 'excluidos') return !isAtivo; // Alunos que trancaram, cancelaram ou foram excluídos
+            if (filtroSelecionado === 'geral') return true; 
             
             return true;
         });
@@ -274,7 +281,7 @@ App.gerarRelatorioMensal = async () => {
 
         // 🛡️ APLICAÇÃO DO NOVO FILTRO INTELIGENTE NO MENSAL
         dados = dados.filter(f => {
-            let statusAluno = 'desconhecido'; // Presume que não existe na base até provar o contrário
+            let statusAluno = 'desconhecido'; 
             
             if (f.idAluno && mapaStatusId[f.idAluno]) {
                 statusAluno = mapaStatusId[f.idAluno];
@@ -282,12 +289,18 @@ App.gerarRelatorioMensal = async () => {
                 statusAluno = mapaStatusNome[f.alunoNome.toLowerCase().trim()];
             }
 
-            const isExcluido = statusAluno === 'excluído' || statusAluno === 'desconhecido';
+            const isAtivo = statusAluno === 'ativo';
             const isPago = f.status === 'Pago';
+            
+            // Verifica se a mensalidade já venceu (Atrasada)
+            const hoje = new Date(); hoje.setHours(0,0,0,0);
+            const dataVenc = new Date(f.vencimento + 'T00:00:00');
+            const isAtrasado = !isPago && dataVenc < hoje;
 
-            if (filtroSelecionado === 'pagos') return isPago && !isExcluido;
-            if (filtroSelecionado === 'pendentes') return !isPago && !isExcluido;
-            if (filtroSelecionado === 'excluidos') return isExcluido;
+            if (filtroSelecionado === 'pagos') return isPago;
+            if (filtroSelecionado === 'pendentes') return !isPago && isAtivo;
+            if (filtroSelecionado === 'inadimplentes') return isAtivo && isAtrasado;
+            if (filtroSelecionado === 'excluidos') return !isAtivo;
             if (filtroSelecionado === 'geral') return true;
             
             return true;
@@ -736,20 +749,27 @@ App.gerarDossie = async () => {
         };
 
         setTimeout(() => {
-            if(document.getElementById('chartStatus')) {
-                new Chart(document.getElementById('chartStatus'), {
-                    type: 'doughnut',
-                    plugins: [pluginNumerosNoGrafico],
-                    data: {
-                        labels: ['Ativos', 'Trancados', 'Cancelados', 'Excluídos'],
-                        datasets: [{ data: [statusStats['Ativo'].total, statusStats['Trancado'].total, statusStats['Cancelado'].total, statusStats['Excluído'].total], backgroundColor: ['#16a34a', '#d97706', '#ea580c', '#dc2626'], borderWidth: 0 }]
-                    }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '55%' }
-                });
-            }
+            // Função auxiliar para destruir gráficos antigos e evitar sobreposição (Flicker)
+            const safeChart = (id, config) => {
+                const canvas = document.getElementById(id);
+                if (!canvas) return;
+                const chartInst = Chart.getChart(canvas);
+                if (chartInst) chartInst.destroy();
+                new Chart(canvas, config);
+            };
+
+            safeChart('chartStatus', {
+                type: 'doughnut',
+                plugins: [pluginNumerosNoGrafico],
+                data: {
+                    labels: ['Ativos', 'Trancados', 'Cancelados', 'Excluídos'],
+                    datasets: [{ data: [statusStats['Ativo'].total, statusStats['Trancado'].total, statusStats['Cancelado'].total, statusStats['Excluído'].total], backgroundColor: ['#16a34a', '#d97706', '#ea580c', '#dc2626'], borderWidth: 0 }]
+                }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, cutout: '55%' }
+            });
 
             if(document.getElementById('chartCaptacaoMes')) {
                 if (modalidadeMes.online > 0 || modalidadeMes.presencial > 0) {
-                    new Chart(document.getElementById('chartCaptacaoMes'), {
+                    safeChart('chartCaptacaoMes', {
                         type: 'pie',
                         plugins: [pluginNumerosNoGrafico],
                         data: {
@@ -762,26 +782,24 @@ App.gerarDossie = async () => {
                 }
             }
 
-            if(document.getElementById('chartGender')) {
-                new Chart(document.getElementById('chartGender'), {
-                    type: 'bar',
-                    data: {
-                        labels: ['Ativ.', 'Tran.', 'Can.', 'Excl.'],
-                        datasets: [
-                            { label: 'Masc', data: [statusStats['Ativo'].masc, statusStats['Trancado'].masc, statusStats['Cancelado'].masc, statusStats['Excluído'].masc], backgroundColor: '#3b82f6', borderRadius: 1.5 },
-                            { label: 'Fem', data: [statusStats['Ativo'].fem, statusStats['Trancado'].fem, statusStats['Cancelado'].fem, statusStats['Excluído'].fem], backgroundColor: '#ec4899', borderRadius: 1.5 }
-                        ]
-                    },
-                    options: {
-                        responsive: true, maintainAspectRatio: false,
-                        plugins: { legend: { position: 'top', labels: { boxWidth: 6, font: { size: 7.5 }, padding: 4 } } },
-                        scales: { 
-                            x: { grid: { display: false }, ticks: { font: { size: 7.5 } } }, 
-                            y: { beginAtZero: true, border: { display: false }, ticks: { stepSize: 1, font: { size: 7.5 } } } 
-                        }
+            safeChart('chartGender', {
+                type: 'bar',
+                data: {
+                    labels: ['Ativ.', 'Tran.', 'Can.', 'Excl.'],
+                    datasets: [
+                        { label: 'Masc', data: [statusStats['Ativo'].masc, statusStats['Trancado'].masc, statusStats['Cancelado'].masc, statusStats['Excluído'].masc], backgroundColor: '#3b82f6', borderRadius: 1.5 },
+                        { label: 'Fem', data: [statusStats['Ativo'].fem, statusStats['Trancado'].fem, statusStats['Cancelado'].fem, statusStats['Excluído'].fem], backgroundColor: '#ec4899', borderRadius: 1.5 }
+                    ]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { boxWidth: 6, font: { size: 7.5 }, padding: 4 } } },
+                    scales: { 
+                        x: { grid: { display: false }, ticks: { font: { size: 7.5 } } }, 
+                        y: { beginAtZero: true, border: { display: false }, ticks: { stepSize: 1, font: { size: 7.5 } } } 
                     }
-                });
-            }
+                }
+            });
         }, 300);
 
     } catch(e) { App.showToast("Erro ao gerar dossiê corporativo.", "error"); console.error(e); } 
@@ -1323,7 +1341,9 @@ App.renderizarMenuCertificados = async () => {
             ? `<option value="">-- Selecione o Aluno Titular --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)} (Curso: ${App.escapeHTML(a.curso || '-')})</option>`).join('')
             : `<option value="">Nenhum aluno ativo encontrado</option>`;
 
-        const dataHojeIso = new Date().toISOString().split('T')[0];
+        // Pega a data exata considerando o fuso horário local
+        const dh = new Date();
+        const dataHojeIso = new Date(dh.getTime() - (dh.getTimezoneOffset() * 60000)).toISOString().split('T')[0];
 
         const formHTML = `
             <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #f39c12;">
