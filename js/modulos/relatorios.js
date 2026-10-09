@@ -1104,13 +1104,19 @@ App.renderizarGeradorDocumentos = () => {
                 <div onclick="App.renderizarMenuDocumentosOficiais()" style="${btnStyle('#3498db')}" onmouseover="${hoverIn('#3498db')}" onmouseout="${hoverOut}">
                     <div style="font-size:60px; margin-bottom:15px;">📄</div>
                     <h3 style="margin:0 0 10px 0; color:#3498db;">Documentos Oficiais</h3>
-                    <p style="color:#666; font-size:13px; margin:0;">Contratos de Prestação de Serviços e Declarações de Matrícula (Formato A4 Retrato).</p>
+                    <p style="color:#666; font-size:13px; margin:0;">Contratos de Serviços e Declarações de Matrícula (A4 Retrato).</p>
                 </div>
                 
                 <div onclick="App.renderizarMenuCertificados()" style="${btnStyle('#f39c12')}" onmouseover="${hoverIn('#f39c12')}" onmouseout="${hoverOut}">
                     <div style="font-size:60px; margin-bottom:15px;">🎓</div>
                     <h3 style="margin:0 0 10px 0; color:#f39c12;">Certificados de Conclusão</h3>
-                    <p style="color:#666; font-size:13px; margin:0;">Diplomas oficiais com carga horária e selo da instituição (Formato A4 Paisagem).</p>
+                    <p style="color:#666; font-size:13px; margin:0;">Diplomas oficiais com carga horária e selos (A4 Paisagem).</p>
+                </div>
+
+                <div onclick="App.renderizarDiarioSetup()" style="${btnStyle('#27ae60')}" onmouseover="${hoverIn('#27ae60')}" onmouseout="${hoverOut}">
+                    <div style="font-size:60px; margin-bottom:15px;">📝</div>
+                    <h3 style="margin:0 0 10px 0; color:#27ae60;">Diários de Classe</h3>
+                    <p style="color:#666; font-size:13px; margin:0;">Grelhas de frequência com 31 dias para turmas ativas (A4 Paisagem).</p>
                 </div>
             </div>
         </div>
@@ -1528,6 +1534,7 @@ App.renderizarMenuCertificados = async () => {
                                 <option value="startup">14. Neo-Brutalism (Startup Color block)</option>
                                 <option value="creative">15. Creative Vibrant (Rosa/Criatividade)</option>
                                 <option value="geometric">16. Geometric Abstract (Padrão de Linhas)</option>
+                                <option value="bluevintage">17. Blue Vintage Elegant (Modelo Oficial em PDF)</option>
                             </select>
                         </div>
                     </div>
@@ -1714,6 +1721,35 @@ App.gerarCertificadoPrint = async () => {
                 .cert-text { color: #2c3e50; background: rgba(255,255,255,0.9); padding: 10px; border-radius: 5px; }
                 .cert-logo { max-height:100px; background:#fff; padding:10px; border-radius:10px; border:2px solid #eee; }
             `; break;
+             case 'bluevintage': themeCSS = `
+                .cert-box { 
+                    border: 8px solid #1e3799; 
+                    outline: 2px solid #000; 
+                    outline-offset: -12px; 
+                    background: #fdfbf7; 
+                    font-family: 'Georgia', 'Times New Roman', serif; 
+                }
+                .cert-title { 
+                    color: #1e3799; 
+                    font-size: 55px !important; 
+                    margin-bottom: 25px !important; 
+                    letter-spacing: 4px; 
+                    font-weight: normal; 
+                }
+                .cert-nome { 
+                    color: #000; 
+                    border-bottom: 2px solid #000; 
+                    font-size: 38px; 
+                    padding: 5px 60px !important; 
+                    font-style: italic; 
+                }
+                .cert-text { 
+                    color: #2c3e50; 
+                    font-size: 20px !important; 
+                    line-height: 2 !important; 
+                }
+                .cert-logo { max-height:120px; }
+            `; break;
             default: themeCSS = `.cert-box { border: 12px solid #2c3e50; background: #fff; color: #000; }`;
         }
 
@@ -1733,8 +1769,31 @@ App.gerarCertificadoPrint = async () => {
                     @page { size: A4 landscape; margin: 0; }
                     body { background: #fff !important; margin:0; padding:0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
                     .no-print { display: none !important; }
-                    .print-sheet { margin: 0 auto !important; padding: 0 !important; box-shadow: none !important; background:transparent !important; border:none !important; max-width: 100% !important; width: 100% !important; display: flex !important; align-items: center !important; justify-content: center !important; height: 100vh !important;}
-                    .scroll-wrapper { overflow: visible !important; padding: 0 !important; }
+                    .scroll-wrapper { overflow: visible !important; padding: 0 !important; display: block !important; }
+                    
+                    /* ⚠️ CORREÇÃO CRUCIAL DE LOTE: Removemos o display: flex global para permitir que o page-break funcione */
+                    .print-sheet { 
+                        margin: 0 !important; 
+                        padding: 0 !important; 
+                        box-shadow: none !important; 
+                        background: transparent !important; 
+                        border: none !important; 
+                        max-width: 100% !important; 
+                        width: 100% !important; 
+                        display: block !important; /* Block permite quebras de página */
+                        height: 100vh !important;
+                        page-break-after: always !important; /* A Mágica acontece aqui */
+                        page-break-inside: avoid !important;
+                    }
+
+                    /* Centralização via Flex interno na folha (evita bugar a paginação externa) */
+                    .flex-center-page {
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        width: 100%;
+                        height: 100%;
+                    }
                 }
                 
                 .scroll-wrapper { width: 100%; overflow-x: auto; padding-bottom: 20px; }
@@ -1750,7 +1809,6 @@ App.gerarCertificadoPrint = async () => {
                     flex-direction: column;
                     justify-content: center;
                     position: relative;
-                    page-break-inside: avoid;
                     text-align: center;
                 }
                 
@@ -1760,43 +1818,38 @@ App.gerarCertificadoPrint = async () => {
             
             <div class="scroll-wrapper">
                 ${alunosParaEmitir.map(aluno => `
-                <div class="print-sheet" style="page-break-after: always; margin-bottom: 30px;">
-                    <div class="cert-box">
-                        
-                        <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO DE CONCLUSÃO</h1>
-                        <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity:0.8;">Certificamos para os devidos fins que</p>
-                        
-                        <h2 class="cert-nome" style="margin: 0 auto 20px auto; display: inline-block; padding: 5px 40px;">
-                            ${App.escapeHTML(aluno.nome)}
-                        </h2>
-                        
-                        <p class="cert-text" style="font-size: 19px; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
-                            portador(a) do CPF nº <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b>, concluiu com êxito todos os requisitos acadêmicos do curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b>, iniciado em <b>${dataInicioStr}</b> e finalizado em <b>${dataFimStr}</b>, com carga horária total de <b>${cargaHoraria} horas</b> e aproveitamento plenamente satisfatório.
-                        </p>
-                        
-                        <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                <div class="print-sheet" style="margin-bottom: 30px;">
+                    <div class="flex-center-page">
+                        <div class="cert-box">
                             
-                            <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
-                                <b>A Direção</b><br>
-                                <span style="font-size: 12px; opacity:0.8;">${App.escapeHTML(escola.nome || 'Instituição')}</span>
-                            </div>
+                            <h1 class="cert-title" style="font-size: 40px; margin-bottom: 5px; letter-spacing: 2px;">CERTIFICADO${modelo === 'bluevintage' ? '<br><span style="font-size: 20px; display:block; margin-top: 5px; letter-spacing: 1px;">DO CURSO DE INGLÊS</span>' : ' DE CONCLUSÃO'}</h1>
+                            <p class="cert-text" style="font-size: 20px; margin-bottom: 20px; font-style: italic; opacity:0.8;">${modelo === 'bluevintage' ? 'Certificamos que o aluno' : 'Certificamos para os devidos fins que'}</p>
                             
-                            <div style="flex:1; display:flex; justify-content:center; align-items:center;">
-                                ${logoCert}
-                            </div>
+                            <h2 class="cert-nome" style="margin: 0 auto 20px auto; display: inline-block; padding: 5px 40px;">
+                                ${App.escapeHTML(aluno.nome)}
+                            </h2>
                             
-                            <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
-                                <b>Aluno(a) Titular</b><br>
-                                <span style="font-size: 12px; opacity:0.8;">${App.escapeHTML(aluno.nome)}</span>
+                            <p class="cert-text" style="font-size: 19px; max-width: 900px; margin: 0 auto; line-height: 1.8; text-align: justify; text-align-last: center;">
+                                inscrito no CPF <b>${App.escapeHTML(aluno.cpf || 'Não informado')}</b> concluiu com êxito o Curso de <b>${App.escapeHTML(aluno.curso || 'Não especificado')}</b> com carga horária total de <b>${cargaHoraria} horas</b> entre <b>${dataInicioStr}</b> e <b>${dataFimStr}</b> através da Instituição de Ensino ativa no CNPJ <b>${App.escapeHTML(escola.cnpj || 'Não informado')}</b>. Curso em conformidade com a Lei nº. 9394/96 - Decreto nº. 5.154/04.
+                            </p>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px;">
+                                
+                                <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                    <b>Assinatura do Diretor e<br>Professor</b>
+                                </div>
+                                
+                                <div style="flex:1; display:flex; justify-content:center; align-items:center;">
+                                    ${modelo !== 'bluevintage' ? logoCert : ''}
+                                </div>
+                                
+                                <div class="cert-text" style="flex:1; border-top: 1px solid currentColor; padding-top: 5px; margin: 0 20px; font-size: 15px;">
+                                    <b>Assinatura do aluno</b>
+                                </div>
+                                
                             </div>
                             
                         </div>
-                        
-                        <div class="cert-text" style="position: absolute; bottom: 10px; left: 0; right: 0; font-size: 10px; text-align: center; line-height: 1.4; opacity:0.6;">
-                            <div style="margin-bottom: 2px;">O presente documento é amparado legalmente pela Lei nº 9.394/96 (Diretrizes e Bases da Educação Nacional) e pelo Decreto nº 5.154/04.</div>
-                            <div>Documento Oficial. Emitido por ${App.escapeHTML(escola.nome || 'Instituição de Ensino')} (CNPJ: ${App.escapeHTML(escola.cnpj || 'Não informado')}) em ${dataHoje}.</div>
-                        </div>
-                        
                     </div>
                 </div>
                 `).join('')}
