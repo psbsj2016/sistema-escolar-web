@@ -1093,20 +1093,21 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA EM MATRIZ (MULTI-DATAS) + MOTIVOS + WIZARD
+// 4. CHAMADA HÍBRIDA MULTI-TEMPO + EDIÇÃO IN-LINE WIZARD
 // ---------------------------------------------------------
 
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
-App.datasLancamentoChamada = []; 
-App.filaEdicaoChamada = []; // 🧠 Nova Memória do Wizard de Edição
+App.datasLancamentoChamada = []; // Agora guarda Objetos: { data: 'YYYY-MM-DD', duracao: 'HH:MM' }
+App.filaEdicaoChamada = []; // Fila do Assistente In-Line
 
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Gestão de Frequência");
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando os dados rapidamente... ⚡</p>';
     
-    App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]]; 
-    App.filaEdicaoChamada = []; // Reseta a fila por segurança
+    // Inicia a fila com a data de hoje e duração base
+    App.datasLancamentoChamada = [{ data: new Date().toISOString().split('T')[0], duracao: '01:00' }]; 
+    App.filaEdicaoChamada = []; 
     
     try { 
         const [alunosFetch, turmasFetch, chamadasFetch, planosFetch] = await Promise.all([
@@ -1134,15 +1135,14 @@ App.renderizarChamadaPro = async () => {
             </div>
             
             <div style="background:#fff; border:1px solid #d5f5e3; padding:15px; border-radius:8px; margin-bottom:15px; display:flex; flex-direction:column; gap:10px;">
-                <label style="font-weight:bold; font-size:12px; color:#27ae60;">📅 Selecionar Datas para o Lançamento:</label>
+                <label style="font-weight:bold; font-size:12px; color:#27ae60;">📅 Adicionar Datas à Matriz (Multi-Tempo):</label>
                 <div style="display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-end;">
                     <div style="display:flex; gap:5px; flex:1; min-width:200px;">
                         <input type="date" id="input-nova-data" value="${hoje}" max="${hoje}" style="flex:1; padding:10px; border:1px solid #ccc; border-radius:5px;">
+                        <input type="time" id="chamada-duracao" value="01:00" style="width:100px; padding:10px; border:1px solid #ccc; border-radius:5px;" title="Duração desta data">
                         <button onclick="App.adicionarDataFila()" style="background:#27ae60; color:white; border:none; padding:0 15px; border-radius:5px; font-weight:bold; cursor:pointer;">+ Add</button>
                     </div>
-                    ${col('Duração (Padrão):', 'chamada-duracao', 'time', '01:00', 'style="max-width:120px;"')}
                     <button onclick="App.carregarListaChamada()" class="btn-primary" style="height:41px; padding:0 20px;">📋 ABRIR MATRIZ</button>
-                    <button onclick="App.cancelarEdicaoChamada()" id="btn-cancel-chamada" style="height:41px; padding:0 20px; background:#95a5a6; color:white; border:none; border-radius:5px; display:none; cursor:pointer;">❌ Cancelar</button>
                 </div>
                 <div id="fila-datas-ui" style="display:flex; gap:8px; flex-wrap:wrap; margin-top:5px;"></div>
             </div>
@@ -1152,7 +1152,7 @@ App.renderizarChamadaPro = async () => {
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; gap:10px;">
                     <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Lote</button>
-                    <button onclick="App.editarLoteChamada('check-chamada')" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);">✏️ Editar Selecionados</button>
+                    <button onclick="App.editarLoteChamada('check-chamada')" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);">✏️ Editar Selecionados (In-Line)</button>
                 </div>
                 <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px;">
                     <span style="font-size: 18px; color: #aaa;">🔍</span>
@@ -1177,14 +1177,14 @@ App.renderizarChamadaPro = async () => {
                             }
 
                             return `
-                            <tr style="border-bottom:1px solid #eee;">
+                            <tr id="tr-chamada-${h.id}" style="border-bottom:1px solid #eee; transition: background 0.2s;">
                                 <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
                                 <td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td>
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; font-weight:bold; color:${color};">${labelStatus}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
                                 <td style="padding:12px; text-align:right;">
-                                    <button onclick="App.editarLancamentoChamada('${h.idAluno}', '${h.data}', '${h.duracao}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar na Matriz">✏️</button>
+                                    <button onclick="App.editarLancamentoInline('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar Rápido na Linha">✏️</button>
                                     <button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
                                 </td>
                             </tr>`; 
@@ -1194,29 +1194,31 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
-        div.innerHTML = App.UI.card('📝 Matriz de Frequência', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
+        div.innerHTML = App.UI.card('📝 Matriz de Frequência Inteligente', '', formChamada, '100%') + `<div id="area-lista-chamada" style="margin-top:20px;"></div>` + '<div style="margin-top:20px;">' + App.UI.card('Histórico Completo de Lançamentos', '', tabelaChamada, '100%') + '</div>';
         
         App.atualizarFilaDatasUI(); 
     } catch(e) { div.innerHTML = "Erro ao carregar módulo de chamada."; } 
 };
 
-// --- GESTÃO DE MÚLTIPLAS DATAS ---
+// --- GESTÃO DA MATRIZ MULTI-TEMPO ---
 App.adicionarDataFila = () => {
-    const input = document.getElementById('input-nova-data');
-    const dataVal = input.value;
+    const dataVal = document.getElementById('input-nova-data').value;
+    const duracaoVal = document.getElementById('chamada-duracao').value || '01:00';
     const hojeStr = new Date().toISOString().split('T')[0];
 
     if (!dataVal) return App.showToast("Selecione uma data válida.", "warning");
     if (dataVal > hojeStr) return App.showToast("Não é permitido adicionar datas futuras.", "warning");
-    if (App.datasLancamentoChamada.includes(dataVal)) return App.showToast("Esta data já está na lista.", "info");
+    
+    // Verifica se a data já existe na matriz
+    if (App.datasLancamentoChamada.some(d => d.data === dataVal)) return App.showToast("Esta data já está na matriz.", "info");
 
-    App.datasLancamentoChamada.push(dataVal);
-    App.datasLancamentoChamada.sort(); 
+    App.datasLancamentoChamada.push({ data: dataVal, duracao: duracaoVal });
+    App.datasLancamentoChamada.sort((a,b) => new Date(a.data) - new Date(b.data)); 
     App.atualizarFilaDatasUI();
 };
 
-App.removerDataFila = (data) => {
-    App.datasLancamentoChamada = App.datasLancamentoChamada.filter(d => d !== data);
+App.removerDataFila = (dataRemover) => {
+    App.datasLancamentoChamada = App.datasLancamentoChamada.filter(d => d.data !== dataRemover);
     App.atualizarFilaDatasUI();
 };
 
@@ -1228,68 +1230,152 @@ App.atualizarFilaDatasUI = () => {
         return;
     }
     
-    container.innerHTML = App.datasLancamentoChamada.map(data => `
+    container.innerHTML = App.datasLancamentoChamada.map(item => `
         <div style="background:#2ecc71; color:white; padding:5px 10px; border-radius:20px; font-size:12px; font-weight:bold; display:flex; align-items:center; gap:8px; box-shadow:0 2px 4px rgba(0,0,0,0.1);">
-            ${data.split('-').reverse().join('/')}
-            <span onclick="App.removerDataFila('${data}')" style="cursor:pointer; background:rgba(0,0,0,0.2); border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✖</span>
+            ${item.data.split('-').reverse().join('/')} ⏳ ${item.duracao}
+            <span onclick="App.removerDataFila('${item.data}')" style="cursor:pointer; background:rgba(0,0,0,0.2); border-radius:50%; width:16px; height:16px; display:inline-flex; align-items:center; justify-content:center; font-size:10px;">✖</span>
         </div>
     `).join('');
 };
 
-// --- GESTÃO DO WIZARD DE EDIÇÃO EM MASSA ---
+// --- MOTOR IN-LINE DE EDIÇÃO (WIZARD DE TABELA) ---
 App.editarLoteChamada = (className) => {
     const checks = document.querySelectorAll('.' + className + ':checked');
     if (checks.length === 0) return App.showToast("Selecione pelo menos um registo na tabela para editar.", "warning");
 
-    App.filaEdicaoChamada = [];
-    const chamadas = App.cachePedagogico.chamadas || [];
+    App.filaEdicaoChamada = Array.from(checks).map(c => c.value);
+    App.showToast(`Assistente In-Line: Iniciando a edição de ${App.filaEdicaoChamada.length} registo(s)...`, "info");
+    
+    // Desmarca os checkboxes visualmente
+    document.querySelectorAll('.' + className).forEach(c => c.checked = false);
 
-    checks.forEach(check => {
-        const id = check.value;
-        const registro = chamadas.find(c => String(c.id) === String(id));
-        if (registro) {
-            App.filaEdicaoChamada.push({ idAluno: registro.idAluno, data: registro.data, duracao: registro.duracao });
-        }
-    });
-
-    if(App.filaEdicaoChamada.length > 0) {
-        App.showToast(`Assistente ativado: A iniciar edição de ${App.filaEdicaoChamada.length} registo(s)...`, "info");
-        App.processarFilaEdicaoChamada();
-    }
+    App.processarFilaEdicaoInline();
 };
 
-App.processarFilaEdicaoChamada = () => {
+App.processarFilaEdicaoInline = () => {
     if (App.filaEdicaoChamada.length > 0) {
-        const proximo = App.filaEdicaoChamada.shift(); // Tira o primeiro da fila
-        App.editarLancamentoChamada(proximo.idAluno, proximo.data, proximo.duracao);
-    } else {
-        App.cancelarEdicaoChamada(); // Fila terminou
+        const proximoId = App.filaEdicaoChamada[0]; // Pega o primeiro da fila
+        App.editarLancamentoInline(proximoId);
     }
 };
 
-App.editarLancamentoChamada = (idAluno, data, duracao) => { 
-    document.getElementById('chamada-aluno').value = idAluno; 
-    document.getElementById('chamada-turma').value = "";
-    document.getElementById('chamada-duracao').value = duracao; 
+App.editarLancamentoInline = (id) => {
+    const tr = document.getElementById(`tr-chamada-${id}`);
+    const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
+    if(!registro || !tr) return;
+
+    // Guarda o HTML original caso o utilizador cancele a edição
+    if(!tr.dataset.originalHtml) tr.dataset.originalHtml = tr.innerHTML;
+
+    const opPresenca = registro.status === 'Presença' ? 'selected' : '';
+    const opFalta = registro.status === 'Falta' ? 'selected' : '';
+    const opFaltaJ = registro.status === 'Falta Justificada' ? 'selected' : '';
+    const opRepo = registro.status === 'Reposição' ? 'selected' : '';
+
+    // Transforma a linha numa caixa de edição cintilante
+    tr.style.background = "#fff8e1";
+    tr.innerHTML = `
+        <td style="padding:12px; text-align:center; color:#f39c12; font-weight:bold;">⚙️</td>
+        <td style="padding:12px; color:#555;">${registro.data.split('-').reverse().join('/')}</td>
+        <td style="padding:12px; font-weight:bold; color:#2c3e50;">${App.escapeHTML(registro.nomeAluno)}</td>
+        <td style="padding:12px;">
+            <select id="inline-status-${id}" style="width:100%; padding:6px; border-radius:5px; border:1px solid #f39c12; font-weight:bold;">
+                <option value="Presença" ${opPresenca}>✅ Presença</option>
+                <option value="Falta" ${opFalta}>❌ Falta</option>
+                <option value="Falta Justificada" ${opFaltaJ}>⚠️ Falta Justificada</option>
+                <option value="Reposição" ${opRepo}>🔄 Reposição</option>
+            </select>
+        </td>
+        <td style="padding:12px;">
+            <input type="time" id="inline-duracao-${id}" value="${registro.duracao}" style="width:80px; padding:6px; border-radius:5px; border:1px solid #f39c12; font-weight:bold;">
+        </td>
+        <td style="padding:12px; text-align:right;">
+            <button onclick="App.salvarEdicaoInline('${id}')" id="btn-save-inline-${id}" style="background:#27ae60; color:white; border:none; cursor:pointer; padding:6px 12px; border-radius:5px; font-weight:bold; margin-right:5px; box-shadow: 0 2px 5px rgba(39, 174, 96, 0.4);" title="Gravar Alteração">💾 Salvar</button>
+            <button onclick="App.cancelarEdicaoInline('${id}')" style="background:#e74c3c; color:white; border:none; cursor:pointer; padding:6px 10px; border-radius:5px; font-weight:bold; box-shadow: 0 2px 5px rgba(231, 76, 60, 0.4);" title="Cancelar">❌</button>
+        </td>
+    `;
     
-    App.datasLancamentoChamada = [data];
-    App.atualizarFilaDatasUI();
-    
-    document.getElementById('btn-cancel-chamada').style.display = 'inline-block';
-    App.carregarListaChamada(); 
-    document.querySelector('.card').scrollIntoView({ behavior: 'smooth' }); 
+    // Rola o ecrã suavemente até à linha em edição
+    tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 
-App.cancelarEdicaoChamada = () => {
-    App.filaEdicaoChamada = []; // Aborta totalmente o Wizard se clicar no botão Cancelar
-    document.getElementById('chamada-aluno').value = "";
-    document.getElementById('btn-cancel-chamada').style.display = 'none';
-    document.getElementById('area-lista-chamada').innerHTML = "";
-    App.datasLancamentoChamada = [new Date().toISOString().split('T')[0]];
-    App.atualizarFilaDatasUI();
-    App.showToast("Modo de edição finalizado/cancelado.", "info");
+App.salvarEdicaoInline = async (id) => {
+    const novoStatus = document.getElementById(`inline-status-${id}`).value;
+    const novaDuracao = document.getElementById(`inline-duracao-${id}`).value;
+    
+    const tr = document.getElementById(`tr-chamada-${id}`);
+    const btnSave = document.getElementById(`btn-save-inline-${id}`);
+    if(btnSave) { btnSave.innerText = '⏳'; btnSave.disabled = true; }
+
+    try {
+        const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
+        registro.status = novoStatus;
+        registro.duracao = novaDuracao;
+        
+        await App.api(`/chamadas/${id}`, 'PUT', registro);
+
+        // Dispara o Auto-Ajuste Silencioso do Planejamento
+        let plano = App.cachePedagogico.planejamentos.find(p => p.idAluno === registro.idAluno && p.status !== 'Arquivado');
+        if(plano && typeof App.processarAutoAjustePlano === 'function') {
+            plano = App.processarAutoAjustePlano(plano, App.cachePedagogico.chamadas);
+            await App.api(`/planejamentos/${plano.id}`, 'PUT', plano);
+        }
+        
+        // Reconstrói o HTML da linha atualizado na hora, sem recarregar a tabela inteira!
+        let color = '#333'; 
+        if(novoStatus === 'Presença') color = 'green'; 
+        else if(novoStatus === 'Falta') color = 'red'; 
+        else if(novoStatus === 'Reposição') color = '#2980b9'; 
+
+        tr.style.background = "#eafaf1"; // Pisca a verde para indicar sucesso
+        tr.innerHTML = `
+            <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${registro.id}"></td>
+            <td style="padding:12px; color:#555;">${registro.data.split('-').reverse().join('/')}</td>
+            <td style="padding:12px; font-weight:bold;">${App.escapeHTML(registro.nomeAluno)}</td>
+            <td style="padding:12px; font-weight:bold; color:${color};">${App.escapeHTML(novoStatus)}</td>
+            <td style="padding:12px; color:#555;">${App.escapeHTML(novaDuracao)}</td>
+            <td style="padding:12px; text-align:right;">
+                <button onclick="App.editarLancamentoInline('${registro.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar Rápido na Linha">✏️</button>
+                <button onclick="App.excluirLancamentoChamada('${registro.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
+            </td>
+        `;
+        
+        // Remove a cor de fundo piscante após 1.5s
+        setTimeout(() => { if(tr) tr.style.background = "transparent"; }, 1500);
+        tr.dataset.originalHtml = ''; // Reseta o histórico
+
+        // Robô de Fila: Verifica se ainda há mais para editar no lote
+        if(App.filaEdicaoChamada.length > 0 && String(App.filaEdicaoChamada[0]) === String(id)) {
+            App.filaEdicaoChamada.shift(); // Remove o atual da fila
+            if (App.filaEdicaoChamada.length > 0) {
+                App.processarFilaEdicaoInline(); // Chama o próximo!
+            } else {
+                App.showToast("✅ Edição em lote concluída perfeitamente!", "success");
+            }
+        } else {
+            App.showToast("Registo atualizado com sucesso!", "success");
+        }
+
+    } catch(e) {
+        App.showToast("Erro ao guardar alteração.", "error");
+        App.cancelarEdicaoInline(id);
+    }
 };
 
+App.cancelarEdicaoInline = (id) => {
+    const tr = document.getElementById(`tr-chamada-${id}`);
+    if(tr && tr.dataset.originalHtml) {
+        tr.innerHTML = tr.dataset.originalHtml;
+        tr.style.background = "transparent";
+    }
+    // Aborta o assistente se estiver numa fila
+    if(App.filaEdicaoChamada.length > 0) {
+        App.filaEdicaoChamada = []; 
+        App.showToast("Assistente de Edição interrompido.", "info");
+    }
+};
+
+// Funções Auxiliares da Matriz
 App.atualizarStatusCelula = (select) => {
     const val = select.value;
     if(val === 'Falta') select.style.color = '#e74c3c';
@@ -1321,6 +1407,7 @@ App.marcarTodosChamadaGlobal = (status) => {
     App.showToast(`Lote aplicado na matriz inteira: ${status}!`, "info");
 };
 
+// Renderização da Matriz Multi-Tempo
 App.carregarListaChamada = async () => {
     const turma = document.getElementById('chamada-turma').value;
     const idAluno = document.getElementById('chamada-aluno').value;
@@ -1329,7 +1416,7 @@ App.carregarListaChamada = async () => {
     if(App.datasLancamentoChamada.length === 0) return App.showToast("Adicione pelo menos uma data na fila.", "warning");
 
     const area = document.getElementById('area-lista-chamada');
-    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar Matriz de Classe... ⚡</p>';
+    area.innerHTML = '<p style="text-align:center; padding:20px;">A preparar Matriz Dinâmica... ⚡</p>';
 
     try {
         const alunos = App.cachePedagogico.alunos;
@@ -1346,30 +1433,35 @@ App.carregarListaChamada = async () => {
             return; 
         }
 
-        // REMOVIDO POSITION: STICKY AQUI
+        // 🧠 A COLUNA AGORA LÊ O OBJETO MULTI-TEMPO
         let theadHtml = `<tr><th style="padding:15px; text-align:left; background:#f8f9fa; border-right:1px solid #ddd; min-width:150px;">NOME DO ALUNO</th>`;
-        App.datasLancamentoChamada.forEach(data => {
-            theadHtml += `<th style="padding:15px; text-align:center; min-width:160px;">${data.split('-').reverse().join('/')}</th>`;
+        App.datasLancamentoChamada.forEach(item => {
+            theadHtml += `<th style="padding:10px 15px; text-align:center; min-width:160px; line-height:1.3;">
+                ${item.data.split('-').reverse().join('/')}<br>
+                <span style="font-size:10px; color:#7f8c8d; font-weight:normal;">⏳ ${item.duracao}</span>
+            </th>`;
         });
         theadHtml += `</tr>`;
 
         let linhasHtml = '';
         alunosAlvo.forEach(a => {
             linhasHtml += `<tr style="border-bottom:1px solid #eee;" class="linha-aluno-matriz" data-id="${a.id}" data-nome="${App.escapeHTML(a.nome)}">`;
-            // REMOVIDO POSITION: STICKY AQUI
             linhasHtml += `<td style="padding:12px; font-weight:500; background:#fff; border-right:1px solid #ddd; min-width:150px;">${App.escapeHTML(a.nome)}</td>`;
 
-            App.datasLancamentoChamada.forEach(data => {
+            App.datasLancamentoChamada.forEach(item => {
+                const data = item.data;
+                const duracaoDaColuna = item.duracao;
                 const regExistente = chamadas.find(c => String(c.idAluno) === String(a.id) && c.data === data);
+                
                 const status = regExistente ? regExistente.status : 'Presença';
                 const motivo = regExistente && regExistente.motivo ? regExistente.motivo : '';
                 const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
-                
                 const mostrarMotivo = (status === 'Falta' || status === 'Falta Justificada') ? 'block' : 'none';
 
+                // Injeta a duração exata desta coluna no select para salvar depois
                 linhasHtml += `
                 <td style="padding:8px; vertical-align:top;">
-                    <select class="status-chamada" data-data="${data}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="App.atualizarStatusCelula(this)">
+                    <select class="status-chamada" data-data="${data}" data-duracao="${duracaoDaColuna}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="App.atualizarStatusCelula(this)">
                         <option value="Presença" ${status==='Presença'?'selected':''}>✅ Presença</option>
                         <option value="Falta" ${status==='Falta'?'selected':''}>❌ Falta</option>
                         <option value="Reposição" ${status==='Reposição'?'selected':''}>🔄 Reposição</option>
@@ -1389,20 +1481,14 @@ App.carregarListaChamada = async () => {
                 <span style="font-size:12px; color:#999; margin-top:8px; margin-right:auto;">Preencher toda a Matriz:</span>
                 <button onclick="App.marcarTodosChamadaGlobal('Presença')" style="background:#eafaf1; color:#27ae60; border:1px solid #27ae60; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;">✅ Tudo Presente</button>
                 <button onclick="App.marcarTodosChamadaGlobal('Falta')" style="background:#fdf2f2; color:#e74c3c; border:1px solid #e74c3c; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;">❌ Tudo Falta</button>
-                <button onclick="App.marcarTodosChamadaGlobal('N/A')" style="background:#f4f6f7; color:#7f8c8d; border:1px solid #bdc3c7; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;" title="Células N/A não são gravadas no banco">➖ Limpar Matriz (N/A)</button>
+                <button onclick="App.marcarTodosChamadaGlobal('N/A')" style="background:#f4f6f7; color:#7f8c8d; border:1px solid #bdc3c7; padding:6px 12px; border-radius:5px; cursor:pointer; font-weight:bold; font-size:12px;">➖ Limpar Matriz (N/A)</button>
             </div>
         `;
 
-        // 🧠 Banner mágico que aparece se o Wizard estiver ativo
-        const bannerWizard = App.filaEdicaoChamada.length > 0 ? 
-            `<div style="background:#3498db; color:white; padding:12px; text-align:center; font-weight:bold; border-radius:5px; margin-bottom:15px; animation: pop 0.3s; box-shadow: 0 4px 6px rgba(52, 152, 219, 0.2);">
-                ✨ ASSISTENTE DE EDIÇÃO: Faltam ${App.filaEdicaoChamada.length} iten(s) na fila. Ao salvar, o próximo carregará automaticamente!
-            </div>` : '';
-
-        area.innerHTML = bannerWizard + `
+        area.innerHTML = `
             <div class="card" style="padding:0; overflow:hidden; border:2px solid #27ae60;">
                 <div style="padding:15px; background:#eafaf1; border-bottom:1px solid #d5f5e3; font-size:13px; color:#27ae60; font-weight:bold;">
-                    Grelha de Frequência em Matriz (${App.datasLancamentoChamada.length} dia(s) selecionado(s))
+                    Grelha de Frequência Dinâmica (${App.datasLancamentoChamada.length} dia(s) processados)
                 </div>
                 ${botoesLote}
                 <div class="table-responsive-wrapper" style="margin:0; border:none; max-height: 500px; overflow-y: auto;">
@@ -1420,7 +1506,6 @@ App.carregarListaChamada = async () => {
 };
 
 App.salvarChamadaLote = async () => {
-    const duracaoGlobal = document.getElementById('chamada-duracao').value || '01:00';
     const linhas = document.querySelectorAll('.linha-aluno-matriz');
     if(linhas.length === 0) return;
 
@@ -1462,7 +1547,9 @@ App.salvarChamadaLote = async () => {
                 const inputMotivo = select.nextElementSibling;
                 const textoMotivo = (status === 'Falta' || status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
 
+                // LÊ A DURAÇÃO E A DATA DIRETAMENTE DA COLUNA
                 const dataCelula = select.getAttribute('data-data');
+                const duracaoCelula = select.getAttribute('data-duracao'); 
                 const idEdicao = select.getAttribute('data-id-chamada'); 
                 
                 alunosAfetados.add(idAluno); 
@@ -1474,10 +1561,10 @@ App.salvarChamadaLote = async () => {
                     regExistente = chamadasExistentes.find(c => String(c.idAluno) === String(idAluno) && c.data === dataCelula); 
                 }
 
-                const payload = { idAluno, nomeAluno, data: dataCelula, status, duracao: duracaoGlobal, motivo: textoMotivo };
+                const payload = { idAluno, nomeAluno, data: dataCelula, status, duracao: duracaoCelula, motivo: textoMotivo };
 
                 if (regExistente) { 
-                    const chamadaAtualizada = { ...regExistente, data: dataCelula, status: status, duracao: duracaoGlobal, motivo: textoMotivo };
+                    const chamadaAtualizada = { ...regExistente, data: dataCelula, status: status, duracao: duracaoCelula, motivo: textoMotivo };
                     promessasChamadas.push(App.api(`/chamadas/${regExistente.id}`, 'PUT', chamadaAtualizada)); 
                     
                     const idx = chamadasAtualizadasNaMemoria.findIndex(c => String(c.id) === String(regExistente.id));
@@ -1505,22 +1592,10 @@ App.salvarChamadaLote = async () => {
             if (promessasPlano.length > 0) { await Promise.all(promessasPlano); avisoExtra = " e Planos Auto-Ajustados!"; }
         } catch (erroPlano) { console.log("Aviso: Falha no auto-ajuste.", erroPlano); }
 
-       // 🧠 A MÁGICA FINAL DO WIZARD: Se tiver gente na fila, carrega o próximo!
-       if (App.filaEdicaoChamada && App.filaEdicaoChamada.length > 0) {
-           App.showToast(`Salvo! Carregando o próximo... (Faltam ${App.filaEdicaoChamada.length})`, "success");
-           
-           // Atualiza o cache silenciosamente para não perder a edição anterior
-           App.cachePedagogico.chamadas = chamadasAtualizadasNaMemoria;
-           
-           App.processarFilaEdicaoChamada();
-           if(btn){btn.innerText = "💾 SALVAR MATRIZ COMPLETA"; btn.disabled = false;} document.body.style.cursor = 'default';
-       } else {
-           App.showToast(`Processamento concluído com sucesso${avisoExtra}!`, "success");
-           App.cancelarEdicaoChamada(); // Limpa e fecha
-           const area = document.getElementById('app-content');
-           if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">A atualizar a tabela de histórico... ⏳</p>';
-           await App.renderizarChamadaPro();
-       }
+        App.showToast(`Matriz Multitempo salva com sucesso${avisoExtra}!`, "success");
+        const area = document.getElementById('app-content');
+        if (area) area.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">A atualizar a tabela de histórico... ⏳</p>';
+        await App.renderizarChamadaPro();
 
     } catch(e) { 
         App.showToast("Erro ao guardar a matriz de chamadas.", "error"); 
