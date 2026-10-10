@@ -2137,17 +2137,15 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
         const nomeDoModelo = App.certModelsList.find(m => m.id === modelo).name;
         const tituloPlacarHtml = `<span class="hide-on-mobile">👁️ Estúdio Interativo - </span><b style="color:#d4af37; font-size:14px;">${nomeDoModelo}</b> ${infoLoteText}`;
 
-        // 🧠 A MATEMÁTICA DA CAIXA DE CONTENÇÃO (Resolve todos os bugs de sobreposição)
-        const espacoDisponivelLargura = window.innerWidth * 0.90; // 90% da largura da tela livre
-        const espacoDisponivelAltura = window.innerHeight - 200; // Altura da tela menos as duas barras
+        // 🧠 A MATEMÁTICA DA CAIXA DE CONTENÇÃO
+        const espacoDisponivelLargura = window.innerWidth * 0.90; 
+        const espacoDisponivelAltura = window.innerHeight - 200; 
 
         const proporcaoLargura = espacoDisponivelLargura / 1122;
         const proporcaoAltura = espacoDisponivelAltura / 793;
         
-        // A escala é o valor mínimo para caber inteiramente (limitado a 1x para não explodir no desktop)
         const scale = Math.min(proporcaoLargura, proporcaoAltura, 1);
         
-        // O tamanho exato do fantasma após a escala
         const boxWidth = 1122 * scale;
         const boxHeight = 793 * scale;
 
@@ -2173,10 +2171,10 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
             document.body.appendChild(modal);
         }
 
-        // Layout Flex de Estrutura Rígida
         modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.9); z-index:9999; display:flex; flex-direction:column; align-items:center; padding:15px; box-sizing:border-box; backdrop-filter:blur(8px); opacity:0; transition: opacity 0.3s; overflow:hidden;';
 
-        const btnArrowStyle = "background: rgba(255,255,255,0.15); color: white; border: 2px solid rgba(255,255,255,0.3); border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.3s; outline:none; flex-shrink:0; z-index:1000;";
+        // 🎨 NOVA ENGENHARIA DAS SETAS (Dark Glassmorphism com Alto Contraste)
+        const btnArrowStyle = "background: rgba(0,0,0,0.65); color: #ffffff; border: 2px solid rgba(255,255,255,0.9); border-radius: 50%; width: 50px; height: 50px; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.3s ease; outline:none; flex-shrink:0; z-index:1000; box-shadow: 0 4px 15px rgba(0,0,0,0.6); backdrop-filter: blur(4px);";
         const btnToolbarStyle = "flex: 1; min-width:140px; padding: 12px; border-radius: 5px; cursor: pointer; font-weight: bold; color: white; border: none; font-size: 12px; text-align:center; transition: 0.3s;";
 
         modal.innerHTML = `
@@ -2195,20 +2193,20 @@ App.abrirPreviewCertificado = async (isUpdate = false) => {
                 <button onclick="document.getElementById('modal-preview-cert').style.opacity='0'; setTimeout(()=>document.getElementById('modal-preview-cert').style.display='none', 300);" style="background: none; border: none; font-size: 24px; cursor: pointer; color: #c0392b; line-height: 1; padding: 0 5px;">✖</button>
             </div>
             
-            <!-- Área do Certificado (Ocupa o centro livre) -->
+            <!-- Área do Certificado -->
             <div style="flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; position: relative;">
                 
-                <button onclick="App.navegarCertificado('prev')" class="cert-arrow-left" style="${btnArrowStyle} position: absolute; left: 20px;">❮</button>
+                <!-- Nova Seta com Animação Hover -->
+                <button onclick="App.navegarCertificado('prev')" class="cert-arrow-left" style="${btnArrowStyle} position: absolute; left: 20px;" onmouseover="this.style.background='rgba(0,0,0,0.9)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(0,0,0,0.65)'; this.style.transform='scale(1)';">❮</button>
                 
-                <!-- A Bounding Box Mágica -->
                 <div style="width: ${boxWidth}px; height: ${boxHeight}px; position: relative;">
-                    <!-- O Documento Real (Escalado e Ancorado no Topo-Esquerdo da Bounding Box) -->
                     <div id="cert-preview-content" oninput="App.salvarRascunhoCertificado()" spellcheck="false" style="width: 1122px; height: 793px; transform: scale(${scale}); transform-origin: top left; position: absolute; top: 0; left: 0; box-shadow: 0 15px 35px rgba(0,0,0,0.5); transition: box-shadow 0.3s; background:#fff;">
                         ${arteHtml}
                     </div>
                 </div>
 
-                <button onclick="App.navegarCertificado('next')" class="cert-arrow-right" style="${btnArrowStyle} position: absolute; right: 20px;">❯</button>
+                <!-- Nova Seta com Animação Hover -->
+                <button onclick="App.navegarCertificado('next')" class="cert-arrow-right" style="${btnArrowStyle} position: absolute; right: 20px;" onmouseover="this.style.background='rgba(0,0,0,0.9)'; this.style.transform='scale(1.1)';" onmouseout="this.style.background='rgba(0,0,0,0.65)'; this.style.transform='scale(1)';">❯</button>
                 
             </div>
 
