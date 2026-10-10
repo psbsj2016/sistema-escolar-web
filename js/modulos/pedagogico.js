@@ -167,19 +167,33 @@ App.renderizarPlanejamentosSalvos = async () => {
             return; 
         }
         
-        const cabecalho = `<tr><th style="width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-plan-ativo')"></th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
-        const corpo = planosAtivos.map(p => `
+        const cabecalho = `<tr><th style="width:40px; text-align:center; border-bottom:2px solid #eee;"><input type="checkbox" onchange="App.toggleCheckMassa(this, 'check-plan-ativo')"></th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Aluno (Progresso)</th><th style="padding:10px; text-align:left; border-bottom:2px solid #eee;">Curso</th><th style="padding:10px; border-bottom:2px solid #eee; text-align:center;">Aulas</th><th style="padding:10px; text-align:right; border-bottom:2px solid #eee;">Ações</th></tr>`;
+        
+        const corpo = planosAtivos.map(p => {
+            // 🧠 CÁLCULO INSTANTÂNEO DE PROGRESSO PARA A TABELA
+            const concluidas = p.aulas ? p.aulas.filter(a => a.visto).length : 0;
+            const total = p.aulas ? p.aulas.length : 0;
+            const progresso = total > 0 ? Math.round((concluidas / total) * 100) : 0;
+            
+            return `
             <tr style="border-bottom:1px solid #eee;">
                 <td style="text-align:center;"><input type="checkbox" class="check-plan-ativo" value="${p.id}"></td>
-                <td style="padding:10px; font-weight:500;">${App.escapeHTML(p.nomeAluno)}</td>
-                <td style="padding:10px;">${App.escapeHTML(p.curso)}</td>
-                <td style="padding:10px; text-align:center;">${p.aulas ? p.aulas.length : 0}</td>
+                <td style="padding:10px; font-weight:500;">
+                    ${App.escapeHTML(p.nomeAluno)}
+                    <div style="background:#ecf0f1; border-radius:10px; width:100%; height:4px; margin-top:5px; overflow:hidden;" title="${progresso}% Concluído">
+                        <div style="background:${progresso === 100 ? '#27ae60' : '#3498db'}; width:${progresso}%; height:100%;"></div>
+                    </div>
+                </td>
+                <td style="padding:10px; color:#555;">${App.escapeHTML(p.curso)}</td>
+                <td style="padding:10px; text-align:center; font-weight:bold; color:#7f8c8d;">${concluidas}/${total}</td>
                 <td style="padding:10px; text-align:right;">
-                    <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Editar">✏️</button>
+                    <button onclick="App.abrirDashboardProgresso('${p.id}')" style="background:#3498db; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer; box-shadow: 0 2px 4px rgba(52,152,219,0.3);" title="Visualizar Progresso Pedagógico">👁️</button>
+                    <button onclick="App.abrirPlanejamentoEditavel('${p.id}')" style="background:#f39c12; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Editar Grelha">✏️</button>
                     <button onclick="App.arquivarPlanejamento('${p.id}')" style="background:#8e44ad; color:white; border:none; padding:5px 10px; border-radius:4px; margin-right:5px; cursor:pointer;" title="Arquivar">🗄️</button>
                     <button onclick="App.excluirPlanejamento('${p.id}')" style="background:#e74c3c; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;" title="Excluir">🗑️</button>
                 </td>
-            </tr>`).join('');
+            </tr>`;
+        }).join('');
 
         const buscaHtml = `
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
@@ -205,6 +219,135 @@ App.renderizarPlanejamentosSalvos = async () => {
             </div>
         `);
     } catch(e) { div.innerHTML = "Erro."; }
+};
+
+// -------------------------------------------------------------------------
+// 👁️ DASHBOARD VISUAL DE PROGRESSO PEDAGÓGICO
+// -------------------------------------------------------------------------
+App.abrirDashboardProgresso = async (id) => {
+    try {
+        const plano = await App.api(`/planejamentos/${id}?_t=${Date.now()}`);
+        if (!plano) return App.showToast("Planejamento não encontrado.", "error");
+
+        // 🧠 CÁLCULO DE MÉTRICAS
+        const totalAulas = plano.aulas ? plano.aulas.length : 0;
+        const aulasConcluidas = plano.aulas ? plano.aulas.filter(a => a.visto).length : 0;
+        const aulasPendentes = totalAulas - aulasConcluidas;
+        const percentual = totalAulas > 0 ? Math.round((aulasConcluidas / totalAulas) * 100) : 0;
+        
+        // Descobre a primeira aula que ainda NÃO tem o visto
+        const proximaAula = plano.aulas ? plano.aulas.find(a => !a.visto) : null;
+
+        // Configura o Modal
+        const modalId = 'modal-progresso-' + Date.now();
+        const overlay = document.createElement('div');
+        overlay.id = modalId;
+        overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,0.75); display:flex; align-items:center; justify-content:center; z-index:99999; backdrop-filter:blur(5px); opacity:0; transition:opacity 0.3s; padding: 20px; box-sizing: border-box;';
+
+        // Caixa de Destaque da Próxima Aula
+        let proximaAulaHtml = '';
+        if (proximaAula) {
+            proximaAulaHtml = `
+                <div style="background: #e8f4f8; border-left: 4px solid #3498db; padding: 20px; border-radius: 8px; text-align: left; margin-top: 25px;">
+                    <div style="font-size: 12px; font-weight: bold; color: #3498db; text-transform: uppercase; margin-bottom: 8px;">⏭️ Próxima Aula Programada (Nº ${proximaAula.num})</div>
+                    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 15px;">
+                        <div>
+                            <div style="font-size: 20px; font-weight: bold; color: #2c3e50;">${App.escapeHTML(proximaAula.data)}</div>
+                            <div style="font-size: 14px; color: #7f8c8d; margin-top:3px;">⏰ ${App.escapeHTML(proximaAula.hora)} <span style="color:#bdc3c7;">(Duração: ${App.escapeHTML(proximaAula.duracao)})</span></div>
+                        </div>
+                        <div style="flex: 1; min-width: 250px; background: white; padding: 15px; border-radius: 8px; border: 1px solid #d1e8f0; box-shadow: 0 2px 5px rgba(52,152,219,0.05);">
+                            <div style="font-size: 11px; color: #95a5a6; margin-bottom: 5px; font-weight:bold;">CONTEÚDO PREVISTO:</div>
+                            <div style="font-size: 15px; color: #34495e; font-weight: 500; line-height: 1.4;">${App.escapeHTML(proximaAula.conteudo || 'Nenhum conteúdo específico descrito no plano.')}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        } else if (totalAulas > 0 && aulasPendentes === 0) {
+            proximaAulaHtml = `
+                <div style="background: #eafaf1; border-left: 4px solid #27ae60; padding: 20px; border-radius: 8px; text-align: left; margin-top: 25px; display: flex; align-items: center; gap: 15px;">
+                    <div style="font-size: 35px;">🏆</div>
+                    <div>
+                        <div style="font-size: 18px; font-weight: bold; color: #27ae60;">Planejamento Concluído!</div>
+                        <div style="font-size: 14px; color: #2c3e50; margin-top:3px;">Todas as ${totalAulas} aulas foram ministradas com sucesso.</div>
+                    </div>
+                </div>
+            `;
+        }
+
+        const card = document.createElement('div');
+        card.style.cssText = 'background:#fff; width:100%; max-width:700px; border-radius:15px; padding:30px; box-shadow:0 15px 40px rgba(0,0,0,0.3); transform:scale(0.95); transition:transform 0.3s; position:relative; max-height: 90vh; overflow-y: auto;';
+
+        card.innerHTML = `
+            <button id="fechar-${modalId}" style="position: absolute; top: 15px; right: 15px; background: none; border: none; font-size: 24px; color: #95a5a6; cursor: pointer; transition: 0.2s; outline:none;" onmouseover="this.style.color='#e74c3c'" onmouseout="this.style.color='#95a5a6'">✖</button>
+            
+            <div style="display: flex; align-items: center; gap: 15px; border-bottom: 1px solid #eee; padding-bottom: 20px; margin-bottom: 25px;">
+                <div style="background: #f4f6f7; width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 28px;">🎓</div>
+                <div style="text-align: left;">
+                    <h2 style="margin: 0; color: #2c3e50; font-size: 22px;">${App.escapeHTML(plano.nomeAluno)}</h2>
+                    <div style="color: #7f8c8d; font-size: 14px; margin-top:2px;">Curso: <b style="color:#2c3e50;">${App.escapeHTML(plano.curso)}</b> | Status: <b>${App.escapeHTML(plano.status)}</b></div>
+                </div>
+            </div>
+
+            <!-- Barra de Progresso Dinâmica -->
+            <div style="margin-bottom: 30px;">
+                <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                    <span style="font-weight: bold; color: #2c3e50; font-size: 14px;">Evolução do Curso</span>
+                    <span style="font-weight: bold; color: ${percentual === 100 ? '#27ae60' : '#3498db'}; font-size: 14px;">${percentual}%</span>
+                </div>
+                <div style="width: 100%; height: 12px; background: #ecf0f1; border-radius: 10px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="width: ${percentual}%; height: 100%; background: ${percentual === 100 ? '#27ae60' : 'linear-gradient(90deg, #3498db, #2980b9)'}; transition: width 1s ease-in-out;"></div>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div style="display: flex; gap: 15px; flex-wrap: wrap; text-align: center;">
+                <div style="flex: 1; min-width: 120px; background: #fdfbf7; border: 1px solid #f1c40f; padding: 15px; border-radius: 8px; box-shadow:0 2px 5px rgba(241, 196, 15, 0.1);">
+                    <div style="font-size: 11px; color: #d35400; font-weight: bold; text-transform: uppercase;">Total de Aulas</div>
+                    <div style="font-size: 28px; font-weight: 900; color: #2c3e50; margin-top: 5px;">${totalAulas}</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; background: #eafaf1; border: 1px solid #2ecc71; padding: 15px; border-radius: 8px; box-shadow:0 2px 5px rgba(46, 204, 113, 0.1);">
+                    <div style="font-size: 11px; color: #27ae60; font-weight: bold; text-transform: uppercase;">Concluídas</div>
+                    <div style="font-size: 28px; font-weight: 900; color: #27ae60; margin-top: 5px;">${aulasConcluidas}</div>
+                </div>
+                <div style="flex: 1; min-width: 120px; background: #fdf2f2; border: 1px solid #e74c3c; padding: 15px; border-radius: 8px; box-shadow:0 2px 5px rgba(231, 76, 60, 0.1);">
+                    <div style="font-size: 11px; color: #c0392b; font-weight: bold; text-transform: uppercase;">Pendentes</div>
+                    <div style="font-size: 28px; font-weight: 900; color: #c0392b; margin-top: 5px;">${aulasPendentes}</div>
+                </div>
+            </div>
+
+            <!-- Bússola Pedagógica (Próxima Aula) -->
+            ${proximaAulaHtml}
+
+            <!-- Botões de Ação -->
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 30px; border-top: 1px solid #eee; padding-top: 20px;">
+                <button id="btn-fechar-${modalId}" style="padding: 12px 25px; border: 1px solid #bdc3c7; background: #fff; color: #7f8c8d; border-radius: 5px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f4f6f7'" onmouseout="this.style.background='#fff'">FECHAR</button>
+                <button id="btn-editar-${modalId}" style="padding: 12px 25px; border: none; background: #f39c12; color: white; border-radius: 5px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 10px rgba(243, 156, 18, 0.3); transition: 0.2s;" onmouseover="this.style.background='#e67e22'" onmouseout="this.style.background='#f39c12'">✏️ EDITAR GRELHA COMPLETA</button>
+            </div>
+        `;
+
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+
+        // Animação de Entrada
+        setTimeout(() => { overlay.style.opacity = '1'; card.style.transform = 'scale(1)'; }, 10);
+
+        const fecharModal = () => {
+            overlay.style.opacity = '0'; card.style.transform = 'scale(0.95)';
+            setTimeout(() => document.body.removeChild(overlay), 300);
+        };
+
+        document.getElementById(`fechar-${modalId}`).onclick = fecharModal;
+        document.getElementById(`btn-fechar-${modalId}`).onclick = fecharModal;
+        
+        // Transição Rápida para o Modo de Edição
+        document.getElementById(`btn-editar-${modalId}`).onclick = () => {
+            fecharModal();
+            App.abrirPlanejamentoEditavel(id);
+        };
+
+    } catch (e) {
+        App.showToast("Erro ao abrir relatório de progresso.", "error");
+    }
 };
 
 App.renderizarPlanejamentosArquivados = async () => {
