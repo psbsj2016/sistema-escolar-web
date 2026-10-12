@@ -1562,27 +1562,168 @@ validarCadastroInst: async () => {
 
     atualizarUIHeader: (escola) => {
         if (!escola) return;
-        const logoTitle = document.querySelector('.logo-area h2'); 
         
-        const planoAtual = escola.plano || 'Teste';
-        
-        let corBadge = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : (planoAtual === 'Teste' ? '#e74c3c' : '#27ae60'));
-        const badgeHtml = `<div style="margin-top:8px; margin-bottom:5px;"><span style="background:${corBadge}; color:#fff; font-size:10px; font-weight:bold; padding:3px 8px; border-radius:12px; text-transform:uppercase; letter-spacing:1px; box-shadow:0 2px 4px rgba(0,0,0,0.2);">💎 PLANO ${App.escapeHTML(planoAtual)}</span></div>`;
-        
-        const userLogin = App.usuario ? App.usuario.login : 'Desconhecido';
-        const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
-        const userHtml = `<div style="font-size:11px; color:#aaa; font-weight:normal; line-height:1.4; margin-top:5px; background: rgba(0,0,0,0.15); border-radius: 6px; padding: 4px;">👤 Logado como:<br><b style="color:#fff;">${App.escapeHTML(userLogin)}</b><br><span style="font-size:9px; color:#3498db; text-transform:uppercase; font-weight:bold;">${App.escapeHTML(userTipo)}</span></div>`;
-
-     if(logoTitle) logoTitle.innerHTML = `${App.escapeHTML(escola.nome || 'Escola')}<br><small style="color:#aaa;">${App.escapeHTML(escola.cnpj || '')}</small>${badgeHtml}${userHtml}`; 
-        
+        // 1. PURIFICAÇÃO DO MENU LATERAL (Apenas Imagem)
         const logoContainer = document.querySelector('.logo-area'); 
-        if (logoContainer) { // 🛡️ Proteção: Só atualiza o logo se a área existir na tela
+        if (logoContainer) { 
             let img = logoContainer.querySelector('img'); 
-            if(escola.foto && escola.foto.length > 50) { 
-                if(!img) { img = document.createElement('img'); img.style.cssText = "width:80px; height:80px; border-radius:50%; object-fit:cover; margin-bottom:10px; display:block; margin: 0 auto 10px auto; border: 3px solid rgba(255,255,255,0.2);"; logoContainer.insertBefore(img, logoContainer.firstChild); } 
+            if(escola.foto && escola.foto.length > 50 && !escola.foto.includes('placehold')) { 
+                if(!img) { 
+                    img = document.createElement('img'); 
+                    img.style.cssText = "width:65px; height:65px; border-radius:12px; object-fit:cover; display:block; margin: 0 auto 10px auto; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 4px 6px rgba(0,0,0,0.2);"; 
+                    logoContainer.insertBefore(img, logoContainer.firstChild); 
+                } 
                 img.src = escola.foto; 
-            } else if(img) { img.remove(); }
+            } else if(img) { 
+                img.remove(); 
+            }
+            // Garante que o texto debaixo da logo é apenas o título, sem utilizadores misturados
+            const h2 = logoContainer.querySelector('h2');
+            if(h2) h2.innerHTML = "Gestão Escolar";
         }
+
+        // 2. PREENCHIMENTO DO CARTÃO DE PERFIL (Dropdown) E AVATAR
+        const planoAtual = escola.plano || 'Teste';
+        const userLogin = App.usuario ? (App.usuario.nome || App.usuario.login) : 'Usuário';
+        const userEmail = App.usuario ? App.usuario.login : 'email@escola.com';
+        const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
+
+        // Lógica matemática para extrair 2 iniciais elegantes do nome do utilizador
+        const partesNome = userLogin.trim().split(' ');
+        let iniciais = 'US';
+        if (partesNome.length >= 2) {
+            iniciais = (partesNome[0][0] + partesNome[1][0]).toUpperCase();
+        } else if (userLogin.length >= 2) {
+            iniciais = userLogin.substring(0, 2).toUpperCase();
+        }
+
+        // Injeta os dados limpos nos IDs criados no index.html
+        const elIniciais = document.getElementById('avatar-iniciais');
+        if(elIniciais) elIniciais.innerText = iniciais;
+
+        const elNome = document.getElementById('dropdown-user-name');
+        if(elNome) elNome.innerText = App.escapeHTML(userLogin);
+
+        const elEmail = document.getElementById('dropdown-user-email');
+        if(elEmail) elEmail.innerText = App.escapeHTML(userEmail);
+
+        const elRole = document.getElementById('dropdown-user-role');
+        if(elRole) elRole.innerText = App.escapeHTML(userTipo);
+
+        const elWorkspace = document.getElementById('dropdown-workspace-name');
+        if(elWorkspace) elWorkspace.innerText = App.escapeHTML(escola.nome || 'Minha Escola');
+
+        const elPlano = document.getElementById('dropdown-plan-name');
+        if(elPlano) {
+            elPlano.innerText = planoAtual;
+            elPlano.style.color = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+        }
+
+        // 3. INJEÇÃO DA DATA DO DIA NO CABEÇALHO
+        const dataHojeBox = document.getElementById('data-hoje');
+        if(dataHojeBox) {
+            const opcoesData = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            let dataFormatada = new Date().toLocaleDateString('pt-BR', opcoesData);
+            // Coloca a primeira letra do dia da semana em maiúscula
+            dataHojeBox.innerText = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
+        }
+    },
+
+    // =========================================================
+    // 🔍 MOTOR DE PESQUISA GLOBAL (OMNIBOX)
+    // =========================================================
+    configurarPesquisaGlobal: () => {
+        const input = document.getElementById('global-search-input');
+        const resultsBox = document.getElementById('global-search-results');
+        
+        if (!input || !resultsBox) return;
+
+        // Fecha a caixa de resultados se clicar em qualquer lado de fora
+        document.addEventListener('click', (e) => {
+            if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+                resultsBox.classList.remove('active');
+            }
+        });
+
+        // Ouve a digitação em tempo real
+        input.addEventListener('input', async (e) => {
+            const termo = e.target.value.toLowerCase().trim();
+            
+            // Só pesquisa a partir de 2 letras para poupar processamento
+            if (termo.length < 2) {
+                resultsBox.classList.remove('active');
+                return;
+            }
+
+            let htmlResultados = '';
+            let encontrouAlgo = false;
+
+            // 1. Pesquisa Rápida nos Atalhos/Menus do Sistema
+            if (window.LISTA_FUNCIONALIDADES) {
+                const menusFiltrados = window.LISTA_FUNCIONALIDADES.filter(m => m.nome.toLowerCase().includes(termo));
+                if (menusFiltrados.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Atalhos do Sistema</div>`;
+                    menusFiltrados.forEach(m => {
+                        htmlResultados += `
+                            <div onclick="${m.acao}; document.getElementById('global-search-results').classList.remove('active'); document.getElementById('global-search-input').value = '';" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px;">${m.icon}</span>
+                                <span style="font-size: 14px; color: #1e293b; font-weight: 500;">Acessar <b>${m.nome}</b></span>
+                            </div>
+                        `;
+                    });
+                }
+            }
+
+            // 2. Pesquisa Inteligente de Alunos
+            try {
+                // Tenta usar a lista de alunos se já existir na memória, ou puxa do servidor sem dar erro visual
+                let alunos = App.cacheAlunosPesquisa;
+                if (!alunos) {
+                    alunos = await App.api('/alunos', 'GET', null, true); 
+                    App.cacheAlunosPesquisa = alunos;
+                }
+                
+                if (Array.isArray(alunos)) {
+                    // Limita a exibição aos 5 melhores resultados para manter a UI elegante
+                    const alunosFiltrados = alunos.filter(a => a.nome && a.nome.toLowerCase().includes(termo)).slice(0, 5);
+                    
+                    if (alunosFiltrados.length > 0) {
+                        encontrouAlgo = true;
+                        htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Fichas de Alunos</div>`;
+                        alunosFiltrados.forEach(a => {
+                            htmlResultados += `
+                                <div onclick="if(typeof App.abrirFichaAluno === 'function') App.abrirFichaAluno('${a.id}'); document.getElementById('global-search-results').classList.remove('active'); document.getElementById('global-search-input').value = '';" 
+                                     style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                     onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #3b82f6; color: white; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">
+                                        ${a.nome.substring(0,2).toUpperCase()}
+                                    </div>
+                                    <div style="flex:1;">
+                                        <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(a.nome)}</div>
+                                        <div style="font-size: 11px; color: #64748b; margin-top:2px;">🎓 ${App.escapeHTML(a.curso || 'Curso Geral')} | Turma: ${App.escapeHTML(a.turma || '-')}</div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+            } catch(e) { /* Ignora erros de rede na pesquisa rápida para não incomodar o utilizador */ }
+
+            // Tratamento se não houver resultados
+            if (!encontrouAlgo) {
+                htmlResultados = `
+                    <div style="padding: 30px 20px; text-align: center; color: #94a3b8;">
+                        <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
+                        <div style="font-size: 13px;">Nenhum resultado encontrado para "<b>${App.escapeHTML(termo)}</b>"</div>
+                    </div>`;
+            }
+
+            resultsBox.innerHTML = htmlResultados;
+            resultsBox.classList.add('active');
+        });
     },
 
     carregarDadosEscola: async (silencioso = false) => { 
@@ -2144,10 +2285,27 @@ window.addEventListener('hashchange', () => {
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
 window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
 
+// =========================================================
+// OUVINTES GLOBAIS DE CLIQUE (FECHAR MENUS FLUTUANTES)
+// =========================================================
 document.addEventListener('click', (e) => {
-    const container = document.querySelector('.notification-container');
-    if (container && !container.contains(e.target)) {
-        const dropdown = document.getElementById('noti-dropdown'); if (dropdown) dropdown.classList.remove('active');
+    // 1. Lógica para fechar Notificações ao clicar fora
+    const notiContainer = document.querySelector('.notification-container');
+    if (notiContainer && !notiContainer.contains(e.target)) {
+        const notiDropdown = document.getElementById('noti-dropdown'); 
+        if (notiDropdown) notiDropdown.classList.remove('active');
+    }
+
+    // 2. Lógica para fechar o Perfil/Avatar ao clicar fora
+    const userDropdown = document.getElementById('dropdown-perfil-usuario');
+    const avatarBtn = document.getElementById('btn-avatar-profile');
+    
+    // Verifica se os elementos existem e se o dropdown está aberto
+    if (userDropdown && avatarBtn && userDropdown.classList.contains('active')) {
+        // Se o clique não foi no avatar nem dentro do cartão de perfil
+        if (!userDropdown.contains(e.target) && !avatarBtn.contains(e.target)) {
+            userDropdown.classList.remove('active');
+        }
     }
 });
 
@@ -2202,10 +2360,14 @@ window.addEventListener('appinstalled', () => {
 });
 
 // =========================================================
-// 🚀 INICIALIZAÇÃO DE SERVIÇOS GLOBAIS (Rastreador)
+// 🚀 INICIALIZAÇÃO DE SERVIÇOS GLOBAIS (Rastreador e Omnibox)
 // =========================================================
 document.addEventListener('DOMContentLoaded', () => {
     if (typeof App.iniciarRastreadorRascunho === 'function') {
         App.iniciarRastreadorRascunho();
+    }
+    // O Gatilho que acorda a barra de pesquisa assim que a página carrega!
+    if (typeof App.configurarPesquisaGlobal === 'function') {
+        App.configurarPesquisaGlobal();
     }
 });
