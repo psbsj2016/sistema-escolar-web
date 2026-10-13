@@ -413,8 +413,9 @@ Object.assign(App, {
             
             const data = await response.json();
             
-            if (method !== 'GET' && App.usuario && typeof App.verificarNotificacoes === 'function') {
-                setTimeout(App.verificarNotificacoes, 800);
+            if (method !== 'GET' && App.usuario) {
+                if (typeof App.verificarNotificacoes === 'function') setTimeout(App.verificarNotificacoes, 800);
+                if (typeof App.sincronizarPerfilUsuarioHeader === 'function') App.sincronizarPerfilUsuarioHeader();
             }
             
             return data;
@@ -1560,10 +1561,97 @@ validarCadastroInst: async () => {
         }
     },
 
+   // =========================================================
+    // 👤 SINCRONIZADOR DE FOTO E NOME DO WORKSPACE EM TEMPO REAL
+    // =========================================================
+    desenharDadosUsuarioNoTopo: () => {
+        if (!App.usuario) return;
+
+        const nomeExibicao = (App.usuario.nome || App.usuario.login || 'Usuário').trim();
+        const emailExibicao = App.usuario.email || App.usuario.login || '';
+        const cargoExibicao = App.usuario.tipo || 'Gestor';
+        const fotoUrl = App.usuario.avatar || App.usuario.foto || '';
+
+        // Calcula as 2 iniciais caso não tenha foto
+        const partesNome = nomeExibicao.split(' ').filter(Boolean);
+        let iniciais = 'US';
+        if (partesNome.length >= 2) {
+            iniciais = (partesNome[0][0] + partesNome[partesNome.length - 1][0]).toUpperCase();
+        } else if (nomeExibicao.length >= 2) {
+            iniciais = nomeExibicao.substring(0, 2).toUpperCase();
+        }
+
+        // Atualiza textos no cartão suspenso
+        const elNome = document.getElementById('dropdown-user-name');
+        if (elNome) elNome.innerText = nomeExibicao;
+
+        const elEmail = document.getElementById('dropdown-user-email');
+        if (elEmail) elEmail.innerText = emailExibicao;
+
+        const elRole = document.getElementById('dropdown-user-role');
+        if (elRole) elRole.innerText = cargoExibicao;
+
+        // Atualiza a Foto ou Iniciais na Bola do Topo e no Cartão
+        const imgTop = document.getElementById('avatar-img-top');
+        const spanTop = document.getElementById('avatar-iniciais');
+        const imgCard = document.getElementById('dropdown-avatar-img');
+        const spanCard = document.getElementById('dropdown-avatar-iniciais');
+
+        const temFotoValida = fotoUrl && fotoUrl.length > 15 && !fotoUrl.includes('placehold');
+
+        if (temFotoValida) {
+            if (imgTop) { imgTop.src = fotoUrl; imgTop.style.display = 'block'; }
+            if (spanTop) { spanTop.style.display = 'none'; }
+            if (imgCard) { imgCard.src = fotoUrl; imgCard.style.display = 'block'; }
+            if (spanCard) { spanCard.style.display = 'none'; }
+        } else {
+            if (imgTop) { imgTop.src = ''; imgTop.style.display = 'none'; }
+            if (spanTop) { spanTop.innerText = iniciais; spanTop.style.display = 'inline'; }
+            if (imgCard) { imgCard.src = ''; imgCard.style.display = 'none'; }
+            if (spanCard) { spanCard.innerText = iniciais; spanCard.style.display = 'inline'; }
+        }
+    },
+
+    sincronizarPerfilUsuarioHeader: async () => {
+        if (!App.usuario) return;
+        try {
+            const listaUsuarios = await App.api('/usuarios', 'GET', null, true);
+            if (!Array.isArray(listaUsuarios)) return;
+
+            // 1. Procura a conta exata do utilizador logado
+            let contaAtualizada = listaUsuarios.find(u => 
+                (u.id && App.usuario.id && String(u.id) === String(App.usuario.id)) ||
+                (u.login && App.usuario.login && u.login.toLowerCase() === App.usuario.login.toLowerCase())
+            );
+
+            // 2. Se o utilizador também tiver um perfil no Workspace com foto/nome atualizados, sincroniza!
+            const contaComAvatar = listaUsuarios.find(u => 
+                u.avatar && (
+                    (u.id && String(u.id) === String(App.usuario.id)) ||
+                    (u.login && App.usuario.login && u.login.toLowerCase() === App.usuario.login.toLowerCase()) ||
+                    (u.nome && App.usuario.nome && u.nome.trim().toLowerCase() === App.usuario.nome.trim().toLowerCase())
+                )
+            );
+
+            if (contaAtualizada || contaComAvatar) {
+                const fonte = contaComAvatar || contaAtualizada;
+                if (fonte.nome) App.usuario.nome = fonte.nome;
+                if (fonte.avatar || fonte.foto) App.usuario.avatar = fonte.avatar || fonte.foto;
+                else if (contaAtualizada && !contaAtualizada.avatar && !contaComAvatar) App.usuario.avatar = null;
+
+                // Guarda no localStorage para que no F5 já carregue instantaneamente com a foto nova
+                localStorage.setItem('usuario_logado', JSON.stringify(App.usuario));
+                App.desenharDadosUsuarioNoTopo();
+            }
+        } catch (e) {
+            // Silencioso em background
+        }
+    },
+
     atualizarUIHeader: (escola) => {
         if (!escola) return;
         
-        // 1. PURIFICAÇÃO DO MENU LATERAL (Apenas Imagem)
+        // 1. PURIFICAÇÃO DO MENU LATERAL (Apenas Imagem e Título da Escola)
         const logoContainer = document.querySelector('.logo-area'); 
         if (logoContainer) { 
             let img = logoContainer.querySelector('img'); 
@@ -1577,54 +1665,27 @@ validarCadastroInst: async () => {
             } else if(img) { 
                 img.remove(); 
             }
-            // Garante que o texto debaixo da logo é apenas o título, sem utilizadores misturados
             const h2 = logoContainer.querySelector('h2');
             if(h2) h2.innerHTML = "Gestão Escolar";
         }
 
-        // 2. PREENCHIMENTO DO CARTÃO DE PERFIL (Dropdown) E AVATAR
+        // 2. PREENCHIMENTO DO PLANO ATUAL NO CARTÃO
         const planoAtual = escola.plano || 'Teste';
-        const userLogin = App.usuario ? (App.usuario.nome || App.usuario.login) : 'Usuário';
-        const userEmail = App.usuario ? App.usuario.login : 'email@escola.com';
-        const userTipo = App.usuario ? App.usuario.tipo : 'Gestor';
-
-        // Lógica matemática para extrair 2 iniciais elegantes do nome do utilizador
-        const partesNome = userLogin.trim().split(' ');
-        let iniciais = 'US';
-        if (partesNome.length >= 2) {
-            iniciais = (partesNome[0][0] + partesNome[1][0]).toUpperCase();
-        } else if (userLogin.length >= 2) {
-            iniciais = userLogin.substring(0, 2).toUpperCase();
-        }
-
-        // Injeta os dados limpos nos IDs criados no index.html
-        const elIniciais = document.getElementById('avatar-iniciais');
-        if(elIniciais) elIniciais.innerText = iniciais;
-
-        const elNome = document.getElementById('dropdown-user-name');
-        if(elNome) elNome.innerText = App.escapeHTML(userLogin);
-
-        const elEmail = document.getElementById('dropdown-user-email');
-        if(elEmail) elEmail.innerText = App.escapeHTML(userEmail);
-
-        const elRole = document.getElementById('dropdown-user-role');
-        if(elRole) elRole.innerText = App.escapeHTML(userTipo);
-
-        const elWorkspace = document.getElementById('dropdown-workspace-name');
-        if(elWorkspace) elWorkspace.innerText = App.escapeHTML(escola.nome || 'Minha Escola');
-
         const elPlano = document.getElementById('dropdown-plan-name');
         if(elPlano) {
             elPlano.innerText = planoAtual;
             elPlano.style.color = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
         }
 
-        // 3. INJEÇÃO DA DATA DO DIA NO CABEÇALHO
+        // 3. DESENHA IMEDIATAMENTE E SINCRONIZA FOTO E NOME COM O WORKSPACE
+        App.desenharDadosUsuarioNoTopo();
+        App.sincronizarPerfilUsuarioHeader();
+
+        // 4. INJEÇÃO DA DATA DO DIA NO CABEÇALHO
         const dataHojeBox = document.getElementById('data-hoje');
         if(dataHojeBox) {
             const opcoesData = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             let dataFormatada = new Date().toLocaleDateString('pt-BR', opcoesData);
-            // Coloca a primeira letra do dia da semana em maiúscula
             dataHojeBox.innerText = dataFormatada.charAt(0).toUpperCase() + dataFormatada.slice(1);
         }
     },
@@ -2555,7 +2616,23 @@ window.addEventListener('hashchange', () => {
 });
 
 document.addEventListener('keydown', function(event) { if (event.key === "Escape") { App.fecharModal(); if(typeof App.fecharModalInst === 'function') App.fecharModalInst(); } });
-window.addEventListener('focus', () => { const telaSistema = document.getElementById('tela-sistema'); if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { App.verificarNotificacoes(); } });
+window.addEventListener('focus', () => { 
+    const telaSistema = document.getElementById('tela-sistema'); 
+    if (App.usuario && telaSistema && telaSistema.style.display !== 'none') { 
+        if (typeof App.verificarNotificacoes === 'function') App.verificarNotificacoes(); 
+        if (typeof App.sincronizarPerfilUsuarioHeader === 'function') App.sincronizarPerfilUsuarioHeader();
+    } 
+});
+
+// Escuta alterações feitas no perfil em outra aba do navegador em tempo real
+window.addEventListener('storage', (e) => {
+    if (e.key === 'usuario_logado' && e.newValue) {
+        try {
+            App.usuario = JSON.parse(e.newValue);
+            if (typeof App.desenharDadosUsuarioNoTopo === 'function') App.desenharDadosUsuarioNoTopo();
+        } catch(err) {}
+    }
+});
 
 // =========================================================
 // OUVINTES GLOBAIS DE CLIQUE (FECHAR MENUS FLUTUANTES)

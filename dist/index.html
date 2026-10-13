@@ -46,7 +46,7 @@
   <script type="module" crossorigin src="/assets/chunk-bqFK08oC.js"></script>
   <script type="module" crossorigin src="/assets/pwa-updater-De2OFdSU.js"></script>
   <script type="module" crossorigin src="/assets/site-DaSd-N01.js"></script>
-  <script type="module" crossorigin src="/assets/main-BJdsG2oe.js"></script>
+  <script type="module" crossorigin src="/assets/main-WnJLYUBZ.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/site-Bo8mnQWM.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
@@ -592,24 +592,26 @@
                             </div>
                         </div>
 
-                        <!-- Bola do Perfil (Avatar) e Cartão de Dados -->
+                       <!-- Bola do Perfil (Avatar com Foto ou Iniciais) e Cartão de Dados -->
                         <div class="user-profile-container">
-                            <button class="avatar-btn" id="btn-avatar-profile" onclick="document.getElementById('dropdown-perfil-usuario').classList.toggle('active'); event.stopPropagation();">
+                            <button class="avatar-btn" id="btn-avatar-profile" onclick="document.getElementById('dropdown-perfil-usuario').classList.toggle('active'); event.stopPropagation();" style="overflow: hidden; position: relative;">
+                                <img id="avatar-img-top" src="" alt="Foto de Perfil" style="display: none; width: 100%; height: 100%; object-fit: cover; border-radius: 50%;">
                                 <span id="avatar-iniciais">US</span>
                             </button>
 
                             <div id="dropdown-perfil-usuario" class="profile-dropdown">
                                 <div class="profile-header-info">
+                                    <!-- Foto ou Iniciais em destaque dentro do cartão -->
+                                    <div style="width: 56px; height: 56px; border-radius: 50%; margin: 0 auto 10px auto; overflow: hidden; background: linear-gradient(135deg, #3b82f6, #2563eb); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700; font-size: 18px; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25); border: 2px solid #ffffff;">
+                                        <img id="dropdown-avatar-img" src="" alt="Foto" style="display: none; width: 100%; height: 100%; object-fit: cover;">
+                                        <span id="dropdown-avatar-iniciais">US</span>
+                                    </div>
                                     <strong id="dropdown-user-name">Usuário</strong>
                                     <span id="dropdown-user-email">email@escola.com</span>
                                     <div id="dropdown-user-role" class="role-badge">Admin</div>
                                 </div>
                                 
                                 <div class="profile-body-info">
-                                    <div class="profile-info-row">
-                                        <span class="profile-info-label">Workspace:</span>
-                                        <span class="profile-info-value" id="dropdown-workspace-name">A Carregar...</span>
-                                    </div>
                                     <div class="profile-info-row">
                                         <span class="profile-info-label">Plano Atual:</span>
                                         <span class="profile-info-value" id="dropdown-plan-name" style="color: #3b82f6;">Verificando...</span>
