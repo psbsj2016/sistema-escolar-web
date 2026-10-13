@@ -1629,95 +1629,367 @@ validarCadastroInst: async () => {
         }
     },
 
+   // =========================================================
+    // 🔍 SUPER MOTOR DE PESQUISA GLOBAL DOMINANTE (OMNIBOX)
     // =========================================================
-    // 🔍 MOTOR DE PESQUISA GLOBAL (OMNIBOX)
-    // =========================================================
+    irParaItemLista: (tipo, termoFiltro = '') => {
+        if (termoFiltro) {
+            sessionStorage.setItem(`ws_filtro_${tipo}`, termoFiltro);
+        } else {
+            sessionStorage.removeItem(`ws_filtro_${tipo}`);
+        }
+        App.renderizarLista(tipo);
+    },
+
+    fecharOmnibox: () => {
+        const input = document.getElementById('global-search-input');
+        const resultsBox = document.getElementById('global-search-results');
+        const clearBtn = document.getElementById('global-search-clear');
+        if (resultsBox) resultsBox.classList.remove('active');
+        if (input) input.value = '';
+        if (clearBtn) clearBtn.style.display = 'none';
+    },
+
     configurarPesquisaGlobal: () => {
         const input = document.getElementById('global-search-input');
         const resultsBox = document.getElementById('global-search-results');
+        const clearBtn = document.getElementById('global-search-clear');
         
         if (!input || !resultsBox) return;
 
-        // Fecha a caixa de resultados se clicar em qualquer lado de fora
+        // Catálogo completo de todas as áreas e palavras-chave do sistema
+        const CATALOGO_SISTEMA = [
+            { nome: 'Dashboard / Painel Geral', cat: 'Tela Principal', icon: '📊', keys: 'inicio dashboard painel geral home resumo graficos', acao: "App.renderizarInicio()", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Hub de Contratos e Matrículas', cat: 'Secretaria', icon: '🗃️', keys: 'hub contratos matriculas assinatura digital link', acao: "App.renderizarHubContratos()", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Workspace', cat: 'Administração', icon: '🌐', keys: 'workspace espaco equipe sala administracao', acao: "App.renderizarWorkspaceAdmin()", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Novo Aluno (Cadastrar)', cat: 'Alunos', icon: '➕', keys: 'novo aluno cadastrar criar matricular estudante', acao: "App.abrirModalCadastro('aluno')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Gerenciar Alunos (Lista)', cat: 'Alunos', icon: '👩‍🎓', keys: 'alunos gerenciar lista estudantes matriculados trancados', acao: "App.irParaItemLista('aluno', '')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Nova Turma (Cadastrar)', cat: 'Turmas', icon: '➕', keys: 'nova turma cadastrar criar classe horario', acao: "App.abrirModalCadastro('turma')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Gerenciar Turmas (Lista)', cat: 'Turmas', icon: '🏫', keys: 'turmas gerenciar lista classes horarios', acao: "App.irParaItemLista('turma', '')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Novo Curso (Cadastrar)', cat: 'Cursos', icon: '➕', keys: 'novo curso cadastrar criar disciplina', acao: "App.abrirModalCadastro('curso')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Gerenciar Cursos (Lista)', cat: 'Cursos', icon: '📚', keys: 'cursos gerenciar lista carga horaria disciplinas', acao: "App.irParaItemLista('curso', '')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Planejamento Pedagógico', cat: 'Pedagógico', icon: '📋', keys: 'planejamento pedagogico plano de aula cronograma', acao: "App.renderizarTela('planejamento')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Calendário e Agenda Escolar', cat: 'Pedagógico', icon: '📆', keys: 'calendario agenda eventos feriados datas reunioes', acao: "App.renderizarTela('calendario')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Gestão de Frequência (Chamada)', cat: 'Pedagógico', icon: '📝', keys: 'chamada frequencia presenca falta faltas reposicao matriz', acao: "App.renderizarTela('chamada')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Notas e Avaliações', cat: 'Pedagógico', icon: '✅', keys: 'notas avaliacoes provas testes media lancar nota', acao: "App.renderizarTela('avaliacoes')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Emitir Boletins', cat: 'Pedagógico', icon: '📊', keys: 'boletins boletim escolar imprimir notas desempenho', acao: "App.renderizarTela('boletins')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Controle de Mensalidades / Gerar Carnê', cat: 'Financeiro', icon: '💸', keys: 'mensalidades carne carnes gerar parcelas cobranca', acao: "App.renderizarTela('mensalidades')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Consultar Lançamentos Financeiros', cat: 'Financeiro', icon: '🔍', keys: 'financeiro lancamentos consultar caixa pagamentos vendas', acao: "App.irParaItemLista('financeiro', '')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Relatório de Inadimplência', cat: 'Financeiro', icon: '⚠️', keys: 'inadimplencia atrasados devedores pendentes cobranca', acao: "App.renderizarTela('inadimplencia')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Ficha de Matrícula', cat: 'Documentos', icon: '📄', keys: 'ficha de matricula documento imprimir cadastro', acao: "App.renderizarRelatorio('ficha')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Relatório Financeiro Detalhado', cat: 'Documentos', icon: '📈', keys: 'relatorio financeiro detalhado balanco extrato', acao: "App.renderizarRelatorio('fin_detalhado')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Dossiê Executivo', cat: 'Documentos', icon: '📁', keys: 'dossie executivo diretoria indicadores bi', acao: "App.renderizarRelatorio('dossie')", roles: ['Gestor'] },
+            { nome: 'Certificados e Documentos', cat: 'Documentos', icon: '🎓', keys: 'certificados certificado diploma declaracao documentos', acao: "App.renderizarRelatorio('documentos')", roles: ['Gestor', 'Secretaria'] },
+            { nome: 'Controle de Estoque e Materiais', cat: 'Estoque', icon: '📦', keys: 'estoque produtos materiais apostilas livros itens', acao: "App.irParaItemLista('estoque', '')", roles: ['Gestor', 'Secretaria', 'Professor'] },
+            { nome: 'Perfil da Instituição (Dados da Escola)', cat: 'Configurações', icon: '🏢', keys: 'configuracoes perfil instituicao escola cnpj logo pix qr code endereco banco', acao: "App.renderizarConfig('perfil')", roles: ['Gestor'] },
+            { nome: 'Aparência do Sistema (Temas e Cores)', cat: 'Configurações', icon: '🎨', keys: 'aparencia cores tema escuro claro design layout', acao: "App.renderizarConfig('aparencia')", roles: ['Gestor'] },
+            { nome: 'Backup e Segurança de Dados', cat: 'Configurações', icon: '💾', keys: 'backup restaurar seguranca baixar json resetar apagar tudo', acao: "App.renderizarConfig('backup')", roles: ['Gestor'] },
+            { nome: 'Logs e Auditoria do Sistema', cat: 'Configurações', icon: '👁️', keys: 'logs auditoria historico seguranca acoes rastreamento', acao: "App.renderizarAuditoria()", roles: ['Gestor'] },
+            { nome: 'Meu Plano e Assinatura', cat: 'Conta', icon: '💎', keys: 'meu plano assinatura pin upgrade premium profissional essencial', acao: "App.renderizarTela('plano')", roles: ['Gestor'] },
+            { nome: 'Minha Conta (Senha e Equipe)', cat: 'Conta', icon: '🔒', keys: 'minha conta senha usuarios acessos equipe biometria login', acao: "App.renderizarMinhaConta()", roles: ['Gestor'] }
+        ];
+
+        // Função auxiliar para remover acentos na comparação (ex: "joao" encontra "João")
+        const normalizar = (str) => String(str || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+
+        // Botão de limpar (✖)
+        if (clearBtn) {
+            clearBtn.addEventListener('click', () => {
+                App.fecharOmnibox();
+                input.focus();
+            });
+        }
+
+        // Fecha a caixa de resultados se clicar fora
         document.addEventListener('click', (e) => {
-            if (!input.contains(e.target) && !resultsBox.contains(e.target)) {
+            if (!input.contains(e.target) && !resultsBox.contains(e.target) && (!clearBtn || !clearBtn.contains(e.target))) {
                 resultsBox.classList.remove('active');
+            }
+        });
+
+        // Atalho de teclado: Enter abre o primeiro resultado, Escape fecha
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                resultsBox.classList.remove('active');
+            } else if (e.key === 'Enter') {
+                const primeiroItem = resultsBox.querySelector('.omnibox-item-acao');
+                if (primeiroItem) {
+                    e.preventDefault();
+                    primeiroItem.click();
+                }
             }
         });
 
         // Ouve a digitação em tempo real
         input.addEventListener('input', async (e) => {
-            const termo = e.target.value.toLowerCase().trim();
+            const termoOriginal = e.target.value.trim();
+            const termo = normalizar(termoOriginal);
             
-            // Só pesquisa a partir de 2 letras para poupar processamento
+            if (clearBtn) clearBtn.style.display = termoOriginal.length > 0 ? 'flex' : 'none';
+
             if (termo.length < 2) {
                 resultsBox.classList.remove('active');
                 return;
             }
 
+            const cargoAtual = (App.usuario && App.usuario.tipo) ? App.usuario.tipo : 'Gestor';
             let htmlResultados = '';
             let encontrouAlgo = false;
 
-            // 1. Pesquisa Rápida nos Atalhos/Menus do Sistema
-            if (window.LISTA_FUNCIONALIDADES) {
-                const menusFiltrados = window.LISTA_FUNCIONALIDADES.filter(m => m.nome.toLowerCase().includes(termo));
-                if (menusFiltrados.length > 0) {
+            // 1. PESQUISA EM TODAS AS TELAS E FUNCIONALIDADES DO SISTEMA
+            const telasFiltradas = CATALOGO_SISTEMA.filter(item => {
+                if (!item.roles.includes(cargoAtual)) return false;
+                return normalizar(item.nome).includes(termo) || normalizar(item.cat).includes(termo) || normalizar(item.keys).includes(termo);
+            }).slice(0, 6);
+
+            if (telasFiltradas.length > 0) {
+                encontrouAlgo = true;
+                htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">⚡ Áreas e Funcionalidades do Sistema</div>`;
+                telasFiltradas.forEach(m => {
+                    htmlResultados += `
+                        <div class="omnibox-item-acao" onclick="${m.acao}; App.fecharOmnibox();" 
+                             style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                             onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                            <span style="font-size: 20px; width: 32px; height: 32px; background: #f1f5f9; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">${m.icon}</span>
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${m.nome}</div>
+                                <div style="font-size: 11px; color: #64748b;">Módulo: ${m.cat}</div>
+                            </div>
+                            <span style="font-size: 11px; color: #2563eb; font-weight: 700;">Abrir ➔</span>
+                        </div>
+                    `;
+                });
+            }
+
+            // 2. CARREGAMENTO SILENCIOSO DO BANCO DE DADOS (COM CACHE DE 20 SEGUNDOS PARA VELOCIDADE MÁXIMA)
+            try {
+                const agora = Date.now();
+                if (!App._omniboxCache || (agora - App._omniboxCacheTime > 20000)) {
+                    const [alunos, turmas, cursos, planos, estoques, eventos, financeiro] = await Promise.all([
+                        App.api('/alunos', 'GET', null, true),
+                        App.api('/turmas', 'GET', null, true),
+                        App.api('/cursos', 'GET', null, true),
+                        App.api('/planejamentos', 'GET', null, true),
+                        App.api('/estoques', 'GET', null, true),
+                        App.api('/eventos', 'GET', null, true),
+                        cargoAtual !== 'Professor' ? App.api('/financeiro', 'GET', null, true) : Promise.resolve([])
+                    ]);
+                    App._omniboxCache = {
+                        alunos: Array.isArray(alunos) ? alunos : [],
+                        turmas: Array.isArray(turmas) ? turmas : [],
+                        cursos: Array.isArray(cursos) ? cursos : [],
+                        planos: Array.isArray(planos) ? planos : [],
+                        estoques: Array.isArray(estoques) ? estoques : [],
+                        eventos: Array.isArray(eventos) ? eventos : [],
+                        financeiro: Array.isArray(financeiro) ? financeiro : []
+                    };
+                    App._omniboxCacheTime = agora;
+                }
+
+                const db = App._omniboxCache;
+
+                // 2.1 ALUNOS
+                const alunosEncontrados = db.alunos.filter(a => 
+                    normalizar(a.nome).includes(termo) || 
+                    normalizar(a.turma).includes(termo) || 
+                    normalizar(a.curso).includes(termo) || 
+                    normalizar(a.whatsapp).includes(termo)
+                ).slice(0, 5);
+
+                if (alunosEncontrados.length > 0) {
                     encontrouAlgo = true;
-                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Atalhos do Sistema</div>`;
-                    menusFiltrados.forEach(m => {
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">👩‍🎓 Alunos Encontrados</div>`;
+                    alunosEncontrados.forEach(a => {
+                        const nomeLimpo = (a.nome || '').replace(/'/g, "\\'");
+                        const acaoAluno = typeof App.abrirFichaAluno === 'function' 
+                            ? `App.abrirFichaAluno('${a.id}')` 
+                            : `App.irParaItemLista('aluno', '${nomeLimpo}')`;
                         htmlResultados += `
-                            <div onclick="${m.acao}; document.getElementById('global-search-results').classList.remove('active'); document.getElementById('global-search-input').value = '';" 
-                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                            <div class="omnibox-item-acao" onclick="${acaoAluno}; App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
                                  onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
-                                <span style="font-size: 18px;">${m.icon}</span>
-                                <span style="font-size: 14px; color: #1e293b; font-weight: 500;">Acessar <b>${m.nome}</b></span>
+                                <div style="width: 32px; height: 32px; border-radius: 50%; background: #3b82f6; color: white; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">
+                                    ${(a.nome || 'AL').substring(0,2).toUpperCase()}
+                                </div>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(a.nome)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">🏫 Turma: ${App.escapeHTML(a.turma || '-')} | Status: ${App.escapeHTML(a.status || 'Ativo')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #3b82f6; font-weight: 700;">Ver Ficha ➔</span>
                             </div>
                         `;
                     });
                 }
-            }
 
-            // 2. Pesquisa Inteligente de Alunos
-            try {
-                // Tenta usar a lista de alunos se já existir na memória, ou puxa do servidor sem dar erro visual
-                let alunos = App.cacheAlunosPesquisa;
-                if (!alunos) {
-                    alunos = await App.api('/alunos', 'GET', null, true); 
-                    App.cacheAlunosPesquisa = alunos;
+                // 2.2 TURMAS
+                const turmasEncontradas = db.turmas.filter(t => 
+                    normalizar(t.nome).includes(termo) || 
+                    normalizar(t.curso).includes(termo) || 
+                    normalizar(t.dia).includes(termo)
+                ).slice(0, 4);
+
+                if (turmasEncontradas.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">🏫 Turmas</div>`;
+                    turmasEncontradas.forEach(t => {
+                        const nomeLimpo = (t.nome || '').replace(/'/g, "\\'");
+                        const acaoTurma = typeof App.abrirFichaTurma === 'function'
+                            ? `App.abrirFichaTurma('${t.id}')`
+                            : `App.irParaItemLista('turma', '${nomeLimpo}')`;
+                        htmlResultados += `
+                            <div class="omnibox-item-acao" onclick="${acaoTurma}; App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px; width: 32px; height: 32px; background: #fef3c7; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">🏫</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(t.nome)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">📚 ${App.escapeHTML(t.curso || '-')} | ⏰ ${App.escapeHTML(t.dia || '')} ${App.escapeHTML(t.horario || '')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #d97706; font-weight: 700;">Abrir ➔</span>
+                            </div>
+                        `;
+                    });
                 }
-                
-                if (Array.isArray(alunos)) {
-                    // Limita a exibição aos 5 melhores resultados para manter a UI elegante
-                    const alunosFiltrados = alunos.filter(a => a.nome && a.nome.toLowerCase().includes(termo)).slice(0, 5);
-                    
-                    if (alunosFiltrados.length > 0) {
+
+                // 2.3 CURSOS
+                const cursosEncontrados = db.cursos.filter(c => normalizar(c.nome).includes(termo)).slice(0, 4);
+                if (cursosEncontrados.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">📚 Cursos</div>`;
+                    cursosEncontrados.forEach(c => {
+                        const nomeLimpo = (c.nome || '').replace(/'/g, "\\'");
+                        const acaoCurso = typeof App.abrirFichaCurso === 'function'
+                            ? `App.abrirFichaCurso('${c.id}')`
+                            : `App.irParaItemLista('curso', '${nomeLimpo}')`;
+                        htmlResultados += `
+                            <div class="omnibox-item-acao" onclick="${acaoCurso}; App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px; width: 32px; height: 32px; background: #e0e7ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">📚</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(c.nome)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">Carga Horária: ${App.escapeHTML(c.carga || '-')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #4338ca; font-weight: 700;">Abrir ➔</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2.4 PLANEJAMENTOS PEDAGÓGICOS
+                const planosEncontrados = db.planos.filter(p => 
+                    p.status !== 'Arquivado' && 
+                    (normalizar(p.nomeAluno).includes(termo) || normalizar(p.curso).includes(termo))
+                ).slice(0, 4);
+
+                if (planosEncontrados.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">📋 Planejamentos Ativos</div>`;
+                    planosEncontrados.forEach(p => {
+                        const acaoPlano = typeof App.abrirDashboardProgresso === 'function'
+                            ? `App.abrirDashboardProgresso('${p.id}')`
+                            : `App.renderizarTela('planejamento')`;
+                        htmlResultados += `
+                            <div class="omnibox-item-acao" onclick="${acaoPlano}; App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px; width: 32px; height: 32px; background: #dcfce7; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">👁️</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">Plano: ${App.escapeHTML(p.nomeAluno)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">Curso: ${App.escapeHTML(p.curso || '-')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #16a34a; font-weight: 700;">Progresso ➔</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2.5 LANÇAMENTOS FINANCEIROS (Apenas Gestor e Secretaria)
+                if (cargoAtual !== 'Professor') {
+                    const finEncontrados = db.financeiro.filter(f => 
+                        normalizar(f.alunoNome).includes(termo) || 
+                        normalizar(f.descricao).includes(termo)
+                    ).slice(0, 4);
+
+                    if (finEncontrados.length > 0) {
                         encontrouAlgo = true;
-                        htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: bold; color: #64748b; text-transform: uppercase;">Fichas de Alunos</div>`;
-                        alunosFiltrados.forEach(a => {
+                        htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">💰 Financeiro</div>`;
+                        finEncontrados.forEach(f => {
+                            const filtroFin = (f.alunoNome || f.descricao || '').replace(/'/g, "\\'");
                             htmlResultados += `
-                                <div onclick="if(typeof App.abrirFichaAluno === 'function') App.abrirFichaAluno('${a.id}'); document.getElementById('global-search-results').classList.remove('active'); document.getElementById('global-search-input').value = '';" 
+                                <div class="omnibox-item-acao" onclick="App.irParaItemLista('financeiro', '${filtroFin}'); App.fecharOmnibox();" 
                                      style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
                                      onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
-                                    <div style="width: 30px; height: 30px; border-radius: 50%; background: #3b82f6; color: white; display: flex; justify-content: center; align-items: center; font-size: 12px; font-weight: bold; flex-shrink: 0;">
-                                        ${a.nome.substring(0,2).toUpperCase()}
+                                    <span style="font-size: 18px; width: 32px; height: 32px; background: #fef9c3; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">💸</span>
+                                    <div style="flex:1; min-width:0;">
+                                        <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(f.alunoNome || 'Lançamento')} - R$ ${parseFloat(f.valor || 0).toFixed(2)}</div>
+                                        <div style="font-size: 11px; color: #64748b;">${App.escapeHTML(f.descricao || '')} (${App.escapeHTML(f.status || '')})</div>
                                     </div>
-                                    <div style="flex:1;">
-                                        <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(a.nome)}</div>
-                                        <div style="font-size: 11px; color: #64748b; margin-top:2px;">🎓 ${App.escapeHTML(a.curso || 'Curso Geral')} | Turma: ${App.escapeHTML(a.turma || '-')}</div>
-                                    </div>
+                                    <span style="font-size: 11px; color: #ca8a04; font-weight: 700;">Filtrar ➔</span>
                                 </div>
                             `;
                         });
                     }
                 }
-            } catch(e) { /* Ignora erros de rede na pesquisa rápida para não incomodar o utilizador */ }
 
-            // Tratamento se não houver resultados
+                // 2.6 ESTOQUE E MATERIAIS
+                const estoquesEncontrados = db.estoques.filter(item => 
+                    normalizar(item.nome).includes(termo) || 
+                    normalizar(item.codigo).includes(termo)
+                ).slice(0, 4);
+
+                if (estoquesEncontrados.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">📦 Estoque</div>`;
+                    estoquesEncontrados.forEach(item => {
+                        const nomeItem = (item.nome || '').replace(/'/g, "\\'");
+                        htmlResultados += `
+                            <div class="omnibox-item-acao" onclick="App.irParaItemLista('estoque', '${nomeItem}'); App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px; width: 32px; height: 32px; background: #f3e8ff; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">📦</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(item.nome)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">Qtd: ${item.quantidade || 0} | Cód: ${App.escapeHTML(item.codigo || '-')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #9333ea; font-weight: 700;">Ver Item ➔</span>
+                            </div>
+                        `;
+                    });
+                }
+
+                // 2.7 EVENTOS DO CALENDÁRIO
+                const eventosEncontrados = db.eventos.filter(ev => 
+                    normalizar(ev.titulo || ev.nome || ev.descricao).includes(termo)
+                ).slice(0, 3);
+
+                if (eventosEncontrados.length > 0) {
+                    encontrouAlgo = true;
+                    htmlResultados += `<div style="padding: 8px 15px; background: #f8fafc; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; border-bottom: 1px solid #e2e8f0;">📆 Agenda e Eventos</div>`;
+                    eventosEncontrados.forEach(ev => {
+                        htmlResultados += `
+                            <div class="omnibox-item-acao" onclick="App.renderizarTela('calendario'); App.fecharOmnibox();" 
+                                 style="padding: 12px 15px; cursor: pointer; display: flex; align-items: center; gap: 12px; border-bottom: 1px solid #f1f5f9; transition: 0.2s;"
+                                 onmouseover="this.style.background='#eff6ff'" onmouseout="this.style.background='transparent'">
+                                <span style="font-size: 18px; width: 32px; height: 32px; background: #fee2e2; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">📅</span>
+                                <div style="flex:1; min-width:0;">
+                                    <div style="font-size: 14px; color: #1e293b; font-weight: 600;">${App.escapeHTML(ev.titulo || ev.nome || ev.descricao)}</div>
+                                    <div style="font-size: 11px; color: #64748b;">Data: ${App.escapeHTML(ev.data || '-')}</div>
+                                </div>
+                                <span style="font-size: 11px; color: #ef4444; font-weight: 700;">Agenda ➔</span>
+                            </div>
+                        `;
+                    });
+                }
+
+            } catch(e) { /* Silencioso se offline */ }
+
+            // Tratamento caso nenhuma categoria retorne resultados
             if (!encontrouAlgo) {
                 htmlResultados = `
                     <div style="padding: 30px 20px; text-align: center; color: #94a3b8;">
-                        <div style="font-size: 24px; margin-bottom: 10px;">🔍</div>
-                        <div style="font-size: 13px;">Nenhum resultado encontrado para "<b>${App.escapeHTML(termo)}</b>"</div>
+                        <div style="font-size: 26px; margin-bottom: 8px;">🔍</div>
+                        <div style="font-size: 13px;">Nenhum resultado encontrado para "<b>${App.escapeHTML(termoOriginal)}</b>"</div>
                     </div>`;
             }
 
