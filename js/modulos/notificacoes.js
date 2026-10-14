@@ -2,7 +2,7 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - SININHO, RADAR E ALERTAS INTELIGENTES
+// MÓDULO NOTIFICAÇÕES - ETAPA 1: AÇÕES RÁPIDAS COM 1 CLIQUE
 // =========================================================
 
 Object.assign(App, {
@@ -45,6 +45,49 @@ Object.assign(App, {
     },
 
     // =========================================================
+    // 💬 NOVO: DISPARADOR DE WHATSAPP COM 1 CLIQUE NO SININHO
+    // =========================================================
+    abrirWhatsAppRapidoNotificacao: (telefoneBruto, tipoMensagem, nomeAluno, infoExtra, event) => {
+        if (event) event.stopPropagation(); // Impede que o cartão de fundo seja clicado junto
+
+        // Respeita a trava de permissão do plano (Essencial / Profissional / Premium)
+        if (typeof App.verificarPermissao === 'function' && !App.verificarPermissao('whatsapp')) {
+            return;
+        }
+
+        // Limpa parênteses, espaços e traços do número de telefone
+        let numeroLimpo = String(telefoneBruto || '').replace(/\D/g, '');
+        if (!numeroLimpo || numeroLimpo.length < 8) {
+            if (typeof App.showToast === 'function') {
+                App.showToast("Este aluno não possui um número de WhatsApp válido cadastrado.", "warning");
+            }
+            return;
+        }
+
+        // Adiciona o código do Brasil (55) caso o número tenha apenas DDD + Telefone
+        if (numeroLimpo.length === 10 || numeroLimpo.length === 11) {
+            numeroLimpo = '55' + numeroLimpo;
+        }
+
+        // Busca o nome da instituição para assinar a mensagem com elegância
+        let nomeEscola = 'nossa instituição';
+        try {
+            const perfilEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+            if (perfilEscola.nome) nomeEscola = perfilEscola.nome;
+        } catch (e) {}
+
+        let texto = '';
+        if (tipoMensagem === 'aniversario') {
+            texto = `Olá, *${nomeAluno}*! 🎂🎉\n\nPassando em nome de toda a equipa da *${nomeEscola}* para lhe desejar um Feliz Aniversário! Muita saúde, alegria e sucesso nos seus estudos! 🚀✨`;
+        } else if (tipoMensagem === 'renovacao') {
+            texto = `Olá, *${nomeAluno}*! Tudo bem? 😊\n\nAqui é da *${nomeEscola}*. Notámos que o seu ciclo atual de parcelas está na reta final e ainda temos cerca de *${infoExtra}* de aulas pela frente para a conclusão do seu curso.\n\nPodemos programar a renovação do seu carnê para manter o seu horário garantido?`;
+        }
+
+        const urlWhatsApp = `https://wa.me/${numeroLimpo}?text=${encodeURIComponent(texto)}`;
+        window.open(urlWhatsApp, '_blank');
+    },
+
+    // =========================================================
     // 📡 MOTOR PRINCIPAL DE VARREDURA DE NOTIFICAÇÕES
     // =========================================================
     verificarNotificacoes: async () => {
@@ -54,7 +97,7 @@ Object.assign(App, {
             const tipoUtilizador = App.usuario.tipo || 'Gestor';
             const alertasOcultosHoje = App.obterAlertasOcultos();
 
-            // 🚀 Busca todos os dados em paralelo e em MODO SILENCIOSO (true) para máxima velocidade
+            // Busca todos os dados em paralelo e em MODO SILENCIOSO (true)
             const [
                 notificacoesBanco,
                 alunosRaw,
@@ -77,7 +120,7 @@ Object.assign(App, {
 
             let alunos = Array.isArray(alunosRaw) ? alunosRaw.filter(a => !a.status || a.status === 'Ativo') : [];
 
-            // 🔄 Atualização automática da tabela se chegar matrícula nova enquanto o gestor vê a lista de alunos
+            // Atualização automática da tabela se chegar matrícula nova enquanto o gestor vê a lista de alunos
             if (App.entidadeAtual === 'aluno' && Array.isArray(alunosRaw) && Array.isArray(App.listaCache)) {
                 const idsAtuais = App.listaCache.map(a => a.id);
                 const existeNovoAluno = alunosRaw.some(a => !idsAtuais.includes(a.id));
@@ -166,7 +209,7 @@ Object.assign(App, {
                 }
             }
 
-            // 3. Aniversários do Dia e Novas Matrículas
+            // 3. Aniversários do Dia (COM BOTÃO DE WHATSAPP 1 CLIQUE) e Novas Matrículas
             alunos.forEach(a => {
                 if (a.nascimento) {
                     const dataNasc = a.nascimento.includes('/') 
@@ -176,12 +219,26 @@ Object.assign(App, {
                         const acaoNiver = typeof App.abrirFichaAluno === 'function' 
                             ? `App.abrirFichaAluno('${a.id}')` 
                             : `App.renderizarLista('aluno')`;
+                        
+                        const nomeSeguro = App.escapeHTML(a.nome || '').replace(/'/g, "\\'");
+                        const whatsSeguro = App.escapeHTML(a.whatsapp || '').replace(/'/g, "\\'");
+
+                        // Se o aluno tiver WhatsApp preenchido, desenha o botão rápido de Parabéns
+                        const btnParabens = whatsSeguro ? `
+                            <div style="margin-top: 8px;">
+                                <button onclick="App.abrirWhatsAppRapidoNotificacao('${whatsSeguro}', 'aniversario', '${nomeSeguro}', '', event)" 
+                                        style="background: #25D366; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; box-shadow: 0 2px 5px rgba(37, 211, 102, 0.25); transition: 0.2s;"
+                                        onmouseover="this.style.background='#1da851'" onmouseout="this.style.background='#25D366'">
+                                    💬 Dar Parabéns no WhatsApp
+                                </button>
+                            </div>` : '';
+
                         adicionarAlertaInteligente({ 
                             id: `alerta_niver_${a.id}`,
                             categoria: 'Aniversário',
                             corCat: '#ec4899',
                             icon: '🎂', 
-                            texto: `Hoje é o aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para abrir a ficha.`,
+                            texto: `Hoje é o aniversário de <b>${App.escapeHTML(a.nome)}</b>! Clique para ver a ficha.${btnParabens}`,
                             acao: acaoNiver
                         });
                     }
@@ -198,16 +255,25 @@ Object.assign(App, {
                 }
             });
 
-            // 4. Mensalidades que Vencem Hoje e Atrasadas
+            // 4. Mensalidades que Vencem Hoje (COM BOTÃO DE ATALHO PARA CONSULTAR PENDENTES)
             if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro)) {
                 const vencemHoje = financeiro.filter(f => f.vencimento === hojeStr && f.status === 'Pendente');
                 if (vencemHoje.length > 0) {
+                    const nomesVencemHoje = vencemHoje
+                        .map(f => App.escapeHTML(f.alunoNome || 'Aluno'))
+                        .slice(0, 3)
+                        .join(', ');
+                    const complementoNomes = vencemHoje.length > 3 ? ` e mais ${vencemHoje.length - 3}` : '';
+
                     adicionarAlertaInteligente({ 
                         id: `alerta_caixa_${hojeStr}`,
                         categoria: 'Financeiro',
                         corCat: '#16a34a',
                         icon: '💲', 
-                        texto: `<b>Caixa de Hoje:</b> Existem <b>${vencemHoje.length}</b> mensalidade(s) a vencer hoje.`,
+                        texto: `<b>Caixa de Hoje:</b> <b>${vencemHoje.length}</b> mensalidade(s) a vencer hoje (${nomesVencemHoje}${complementoNomes}).
+                                <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <button onclick="event.stopPropagation(); App.renderizarTela('mensalidades'); App.toggleNotificacoes();" style="background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; padding: 4px 9px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">💸 Receber no Caixa</button>
+                                </div>`,
                         acao: "App.renderizarTela('mensalidades')" 
                     });
                 }
@@ -239,7 +305,7 @@ Object.assign(App, {
                 });
             }
 
-            // 6. IA Preditiva de Faturação e Carga Horária
+            // 6. IA Preditiva de Faturação e Carga Horária (COM BOTÃO DE WHATSAPP E GERAR CARNÊ)
             if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro) && Array.isArray(planejamentos)) {
                 const trintaDiasAtras = new Date(hojeTime - 30 * 24 * 60 * 60 * 1000);
                 const listaCursos = Array.isArray(cursos) ? cursos : [];
@@ -305,13 +371,26 @@ Object.assign(App, {
 
                                 let tempoTexto = diffDias < 0 ? `venceu há ${Math.abs(diffDias)} dias` : (diffDias === 0 ? `vence hoje` : `vence em ${diffDias} dias`);
 
+                                const nomeSeguro = App.escapeHTML(aluno.nome || '').replace(/'/g, "\\'");
+                                const whatsSeguro = App.escapeHTML(aluno.whatsapp || '').replace(/'/g, "\\'");
+
+                                const btnRenovarWhats = whatsSeguro ? `
+                                    <button onclick="App.abrirWhatsAppRapidoNotificacao('${whatsSeguro}', 'renovacao', '${nomeSeguro}', '${horasFaltantes}h', event)" 
+                                            style="background: #25D366; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                                        💬 Avisar Aluno
+                                    </button>` : '';
+
                                 adicionarAlertaInteligente({ 
                                     id: `alerta_preditiva_${aluno.id}`,
                                     categoria: 'IA Preditiva',
                                     corCat: '#8b5cf6',
                                     icon: '🎯', 
                                     texto: `<div style="line-height:1.45;"><b>Renovação de Carnê (${App.escapeHTML(aluno.nome)}):</b><br>
-                                    Última parcela ${tempoTexto}. Faltam <b>${horasFaltantes}h</b> (~${aulasRestantesEstimadas} aulas). Previsão de término: <b style="color:#e74c3c;">${dataProjStr}</b>.</div>`,
+                                    Última parcela ${tempoTexto}. Faltam <b>${horasFaltantes}h</b> (~${aulasRestantesEstimadas} aulas). Previsão de término: <b style="color:#e74c3c;">${dataProjStr}</b>.
+                                    <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                        ${btnRenovarWhats}
+                                        <button onclick="event.stopPropagation(); App.renderizarTela('mensalidades'); App.toggleNotificacoes();" style="background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">💸 Gerar Novo Carnê</button>
+                                    </div></div>`,
                                     acao: "App.renderizarTela('mensalidades')"
                                 });
                             }
@@ -395,15 +474,12 @@ Object.assign(App, {
     dispensarAlerta: async (id, event) => {
         if (event) event.stopPropagation(); 
 
-        // Guarda na memória persistente do dia (localStorage)
         App.salvarAlertaOculto(String(id));
 
-        // Remove da lista em memória e da interface
         App.alertasAtuaisLista = (App.alertasAtuaisLista || []).filter(a => String(a.id) !== String(id));
         const itemVisual = document.getElementById(`box-alerta-${id}`);
         if (itemVisual) itemVisual.remove();
 
-        // Atualiza o contador vermelho no sino
         const badge = document.getElementById('noti-badge');
         const qtdRestante = App.alertasAtuaisLista.length;
 
@@ -416,7 +492,6 @@ Object.assign(App, {
             }
         }
 
-        // Se for uma notificação oficial do banco de dados, marca como lida no servidor
         if (!String(id).startsWith('alerta_')) {
             try {
                 await App.api(`/sistema/notificacoes/lida/${id}`, 'PUT', null, true);
@@ -434,12 +509,10 @@ Object.assign(App, {
     // =========================================================
     marcarNotificacoesComoLidas: async () => {
         try {
-            // 1. Oculta todos os alertas inteligentes visíveis hoje no localStorage
             if (Array.isArray(App.alertasAtuaisLista)) {
                 App.alertasAtuaisLista.forEach(a => App.salvarAlertaOculto(String(a.id)));
             }
 
-            // 2. Marca todas as notificações do banco como lidas em segundo plano
             const notificacoes = await App.api('/sistema/notificacoes/nao-lidas', 'GET', null, true);
             if (Array.isArray(notificacoes)) {
                 const naoLidas = notificacoes.filter(n => !n.lida);
@@ -465,7 +538,6 @@ Object.assign(App, {
             if (res && res.success) {
                 App.showToast("📲 Notificação Push enviada! Verifique o seu aparelho.", "success");
             } else if (res && res.error) {
-                // Se o aparelho ainda não estiver inscrito, chama o ativador automaticamente
                 if (typeof App.configurarNotificacoesPush === 'function') {
                     App.showToast("Ativando notificações neste aparelho...", "info");
                     App.configurarNotificacoesPush();
