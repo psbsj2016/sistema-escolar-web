@@ -1251,11 +1251,17 @@ App.filaEdicaoChamada = []; // Fila do Assistente In-Line
 
 // 🔍 MOTOR DE FILTRO COMBINADO (DIA, MÊS, ANO, STATUS E TEXTO)
 App.filtrarHistoricoChamadas = () => {
-    const termo = (document.getElementById('input-busca-chamada')?.value || '').trim().toLowerCase();
-    const diaFiltro = document.getElementById('filtro-chamada-dia')?.value || '';
-    const mesFiltro = document.getElementById('filtro-chamada-mes')?.value || '';
-    const anoFiltro = document.getElementById('filtro-chamada-ano')?.value || '';
-    const statusFiltro = document.getElementById('filtro-chamada-status')?.value || '';
+    const inputBusca = document.getElementById('input-busca-chamada');
+    const elDia = document.getElementById('filtro-chamada-dia');
+    const elMes = document.getElementById('filtro-chamada-mes');
+    const elAno = document.getElementById('filtro-chamada-ano');
+    const elStatus = document.getElementById('filtro-chamada-status');
+
+    const termo = (inputBusca && inputBusca.value ? inputBusca.value : '').trim().toLowerCase();
+    const diaFiltro = elDia && elDia.value ? elDia.value : '';
+    const mesFiltro = elMes && elMes.value ? elMes.value : '';
+    const anoFiltro = elAno && elAno.value ? elAno.value : '';
+    const statusFiltro = elStatus && elStatus.value ? elStatus.value : '';
 
     const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr.linha-hist-chamada');
     const linhaSemResultado = document.getElementById('tr-chamada-sem-resultado');
@@ -1264,39 +1270,38 @@ App.filtrarHistoricoChamadas = () => {
     let visiveis = 0;
 
     linhas.forEach(linha => {
-        const dataIso = linha.getAttribute('data-iso') || ''; // Formato esperado: YYYY-MM-DD
-        const statusLinha = linha.getAttribute('data-status') || '';
+        const attrIso = linha.getAttribute('data-iso');
+        const attrStatus = linha.getAttribute('data-status');
+        const dataIso = attrIso ? attrIso : '';
+        const statusLinha = attrStatus ? attrStatus : '';
         const textoLinha = linha.innerText.toLowerCase();
 
-        // Extrai Ano, Mês e Dia da data do registo
+        // Extrai Ano, Mês e Dia da data do registo (YYYY-MM-DD)
         const partesData = dataIso.split('-');
-        const anoLinha = partesData[0] || '';
-        const mesLinha = partesData[1] || '';
-        const diaLinha = partesData[2] || '';
+        const anoLinha = partesData[0] ? partesData[0] : '';
+        const mesLinha = partesData[1] ? partesData[1] : '';
+        const diaLinha = partesData[2] ? partesData[2] : '';
 
-        const bateDia = !diaFiltro || diaLinha === diaFiltro;
-        const bateMes = !mesFiltro || mesLinha === mesFiltro;
-        const bateAno = !anoFiltro || anoLinha === anoFiltro;
-        const bateStatus = !statusFiltro || statusLinha === statusFiltro;
-        const bateTexto = !termo || textoLinha.includes(termo);
+        const bateDia = !diaFiltro ? true : (diaLinha === diaFiltro);
+        const bateMes = !mesFiltro ? true : (mesLinha === mesFiltro);
+        const bateAno = !anoFiltro ? true : (anoLinha === anoFiltro);
+        const bateStatus = !statusFiltro ? true : (statusLinha === statusFiltro);
+        const bateTexto = !termo ? true : textoLinha.includes(termo);
 
         if (bateDia && bateMes && bateAno && bateStatus && bateTexto) {
             linha.style.display = '';
             visiveis++;
         } else {
             linha.style.display = 'none';
-            // Desmarca a caixa de seleção caso a linha seja ocultada pelo filtro
             const check = linha.querySelector('.check-chamada');
             if (check) check.checked = false;
         }
     });
 
-    // Atualiza o contador visual de registos encontrados
     if (contadorEl) {
         contadorEl.innerText = `${visiveis} registo(s)`;
     }
 
-    // Mostra ou esconde o aviso caso nenhum registo corresponda à combinação de filtros
     if (linhaSemResultado) {
         linhaSemResultado.style.display = (visiveis === 0 && linhas.length > 0) ? '' : 'none';
     }
@@ -1317,7 +1322,6 @@ App.renderizarChamadaPro = async () => {
     const div = document.getElementById('app-content'); 
     div.innerHTML = '<p style="text-align:center; padding:20px; color:#666;">Carregando os dados rapidamente... ⚡</p>';
     
-    // Inicia a fila com a data de hoje e duração base
     App.datasLancamentoChamada = [{ data: new Date().toISOString().split('T')[0], duracao: '01:00' }]; 
     App.filaEdicaoChamada = []; 
     
@@ -1333,7 +1337,7 @@ App.renderizarChamadaPro = async () => {
 
         const idsComPlanoAtivo = App.cachePedagogico.planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
         const historico = [...App.cachePedagogico.chamadas].sort((a,b) => new Date(b.data) - new Date(a.data)); 
-        const alunosAtivos = App.cachePedagogico.alunos.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
+        const alunosAtivos = App.cachePedagogico.alunos.filter(a => (!a.status ? true : a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
         const opTurmas = `<option value="">-- Turma Completa --</option>` + App.cachePedagogico.turmas.map(t => `<option value="${App.escapeHTML(t.nome)}">${App.escapeHTML(t.nome)}</option>`).join('');
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
@@ -1380,8 +1384,37 @@ App.renderizarChamadaPro = async () => {
             </div>
         `;
 
+        const linhasHistoricoHTML = historico.map(h => { 
+            let color = '#333'; 
+            if (h.status === 'Presença') color = 'green'; 
+            else if (h.status === 'Falta') color = 'red'; 
+            else if (h.status === 'Reposição') color = '#2980b9'; 
+            
+            let labelStatus = App.escapeHTML(h.status);
+            if ((h.status === 'Falta' ? true : h.status === 'Falta Justificada') && h.motivo) {
+                labelStatus += `<br><span style="font-size:10px; color:#7f8c8d;">Motivo: ${App.escapeHTML(h.motivo)}</span>`;
+            }
+
+            // Variáveis limpas fora do HTML para evitar erros de formatação
+            const dataIsoSegura = App.escapeHTML(h.data ? h.data : '');
+            const statusSeguro = App.escapeHTML(h.status ? h.status : '');
+            const dataFormatadaBR = h.data ? h.data.split('-').reverse().join('/') : '-';
+
+            return `
+            <tr id="tr-chamada-${h.id}" class="linha-hist-chamada" data-iso="${dataIsoSegura}" data-status="${statusSeguro}" style="border-bottom:1px solid #eee; transition: background 0.2s;">
+                <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
+                <td style="padding:12px; color:#555;">${dataFormatadaBR}</td>
+                <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
+                <td style="padding:12px; font-weight:bold; color:${color};">${labelStatus}</td>
+                <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
+                <td style="padding:12px; text-align:right;">
+                    <button onclick="App.editarLancamentoInline('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar Rápido na Linha">✏️</button>
+                    <button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
+                </td>
+            </tr>`; 
+        }).join('');
+
         const tabelaChamada = `
-            <!-- BARRA SUPERIOR DE AÇÕES EM LOTE E PESQUISA POR NOME -->
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                     <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Lote</button>
@@ -1394,7 +1427,6 @@ App.renderizarChamadaPro = async () => {
                 </div>
             </div>
 
-            <!-- 🗓️ NOVA BARRA DE FILTROS DE DATA (DIA, MÊS, ANO E STATUS) -->
             <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                 <span style="font-size:12px; font-weight:bold; color:#475569; display:flex; align-items:center; gap:5px;">📅 Filtrar Período:</span>
                 
@@ -1439,27 +1471,7 @@ App.renderizarChamadaPro = async () => {
                                 🔍 Nenhum lançamento de chamada encontrado para o Dia, Mês ou Ano selecionado.
                             </td>
                         </tr>
-                        ${historico.map(h => { 
-                            let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
-                            
-                            let labelStatus = App.escapeHTML(h.status);
-                            if((h.status === 'Falta' || h.status === 'Falta Justificada') && h.motivo) {
-                                labelStatus += `<br><span style="font-size:10px; color:#7f8c8d;">Motivo: ${App.escapeHTML(h.motivo)}</span>`;
-                            }
-
-                            return `
-                            <tr id="tr-chamada-${h.id}" class="linha-hist-chamada" <tr id="tr-chamada-${h.id}" class="linha-hist-chamada" data-iso="${App.escapeHTML(h.data ? h.data : '')}" data-status="${App.escapeHTML(h.status ? h.status : '')}" style="border-bottom:1px solid #eee; transition: background 0.2s;"> style="border-bottom:1px solid #eee; transition: background 0.2s;">
-                                <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
-                                <td style="padding:12px; color:#555;">${h.data ? h.data.split('-').reverse().join('/') : '-'}</td>
-                                <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
-                                <td style="padding:12px; font-weight:bold; color:${color};">${labelStatus}</td>
-                                <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
-                                <td style="padding:12px; text-align:right;">
-                                    <button onclick="App.editarLancamentoInline('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; margin-right:5px;" title="Editar Rápido na Linha">✏️</button>
-                                    <button onclick="App.excluirLancamentoChamada('${h.id}')" style="background:none; border:none; cursor:pointer; font-size:16px; color:#999;" title="Excluir">🗑️</button>
-                                </td>
-                            </tr>`; 
-                        }).join('')}
+                        ${linhasHistoricoHTML}
                     </tbody>
                 </table>
             </div>
@@ -1474,7 +1486,8 @@ App.renderizarChamadaPro = async () => {
 // --- GESTÃO DA MATRIZ MULTI-TEMPO ---
 App.adicionarDataFila = () => {
     const dataVal = document.getElementById('input-nova-data').value;
-    const duracaoVal = document.getElementById('chamada-duracao').value || '01:00';
+    const duracaoInput = document.getElementById('chamada-duracao').value;
+    const duracaoVal = duracaoInput ? duracaoInput : '01:00';
     const hojeStr = new Date().toISOString().split('T')[0];
 
     if (!dataVal) return App.showToast("Selecione uma data válida.", "warning");
@@ -1591,7 +1604,6 @@ App.salvarEdicaoInline = async (id) => {
         else if(novoStatus === 'Falta') color = 'red'; 
         else if(novoStatus === 'Reposição') color = '#2980b9'; 
 
-        // Atualiza o atributo data-status na linha para que o filtro continue exato
         tr.setAttribute('data-status', novoStatus);
         tr.style.background = "#eafaf1";
         tr.innerHTML = `
@@ -1609,7 +1621,6 @@ App.salvarEdicaoInline = async (id) => {
         setTimeout(() => { if(tr) tr.style.background = "transparent"; }, 1500);
         tr.dataset.originalHtml = '';
 
-        // Reaplica o filtro ativo caso o utilizador esteja a filtrar por Status
         App.filtrarHistoricoChamadas();
 
         if(App.filaEdicaoChamada.length > 0 && String(App.filaEdicaoChamada[0]) === String(id)) {
@@ -1651,7 +1662,7 @@ App.atualizarStatusCelula = (select) => {
 
     const inputMotivo = select.nextElementSibling;
     if(inputMotivo && inputMotivo.classList.contains('motivo-chamada')) {
-        if(val === 'Falta' || val === 'Falta Justificada') {
+        if(val === 'Falta' ? true : val === 'Falta Justificada') {
             inputMotivo.style.display = 'block';
             inputMotivo.focus();
         } else {
@@ -1692,7 +1703,7 @@ App.carregarListaChamada = async () => {
         const idsComPlanoAtivo = planejamentos.filter(p => p.status !== 'Arquivado').map(p => p.idAluno);
 
         let alunosAlvo = idAluno ? alunos.filter(a => a.id === idAluno) : alunos.filter(a => a.turma === turma);
-        alunosAlvo = alunosAlvo.filter(a => (!a.status || a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
+        alunosAlvo = alunosAlvo.filter(a => (!a.status ? true : a.status === 'Ativo') && idsComPlanoAtivo.includes(a.id));
 
         if(alunosAlvo.length === 0) { 
             area.innerHTML = '<div class="card"><p style="text-align:center; color:#999; margin:0;">Nenhum aluno com Planejamento Ativo foi encontrado para este filtro.</p></div>'; 
@@ -1721,7 +1732,7 @@ App.carregarListaChamada = async () => {
                 const status = regExistente ? regExistente.status : 'Presença';
                 const motivo = regExistente && regExistente.motivo ? regExistente.motivo : '';
                 const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
-                const mostrarMotivo = (status === 'Falta' || status === 'Falta Justificada') ? 'block' : 'none';
+                const mostrarMotivo = (status === 'Falta' ? true : status === 'Falta Justificada') ? 'block' : 'none';
 
                 linhasHtml += `
                 <td style="padding:8px; vertical-align:top;">
@@ -1809,7 +1820,7 @@ App.salvarChamadaLote = async () => {
                 if (status === 'N/A') return; 
 
                 const inputMotivo = select.nextElementSibling;
-                const textoMotivo = (status === 'Falta' || status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
+                const textoMotivo = (status === 'Falta' ? true : status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
 
                 const dataCelula = select.getAttribute('data-data');
                 const duracaoCelula = select.getAttribute('data-duracao'); 
