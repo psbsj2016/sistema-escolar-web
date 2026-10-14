@@ -23,10 +23,9 @@ App.abrirModalCadastroModulo = (tipo, id) => {
 
 Object.assign(App, {
     // =========================================================
-    // 🎓 1. HUB CENTRAL DO WORKSPACE (MENU DE 2 BOTÕES)
+    // 🎓 1. HUB CENTRAL DO WORKSPACE (MENU DE 2 BOTÕES + AVISO GERAL)
     // =========================================================
     renderizarWorkspaceAdmin: (veioDoHistorico = false) => {
-        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
         if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_admin' }, '', '#workspace_admin');
         if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_admin' });
 
@@ -34,8 +33,14 @@ Object.assign(App, {
         const div = document.getElementById('app-content');
         
         div.innerHTML = `
-            <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 25px; text-align: center;">Escolha a área que deseja aceder para administrar o ambiente virtual dos alunos.</p>
+            <p style="color: #7f8c8d; font-size: 15px; margin-bottom: 20px; text-align: center;">Escolha a área que deseja aceder para administrar o ambiente virtual dos alunos.</p>
             
+            <div style="text-align: center; margin-bottom: 25px;">
+                <button class="btn-primary" style="background: #2563eb; border: none; padding: 12px 22px; border-radius: 10px; font-weight: bold; font-size: 14px; cursor: pointer; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" onclick="App.abrirModalAvisoWorkspace('TODOS', '', 'Todos os Alunos do Workspace')">
+                    📢 Enviar Aviso Push para Todos os Alunos
+                </button>
+            </div>
+
             <div style="display:flex; gap:20px; flex-wrap:wrap; justify-content: center;">
                 <!-- BOTÃO 1: ACESSOS -->
                 <div class="card" style="flex:1; min-width:280px; max-width: 450px; text-align:center; cursor:pointer; transition:all 0.3s ease; border:2px solid transparent; padding: 40px 20px; background: white; box-shadow: 0 4px 15px rgba(0,0,0,0.05);" 
@@ -43,8 +48,8 @@ Object.assign(App, {
                      onmouseout="this.style.borderColor='transparent'; this.style.transform='translateY(0)';" 
                      onclick="App.renderizarWorkspaceAcessos()">
                     <div style="font-size:55px; margin-bottom:15px;">🔐</div>
-                    <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size: 20px;">Gerir Acessos</h3>
-                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Criar ou revogar logins e senhas para a entrada dos alunos no Workspace.</p>
+                    <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size: 20px;">Gerir Acessos e Avisos</h3>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Criar logins, revogar senhas ou enviar notificações individuais para alunos no Workspace.</p>
                 </div>
 
                 <!-- BOTÃO 2: MONITORAMENTO -->
@@ -54,17 +59,16 @@ Object.assign(App, {
                      onclick="App.renderizarWorkspaceMonitoramento()">
                     <div style="font-size:55px; margin-bottom:15px;">📡</div>
                     <h3 style="color:#2c3e50; margin:0 0 10px 0; font-size: 20px;">Monitoramento Online</h3>
-                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Acompanhe em tempo real quem está a navegar no Workspace e os últimos acessos.</p>
+                    <p style="color:#7f8c8d; font-size:14px; margin:0; line-height: 1.5;">Acompanhe em tempo real quem está a navegar no Workspace e envie alertas rápidos.</p>
                 </div>
             </div>
         `;
     },
 
     // =========================================================
-    // 🔐 2. TELA DE GESTÃO DE ACESSOS (SISTEMA ORIGINAL)
+    // 🔐 2. TELA DE GESTÃO DE ACESSOS E AVISOS
     // =========================================================
     renderizarWorkspaceAcessos: async (veioDoHistorico = false) => {
-        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
         if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_acessos' }, '', '#workspace_acessos');
         if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_acessos' });
 
@@ -85,11 +89,14 @@ Object.assign(App, {
             App.workspaceCache = { alunos: alunosAtivos, usuarios: usuariosAlunos };
 
             const barraBusca = `
-                <div class="toolbar" style="max-width: 800px; margin: 0 auto 20px auto; display: flex; gap: 15px;">
-                    <div class="search-wrapper" style="flex: 1; position: relative;">
+                <div class="toolbar" style="max-width: 800px; margin: 0 auto 20px auto; display: flex; gap: 15px; flex-wrap: wrap;">
+                    <div class="search-wrapper" style="flex: 1; min-width: 240px; position: relative;">
                         <span style="position: absolute; left: 15px; top: 50%; transform: translateY(-50%); color: #aaa;">🔍</span>
-                        <input type="text" id="ws-busca-aluno" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee; outline:none;" placeholder="Pesquisar aluno pelo nome..." oninput="App.filtrarWorkspaceAdmin()">
+                        <input type="text" id="ws-busca-aluno" style="width: 100%; padding: 14px 14px 14px 45px; border-radius: 8px; border: 2px solid #eee; outline:none; box-sizing: border-box;" placeholder="Pesquisar aluno pelo nome..." oninput="App.filtrarWorkspaceAdmin()">
                     </div>
+                    <button class="btn-primary" style="background: #2563eb; border: none; padding: 12px 18px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="App.abrirModalAvisoWorkspace('TODOS', '', 'Todos os Alunos do Workspace')">
+                        📢 Avisar Todos
+                    </button>
                 </div>`;
 
             div.innerHTML = `
@@ -99,7 +106,7 @@ Object.assign(App, {
                 <div style="text-align:center; margin-bottom:20px;">
                     <div class="card" style="padding:20px;">
                         <h3 style="margin:0 0 10px 0; color:#2c3e50;">Acessos ao Portal do Aluno</h3>
-                        <p style="font-size:13px; color:#7f8c8d; margin:0 0 20px 0;">Crie e gira as credenciais para os alunos acederem à plataforma interativa (Workspace).</p>
+                        <p style="font-size:13px; color:#7f8c8d; margin:0 0 20px 0;">Crie credenciais ou envie notificações diretas para os alunos no Workspace.</p>
                         ${barraBusca}
                     </div>
                 </div>
@@ -107,9 +114,6 @@ Object.assign(App, {
                 </div>
             `;
 
-            App.filtrarWorkspaceAdmin();
-
-            // 🚀 HIDRATAÇÃO DO FILTRO: Injeta a pesquisa salva antes de filtrar
             const termoSalvo = sessionStorage.getItem('ws_filtro_admin_acessos');
             if (termoSalvo) {
                 const inputBusca = document.getElementById('ws-busca-aluno');
@@ -128,7 +132,6 @@ Object.assign(App, {
         const input = document.getElementById('ws-busca-aluno');
         const termo = (input?.value || '').toLowerCase();
         
-        // 🚀 MEMÓRIA DA PESQUISA: Grava na sessão
         sessionStorage.setItem('ws_filtro_admin_acessos', input?.value || '');
 
         const container = document.getElementById('ws-admin-tabela-container');
@@ -165,7 +168,10 @@ Object.assign(App, {
             const nomeSeguro = App.escapeHTML(aluno.nome).replace(/'/g, "\\'");
 
             const btnHtml = conta
-                ? `<button class="btn-cancel" style="padding:8px 15px; font-size:12px; width:auto; font-weight:bold; color:#e74c3c; border-color:#e74c3c;" onclick="App.excluirAcessoWorkspace('${conta.id}')">🗑️ Revogar Acesso</button>`
+                ? `<div style="display:inline-flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">
+                       <button class="btn-primary" style="padding:8px 12px; font-size:12px; width:auto; font-weight:bold; background:#2563eb; border:none; border-radius:6px; cursor:pointer;" onclick="App.abrirModalAvisoWorkspace('${conta.id}', '${aluno.id}', '${nomeSeguro}')">🔔 Avisar</button>
+                       <button class="btn-cancel" style="padding:8px 12px; font-size:12px; width:auto; font-weight:bold; color:#e74c3c; border-color:#e74c3c;" onclick="App.excluirAcessoWorkspace('${conta.id}')">🗑️ Revogar</button>
+                   </div>`
                 : `<button class="btn-primary" style="padding:8px 15px; font-size:12px; width:auto; font-weight:bold; background:#8e44ad; border-color:#8e44ad;" onclick="App.abrirModalAcessoWorkspace('${aluno.id}', '${nomeSeguro}')">🔑 Gerar Acesso</button>`;
 
             html += `
@@ -181,8 +187,110 @@ Object.assign(App, {
         container.innerHTML = html;
     },
 
+    // =========================================================
+    // 🔔 NOVO: MODAL DE ENVIO DE AVISO PUSH PARA ALUNOS NO WORKSPACE
+    // =========================================================
+    abrirModalAvisoWorkspace: (alvoUserId, alunoRefId, nomeDestino) => {
+        let modal = document.getElementById('modal-aviso-ws');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-aviso-ws';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.75); display:flex; justify-content:center; align-items:center; z-index:10001; backdrop-filter:blur(4px); padding:15px; box-sizing:border-box;';
+            document.body.appendChild(modal);
+        }
+
+        const primeiroNome = (nomeDestino || 'Aluno').split(' ')[0];
+
+        modal.innerHTML = `
+            <div style="background:#fff; padding:25px; border-radius:16px; max-width:440px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.25s ease; box-sizing:border-box;">
+                <div style="text-align:center; font-size:36px; margin-bottom:8px;">📲</div>
+                <h3 style="margin:0 0 6px 0; color:#1e293b; text-align:center;">Enviar Aviso no Workspace</h3>
+                <p style="font-size:13px; color:#64748b; text-align:center; margin:0 0 18px 0;">Destinatário: <strong style="color:#2563eb;">${App.escapeHTML(nomeDestino)}</strong></p>
+
+                <div style="margin-bottom:15px;">
+                    <label style="font-weight:bold; font-size:11px; color:#64748b; text-transform:uppercase; display:block; margin-bottom:6px;">⚡ Modelos Rápidos (1 Clique):</label>
+                    <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                        <button type="button" onclick="App.preencherModeloAvisoWS('aula', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📚 Lembrete de Aula</button>
+                        <button type="button" onclick="App.preencherModeloAvisoWS('nota', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">✅ Nota Lançada</button>
+                        <button type="button" onclick="App.preencherModeloAvisoWS('evento', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📅 Evento / Feriado</button>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:12px; text-align:left;">
+                    <label style="font-weight:bold; font-size:12px; color:#334155; display:block; margin-bottom:4px;">Título da Notificação</label>
+                    <input type="text" id="ws-aviso-titulo" placeholder="Ex: 📚 Lembrete da sua aula de hoje!" style="width:100%; padding:11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; box-sizing:border-box;">
+                </div>
+
+                <div style="margin-bottom:20px; text-align:left;">
+                    <label style="font-weight:bold; font-size:12px; color:#334155; display:block; margin-bottom:4px;">Mensagem</label>
+                    <textarea id="ws-aviso-mensagem" rows="3" placeholder="Escreva a mensagem que aparecerá no ecrã do aluno..." style="width:100%; padding:11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; box-sizing:border-box;"></textarea>
+                </div>
+
+                <div style="display:flex; gap:10px;">
+                    <button class="btn-cancel" style="flex:1; justify-content:center; padding:12px; border-radius:8px;" onclick="document.getElementById('modal-aviso-ws').style.display='none'">Cancelar</button>
+                    <button class="btn-primary" id="ws-btn-disparar-aviso" style="flex:1; justify-content:center; padding:12px; border-radius:8px; background:#2563eb; border:none; font-weight:bold;" onclick="App.enviarAvisoWorkspace('${alvoUserId}', '${alunoRefId}', '${nomeDestino.replace(/'/g, "\\'")}')">🚀 Enviar Agora</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    },
+
+    preencherModeloAvisoWS: (tipo, primeiroNome) => {
+        const inputTitulo = document.getElementById('ws-aviso-titulo');
+        const inputMsg = document.getElementById('ws-aviso-mensagem');
+        if (!inputTitulo || !inputMsg) return;
+
+        const saudacao = primeiroNome === 'Todos' ? 'Olá, turma!' : `Olá, ${primeiroNome}!`;
+
+        if (tipo === 'aula') {
+            inputTitulo.value = '📚 Lembrete de Aula Hoje!';
+            inputMsg.value = `${saudacao} Passando para lembrar da nossa aula de hoje. Já preparou o seu material no Workspace? Até já!`;
+        } else if (tipo === 'nota') {
+            inputTitulo.value = '✅ Nova Avaliação Disponível!';
+            inputMsg.value = `${saudacao} Acabámos de atualizar o seu desempenho académico. Aceda ao seu portal para conferir!`;
+        } else if (tipo === 'evento') {
+            inputTitulo.value = '📅 Aviso Importante na Agenda';
+            inputMsg.value = `${saudacao} Temos uma atualização importante no calendário de aulas da escola. Confira no seu Workspace!`;
+        }
+    },
+
+    enviarAvisoWorkspace: async (alvoUserId, alunoRefId, nomeDestino) => {
+        const titulo = document.getElementById('ws-aviso-titulo')?.value.trim();
+        const mensagem = document.getElementById('ws-aviso-mensagem')?.value.trim();
+
+        if (!titulo || !mensagem) {
+            return App.showToast("Preencha o título e a mensagem do aviso.", "warning");
+        }
+
+        const btn = document.getElementById('ws-btn-disparar-aviso');
+        const txtOriginal = btn.innerHTML;
+        btn.innerHTML = "A enviar... ⏳";
+        btn.disabled = true;
+
+        try {
+            const res = await App.api('/push/enviar-aviso-aluno', 'POST', {
+                alvoUserId,
+                alunoRefId,
+                nomeDestino,
+                titulo,
+                mensagem
+            });
+
+            if (res && res.success) {
+                App.showToast(res.message || "✅ Aviso enviado com sucesso!", "success");
+                document.getElementById('modal-aviso-ws').style.display = 'none';
+            } else {
+                App.showToast((res && res.error) || "Não foi possível enviar o aviso.", "error");
+            }
+        } catch (e) {
+            App.showToast("Erro de comunicação ao enviar o aviso.", "error");
+        } finally {
+            btn.innerHTML = txtOriginal;
+            btn.disabled = false;
+        }
+    },
+
     abrirModalAcessoWorkspace: (alunoId, nomeAluno) => {
-        // 🚀 GRAVA O MODAL ABERTO NA MEMÓRIA PROFUNDA
         if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', { tipo: 'ws_acesso', id: alunoId });
         let modal = document.getElementById('modal-acesso-ws');
         if (!modal) {
@@ -240,7 +348,7 @@ Object.assign(App, {
             } else {
                 App.showToast("✅ Acesso criado com sucesso!", "success");
                 document.getElementById('modal-acesso-ws').style.display = 'none';
-                if(typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', null); // 🚀 Limpa a memória
+                if(typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('modal', null);
                 App.renderizarWorkspaceAcessos();
             }
         } catch (e) { App.showToast("Erro de ligação.", "error"); } 
@@ -256,7 +364,7 @@ Object.assign(App, {
                 try {
                     await App.api(`/usuarios/${usuarioId}`, 'DELETE');
                     App.showToast("Acesso revogado.", "success");
-                    App.renderizarWorkspaceAcessos(); // 🚀 CORRIGIDO: Volta para a lista de acessos e não para o Hub
+                    App.renderizarWorkspaceAcessos();
                 } catch(e) { App.showToast("Erro ao revogar.", "error"); } 
                 finally { document.body.style.cursor = 'default'; modal.style.opacity = '0'; setTimeout(() => modal.style.display='none', 300); }
             }
@@ -268,15 +376,13 @@ Object.assign(App, {
     // =========================================================
     radarMonitoramentoInterval: null,
 
-   renderizarWorkspaceMonitoramento: async (veioDoHistorico = false) => {
-        // 🚀 GRAVA A TELA NA MEMÓRIA PROFUNDA
+    renderizarWorkspaceMonitoramento: async (veioDoHistorico = false) => {
         if (!veioDoHistorico) window.history.pushState({ tela: 'workspace_monitoramento' }, '', '#workspace_monitoramento');
         if (typeof App.salvarEstadoNavegacao === 'function') App.salvarEstadoNavegacao('fundo', { tipo: 'tela', alvo: 'workspace_monitoramento' });
 
         App.setTitulo("Monitoramento Online");
         const div = document.getElementById('app-content');
         
-        // Injeta CSS para a bolinha a piscar (se não existir)
         if (!document.getElementById('ws-pulse-css')) {
             const style = document.createElement('style');
             style.id = 'ws-pulse-css';
@@ -285,8 +391,11 @@ Object.assign(App, {
         }
 
         div.innerHTML = `
-            <div style="margin-bottom: 20px;">
+            <div style="margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
                 <button class="btn-cancel" style="padding: 8px 15px; font-weight: bold;" onclick="App.renderizarWorkspaceAdmin()">⬅️ Voltar ao Hub</button>
+                <button class="btn-primary" style="background: #2563eb; border: none; padding: 9px 16px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer;" onclick="App.abrirModalAvisoWorkspace('TODOS', '', 'Todos os Alunos do Workspace')">
+                    📢 Avisar Todos os Alunos
+                </button>
             </div>
             <div class="card" style="padding: 0; overflow: hidden; border: 1px solid #eee;">
                 <div style="background: #f8f9fa; padding: 20px; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; align-items: center;">
@@ -302,16 +411,12 @@ Object.assign(App, {
             </div>
         `;
 
-        // Busca dados pela 1ª vez
         await App.atualizarDadosRadar();
 
-        // Limpa lixo de memória
         if (App.radarMonitoramentoInterval) clearInterval(App.radarMonitoramentoInterval);
 
-        // Dispara o Radar a cada 10 segundos
         App.radarMonitoramentoInterval = setInterval(() => {
             const telaAtual = document.getElementById('titulo-pagina')?.innerText;
-            // Se o Professor sair da tela, desliga o radar para poupar internet
             if (telaAtual !== "Monitoramento Online") {
                 clearInterval(App.radarMonitoramentoInterval);
                 return;
@@ -320,9 +425,8 @@ Object.assign(App, {
         }, 10000);
     },
 
-  atualizarDadosRadar: async (silencioso = false) => {
+    atualizarDadosRadar: async (silencioso = false) => {
         try {
-            // 1. Puxa o ID da escola
             let escolaId = 'DEFAULT';
             if (App.usuario && App.usuario.escolaId) {
                 escolaId = App.usuario.escolaId;
@@ -331,7 +435,6 @@ Object.assign(App, {
                 escolaId = escolaCache.id || 'DEFAULT';
             }
 
-            // 2. BUSCA SIMULTÂNEA: Radar + Secretaria + Usuários
             const [radarRes, alunosRes, usuariosRes] = await Promise.all([
                 App.api(`/workspace/monitoramento/status?escolaId=${escolaId}`, 'GET', null, silencioso),
                 App.api('/alunos', 'GET', null, true),
@@ -345,11 +448,9 @@ Object.assign(App, {
             const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
             const radarDados = Array.isArray(radarRes) ? radarRes : [];
 
-            // 3. O FILTRO DE OURO: Isola apenas os alunos estritamente ATIVOS
             const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
             const alunosAtivosIds = alunosAtivos.map(a => a.id);
 
-            // 4. Isola apenas os utilizadores (contas) que pertencem a alunos ativos
             const contasAtivas = usuarios.filter(u => 
                 (u.tipo === 'Aluno' || u.alunoRefId) && alunosAtivosIds.includes(u.alunoRefId)
             );
@@ -359,7 +460,6 @@ Object.assign(App, {
                 return;
             }
 
-            // 5. CONSTRUÇÃO DA LISTA VISUAL: Nomes Sociais e Fotos
             const listaMonitoramento = contasAtivas.map(conta => {
                 const alunoFicha = alunosAtivos.find(a => a.id === conta.alunoRefId) || {};
                 
@@ -372,27 +472,26 @@ Object.assign(App, {
                 ) || {};
                 
                 return {
-                    // 🚀 PRIORIDADE INVERTIDA: O nome do Workspace manda aqui!
+                    contaId: conta.id,
+                    alunoRefId: conta.alunoRefId,
                     nome: conta.nome || alunoFicha.nome || conta.login,
                     login: conta.login,
-                    avatar: conta.avatar || null, // 🚀 Puxa a foto guardada no perfil do aluno
+                    avatar: conta.avatar || null,
                     isOnline: statusRadar.isOnline === true || String(statusRadar.isOnline) === 'true',
                     ultimoAcesso: statusRadar.ultimoAcesso || null
                 };
             });
 
-            // Ordena: Alunos Online no topo, seguidos por ordem alfabética
             listaMonitoramento.sort((a, b) => {
                 if (b.isOnline === a.isOnline) return a.nome.localeCompare(b.nome);
                 return b.isOnline ? 1 : -1;
             });
 
-            // 6. RENDERIZAÇÃO DA TABELA (Agora com Fotos!)
             let html = '<div class="table-responsive-wrapper"><table style="width:100%; border-collapse:collapse; text-align:left;">';
             html += '<thead><tr style="background: #fff; border-bottom: 2px solid #eee; color:#64748b; font-size: 13px; text-transform: uppercase;">';
             html += '<th style="padding:15px 20px;">Identificação do Aluno</th>';
             html += '<th style="padding:15px 20px; text-align:center;">Status Atual</th>';
-            html += '<th style="padding:15px 20px; text-align:right;">Última Interação Registada</th>';
+            html += '<th style="padding:15px 20px; text-align:right;">Última Interação / Ação</th>';
             html += '</tr></thead><tbody>';
 
             listaMonitoramento.forEach(aluno => {
@@ -406,15 +505,15 @@ Object.assign(App, {
                     ? new Date(aluno.ultimoAcesso).toLocaleString('pt-BR', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' }) 
                     : 'Nunca acessou';
 
-                // 🚀 RENDERIZAÇÃO INTELIGENTE DO AVATAR
                 let avatarHtml = '';
                 if (aluno.avatar) {
                     avatarHtml = `<img src="${aluno.avatar}" style="width:35px; height:35px; min-width:35px; border-radius:50%; object-fit:cover; border: 2px solid #e2e8f0; cursor: zoom-in; transition: 0.2s; box-shadow: 0 2px 4px rgba(0,0,0,0.1);" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="App.verFotoRadar('${aluno.avatar}', '${App.escapeHTML(aluno.nome)}')">`;
                 } else {
                     const inicial = App.escapeHTML(aluno.nome).charAt(0).toUpperCase();
-                    // Gera uma cor suave para quem não tem foto, e mostra a inicial
                     avatarHtml = `<div style="width:35px; height:35px; min-width:35px; background:#3498db; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:16px; font-weight:bold; border: 2px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">${inicial}</div>`;
                 }
+
+                const nomeSeguro = App.escapeHTML(aluno.nome).replace(/'/g, "\\'");
 
                 html += `
                     <tr style="border-bottom:1px solid #f0f2f5; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
@@ -432,7 +531,10 @@ Object.assign(App, {
                             </div>
                         </td>
                         <td style="padding:15px 20px; text-align:right; color:#64748b; font-size:13px; font-weight: 500;">
-                            ${dataAcesso}
+                            <div style="display:flex; align-items:center; justify-content:flex-end; gap:10px; flex-wrap:wrap;">
+                                <span>${dataAcesso}</span>
+                                <button onclick="App.abrirModalAvisoWorkspace('${aluno.contaId}', '${aluno.alunoRefId}', '${nomeSeguro}')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:5px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">🔔 Avisar</button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -441,25 +543,21 @@ Object.assign(App, {
             html += '</tbody></table></div>';
             container.innerHTML = html;
 
-        } catch (e) {
-            // Falha invisível
-        }
+        } catch (e) {}
     },
        
-       // =========================================================
+    // =========================================================
     // 📸 4. VISUALIZADOR DE FOTOS DO RADAR (ZOOM DA IMAGEM)
     // =========================================================
     verFotoRadar: (url, nome) => {
         const id = 'admin-foto-viewer';
         let viewer = document.getElementById(id);
-        if (viewer) viewer.remove(); // Evita duplicações
+        if (viewer) viewer.remove();
 
-        // Cria a "tela de cinema" de fundo escuro com efeito de desfoque
         viewer = document.createElement('div');
         viewer.id = id;
         viewer.style.cssText = "position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0,0,0,0.9); z-index: 9999999; display: flex; flex-direction: column; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.2s ease; backdrop-filter: blur(5px);";
 
-        // HTML do botão fechar e da imagem centralizada
         viewer.innerHTML = `
             <div style="position: absolute; top: 0; left: 0; width: 100%; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; background: linear-gradient(to bottom, rgba(0,0,0,0.7), transparent); box-sizing: border-box;">
                 <span style="color: white; font-weight: 500; font-size: 16px;">Foto de Perfil: ${App.escapeHTML(nome)}</span>
@@ -470,7 +568,6 @@ Object.assign(App, {
 
         document.body.appendChild(viewer);
         
-        // Dispara a animação suave para revelar a foto
         requestAnimationFrame(() => {
             viewer.style.opacity = '1';
             document.getElementById('admin-viewer-img').style.transform = 'scale(1)';
