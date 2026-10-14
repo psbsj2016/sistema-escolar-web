@@ -2,7 +2,7 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - ETAPA 3: ABAS DE FILTRO, RESTAURO E AJUSTE MOBILE/TABLET
+// MÓDULO NOTIFICAÇÕES - ETAPA 4: SOM SUAVE ("DING") E ANIMAÇÃO NO SININHO
 // =========================================================
 
 Object.assign(App, {
@@ -11,7 +11,11 @@ Object.assign(App, {
     alertasAtuaisLista: [],
     filtroNotificacaoAtual: 'todos',
 
-    // 🎨 Injeta o CSS que corrige a distância do sininho e evita cortes no telemóvel/tablet
+    // Memória para saber quais alertas já existiam e só tocar som quando chegar algo NOVO
+    idsAlertasJaConhecidos: new Set(),
+    radarPrimeiraLeituraConcluida: false,
+
+    // 🎨 Injeta o CSS que corrige a distância do sininho, cria as abas e a animação de abanar
     injetarEstilosNotificacoes: () => {
         if (document.getElementById('noti-modern-styles')) return;
         const style = document.createElement('style');
@@ -85,7 +89,24 @@ Object.assign(App, {
                 box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
             }
 
-            /* 📱 Telemóveis: Compensa os 50px do Avatar ao lado para nunca cortar na esquerda! */
+            /* 🔔 Animação do Sininho a Abanar quando chega novidade */
+            @keyframes sinoAbanar {
+                0% { transform: rotate(0deg) scale(1); }
+                15% { transform: rotate(18deg) scale(1.12); }
+                30% { transform: rotate(-16deg) scale(1.12); }
+                45% { transform: rotate(12deg) scale(1.08); }
+                60% { transform: rotate(-10deg) scale(1.05); }
+                75% { transform: rotate(6deg) scale(1.02); }
+                100% { transform: rotate(0deg) scale(1); }
+            }
+
+            .sino-animando {
+                animation: sinoAbanar 0.9s ease-in-out 2 !important;
+                border-color: #3b82f6 !important;
+                background: #eff6ff !important;
+            }
+
+            /* 📱 Telemóveis: Compensa os 50px do Avatar ao lado para nunca cortar na esquerda */
             @media (max-width: 600px) {
                 header.header-moderno .notification-container #noti-dropdown,
                 #noti-dropdown.noti-dropdown {
@@ -99,6 +120,79 @@ Object.assign(App, {
             }
         `;
         document.head.appendChild(style);
+    },
+
+    // =========================================================
+    // 🔊 MOTOR DE ÁUDIO SUAVE ("DING") E CONTROLO DE MUDO
+    // =========================================================
+    isSomNotificacaoAtivo: () => {
+        const chave = typeof App.getTenantKey === 'function' ? App.getTenantKey('noti_som_ativo') : 'noti_som_ativo';
+        const valor = localStorage.getItem(chave);
+        return valor === null ? true : valor === 'true'; // Ativo por padrão
+    },
+
+    alternarSomNotificacoes: (event) => {
+        if (event) event.stopPropagation();
+        const chave = typeof App.getTenantKey === 'function' ? App.getTenantKey('noti_som_ativo') : 'noti_som_ativo';
+        const novoEstado = !App.isSomNotificacaoAtivo();
+        localStorage.setItem(chave, String(novoEstado));
+
+        if (novoEstado) {
+            App.tocarSomNotificacao(true); // Toca um som de demonstração ao ativar
+            if (typeof App.showToast === 'function') App.showToast("🔔 Som de notificações ativado!", "success");
+        } else {
+            if (typeof App.showToast === 'function') App.showToast("🔕 Som de notificações silenciado.", "info");
+        }
+        App.renderizarPainelNotificacoes();
+    },
+
+    tocarSomNotificacao: (forcarTeste = false) => {
+        if (!forcarTeste && !App.isSomNotificacaoAtivo()) return;
+
+        try {
+            // ⚙️ PARÂMETROS AJUSTÁVEIS DO SOM
+            const VOLUME_SOM = 0.12;  // Volume suave (de 0.01 a 1.0)
+            const NOTA_1_HZ = 587.33; // Nota Ré (D5)
+            const NOTA_2_HZ = 880.00; // Nota Lá (A5 - toque cristalino)
+
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!AudioCtx) return;
+
+            const ctx = new AudioCtx();
+            const agora = ctx.currentTime;
+
+            // Função interna para tocar cada nota do "Ding-Dong" suave
+            const tocarNota = (frequencia, inicio, duracao) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(frequencia, inicio);
+
+                gain.gain.setValueAtTime(0.0001, inicio);
+                gain.gain.exponentialRampToValueAtTime(VOLUME_SOM, inicio + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, inicio + duracao);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+
+                osc.start(inicio);
+                osc.stop(inicio + duracao);
+            };
+
+            tocarNota(NOTA_1_HZ, agora, 0.22);
+            tocarNota(NOTA_2_HZ, agora + 0.14, 0.45);
+        } catch (e) {
+            // Ignora silenciosamente caso o navegador ainda não tenha recebido clique do utilizador
+        }
+    },
+
+    animarSininhoTopo: () => {
+        const btnSino = document.querySelector('.btn-bell-moderno');
+        if (!btnSino) return;
+        btnSino.classList.remove('sino-animando');
+        void btnSino.offsetWidth; // Reinicia a animação CSS
+        btnSino.classList.add('sino-animando');
+        setTimeout(() => btnSino.classList.remove('sino-animando'), 2000);
     },
 
     // 🧠 Obtém a chave de memória diária do utilizador (reseta automaticamente no dia seguinte)
@@ -648,6 +742,27 @@ Object.assign(App, {
                 });
             }
 
+            // =========================================================================
+            // 🔔 9. DETETOR DE NOVIDADES AO VIVO (DISPARA SOM E ANIMAÇÃO NO SININHO)
+            // =========================================================================
+            let chegouAlertaNovo = false;
+            alertas.forEach(a => {
+                const idStr = String(a.id);
+                if (!App.idsAlertasJaConhecidos.has(idStr)) {
+                    App.idsAlertasJaConhecidos.add(idStr);
+                    if (App.radarPrimeiraLeituraConcluida) {
+                        chegouAlertaNovo = true;
+                    }
+                }
+            });
+
+            if (!App.radarPrimeiraLeituraConcluida) {
+                App.radarPrimeiraLeituraConcluida = true;
+            } else if (chegouAlertaNovo) {
+                App.tocarSomNotificacao(false);
+                App.animarSininhoTopo();
+            }
+
             // Guarda a lista atual e desenha o painel com as abas
             App.alertasAtuaisLista = alertas;
             App.renderizarPainelNotificacoes();
@@ -658,7 +773,7 @@ Object.assign(App, {
     },
 
     // =========================================================
-    // 🎨 RENDERIZADOR VISUAL DO PAINEL (COM ABAS E RESTAURO)
+    // 🎨 RENDERIZADOR VISUAL DO PAINEL (COM ABAS, SOM E RESTAURO)
     // =========================================================
     renderizarPainelNotificacoes: () => {
         const badge = document.getElementById('noti-badge');
@@ -666,6 +781,7 @@ Object.assign(App, {
         const alertas = App.alertasAtuaisLista || [];
         const tipoUtilizador = (App.usuario && App.usuario.tipo) ? App.usuario.tipo : 'Gestor';
         const qtdOcultosHoje = App.obterAlertasOcultos().size;
+        const somAtivo = App.isSomNotificacaoAtivo();
 
         // Atualiza a bolinha vermelha com o total geral de alertas ativos
         if (badge) {
@@ -708,15 +824,18 @@ Object.assign(App, {
             </div>
         `;
 
-        // Barra de Ações Rápidas (Limpar Tudo e Testar Push)
+        // Barra de Ações Rápidas (Limpar Tudo, Ligar/Desligar Som e Testar Push)
         const barraTopoAcoes = `
-            <div style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 6px; background: #f8fafc;" onclick="event.stopPropagation();">
+            <div style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 6px; background: #f8fafc; flex-wrap: wrap;" onclick="event.stopPropagation();">
                 ${alertas.length > 0 ? `
                 <button onclick="App.marcarNotificacoesComoLidas(); event.stopPropagation();" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; padding: 7px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
-                    ✅ Limpar Tudo
+                    ✅ Limpar
                 </button>` : ''}
+                <button onclick="App.alternarSomNotificacoes(event)" style="flex: 1; border: 1px solid ${somAtivo ? '#bbf7d0' : '#e2e8f0'}; background: ${somAtivo ? '#f0fdf4' : '#f1f5f9'}; color: ${somAtivo ? '#15803d' : '#64748b'}; padding: 7px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" title="Ativar ou silenciar o toque sonoro de novas notificações">
+                    ${somAtivo ? '🔔 Som: On' : '🔕 Mudo'}
+                </button>
                 <button onclick="App.testarPushNoAparelho(event)" style="flex: 1; border: none; background: #eff6ff; color: #2563eb; padding: 7px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Enviar notificação de teste para este telemóvel/PC">
-                    📲 Testar Push
+                    📲 Push
                 </button>
             </div>
         `;
