@@ -64,7 +64,13 @@ App.filtrarTabela = (inputId, tabelaId) => {
 };
 
 App.toggleCheckMassa = (source, className) => {
-    document.querySelectorAll('.' + className).forEach(c => c.checked = source.checked);
+    document.querySelectorAll('.' + className).forEach(c => {
+        const linha = c.closest('tr');
+        // Só marca ou desmarca se a linha não estiver oculta pelo filtro de data/pesquisa
+        if (!linha || linha.style.display !== 'none') {
+            c.checked = source.checked;
+        }
+    });
 };
 
 App.excluirLotePedagogico = (endpoint, className, callbackRender) => {
@@ -1236,12 +1242,75 @@ App.excluirAvaliacao = (id) => {
 };
 
 // ---------------------------------------------------------
-// 4. CHAMADA HÍBRIDA MULTI-TEMPO + EDIÇÃO IN-LINE WIZARD
+// 4. CHAMADA HÍBRIDA MULTI-TEMPO + EDIÇÃO IN-LINE WIZARD + FILTROS DIA/MÊS/ANO
 // ---------------------------------------------------------
 
 App.cachePedagogico = { chamadas: null, alunos: null, turmas: null, planejamentos: null };
-App.datasLancamentoChamada = []; // Agora guarda Objetos: { data: 'YYYY-MM-DD', duracao: 'HH:MM' }
+App.datasLancamentoChamada = []; // Guarda Objetos: { data: 'YYYY-MM-DD', duracao: 'HH:MM' }
 App.filaEdicaoChamada = []; // Fila do Assistente In-Line
+
+// 🔍 MOTOR DE FILTRO COMBINADO (DIA, MÊS, ANO, STATUS E TEXTO)
+App.filtrarHistoricoChamadas = () => {
+    const termo = (document.getElementById('input-busca-chamada')?.value || '').trim().toLowerCase();
+    const diaFiltro = document.getElementById('filtro-chamada-dia')?.value || '';
+    const mesFiltro = document.getElementById('filtro-chamada-mes')?.value || '';
+    const anoFiltro = document.getElementById('filtro-chamada-ano')?.value || '';
+    const statusFiltro = document.getElementById('filtro-chamada-status')?.value || '';
+
+    const linhas = document.querySelectorAll('#tabela-historico-chamadas tbody tr.linha-hist-chamada');
+    const linhaSemResultado = document.getElementById('tr-chamada-sem-resultado');
+    const contadorEl = document.getElementById('contador-historico-chamada');
+
+    let visiveis = 0;
+
+    linhas.forEach(linha => {
+        const dataIso = linha.getAttribute('data-iso') || ''; // Formato esperado: YYYY-MM-DD
+        const statusLinha = linha.getAttribute('data-status') || '';
+        const textoLinha = linha.innerText.toLowerCase();
+
+        // Extrai Ano, Mês e Dia da data do registo
+        const partesData = dataIso.split('-');
+        const anoLinha = partesData[0] || '';
+        const mesLinha = partesData[1] || '';
+        const diaLinha = partesData[2] || '';
+
+        const bateDia = !diaFiltro || diaLinha === diaFiltro;
+        const bateMes = !mesFiltro || mesLinha === mesFiltro;
+        const bateAno = !anoFiltro || anoLinha === anoFiltro;
+        const bateStatus = !statusFiltro || statusLinha === statusFiltro;
+        const bateTexto = !termo || textoLinha.includes(termo);
+
+        if (bateDia && bateMes && bateAno && bateStatus && bateTexto) {
+            linha.style.display = '';
+            visiveis++;
+        } else {
+            linha.style.display = 'none';
+            // Desmarca a caixa de seleção caso a linha seja ocultada pelo filtro
+            const check = linha.querySelector('.check-chamada');
+            if (check) check.checked = false;
+        }
+    });
+
+    // Atualiza o contador visual de registos encontrados
+    if (contadorEl) {
+        contadorEl.innerText = `${visiveis} registo(s)`;
+    }
+
+    // Mostra ou esconde o aviso caso nenhum registo corresponda à combinação de filtros
+    if (linhaSemResultado) {
+        linhaSemResultado.style.display = (visiveis === 0 && linhas.length > 0) ? '' : 'none';
+    }
+};
+
+// 🧹 LIMPAR TODOS OS FILTROS DO HISTÓRICO COM 1 CLIQUE
+App.limparFiltrosHistoricoChamada = () => {
+    const ids = ['input-busca-chamada', 'filtro-chamada-dia', 'filtro-chamada-mes', 'filtro-chamada-ano', 'filtro-chamada-status'];
+    ids.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.value = '';
+    });
+    App.filtrarHistoricoChamadas();
+};
 
 App.renderizarChamadaPro = async () => { 
     App.setTitulo("Gestão de Frequência");
@@ -1270,6 +1339,26 @@ App.renderizarChamadaPro = async () => {
         const opAlunos = `<option value="">-- Aluno Específico --</option>` + alunosAtivos.map(a => `<option value="${a.id}">${App.escapeHTML(a.nome)}</option>`).join('');
         const hoje = new Date().toISOString().split('T')[0];
 
+        // 📅 GERAÇÃO DAS OPÇÕES DE DIA, MÊS E ANO PARA O FILTRO DO HISTÓRICO
+        const opDiasFiltro = `<option value="">Dia (Todos)</option>` + Array.from({ length: 31 }, (_, i) => {
+            const d = String(i + 1).padStart(2, '0');
+            return `<option value="${d}">Dia ${d}</option>`;
+        }).join('');
+
+        const nomesMeses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+        const opMesesFiltro = `<option value="">Mês (Todos)</option>` + nomesMeses.map((nome, i) => {
+            const m = String(i + 1).padStart(2, '0');
+            return `<option value="${m}">${m} - ${nome}</option>`;
+        }).join('');
+
+        const anoAtualStr = String(new Date().getFullYear());
+        const anosUnicos = [...new Set([
+            anoAtualStr,
+            ...historico.map(h => (h.data ? h.data.split('-')[0] : '')).filter(a => a && a.length === 4)
+        ])].sort((a, b) => Number(b) - Number(a));
+
+        const opAnosFiltro = `<option value="">Ano (Todos)</option>` + anosUnicos.map(ano => `<option value="${ano}">${ano}</option>`).join('');
+
         const formChamada = `
             <div style="display:flex; gap:15px; flex-wrap:wrap; align-items:flex-end; margin-bottom:15px; background:#f9f9f9; padding:15px; border-radius:8px; border:1px solid #eee;">
                 ${selectLocal('Filtrar por Turma:', 'chamada-turma', opTurmas)}
@@ -1292,16 +1381,50 @@ App.renderizarChamadaPro = async () => {
         `;
 
         const tabelaChamada = `
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
-                <div style="display:flex; gap:10px;">
+            <!-- BARRA SUPERIOR DE AÇÕES EM LOTE E PESQUISA POR NOME -->
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
                     <button onclick="App.excluirLotePedagogico('/chamadas', 'check-chamada', App.renderizarChamadaPro)" style="background:#e74c3c; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s;">🗑️ Excluir Lote</button>
                     <button onclick="App.editarLoteChamada('check-chamada')" style="background:#3498db; color:white; border:none; padding:8px 15px; border-radius:5px; font-weight:bold; cursor:pointer; display:inline-flex; align-items:center; gap:5px; transition:0.2s; box-shadow: 0 2px 5px rgba(52, 152, 219, 0.3);">✏️ Editar Selecionados (In-Line)</button>
+                    <span id="contador-historico-chamada" style="background:#eafaf1; color:#27ae60; border:1px solid #a9dfbf; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:bold;">${historico.length} registo(s)</span>
                 </div>
-                <div style="background: #fff; padding: 10px 15px; border-radius: 8px; border: 1px solid #eee; display: flex; align-items: center; gap: 10px; flex:1; min-width:250px;">
-                    <span style="font-size: 18px; color: #aaa;">🔍</span>
-                    <input type="text" id="input-busca-chamada" placeholder="Pesquisar histórico..." oninput="App.filtrarTabela('input-busca-chamada', 'tabela-historico-chamadas')" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 5px; background: transparent; width: 100%;">
+                <div style="background: #fff; padding: 8px 14px; border-radius: 8px; border: 1px solid #cbd5e1; display: flex; align-items: center; gap: 8px; flex:1; min-width:240px;">
+                    <span style="font-size: 16px; color: #94a3b8;">🔍</span>
+                    <input type="text" id="input-busca-chamada" placeholder="Pesquisar por nome do aluno ou motivo..." oninput="App.filtrarHistoricoChamadas()" style="flex: 1; border: none; outline: none; font-size: 14px; padding: 4px; background: transparent; width: 100%;">
                 </div>
             </div>
+
+            <!-- 🗓️ NOVA BARRA DE FILTROS DE DATA (DIA, MÊS, ANO E STATUS) -->
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:12px; border-radius:8px; margin-bottom:15px; display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                <span style="font-size:12px; font-weight:bold; color:#475569; display:flex; align-items:center; gap:5px;">📅 Filtrar Período:</span>
+                
+                <select id="filtro-chamada-dia" onchange="App.filtrarHistoricoChamadas()" style="flex:1; min-width:110px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:13px; color:#1e293b; outline:none; cursor:pointer;">
+                    ${opDiasFiltro}
+                </select>
+
+                <select id="filtro-chamada-mes" onchange="App.filtrarHistoricoChamadas()" style="flex:1.4; min-width:140px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:13px; color:#1e293b; outline:none; cursor:pointer;">
+                    ${opMesesFiltro}
+                </select>
+
+                <select id="filtro-chamada-ano" onchange="App.filtrarHistoricoChamadas()" style="flex:1; min-width:110px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:13px; color:#1e293b; outline:none; cursor:pointer;">
+                    ${opAnosFiltro}
+                </select>
+
+                <select id="filtro-chamada-status" onchange="App.filtrarHistoricoChamadas()" style="flex:1.2; min-width:130px; padding:8px 10px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; font-size:13px; color:#1e293b; outline:none; cursor:pointer;">
+                    <option value="">Status (Todos)</option>
+                    <option value="Presença">✅ Presença</option>
+                    <option value="Falta">❌ Falta</option>
+                    <option value="Falta Justificada">⚠️ Falta Justificada</option>
+                    <option value="Reposição">🔄 Reposição</option>
+                    <option value="Feriado">📅 Feriado</option>
+                    <option value="Recesso">🏖️ Recesso</option>
+                </select>
+
+                <button type="button" onclick="App.limparFiltrosHistoricoChamada()" style="background:#e2e8f0; color:#334155; border:none; padding:8px 14px; border-radius:6px; font-size:12px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#cbd5e1'" onmouseout="this.style.background='#e2e8f0'" title="Mostrar todos os lançamentos">
+                    🧹 Limpar Filtros
+                </button>
+            </div>
+
             <div class="table-responsive-wrapper">
                 <table id="tabela-historico-chamadas" style="width:100%; border-collapse:collapse; font-size:13px;">
                     <thead>
@@ -1311,6 +1434,11 @@ App.renderizarChamadaPro = async () => {
                     </thead>
                     <tbody>
                         ${historico.length === 0 ? '<tr><td colspan="6" style="padding:20px; text-align:center; color:#999;">Nenhum registo encontrado.</td></tr>' : ''}
+                        <tr id="tr-chamada-sem-resultado" style="display:none;">
+                            <td colspan="6" style="padding:25px; text-align:center; color:#7f8c8d; font-size:13px;">
+                                🔍 Nenhum lançamento de chamada encontrado para o Dia, Mês ou Ano selecionado.
+                            </td>
+                        </tr>
                         ${historico.map(h => { 
                             let color = '#333'; if(h.status === 'Presença') color = 'green'; else if(h.status === 'Falta') color = 'red'; else if(h.status === 'Reposição') color = '#2980b9'; 
                             
@@ -1320,9 +1448,9 @@ App.renderizarChamadaPro = async () => {
                             }
 
                             return `
-                            <tr id="tr-chamada-${h.id}" style="border-bottom:1px solid #eee; transition: background 0.2s;">
+                            <tr id="tr-chamada-${h.id}" class="linha-hist-chamada" <tr id="tr-chamada-${h.id}" class="linha-hist-chamada" data-iso="${App.escapeHTML(h.data ? h.data : '')}" data-status="${App.escapeHTML(h.status ? h.status : '')}" style="border-bottom:1px solid #eee; transition: background 0.2s;"> style="border-bottom:1px solid #eee; transition: background 0.2s;">
                                 <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${h.id}"></td>
-                                <td style="padding:12px; color:#555;">${h.data.split('-').reverse().join('/')}</td>
+                                <td style="padding:12px; color:#555;">${h.data ? h.data.split('-').reverse().join('/') : '-'}</td>
                                 <td style="padding:12px; font-weight:bold;">${App.escapeHTML(h.nomeAluno)}</td>
                                 <td style="padding:12px; font-weight:bold; color:${color};">${labelStatus}</td>
                                 <td style="padding:12px; color:#555;">${App.escapeHTML(h.duracao)}</td>
@@ -1352,7 +1480,6 @@ App.adicionarDataFila = () => {
     if (!dataVal) return App.showToast("Selecione uma data válida.", "warning");
     if (dataVal > hojeStr) return App.showToast("Não é permitido adicionar datas futuras.", "warning");
     
-    // Verifica se a data já existe na matriz
     if (App.datasLancamentoChamada.some(d => d.data === dataVal)) return App.showToast("Esta data já está na matriz.", "info");
 
     App.datasLancamentoChamada.push({ data: dataVal, duracao: duracaoVal });
@@ -1389,7 +1516,6 @@ App.editarLoteChamada = (className) => {
     App.filaEdicaoChamada = Array.from(checks).map(c => c.value);
     App.showToast(`Assistente In-Line: Iniciando a edição de ${App.filaEdicaoChamada.length} registo(s)...`, "info");
     
-    // Desmarca os checkboxes visualmente
     document.querySelectorAll('.' + className).forEach(c => c.checked = false);
 
     App.processarFilaEdicaoInline();
@@ -1397,7 +1523,7 @@ App.editarLoteChamada = (className) => {
 
 App.processarFilaEdicaoInline = () => {
     if (App.filaEdicaoChamada.length > 0) {
-        const proximoId = App.filaEdicaoChamada[0]; // Pega o primeiro da fila
+        const proximoId = App.filaEdicaoChamada[0];
         App.editarLancamentoInline(proximoId);
     }
 };
@@ -1407,7 +1533,6 @@ App.editarLancamentoInline = (id) => {
     const registro = App.cachePedagogico.chamadas.find(c => String(c.id) === String(id));
     if(!registro || !tr) return;
 
-    // Guarda o HTML original caso o utilizador cancele a edição
     if(!tr.dataset.originalHtml) tr.dataset.originalHtml = tr.innerHTML;
 
     const opPresenca = registro.status === 'Presença' ? 'selected' : '';
@@ -1415,7 +1540,6 @@ App.editarLancamentoInline = (id) => {
     const opFaltaJ = registro.status === 'Falta Justificada' ? 'selected' : '';
     const opRepo = registro.status === 'Reposição' ? 'selected' : '';
 
-    // Transforma a linha numa caixa de edição cintilante
     tr.style.background = "#fff8e1";
     tr.innerHTML = `
         <td style="padding:12px; text-align:center; color:#f39c12; font-weight:bold;">⚙️</td>
@@ -1438,7 +1562,6 @@ App.editarLancamentoInline = (id) => {
         </td>
     `;
     
-    // Rola o ecrã suavemente até à linha em edição
     tr.scrollIntoView({ behavior: 'smooth', block: 'center' });
 };
 
@@ -1457,20 +1580,20 @@ App.salvarEdicaoInline = async (id) => {
         
         await App.api(`/chamadas/${id}`, 'PUT', registro);
 
-        // Dispara o Auto-Ajuste Silencioso do Planejamento
         let plano = App.cachePedagogico.planejamentos.find(p => p.idAluno === registro.idAluno && p.status !== 'Arquivado');
         if(plano && typeof App.processarAutoAjustePlano === 'function') {
             plano = App.processarAutoAjustePlano(plano, App.cachePedagogico.chamadas);
             await App.api(`/planejamentos/${plano.id}`, 'PUT', plano);
         }
         
-        // Reconstrói o HTML da linha atualizado na hora, sem recarregar a tabela inteira!
         let color = '#333'; 
         if(novoStatus === 'Presença') color = 'green'; 
         else if(novoStatus === 'Falta') color = 'red'; 
         else if(novoStatus === 'Reposição') color = '#2980b9'; 
 
-        tr.style.background = "#eafaf1"; // Pisca a verde para indicar sucesso
+        // Atualiza o atributo data-status na linha para que o filtro continue exato
+        tr.setAttribute('data-status', novoStatus);
+        tr.style.background = "#eafaf1";
         tr.innerHTML = `
             <td style="padding:12px; text-align:center;"><input type="checkbox" class="check-chamada" value="${registro.id}"></td>
             <td style="padding:12px; color:#555;">${registro.data.split('-').reverse().join('/')}</td>
@@ -1483,15 +1606,16 @@ App.salvarEdicaoInline = async (id) => {
             </td>
         `;
         
-        // Remove a cor de fundo piscante após 1.5s
         setTimeout(() => { if(tr) tr.style.background = "transparent"; }, 1500);
-        tr.dataset.originalHtml = ''; // Reseta o histórico
+        tr.dataset.originalHtml = '';
 
-        // Robô de Fila: Verifica se ainda há mais para editar no lote
+        // Reaplica o filtro ativo caso o utilizador esteja a filtrar por Status
+        App.filtrarHistoricoChamadas();
+
         if(App.filaEdicaoChamada.length > 0 && String(App.filaEdicaoChamada[0]) === String(id)) {
-            App.filaEdicaoChamada.shift(); // Remove o atual da fila
+            App.filaEdicaoChamada.shift();
             if (App.filaEdicaoChamada.length > 0) {
-                App.processarFilaEdicaoInline(); // Chama o próximo!
+                App.processarFilaEdicaoInline();
             } else {
                 App.showToast("✅ Edição em lote concluída perfeitamente!", "success");
             }
@@ -1511,7 +1635,6 @@ App.cancelarEdicaoInline = (id) => {
         tr.innerHTML = tr.dataset.originalHtml;
         tr.style.background = "transparent";
     }
-    // Aborta o assistente se estiver numa fila
     if(App.filaEdicaoChamada.length > 0) {
         App.filaEdicaoChamada = []; 
         App.showToast("Assistente de Edição interrompido.", "info");
@@ -1576,7 +1699,6 @@ App.carregarListaChamada = async () => {
             return; 
         }
 
-        // 🧠 A COLUNA AGORA LÊ O OBJETO MULTI-TEMPO
         let theadHtml = `<tr><th style="padding:15px; text-align:left; background:#f8f9fa; border-right:1px solid #ddd; min-width:150px;">NOME DO ALUNO</th>`;
         App.datasLancamentoChamada.forEach(item => {
             theadHtml += `<th style="padding:10px 15px; text-align:center; min-width:160px; line-height:1.3;">
@@ -1601,7 +1723,6 @@ App.carregarListaChamada = async () => {
                 const idEdicaoTag = regExistente ? `data-id-chamada="${regExistente.id}"` : '';
                 const mostrarMotivo = (status === 'Falta' || status === 'Falta Justificada') ? 'block' : 'none';
 
-                // Injeta a duração exata desta coluna no select para salvar depois
                 linhasHtml += `
                 <td style="padding:8px; vertical-align:top;">
                     <select class="status-chamada" data-data="${data}" data-duracao="${duracaoDaColuna}" ${idEdicaoTag} style="width:100%; padding:8px; border-radius:5px; border:1px solid #ccc; font-weight:bold; color:${status==='Falta'?'#e74c3c':(status==='Reposição'?'#f39c12':'#27ae60')};" onchange="App.atualizarStatusCelula(this)">
@@ -1690,7 +1811,6 @@ App.salvarChamadaLote = async () => {
                 const inputMotivo = select.nextElementSibling;
                 const textoMotivo = (status === 'Falta' || status === 'Falta Justificada') && inputMotivo ? inputMotivo.value.trim() : '';
 
-                // LÊ A DURAÇÃO E A DATA DIRETAMENTE DA COLUNA
                 const dataCelula = select.getAttribute('data-data');
                 const duracaoCelula = select.getAttribute('data-duracao'); 
                 const idEdicao = select.getAttribute('data-id-chamada'); 
