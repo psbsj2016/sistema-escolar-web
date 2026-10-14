@@ -165,7 +165,8 @@ Object.assign(App, {
                 ? `<span style="background:#eafaf1; color:#27ae60; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #2ecc71;">✅ ${App.escapeHTML(conta.login)}</span>` 
                 : `<span style="background:#fdf2f2; color:#e74c3c; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #e74c3c;">❌ Sem Acesso</span>`;
             
-            const nomeSeguro = App.escapeHTML(aluno.nome).replace(/'/g, "\\'");
+            const nomeRealWorkspace = conta ? (conta.nome || aluno.nome || conta.login) : aluno.nome;
+            const nomeSeguro = App.escapeHTML(nomeRealWorkspace).replace(/'/g, "\\'");
 
             const btnHtml = conta
                 ? `<div style="display:inline-flex; gap:8px; flex-wrap:wrap; justify-content:flex-end;">

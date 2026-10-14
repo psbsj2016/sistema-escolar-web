@@ -492,6 +492,22 @@ buscarNotificacoes: async () => {
                                 }, 'tarefa', async () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
+                            // 4.6. COMUNICADO DIRETO DA COORDENAÇÃO / GESTOR
+                            else if (novaNoti.origem === 'aviso_coordenacao') {
+                                if (window.Toast && typeof Toast.showInterativo === 'function') {
+                                    Toast.showInterativo({
+                                        remetenteNome: novaNoti.remetenteNome,
+                                        subtitulo: novaNoti.tituloAviso || "Comunicado da Coordenação 📢",
+                                        mensagemCorpo: novaNoti.mensagem
+                                    }, 'avaliacao', () => Workspace.Alertas.lerEIr(novaNoti.id, 'post', '', ''));
+                                } else if (window.Toast && Toast.show) {
+                                    Toast.show(`📢 ${novaNoti.remetenteNome}: ${novaNoti.mensagem}`, 'info', 6000);
+                                }
+                                const bells = document.querySelectorAll('#ws-bell');
+                                bells.forEach(bell => { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); });
+                                Workspace.Alertas.atualizarInterface();
+                            }  
+
                             // 5. POSTS E REAÇÕES
                             else {
                                 if (window.Toast && Toast.show) Toast.show(`🔔 ${novaNoti.remetenteNome} ${novaNoti.mensagem}`, 'info');
