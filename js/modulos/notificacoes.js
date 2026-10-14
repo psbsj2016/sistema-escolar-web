@@ -2,13 +2,104 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - ETAPA 2: RADAR PEDAGÓGICO E ANTI-EVASÃO
+// MÓDULO NOTIFICAÇÕES - ETAPA 3: ABAS DE FILTRO, RESTAURO E AJUSTE MOBILE/TABLET
 // =========================================================
 
 Object.assign(App, {
 
-    // Lista em memória dos alertas gerados no ciclo atual
+    // Lista em memória dos alertas gerados no ciclo atual e aba ativa
     alertasAtuaisLista: [],
+    filtroNotificacaoAtual: 'todos',
+
+    // 🎨 Injeta o CSS que corrige a distância do sininho e evita cortes no telemóvel/tablet
+    injetarEstilosNotificacoes: () => {
+        if (document.getElementById('noti-modern-styles')) return;
+        const style = document.createElement('style');
+        style.id = 'noti-modern-styles';
+        style.innerHTML = `
+            /* Garante que o contentor do sininho é a âncora exata da caixa */
+            .notification-container {
+                position: relative !important;
+            }
+
+            /* Computadores e Tablets: Caixa colada exatamente abaixo do sininho */
+            header.header-moderno .notification-container #noti-dropdown,
+            #noti-dropdown.noti-dropdown {
+                position: absolute !important;
+                top: calc(100% + 10px) !important;
+                right: 0 !important;
+                left: auto !important;
+                transform: none !important;
+                width: 370px !important;
+                max-width: calc(100vw - 32px) !important;
+                min-width: 0 !important;
+                margin: 0 !important;
+                border-radius: 16px !important;
+                border: 1px solid #cbd5e1 !important;
+                background: #ffffff !important;
+                box-shadow: 0 15px 35px rgba(0, 0, 0, 0.18) !important;
+                z-index: 9999 !important;
+                overflow: hidden !important;
+                box-sizing: border-box !important;
+            }
+
+            #noti-dropdown #noti-list {
+                max-height: 65vh !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+            }
+
+            /* Mini-abas de Filtro dentro do Sininho */
+            .noti-tabs-bar {
+                display: flex;
+                gap: 4px;
+                padding: 8px 10px;
+                background: #f1f5f9;
+                border-bottom: 1px solid #e2e8f0;
+                overflow-x: auto;
+                scrollbar-width: none;
+            }
+            .noti-tabs-bar::-webkit-scrollbar { display: none; }
+
+            .noti-tab-btn {
+                flex: 1;
+                border: none;
+                background: transparent;
+                color: #64748b;
+                padding: 6px 8px;
+                border-radius: 8px;
+                font-size: 11px;
+                font-weight: 700;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.2s ease;
+                text-align: center;
+            }
+            .noti-tab-btn:hover {
+                background: rgba(255, 255, 255, 0.6);
+                color: #1e293b;
+            }
+            .noti-tab-btn.active {
+                background: #ffffff;
+                color: #2563eb;
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06);
+            }
+
+            /* 📱 Telemóveis: Compensa os 50px do Avatar ao lado para nunca cortar na esquerda! */
+            @media (max-width: 600px) {
+                header.header-moderno .notification-container #noti-dropdown,
+                #noti-dropdown.noti-dropdown {
+                    position: absolute !important;
+                    top: calc(100% + 10px) !important;
+                    right: -50px !important;
+                    left: auto !important;
+                    width: calc(100vw - 24px) !important;
+                    max-width: 360px !important;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    },
 
     // 🧠 Obtém a chave de memória diária do utilizador (reseta automaticamente no dia seguinte)
     getChaveAlertasOcultosHoje: () => {
@@ -37,6 +128,22 @@ Object.assign(App, {
         } catch (e) {}
     },
 
+    // 🔄 Restaura todos os alertas que foram fechados no X durante o dia de hoje
+    restaurarAlertasOcultosHoje: async (event) => {
+        if (event) event.stopPropagation();
+        localStorage.removeItem(App.getChaveAlertasOcultosHoje());
+        App.filtroNotificacaoAtual = 'todos';
+        if (typeof App.showToast === 'function') App.showToast("🔄 Alertas ocultos de hoje foram restaurados!", "info");
+        await App.verificarNotificacoes();
+    },
+
+    // 🗂️ Troca de aba instantaneamente sem fechar o menu do sininho
+    mudarAbaNotificacao: (novaAba, event) => {
+        if (event) event.stopPropagation();
+        App.filtroNotificacaoAtual = novaAba;
+        App.renderizarPainelNotificacoes();
+    },
+
     // Unifica a chamada que vem do app.js para evitar conflitos
     verificarNovidadesSilenciosamente: async () => {
         if (typeof App.verificarNotificacoes === 'function') {
@@ -50,12 +157,10 @@ Object.assign(App, {
     abrirWhatsAppRapidoNotificacao: (telefoneBruto, tipoMensagem, nomeAluno, infoExtra, event) => {
         if (event) event.stopPropagation();
 
-        // Respeita a trava de permissão do plano (Essencial / Profissional / Premium)
         if (typeof App.verificarPermissao === 'function' && !App.verificarPermissao('whatsapp')) {
             return;
         }
 
-        // Limpa parênteses, espaços e traços do número de telefone
         let numeroLimpo = String(telefoneBruto || '').replace(/\D/g, '');
         if (!numeroLimpo || numeroLimpo.length < 8) {
             if (typeof App.showToast === 'function') {
@@ -64,12 +169,10 @@ Object.assign(App, {
             return;
         }
 
-        // Adiciona o código do Brasil (55) caso o número tenha apenas DDD + Telefone
         if (numeroLimpo.length === 10 || numeroLimpo.length === 11) {
             numeroLimpo = '55' + numeroLimpo;
         }
 
-        // Busca o nome da instituição para assinar a mensagem
         let nomeEscola = 'nossa instituição';
         try {
             const perfilEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
@@ -96,13 +199,15 @@ Object.assign(App, {
         if (!App.usuario) return;
 
         try {
+            App.injetarEstilosNotificacoes();
+
             const tipoUtilizador = App.usuario.tipo || 'Gestor';
             const alertasOcultosHoje = App.obterAlertasOcultos();
 
-            // ⚙️ PARÂMETROS AJUSTÁVEIS DO RADAR PEDAGÓGICO
-            const LIMITE_FALTAS_SEGUIDAS = 2;    // Alerta a partir de 2 faltas consecutivas
-            const AULAS_AVISO_CERTIFICADO = 2;   // Alerta quando faltam 2 ou menos aulas para concluir o plano
-            const DIAS_ATRASO_CHAMADA = 7;       // Verifica aulas sem visto nos últimos 7 dias
+            // Parâmetros ajustáveis do Radar Pedagógico
+            const LIMITE_FALTAS_SEGUIDAS = 2;
+            const AULAS_AVISO_CERTIFICADO = 2;
+            const DIAS_ATRASO_CHAMADA = 7;
 
             // Busca todos os dados em paralelo e em MODO SILENCIOSO (true)
             const [
@@ -143,7 +248,6 @@ Object.assign(App, {
 
             let alertas = [];
 
-            // Função auxiliar: Só adiciona à lista se não tiver sido fechado hoje pelo utilizador
             const adicionarAlertaInteligente = (alerta) => {
                 if (!alertasOcultosHoje.has(String(alerta.id))) {
                     alertas.push(alerta);
@@ -160,6 +264,7 @@ Object.assign(App, {
                         adicionarAlertaInteligente({
                             id: String(n.id),
                             oficial: true,
+                            grupo: 'pedagogico',
                             categoria: 'Sistema',
                             corCat: '#3b82f6',
                             icon: n.tipo === 'matricula_contrato' ? '📝' : '🔔',
@@ -199,6 +304,7 @@ Object.assign(App, {
                     if (diasRestantes <= 3 && diasRestantes > 0) {
                         adicionarAlertaInteligente({ 
                             id: 'alerta_plano_vence',
+                            grupo: 'urgente',
                             categoria: 'Assinatura',
                             corCat: '#f59e0b',
                             icon: '⏳', 
@@ -208,6 +314,7 @@ Object.assign(App, {
                     } else if (diasRestantes <= 0) {
                         adicionarAlertaInteligente({ 
                             id: 'alerta_plano_venceu',
+                            grupo: 'urgente',
                             categoria: 'Urgente',
                             corCat: '#ef4444',
                             icon: '🚫', 
@@ -243,6 +350,7 @@ Object.assign(App, {
 
                         adicionarAlertaInteligente({ 
                             id: `alerta_niver_${a.id}`,
+                            grupo: 'pedagogico',
                             categoria: 'Aniversário',
                             corCat: '#ec4899',
                             icon: '🎂', 
@@ -254,6 +362,7 @@ Object.assign(App, {
                 if (a.dataMatricula && a.dataMatricula.startsWith(hojeStr)) {
                     adicionarAlertaInteligente({ 
                         id: `alerta_matr_${a.id}`,
+                        grupo: 'pedagogico',
                         categoria: 'Matrícula',
                         corCat: '#10b981',
                         icon: '🎉', 
@@ -275,6 +384,7 @@ Object.assign(App, {
 
                     adicionarAlertaInteligente({ 
                         id: `alerta_caixa_${hojeStr}`,
+                        grupo: 'financeiro',
                         categoria: 'Financeiro',
                         corCat: '#16a34a',
                         icon: '💲', 
@@ -294,6 +404,7 @@ Object.assign(App, {
                     if (e.data === hojeStr) {
                         adicionarAlertaInteligente({ 
                             id: `alerta_evt_hoje_${e.id}`,
+                            grupo: 'urgente',
                             categoria: 'Agenda Hoje',
                             corCat: '#ef4444',
                             icon: '🚨', 
@@ -303,6 +414,7 @@ Object.assign(App, {
                     } else if (e.data === amanhaStr) {
                         adicionarAlertaInteligente({ 
                             id: `alerta_evt_amanha_${e.id}`,
+                            grupo: 'pedagogico',
                             categoria: 'Agenda Amanhã',
                             corCat: '#f59e0b',
                             icon: '📅', 
@@ -313,13 +425,11 @@ Object.assign(App, {
                 });
             }
 
-            // =========================================================================
-            // 🛡️ 6. NOVO: RADAR PEDAGÓGICO ANTI-EVASÃO (FALTAS, CERTIFICADO E CHAMADA)
-            // =========================================================================
+            // 6. Radar Pedagógico Anti-Evasão (Faltas, Certificado e Chamada)
             const listaChamadas = Array.isArray(chamadas) ? chamadas : [];
             const listaPlanosAtivos = Array.isArray(planejamentos) ? planejamentos.filter(p => p.status !== 'Arquivado') : [];
 
-            // 6.1 ALERTA DE FALTAS SEGUIDAS (Risco de Desistência)
+            // 6.1 Alerta de Faltas Seguidas
             alunos.forEach(aluno => {
                 const historicoAluno = listaChamadas
                     .filter(c => c.idAluno === aluno.id && c.data)
@@ -330,7 +440,7 @@ Object.assign(App, {
                     if (registo.status === 'Falta') {
                         faltasConsecutivas++;
                     } else {
-                        break; // Para a contagem assim que encontra uma Presença, Reposição ou Justificada
+                        break;
                     }
                 }
 
@@ -346,6 +456,7 @@ Object.assign(App, {
 
                     adicionarAlertaInteligente({
                         id: `alerta_evasao_${aluno.id}_${faltasConsecutivas}`,
+                        grupo: 'urgente',
                         categoria: 'Anti-Evasão',
                         corCat: '#ef4444',
                         icon: '⚠️',
@@ -359,7 +470,7 @@ Object.assign(App, {
                 }
             });
 
-            // 6.2 ALERTA DE RETA FINAL DE CURSO (Certificado) E CHAMADA PENDENTE
+            // 6.2 Alerta de Reta Final de Curso (Certificado) e Chamada Pendente
             const limiteAtrasoTime = hojeTime - (DIAS_ATRASO_CHAMADA * 24 * 60 * 60 * 1000);
 
             listaPlanosAtivos.forEach(plano => {
@@ -370,7 +481,6 @@ Object.assign(App, {
                 const aulasConcluidas = plano.aulas.filter(a => a.visto).length;
                 const aulasRestantes = totalAulas - aulasConcluidas;
 
-                // Se já cumpriu pelo menos metade do plano e faltam 1 ou 2 aulas (ou acabou de concluir)
                 if (totalAulas >= 4 && aulasConcluidas > 0 && aulasRestantes <= AULAS_AVISO_CERTIFICADO) {
                     const textoRestante = aulasRestantes === 0 
                         ? 'concluiu <b>100% das aulas</b> planeadas!' 
@@ -382,6 +492,7 @@ Object.assign(App, {
 
                     adicionarAlertaInteligente({
                         id: `alerta_fimcurso_${plano.id}_${aulasRestantes}`,
+                        grupo: 'pedagogico',
                         categoria: 'Pedagógico',
                         corCat: '#0ea5e9',
                         icon: '🎓',
@@ -394,7 +505,6 @@ Object.assign(App, {
                     });
                 }
 
-                // Verifica se há aulas passadas nos últimos 7 dias que ficaram sem "visto" no planeamento
                 let aulasSemVistoRecentes = 0;
                 plano.aulas.forEach(aula => {
                     if (aula.visto || !aula.data) return;
@@ -410,6 +520,7 @@ Object.assign(App, {
                 if (aulasSemVistoRecentes > 0) {
                     adicionarAlertaInteligente({
                         id: `alerta_semvisto_${plano.id}_${hojeStr}`,
+                        grupo: 'pedagogico',
                         categoria: 'Diário de Classe',
                         corCat: '#f59e0b',
                         icon: '📋',
@@ -500,6 +611,7 @@ Object.assign(App, {
 
                                 adicionarAlertaInteligente({ 
                                     id: `alerta_preditiva_${aluno.id}`,
+                                    grupo: 'financeiro',
                                     categoria: 'IA Preditiva',
                                     corCat: '#8b5cf6',
                                     icon: '🎯', 
@@ -525,6 +637,7 @@ Object.assign(App, {
                     if (qtd <= min) {
                         adicionarAlertaInteligente({ 
                             id: `alerta_estoque_${item.id}`,
+                            grupo: 'urgente',
                             categoria: 'Estoque',
                             corCat: '#d97706',
                             icon: '📦', 
@@ -535,54 +648,109 @@ Object.assign(App, {
                 });
             }
 
-            // Guarda a lista atual para o botão "Limpar tudo" saber quais IDs dispensar
+            // Guarda a lista atual e desenha o painel com as abas
             App.alertasAtuaisLista = alertas;
+            App.renderizarPainelNotificacoes();
 
-            // ==========================================
-            // 🎨 RENDERIZAÇÃO VISUAL NO DROPDOWN DO SININHO
-            // ==========================================
-            const badge = document.getElementById('noti-badge');
-            const list = document.getElementById('noti-list');
-            
-            const barraTopoAcoes = `
-                <div style="padding: 10px 12px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 8px; background: #f8fafc;">
-                    ${alertas.length > 0 ? `
-                    <button onclick="App.marcarNotificacoesComoLidas(); event.stopPropagation();" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
-                        ✅ Limpar Tudo (${alertas.length})
-                    </button>` : ''}
-                    <button onclick="App.testarPushNoAparelho(event)" style="flex: 1; border: none; background: #eff6ff; color: #2563eb; padding: 8px 10px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Enviar notificação de teste para este telemóvel/PC">
-                        📲 Testar Push
-                    </button>
-                </div>`;
-
-            if (alertas.length > 0) {
-                if (badge) { badge.innerText = alertas.length; badge.style.display = 'flex'; }
-                
-                if (list) {
-                    list.innerHTML = barraTopoAcoes + alertas.map(a => `
-                        <div id="box-alerta-${a.id}" class="noti-item" style="cursor:pointer; transition:background 0.2s; display: flex; align-items: flex-start; gap: 12px; padding: 12px 15px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
-                            <span class="noti-icon" style="font-size: 20px; margin-top: 2px;">${a.icon}</span>
-                            <div style="flex: 1; min-width: 0; font-size: 13px; color: #334155;">
-                                <span style="display:inline-block; background:${a.corCat || '#3b82f6'}18; color:${a.corCat || '#3b82f6'}; font-size:10px; font-weight:800; padding:2px 7px; border-radius:6px; text-transform:uppercase; margin-bottom:4px;">${a.categoria || 'Aviso'}</span>
-                                <div>${a.texto}</div>
-                            </div>
-                            <button onclick="App.dispensarAlerta('${a.id}', event)" style="background:transparent; border:none; cursor:pointer; color:#94a3b8; padding:4px 6px; font-size:13px; border-radius:6px; transition:0.2s; align-self: flex-start;" onmouseover="this.style.color='#ef4444'; this.style.background='#fee2e2'" onmouseout="this.style.color='#94a3b8'; this.style.background='transparent'" title="Ocultar este aviso">✖</button>
-                        </div>
-                    `).join('');
-                }
-            } else {
-                if (badge) badge.style.display = 'none';
-                if (list) {
-                    list.innerHTML = barraTopoAcoes + `
-                        <div class="noti-item" style="justify-content:center; text-align:center; color:#94a3b8; padding: 35px 15px; flex-direction:column; gap:8px;">
-                            <span style="font-size:28px;">🎉</span>
-                            <span style="font-size:13px; font-weight:600; color:#475569;">Nenhum alerta pendente!</span>
-                            <span style="font-size:11px;">Tudo em dia na sua instituição.</span>
-                        </div>`;
-                }
-            }
         } catch (e) {
             console.error("Erro silencioso nas notificações:", e);
+        }
+    },
+
+    // =========================================================
+    // 🎨 RENDERIZADOR VISUAL DO PAINEL (COM ABAS E RESTAURO)
+    // =========================================================
+    renderizarPainelNotificacoes: () => {
+        const badge = document.getElementById('noti-badge');
+        const list = document.getElementById('noti-list');
+        const alertas = App.alertasAtuaisLista || [];
+        const tipoUtilizador = (App.usuario && App.usuario.tipo) ? App.usuario.tipo : 'Gestor';
+        const qtdOcultosHoje = App.obterAlertasOcultos().size;
+
+        // Atualiza a bolinha vermelha com o total geral de alertas ativos
+        if (badge) {
+            if (alertas.length > 0) {
+                badge.innerText = alertas.length;
+                badge.style.display = 'flex';
+            } else {
+                badge.style.display = 'none';
+            }
+        }
+
+        if (!list) return;
+
+        // Contadores por grupo para exibir nas mini-abas
+        const qtdUrgentes = alertas.filter(a => a.grupo === 'urgente').length;
+        const qtdFinanceiro = alertas.filter(a => a.grupo === 'financeiro').length;
+        const qtdPedagogico = alertas.filter(a => a.grupo === 'pedagogico').length;
+
+        const abaAtiva = App.filtroNotificacaoAtual || 'todos';
+        const alertasFiltrados = abaAtiva === 'todos' 
+            ? alertas 
+            : alertas.filter(a => a.grupo === abaAtiva);
+
+        // Barra de Mini-Abas de Filtro
+        const abasHTML = `
+            <div class="noti-tabs-bar" onclick="event.stopPropagation();">
+                <button class="noti-tab-btn ${abaAtiva === 'todos' ? 'active' : ''}" onclick="App.mudarAbaNotificacao('todos', event)">
+                    Todos (${alertas.length})
+                </button>
+                <button class="noti-tab-btn ${abaAtiva === 'urgente' ? 'active' : ''}" onclick="App.mudarAbaNotificacao('urgente', event)">
+                    🚨 Urgentes (${qtdUrgentes})
+                </button>
+                ${tipoUtilizador !== 'Professor' ? `
+                <button class="noti-tab-btn ${abaAtiva === 'financeiro' ? 'active' : ''}" onclick="App.mudarAbaNotificacao('financeiro', event)">
+                    💰 Finanças (${qtdFinanceiro})
+                </button>` : ''}
+                <button class="noti-tab-btn ${abaAtiva === 'pedagogico' ? 'active' : ''}" onclick="App.mudarAbaNotificacao('pedagogico', event)">
+                    🍎 Pedag. (${qtdPedagogico})
+                </button>
+            </div>
+        `;
+
+        // Barra de Ações Rápidas (Limpar Tudo e Testar Push)
+        const barraTopoAcoes = `
+            <div style="padding: 8px 10px; border-bottom: 1px solid #e2e8f0; display: flex; gap: 6px; background: #f8fafc;" onclick="event.stopPropagation();">
+                ${alertas.length > 0 ? `
+                <button onclick="App.marcarNotificacoesComoLidas(); event.stopPropagation();" style="flex: 1; border: 1px solid #cbd5e1; background: #ffffff; color: #1e293b; padding: 7px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f1f5f9'" onmouseout="this.style.background='#ffffff'">
+                    ✅ Limpar Tudo
+                </button>` : ''}
+                <button onclick="App.testarPushNoAparelho(event)" style="flex: 1; border: none; background: #eff6ff; color: #2563eb; padding: 7px 8px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#dbeafe'" onmouseout="this.style.background='#eff6ff'" title="Enviar notificação de teste para este telemóvel/PC">
+                    📲 Testar Push
+                </button>
+            </div>
+        `;
+
+        // Rodapé para Restaurar Alertas Fechados no Dia
+        const rodapeRestaurar = qtdOcultosHoje > 0 ? `
+            <div style="padding: 10px; text-align: center; background: #f8fafc; border-top: 1px solid #e2e8f0;" onclick="event.stopPropagation();">
+                <button onclick="App.restaurarAlertasOcultosHoje(event)" style="background: transparent; border: 1px dashed #94a3b8; color: #475569; padding: 6px 12px; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer; width: 100%; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'" onmouseout="this.style.background='transparent'; this.style.color='#475569'">
+                    🔄 Restaurar ${qtdOcultosHoje} alerta(s) oculto(s) hoje
+                </button>
+            </div>
+        ` : '';
+
+        if (alertasFiltrados.length > 0) {
+            list.innerHTML = abasHTML + barraTopoAcoes + alertasFiltrados.map(a => `
+                <div id="box-alerta-${a.id}" class="noti-item" style="cursor:pointer; transition:background 0.2s; display: flex; align-items: flex-start; gap: 12px; padding: 12px 14px; border-bottom: 1px solid #f1f5f9;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'" onclick="${a.acao}; App.toggleNotificacoes();">
+                    <span class="noti-icon" style="font-size: 20px; margin-top: 2px;">${a.icon}</span>
+                    <div style="flex: 1; min-width: 0; font-size: 13px; color: #334155;">
+                        <span style="display:inline-block; background:${a.corCat || '#3b82f6'}18; color:${a.corCat || '#3b82f6'}; font-size:10px; font-weight:800; padding:2px 7px; border-radius:6px; text-transform:uppercase; margin-bottom:4px;">${a.categoria || 'Aviso'}</span>
+                        <div>${a.texto}</div>
+                    </div>
+                    <button onclick="App.dispensarAlerta('${a.id}', event)" style="background:transparent; border:none; cursor:pointer; color:#94a3b8; padding:4px 6px; font-size:13px; border-radius:6px; transition:0.2s; align-self: flex-start;" onmouseover="this.style.color='#ef4444'; this.style.background='#fee2e2'" onmouseout="this.style.color='#94a3b8'; this.style.background='transparent'" title="Ocultar este aviso">✖</button>
+                </div>
+            `).join('') + rodapeRestaurar;
+        } else {
+            const msgVazia = abaAtiva === 'todos' 
+                ? 'Nenhum alerta pendente!' 
+                : 'Nenhum alerta nesta categoria!';
+            list.innerHTML = abasHTML + barraTopoAcoes + `
+                <div class="noti-item" style="justify-content:center; text-align:center; color:#94a3b8; padding: 30px 15px; flex-direction:column; gap:8px;">
+                    <span style="font-size:26px;">🎉</span>
+                    <span style="font-size:13px; font-weight:600; color:#475569;">${msgVazia}</span>
+                    <span style="font-size:11px;">Tudo em dia por aqui.</span>
+                </div>` + rodapeRestaurar;
         }
     },
 
@@ -595,20 +763,7 @@ Object.assign(App, {
         App.salvarAlertaOculto(String(id));
 
         App.alertasAtuaisLista = (App.alertasAtuaisLista || []).filter(a => String(a.id) !== String(id));
-        const itemVisual = document.getElementById(`box-alerta-${id}`);
-        if (itemVisual) itemVisual.remove();
-
-        const badge = document.getElementById('noti-badge');
-        const qtdRestante = App.alertasAtuaisLista.length;
-
-        if (badge) {
-            if (qtdRestante > 0) {
-                badge.innerText = qtdRestante;
-            } else {
-                badge.style.display = 'none';
-                await App.verificarNotificacoes();
-            }
-        }
+        App.renderizarPainelNotificacoes();
 
         if (!String(id).startsWith('alerta_')) {
             try {
@@ -618,6 +773,7 @@ Object.assign(App, {
     },
 
     toggleNotificacoes: () => {
+        App.injetarEstilosNotificacoes();
         const dropdown = document.getElementById('noti-dropdown');
         if (dropdown) dropdown.classList.toggle('active');
     },
