@@ -2,7 +2,7 @@ window.App = window.App || {};
 const App = window.App;
 
 // =========================================================
-// MÓDULO NOTIFICAÇÕES - ETAPA 1: AÇÕES RÁPIDAS COM 1 CLIQUE
+// MÓDULO NOTIFICAÇÕES - ETAPA 2: RADAR PEDAGÓGICO E ANTI-EVASÃO
 // =========================================================
 
 Object.assign(App, {
@@ -45,10 +45,10 @@ Object.assign(App, {
     },
 
     // =========================================================
-    // 💬 NOVO: DISPARADOR DE WHATSAPP COM 1 CLIQUE NO SININHO
+    // 💬 DISPARADOR DE WHATSAPP COM 1 CLIQUE NO SININHO
     // =========================================================
     abrirWhatsAppRapidoNotificacao: (telefoneBruto, tipoMensagem, nomeAluno, infoExtra, event) => {
-        if (event) event.stopPropagation(); // Impede que o cartão de fundo seja clicado junto
+        if (event) event.stopPropagation();
 
         // Respeita a trava de permissão do plano (Essencial / Profissional / Premium)
         if (typeof App.verificarPermissao === 'function' && !App.verificarPermissao('whatsapp')) {
@@ -69,7 +69,7 @@ Object.assign(App, {
             numeroLimpo = '55' + numeroLimpo;
         }
 
-        // Busca o nome da instituição para assinar a mensagem com elegância
+        // Busca o nome da instituição para assinar a mensagem
         let nomeEscola = 'nossa instituição';
         try {
             const perfilEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
@@ -81,6 +81,8 @@ Object.assign(App, {
             texto = `Olá, *${nomeAluno}*! 🎂🎉\n\nPassando em nome de toda a equipa da *${nomeEscola}* para lhe desejar um Feliz Aniversário! Muita saúde, alegria e sucesso nos seus estudos! 🚀✨`;
         } else if (tipoMensagem === 'renovacao') {
             texto = `Olá, *${nomeAluno}*! Tudo bem? 😊\n\nAqui é da *${nomeEscola}*. Notámos que o seu ciclo atual de parcelas está na reta final e ainda temos cerca de *${infoExtra}* de aulas pela frente para a conclusão do seu curso.\n\nPodemos programar a renovação do seu carnê para manter o seu horário garantido?`;
+        } else if (tipoMensagem === 'acolhimento_faltas') {
+            texto = `Olá, *${nomeAluno}*! Tudo bem consigo? 😊\n\nAqui é da *${nomeEscola}*. Sentimos a sua falta nas últimas *${infoExtra}* aulas! Está tudo bem? Conte connosco para o ajudar a manter o ritmo dos seus estudos! 📚✨`;
         }
 
         const urlWhatsApp = `https://wa.me/${numeroLimpo}?text=${encodeURIComponent(texto)}`;
@@ -97,6 +99,11 @@ Object.assign(App, {
             const tipoUtilizador = App.usuario.tipo || 'Gestor';
             const alertasOcultosHoje = App.obterAlertasOcultos();
 
+            // ⚙️ PARÂMETROS AJUSTÁVEIS DO RADAR PEDAGÓGICO
+            const LIMITE_FALTAS_SEGUIDAS = 2;    // Alerta a partir de 2 faltas consecutivas
+            const AULAS_AVISO_CERTIFICADO = 2;   // Alerta quando faltam 2 ou menos aulas para concluir o plano
+            const DIAS_ATRASO_CHAMADA = 7;       // Verifica aulas sem visto nos últimos 7 dias
+
             // Busca todos os dados em paralelo e em MODO SILENCIOSO (true)
             const [
                 notificacoesBanco,
@@ -106,7 +113,8 @@ Object.assign(App, {
                 planejamentos,
                 estoque,
                 escola,
-                cursos
+                cursos,
+                chamadas
             ] = await Promise.all([
                 App.api('/sistema/notificacoes/nao-lidas', 'GET', null, true),
                 App.api('/alunos', 'GET', null, true),
@@ -115,7 +123,8 @@ Object.assign(App, {
                 App.api('/planejamentos', 'GET', null, true),
                 App.api('/estoques', 'GET', null, true),
                 App.api('/escola', 'GET', null, true),
-                App.api('/cursos', 'GET', null, true)
+                App.api('/cursos', 'GET', null, true),
+                App.api('/chamadas', 'GET', null, true)
             ]);
 
             let alunos = Array.isArray(alunosRaw) ? alunosRaw.filter(a => !a.status || a.status === 'Ativo') : [];
@@ -209,7 +218,7 @@ Object.assign(App, {
                 }
             }
 
-            // 3. Aniversários do Dia (COM BOTÃO DE WHATSAPP 1 CLIQUE) e Novas Matrículas
+            // 3. Aniversários do Dia e Novas Matrículas
             alunos.forEach(a => {
                 if (a.nascimento) {
                     const dataNasc = a.nascimento.includes('/') 
@@ -223,7 +232,6 @@ Object.assign(App, {
                         const nomeSeguro = App.escapeHTML(a.nome || '').replace(/'/g, "\\'");
                         const whatsSeguro = App.escapeHTML(a.whatsapp || '').replace(/'/g, "\\'");
 
-                        // Se o aluno tiver WhatsApp preenchido, desenha o botão rápido de Parabéns
                         const btnParabens = whatsSeguro ? `
                             <div style="margin-top: 8px;">
                                 <button onclick="App.abrirWhatsAppRapidoNotificacao('${whatsSeguro}', 'aniversario', '${nomeSeguro}', '', event)" 
@@ -255,7 +263,7 @@ Object.assign(App, {
                 }
             });
 
-            // 4. Mensalidades que Vencem Hoje (COM BOTÃO DE ATALHO PARA CONSULTAR PENDENTES)
+            // 4. Mensalidades que Vencem Hoje
             if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro)) {
                 const vencemHoje = financeiro.filter(f => f.vencimento === hojeStr && f.status === 'Pendente');
                 if (vencemHoje.length > 0) {
@@ -305,13 +313,123 @@ Object.assign(App, {
                 });
             }
 
-            // 6. IA Preditiva de Faturação e Carga Horária (COM BOTÃO DE WHATSAPP E GERAR CARNÊ)
+            // =========================================================================
+            // 🛡️ 6. NOVO: RADAR PEDAGÓGICO ANTI-EVASÃO (FALTAS, CERTIFICADO E CHAMADA)
+            // =========================================================================
+            const listaChamadas = Array.isArray(chamadas) ? chamadas : [];
+            const listaPlanosAtivos = Array.isArray(planejamentos) ? planejamentos.filter(p => p.status !== 'Arquivado') : [];
+
+            // 6.1 ALERTA DE FALTAS SEGUIDAS (Risco de Desistência)
+            alunos.forEach(aluno => {
+                const historicoAluno = listaChamadas
+                    .filter(c => c.idAluno === aluno.id && c.data)
+                    .sort((a, b) => new Date(b.data) - new Date(a.data));
+
+                let faltasConsecutivas = 0;
+                for (const registo of historicoAluno) {
+                    if (registo.status === 'Falta') {
+                        faltasConsecutivas++;
+                    } else {
+                        break; // Para a contagem assim que encontra uma Presença, Reposição ou Justificada
+                    }
+                }
+
+                if (faltasConsecutivas >= LIMITE_FALTAS_SEGUIDAS) {
+                    const nomeSeguro = App.escapeHTML(aluno.nome || '').replace(/'/g, "\\'");
+                    const whatsSeguro = App.escapeHTML(aluno.whatsapp || '').replace(/'/g, "\\'");
+
+                    const btnWhatsFalta = whatsSeguro ? `
+                        <button onclick="App.abrirWhatsAppRapidoNotificacao('${whatsSeguro}', 'acolhimento_faltas', '${nomeSeguro}', '${faltasConsecutivas}', event)" 
+                                style="background: #25D366; color: #ffffff; border: none; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                            💬 Falar com Aluno
+                        </button>` : '';
+
+                    adicionarAlertaInteligente({
+                        id: `alerta_evasao_${aluno.id}_${faltasConsecutivas}`,
+                        categoria: 'Anti-Evasão',
+                        corCat: '#ef4444',
+                        icon: '⚠️',
+                        texto: `<div style="line-height:1.45;"><b>Risco de Evasão:</b> O aluno <b>${App.escapeHTML(aluno.nome)}</b> acumulou <b>${faltasConsecutivas} faltas seguidas</b>!
+                                <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                    ${btnWhatsFalta}
+                                    <button onclick="event.stopPropagation(); App.abrirRelatorioFrequencia('${aluno.id}', '${nomeSeguro}'); App.toggleNotificacoes();" style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">⏱️ Ver Frequência</button>
+                                </div></div>`,
+                        acao: `App.abrirRelatorioFrequencia('${aluno.id}', '${nomeSeguro}')`
+                    });
+                }
+            });
+
+            // 6.2 ALERTA DE RETA FINAL DE CURSO (Certificado) E CHAMADA PENDENTE
+            const limiteAtrasoTime = hojeTime - (DIAS_ATRASO_CHAMADA * 24 * 60 * 60 * 1000);
+
+            listaPlanosAtivos.forEach(plano => {
+                const alunoAtivo = alunos.find(a => a.id === plano.idAluno);
+                if (!alunoAtivo || !Array.isArray(plano.aulas) || plano.aulas.length === 0) return;
+
+                const totalAulas = plano.aulas.length;
+                const aulasConcluidas = plano.aulas.filter(a => a.visto).length;
+                const aulasRestantes = totalAulas - aulasConcluidas;
+
+                // Se já cumpriu pelo menos metade do plano e faltam 1 ou 2 aulas (ou acabou de concluir)
+                if (totalAulas >= 4 && aulasConcluidas > 0 && aulasRestantes <= AULAS_AVISO_CERTIFICADO) {
+                    const textoRestante = aulasRestantes === 0 
+                        ? 'concluiu <b>100% das aulas</b> planeadas!' 
+                        : `está a apenas <b>${aulasRestantes} aula(s)</b> de concluir o planeamento!`;
+
+                    const btnCertificado = tipoUtilizador !== 'Professor' ? `
+                        <button onclick="event.stopPropagation(); App.renderizarRelatorio('documentos'); App.toggleNotificacoes();" style="background: #dcfce7; color: #15803d; border: 1px solid #bbf7d0; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">🎓 Emitir Certificado</button>
+                    ` : '';
+
+                    adicionarAlertaInteligente({
+                        id: `alerta_fimcurso_${plano.id}_${aulasRestantes}`,
+                        categoria: 'Pedagógico',
+                        corCat: '#0ea5e9',
+                        icon: '🎓',
+                        texto: `<div style="line-height:1.45;"><b>Reta Final de Curso:</b> <b>${App.escapeHTML(alunoAtivo.nome)}</b> ${textoRestante}
+                                <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                    ${btnCertificado}
+                                    <button onclick="event.stopPropagation(); App.renderizarTela('planejamento'); App.toggleNotificacoes();" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">📋 Ver Plano</button>
+                                </div></div>`,
+                        acao: "App.renderizarTela('planejamento')"
+                    });
+                }
+
+                // Verifica se há aulas passadas nos últimos 7 dias que ficaram sem "visto" no planeamento
+                let aulasSemVistoRecentes = 0;
+                plano.aulas.forEach(aula => {
+                    if (aula.visto || !aula.data) return;
+                    const partes = aula.data.includes('/') ? aula.data.split('/') : null;
+                    const dataIso = partes ? `${partes[2]}-${partes[1]}-${partes[0]}` : aula.data;
+                    const dataAulaTime = new Date(dataIso + 'T00:00:00').getTime();
+
+                    if (!isNaN(dataAulaTime) && dataAulaTime < hojeTime && dataAulaTime >= limiteAtrasoTime && dataIso !== hojeStr) {
+                        aulasSemVistoRecentes++;
+                    }
+                });
+
+                if (aulasSemVistoRecentes > 0) {
+                    adicionarAlertaInteligente({
+                        id: `alerta_semvisto_${plano.id}_${hojeStr}`,
+                        categoria: 'Diário de Classe',
+                        corCat: '#f59e0b',
+                        icon: '📋',
+                        texto: `<div style="line-height:1.45;"><b>Aula Pendente de Visto:</b> <b>${App.escapeHTML(alunoAtivo.nome)}</b> possui <b>${aulasSemVistoRecentes} aula(s)</b> recente(s) sem registo de conclusão no planeamento.
+                                <div style="margin-top: 8px; display: flex; gap: 6px; flex-wrap: wrap;">
+                                    <button onclick="event.stopPropagation(); App.renderizarTela('planejamento'); App.toggleNotificacoes();" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">📝 Atualizar Plano</button>
+                                    <button onclick="event.stopPropagation(); App.renderizarTela('chamada'); App.toggleNotificacoes();" style="background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1; padding: 5px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; cursor: pointer;">📋 Ir à Chamada</button>
+                                </div></div>`,
+                        acao: "App.renderizarTela('planejamento')"
+                    });
+                }
+            });
+
+            // 7. IA Preditiva de Faturação e Carga Horária
             if (tipoUtilizador !== 'Professor' && Array.isArray(financeiro) && Array.isArray(planejamentos)) {
                 const trintaDiasAtras = new Date(hojeTime - 30 * 24 * 60 * 60 * 1000);
                 const listaCursos = Array.isArray(cursos) ? cursos : [];
 
                 alunos.forEach(aluno => {
-                    const plano = planejamentos.find(p => p.idAluno === aluno.id && p.status !== 'Arquivado');
+                    const plano = listaPlanosAtivos.find(p => p.idAluno === aluno.id);
                     let dataUltimaMensalidade = null;
                     
                     financeiro.forEach(f => {
@@ -399,7 +517,7 @@ Object.assign(App, {
                 });
             }
     
-            // 7. Alerta de Estoque Baixo
+            // 8. Alerta de Estoque Baixo
             if (Array.isArray(estoque)) {
                 estoque.forEach(item => {
                     const qtd = parseInt(item.quantidade) || 0;
