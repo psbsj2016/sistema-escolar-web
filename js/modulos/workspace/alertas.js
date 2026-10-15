@@ -4,11 +4,12 @@ window.Workspace = window.Workspace || {};
 Workspace.Alertas = {
     notificacoesAtuais: [],
     idsConhecidos: new Set(),
-    primeiraBuscaConcluida: false, // 🚀 A CHAVE DO MISTÉRIO ADICIONADA AQUI
+    primeiraBuscaConcluida: false,
     
-    // 🚀 NOVAS VARIÁVEIS DE MEMÓRIA PARA O "DETETIVE DE RETORNO"
+    // Variáveis de memória para o Detetive de Retorno e Radar
     conexaoSSE: null, 
     momentoSaida: null,
+    radarPolling: null,
 
     init: () => {
         console.log("🔔 Motor de Alertas: Conexão em Tempo Real (SSE) Ativada.");
@@ -16,26 +17,32 @@ Workspace.Alertas = {
         Workspace.Alertas.construirDropdown();
         Workspace.Alertas.atualizarInterface();
         
-        // 🚀 LIGA O VIGIA DE ABAS ADORMECIDAS
+        // Liga o vigia de abas adormecidas
         Workspace.Alertas.iniciarDetetiveRetorno();
         
-     const aguardarUsuario = setInterval(() => {
-            const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
+        const aguardarUsuario = setInterval(() => {
+            const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
             if (meuNome) {
                 clearInterval(aguardarUsuario);
                 Workspace.Alertas.buscarNotificacoes(); 
                 Workspace.Alertas.iniciarConexaoTempoReal(); 
+
+                // 🛡️ Radar de Segurança: Verifica novas notificações a cada 15s caso o túnel SSE oscile
+                if (Workspace.Alertas.radarPolling) clearInterval(Workspace.Alertas.radarPolling);
+                Workspace.Alertas.radarPolling = setInterval(() => {
+                    if (document.visibilityState === 'visible' && Workspace.usuario) {
+                        Workspace.Alertas.buscarNotificacoes();
+                    }
+                }, 15000);
             }
         }, 1000);
     },
 
-   
     // ============================================================================
     // 🩺 O DESFIBRILADOR: ACORDA O SITE APÓS MUITO TEMPO ADORMECIDO
     // ============================================================================
     iniciarDetetiveRetorno: () => {
         document.addEventListener('visibilitychange', () => {
-            // 🚀 ESCUDO 1: Se o utilizador já foi deslogado, o detetive nem deve trabalhar!
             if (!window.Workspace || !Workspace.usuario) return;
 
             if (document.visibilityState === 'hidden') {
@@ -44,10 +51,9 @@ Workspace.Alertas = {
                 if (Workspace.Alertas.momentoSaida) {
                     const tempoAusente = Date.now() - Workspace.Alertas.momentoSaida;
                     
-                    // 🚀 ESCUDO 2: Só reanima se a sessão não tiver expirado a meio do processo
                     if (tempoAusente > 60000 && Workspace.usuario) {
                         console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
-                        if(window.Workspace && Workspace.mostrarAviso) {
+                        if (window.Workspace && Workspace.mostrarAviso) {
                             Workspace.mostrarAviso("Atualizando ⏳", "info", 2000);
                         }
                         Workspace.Alertas.reanimaSistema();
@@ -64,25 +70,21 @@ Workspace.Alertas = {
 
         // 2. Manda cada departamento recarregar as suas listas em silêncio
         if (window.Workspace) {
-            // Atualiza as Notificações
             if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes();
             
-            // Atualiza a Sala de Acessos (Avaliações / Lobbies) -> Resolve o seu Bug Principal!
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) Workspace.Avaliacoes.carregarLobbies();
             
-            // Atualiza o Bate-papo se o aluno o tiver deixado aberto na tela
             if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) {
-                const nomeChat = document.getElementById('ws-chat-titulo') ? document.getElementById('ws-chat-titulo').innerText : 'Bate-papo';
+                const elTitulo = document.getElementById('ws-chat-titulo');
+                const nomeChat = elTitulo ? elTitulo.innerText : 'Bate-papo';
                 Workspace.Sidebar.abrirChat(Workspace.Sidebar.turmaIdAberta, nomeChat);
             }
 
-            // Atualiza o Mural/Feed principal
             if (Workspace.Feed && Workspace.Feed.carregarPosts) {
-                Workspace.Feed.todosOsPosts = []; // Esvazia o lixo antigo da memória
+                Workspace.Feed.todosOsPosts = [];
                 Workspace.Feed.carregarPosts();
             }
             
-            // Atualiza a Estante de Materiais
             if (Workspace.Materiais && Workspace.Materiais.carregarMateriais) {
                 await Workspace.Materiais.carregarMateriais();
                 if (Workspace.usuario.tipo === 'Aluno') {
@@ -96,15 +98,14 @@ Workspace.Alertas = {
         }
     },
 
-   iniciarConexaoTempoReal: () => {
-        // 🚀 ESCUDO 3: Proteção final contra o Erro "Cannot read properties of null"
+    iniciarConexaoTempoReal: () => {
         if (!window.Workspace || !Workspace.usuario) return;
 
         if (Workspace.Alertas.conexaoSSE) {
             Workspace.Alertas.conexaoSSE.close();
         }
 
-        const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
+        const escolaId = Workspace.usuario.escolaId ? Workspace.usuario.escolaId : 'DEFAULT';
         Workspace.Alertas.conexaoSSE = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
         const sse = Workspace.Alertas.conexaoSSE; 
 
@@ -117,8 +118,16 @@ Workspace.Alertas = {
                 }
             }
             
-            if (data.type === 'NOVA_NOTIFICACAO' && data.destinatarios.includes(Workspace.usuario.nome || Workspace.usuario.login)) {
-                Workspace.Alertas.buscarNotificacoes(); 
+            if (data.type === 'NOVA_NOTIFICACAO' && Array.isArray(data.destinatarios)) {
+                const meuNome = (Workspace.usuario.nome ? Workspace.usuario.nome : '').trim().toLowerCase();
+                const meuLogin = (Workspace.usuario.login ? Workspace.usuario.login : '').trim().toLowerCase();
+                const souDestinatario = data.destinatarios.some(d => {
+                    const destLimpo = String(d ? d : '').trim().toLowerCase();
+                    return destLimpo === 'todos' ? true : (destLimpo === meuNome ? true : destLimpo === meuLogin);
+                });
+                if (souDestinatario) {
+                    Workspace.Alertas.buscarNotificacoes(); 
+                }
             }
 
             if (data.type === 'NOVO_POST') {
@@ -127,34 +136,28 @@ Workspace.Alertas = {
                 }
             }
 
-            // 🚀 A MÁGICA AO VIVO DO FEEDBACK: Se a janela estiver aberta, desenha o balão instantaneamente!
             if (data.type === 'NOVO_FEEDBACK') {
                 const modalAberto = document.getElementById('ws-feedback-modal');
                 if (modalAberto && Workspace.Sidebar && Workspace.Sidebar.modalFeedbackAtivo === data.entregaId) {
-                    Workspace.Sidebar.abrirModalFeedback(data.entregaId, null); // Recarrega os balões s/ pestanejar
+                    Workspace.Sidebar.abrirModalFeedback(data.entregaId, null);
                 }
             }
 
-            // 🚀 A NOVA MAGIA: Atualiza o Baú automaticamente se o professor alterar uma data!
             if (data.type === 'BAU_UPDATE') {
                 if (window.Workspace && Workspace.Bau && Workspace.Bau.carregarDadosDaNuvem) {
                     Workspace.Bau.carregarDadosDaNuvem();
                 }
             }
 
-            // 🚀 O ATUALIZADOR INSTANTÂNEO DE SALAS (Ocultar/Desocultar em Tempo Real)
             if (data.type === 'SALA_UPDATE') {
                 if (window.Workspace && Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) {
-                    Workspace.Avaliacoes.carregarLobbies(); // O ecrã do aluno pisca e o cartão some/aparece na hora!
+                    Workspace.Avaliacoes.carregarLobbies();
                 }
             }
 
-            // 🚀 O ATUALIZADOR INSTANTÂNEO DE MATERIAIS DA AULA
             if (data.type === 'MATERIAL_UPDATE') {
                 if (window.Workspace && Workspace.Materiais && Workspace.Materiais.carregarMateriais) {
-                    // Puxa as atualizações do banco de dados silenciosamente
                     Workspace.Materiais.carregarMateriais().then(() => {
-                        // Descobre quem está olhando para o ecrã e redesenha a estante!
                         if (Workspace.usuario.tipo === 'Aluno') {
                             const areaAluno = document.getElementById('ws-materiais-aluno-area');
                             if (areaAluno && areaAluno.style.display !== 'none') {
@@ -170,12 +173,9 @@ Workspace.Alertas = {
                 }
             }
 
-            // 🚀 O ATUALIZADOR INSTANTÂNEO DO BAÚ DO INGLÊS (Algoritmo Coletivo)
             if (data.type === 'BAU_INGLES_UPDATE') {
                 if (window.Workspace && Workspace.Ingles && Workspace.Ingles.loadDados) {
-                    // Vai à nuvem buscar a nova palavra/frase/envio silenciosamente
                     Workspace.Ingles.loadDados().then(() => {
-                        // Se o aluno ou professor estiver com o Baú aberto neste exato segundo, atualiza os dados gráficos instantaneamente!
                         const painelAberto = document.getElementById('ws-ingles-container');
                         if (painelAberto && painelAberto.style.display !== 'none') {
                             Workspace.Ingles.renderizarVisualizacao();
@@ -184,28 +184,21 @@ Workspace.Alertas = {
                 }
             }
 
-          // 🚀 Detetive de Novas Mensagens do Bate-papo (Ping-Pong + Sininho)
             if (data.type === 'NOVA_MENSAGEM') {
-                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                const meuNome = Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login;
                 
-                // 1. Só avisa se a mensagem NÃO for escrita por nós mesmos
                 if (data.mensagem && data.mensagem.autorNome !== meuNome) {
-                    
-                    // =================================================================
-                    // 🚀 O ESCUDO DE PRIVACIDADE: O aluno pertence a esta turma?
-                    // =================================================================
                     let pertenceATurma = false;
                     
                     if (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor') {
-                        pertenceATurma = true; // Professores monitorizam todas as salas
+                        pertenceATurma = true;
                     } else {
-                        // Reúne as turmas do aluno
                         const minhasTurmas = Array.isArray(Workspace.usuario.turmas) 
                             ? Workspace.usuario.turmas 
                             : [Workspace.usuario.turmas, Workspace.usuario.turma, Workspace.usuario.turmaId];
                         
                         const idRecebido = String(data.turmaId).toLowerCase().trim();
-                        const nomeRecebido = String(data.turmaNome || '').toLowerCase().trim();
+                        const nomeRecebido = String(data.turmaNome ? data.turmaNome : '').toLowerCase().trim();
                         
                         pertenceATurma = (idRecebido === 'global' || idRecebido === 'geral') || minhasTurmas.some(t => {
                             if (!t) return false;
@@ -214,24 +207,20 @@ Workspace.Alertas = {
                         });
                     }
 
-                    // Se a mensagem for de outra turma, ABORTA a notificação local instantaneamente!
                     if (!pertenceATurma) return;
-                    // =================================================================
 
-                    // 2. Verifica se o bate-papo daquela turma JÁ ESTÁ ABERTO no ecrã neste momento
                     const chatAberto = Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta === data.turmaId;
-                    const modalChatVisivel = document.getElementById('ws-chat-modal') && document.getElementById('ws-chat-modal').style.display !== 'none';
+                    const modalChatEl = document.getElementById('ws-chat-modal');
+                    const modalChatVisivel = modalChatEl && modalChatEl.style.display !== 'none';
                     
-                    // 3. Se o aluno não estiver a olhar para o chat, disparamos a novidade!
                     if (!(chatAberto && modalChatVisivel)) {
-                        const nomeTurma = data.turmaNome || 'Fórum da Turma';
+                        const nomeTurma = data.turmaNome ? data.turmaNome : 'Fórum da Turma';
                         const textoCurto = data.mensagem.texto.length > 30 ? data.mensagem.texto.substring(0, 30) + '...' : data.mensagem.texto;
                         
-                        // 🔔 A) REGISTO NO SININHO (Fica guardado até o aluno limpar)
                         const idLocal = `alerta_local_${Date.now()}_${Math.floor(Math.random()*1000)}`;
                         const novaNotificacaoLocal = {
                             id: idLocal,
-                            escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                            escolaId: Workspace.usuario.escolaId ? Workspace.usuario.escolaId : 'DEFAULT',
                             destinatarioNome: meuNome,
                             remetenteNome: data.mensagem.autorNome,
                             mensagem: `enviou uma mensagem lá no chat: "${textoCurto}"`,
@@ -242,14 +231,12 @@ Workspace.Alertas = {
                             data: new Date().toISOString()
                         };
 
-                        // Adiciona no topo da lista do sininho e toca o alerta
                         Workspace.Alertas.notificacoesAtuais.unshift(novaNotificacaoLocal);
                         Workspace.Alertas.idsConhecidos.add(idLocal);
                         const bell = document.getElementById('ws-bell');
                         if (bell) { bell.classList.add('bell-ringing'); setTimeout(() => bell.classList.remove('bell-ringing'), 1000); }
                         Workspace.Alertas.atualizarInterface();
 
-                        // 🏓 B) O BALÃO SALTITANTE (Ping-Pong Visual)
                         const avatarHtml = window.Workspace.renderizarAvatar(data.mensagem.autorNome, 44);
                         const layoutDivertido = `
                             <div style="display: flex; align-items: center; gap: 12px; margin-left: -5px; width: 100%;">
@@ -263,7 +250,7 @@ Workspace.Alertas = {
                             </div>
                         `;
                         
-                        if(window.Workspace && Workspace.mostrarAviso) {
+                        if (window.Workspace && Workspace.mostrarAviso) {
                             Workspace.mostrarAviso(
                                 layoutDivertido, 
                                 'pingpong',
@@ -282,7 +269,6 @@ Workspace.Alertas = {
 
         sse.onerror = () => { 
             console.log("Túnel tremendo. O navegador está a tentar recuperar..."); 
-            // 🚀 PROTEÇÃO: Se a conexão morrer definitivamente, forçamos um religamento em 3s
             if (sse.readyState === EventSource.CLOSED) {
                 setTimeout(() => {
                     if (Workspace.Alertas && Workspace.Alertas.iniciarConexaoTempoReal) {
@@ -293,7 +279,7 @@ Workspace.Alertas = {
         };
     },
 
-injetarCSS: () => {
+    injetarCSS: () => {
         if (document.getElementById('ws-alertas-css')) return;
         const style = document.createElement('style');
         style.id = 'ws-alertas-css';
@@ -312,7 +298,6 @@ injetarCSS: () => {
             .ws-scroll-suave::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
             .ws-scroll-suave::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 
-            /* 🚀 NOVO DESIGN: BOLHA VERMELHA NUMERADA ESTILO MOBILE */
             #ws-noti-count {
                 position: absolute !important;
                 top: -6px !important;
@@ -336,7 +321,7 @@ injetarCSS: () => {
                 box-sizing: border-box !important;
             }
 
-                @keyframes highlightMagic { 
+            @keyframes highlightMagic { 
                 0% { background-color: transparent; transform: scale(1); } 
                 20% { background-color: #fff9c4; transform: scale(1.02); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); } 
                 80% { background-color: #fff9c4; transform: scale(1.02); box-shadow: 0 0 15px rgba(241, 196, 15, 0.5); } 
@@ -344,12 +329,10 @@ injetarCSS: () => {
             }
             .ws-highlight-magic { animation: highlightMagic 2.5s ease-out; }
         `;
-        
-         document.head.appendChild(style);
+        document.head.appendChild(style);
     },
 
- construirDropdown: () => {
-        // 🚀 CORREÇÃO 2: Procura TODOS os sininhos na tela (Mobile e PC)
+    construirDropdown: () => {
         const bells = document.querySelectorAll('#ws-bell');
         if (bells.length === 0) return;
         
@@ -358,34 +341,31 @@ injetarCSS: () => {
             dropdown = document.createElement('div');
             dropdown.id = 'ws-noti-dropdown';
             dropdown.style.cssText = 'display:none;'; 
-            // Prendemos no body para ser uma gaveta independente!
             document.body.appendChild(dropdown);
         }
         
-        // 🚀 PREVINE DUPLICAÇÃO DE CLIQUES E ATIVA INSTANTANEAMENTE EM TODOS OS SINOS
         if (!Workspace.Alertas.cliquesConfigurados) {
             bells.forEach(bell => {
                 bell.addEventListener('click', (e) => {
                     e.preventDefault();
-                    e.stopPropagation(); // Impede o clique de se perder
+                    e.stopPropagation();
                     dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
                     const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                     if (perfilDropdown) perfilDropdown.style.display = 'none';
                 });
             });
             
-            // Garante que clicar fora da gaveta também a fecha
             document.addEventListener('click', (e) => { 
                 if (!e.target.closest('#ws-bell') && !e.target.closest('#ws-noti-dropdown')) {
                     dropdown.style.display = 'none'; 
                 }
             });
-            Workspace.Alertas.cliquesConfigurados = true; // Marca que já ativou os cliques
+            Workspace.Alertas.cliquesConfigurados = true;
         }
     },
 
-buscarNotificacoes: async () => {
-        const meuNome = Workspace.usuario ? (Workspace.usuario.nome || Workspace.usuario.login) : null;
+    buscarNotificacoes: async () => {
+        const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
         if (!meuNome) return;
         
         try {
@@ -398,12 +378,12 @@ buscarNotificacoes: async () => {
                 const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
                 const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
 
-                // 🚀 A CORREÇÃO LÓGICA: Se não for o 1º segundo de login e houver novidade, mostra no ecrã!
                 if (Workspace.Alertas.primeiraBuscaConcluida && novas.length > 0) {
                     
                     novas.forEach((novaNoti, index) => {
                         setTimeout(async () => { 
-                            const titulo = novaNoti.mensagem.split('"')[1] || 'Atividade'; 
+                            const partesMsg = novaNoti.mensagem ? novaNoti.mensagem.split('"') : [];
+                            const titulo = partesMsg[1] ? partesMsg[1] : 'Atividade'; 
 
                             // 1. AVALIAÇÕES (ESCRITA E ORAL)
                             if (novaNoti.origem === 'avaliacao_escrita' || novaNoti.origem === 'avaliacao_oral') {
@@ -438,7 +418,6 @@ buscarNotificacoes: async () => {
                                             Workspace.Bau.atualizarCalendarioVisual();
                                         }
                                     } catch (e) {}
-                                    // Teletransporte para a sessão!
                                     Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
                                 });
                             }
@@ -455,7 +434,7 @@ buscarNotificacoes: async () => {
                                 });
                             }
 
-                           // 3. EXERCÍCIOS E ACESSOS ÀS SESSÕES (Professor)
+                            // 3. EXERCÍCIOS E ACESSOS ÀS SESSÕES (Professor)
                             else if (novaNoti.origem === 'tarefa' || novaNoti.origem === 'exercicio' || novaNoti.origem === 'acesso_online') {
                                 const ehProfessor = Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor';
                                 
@@ -497,9 +476,9 @@ buscarNotificacoes: async () => {
                                 if (window.Toast && typeof Toast.showInterativo === 'function') {
                                     Toast.showInterativo({
                                         remetenteNome: novaNoti.remetenteNome,
-                                        subtitulo: novaNoti.tituloAviso || "Comunicado da Coordenação 📢",
+                                        subtitulo: novaNoti.tituloAviso ? novaNoti.tituloAviso : "Comunicado da Coordenação 📢",
                                         mensagemCorpo: novaNoti.mensagem
-                                    }, 'avaliacao', () => Workspace.Alertas.lerEIr(novaNoti.id, 'post', '', ''));
+                                    }, 'avaliacao', () => Workspace.Alertas.lerEIr(novaNoti.id, 'aviso_coordenacao', '', ''));
                                 } else if (window.Toast && Toast.show) {
                                     Toast.show(`📢 ${novaNoti.remetenteNome}: ${novaNoti.mensagem}`, 'info', 6000);
                                 }
@@ -521,15 +500,14 @@ buscarNotificacoes: async () => {
                 } 
                 
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
-                Workspace.Alertas.primeiraBuscaConcluida = true; // 🚀 O SISTEMA APRENDE! Nas próximas, ele mostra o ecrã.
+                Workspace.Alertas.primeiraBuscaConcluida = true;
                 
                 Workspace.Alertas.atualizarInterface();
             }
         } catch (e) {}
     },
 
-atualizarInterface: () => {
-        // 🚀 CORREÇÃO 1: Procura TODAS as bolinhas de notificação e atualiza-as em simultâneo
+    atualizarInterface: () => {
         const badges = document.querySelectorAll('#ws-noti-count, .ws-badge');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
@@ -553,7 +531,6 @@ atualizarInterface: () => {
                     </div>
                     <div style="text-align:center; color:#94a3b8; padding:50px 0;"><div style="font-size:45px; margin-bottom:10px;">🔔</div><div style="font-weight:600; font-size:16px;">Parabéns! </div><div style="font-size:13px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
-                
                 dropdown.innerHTML = `
                     <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:15px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
                         <span style="font-size: 16px;">🔔 Notificações (${qtd})</span>
@@ -572,7 +549,7 @@ atualizarInterface: () => {
                             <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
                                 ${avatarSino}
                                 <div style="flex: 1; min-width: 0;">
-                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong> ${n.mensagem}</div>
+                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong>${n.mensagem}</div>
                                     <div class="ws-time-ago" data-time="${n.data}" style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
                                 </div>
                             </div>
@@ -584,34 +561,28 @@ atualizarInterface: () => {
         }
     },
 
-    // 🚀 A NOVA FUNÇÃO: Limpa todas com o Efeito Cascata!
     limparTodas: () => {
-        if (!Workspace.usuario || !Workspace.usuario.nome) return;
+        const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
+        if (!meuNome) return;
 
-        // 1. Procura todas as notificações visíveis na lista
         const itens = document.querySelectorAll('#ws-lista-notificacoes .ws-noti-item');
         if (itens.length === 0) return;
 
-       // 2. Aplica a classe de animação, mas acelera brutalmente após o 10º item
         itens.forEach((item, index) => {
             setTimeout(() => {
                 item.classList.add('riscando');
-            }, Math.min(index, 10) * 50); // Trava o multiplicador no 10
+            }, Math.min(index, 10) * 50);
         });
 
-        // 3. Calcula o tempo de espera (agora nunca passa de ~800ms)
         const tempoEspera = (Math.min(itens.length, 10) * 50) + 300;
 
-        // 4. Só depois de todas saírem da tela é que limpamos a memória e o banco de dados
         setTimeout(async () => {
-            // Esvazia as listas locais e atualiza o ecrã para a mensagem de "Tudo limpo!"
             Workspace.Alertas.notificacoesAtuais = [];
             Workspace.Alertas.idsConhecidos.clear();
             Workspace.Alertas.atualizarInterface();
 
-            // Envia a ordem secreta para o servidor limpar de vez
             try {
-                const nomeDono = encodeURIComponent(Workspace.usuario.nome);
+                const nomeDono = encodeURIComponent(meuNome);
                 await Workspace.api(`/workspace/notificacoes/usuario/${nomeDono}/ler-todas`, 'PUT');
             } catch (e) {
                 console.error("Erro ao limpar notificações no servidor.");
@@ -620,11 +591,9 @@ atualizarInterface: () => {
     },
 
     lerEIr: async (id, origem, origemId, destinoNome) => {
-        // Fecha a gaveta do sininho imediatamente
         const dropdown = document.getElementById('ws-noti-dropdown');
         if (dropdown) dropdown.style.display = 'none';
 
-        // Marca como lida na memória e na nuvem
         if (String(id).startsWith('alerta_local_')) {
             Workspace.Alertas.notificacoesAtuais = Workspace.Alertas.notificacoesAtuais.filter(n => n.id !== id);
             Workspace.Alertas.idsConhecidos.delete(id);
@@ -638,21 +607,17 @@ atualizarInterface: () => {
             } catch(e) {}
         }
 
-        // Esconde o chat se estiver aberto
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
         window.scrollTo({ top: 0, behavior: 'smooth' });
 
-        // 🚀 O ROTEADOR INTELIGENTE (O "Teletransporte" para qualquer área do Hub)
-        // 🚀 O ROTEADOR INTELIGENTE (O "Teletransporte" com Destaque)
         if (origem === 'post' || origem === 'comentario_novo' || origem === 'comentario_reacao') {
             if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
             
             let postId = origemId;
             let comentarioId = null;
 
-            // Desempacota os IDs caso seja uma interação de comentário
-            if (origemId.includes('|')) {
+            if (origemId && origemId.includes('|')) {
                 const partes = origemId.split('|');
                 postId = partes[0];
                 comentarioId = partes[1];
@@ -664,7 +629,6 @@ atualizarInterface: () => {
                 if (postElement) {
                     clearInterval(checkExist);
                     
-                    // Se a notificação for de um comentário, garantimos que a aba de comentários abre!
                     if (comentarioId && Workspace.Feed && Workspace.Feed.toggleComentarios) {
                         const boxComentarios = document.getElementById(`box-comentarios-${postId}`);
                         if (boxComentarios && boxComentarios.style.display === 'none') {
@@ -672,85 +636,68 @@ atualizarInterface: () => {
                         }
                     }
 
-                    // Define quem vai brilhar (o Post inteiro ou apenas o Comentário exato)
                     let alvoDestaque = postElement;
                     if (comentarioId) {
                         const comElement = document.getElementById(`comentario-${comentarioId}`);
                         if (comElement) alvoDestaque = comElement;
                     }
 
-                    // O Salto Automático
                     alvoDestaque.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // O Piscar de Cor (Remove a classe e volta a adicionar para forçar o recomeço da animação)
                     alvoDestaque.classList.remove('ws-highlight-magic');
                     void alvoDestaque.offsetWidth; 
                     alvoDestaque.classList.add('ws-highlight-magic');
                 }
             }, 200);
-            setTimeout(() => clearInterval(checkExist), 3000); // Desiste após 3 segundos se a net estiver lenta
+            setTimeout(() => clearInterval(checkExist), 3000);
         }
         else if (origem === 'chat') {
             if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
-            if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome || 'Fórum da Turma');
+            if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) Workspace.Sidebar.abrirChat(origemId, destinoNome ? destinoNome : 'Fórum da Turma');
         }
-       else if (origem === 'tarefa' || origem === 'exercicio') {
-            // Abre primeiro a página de Exercícios 
+        else if (origem === 'tarefa' || origem === 'exercicio') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
             
             setTimeout(async () => {
-                // 🚀 O TRUQUE DE MESTRE: Força a plataforma a atualizar as tarefas (invisivelmente)
-                // Isto garante que o aluno vê as novas edições que o professor fez!
                 if (Workspace.Sidebar && Workspace.Sidebar.carregarTarefas) {
                     await Workspace.Sidebar.carregarTarefas();
                 }
-                // Só depois de atualizar é que abre o modal específico da tarefa
                 if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
                     Workspace.Sidebar.abrirModalTarefa(origemId);
                 }
             }, 500); 
         }
-        // 🚀 O NOVO ROTEIRO DO FEEDBACK 
         else if (origem === 'feedback_tarefa') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('tarefas');
             setTimeout(() => {
-                // Desempacotamos os 2 IDs que guardamos no servidor separados pela barra vertical (|)
                 const partes = origemId.split('|');
                 const eventoId = partes[0];
                 const entregaId = partes[1];
                 
                 if (Workspace.Sidebar && Workspace.Sidebar.abrirModalTarefa) {
-                    Workspace.Sidebar.abrirModalTarefa(eventoId); // Abre o exercício
+                    Workspace.Sidebar.abrirModalTarefa(eventoId);
                     setTimeout(() => {
-                        // 0.6 segundos depois, sobrepõe o modal de Feedback por cima do exercício!
                         if (Workspace.Sidebar.abrirModalFeedback) Workspace.Sidebar.abrirModalFeedback(entregaId, eventoId);
                     }, 600); 
                 }
             }, 500); 
         }
         else if (origem === 'material') {
-            // Abre o Hub e invoca a página de Materiais
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('sala_aula');
             setTimeout(() => {
-                 if (window.Workspace && Workspace.abrirPaginaMateriais) Workspace.abrirPaginaMateriais();
+                if (window.Workspace && Workspace.abrirPaginaMateriais) Workspace.abrirPaginaMateriais();
             }, 300);
         }
-        // 🚀 O ROTEIRO DA LOUSA DIGITAL: Leva o professor ao painel de controlo!
         else if (origem === 'lousa_espera') {
             if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('sala_aula');
             
             setTimeout(() => {
                 const painelLousa = document.getElementById('ws-cartao-lousa-prof');
                 if (painelLousa) {
-                    // Rola a tela até ao painel
                     painelLousa.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Efeito de brilho mágico
                     painelLousa.classList.remove('ws-highlight-magic');
                     void painelLousa.offsetWidth; 
                     painelLousa.classList.add('ws-highlight-magic');
                     
-                    // 🚀 BÓNUS: Seleciona automaticamente a turma do aluno que chamou!
                     const seletorTurma = document.getElementById('ws-prof-turma-lousa');
                     if (seletorTurma && origemId && origemId !== 'global') {
                         seletorTurma.value = origemId;
@@ -758,16 +705,11 @@ atualizarInterface: () => {
                 }
             }, 600);
         }
-        // ========================================================================
-        // 🚀 ROTEADOR INTELIGENTE (PROFESSOR VS ALUNO)
-        // ========================================================================
         else if (origem === 'avaliacao_escrita') {
             if (window.Workspace && Workspace.navegarPara) {
-                // Se for Professor ou Gestor, vai para a Central de Correções
                 if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
                     Workspace.navegarPara('avaliacoes_prof'); 
                 } else {
-                    // Se for Aluno, vai fazer o teste
                     Workspace.navegarPara('avaliacoes_escrita'); 
                 }
             }
@@ -784,42 +726,31 @@ atualizarInterface: () => {
         else if (origem === 'online' || origem === 'online_edit' || origem === 'acesso_online' || origem === 'sessao_vivo') {
             if (window.Workspace && Workspace.navegarPara) {
                 if (Workspace.usuario && (Workspace.usuario.tipo === 'Professor' || Workspace.usuario.tipo === 'Gestor')) {
-                    // 1. Leva o Professor para a área de Encontros
                     Workspace.navegarPara('encontros_prof');
                     
-                    // 2. Chama a função que vai carregar os dados na Base de Dados
                     setTimeout(() => {
                         if (Workspace.Avaliacoes && Workspace.Avaliacoes.abrirGerenciador) {
                             Workspace.Avaliacoes.abrirGerenciador();
                             
-                            // 🚀 3. O RADAR DE LONGA DURAÇÃO (Até 20 segundos de paciência)
                             let tentativas = 0;
                             const radarPisca = setInterval(() => {
                                 const cartaoSessao = document.querySelector(`[id*="${origemId}"]`);
                                 
-                                // Se encontrou o cartão E o "Carregando Painel..." já desapareceu
                                 if (cartaoSessao && cartaoSessao.offsetParent !== null) {
-                                    clearInterval(radarPisca); // Missão cumprida, desliga o radar!
-                                    
-                                    // Desliza suavemente até o cartão
+                                    clearInterval(radarPisca);
                                     cartaoSessao.scrollIntoView({ behavior: 'smooth', block: 'center' });
                                     cartaoSessao.classList.remove('ws-highlight-magic');
-                                    
-                                    // Pequeno atraso para o navegador aplicar a pintura amarela
                                     setTimeout(() => {
                                         cartaoSessao.classList.add('ws-highlight-magic');
                                     }, 100);
                                 }
                                 
                                 tentativas++;
-                                // 80 tentativas a cada 250ms = 20 segundos de espera máxima!
-                                // Garante que o radar não fica a correr para sempre se houver um erro.
                                 if (tentativas > 80) clearInterval(radarPisca); 
                             }, 250);
                         }
                     }, 500);
                 } else {
-                    // 🚀 Lógica do Aluno (Mantida intacta)
                     Workspace.navegarPara('avaliacoes_online');
                     
                     setTimeout(() => {
@@ -838,12 +769,15 @@ atualizarInterface: () => {
         else if (origem === 'bau') {
             if (Workspace.Bau && Workspace.Bau.irParaCalendarioDoBau) Workspace.Bau.irParaCalendarioDoBau(Number(origemId));
         }
+        else if (origem === 'aviso_coordenacao') {
+            if (window.Workspace && Workspace.voltarAoFeed) Workspace.voltarAoFeed();
+        }
     },
 
     riscar: async (id, event) => {
         event.stopPropagation(); 
         const itemUI = document.getElementById(`notif-item-${id}`);
-        if(itemUI) itemUI.classList.add('riscando'); 
+        if (itemUI) itemUI.classList.add('riscando'); 
         
         if (String(id).startsWith('alerta_local_')) {
             setTimeout(() => {
@@ -861,13 +795,12 @@ atualizarInterface: () => {
                 Workspace.Alertas.idsConhecidos.delete(id);
                 Workspace.Alertas.atualizarInterface(); 
             }, 300); 
-        } catch (e) { if(itemUI) itemUI.classList.remove('riscando'); }
+        } catch (e) { if (itemUI) itemUI.classList.remove('riscando'); }
     },
 
-   tempoRelativo: (dataString) => {
+    tempoRelativo: (dataString) => {
         if (!dataString) return '';
         const dataPost = new Date(dataString);
-        // 🚀 CORREÇÃO: Math.max(0) impede que a diferença de segundos fique negativa
         const diff = Math.max(0, Math.floor((new Date() - dataPost) / 1000));
         
         if (diff < 60) return 'Agora mesmo';

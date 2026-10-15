@@ -22,6 +22,10 @@ App.abrirModalCadastroModulo = (tipo, id) => {
 };
 
 Object.assign(App, {
+
+    // Memória das mensagens salvas para reutilização rápida
+    mensagensSalvasWorkspace: [],
+
     // =========================================================
     // 🎓 1. HUB CENTRAL DO WORKSPACE (MENU DE 2 BOTÕES + AVISO GERAL)
     // =========================================================
@@ -65,6 +69,27 @@ Object.assign(App, {
         `;
     },
 
+    // Função auxiliar que garante que temos a lista de alunos e logins do Workspace carregada
+    garantirCacheWorkspace: async () => {
+        if (App.workspaceCache && Array.isArray(App.workspaceCache.usuarios) && App.workspaceCache.usuarios.length > 0) {
+            return App.workspaceCache;
+        }
+        try {
+            const [alunosRes, usuariosRes] = await Promise.all([
+                App.api('/alunos', 'GET', null, true),
+                App.api('/usuarios', 'GET', null, true)
+            ]);
+            const alunos = Array.isArray(alunosRes) ? alunosRes : [];
+            const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
+            const alunosAtivos = alunos.filter(a => !a.status ? true : a.status === 'Ativo');
+            const usuariosAlunos = usuarios.filter(u => u.tipo === 'Aluno' ? true : Boolean(u.alunoRefId));
+            App.workspaceCache = { alunos: alunosAtivos, usuarios: usuariosAlunos };
+        } catch (e) {
+            App.workspaceCache = { alunos: [], usuarios: [] };
+        }
+        return App.workspaceCache;
+    },
+
     // =========================================================
     // 🔐 2. TELA DE GESTÃO DE ACESSOS E AVISOS
     // =========================================================
@@ -83,8 +108,8 @@ Object.assign(App, {
             const alunos = Array.isArray(alunosRes) ? alunosRes : [];
             const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
 
-            const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
-            const usuariosAlunos = usuarios.filter(u => u.tipo === 'Aluno' || u.alunoRefId);
+            const alunosAtivos = alunos.filter(a => !a.status ? true : a.status === 'Ativo');
+            const usuariosAlunos = usuarios.filter(u => u.tipo === 'Aluno' ? true : Boolean(u.alunoRefId));
 
             App.workspaceCache = { alunos: alunosAtivos, usuarios: usuariosAlunos };
 
@@ -130,15 +155,16 @@ Object.assign(App, {
 
     filtrarWorkspaceAdmin: () => {
         const input = document.getElementById('ws-busca-aluno');
-        const termo = (input?.value || '').toLowerCase();
+        const valorInput = input && input.value ? input.value : '';
+        const termo = valorInput.toLowerCase();
         
-        sessionStorage.setItem('ws_filtro_admin_acessos', input?.value || '');
+        sessionStorage.setItem('ws_filtro_admin_acessos', valorInput);
 
         const container = document.getElementById('ws-admin-tabela-container');
         if (!container || !App.workspaceCache) return;
 
         const { alunos, usuarios } = App.workspaceCache;
-        const filtrados = alunos.filter(a => (a.nome || '').toLowerCase().includes(termo));
+        const filtrados = alunos.filter(a => (a.nome ? a.nome : '').toLowerCase().includes(termo));
 
         if (filtrados.length === 0) {
             container.innerHTML = '<p style="text-align:center; padding:30px; color:#666;">Nenhum aluno encontrado com este nome.</p>';
@@ -159,13 +185,13 @@ Object.assign(App, {
         `;
 
         filtrados.forEach(aluno => {
-            const conta = usuarios.find(u => u.alunoRefId === aluno.id);
+            const conta = usuarios.find(u => String(u.alunoRefId) === String(aluno.id));
             
             const statusHtml = conta 
                 ? `<span style="background:#eafaf1; color:#27ae60; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #2ecc71;">✅ ${App.escapeHTML(conta.login)}</span>` 
                 : `<span style="background:#fdf2f2; color:#e74c3c; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:bold; border:1px solid #e74c3c;">❌ Sem Acesso</span>`;
             
-            const nomeRealWorkspace = conta ? (conta.nome || aluno.nome || conta.login) : aluno.nome;
+            const nomeRealWorkspace = conta ? (conta.nome ? conta.nome : (aluno.nome ? aluno.nome : conta.login)) : aluno.nome;
             const nomeSeguro = App.escapeHTML(nomeRealWorkspace).replace(/'/g, "\\'");
 
             const btnHtml = conta
@@ -189,7 +215,128 @@ Object.assign(App, {
     },
 
     // =========================================================
-    // 🔔 NOVO: MODAL DE ENVIO DE AVISO PUSH PARA ALUNOS NO WORKSPACE
+    // 💾 3. MOTOR DE MENSAGENS SALVAS (PARA REUTILIZAR QUANDO PRECISAR)
+    // =========================================================
+    getChaveLocalAvisosSalvos: () => {
+        return typeof App.getTenantKey === 'function' ? App.getTenantKey('ws_avisos_salvos_cache') : 'ws_avisos_salvos_cache';
+    },
+
+    carregarMensagensSalvasWS: async () => {
+        const container = document.getElementById('ws-lista-mensagens-salvas');
+        if (container) {
+            container.innerHTML = '<div style="font-size:12px; color:#94a3b8; text-align:center; padding:10px;">A carregar mensagens salvas... ⏳</div>';
+        }
+
+        try {
+            const res = await App.api('/push/avisos-salvos', 'GET', null, true);
+            if (Array.isArray(res)) {
+                App.mensagensSalvasWorkspace = res;
+                localStorage.setItem(App.getChaveLocalAvisosSalvos(), JSON.stringify(res));
+            } else {
+                const local = JSON.parse(localStorage.getItem(App.getChaveLocalAvisosSalvos()) ? localStorage.getItem(App.getChaveLocalAvisosSalvos()) : '[]');
+                App.mensagensSalvasWorkspace = Array.isArray(local) ? local : [];
+            }
+        } catch (e) {
+            const local = JSON.parse(localStorage.getItem(App.getChaveLocalAvisosSalvos()) ? localStorage.getItem(App.getChaveLocalAvisosSalvos()) : '[]');
+            App.mensagensSalvasWorkspace = Array.isArray(local) ? local : [];
+        }
+
+        App.renderizarListaMensagensSalvasWS();
+    },
+
+    renderizarListaMensagensSalvasWS: () => {
+        const container = document.getElementById('ws-lista-mensagens-salvas');
+        const badgeCount = document.getElementById('ws-count-mensagens-salvas');
+        if (!container) return;
+
+        const lista = App.mensagensSalvasWorkspace ? App.mensagensSalvasWorkspace : [];
+        if (badgeCount) badgeCount.innerText = lista.length;
+
+        if (lista.length === 0) {
+            container.innerHTML = `
+                <div style="text-align:center; padding:12px; color:#94a3b8; font-size:12px; background:#f8fafc; border-radius:8px; border:1px dashed #cbd5e1;">
+                    Nenhuma mensagem salva ainda. As mensagens que enviar ou guardar aparecerão aqui para reutilizar com 1 clique!
+                </div>`;
+            return;
+        }
+
+        container.innerHTML = lista.map((item, idx) => {
+            const resumoMsg = item.mensagem && item.mensagem.length > 70 
+                ? item.mensagem.substring(0, 70) + '...' 
+                : (item.mensagem ? item.mensagem : '');
+
+            return `
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px; background:#f8fafc; border:1px solid #e2e8f0; padding:8px 10px; border-radius:8px; margin-bottom:6px; transition:0.2s;" onmouseover="this.style.borderColor='#93c5fd'" onmouseout="this.style.borderColor='#e2e8f0'">
+                    <div style="flex:1; min-width:0; cursor:pointer;" onclick="App.usarMensagemSalvaWS(${idx})" title="Clique para preencher este aviso">
+                        <div style="font-size:12px; font-weight:700; color:#1e293b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">📌 ${App.escapeHTML(item.titulo)}</div>
+                        <div style="font-size:11px; color:#64748b; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${App.escapeHTML(resumoMsg)}</div>
+                    </div>
+                    <div style="display:flex; gap:4px; flex-shrink:0;">
+                        <button type="button" onclick="App.usarMensagemSalvaWS(${idx})" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" title="Carregar texto nos campos">📂 Usar</button>
+                        <button type="button" onclick="App.excluirMensagemSalvaWS('${item.id}', ${idx})" style="background:#fef2f2; color:#ef4444; border:1px solid #fecaca; padding:4px 7px; border-radius:6px; font-size:11px; cursor:pointer;" title="Apagar das salvas">🗑️</button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    usarMensagemSalvaWS: (idx) => {
+        const item = App.mensagensSalvasWorkspace && App.mensagensSalvasWorkspace[idx];
+        if (!item) return;
+
+        const inputTitulo = document.getElementById('ws-aviso-titulo');
+        const inputMsg = document.getElementById('ws-aviso-mensagem');
+        if (inputTitulo) inputTitulo.value = item.titulo ? item.titulo : '';
+        if (inputMsg) inputMsg.value = item.mensagem ? item.mensagem : '';
+
+        if (typeof App.showToast === 'function') {
+            App.showToast("📂 Mensagem carregada! Pode enviar ou ajustar o texto.", "info");
+        }
+    },
+
+    salvarApenasModeloAvisoWS: async () => {
+        const elTitulo = document.getElementById('ws-aviso-titulo');
+        const elMsg = document.getElementById('ws-aviso-mensagem');
+        const titulo = elTitulo && elTitulo.value ? elTitulo.value.trim() : '';
+        const mensagem = elMsg && elMsg.value ? elMsg.value.trim() : '';
+
+        if (!titulo || !mensagem) {
+            return App.showToast("Preencha o título e a mensagem antes de guardar na lista.", "warning");
+        }
+
+        try {
+            const res = await App.api('/push/avisos-salvos', 'POST', { titulo, mensagem });
+            if (res && res.success) {
+                App.showToast(res.message ? res.message : "💾 Mensagem guardada na lista!", "success");
+                await App.carregarMensagensSalvasWS();
+            } else {
+                // Fallback local caso o servidor ainda não tenha sido reiniciado
+                const novo = { id: 'local_' + Date.now(), titulo, mensagem, dataCriacao: new Date().toISOString() };
+                App.mensagensSalvasWorkspace.unshift(novo);
+                localStorage.setItem(App.getChaveLocalAvisosSalvos(), JSON.stringify(App.mensagensSalvasWorkspace));
+                App.renderizarListaMensagensSalvasWS();
+                App.showToast("💾 Mensagem guardada na lista!", "success");
+            }
+        } catch (e) {
+            App.showToast("Erro ao guardar mensagem.", "error");
+        }
+    },
+
+    excluirMensagemSalvaWS: async (id, idx) => {
+        try {
+            App.mensagensSalvasWorkspace.splice(idx, 1);
+            localStorage.setItem(App.getChaveLocalAvisosSalvos(), JSON.stringify(App.mensagensSalvasWorkspace));
+            App.renderizarListaMensagensSalvasWS();
+
+            if (id && !String(id).startsWith('local_')) {
+                await App.api(`/push/avisos-salvos/${id}`, 'DELETE', null, true);
+            }
+            if (typeof App.showToast === 'function') App.showToast("🗑️ Mensagem removida da lista.", "info");
+        } catch (e) {}
+    },
+
+    // =========================================================
+    // 🔔 4. MODAL DE ENVIO DE AVISO PARA ALUNOS NO WORKSPACE
     // =========================================================
     abrirModalAvisoWorkspace: (alvoUserId, alunoRefId, nomeDestino) => {
         let modal = document.getElementById('modal-aviso-ws');
@@ -200,40 +347,62 @@ Object.assign(App, {
             document.body.appendChild(modal);
         }
 
-        const primeiroNome = (nomeDestino || 'Aluno').split(' ')[0];
+        const nomeBase = nomeDestino ? nomeDestino : 'Aluno';
+        const primeiroNome = nomeBase.split(' ')[0];
+        const primeiroNomeSeguro = App.escapeHTML(primeiroNome).replace(/'/g, "\\'");
+        const nomeDestinoSeguro = App.escapeHTML(nomeBase).replace(/'/g, "\\'");
 
         modal.innerHTML = `
-            <div style="background:#fff; padding:25px; border-radius:16px; max-width:440px; width:100%; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.25s ease; box-sizing:border-box;">
-                <div style="text-align:center; font-size:36px; margin-bottom:8px;">📲</div>
-                <h3 style="margin:0 0 6px 0; color:#1e293b; text-align:center;">Enviar Aviso no Workspace</h3>
-                <p style="font-size:13px; color:#64748b; text-align:center; margin:0 0 18px 0;">Destinatário: <strong style="color:#2563eb;">${App.escapeHTML(nomeDestino)}</strong></p>
+            <div style="background:#fff; padding:22px; border-radius:16px; max-width:500px; width:100%; max-height:90vh; overflow-y:auto; box-shadow:0 20px 50px rgba(0,0,0,0.3); animation: slideIn 0.25s ease; box-sizing:border-box;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <h3 style="margin:0; color:#1e293b; font-size:18px;">📲 Enviar Aviso para o Workspace</h3>
+                    <button type="button" onclick="document.getElementById('modal-aviso-ws').style.display='none'" style="background:none; border:none; font-size:20px; color:#94a3b8; cursor:pointer;">✖</button>
+                </div>
+                <p style="font-size:13px; color:#64748b; margin:0 0 15px 0; text-align:left;">Destinatário: <strong style="color:#2563eb;">${App.escapeHTML(nomeBase)}</strong></p>
 
-                <div style="margin-bottom:15px;">
+                <!-- MODELOS FIXOS RÁPIDOS -->
+                <div style="margin-bottom:14px; text-align:left;">
                     <label style="font-weight:bold; font-size:11px; color:#64748b; text-transform:uppercase; display:block; margin-bottom:6px;">⚡ Modelos Rápidos (1 Clique):</label>
                     <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                        <button type="button" onclick="App.preencherModeloAvisoWS('aula', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📚 Lembrete de Aula</button>
-                        <button type="button" onclick="App.preencherModeloAvisoWS('nota', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">✅ Nota Lançada</button>
-                        <button type="button" onclick="App.preencherModeloAvisoWS('evento', '${primeiroNome.replace(/'/g, "\\'")}')" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📅 Evento / Feriado</button>
+                        <button type="button" onclick="App.preencherModeloAvisoWS('aula', '${primeiroNomeSeguro}')" style="background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📚 Lembrete de Aula</button>
+                        <button type="button" onclick="App.preencherModeloAvisoWS('nota', '${primeiroNomeSeguro}')" style="background:#f0fdf4; color:#16a34a; border:1px solid #bbf7d0; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">✅ Nota Lançada</button>
+                        <button type="button" onclick="App.preencherModeloAvisoWS('evento', '${primeiroNomeSeguro}')" style="background:#fef3c7; color:#d97706; border:1px solid #fde68a; padding:6px 10px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;">📅 Evento / Feriado</button>
                     </div>
                 </div>
 
+                <!-- 🗂️ GALERIA DE MENSAGENS SALVAS -->
+                <div style="margin-bottom:15px; text-align:left; background:#f1f5f9; padding:10px; border-radius:10px; border:1px solid #e2e8f0;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                        <span style="font-weight:800; font-size:11px; color:#334155; text-transform:uppercase;">💾 Mensagens Salvas (<span id="ws-count-mensagens-salvas">0</span>)</span>
+                        <button type="button" onclick="App.salvarApenasModeloAvisoWS()" style="background:#ffffff; color:#0f172a; border:1px solid #cbd5e1; padding:4px 9px; border-radius:6px; font-size:11px; font-weight:700; cursor:pointer;" title="Guardar o título e texto atuais na lista sem enviar agora">➕ Guardar Texto Atual</button>
+                    </div>
+                    <div id="ws-lista-mensagens-salvas" style="max-height:135px; overflow-y:auto; padding-right:2px;"></div>
+                </div>
+
+                <!-- CAMPOS DO AVISO -->
                 <div style="margin-bottom:12px; text-align:left;">
                     <label style="font-weight:bold; font-size:12px; color:#334155; display:block; margin-bottom:4px;">Título da Notificação</label>
                     <input type="text" id="ws-aviso-titulo" placeholder="Ex: 📚 Lembrete da sua aula de hoje!" style="width:100%; padding:11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; box-sizing:border-box;">
                 </div>
 
-                <div style="margin-bottom:20px; text-align:left;">
+                <div style="margin-bottom:12px; text-align:left;">
                     <label style="font-weight:bold; font-size:12px; color:#334155; display:block; margin-bottom:4px;">Mensagem</label>
-                    <textarea id="ws-aviso-mensagem" rows="3" placeholder="Escreva a mensagem que aparecerá no ecrã do aluno..." style="width:100%; padding:11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; box-sizing:border-box;"></textarea>
+                    <textarea id="ws-aviso-mensagem" rows="3" placeholder="Escreva a mensagem que aparecerá no sininho e na tela do aluno no Workspace..." style="width:100%; padding:11px; border:1.5px solid #cbd5e1; border-radius:8px; font-size:14px; outline:none; resize:vertical; font-family:inherit; box-sizing:border-box;"></textarea>
                 </div>
+
+                <label style="display:flex; align-items:center; gap:8px; font-size:12px; color:#475569; margin-bottom:18px; cursor:pointer; text-align:left; font-weight:600;">
+                    <input type="checkbox" id="ws-aviso-salvar-check" checked style="width:16px; height:16px; cursor:pointer;">
+                    Guardar automaticamente esta mensagem nas "Mensagens Salvas" para usar outras vezes
+                </label>
 
                 <div style="display:flex; gap:10px;">
                     <button class="btn-cancel" style="flex:1; justify-content:center; padding:12px; border-radius:8px;" onclick="document.getElementById('modal-aviso-ws').style.display='none'">Cancelar</button>
-                    <button class="btn-primary" id="ws-btn-disparar-aviso" style="flex:1; justify-content:center; padding:12px; border-radius:8px; background:#2563eb; border:none; font-weight:bold;" onclick="App.enviarAvisoWorkspace('${alvoUserId}', '${alunoRefId}', '${nomeDestino.replace(/'/g, "\\'")}')">🚀 Enviar Agora</button>
+                    <button class="btn-primary" id="ws-btn-disparar-aviso" style="flex:1.4; justify-content:center; padding:12px; border-radius:8px; background:#2563eb; border:none; font-weight:bold; cursor:pointer;" onclick="App.enviarAvisoWorkspace('${alvoUserId}', '${alunoRefId}', '${nomeDestinoSeguro}')">🚀 Enviar para o Workspace</button>
                 </div>
             </div>
         `;
         modal.style.display = 'flex';
+        App.carregarMensagensSalvasWS();
     },
 
     preencherModeloAvisoWS: (tipo, primeiroNome) => {
@@ -256,8 +425,13 @@ Object.assign(App, {
     },
 
     enviarAvisoWorkspace: async (alvoUserId, alunoRefId, nomeDestino) => {
-        const titulo = document.getElementById('ws-aviso-titulo')?.value.trim();
-        const mensagem = document.getElementById('ws-aviso-mensagem')?.value.trim();
+        const elTitulo = document.getElementById('ws-aviso-titulo');
+        const elMsg = document.getElementById('ws-aviso-mensagem');
+        const elSalvar = document.getElementById('ws-aviso-salvar-check');
+
+        const titulo = elTitulo && elTitulo.value ? elTitulo.value.trim() : '';
+        const mensagem = elMsg && elMsg.value ? elMsg.value.trim() : '';
+        const salvarMensagem = elSalvar ? elSalvar.checked : true;
 
         if (!titulo || !mensagem) {
             return App.showToast("Preencha o título e a mensagem do aviso.", "warning");
@@ -269,19 +443,40 @@ Object.assign(App, {
         btn.disabled = true;
 
         try {
+            // Garante que conhecemos todos os alunos com acesso ativo ao Workspace
+            const cache = await App.garantirCacheWorkspace();
+            const nomesListaFrontend = [];
+
+            if (alvoUserId === 'TODOS') {
+                cache.usuarios.forEach(u => {
+                    const nomePrincipal = u.nome ? u.nome.trim() : (u.login ? u.login.trim() : '');
+                    if (nomePrincipal) nomesListaFrontend.push(nomePrincipal);
+                });
+            } else {
+                const conta = cache.usuarios.find(u => String(u.id) === String(alvoUserId) ? true : String(u.alunoRefId) === String(alunoRefId));
+                if (conta) {
+                    const nomePrincipal = conta.nome ? conta.nome.trim() : (conta.login ? conta.login.trim() : '');
+                    if (nomePrincipal) nomesListaFrontend.push(nomePrincipal);
+                } else if (nomeDestino) {
+                    nomesListaFrontend.push(nomeDestino.trim());
+                }
+            }
+
             const res = await App.api('/push/enviar-aviso-aluno', 'POST', {
                 alvoUserId,
                 alunoRefId,
                 nomeDestino,
+                nomesListaFrontend,
                 titulo,
-                mensagem
+                mensagem,
+                salvarMensagem
             });
 
             if (res && res.success) {
-                App.showToast(res.message || "✅ Aviso enviado com sucesso!", "success");
+                App.showToast(res.message ? res.message : "✅ Aviso entregue no Workspace!", "success");
                 document.getElementById('modal-aviso-ws').style.display = 'none';
             } else {
-                App.showToast((res && res.error) || "Não foi possível enviar o aviso.", "error");
+                App.showToast((res && res.error) ? res.error : "Não foi possível enviar o aviso.", "error");
             }
         } catch (e) {
             App.showToast("Erro de comunicação ao enviar o aviso.", "error");
@@ -373,7 +568,7 @@ Object.assign(App, {
     },
 
     // =========================================================
-    // 📡 3. TELA DE MONITORAMENTO EM TEMPO REAL
+    // 📡 5. TELA DE MONITORAMENTO EM TEMPO REAL
     // =========================================================
     radarMonitoramentoInterval: null,
 
@@ -417,7 +612,8 @@ Object.assign(App, {
         if (App.radarMonitoramentoInterval) clearInterval(App.radarMonitoramentoInterval);
 
         App.radarMonitoramentoInterval = setInterval(() => {
-            const telaAtual = document.getElementById('titulo-pagina')?.innerText;
+            const elTitulo = document.getElementById('titulo-pagina');
+            const telaAtual = elTitulo ? elTitulo.innerText : '';
             if (telaAtual !== "Monitoramento Online") {
                 clearInterval(App.radarMonitoramentoInterval);
                 return;
@@ -432,8 +628,9 @@ Object.assign(App, {
             if (App.usuario && App.usuario.escolaId) {
                 escolaId = App.usuario.escolaId;
             } else {
-                const escolaCache = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
-                escolaId = escolaCache.id || 'DEFAULT';
+                const rawCache = localStorage.getItem(App.getTenantKey('escola_perfil'));
+                const escolaCache = rawCache ? JSON.parse(rawCache) : {};
+                escolaId = escolaCache.id ? escolaCache.id : 'DEFAULT';
             }
 
             const [radarRes, alunosRes, usuariosRes] = await Promise.all([
@@ -449,12 +646,14 @@ Object.assign(App, {
             const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
             const radarDados = Array.isArray(radarRes) ? radarRes : [];
 
-            const alunosAtivos = alunos.filter(a => !a.status || a.status === 'Ativo');
+            const alunosAtivos = alunos.filter(a => !a.status ? true : a.status === 'Ativo');
             const alunosAtivosIds = alunosAtivos.map(a => a.id);
 
             const contasAtivas = usuarios.filter(u => 
-                (u.tipo === 'Aluno' || u.alunoRefId) && alunosAtivosIds.includes(u.alunoRefId)
+                (u.tipo === 'Aluno' ? true : Boolean(u.alunoRefId)) && alunosAtivosIds.includes(u.alunoRefId)
             );
+
+            App.workspaceCache = { alunos: alunosAtivos, usuarios: contasAtivas };
 
             if (contasAtivas.length === 0) {
                 container.innerHTML = '<p style="text-align:center; padding: 40px; color:#7f8c8d; font-size: 14px;">Nenhum aluno ativo possui acesso ao Workspace no momento.</p>';
@@ -462,24 +661,26 @@ Object.assign(App, {
             }
 
             const listaMonitoramento = contasAtivas.map(conta => {
-                const alunoFicha = alunosAtivos.find(a => a.id === conta.alunoRefId) || {};
+                const alunoFound = alunosAtivos.find(a => a.id === conta.alunoRefId);
+                const alunoFicha = alunoFound ? alunoFound : {};
                 
-                const statusRadar = radarDados.find(r => 
-                    (r.id && String(r.id) === String(conta.id)) ||
-                    (r.usuarioId && String(r.usuarioId) === String(conta.id)) ||
-                    (r.alunoRefId && String(r.alunoRefId) === String(alunoFicha.id)) ||
-                    (r.login && conta.login && r.login.toLowerCase() === conta.login.toLowerCase()) ||
-                    (r.nome && alunoFicha.nome && r.nome.trim().toLowerCase() === alunoFicha.nome.trim().toLowerCase())
-                ) || {};
+                const statusFound = radarDados.find(r => 
+                    (r.id && String(r.id) === String(conta.id)) ? true :
+                    (r.usuarioId && String(r.usuarioId) === String(conta.id)) ? true :
+                    (r.alunoRefId && String(r.alunoRefId) === String(alunoFicha.id)) ? true :
+                    (r.login && conta.login && r.login.toLowerCase() === conta.login.toLowerCase()) ? true :
+                    Boolean(r.nome && alunoFicha.nome && r.nome.trim().toLowerCase() === alunoFicha.nome.trim().toLowerCase())
+                );
+                const statusRadar = statusFound ? statusFound : {};
                 
                 return {
                     contaId: conta.id,
                     alunoRefId: conta.alunoRefId,
-                    nome: conta.nome || alunoFicha.nome || conta.login,
+                    nome: conta.nome ? conta.nome : (alunoFicha.nome ? alunoFicha.nome : conta.login),
                     login: conta.login,
-                    avatar: conta.avatar || null,
-                    isOnline: statusRadar.isOnline === true || String(statusRadar.isOnline) === 'true',
-                    ultimoAcesso: statusRadar.ultimoAcesso || null
+                    avatar: conta.avatar ? conta.avatar : null,
+                    isOnline: statusRadar.isOnline === true ? true : String(statusRadar.isOnline) === 'true',
+                    ultimoAcesso: statusRadar.ultimoAcesso ? statusRadar.ultimoAcesso : null
                 };
             });
 
@@ -548,7 +749,7 @@ Object.assign(App, {
     },
        
     // =========================================================
-    // 📸 4. VISUALIZADOR DE FOTOS DO RADAR (ZOOM DA IMAGEM)
+    // 📸 6. VISUALIZADOR DE FOTOS DO RADAR (ZOOM DA IMAGEM)
     // =========================================================
     verFotoRadar: (url, nome) => {
         const id = 'admin-foto-viewer';

@@ -2086,7 +2086,7 @@ validarCadastroInst: async () => {
         } catch(e) { console.log("Carregando perfil silenciosamente..."); } 
     },
     
-    // =========================================================
+   // =========================================================
     // 📡 RADAR SILENCIOSO (Notificações e Matrículas em Tempo Real)
     // =========================================================
     verificarNovidadesSilenciosamente: async () => {
@@ -2098,7 +2098,10 @@ validarCadastroInst: async () => {
             });
 
             if (!res.ok) return;
-            const notificacoes = await res.json();
+            const dadosBrutos = await res.json();
+            const notificacoes = Array.isArray(dadosBrutos) 
+                ? dadosBrutos.filter(n => n.tipo !== 'aviso_workspace_aluno') 
+                : [];
 
             // 1. Atualiza o número vermelho no sininho
             const badge = document.getElementById('noti-badge');
@@ -2108,7 +2111,7 @@ validarCadastroInst: async () => {
             }
 
             // 2. Compara com a memória para saber se algo REALMENTE novo chegou agora
-            const idsAtuais = App.notificacoesAtuais || [];
+            const idsAtuais = App.notificacoesAtuais ? App.notificacoesAtuais : [];
             const idsNovos = notificacoes.map(n => n.id);
             const temCoisaNova = idsNovos.some(id => !idsAtuais.includes(id));
 
@@ -2122,7 +2125,7 @@ validarCadastroInst: async () => {
 
                 // 🚀 A MÁGICA: Deteta se a novidade é uma Matrícula
                 const temNovaMatricula = notificacoes.some(n => 
-                    (n.tipo === 'matricula' || n.tipo === 'matricula_contrato') && !idsAtuais.includes(n.id)
+                    (n.tipo === 'matricula' ? true : n.tipo === 'matricula_contrato') && !idsAtuais.includes(n.id)
                 );
 
                 if (temNovaMatricula) {
@@ -2131,7 +2134,7 @@ validarCadastroInst: async () => {
                         await App.carregarDadosEscola();
                     }
                     
-                   // Se o diretor estiver exatamente na tela de 'alunos', recarrega a tabela para o aluno surgir na hora
+                    // Se o diretor estiver exatamente na tela de 'alunos', recarrega a tabela para o aluno surgir na hora
                     if (App.entidadeAtual === 'aluno' && typeof App.renderizarLista === 'function') {
                         App.renderizarLista('aluno');
                     }

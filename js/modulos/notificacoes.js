@@ -351,7 +351,7 @@ Object.assign(App, {
             // 1. Notificações Oficiais da Base de Dados
             if (Array.isArray(notificacoesBanco)) {
                 notificacoesBanco
-                    .filter(n => !n.lida)
+                    .filter(n => !n.lida && n.tipo !== 'aviso_workspace_aluno')
                     .sort((a, b) => new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0))
                     .slice(0, 10)
                     .forEach(n => {
