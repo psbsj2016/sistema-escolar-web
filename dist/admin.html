@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> Portal do Controle do Sistema Ptt</title>
+    <title>Portal do Controle do Sistema Ptt</title>
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>👑</text></svg>">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    
   <script type="module" crossorigin src="/assets/preload-helper-B83JGOQx.js"></script>
   <script type="module" crossorigin src="/assets/chunk-bqFK08oC.js"></script>
   <script type="module" crossorigin src="/assets/pwa-updater-De2OFdSU.js"></script>
   <script type="module" crossorigin src="/assets/site-DaSd-N01.js"></script>
-  <script type="module" crossorigin src="/assets/main-kUI-eJl_.js"></script>
+  <script type="module" crossorigin src="/assets/main-BYwlkjO0.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/site-Bo8mnQWM.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body class="admin-portal-body">
 
     <div id="login-screen">
         <div class="login-box">
-            <h2 style="margin-top:0; color:var(--accent);"> CEO Login</h2>
+            <h2 style="margin-top:0; color:var(--accent);">👑 CEO Login</h2>
             <p style="color:#94a3b8; font-size:14px; margin-bottom:20px;">Acesso restrito à gestão de licenças.</p>
             <input type="password" id="master-pwd" placeholder="Senha Master" autocomplete="off" onkeypress="if(event.key === 'Enter') Admin.login()">
             <button onclick="Admin.login()">Autenticar</button>
@@ -83,9 +82,9 @@
                 <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
                     <thead>
                         <tr style="background: #0f172a; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
-                            <th style="padding: 15px 20px; width: 30%;">E-mail da Escola</th>
-                            <th style="padding: 15px 20px; width: 15%;">Plano Atual</th>
-                            <th style="padding: 15px 20px; width: 20%;">Status / PIN</th>
+                            <th style="padding: 15px 20px; width: 28%;">E-mail da Escola</th>
+                            <th style="padding: 15px 20px; width: 18%;">Plano & Validade</th>
+                            <th style="padding: 15px 20px; width: 19%;">Status / PIN</th>
                             <th style="padding: 15px 20px; text-align: right; width: 35%;">Ações de Gestão</th>
                         </tr>
                     </thead>
@@ -97,6 +96,7 @@
         </div>
     </div>
 
+    <!-- MODAL 1: CADASTRO VIP -->
     <div id="modal-vip" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
         <div style="background:var(--card); padding:30px; border-radius:12px; width:450px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
@@ -106,20 +106,29 @@
             
             <div id="vip-form-area">
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">E-mail do Cliente:</label>
-                <input type="email" id="vip-email" placeholder="escola@email.com" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <input type="email" id="vip-email" placeholder="escola@email.com" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
                 
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">WhatsApp (com DDD):</label>
-                <input type="text" id="vip-zap" placeholder="Ex: 11999999999" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <input type="text" id="vip-zap" placeholder="Ex: 11999999999" autocomplete="off" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
                 
                 <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Plano Contratado:</label>
-                <select id="vip-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                <select id="vip-plano" onchange="Admin.ajustarDiasPadrao('vip')" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
                     <option value="Teste">⚪ Plano Teste (7 Dias)</option>
                     <option value="Essencial">🟢 Essencial</option>
                     <option value="Profissional">🔵 Profissional</option>
                     <option value="Premium">🟡 Premium</option>
                 </select>
+
+                <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Período de Validade:</label>
+                <select id="vip-dias" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
+                    <option value="7">⏳ 7 Dias (Teste / Cortesia)</option>
+                    <option value="30" selected>📅 30 Dias (Mensal)</option>
+                    <option value="90">📅 90 Dias (Trimestral)</option>
+                    <option value="180">📅 180 Dias (Semestral)</option>
+                    <option value="365">👑 365 Dias (Anual)</option>
+                </select>
                 
-                <button id="btn-gerar-vip" onclick="Admin.gerarAcessoVip()" style="width:100%; padding:14px; border:none; border-radius:6px; background:var(--accent); color:white; font-weight:bold; font-size:15px; transition:0.3s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Gerar PIN e Acesso Direto</button>
+                <button id="btn-gerar-vip" onclick="Admin.gerarAcessoVip()" style="width:100%; padding:14px; border:none; border-radius:6px; background:var(--accent); color:white; font-weight:bold; font-size:15px; transition:0.3s; cursor:pointer;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Gerar PIN e Acesso Direto</button>
             </div>
 
             <div id="vip-result-area" style="display:none; text-align:center;">
@@ -128,36 +137,53 @@
                     <div id="vip-pin-display" style="font-size:32px; font-weight:bold; color:var(--success); letter-spacing:3px;">PRO-1234</div>
                 </div>
                 
-                <a id="vip-zap-link" href="#" target="_blank" style="display:inline-block; width:100%; background:#25D366; color:white; padding:15px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; transition:0.3s;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">
+                <a id="vip-zap-link" href="#" target="_blank" style="display:inline-block; width:100%; background:#25D366; color:white; padding:15px; text-decoration:none; border-radius:6px; font-weight:bold; font-size:15px; transition:0.3s; box-sizing:border-box;" onmouseover="this.style.background='#22c55e'" onmouseout="this.style.background='#25D366'">
                     📲 Enviar Acesso p/ WhatsApp
                 </a>
-                <button onclick="Admin.fecharModalVip()" style="width:100%; margin-top:10px; padding:12px; background:transparent; color:#94a3b8; border:none; font-size:13px; text-decoration:underline;">Fechar Janela</button>
+                <button onclick="Admin.fecharModalVip()" style="width:100%; margin-top:10px; padding:12px; background:transparent; color:#94a3b8; border:none; font-size:13px; text-decoration:underline; cursor:pointer;">Fechar Janela</button>
             </div>
         </div>
     </div>
 
+    <!-- MODAL 2: ATUALIZAR / RENOVAR PLANO -->
     <div id="modal-mudar-plano" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
-        <div style="background:var(--card); padding:30px; border-radius:12px; width:400px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
-            <h3 style="margin-top:0; color:var(--warning); border-bottom:1px solid #334155; padding-bottom:15px;">🔄 Atualizar Plano</h3>
-            <p style="font-size:13px; color:#94a3b8; margin-bottom:20px;">Selecione o novo pacote. Isto irá gerar um novo PIN de ativação para a escola.</p>
+        <div style="background:var(--card); padding:30px; border-radius:12px; width:430px; text-align:left; border:1px solid #334155; box-shadow: 0 10px 40px rgba(0,0,0,0.5);">
+            <h3 style="margin-top:0; color:var(--warning); border-bottom:1px solid #334155; padding-bottom:15px;">🔄 Atualizar / Renovar Plano</h3>
+            <p style="font-size:13px; color:#94a3b8; margin-bottom:18px;">Escolha o pacote, a duração e se deseja ativar diretamente ou gerar um novo PIN.</p>
             
             <input type="hidden" id="mp-email">
             
-            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Novo Plano Contratado:</label>
-            <select id="mp-plano" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Plano Contratado:</label>
+            <select id="mp-plano" onchange="Admin.ajustarDiasPadrao('mp')" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
                 <option value="Teste">⚪ Plano Teste (7 Dias)</option>
                 <option value="Essencial">🟢 Essencial</option>
                 <option value="Profissional">🔵 Profissional</option>
                 <option value="Premium">🟡 Premium</option>
             </select>
+
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Período a Adicionar (Cumulativo):</label>
+            <select id="mp-dias" style="width:100%; padding:12px; margin-bottom:15px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
+                <option value="7">⏳ +7 Dias (Teste / Cortesia)</option>
+                <option value="30" selected>📅 +30 Dias (Mensal)</option>
+                <option value="90">📅 +90 Dias (Trimestral)</option>
+                <option value="180">📅 +180 Dias (Semestral)</option>
+                <option value="365">👑 +365 Dias (Anual)</option>
+            </select>
+
+            <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Modo de Ativação:</label>
+            <select id="mp-modo" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; box-sizing:border-box;">
+                <option value="direto">⚡ Ativar / Renovar Imediatamente (Sem precisar de PIN)</option>
+                <option value="pin">🔑 Gerar PIN de Ativação (Cliente ativa no painel)</option>
+            </select>
             
             <div style="display:flex; gap:10px;">
                 <button onclick="Admin.fecharModalMudarPlano()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
-                <button id="btn-confirmar-mp" onclick="Admin.confirmarMudancaPlano()" style="flex:1; padding:12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Atualizar Plano</button>
+                <button id="btn-confirmar-mp" onclick="Admin.confirmarMudancaPlano()" style="flex:1.3; padding:12px; background:var(--accent); color:white; border:none; border-radius:6px; font-weight:bold; cursor:pointer; transition:0.2s;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Confirmar</button>
             </div>
         </div>
     </div>
     
+    <!-- MODAL 3: EXCLUIR CONTA -->
     <div id="modal-excluir" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:999; justify-content:center; align-items:center; animation: fadeIn 0.2s ease;">
         <div style="background:var(--card); padding:30px; border-radius:12px; width:450px; text-align:left; border:1px solid #dc2626; box-shadow: 0 10px 40px rgba(220, 38, 38, 0.3);">
             <h3 style="margin-top:0; color:var(--danger); border-bottom:1px solid #334155; padding-bottom:15px;">⚠️ EXCLUSÃO DEFINITIVA</h3>
@@ -170,7 +196,7 @@
             <input type="hidden" id="excluir-email">
             
             <label style="font-size:12px; color:#cbd5e1; font-weight:bold; margin-bottom:5px; display:block;">Para confirmar, digite EXCLUIR abaixo:</label>
-            <input type="text" id="input-confirmar-exclusao" placeholder="EXCLUIR" autocomplete="off" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; text-transform:uppercase;">
+            <input type="text" id="input-confirmar-exclusao" placeholder="EXCLUIR" autocomplete="off" style="width:100%; padding:12px; margin-bottom:25px; border-radius:6px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit; text-transform:uppercase; box-sizing:border-box;">
             
             <div style="display:flex; gap:10px;">
                 <button onclick="Admin.fecharModalExcluir()" style="flex:1; padding:12px; background:transparent; color:#94a3b8; border:1px solid #334155; border-radius:6px; cursor:pointer;">Cancelar</button>
@@ -181,7 +207,5 @@
 
     <div id="toast-container" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:10px;"></div>
 
-
-    
 </body>
 </html>
