@@ -290,26 +290,30 @@ Object.assign(App, {
         });
     },
 
-    verificarBloqueioGeral: (escola) => {
+  verificarBloqueioGeral: (escola) => {
         if (!escola) return false;
-        const plano = escola.plano || 'Teste';
-        if (plano === 'Bloqueado') return true;
+        const plano = escola.plano ? escola.plano : 'Teste';
+        if (plano === 'Bloqueado' || escola.status === 'Bloqueado') return true;
 
         const dataHoje = new Date();
 
-        if (plano === 'Teste') {
-            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
-            const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
-            return diffDays >= 7;
-        }
-
+        // 1. Prioridade absoluta: se o servidor definiu uma dataExpiracao, respeita essa data em qualquer plano
         if (escola.dataExpiracao) {
             const dataVenc = new Date(escola.dataExpiracao);
-            return dataHoje >= dataVenc;
-        } else {
-            const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
-            const diffDays = Math.floor(Math.abs(dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
-            if (plano !== 'Premium' && diffDays >= 30) return true; 
+            if (!isNaN(dataVenc.getTime())) {
+                return dataHoje >= dataVenc;
+            }
+        }
+
+        // 2. Fallback de segurança apenas para contas antigas que ainda não possuam dataExpiracao
+        const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao) : dataHoje;
+        const diffDays = Math.floor((dataHoje - dataCriacao) / (1000 * 60 * 60 * 24));
+
+        if (plano === 'Teste') {
+            return diffDays >= 7;
+        }
+        if (plano !== 'Premium' && diffDays >= 30) {
+            return true;
         }
 
         return false;
@@ -565,36 +569,52 @@ validarCadastroInst: async () => {
     // =========================================================
     // 💎 O MEU PLANO (PAINEL INTERNO)
     // =========================================================
-    renderizarMeuPlano: () => {
+    renderizarMeuPlano: async () => {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
-        const planoAtual = App.getPlanoAtual();
+
+        // Atualiza silenciosamente os dados do servidor para refletir mudanças feitas no Painel Master
+        try {
+            const escolaServidor = await App.api('/escola', 'GET', null, true);
+            if (escolaServidor && !escolaServidor.error) {
+                if (escolaServidor.plano) localStorage.setItem(App.getTenantKey('escola_plano'), escolaServidor.plano);
+                localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escolaServidor));
+                if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escolaServidor);
+            }
+        } catch (e) {}
+
+        const rawEscola = localStorage.getItem(App.getTenantKey('escola_perfil'));
+        const escola = rawEscola ? JSON.parse(rawEscola) : {};
+        const planoAtual = escola.plano ? escola.plano : App.getPlanoAtual();
         
         let diasRestantes = 0;
-        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        let textoDataVenc = '';
         const hojeTime = new Date().getTime();
         
-        if (planoAtual === 'Teste') {
+        // 1. Usa sempre a dataExpiracao oficial do servidor (para Teste, Essencial, Profissional ou Premium)
+        if (escola.dataExpiracao) {
+            const dataExpObj = new Date(escola.dataExpiracao);
+            if (!isNaN(dataExpObj.getTime())) {
+                const diffTime = dataExpObj.getTime() - hojeTime;
+                diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                textoDataVenc = ` • Vencimento: ${dataExpObj.toLocaleDateString('pt-BR')}`;
+            }
+        } else if (planoAtual === 'Teste') {
             const dataCriacao = escola.dataCriacao ? new Date(escola.dataCriacao).getTime() : hojeTime;
-            const diffTime = Math.abs(hojeTime - dataCriacao);
+            const diffTime = hojeTime - dataCriacao;
             diasRestantes = 7 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
-        } 
-        else if (escola.dataExpiracao) {
-            const diffTime = new Date(escola.dataExpiracao).getTime() - hojeTime;
-            diasRestantes = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        } 
-        else if (escola.dataCriacao) {
-            const diffTime = Math.abs(hojeTime - new Date(escola.dataCriacao).getTime());
+        } else if (escola.dataCriacao) {
+            const diffTime = hojeTime - new Date(escola.dataCriacao).getTime();
             diasRestantes = 30 - Math.floor(diffTime / (1000 * 60 * 60 * 24));
         }
 
-        if(diasRestantes < 0) diasRestantes = 0;
+        if (diasRestantes < 0) diasRestantes = 0;
 
-        let corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
+        const corPlano = planoAtual === 'Premium' ? '#f39c12' : (planoAtual === 'Profissional' ? '#3498db' : '#27ae60');
 
         const infoPlano = planoAtual === 'Teste' 
-            ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px;">⏳ Plano Teste (${diasRestantes} dias restantes)</strong>` 
-            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05);">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias)</strong>`;
+            ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px; display:inline-block;">⏳ Plano Teste (${diasRestantes} dias restantes${textoDataVenc})</strong>` 
+            : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:inline-block;">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias restantes${textoDataVenc})</strong>`;
         
         div.innerHTML = `
             <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
@@ -602,13 +622,13 @@ validarCadastroInst: async () => {
                 <div style="margin-bottom: 30px;">${infoPlano}</div>
                 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
-                    <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento?</h4>
+                    <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento ou recebeu um PIN?</h4>
                     <div style="display:flex; gap:10px; flex-wrap:wrap;">
                         <input type="text" id="input-novo-pin" placeholder="Insira a sua Chave de Ativação (PIN)" style="flex:1; min-width: 200px; padding:12px; border-radius:6px; border:1px solid #ccc; text-align:center; letter-spacing:2px; font-weight:bold; font-size:16px;">
                         
                         <button class="btn-primary" style="width:auto; margin:0;" onclick="App.ativarNovoPlano(event)">Validar PIN</button>
                     </div>
-                    <p style="font-size:11px; color:#999; margin: 10px 0 0 0;">O PIN é enviado para o seu e-mail imediatamente após a confirmação do pagamento.</p>
+                    <p style="font-size:11px; color:#999; margin: 10px 0 0 0;">Os dias do novo PIN são somados automaticamente à sua validade atual.</p>
                 </div>
             </div>
 
