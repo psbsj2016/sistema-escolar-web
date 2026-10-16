@@ -121,13 +121,30 @@ const Admin = {
             if (Array.isArray(lista)) {
                 cacheClientes = lista;
                 
+                const ativosEmDia = lista.filter(l => (l.status === 'Verificado' || l.status === 'Ativo') && (l.diasRestantes === null || l.diasRestantes >= 0));
+                const pendentesOuAVencer = lista.filter(l => l.status === 'Pendente' || l.status === 'Aguardando Ativação' || l.status === 'Aguardando' || (typeof l.diasRestantes === 'number' && l.diasRestantes >= 0 && l.diasRestantes <= 5));
+                const bloqueadosOuVencidos = lista.filter(l => l.status === 'Bloqueado' || l.plano === 'Bloqueado' || (typeof l.diasRestantes === 'number' && l.diasRestantes < 0));
+
+                // 💰 Cálculo automático do MRR (Receita Recorrente Mensal Estimada)
+                const tabelaPrecos = { 'Essencial': 97, 'Profissional': 147, 'Premium': 297 };
+                let somaMRR = 0;
+                ativosEmDia.forEach(escola => {
+                    if (tabelaPrecos[escola.plano]) somaMRR += tabelaPrecos[escola.plano];
+                });
+
                 document.getElementById('kpi-total').innerText = lista.length;
-                document.getElementById('kpi-ativas').innerText = lista.filter(l => (l.status === 'Verificado' || l.status === 'Ativo') && (l.diasRestantes === null || l.diasRestantes >= 0)).length;
-                document.getElementById('kpi-pendentes').innerText = lista.filter(l => l.status === 'Pendente' || l.status === 'Aguardando Ativação' || l.status === 'Aguardando').length;
-                document.getElementById('kpi-bloqueados').innerText = lista.filter(l => l.status === 'Bloqueado' || (l.diasRestantes !== null && l.diasRestantes < 0)).length;
+                document.getElementById('kpi-ativas').innerText = ativosEmDia.length;
+                document.getElementById('kpi-pendentes').innerText = pendentesOuAVencer.length;
+                document.getElementById('kpi-bloqueados').innerText = bloqueadosOuVencidos.length;
+                
+                const elMrr = document.getElementById('kpi-mrr');
+                if (elMrr) elMrr.innerText = `R$ ${somaMRR.toLocaleString('pt-BR')}`;
 
                 const campoBusca = document.getElementById('busca-tabela-escolas') ? document.getElementById('busca-tabela-escolas') : document.getElementById('pesquisa-admin');
                 if (campoBusca) campoBusca.value = ''; 
+
+                const etiqueta = document.getElementById('etiqueta-filtro-ativo');
+                if (etiqueta) etiqueta.style.display = 'none';
 
                 Admin.desenharTabela(cacheClientes);
                 Admin.carregarNotificacoes();
@@ -136,6 +153,41 @@ const Admin = {
             console.error("🚨 Erro no carregarDados:", e); 
             Admin.showToast("Erro de comunicação: O servidor não está a responder.", "error");
         }
+    },
+
+    // 🎯 Filtro Rápido ao clicar nos cartões KPI do topo
+    filtrarPorKPI: (tipo) => {
+        const etiqueta = document.getElementById('etiqueta-filtro-ativo');
+        if (tipo === 'TODOS') {
+            if (etiqueta) etiqueta.style.display = 'none';
+            return Admin.desenharTabela(cacheClientes);
+        }
+
+        let filtrados = [];
+        let nomeFiltro = '';
+
+        if (tipo === 'ATIVOS') {
+            nomeFiltro = 'Ativos em Dia';
+            filtrados = cacheClientes.filter(l => (l.status === 'Verificado' || l.status === 'Ativo') && (l.diasRestantes === null || l.diasRestantes >= 0));
+        } else if (tipo === 'PENDENTES') {
+            nomeFiltro = 'Pendentes / A Vencer (≤ 5d)';
+            filtrados = cacheClientes.filter(l => l.status === 'Pendente' || l.status === 'Aguardando Ativação' || l.status === 'Aguardando' || (typeof l.diasRestantes === 'number' && l.diasRestantes >= 0 && l.diasRestantes <= 5));
+        } else if (tipo === 'BLOQUEADOS') {
+            nomeFiltro = 'Bloqueados / Vencidos';
+            filtrados = cacheClientes.filter(l => l.status === 'Bloqueado' || l.plano === 'Bloqueado' || (typeof l.diasRestantes === 'number' && l.diasRestantes < 0));
+        } else if (tipo === 'UPSELL') {
+            nomeFiltro = 'Oportunidades de Upgrade';
+            filtrados = cacheClientes.filter(l => {
+                const lim = l.plano === 'Essencial' ? 20 : (l.plano === 'Profissional' ? 80 : 0);
+                return (lim > 0 && (l.alunosAtivos || 0) >= lim * 0.75) || l.plano === 'Teste';
+            });
+        }
+
+        if (etiqueta) {
+            etiqueta.innerText = `Filtro: ${nomeFiltro} (${filtrados.length}) ✖`;
+            etiqueta.style.display = 'inline-block';
+        }
+        Admin.desenharTabela(filtrados);
     },
 
     toggleNotificacoes: () => {
@@ -209,11 +261,13 @@ const Admin = {
             try {
                 const rawEmail = (c.email ? c.email : "").trim().toLowerCase();
                 const safeEmail = Admin.escapeHTML(rawEmail);
+                const safeNomeEscola = c.nomeEscola ? Admin.escapeHTML(c.nomeEscola) : '';
                 const jsSafeEmail = Admin.escapeJS(rawEmail);
                 const jsSafePinAtivacao = c.pinAtivacao ? Admin.escapeJS(c.pinAtivacao) : '';
                 const safeStatus = Admin.escapeHTML(c.status ? c.status : 'Pendente');
                 const estaBloqueado = safeStatus === 'Bloqueado' || c.plano === 'Bloqueado';
                 const estaVencido = typeof c.diasRestantes === 'number' && c.diasRestantes < 0;
+                const pertoDeVencer = typeof c.diasRestantes === 'number' && c.diasRestantes >= 0 && c.diasRestantes <= 5;
 
                 // 1. Cores do Status
                 let badgeClass = 'color:var(--warning); background:rgba(245, 158, 11, 0.2);'; 
@@ -259,6 +313,22 @@ const Admin = {
                 else if (planoNome === 'Premium') planoClass = 'plan-premium';
                 else if (planoNome === 'Liberado') { planoClass = 'plan-liberado'; planoDisplay = '💎 Liberado'; }
 
+                // Termómetro de Alunos e Equipa (Raio-X da Escola)
+                const qtdAlunos = c.alunosAtivos || 0;
+                const qtdEquipa = c.equipaAtiva || 1;
+                const limiteAlunos = planoNome === 'Essencial' ? 20 : (planoNome === 'Profissional' ? 80 : '∞');
+                const alertaUpsell = (limiteAlunos !== '∞' && qtdAlunos >= limiteAlunos * 0.8)
+                    ? `<span style="color:#f59e0b; font-weight:bold;" title="Escola perto do limite! Ótimo momento para oferecer Upgrade.">🔥 Quase cheio!</span>`
+                    : '';
+
+                const raioXHTML = `
+                    <div style="font-size:11px; color:#94a3b8; margin-top:5px; display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                        <span>👨‍🎓 <b>${qtdAlunos}/${limiteAlunos}</b> alunos</span>
+                        <span>👥 <b>${qtdEquipa}</b> equipa</span>
+                        ${alertaUpsell}
+                    </div>
+                `;
+
                 // Etiqueta visual de vencimento
                 let validadeHTML = '';
                 if (c.dataExpiracao && !estaBloqueado) {
@@ -289,6 +359,17 @@ const Admin = {
                     `;
                 }
 
+                // Botão inteligente de Lembrete de Vencimento no WhatsApp
+                if (pertoDeVencer || estaVencido) {
+                    const textoLembrete = estaVencido
+                        ? `Olá! Notámos que a assinatura do plano *${planoNome}* da sua escola (${rawEmail}) venceu. Deseja renovar agora para manter o acesso ativo?`
+                        : `Olá! Passando para lembrar que a assinatura do plano *${planoNome}* da sua escola (${rawEmail}) vence em *${c.diasRestantes} dia(s)*. Se desejar renovar antecipadamente, os novos dias são somados sem perder nenhum dia atual!`;
+                    const zapCobranca = `https://wa.me/?text=${encodeURIComponent(textoLembrete)}`;
+                    botoesAcaoHTML += `
+                        <button onclick="window.open('${zapCobranca}', '_blank')" style="background:#0ea5e9; color:white; border:none; padding:8px 11px; cursor:pointer; border-radius:5px; font-size:12px; font-weight:bold; margin-right:5px; transition:0.2s;" title="Enviar lembrete amigável de renovação no WhatsApp">📲 Lembrar</button>
+                    `;
+                }
+
                 if (estaBloqueado || estaVencido) {
                     botoesAcaoHTML += `
                         <button onclick="Admin.desbloquear('${jsSafeEmail}')" style="background:#10b981; color:white; border:none; padding:8px 12px; cursor:pointer; border-radius:5px; font-size:12px; font-weight:bold; margin-right:5px; transition:0.2s;" title="Reativar acesso imediatamente (+30 dias se estiver vencido)">🔓 Reativar</button>
@@ -310,7 +391,11 @@ const Admin = {
                 tr.onmouseout = () => tr.style.background = 'transparent';
                 
                 tr.innerHTML = `
-                    <td style="padding:15px; font-weight:bold; max-width: 250px; word-break: break-all; white-space: normal;">${safeEmail}</td>
+                    <td style="padding:15px; max-width: 260px; word-break: break-all; white-space: normal;">
+                        ${safeNomeEscola ? `<div style="font-weight:700; color:#f8fafc; font-size:14px; margin-bottom:2px;">🏫 ${safeNomeEscola}</div>` : ''}
+                        <div style="font-weight:600; color:${safeNomeEscola ? '#94a3b8' : '#ffffff'}; font-size:${safeNomeEscola ? '12px' : '14px'};">${safeEmail}</div>
+                        ${raioXHTML}
+                    </td>
                     <td style="padding:15px;">
                         <span class="${planoClass}">${Admin.escapeHTML(planoDisplay)}</span>${validadeHTML}
                     </td>
@@ -340,11 +425,12 @@ const Admin = {
         const t = termo.toLowerCase().trim();
         const filtrados = cacheClientes.filter(c => {
             const emailStr = c.email ? String(c.email).toLowerCase() : '';
+            const nomeStr = c.nomeEscola ? String(c.nomeEscola).toLowerCase() : '';
             const planoStr = c.plano ? String(c.plano).toLowerCase() : '';
             const statusStr = c.status ? String(c.status).toLowerCase() : '';
             const pinStr = c.pinAtivacao ? String(c.pinAtivacao).toLowerCase() : '';
             
-            return emailStr.includes(t) || planoStr.includes(t) || statusStr.includes(t) || pinStr.includes(t);
+            return emailStr.includes(t) || nomeStr.includes(t) || planoStr.includes(t) || statusStr.includes(t) || pinStr.includes(t);
         });
         
         Admin.desenharTabela(filtrados);
@@ -383,9 +469,9 @@ const Admin = {
             
             if (data.success) {
                 if (data.modo === 'direto') {
-                    Admin.showToast(`⚡ Plano ${plano} ativado/renovado diretamente por +${diasValidade} dias!`, 'success');
+                    Admin.showToast(`⚡ Plano ${plano} ativado diretamente (+${diasValidade}d) e e-mail enviado!`, 'success');
                 } else {
-                    Admin.showToast(`🔑 Novo PIN gerado para ${plano}:${data.pin}`, 'success');
+                    Admin.showToast(`🔑 Novo PIN gerado (${data.pin}) e enviado por e-mail!`, 'success');
                 }
                 Admin.fecharModalMudarPlano();
                 Admin.carregarDados(); 
@@ -447,7 +533,7 @@ const Admin = {
                 document.getElementById('vip-form-area').style.display = 'none';
                 document.getElementById('vip-result-area').style.display = 'block';
                 
-                Admin.showToast("Acesso VIP gerado!", "success");
+                Admin.showToast("Acesso VIP gerado e enviado por e-mail!", "success");
                 Admin.carregarDados(); 
             } else {
                 Admin.showToast(data.error ? data.error : "Erro ao gerar PIN da API.", "error");
@@ -455,7 +541,7 @@ const Admin = {
         } catch (e) {
             Admin.showToast("Erro de comunicação com o servidor.", "error");
         } finally {
-            btn.innerText = "Gerar PIN e Acesso Direto";
+            btn.innerText = "Gerar PIN e Enviar por E-mail";
             btn.disabled = false;
         }
     },

@@ -319,30 +319,34 @@ Object.assign(App, {
         return false;
     },
 
-    verificarLimites: async (tipo) => {
+   verificarLimites: async (tipo) => {
         const plano = App.getPlanoAtual();
         if (plano === 'Premium' || plano === 'Teste') return true; 
         
         try {
             if (tipo === 'aluno') {
-                const alunos = await App.api('/alunos');
+                const alunosRes = await App.api('/alunos');
+                const alunos = Array.isArray(alunosRes) ? alunosRes : [];
+                const alunosAtivos = alunos.filter(a => !a.status ? true : a.status === 'Ativo');
                 const limite = plano === 'Essencial' ? 20 : (plano === 'Profissional' ? 80 : 0);
-                if (alunos.length >= limite) {
-                    App.showToast(`⚠️ Limite de ${limite} alunos atingido no plano ${plano}. Faça o upgrade para continuar a crescer!`, "warning");
+                if (alunosAtivos.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} alunos ativos atingido no plano ${plano}. Faça o upgrade para continuar a crescer!`, "warning");
                     setTimeout(() => App.renderizarMeuPlano(), 2000);
                     return false;
                 }
             } else if (tipo === 'usuario') {
-                const usuarios = await App.api('/usuarios');
+                const usuariosRes = await App.api('/usuarios');
+                const usuarios = Array.isArray(usuariosRes) ? usuariosRes : [];
+                const equipaAtiva = usuarios.filter(u => u.tipo !== 'Aluno' && !u.alunoRefId);
                 const limite = plano === 'Essencial' ? 2 : (plano === 'Profissional' ? 4 : 0);
-                if (usuarios.length >= limite) {
-                    App.showToast(`⚠️ Limite de ${limite} acessos atingido no plano ${plano}. Faça o upgrade para adicionar mais equipe!`, "warning");
+                if (equipaAtiva.length >= limite) {
+                    App.showToast(`⚠️ Limite de ${limite} acessos de equipa atingido no plano ${plano}. Faça o upgrade para adicionar mais membros!`, "warning");
                     setTimeout(() => App.renderizarMeuPlano(), 2000);
                     return false;
                 }
             }
             return true;
-        } catch(e) { return false; }
+        } catch (e) { return false; }
     },
 
     verificarPermissao: (funcionalidade) => {
@@ -569,17 +573,30 @@ validarCadastroInst: async () => {
     // =========================================================
     // 💎 O MEU PLANO (PAINEL INTERNO)
     // =========================================================
-    renderizarMeuPlano: async () => {
+   renderizarMeuPlano: async () => {
         App.setTitulo("Gerenciar Assinatura");
         const div = document.getElementById('app-content');
 
-        // Atualiza silenciosamente os dados do servidor para refletir mudanças feitas no Painel Master
+        let qtdAlunosAtivos = 0;
+        let qtdEquipaAtiva = 1;
+
         try {
-            const escolaServidor = await App.api('/escola', 'GET', null, true);
+            const [escolaServidor, alunosRes, usuariosRes] = await Promise.all([
+                App.api('/escola', 'GET', null, true),
+                App.api('/alunos', 'GET', null, true),
+                App.api('/usuarios', 'GET', null, true)
+            ]);
+
             if (escolaServidor && !escolaServidor.error) {
                 if (escolaServidor.plano) localStorage.setItem(App.getTenantKey('escola_plano'), escolaServidor.plano);
                 localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escolaServidor));
                 if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escolaServidor);
+            }
+            if (Array.isArray(alunosRes)) {
+                qtdAlunosAtivos = alunosRes.filter(a => !a.status ? true : a.status === 'Ativo').length;
+            }
+            if (Array.isArray(usuariosRes)) {
+                qtdEquipaAtiva = usuariosRes.filter(u => u.tipo !== 'Aluno' && !u.alunoRefId).length || 1;
             }
         } catch (e) {}
 
@@ -591,7 +608,6 @@ validarCadastroInst: async () => {
         let textoDataVenc = '';
         const hojeTime = new Date().getTime();
         
-        // 1. Usa sempre a dataExpiracao oficial do servidor (para Teste, Essencial, Profissional ou Premium)
         if (escola.dataExpiracao) {
             const dataExpObj = new Date(escola.dataExpiracao);
             if (!isNaN(dataExpObj.getTime())) {
@@ -615,11 +631,89 @@ validarCadastroInst: async () => {
         const infoPlano = planoAtual === 'Teste' 
             ? `<strong style="color:var(--warning); background:rgba(243,156,18,0.1); padding:8px 20px; border-radius:20px; border:2px solid var(--warning); font-size:16px; display:inline-block;">⏳ Plano Teste (${diasRestantes} dias restantes${textoDataVenc})</strong>` 
             : `<strong style="color:${corPlano}; background:rgba(0,0,0,0.02); padding:8px 20px; border-radius:20px; border:2px solid ${corPlano}; font-size:16px; box-shadow:0 4px 10px rgba(0,0,0,0.05); display:inline-block;">💎 PLANO ATUAL: ${App.escapeHTML(planoAtual).toUpperCase()} (${diasRestantes} dias restantes${textoDataVenc})</strong>`;
+
+        // 📊 Termómetro de Consumo do Plano (Alunos, Equipa e Validade)
+        const limAlunos = planoAtual === 'Essencial' ? 20 : (planoAtual === 'Profissional' ? 80 : 0);
+        const pctAlunos = limAlunos > 0 ? Math.min(100, Math.round((qtdAlunosAtivos / limAlunos) * 100)) : 25;
+        const corBarraAlunos = (limAlunos > 0 && pctAlunos >= 85) ? '#e74c3c' : '#3498db';
+
+        const limEquipa = planoAtual === 'Essencial' ? 2 : (planoAtual === 'Profissional' ? 4 : 0);
+        const pctEquipa = limEquipa > 0 ? Math.min(100, Math.round((qtdEquipaAtiva / limEquipa) * 100)) : 25;
+        const corBarraEquipa = (limEquipa > 0 && pctEquipa >= 100) ? '#f39c12' : '#27ae60';
+
+        const baseCicloDias = planoAtual === 'Teste' ? 7 : 30;
+        const pctDias = Math.min(100, Math.max(5, Math.round((diasRestantes / baseCicloDias) * 100)));
+        const corBarraDias = diasRestantes <= 5 ? '#e74c3c' : '#8e44ad';
+
+        // 📜 Histórico de Licenças e Renovações
+        const historico = Array.isArray(escola.historicoLicencas) ? escola.historicoLicencas : [];
+        const htmlHistorico = historico.length > 0 ? `
+            <div class="card" style="margin-top: 35px; padding: 25px;">
+                <h3 style="margin: 0 0 15px 0; color: var(--card-text); font-size: 18px;">📜 Histórico de Ativações e Renovações</h3>
+                <div class="table-responsive-wrapper">
+                    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+                        <thead>
+                            <tr style="background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:left; color:#475569;">
+                                <th style="padding:10px 12px;">Recibo</th>
+                                <th style="padding:10px 12px;">Data da Ativação</th>
+                                <th style="padding:10px 12px;">Plano</th>
+                                <th style="padding:10px 12px;">Período Somado</th>
+                                <th style="padding:10px 12px;">Chave / Modo</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${historico.map(h => `
+                                <tr style="border-bottom:1px solid #f1f5f9;">
+                                    <td style="padding:10px 12px; font-family:monospace; font-weight:bold; color:#64748b;">${App.escapeHTML(h.id || '-')}</td>
+                                    <td style="padding:10px 12px;">${h.data ? new Date(h.data).toLocaleDateString('pt-BR') : '-'}</td>
+                                    <td style="padding:10px 12px; font-weight:bold; color:#2563eb;">${App.escapeHTML(h.plano || '-')}</td>
+                                    <td style="padding:10px 12px; color:#16a34a; font-weight:bold;">+${h.diasAdicionados || 30} dias</td>
+                                    <td style="padding:10px 12px; font-family:monospace;">${App.escapeHTML(h.pin || h.origem || 'PIN')}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        ` : '';
         
         div.innerHTML = `
-            <div class="card" style="text-align:center; padding: 40px 20px; border-top: 5px solid var(--accent);">
+            <div class="card" style="text-align:center; padding: 35px 20px; border-top: 5px solid var(--accent);">
                 <h2 style="margin: 0 0 15px 0; color: var(--card-text);">Evolua a sua Instituição</h2>
-                <div style="margin-bottom: 30px;">${infoPlano}</div>
+                <div style="margin-bottom: 25px;">${infoPlano}</div>
+
+                <!-- TERMÓMETRO DE CONSUMO DA ASSINATURA -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; max-width:820px; margin: 0 auto 30px auto; text-align:left;">
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; color:#475569; margin-bottom:8px;">
+                            <span>👨‍🎓 Alunos Ativos</span>
+                            <span style="color:${corBarraAlunos};">${qtdAlunosAtivos} / ${limAlunos > 0 ? limAlunos : 'Ilimitado'}</span>
+                        </div>
+                        <div style="width:100%; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
+                            <div style="width:${pctAlunos}%; height:100%; background:${corBarraAlunos}; border-radius:10px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; color:#475569; margin-bottom:8px;">
+                            <span>👥 Equipa Administrativa</span>
+                            <span style="color:${corBarraEquipa};">${qtdEquipaAtiva} / ${limEquipa > 0 ? limEquipa : 'Ilimitado'}</span>
+                        </div>
+                        <div style="width:100%; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
+                            <div style="width:${pctEquipa}%; height:100%; background:${corBarraEquipa}; border-radius:10px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; padding:15px; border-radius:10px;">
+                        <div style="display:flex; justify-content:space-between; font-size:12px; font-weight:bold; color:#475569; margin-bottom:8px;">
+                            <span>⏳ Ciclo de Validade</span>
+                            <span style="color:${corBarraDias};">${diasRestantes} dia(s)</span>
+                        </div>
+                        <div style="width:100%; height:8px; background:#e2e8f0; border-radius:10px; overflow:hidden;">
+                            <div style="width:${pctDias}%; height:100%; background:${corBarraDias}; border-radius:10px; transition:width 0.4s ease;"></div>
+                        </div>
+                    </div>
+                </div>
                 
                 <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; max-width: 500px; margin: 0 auto; border: 1px solid #eee;">
                     <h4 style="margin: 0 0 15px 0; color: #333;">Já efetuou o pagamento ou recebeu um PIN?</h4>
@@ -681,6 +775,8 @@ validarCadastroInst: async () => {
                     <button class="btn-primary" style="width:100%; background:transparent; color:#f39c12; border:2px solid #f39c12; justify-content:center;" onclick="App.comprarPlano('Premium', 'https://mpago.la/1DNyscL')">Assinar Premium</button>
                 </div>
             </div>
+
+            ${htmlHistorico}
         `;
     },
 
@@ -2066,15 +2162,47 @@ validarCadastroInst: async () => {
         });
     },
 
+   abrirModalBloqueioComPin: (escola) => {
+        let modal = document.getElementById('modal-bloqueio-assinatura-pin');
+        if (!modal) {
+            modal = document.createElement('div');
+            modal.id = 'modal-bloqueio-assinatura-pin';
+            modal.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(15,23,42,0.96); z-index:999999; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; backdrop-filter:blur(8px);';
+            document.body.appendChild(modal);
+        }
+
+        modal.innerHTML = `
+            <div style="background:#ffffff; max-width:460px; width:100%; border-radius:20px; padding:35px 25px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.5);">
+                <div style="font-size:48px; margin-bottom:10px;">🔒</div>
+                <h2 style="margin:0 0 8px 0; color:#1e293b; font-size:22px;">Assinatura Expirada ou Bloqueada</h2>
+                <p style="color:#64748b; font-size:13.5px; line-height:1.5; margin:0 0 22px 0;">
+                    O ciclo atual do plano <b>${App.escapeHTML(escola.plano || 'Escolar')}</b> encerrou. Insira abaixo o seu <b>PIN de Renovação</b> para destravar o acesso imediatamente:
+                </p>
+
+                <div style="background:#f8fafc; padding:18px; border-radius:12px; border:1px solid #e2e8f0; margin-bottom:20px;">
+                    <input type="text" id="input-novo-pin" placeholder="DIGITE O SEU PIN AQUI" style="width:100%; padding:13px; border:2px solid #cbd5e1; border-radius:8px; text-align:center; font-size:17px; font-weight:bold; letter-spacing:2px; margin-bottom:12px; box-sizing:border-box; text-transform:uppercase;">
+                    <button type="button" class="btn-primary" style="width:100%; justify-content:center; padding:13px; font-size:15px; font-weight:bold;" onclick="App.ativarNovoPlano(event); setTimeout(() => { const m = document.getElementById('modal-bloqueio-assinatura-pin'); if(m) m.remove(); }, 1800);">🔓 Validar PIN e Destravar Agora</button>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button type="button" onclick="window.open('https://mpago.la/1KmmwZf', '_blank')" style="flex:1; padding:11px; background:#2563eb; color:white; border:none; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;">💳 Renovar Online</button>
+                    <button type="button" onclick="App.logout()" style="flex:1; padding:11px; background:#f1f5f9; color:#475569; border:1px solid #cbd5e1; border-radius:8px; font-weight:bold; font-size:12px; cursor:pointer;">🚪 Sair da Conta</button>
+                </div>
+            </div>
+        `;
+        modal.style.display = 'flex';
+    },
+
     carregarDadosEscola: async (silencioso = false) => { 
         try { 
-            const cacheEscola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil')));
+            const rawCache = localStorage.getItem(App.getTenantKey('escola_perfil'));
+            const cacheEscola = rawCache ? JSON.parse(rawCache) : null;
             if (cacheEscola) {
-                if(typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(cacheEscola);
+                if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(cacheEscola);
             }
 
             const escola = await App.api('/escola', 'GET', null, silencioso); 
-            if(!escola || escola.error) return;
+            if (!escola || escola.error) return;
             
             if (!escola.dataCriacao) {
                 escola.dataCriacao = new Date().toISOString();
@@ -2084,13 +2212,26 @@ validarCadastroInst: async () => {
             if (escola.plano) { localStorage.setItem(App.getTenantKey('escola_plano'), escola.plano); }
             localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
             
-            if(typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escola);
+            if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escola);
             
             if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
-                if(typeof App.mostrarTelaBloqueioLogin === 'function') App.mostrarTelaBloqueioLogin(escola);
+                App.abrirModalBloqueioComPin(escola);
+                return;
+            } else {
+                const modalBloq = document.getElementById('modal-bloqueio-assinatura-pin');
+                if (modalBloq) modalBloq.remove();
             }
 
-        } catch(e) { console.log("Carregando perfil silenciosamente..."); } 
+            // ⏳ Aviso preventivo discreto quando faltam 5 dias ou menos para o vencimento
+            if (escola.dataExpiracao && !App._avisoVencimentoMostrado) {
+                const diasRest = Math.ceil((new Date(escola.dataExpiracao).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+                if (diasRest >= 0 && diasRest <= 5 && typeof App.showToast === 'function') {
+                    App._avisoVencimentoMostrado = true;
+                    App.showToast(`⏳ A assinatura da escola vence em ${diasRest} dia(s). Aceda a "💎 Meu Plano" para renovar sem perder dias!`, "warning");
+                }
+            }
+
+        } catch (e) { console.log("Carregando perfil silenciosamente..."); } 
     },
     
    // =========================================================

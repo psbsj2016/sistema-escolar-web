@@ -40,43 +40,51 @@
                     </div>
                 </div>
 
-                <button onclick="Admin.abrirModalVip()" style="background: linear-gradient(135deg, var(--success), #059669); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition:0.3s;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">➕ Cadastro VIP</button>
-                <button onclick="Admin.logout()" style="background: #334155; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; transition:0.3s;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Sair</button>
+                <button onclick="Admin.abrirModalVip()" style="background: linear-gradient(135deg, var(--success), #059669); color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3); transition:0.3s; cursor:pointer;" onmouseover="this.style.transform='translateY(-2px)'" onmouseout="this.style.transform='translateY(0)'">➕ Cadastro VIP</button>
+                <button onclick="Admin.logout()" style="background: #334155; color:white; border:none; padding:10px 20px; border-radius:8px; font-weight:bold; transition:0.3s; cursor:pointer;" onmouseover="this.style.background='#475569'" onmouseout="this.style.background='#334155'">Sair</button>
             </div>
         </header>
 
-        <div style="padding: 40px; max-width: 1200px; margin: 0 auto; width: 100%; animation: fadeIn 0.5s ease;">
+        <div style="padding: 40px; max-width: 1250px; margin: 0 auto; width: 100%; animation: fadeIn 0.5s ease; box-sizing: border-box;">
             
-            <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; margin-bottom: 40px;">
-                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--accent);">
-                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Total de Escolas</div>
-                    <div id="kpi-total" style="font-size: 36px; font-weight: bold; margin-top: 10px;">0</div>
+            <!-- CARTÕES KPI CLICÁVEIS + MRR -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 18px; margin-bottom: 35px;">
+                <div onclick="Admin.filtrarPorKPI('TODOS')" title="Clique para ver todas as escolas" style="background: var(--card); padding: 22px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--accent); cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">Total de Escolas (Ver Todas)</div>
+                    <div id="kpi-total" style="font-size: 32px; font-weight: bold; margin-top: 8px;">0</div>
                 </div>
-                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--success);">
-                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Ativos</div>
-                    <div id="kpi-ativas" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--success);">0</div>
+                <div onclick="Admin.filtrarPorKPI('ATIVOS')" title="Clique para filtrar apenas escolas ativas em dia" style="background: var(--card); padding: 22px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--success); cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">Ativos em Dia</div>
+                    <div id="kpi-ativas" style="font-size: 32px; font-weight: bold; margin-top: 8px; color:var(--success);">0</div>
                 </div>
-                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--warning);">
-                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Pendentes</div>
-                    <div id="kpi-pendentes" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--warning);">0</div>
+                <div onclick="Admin.filtrarPorKPI('PENDENTES')" title="Clique para filtrar pendentes ou que vencem em até 5 dias" style="background: var(--card); padding: 22px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--warning); cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">Pendentes / A Vencer</div>
+                    <div id="kpi-pendentes" style="font-size: 32px; font-weight: bold; margin-top: 8px; color:var(--warning);">0</div>
                 </div>
-                <div style="background: var(--card); padding: 25px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--danger);">
-                    <div style="color: #94a3b8; font-size: 14px; font-weight: 600; text-transform: uppercase;">Bloqueados</div>
-                    <div id="kpi-bloqueados" style="font-size: 36px; font-weight: bold; margin-top: 10px; color:var(--danger);">0</div>
+                <div onclick="Admin.filtrarPorKPI('BLOQUEADOS')" title="Clique para filtrar escolas bloqueadas ou vencidas" style="background: var(--card); padding: 22px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid var(--danger); cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">Bloqueados / Vencidos</div>
+                    <div id="kpi-bloqueados" style="font-size: 32px; font-weight: bold; margin-top: 8px; color:var(--danger);">0</div>
+                </div>
+                <div onclick="Admin.filtrarPorKPI('UPSELL')" title="Clique para ver escolas próximas do limite de alunos (Oportunidade de Upgrade)" style="background: var(--card); padding: 22px; border-radius: 12px; border: 1px solid #334155; border-left: 4px solid #a855f7; cursor: pointer; transition: 0.2s;" onmouseover="this.style.transform='translateY(-3px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <div style="color: #94a3b8; font-size: 12px; font-weight: 600; text-transform: uppercase;">💰 Receita Mensal (MRR)</div>
+                    <div id="kpi-mrr" style="font-size: 26px; font-weight: bold; margin-top: 10px; color:#c084fc;">R$ 0</div>
                 </div>
             </div>
 
             <div style="background: var(--card); border-radius: 12px; border: 1px solid #334155; overflow: hidden;">
                 <div style="padding: 20px; border-bottom: 1px solid #334155; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px;">
-                    <h2 style="margin:0; font-weight:400; font-size:18px;">Escolas Gerenciadas</h2>
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <h2 style="margin:0; font-weight:400; font-size:18px;">Escolas Gerenciadas</h2>
+                        <span id="etiqueta-filtro-ativo" style="display:none; background:#1e293b; color:#38bdf8; border:1px solid #334155; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:bold; cursor:pointer;" onclick="Admin.filtrarPorKPI('TODOS')">Filtro Ativo ✖</span>
+                    </div>
                     
-                    <input type="text" id="busca-tabela-escolas" name="busca_aleatoria" placeholder="🔍 Buscar registros e cadastros..." oninput="Admin.filtrarTabela(this.value)" autocomplete="new-password" spellcheck="false" style="padding:10px 15px; width:300px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
+                    <input type="text" id="busca-tabela-escolas" name="busca_aleatoria" placeholder="🔍 Buscar por escola, e-mail, plano ou PIN..." oninput="Admin.filtrarTabela(this.value)" autocomplete="new-password" spellcheck="false" style="padding:10px 15px; width:320px; border-radius:8px; border:1px solid #475569; background:#0f172a; color:white; font-family:inherit;">
                 </div>
                 
                 <table style="width: 100%; border-collapse: collapse; text-align: left; table-layout: auto;">
                     <thead>
                         <tr style="background: #0f172a; color: #94a3b8; font-size: 12px; text-transform: uppercase; letter-spacing: 1px;">
-                            <th style="padding: 15px 20px; width: 28%;">E-mail da Escola</th>
+                            <th style="padding: 15px 20px; width: 28%;">Instituição & Uso</th>
                             <th style="padding: 15px 20px; width: 18%;">Plano & Validade</th>
                             <th style="padding: 15px 20px; width: 19%;">Status / PIN</th>
                             <th style="padding: 15px 20px; text-align: right; width: 35%;">Ações de Gestão</th>
@@ -122,7 +130,7 @@
                     <option value="365">👑 365 Dias (Anual)</option>
                 </select>
                 
-                <button id="btn-gerar-vip" onclick="Admin.gerarAcessoVip()" style="width:100%; padding:14px; border:none; border-radius:6px; background:var(--accent); color:white; font-weight:bold; font-size:15px; transition:0.3s; cursor:pointer;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Gerar PIN e Acesso Direto</button>
+                <button id="btn-gerar-vip" onclick="Admin.gerarAcessoVip()" style="width:100%; padding:14px; border:none; border-radius:6px; background:var(--accent); color:white; font-weight:bold; font-size:15px; transition:0.3s; cursor:pointer;" onmouseover="this.style.background='#2563eb'" onmouseout="this.style.background='var(--accent)'">Gerar PIN e Enviar por E-mail</button>
             </div>
 
             <div id="vip-result-area" style="display:none; text-align:center;">
