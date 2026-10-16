@@ -445,20 +445,32 @@ Object.assign(Workspace.Avaliacoes, {
             event.stopPropagation();
         }
         
-        if (link && link !== '#') {
-            window.open(link, '_blank', 'noopener,noreferrer');
-        } else {
+        if (!link || link === '#') {
             Workspace.mostrarAviso("Nenhum link foi fornecido para esta sessão.", "warning");
             return;
         }
-        
+
+        const payloadPresenca = {
+            respostas: {},
+            alunoId: Workspace.usuario.id,
+            alunoRefId: Workspace.usuario.alunoRefId || Workspace.usuario.id,
+            alunoNome: Workspace.usuario.nome || Workspace.usuario.login,
+            relatorioFraude: { fugas: 0, tempoFora: 0 }
+        };
+
+        // 1. Dispara o registo direto para o servidor IMEDIATAMENTE antes da mudança de aba
+        const promessaRegisto = Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', payloadPresenca);
+
+        // 2. Abre a sala de aula online numa nova aba
+        window.open(link, '_blank', 'noopener,noreferrer');
+
+        // 3. Atualiza os lobbies locais assim que o servidor confirmar
         try {
-            const resInic = await Workspace.api(`/workspace/avaliacoes/${id}/iniciar`, 'POST', { alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login });
-            if (resInic && resInic.success) {
-                await Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', { respostas: {}, alunoId: Workspace.usuario.id, alunoNome: Workspace.usuario.nome || Workspace.usuario.login, relatorioFraude: { fugas: 0, tempoFora: 0 }, entregaId: resInic.entregaId });
-                Workspace.Avaliacoes.carregarLobbies();
-            }
-        } catch(e) { console.log("Erro ao registar a presença silenciosa.", e); }
+            await promessaRegisto;
+            Workspace.Avaliacoes.carregarLobbies();
+        } catch (e) {
+            console.log("Erro ao registar a presença silenciosa.", e);
+        }
     },
 
     renderizarLobbies: () => {
@@ -1217,7 +1229,7 @@ Object.assign(Workspace.Avaliacoes, {
                 const ausentes = [];
                 
                 alunosSessao.forEach(aluno => {
-                    const acessou = presencasReais.some(e => String(e.alunoId) === String(aluno.id) || (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim()));
+                    const acessou = presencasReais.some(e => String(e.alunoId) === String(aluno.id) || (e.alunoRefId && String(e.alunoRefId) === String(aluno.id)) || (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim()));
                     if (acessou) presentes.push(aluno);
                     else ausentes.push(aluno);
                 });
@@ -1473,7 +1485,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
                 alunosLista.forEach(aluno => {
-                    const acessoFeito = acessos.find(e => e.alunoId === aluno.id || e.alunoNome === aluno.nome);
+                    const acessoFeito = acessos.find(e => 
+                        String(e.alunoId) === String(aluno.id) || 
+                        (e.alunoRefId && String(e.alunoRefId) === String(aluno.id)) || 
+                        (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim())
+                    );
                     const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
                     const foiReativado = idsReativados.includes(aluno.id);
                     const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
