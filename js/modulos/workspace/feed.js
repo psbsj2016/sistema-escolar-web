@@ -2677,22 +2677,28 @@ Workspace.Feed = {
         const conteudo = document.getElementById('ws-imersao-musical-conteudo');
         if (!conteudo) return;
 
-        // Se o plano vier direto como array (ex: no "Mais Dias"), ajusta a estrutura
         const listaDias = Array.isArray(plano) ? plano : (plano.planoEstudos || []);
         const titulo = plano.tituloMusica || 'Treino Musical';
+        const idPostMusica = (postOriginal && postOriginal.id) 
+            ? postOriginal.id 
+            : (Workspace.Feed._estadoMusicaAtual ? Workspace.Feed._estadoMusicaAtual.postId : '');
 
         let htmlSuperior = `
             <div style="animation: fadeIn 0.5s ease;">
-                <div style="display: flex; align-items: center; gap: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 12px; border: 1px solid #3f3f46;">
-                    <div style="font-size: 30px;">🎧</div>
-                    <div>
-                        <div style="color: #ec4899; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Treino Ativo</div>
-                        <h2 style="color: #fff; margin: 0; font-size: 20px;">${Workspace.Feed.limparTexto(titulo)}</h2>
+                <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 15px; margin-bottom: 25px; background: rgba(0,0,0,0.3); padding: 15px 20px; border-radius: 12px; border: 1px solid #3f3f46;">
+                    <div style="display: flex; align-items: center; gap: 15px;">
+                        <div style="font-size: 30px;">🎧</div>
+                        <div>
+                            <div style="color: #ec4899; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;">Treino Ativo</div>
+                            <h2 style="color: #fff; margin: 0; font-size: 20px;">${Workspace.Feed.limparTexto(titulo)}</h2>
+                        </div>
                     </div>
+                    <button onclick="Workspace.Feed.voltarCatalogoMusical('${idPostMusica}')" style="background: rgba(255,255,255,0.08); color: #e4e4e7; border: 1px solid #52525b; padding: 8px 16px; border-radius: 10px; font-weight: bold; font-size: 13px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; gap: 6px;" onmouseover="this.style.background='rgba(255,255,255,0.15)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'" title="Sair desta música e escolher outra no catálogo">
+                        ↩ Trocar Música / Catálogo
+                    </button>
                 </div>
         `;
 
-        // Renderiza o vídeo/áudio original para o aluno ouvir enquanto estuda
         if (postOriginal && postOriginal.texto) {
             htmlSuperior += `
                 <div style="background: rgba(0,0,0,0.2); border-radius: 12px; padding: 15px; margin-bottom: 30px; border: 1px solid #27272a;">
@@ -2709,30 +2715,78 @@ Workspace.Feed = {
         });
         htmlDias += '</div>';
 
-        // O botão inteligente que sabe qual é o último dia para pedir à IA os seguintes!
         const ultimoDiaGerado = listaDias.length > 0 ? listaDias[listaDias.length - 1].dia : 0;
         
         let htmlMaisDias = `
-            <div style="text-align: center; margin-top: 30px; margin-bottom: 20px;">
-                <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica('${postOriginal ? postOriginal.id : ''}', ${ultimoDiaGerado})" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">
+            <div style="display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 30px; margin-bottom: 20px;">
+                <button id="ws-btn-mais-dias-musica" onclick="Workspace.Feed.gerarMaisDiasMusica('${idPostMusica}', ${ultimoDiaGerado})" style="background: rgba(236, 72, 153, 0.1); color: #ec4899; border: 1px solid rgba(236, 72, 153, 0.3); padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px;" onmouseover="this.style.background='rgba(236, 72, 153, 0.2)'" onmouseout="this.style.background='rgba(236, 72, 153, 0.1)'">
                     ➕ Desbloquear Mais Dias
+                </button>
+                <button id="ws-btn-concluir-musica" onclick="Workspace.Feed.concluirTreinoMusical('${idPostMusica}', this)" style="background: linear-gradient(135deg, #10b981, #059669); color: white; border: none; padding: 12px 24px; border-radius: 12px; font-weight: bold; cursor: pointer; transition: 0.2s; font-size: 15px; box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);" onmouseover="this.style.filter='brightness(1.1)'" onmouseout="this.style.filter='none'">
+                    🏆 Concluir Treino Musical
                 </button>
             </div>
             </div>
         `;
 
-        // LÓGICA DE INJEÇÃO: Se o painel de dias já existe, apenas acrescenta os novos!
         const containerDiasExistente = document.getElementById('ws-imersao-musical-dias');
-        if (containerDiasExistente) {
+        if (containerDiasExistente && Array.isArray(plano)) {
             let novosDiasHtml = '';
             listaDias.forEach(dia => { novosDiasHtml += Workspace.Feed.gerarHTMLDiaMusical(dia); });
             containerDiasExistente.insertAdjacentHTML('beforeend', novosDiasHtml);
             
             const btnMaisDias = document.getElementById('ws-btn-mais-dias-musica');
-            if (btnMaisDias) btnMaisDias.setAttribute('onclick', `Workspace.Feed.gerarMaisDiasMusica('${postOriginal.id}', ${ultimoDiaGerado})`);
+            if (btnMaisDias) btnMaisDias.setAttribute('onclick', `Workspace.Feed.gerarMaisDiasMusica('${idPostMusica}', ${ultimoDiaGerado})`);
         } else {
-            // Se for a primeira vez, desenha tudo!
             conteudo.innerHTML = htmlSuperior + htmlDias + htmlMaisDias;
+        }
+    },
+
+    voltarCatalogoMusical: async (postId) => {
+        try {
+            await Workspace.api('/workspace/ingles/musica/concluir', 'POST', {
+                userId: Workspace.usuario.id,
+                postId: postId,
+                apenasTrocar: true
+            });
+            Workspace.Feed.abrirImersaoMusical();
+        } catch (e) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao voltar ao catálogo.", "error");
+        }
+    },
+
+    concluirTreinoMusical: async (postId, btnEl) => {
+        if (btnEl) {
+            btnEl.innerHTML = '⏳ A guardar no seu Hall da Fama...';
+            btnEl.disabled = true;
+        }
+        try {
+            const res = await Workspace.api('/workspace/ingles/musica/concluir', 'POST', {
+                userId: Workspace.usuario.id,
+                postId: postId,
+                apenasTrocar: false
+            });
+
+            if (res && res.success) {
+                if (Workspace.Feed.dispararConfetes) Workspace.Feed.dispararConfetes();
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("🏆 Parabéns! Música concluída e adicionada ao seu Histórico!", "success", 4500);
+                }
+
+                // Atualiza o catálogo e abre diretamente a aba "Meu Histórico" para o aluno ver o troféu
+                const statusRes = await Workspace.api(`/workspace/ingles/musica/status?userId=${Workspace.usuario.id}&escolaId=${Workspace.usuario.escolaId}`, 'GET');
+                Workspace.Feed._historicoMusicas = statusRes ? statusRes.historicoMusicas || [] : [];
+                Workspace.Feed._catalogoMusicas = statusRes ? statusRes.catalogo || [] : [];
+                Workspace.Feed.renderizarMontraMusical('historico');
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao concluir o treino musical.", "error");
+            if (btnEl) {
+                btnEl.innerHTML = '🏆 Concluir Treino Musical';
+                btnEl.disabled = false;
+            }
         }
     },
 
@@ -2753,7 +2807,6 @@ Workspace.Feed = {
             });
 
             if (res && res.success && res.plano) {
-                // Reutilizamos a nossa função de renderização! Ela é inteligente e vai apenas anexar.
                 Workspace.Feed.renderizarImersaoMusical(res.plano, { id: postId }); 
             } else {
                 throw new Error(res?.error || 'A IA não conseguiu gerar mais dias.');
