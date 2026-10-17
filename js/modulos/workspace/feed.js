@@ -90,7 +90,10 @@ Workspace.Feed = {
 
         try {
             const avataresRes = await Workspace.api('/workspace/avatars', 'GET');
-            if (avataresRes && !avataresRes.error) window.Workspace.mapaAvatars = avataresRes;
+            if (avataresRes && !avataresRes.error) {
+                window.Workspace.avatarsCache = { ...(window.Workspace.avatarsCache || {}), ...avataresRes };
+                window.Workspace.mapaAvatars = window.Workspace.avatarsCache;
+            }
         } catch(e) {}
 
         await Workspace.Feed.carregarPosts();
@@ -166,6 +169,37 @@ Workspace.Feed = {
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
                     if (elementoHTML) elementoHTML.remove(); 
                     Workspace.Feed._removerPostDosCaches(idDoPost);
+                }
+
+                // 🚀 ATUALIZAÇÃO EM TEMPO REAL DE FOTO E NOME NO FEED E COMENTÁRIOS
+                if (dados.type === 'PERFIL_ATUALIZADO') {
+                    const nomeAntigo = dados.nomeAntigo || dados.novoNome;
+                    const novoNome = dados.novoNome || dados.nomeAntigo;
+                    const novaFoto = dados.avatar || null;
+
+                    if (novaFoto && novoNome) {
+                        window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
+                        window.Workspace.avatarsCache[novoNome] = novaFoto;
+                        if (nomeAntigo) window.Workspace.avatarsCache[nomeAntigo] = novaFoto;
+                        if (dados.login) window.Workspace.avatarsCache[dados.login] = novaFoto;
+                    }
+
+                    if (nomeAntigo && novoNome && nomeAntigo !== novoNome) {
+                        if (typeof Workspace.atualizarNomeNaTela === 'function') {
+                            Workspace.atualizarNomeNaTela(nomeAntigo, novoNome, novaFoto);
+                        }
+                        [Workspace.Feed.todosOsPosts, Workspace.Feed.postsCache].forEach(lista => {
+                            if (!Array.isArray(lista)) return;
+                            lista.forEach(p => {
+                                if (p.autorNome === nomeAntigo) p.autorNome = novoNome;
+                                if (Array.isArray(p.comentarios)) {
+                                    p.comentarios.forEach(c => { if (c.autorNome === nomeAntigo) c.autorNome = novoNome; });
+                                }
+                            });
+                        });
+                    } else if (novoNome && novaFoto && typeof Workspace.atualizarAvataresNaTela === 'function') {
+                        Workspace.atualizarAvataresNaTela(novoNome, novaFoto);
+                    }
                 }
 
                 // 🚀 RECETOR DO SINALIZADOR DA ARENA
@@ -2712,6 +2746,7 @@ Workspace.Feed = {
 
         try {
             const res = await Workspace.api('/workspace/posts/imersao-musical/mais-dias', 'POST', {
+                userId: Workspace.usuario.id,
                 escolaId: Workspace.usuario.escolaId,
                 postId: postId,
                 ultimoDia: parseInt(ultimoDia)

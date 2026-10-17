@@ -21,14 +21,20 @@ const Workspace = window.Workspace;
  */
 Workspace.atualizarCacheAvatares = async function() {
     try {
-        // Faz o pedido "fantasma" (em segundo plano) à nossa rota do servidor
-        // 🚀 CORREÇÃO: Caminho corrigido para '/workspace/avatars'
         const resposta = await Workspace.api('/workspace/avatars', 'GET');
-        
-        // Se o servidor devolver os dados com sucesso, substituímos a memória antiga
         if (resposta && !resposta.error) {
-            Workspace.avatarsCache = resposta;
-            console.log("✨ Memória da Arena atualizada com sucesso em tempo real!");
+            Workspace.avatarsCache = { ...(Workspace.avatarsCache || {}), ...resposta };
+            if (Workspace.usuario && Workspace.usuario.avatar) {
+                const meuNome = (Workspace.usuario.nome || Workspace.usuario.login || '').trim();
+                if (meuNome) Workspace.avatarsCache[meuNome] = Workspace.usuario.avatar;
+                if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = Workspace.usuario.avatar;
+            }
+            window.Workspace.mapaAvatars = Workspace.avatarsCache;
+
+            // Varre o ecrã e substitui imediatamente qualquer inicial pela foto carregada!
+            if (typeof Workspace.sincronizarTodosAvataresVisiveis === 'function') {
+                Workspace.sincronizarTodosAvataresVisiveis();
+            }
         }
     } catch (erro) {
         console.error("🚨 Falha ao atualizar a lista de avatares em segundo plano:", erro);
@@ -344,11 +350,12 @@ Object.assign(Workspace, {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) boxCriarPost.style.display = 'block';
 
-        // 🚀 O SEGREDO 1: Busca as fotos de perfil em SEGUNDO PLANO sem travar a tela!
-        Workspace.api('/workspace/avatars', 'GET').then(res => {
-            Workspace.avatarsCache = res || {};
-            Workspace.avatarsCache[Workspace.usuario.nome || Workspace.usuario.login] = Workspace.usuario.avatar;
-        }).catch(()=>{});
+       // 🚀 O SEGREDO 1: Preenche imediatamente a foto do utilizador logado e busca o resto em segundo plano
+        if (Workspace.usuario.avatar) {
+            if (Workspace.usuario.nome) Workspace.avatarsCache[Workspace.usuario.nome.trim()] = Workspace.usuario.avatar;
+            if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = Workspace.usuario.avatar;
+        }
+        Workspace.atualizarCacheAvatares();
 
         // 🚀 PASSO 1: PREPARA AS PAREDES DA CASA (Execução Imediata)
         if (Workspace.Ingles) Workspace.Ingles.init(); 
@@ -647,50 +654,125 @@ Object.assign(Workspace, {
    // ============================================================================
     // 🎨 RENDERIZADOR UNIVERSAL DE AVATARES (Agora com Bolinha Online Embutida!)
     // ============================================================================
-      renderizarAvatar: (nomeAutor, tamanho = 40) => {
-        const nomeStr = nomeAutor || 'Desconhecido';
-        const url = Workspace.avatarsCache[nomeStr];
+     // 🔍 Procura a foto do utilizador no cache ignorando diferenças de maiúsculas/minúsculas ou espaços
+    obterUrlAvatar: (nomeAutor) => {
+        const nomeLimpo = String(nomeAutor || '').trim();
+        if (!nomeLimpo) return null;
+
+        const cache = Workspace.avatarsCache || window.Workspace.mapaAvatars || {};
+        if (cache[nomeLimpo]) return cache[nomeLimpo];
+
+        const chaveEncontrada = Object.keys(cache).find(k => k.toLowerCase().trim() === nomeLimpo.toLowerCase());
+        if (chaveEncontrada && cache[chaveEncontrada]) return cache[chaveEncontrada];
+
+        if (Workspace.usuario && Workspace.usuario.avatar) {
+            const meuNome = String(Workspace.usuario.nome || '').trim().toLowerCase();
+            const meuLogin = String(Workspace.usuario.login || '').trim().toLowerCase();
+            if (nomeLimpo.toLowerCase() === meuNome || nomeLimpo.toLowerCase() === meuLogin) {
+                return Workspace.usuario.avatar;
+            }
+        }
+        return null;
+    },
+
+    renderizarAvatar: (nomeAutor, tamanho = 40) => {
+        const nomeStr = String(nomeAutor || 'Desconhecido').trim();
+        const url = Workspace.obterUrlAvatar(nomeStr);
         const nomeSeguro = Workspace.escapeHTML(nomeStr);
 
-        // 🚀 VERIFICAÇÃO INTELIGENTE: Procura o nome já limpo e protegido na lista do Radar
         const isOnline = Workspace.usuariosOnline.has(nomeSeguro.trim());
         const displayDot = isOnline ? 'block' : 'none';
 
-        // A bolinha verde fica pendurada no canto inferior direito da foto
         const bolinhaHtml = `<span class="ws-online-badge" data-badge-nome="${nomeSeguro}" style="display: ${displayDot}; position: absolute; top: 0; left: 0; width: ${tamanho * 0.25}px; height: ${tamanho * 0.25}px; background-color: #27ae60; border: 2px solid white; border-radius: 50%; z-index: 5; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"></span>`;
 
         let htmlInterno = '';
         if (url) {
-            htmlInterno = `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;">`;
+            htmlInterno = `<img src="${url}" loading="lazy" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0; margin:0 !important;">`;
         } else {
             const letra = nomeStr.charAt(0).toUpperCase();
             const corFundo = Workspace.gerarCorPorNome(nomeStr);
-            htmlInterno = `<div style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0;">${letra}</div>`;
+            htmlInterno = `<div class="ws-avatar-iniciais" style="width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0; margin:0 !important;">${letra}</div>`;
         }
 
-        // Devolvemos um contentor que segura a fotografia e a bolinha ao mesmo tempo!
         return `<div class="ws-avatar-wrapper" data-avatar-nome="${nomeSeguro}" data-avatar-tamanho="${tamanho}" style="position: relative; display: inline-block; width: ${tamanho}px; height: ${tamanho}px; flex-shrink: 0;">${htmlInterno}${bolinhaHtml}</div>`;
     },
 
-    // 🚀 O VARREDOR MÁGICO: Atualiza as fotos instantaneamente sem destruir as bolinhas
+    // 🚀 Atualiza as fotos (ou iniciais) instantaneamente em todos os posts e comentários na tela
     atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
-        const nomeSeguro = Workspace.escapeHTML(nomeAutor);
-        // Agora procura pelos nossos contentores
-        const wrappers = document.querySelectorAll(`.ws-avatar-wrapper[data-avatar-nome="${nomeSeguro}"]`);
+        if (!nomeAutor) return;
+        const alvoLower = Workspace.escapeHTML(String(nomeAutor).trim()).toLowerCase();
+        const wrappers = document.querySelectorAll('.ws-avatar-wrapper');
         
         wrappers.forEach(wrap => {
+            const nomeWrap = (wrap.getAttribute('data-avatar-nome') || '').trim().toLowerCase();
+            if (nomeWrap !== alvoLower) return;
+
             const tamanho = wrap.getAttribute('data-avatar-tamanho') || 40;
             const innerImg = wrap.querySelector('img');
-            const innerDiv = wrap.querySelector('div'); // A caixa com a letra inicial
+            const innerDiv = wrap.querySelector('.ws-avatar-iniciais') || wrap.querySelector('div:not(.ws-online-badge)');
 
-            if (innerImg) {
-                innerImg.src = novaUrl;
-            } else if (innerDiv && !innerDiv.classList.contains('ws-online-badge')) {
-                const novaImg = document.createElement('img');
-                novaImg.src = novaUrl;
-                novaImg.setAttribute('loading', 'lazy');
-                novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0;`;
-                wrap.replaceChild(novaImg, innerDiv);
+            if (novaUrl) {
+                if (innerImg) {
+                    innerImg.src = novaUrl;
+                } else if (innerDiv) {
+                    const novaImg = document.createElement('img');
+                    novaImg.src = novaUrl;
+                    novaImg.setAttribute('loading', 'lazy');
+                    novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0; margin:0 !important;`;
+                    wrap.replaceChild(novaImg, innerDiv);
+                }
+            } else if (innerDiv) {
+                const nomeAtual = wrap.getAttribute('data-avatar-nome') || 'U';
+                innerDiv.innerText = nomeAtual.charAt(0).toUpperCase();
+                innerDiv.style.background = Workspace.gerarCorPorNome(nomeAtual);
+            }
+        });
+    },
+
+    // 🔄 Troca o Nome Antigo pelo Novo Nome em todos os elementos já desenhados no Feed/Comentários
+    atualizarNomeNaTela: (nomeAntigo, novoNome, avatarUrl = null) => {
+        if (!nomeAntigo || !novoNome) return;
+        const antigoSeguro = Workspace.escapeHTML(String(nomeAntigo).trim());
+        const novoSeguro = Workspace.escapeHTML(String(novoNome).trim());
+        const antigoLower = antigoSeguro.toLowerCase();
+
+        // 1. Atualiza o atributo data-avatar-nome nos contentores de fotos e nas bolinhas online
+        document.querySelectorAll('.ws-avatar-wrapper').forEach(wrap => {
+            const atual = (wrap.getAttribute('data-avatar-nome') || '').trim();
+            if (atual.toLowerCase() === antigoLower) {
+                wrap.setAttribute('data-avatar-nome', novoSeguro);
+                const badge = wrap.querySelector('.ws-online-badge');
+                if (badge) badge.setAttribute('data-badge-nome', novoSeguro);
+            }
+        });
+
+        // 2. Atualiza os nomes clicáveis nos cabeçalhos de Posts e Comentários
+        document.querySelectorAll('[onclick*="abrirPerfilUsuario"]').forEach(el => {
+            const onclickAtual = el.getAttribute('onclick') || '';
+            if (onclickAtual.toLowerCase().includes(antigoLower)) {
+                el.setAttribute('onclick', `Workspace.Feed.abrirPerfilUsuario('${novoSeguro.replace(/'/g, "\\'")}')`);
+            }
+            if (!el.querySelector('.ws-avatar-wrapper') && el.textContent.trim().toLowerCase() === String(nomeAntigo).trim().toLowerCase()) {
+                el.textContent = novoNome;
+            }
+        });
+
+        // 3. Atualiza a foto (ou as novas iniciais caso não tenha foto)
+        const fotoFinal = avatarUrl || Workspace.obterUrlAvatar(novoNome) || Workspace.obterUrlAvatar(nomeAntigo);
+        if (fotoFinal) {
+            Workspace.avatarsCache[novoNome.trim()] = fotoFinal;
+            if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[novoNome.trim()] = fotoFinal;
+        }
+        Workspace.atualizarAvataresNaTela(novoNome, fotoFinal);
+    },
+
+    // Varre todos os avatares visíveis quando o dicionário de fotos termina de carregar
+    sincronizarTodosAvataresVisiveis: () => {
+        document.querySelectorAll('.ws-avatar-wrapper').forEach(wrap => {
+            const nome = wrap.getAttribute('data-avatar-nome');
+            if (nome) {
+                const url = Workspace.obterUrlAvatar(nome);
+                if (url) Workspace.atualizarAvataresNaTela(nome, url);
             }
         });
     },
@@ -710,7 +792,6 @@ Object.assign(Workspace, {
     },
 
     abrirPaginaPerfil: () => {
-        // Como o 'navegarPara' agora é super inteligente, só precisamos dar-lhe a ordem de viagem!
         Workspace.navegarPara('perfil');
     },
 
@@ -725,7 +806,7 @@ Object.assign(Workspace, {
     },
 
     // ============================================================================
-    // ✏️ EDIÇÃO DO NOME DO PERFIL E EFEITO CASCATA VISUAL
+    // ✏️ EDIÇÃO DO NOME DO PERFIL E EFEITO CASCATA VISUAL INSTANTÂNEO
     // ============================================================================
     editarNomePerfil: () => {
         const nomeAtual = Workspace.usuario.nome || Workspace.usuario.login;
@@ -755,6 +836,7 @@ Object.assign(Workspace, {
         btn.disabled = true;
 
         try {
+            const nomeAntes = Workspace.usuario.nome || Workspace.usuario.login;
             const res = await Workspace.api('/workspace/perfil/nome', 'PUT', {
                 id: Workspace.usuario.id,
                 alunoRefId: Workspace.usuario.alunoRefId,
@@ -762,44 +844,61 @@ Object.assign(Workspace, {
             });
 
             if (res && res.success) {
-                const nomeAntigo = res.nomeAntigo;
+                const nomeAntigo = res.nomeAntigo || nomeAntes;
+                const fotoMantida = res.avatar || Workspace.usuario.avatar || Workspace.obterUrlAvatar(nomeAntigo) || null;
 
-                // 1. Atualiza a Memória do Navegador
+                // 1. Atualiza a Memória do Navegador mantendo a foto intacta
                 Workspace.usuario.nome = novoNome;
+                if (fotoMantida) Workspace.usuario.avatar = fotoMantida;
                 localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
 
-                // 2. Transferência de Avatar no Cache
-                if (nomeAntigo && Workspace.avatarsCache[nomeAntigo]) {
-                    Workspace.avatarsCache[novoNome] = Workspace.avatarsCache[nomeAntigo];
+                // 2. Garante a foto no novo nome dentro de ambos os caches
+                if (fotoMantida) {
+                    Workspace.avatarsCache[novoNome] = fotoMantida;
+                    if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[novoNome] = fotoMantida;
                 }
 
-                // 3. Atualiza Visuais
-                document.getElementById('ws-perfil-modal-nome').innerText = novoNome;
-                if (!Workspace.usuario.avatar) {
-                    const letrasEl = document.getElementById('ws-perfil-letras');
-                    if (letrasEl) {
-                        letrasEl.innerText = novoNome.charAt(0).toUpperCase();
-                        letrasEl.style.background = Workspace.gerarCorPorNome(novoNome);
-                    }
+                // 3. Atualiza os elementos do Modal de Perfil na hora
+                const elModalNome = document.getElementById('ws-perfil-modal-nome');
+                if (elModalNome) elModalNome.innerText = novoNome;
+
+                const imgEl = document.getElementById('ws-perfil-img');
+                const letrasEl = document.getElementById('ws-perfil-letras');
+                if (fotoMantida) {
+                    if (imgEl) { imgEl.src = fotoMantida; imgEl.style.display = 'block'; }
+                    if (letrasEl) letrasEl.style.display = 'none';
+                } else if (letrasEl) {
+                    if (imgEl) imgEl.style.display = 'none';
+                    letrasEl.style.display = 'flex';
+                    letrasEl.innerText = novoNome.charAt(0).toUpperCase();
+                    letrasEl.style.background = Workspace.gerarCorPorNome(novoNome);
+                }
+
+                // 4. Atualiza os posts e comentários em memória e diretamente na tela!
+                Workspace.atualizarNomeNaTela(nomeAntigo, novoNome, fotoMantida);
+
+                if (Workspace.Feed) {
+                    const atualizarArrayPosts = (lista) => {
+                        if (!Array.isArray(lista)) return;
+                        lista.forEach(p => {
+                            if (p.autorNome === nomeAntigo || p.autorNome === Workspace.usuario.login) p.autorNome = novoNome;
+                            if (Array.isArray(p.comentarios)) {
+                                p.comentarios.forEach(c => {
+                                    if (c.autorNome === nomeAntigo || c.autorNome === Workspace.usuario.login) c.autorNome = novoNome;
+                                });
+                            }
+                        });
+                    };
+                    atualizarArrayPosts(Workspace.Feed.todosOsPosts);
+                    atualizarArrayPosts(Workspace.Feed.postsCache);
                 }
 
                 Workspace.cancelarEdicaoNome();
-                Workspace.mostrarAviso("Nome atualizado em toda a plataforma!", "success");
-
-                // 4. Magia Invisível: Recarrega o Feed
-                if (Workspace.Feed) {
-                    Workspace.Feed.todosOsPosts = [];
-                    Workspace.Feed.postsCache = [];
-                    const areaFeed = document.getElementById('ws-posts-area');
-                    if (areaFeed) areaFeed.innerHTML = ''; 
-                    Workspace.Feed.carregarPosts(); 
-                }
+                Workspace.mostrarAviso("Nome atualizado instantaneamente em toda a plataforma!", "success");
 
                 if (Workspace.Sidebar && Workspace.Sidebar.carregarTurmas) Workspace.Sidebar.carregarTurmas();
-
-                // 🚀 GATILHO ADICIONADO AQUI: Atualiza a memória da Arena invisivelmente!
                 if (typeof Workspace.atualizarCacheAvatares === 'function') {
-                    Workspace.atualizarCacheAvatares();
+                    await Workspace.atualizarCacheAvatares();
                 }
 
             } else {
@@ -895,25 +994,30 @@ Object.assign(Workspace, {
                 });
 
                 if (res && res.success) {
-                    const nomeUsuario = Workspace.usuario.nome || Workspace.usuario.login;
+                    const nomeUsuario = (Workspace.usuario.nome || Workspace.usuario.login || '').trim();
                     Workspace.usuario.avatar = avatarFinal;
                     localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+                    
                     Workspace.avatarsCache[nomeUsuario] = avatarFinal;
+                    if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = avatarFinal;
+                    if (window.Workspace.mapaAvatars) {
+                        window.Workspace.mapaAvatars[nomeUsuario] = avatarFinal;
+                    }
                     
                     const img = document.getElementById('ws-perfil-img');
                     const letras = document.getElementById('ws-perfil-letras');
                     
-                    if(img) { img.src = avatarFinal; img.style.display = 'block'; }
-                    if(letras) letras.style.display = 'none';
+                    if (img) { img.src = avatarFinal; img.style.display = 'block'; }
+                    if (letras) letras.style.display = 'none';
 
-                    Workspace.mostrarAviso("Foto atualizada em toda a plataforma!", "success");
+                    Workspace.mostrarAviso("Foto atualizada instantaneamente em toda a plataforma!", "success");
                     
-                    // 🚀 O VARREDOR MÁGICO ENTRA AQUI!
+                    // Substitui imediatamente todas as iniciais ou fotos antigas no Feed e Comentários!
                     if (Workspace.atualizarAvataresNaTela) {
                         Workspace.atualizarAvataresNaTela(nomeUsuario, avatarFinal);
+                        if (Workspace.usuario.login) Workspace.atualizarAvataresNaTela(Workspace.usuario.login, avatarFinal);
                     }
                     
-                    // 🚀 GATILHO ADICIONADO AQUI: Sincroniza a Arena com a nova foto!
                     if (typeof Workspace.atualizarCacheAvatares === 'function') {
                         Workspace.atualizarCacheAvatares();
                     }
