@@ -669,14 +669,26 @@ Workspace.Feed = {
         }
     },
 
+    filtrarPorAutor: (nomeAutor) => {
+        if (!nomeAutor) return;
+        Workspace.Feed.autorFiltroAtivo = String(nomeAutor).trim();
+        Workspace.Feed.filtrarFeed('autor');
+        const areaPosts = document.getElementById('ws-posts-area');
+        if (areaPosts) areaPosts.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    },
+
     filtrarFeed: (tipoFiltro) => {
         Workspace.Feed.filtroAtivo = tipoFiltro;
         Workspace.Feed.paginaAtual = 1;
         Workspace.Feed.postsCache = [];
+
+        if (tipoFiltro !== 'autor') {
+            Workspace.Feed.autorFiltroAtivo = null;
+        }
         
         document.querySelectorAll('.ws-filtro-btn').forEach(btn => btn.classList.remove('ativo'));
         const btnAtivo = document.getElementById(`filtro-${tipoFiltro}`);
-        if(btnAtivo) btnAtivo.classList.add('ativo');
+        if (btnAtivo) btnAtivo.classList.add('ativo');
 
         let listaFiltrada = Workspace.Feed.todosOsPosts;
         
@@ -684,7 +696,6 @@ Workspace.Feed = {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.anexos && p.anexos.some(a => a.tipo.includes('image')));
         } 
         else if (tipoFiltro === 'video') {
-            // 🚀 Filtro de Vídeos Corrigido (Precedência do && sobre ||)
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => {
                 const temVideoAnexo = p.anexos && p.anexos.some(a => a.tipo.includes('video'));
                 const txt = p.texto || '';
@@ -698,11 +709,32 @@ Workspace.Feed = {
         else if (tipoFiltro === 'musica') {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => p.categoria === 'musica');
         }
+        else if (tipoFiltro === 'autor' && Workspace.Feed.autorFiltroAtivo) {
+            const alvoLower = Workspace.Feed.autorFiltroAtivo.toLowerCase();
+            listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => String(p.autorNome || '').trim().toLowerCase() === alvoLower);
+        }
 
         const container = document.getElementById('ws-posts-area');
         if (container) {
-            if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect(); // 🚀 Previne memory leak dos vídeos antigos
+            if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect();
             container.innerHTML = ''; 
+        }
+
+        // Barra visual de filtro por membro (aparece apenas quando estamos a filtrar por autor)
+        let bannerAutor = document.getElementById('ws-banner-filtro-autor');
+        if (tipoFiltro === 'autor' && Workspace.Feed.autorFiltroAtivo && container) {
+            if (!bannerAutor) {
+                bannerAutor = document.createElement('div');
+                bannerAutor.id = 'ws-banner-filtro-autor';
+                container.parentNode.insertBefore(bannerAutor, container);
+            }
+            bannerAutor.style.cssText = 'display: flex; justify-content: space-between; align-items: center; background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; padding: 12px 18px; border-radius: 12px; margin-bottom: 20px; font-size: 13px; font-weight: 600; animation: fadeIn 0.3s ease;';
+            bannerAutor.innerHTML = `
+                <span>👤 A mostrar publicações de: <strong>${Workspace.Feed.limparTexto(Workspace.Feed.autorFiltroAtivo)}</strong> (${listaFiltrada.length})</span>
+                <button onclick="Workspace.Feed.filtrarFeed('todos')" style="background: #2563eb; color: white; border: none; padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">✖ Mostrar Tudo</button>
+            `;
+        } else if (bannerAutor) {
+            bannerAutor.remove();
         }
 
         let sentinela = document.getElementById('ws-feed-sentinela');
@@ -1552,7 +1584,7 @@ Workspace.Feed = {
 
     abrirPerfilUsuario: async (autorNome) => {
         const id = 'ws-perfil-visitante-modal';
-        if(document.getElementById(id)) document.getElementById(id).remove();
+        if (document.getElementById(id)) document.getElementById(id).remove();
         
         document.body.style.cursor = 'wait';
         
@@ -1562,6 +1594,26 @@ Workspace.Feed = {
         } catch(e) {}
         
         document.body.style.cursor = 'default';
+
+        // 📊 CÁLCULO INSTANTÂNEO DE PARTICIPAÇÃO NO FEED (Publicações e Curtidas Recebidas)
+        const nomeAlvoLower = String(autorNome || '').trim().toLowerCase();
+        const todosPosts = Array.isArray(Workspace.Feed.todosOsPosts) ? Workspace.Feed.todosOsPosts : [];
+        let totalPostsMembro = 0;
+        let totalCurtidasRecebidas = 0;
+
+        todosPosts.forEach(p => {
+            if (String(p.autorNome || '').trim().toLowerCase() === nomeAlvoLower) {
+                totalPostsMembro++;
+                totalCurtidasRecebidas += Array.isArray(p.likes) ? p.likes.length : 0;
+            }
+            if (Array.isArray(p.comentarios)) {
+                p.comentarios.forEach(c => {
+                    if (String(c.autorNome || '').trim().toLowerCase() === nomeAlvoLower) {
+                        totalCurtidasRecebidas += Array.isArray(c.likes) ? c.likes.length : 0;
+                    }
+                });
+            }
+        });
 
         let avatarHTML = window.Workspace.renderizarAvatar(autorNome, 100);
         let bioReal = "A evoluir e a participar ativamente na nossa comunidade de aprendizagem.";
@@ -1580,7 +1632,7 @@ Workspace.Feed = {
                 if (avatarFinalHTML.includes('<img')) {
                     avatarFinalHTML = avatarFinalHTML.replace(/src="([^"]+)"/, `src="${novoSrc}"`);
                 } else {
-                    avatarFinalHTML = `<img src="${novoSrc}" alt="${autorNome}">`;
+                    avatarFinalHTML = `<img src="${novoSrc}" alt="${Workspace.Feed.limparTexto(autorNome)}">`;
                 }
             }
 
@@ -1595,7 +1647,7 @@ Workspace.Feed = {
                 else if (cristalArena.includes('Ametista')) { corCristal = '#a855f7'; emojiCristal = '🟪'; glow = 'rgba(168, 85, 247, 0.1)'; }
 
                 arenaHtml = `
-                    <div style="background: ${glow}; border: 1px solid rgba(0,0,0,0.05); padding: 8px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 12px; margin-bottom: 20px; text-align: left; box-shadow: 0 2px 10px ${glow};">
+                    <div style="background: ${glow}; border: 1px solid rgba(0,0,0,0.05); padding: 8px 15px; border-radius: 12px; display: inline-flex; align-items: center; gap: 12px; margin-bottom: 15px; text-align: left; box-shadow: 0 2px 10px ${glow};">
                         <div style="font-size: 24px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); animation: ws-float 3s ease-in-out infinite;">${emojiCristal}</div>
                         <div style="line-height: 1.2;">
                             <div style="font-size: 9px; color: #64748b; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px;">Status de Eloquência</div>
@@ -1641,9 +1693,11 @@ Workspace.Feed = {
             </style>
         `;
 
+        const nomeSeguroJS = Workspace.Feed.limparTexto(autorNome).replace(/'/g, "\\'");
+
         overlay.innerHTML = `
             ${estiloAvatar}
-            <div class="ws-card" style="width: 90%; max-width: 360px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
+            <div class="ws-card" style="width: 90%; max-width: 370px; text-align: center; padding: 0; background: #fff; border-radius: 20px; position: relative; transform: scale(0.9); transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); margin:0; box-shadow: 0 25px 50px rgba(0,0,0,0.3); overflow: visible;">
                 <div style="position: absolute; top: 15px; right: 15px; background: rgba(0,0,0,0.3); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; cursor: pointer; z-index: 10; backdrop-filter: blur(5px); transition: 0.2s;" onmouseover="this.style.background='rgba(231, 76, 60, 0.9)'" onmouseout="this.style.background='rgba(0,0,0,0.3)'" onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" title="Fechar">✖</div>
                 
                 <div style="height: 110px; background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); position: relative; width: 100%; border-top-left-radius: 20px; border-top-right-radius: 20px; overflow: hidden;">
@@ -1654,7 +1708,7 @@ Workspace.Feed = {
                     ${avatarFinalHTML}
                 </div>
                 
-                <div style="padding: 0 25px 30px 25px; animation: fadeIn 0.3s ease;">
+                <div style="padding: 0 25px 25px 25px; animation: fadeIn 0.3s ease;">
                     <h2 style="margin: 0 0 8px 0; color: #1e293b; font-size: 22px; font-weight: 800; display: flex; align-items: center; justify-content: center; gap: 6px;">
                         ${Workspace.Feed.limparTexto(autorNome)}
                         <span style="color: #3b82f6; font-size: 16px; background: #eff6ff; border-radius: 50%; padding: 2px;" title="Conta Verificada">✔️</span>
@@ -1666,12 +1720,32 @@ Workspace.Feed = {
                     
                     ${arenaHtml}
 
-                    <p style="margin: 0 0 25px 0; color: #64748b; font-size: 14px; line-height: 1.5; font-style: italic;">
+                    <!-- 📊 CONTADORES DE PUBLICAÇÕES E CURTIDAS RECEBIDAS -->
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-bottom: 18px;">
+                        <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 8px;">
+                            <div style="font-size: 18px; font-weight: 800; color: #1e293b;">${totalPostsMembro}</div>
+                            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">📝 Publicações</div>
+                        </div>
+                        <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 10px 8px;">
+                            <div style="font-size: 18px; font-weight: 800; color: #16a34a;">${totalCurtidasRecebidas}</div>
+                            <div style="font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase;">👍 Curtidas</div>
+                        </div>
+                    </div>
+
+                    <p style="margin: 0 0 20px 0; color: #64748b; font-size: 13.5px; line-height: 1.5; font-style: italic;">
                         "${bioReal}"
                     </p>
-                    <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" style="width: 100%; background: #f1f5f9; color: #475569; border: none; padding: 12px; border-radius: 12px; font-size: 14px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">
-                        Voltar ao Feed
-                    </button>
+
+                    <div style="display: flex; flex-direction: column; gap: 8px;">
+                        ${totalPostsMembro > 0 ? `
+                        <button onclick="document.getElementById('${id}').remove(); Workspace.Feed.filtrarPorAutor('${nomeSeguroJS}');" style="width: 100%; background: #2563eb; color: #ffffff; border: none; padding: 12px; border-radius: 12px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: 0.2s; box-shadow: 0 4px 12px rgba(37, 99, 235, 0.25);" onmouseover="this.style.background='#1d4ed8'" onmouseout="this.style.background='#2563eb'">
+                            📄 Ver Publicações no Feed (${totalPostsMembro})
+                        </button>
+                        ` : ''}
+                        <button onclick="document.getElementById('${id}').style.opacity='0'; setTimeout(()=>document.getElementById('${id}').remove(), 300);" style="width: 100%; background: #f1f5f9; color: #475569; border: none; padding: 12px; border-radius: 12px; font-size: 13.5px; font-weight: 700; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#1e293b'" onmouseout="this.style.background='#f1f5f9'; this.style.color='#475569'">
+                            Voltar ao Feed
+                        </button>
+                    </div>
                 </div>
             </div>
         `;
@@ -1679,7 +1753,7 @@ Workspace.Feed = {
         requestAnimationFrame(() => { overlay.style.opacity = '1'; overlay.children[1].style.transform = 'scale(1)'; });
         
         overlay.addEventListener('click', (e) => { 
-            if(e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
+            if (e.target === overlay) { overlay.style.opacity = '0'; overlay.children[1].style.transform = 'scale(0.9)'; setTimeout(() => overlay.remove(), 300); } 
         });
     },
 
