@@ -171,17 +171,21 @@ Workspace.Feed = {
                     Workspace.Feed._removerPostDosCaches(idDoPost);
                 }
 
-                // 🚀 ATUALIZAÇÃO EM TEMPO REAL DE FOTO E NOME NO FEED E COMENTÁRIOS
+                // 🚀 ATUALIZAÇÃO EM TEMPO REAL DE FOTO (OU REMOÇÃO PARA INICIAIS) E NOME NO FEED
                 if (dados.type === 'PERFIL_ATUALIZADO') {
                     const nomeAntigo = dados.nomeAntigo || dados.novoNome;
                     const novoNome = dados.novoNome || dados.nomeAntigo;
                     const novaFoto = dados.avatar || null;
 
+                    window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
                     if (novaFoto && novoNome) {
-                        window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
                         window.Workspace.avatarsCache[novoNome] = novaFoto;
                         if (nomeAntigo) window.Workspace.avatarsCache[nomeAntigo] = novaFoto;
                         if (dados.login) window.Workspace.avatarsCache[dados.login] = novaFoto;
+                    } else if (!novaFoto) {
+                        if (novoNome) delete window.Workspace.avatarsCache[novoNome];
+                        if (nomeAntigo) delete window.Workspace.avatarsCache[nomeAntigo];
+                        if (dados.login) delete window.Workspace.avatarsCache[dados.login];
                     }
 
                     if (nomeAntigo && novoNome && nomeAntigo !== novoNome) {
@@ -197,7 +201,7 @@ Workspace.Feed = {
                                 }
                             });
                         });
-                    } else if (novoNome && novaFoto && typeof Workspace.atualizarAvataresNaTela === 'function') {
+                    } else if (novoNome && typeof Workspace.atualizarAvataresNaTela === 'function') {
                         Workspace.atualizarAvataresNaTela(novoNome, novaFoto);
                     }
                 }

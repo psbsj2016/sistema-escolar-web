@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-DXFJYtJD.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-f1uNruP5.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -842,12 +842,13 @@
             <div class="ws-card" style="width: 100%; padding: 0; overflow: hidden; box-shadow: 0 5px 15px rgba(0,0,0,0.05);">
                 <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;"><h3 style="margin: 0; font-size: 16px;">🙍 Meu Perfil</h3></div>
                 <div style="padding: 30px 20px; text-align: center;">
-                    <div style="position: relative; display: inline-block; margin: 0 auto;">
+                   <div style="position: relative; display: inline-block; margin: 0 auto;">
                         <div style="cursor: pointer; border-radius: 16px; overflow: hidden; border: 3px solid #3498db; width: 120px; height: 120px; min-width: 120px; flex-shrink: 0; box-shadow: 0 5px 15px rgba(0,0,0,0.1); position: relative; background: #ffffff;" onclick="Workspace.verMinhaFoto()" title="Ver Foto">
                             <img id="ws-perfil-img" src="" alt="Avatar" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; object-position: center; display: none; margin: 0 !important; padding: 0 !important; border-radius: 0 !important;">
                             <div id="ws-perfil-letras" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: #3498db; color: white; font-size: 45px; font-weight: bold; display: flex; align-items: center; justify-content: center; margin: 0; padding: 0;">?</div>
                         </div>
-                        <div style="position: absolute; bottom: -8px; right: -8px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onclick="document.getElementById('ws-avatar-upload').click()" title="Alterar Foto">📷</div>
+                        <div id="ws-btn-remover-foto" style="display: none; position: absolute; bottom: -8px; left: -8px; background: #e74c3c; width: 35px; height: 35px; border-radius: 50%; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 15px; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="Workspace.removerFotoPerfil()" title="Remover Foto e Voltar às Iniciais">🗑️</div>
+                        <div style="position: absolute; bottom: -8px; right: -8px; background: #27ae60; width: 35px; height: 35px; border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; cursor: pointer; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white; font-size: 16px; transition: 0.2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'" onclick="document.getElementById('ws-avatar-upload').click()" title="Alterar Foto">📷</div>
                     </div>
                     <input type="file" id="ws-avatar-upload" accept="image/*" style="display: none;" onchange="Workspace.uploadAvatar(event)">
                     

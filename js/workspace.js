@@ -512,11 +512,14 @@ Object.assign(Workspace, {
             if (elLogin) elLogin.innerText = `@${Workspace.usuario.login}`;
             const imgEl = document.getElementById('ws-perfil-img');
             const letrasEl = document.getElementById('ws-perfil-letras');
+            const btnRemoverFoto = document.getElementById('ws-btn-remover-foto');
             if (Workspace.usuario.avatar) {
                 if (imgEl) { imgEl.src = Workspace.usuario.avatar; imgEl.style.display = 'block'; }
                 if (letrasEl) letrasEl.style.display = 'none';
+                if (btnRemoverFoto) btnRemoverFoto.style.display = 'flex';
             } else {
                 if (imgEl) imgEl.style.display = 'none';
+                if (btnRemoverFoto) btnRemoverFoto.style.display = 'none';
                 if (letrasEl) {
                     letrasEl.style.display = 'flex'; letrasEl.innerText = nome.charAt(0).toUpperCase(); letrasEl.style.background = Workspace.gerarCorPorNome(nome);
                 }
@@ -697,7 +700,7 @@ Object.assign(Workspace, {
         return `<div class="ws-avatar-wrapper" data-avatar-nome="${nomeSeguro}" data-avatar-tamanho="${tamanho}" style="position: relative; display: inline-block; width: ${tamanho}px; height: ${tamanho}px; flex-shrink: 0;">${htmlInterno}${bolinhaHtml}</div>`;
     },
 
-    // 🚀 Atualiza as fotos (ou iniciais) instantaneamente em todos os posts e comentários na tela
+    // 🚀 Atualiza as fotos (ou transforma de volta nas iniciais se novaUrl for null) instantaneamente na tela
     atualizarAvataresNaTela: (nomeAutor, novaUrl) => {
         if (!nomeAutor) return;
         const alvoLower = Workspace.escapeHTML(String(nomeAutor).trim()).toLowerCase();
@@ -707,7 +710,7 @@ Object.assign(Workspace, {
             const nomeWrap = (wrap.getAttribute('data-avatar-nome') || '').trim().toLowerCase();
             if (nomeWrap !== alvoLower) return;
 
-            const tamanho = wrap.getAttribute('data-avatar-tamanho') || 40;
+            const tamanho = parseFloat(wrap.getAttribute('data-avatar-tamanho')) || 40;
             const innerImg = wrap.querySelector('img');
             const innerDiv = wrap.querySelector('.ws-avatar-iniciais') || wrap.querySelector('div:not(.ws-online-badge)');
 
@@ -721,10 +724,21 @@ Object.assign(Workspace, {
                     novaImg.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; border-radius:50%; object-fit:cover; object-position:center; aspect-ratio:1/1; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); background:#fff; flex-shrink:0; margin:0 !important;`;
                     wrap.replaceChild(novaImg, innerDiv);
                 }
-            } else if (innerDiv) {
+            } else {
                 const nomeAtual = wrap.getAttribute('data-avatar-nome') || 'U';
-                innerDiv.innerText = nomeAtual.charAt(0).toUpperCase();
-                innerDiv.style.background = Workspace.gerarCorPorNome(nomeAtual);
+                const letra = nomeAtual.charAt(0).toUpperCase();
+                const corFundo = Workspace.gerarCorPorNome(nomeAtual);
+
+                if (innerImg) {
+                    const novaDiv = document.createElement('div');
+                    novaDiv.className = 'ws-avatar-iniciais';
+                    novaDiv.style.cssText = `width:${tamanho}px; height:${tamanho}px; min-width:${tamanho}px; max-width:${tamanho}px; aspect-ratio:1/1; border-radius:50%; background:${corFundo}; color:white; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:${tamanho/2.2}px; border:2px solid #eee; box-shadow:0 2px 5px rgba(0,0,0,0.05); flex-shrink:0; margin:0 !important;`;
+                    novaDiv.innerText = letra;
+                    wrap.replaceChild(novaDiv, innerImg);
+                } else if (innerDiv) {
+                    innerDiv.innerText = letra;
+                    innerDiv.style.background = corFundo;
+                }
             }
         });
     },
@@ -1004,15 +1018,16 @@ Object.assign(Workspace, {
                         window.Workspace.mapaAvatars[nomeUsuario] = avatarFinal;
                     }
                     
-                    const img = document.getElementById('ws-perfil-img');
+                   const img = document.getElementById('ws-perfil-img');
                     const letras = document.getElementById('ws-perfil-letras');
+                    const btnRemoverFoto = document.getElementById('ws-btn-remover-foto');
                     
                     if (img) { img.src = avatarFinal; img.style.display = 'block'; }
                     if (letras) letras.style.display = 'none';
+                    if (btnRemoverFoto) btnRemoverFoto.style.display = 'flex';
 
                     Workspace.mostrarAviso("Foto atualizada instantaneamente em toda a plataforma!", "success");
                     
-                    // Substitui imediatamente todas as iniciais ou fotos antigas no Feed e Comentários!
                     if (Workspace.atualizarAvataresNaTela) {
                         Workspace.atualizarAvataresNaTela(nomeUsuario, avatarFinal);
                         if (Workspace.usuario.login) Workspace.atualizarAvataresNaTela(Workspace.usuario.login, avatarFinal);
@@ -1033,6 +1048,79 @@ Object.assign(Workspace, {
                 btn.disabled = false;
             }
         }, 'image/jpeg', 0.92);
+    },
+
+    // 🗑️ REMOVE A FOTO DE PERFIL E VOLTA ÀS INICIAIS EM TODA A PLATAFORMA
+    removerFotoPerfil: () => {
+        if (!Workspace.usuario || !Workspace.usuario.avatar) {
+            return Workspace.mostrarAviso("Você já está a utilizar o avatar com as iniciais.", "info");
+        }
+
+        const executarRemocao = async () => {
+            const loader = document.getElementById('ws-avatar-loading');
+            if (loader) loader.style.display = 'block';
+
+            try {
+                const res = await Workspace.api('/workspace/perfil/avatar', 'PUT', {
+                    id: Workspace.usuario.id,
+                    alunoRefId: Workspace.usuario.alunoRefId || null,
+                    avatarUrl: null
+                });
+
+                if (res && res.success) {
+                    const nomeUsuario = (Workspace.usuario.nome || Workspace.usuario.login || 'U').trim();
+                    const loginUsuario = (Workspace.usuario.login || '').trim();
+
+                    // 1. Limpa a foto na sessão local e nos dicionários de cache
+                    Workspace.usuario.avatar = null;
+                    localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+
+                    if (Workspace.avatarsCache) {
+                        delete Workspace.avatarsCache[nomeUsuario];
+                        if (loginUsuario) delete Workspace.avatarsCache[loginUsuario];
+                    }
+                    if (window.Workspace.mapaAvatars) {
+                        delete window.Workspace.mapaAvatars[nomeUsuario];
+                        if (loginUsuario) delete window.Workspace.mapaAvatars[loginUsuario];
+                    }
+
+                    // 2. Atualiza o cartão de Meu Perfil para mostrar a letra inicial
+                    const img = document.getElementById('ws-perfil-img');
+                    const letras = document.getElementById('ws-perfil-letras');
+                    const btnRemoverFoto = document.getElementById('ws-btn-remover-foto');
+
+                    if (img) { img.src = ''; img.style.display = 'none'; }
+                    if (btnRemoverFoto) btnRemoverFoto.style.display = 'none';
+                    if (letras) {
+                        letras.style.display = 'flex';
+                        letras.innerText = nomeUsuario.charAt(0).toUpperCase();
+                        letras.style.background = Workspace.gerarCorPorNome(nomeUsuario);
+                    }
+
+                    // 3. Transforma todas as fotos do utilizador no Feed e Comentários em iniciais na mesma hora!
+                    Workspace.atualizarAvataresNaTela(nomeUsuario, null);
+                    if (loginUsuario) Workspace.atualizarAvataresNaTela(loginUsuario, null);
+
+                    Workspace.mostrarAviso("Foto removida! O seu perfil voltou às iniciais.", "success");
+                } else {
+                    throw new Error();
+                }
+            } catch (e) {
+                Workspace.mostrarAviso("Erro ao remover a foto de perfil.", "error");
+            } finally {
+                if (loader) loader.style.display = 'none';
+            }
+        };
+
+        if (Workspace.Feed && typeof Workspace.Feed.confirmarAcao === 'function') {
+            Workspace.Feed.confirmarAcao(
+                "Remover Foto de Perfil?",
+                "A sua fotografia atual será removida e o seu perfil voltará a exibir as iniciais do seu nome.",
+                executarRemocao
+            );
+        } else if (confirm("Deseja remover a sua foto de perfil e voltar às iniciais?")) {
+            executarRemocao();
+        }
     },
 
     abrirPaginaTarefas: () => Workspace.navegarPara('tarefas'),
