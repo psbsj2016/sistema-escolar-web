@@ -171,6 +171,16 @@ Workspace.Feed = {
                     Workspace.Feed._removerPostDosCaches(idDoPost);
                 }
 
+                // 📌 ATUALIZAÇÃO EM TEMPO REAL QUANDO UM PROFESSOR FIXA OU DESAFIXA UM POST
+                if (dados.type === 'POST_FIXADO') {
+                    const postAlvo = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(dados.postId));
+                    if (postAlvo) {
+                        postAlvo.fixado = Boolean(dados.fixado);
+                        Workspace.Feed._ordenarPostsComFixados();
+                        Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
+                    }
+                }
+
                 // 🚀 ATUALIZAÇÃO EM TEMPO REAL DE FOTO (OU REMOÇÃO PARA INICIAIS) E NOME NO FEED
                 if (dados.type === 'PERFIL_ATUALIZADO') {
                     const nomeAntigo = dados.nomeAntigo || dados.novoNome;
@@ -1143,6 +1153,42 @@ Workspace.Feed = {
         }
     },
 
+   _ordenarPostsComFixados: () => {
+        if (!Array.isArray(Workspace.Feed.todosOsPosts)) return;
+        Workspace.Feed.todosOsPosts.sort((a, b) => {
+            const fixA = a.fixado ? 1 : 0;
+            const fixB = b.fixado ? 1 : 0;
+            if (fixB !== fixA) return fixB - fixA;
+            return new Date(b.dataCriacao || 0) - new Date(a.dataCriacao || 0);
+        });
+    },
+
+    alternarFixarPost: async (postId) => {
+        const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(postId)) || Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+        if (!post) return;
+
+        const novoEstado = !post.fixado;
+        post.fixado = novoEstado;
+
+        // Reordena imediatamente na memória e redesenha o Feed
+        Workspace.Feed._ordenarPostsComFixados();
+        Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
+
+        if (novoEstado) {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        if (window.Workspace && Workspace.mostrarAviso) {
+            Workspace.mostrarAviso(novoEstado ? "📌 Publicação fixada no topo do Feed!" : "Publicação desafixada do topo.", "success");
+        }
+
+        try {
+            await Workspace.api(`/workspace/posts/${postId}/fixar`, 'PUT', { fixado: novoEstado });
+        } catch (e) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Erro ao sincronizar fixação no servidor.", "error");
+        }
+    },
+
     apagarPost: (postId) => {
         Workspace.Feed.confirmarAcao("Apagar Publicação", "Tem a certeza de que deseja eliminar definitivamente esta publicação?", async () => {
             const el = document.getElementById(`post-${postId}`);
@@ -1331,9 +1377,16 @@ Workspace.Feed = {
                 ? `<span style="font-size:10px; background:#e8f4f8; color:#3498db; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🌍 Público Geral</span>`
                 : `<span style="font-size:10px; background:#f4e8f8; color:#8e44ad; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">📚 ${Workspace.Feed.limparTexto(p.destinoNome)}</span>`;
 
-            let categoriaBadge = p.categoria === 'musica' 
+           let categoriaBadge = p.categoria === 'musica' 
                 ? `<span style="font-size:10px; background:#fce7f3; color:#db2777; padding:2px 6px; border-radius:4px; margin-left:5px; font-weight:bold;">🎵 Música</span>` 
                 : '';
+
+            const ehProfOuGestor = Workspace.usuario && (Workspace.usuario.tipo === 'Gestor' || Workspace.usuario.tipo === 'Professor');
+            const estaFixado = Boolean(p.fixado);
+            const fixadoBadge = estaFixado
+                ? `<span style="font-size:10px; background:#fef3c7; color:#d97706; padding:2px 8px; border-radius:4px; margin-left:5px; font-weight:800; border:1px solid #fde68a;">📌 Fixado no Topo</span>`
+                : '';
+            const estiloCardFixado = estaFixado ? 'border-top: 4px solid #f59e0b; background: linear-gradient(to bottom, #fffbeb 0%, #ffffff 60px);' : '';
 
             const likesArr = Array.isArray(p.likes) ? p.likes : [];
             const dislikesArr = Array.isArray(p.dislikes) ? p.dislikes : [];
@@ -1377,27 +1430,31 @@ Workspace.Feed = {
             }
 
             return `
-                <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px;">
+                <div class="ws-card" id="post-${p.id}" style="animation: fadeIn 0.4s ease; margin-bottom: 20px; ${estiloCardFixado}">
                     <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:15px; width:100%; gap:8px;">
                         <div style="display:flex; align-items:center; gap:10px; flex: 1; min-width: 0;">
                             <div style="flex-shrink:0;">${avatarPost}</div>
                             <div style="flex: 1; min-width: 0;">
-                                
-<div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                <div style="font-weight:700; color:#2c3e50; font-size:15px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
                                     <span onclick="Workspace.Feed.abrirPerfilUsuario('${Workspace.Feed.limparTexto(p.autorNome)}')" style="cursor:pointer;" onmouseover="this.style.textDecoration='underline'" onmouseout="this.style.textDecoration='none'" title="Ver Perfil">${Workspace.Feed.limparTexto(p.autorNome)}</span> 
                                     <span style="font-size:11px; color:#aaa; margin-left:2px;">• ${p.autorTipo}</span>
                                 </div>
                                 <div style="font-size:12px; color:#7f8c8d; margin-top:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                                    <span ${tempoAttr}>${tempoAmigavel}</span> ${destinoBadge} ${categoriaBadge}
+                                    <span ${tempoAttr}>${tempoAmigavel}</span>${destinoBadge} ${categoriaBadge}${fixadoBadge}
                                 </div>
                             </div>
                         </div>
                         <div class="ws-menu-ancora" style="position:relative; flex-shrink: 0; margin-left: auto; padding-right: 5px;">
                             <button onclick="Workspace.Feed.toggleMenu(event, '${p.id}')" style="background:none; border:none; font-size:20px; font-weight:bold; cursor:pointer; color:#7f8c8d; padding:2px 10px; border-radius:50%; line-height:1;" onmouseover="this.style.background='#f0f2f5'; this.style.color='#2c3e50'" onmouseout="this.style.background='transparent'; this.style.color='#7f8c8d'">⋮</button>
-                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:160px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
+                            <div id="menu-dropdown-${p.id}" class="ws-post-dropdown" style="display:none; position:absolute; right:5px; top:100%; background:#fff; border:1px solid #eee; border-radius:8px; box-shadow:0 10px 25px rgba(0,0,0,0.1); width:175px; z-index:100; overflow:hidden; animation: fadeIn 0.2s ease;">
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#333; display:flex; align-items:center; gap:10px;" onclick="Workspace.Feed.partilharPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">🔗</span> Copiar Link
                                 </div>
+                                ${ehProfOuGestor ? `
+                                <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#d97706; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.alternarFixarPost('${p.id}'); Workspace.Feed.fecharMenus()">
+                                    <span style="font-size:16px;">📌</span> ${estaFixado ? 'Desafixar do Topo' : 'Fixar no Topo'}
+                                </div>
+                                ` : ''}
                                 ${ehDonoOuGestor ? `
                                 <div style="padding:12px 15px; cursor:pointer; font-size:13px; font-weight:600; color:#f39c12; display:flex; align-items:center; gap:10px; border-top:1px solid #f9f9f9;" onclick="Workspace.Feed.editarPost('${p.id}'); Workspace.Feed.fecharMenus()">
                                     <span style="font-size:16px;">✏️</span> Editar
