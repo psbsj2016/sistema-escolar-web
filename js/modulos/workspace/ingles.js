@@ -111,9 +111,10 @@ const SRSService = {
 };
 
 Workspace.Ingles = {
-   state: {
+  state: {
         _dbLoaded: false, 
         _roleplayChat: [],
+        magoConfig: { vozAtiva: true },
         streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
@@ -873,6 +874,22 @@ Workspace.Ingles = {
                 const boxDica = document.getElementById('ig-pic-hint-box');
                 if(boxDica) boxDica.style.display = boxDica.style.display === 'none' ? 'block' : 'none';
             }
+            if(a === 'toggle-voz-mago'){
+                this.state.magoConfig = this.state.magoConfig || { vozAtiva: true };
+                this.state.magoConfig.vozAtiva = !this.state.magoConfig.vozAtiva;
+                const ativa = this.state.magoConfig.vozAtiva;
+                b.innerHTML = ativa ? '🔊 Voz da IA: Ligada' : '🔇 Voz da IA: Muda';
+                b.style.background = ativa ? '#EEF2FF' : '#F1F5F9';
+                b.style.color = ativa ? '#4F46E5' : '#64748B';
+                if (!ativa && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+                else if (ativa && this.state._debateChat?.length) {
+                    const ultimaIA = [...this.state._debateChat].reverse().find(m => m.role === 'ai');
+                    if (ultimaIA) VoiceService.falar(ultimaIA.text, { isMago: true });
+                }
+            }
+            if(a === 'ditar-para-input'){
+                this.ditarParaInput(b);
+            }
             if(a === 'iniciar-voz'){
                 const esperado = cur?.word||cur?.phrase||this.state._minimalTarget;
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
@@ -1025,13 +1042,20 @@ Workspace.Ingles = {
                             
                             document.getElementById('modalBody').innerHTML = `
                                 <div style="background:#FEF3C7; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px; border-left:4px solid #D97706;">
-                                    ${r.correcao && r.correcao !== 'null' ? `💡 <b>Dica:</b> ${Workspace.escapeHTML(r.correcao)}` : `✅ ${Workspace.escapeHTML(r.feedback || 'Muito bem!')}`}
+                                    ${r.correcao && r.correcao !== 'null' ? `💡 <b>Dica:</b> ${Workspace.escapeHTML(r.correcao)}` : `✅ ${Workspace.escapeHTML(r.feedback ? r.feedback : 'Muito bem!')}`}
                                 </div>
                                 <div class="ig-big-phrase" style="text-align:left; background:#EEF2FF; border-color:#818CF8; font-size:16px;">
-                                    🎭 <b>Personagem:</b> <br><br> ${Workspace.escapeHTML(r.npcResponse)}
+                                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                        <b>🎭 Personagem:</b>
+                                        <button data-action="falar-frase" data-text="${Workspace.escapeHTML(r.npcResponse)}" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:4px 12px; border-radius:14px; font-size:11px;">🔊 Ouvir</button>
+                                    </div>
+                                    ${Workspace.escapeHTML(r.npcResponse)}
                                 </div>
-                                <textarea id="ig-input" class="ig-textarea" placeholder="O que responde agora?..." style="min-height:80px; margin-top:12px; border-color:#818CF8;"></textarea>
-                                <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:12px; padding:14px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">Continuar a Conversa 🎭</button>
+                                <textarea id="ig-input" class="ig-textarea" placeholder="Escreva ou dite no microfone o que responde agora..." style="min-height:80px; margin-top:12px; border-color:#818CF8;"></textarea>
+                                <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
+                                    <button data-action="ditar-para-input" class="ws-btn" style="flex:1; min-width:140px; background:#EEF2FF; color:#4F46E5; border:2px solid #818CF8; padding:14px; border-radius:12px; font-weight:bold; cursor:pointer;">🎤 Ditar com Voz</button>
+                                    <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="flex:2; min-width:180px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; padding:14px; border-radius:12px; border:none; font-weight:bold; cursor:pointer;">Continuar a Conversa 🎭</button>
+                                </div>
                             `;
                             this.ganharCoins('bronze', 20);
                         } else {
@@ -1450,6 +1474,48 @@ Workspace.Ingles = {
             <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
     },
 
+   ditarParaInput(btnEl){
+        const inputEl = document.getElementById('ig-input');
+        if(!inputEl) return;
+        if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
+            return this.mostrarAvisoLocal('O seu navegador não suporta ditado por voz. Use o Google Chrome.', 'error');
+        }
+
+        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const rec = new SR();
+        rec.lang = 'en-US';
+        rec.interimResults = false;
+        rec.maxAlternatives = 1;
+
+        const txtOriginal = btnEl.innerHTML;
+        btnEl.innerHTML = '🔴 Ouvindo em Inglês...';
+        btnEl.disabled = true;
+
+        rec.start();
+
+        rec.onresult = async (e) => {
+            const textoCru = e.results[0][0].transcript;
+            btnEl.innerHTML = '⏳ Pontuando...';
+            try {
+                const res = await Workspace.api('/workspace/ingles/transcricao/corrigir', 'POST', { textoCru });
+                const textoFinal = (res && res.success && res.textoCorrigido) ? res.textoCorrigido : textoCru;
+                inputEl.value = inputEl.value ? `${inputEl.value.trim()} ${textoFinal}` : textoFinal;
+            } catch (err) {
+                inputEl.value = inputEl.value ? `${inputEl.value.trim()} ${textoCru}` : textoCru;
+            } finally {
+                btnEl.innerHTML = txtOriginal;
+                btnEl.disabled = false;
+                inputEl.focus();
+            }
+        };
+
+        rec.onerror = () => {
+            btnEl.innerHTML = txtOriginal;
+            btnEl.disabled = false;
+            this.mostrarAvisoLocal('Não foi possível captar o áudio. Verifique o microfone.', 'warning');
+        };
+    },
+
     renderGameContextRole(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'roleplay'); 
@@ -1457,39 +1523,54 @@ Workspace.Ingles = {
         const c = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="text-align:left;">
-                <div style="font-size:18px; font-weight:800; margin-bottom:8px;">${Workspace.escapeHTML(c.title)}</div>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <div style="font-size:18px; font-weight:800;">${Workspace.escapeHTML(c.title)}</div>
+                    <button data-action="falar-frase" data-text="${Workspace.escapeHTML(c.prompt)}" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:5px 12px; border-radius:14px; font-size:12px;">🔊 Ouvir Fala</button>
+                </div>
                 <div style="font-size:16px; color:#475569; font-weight:500;">${Workspace.escapeHTML(c.prompt)}</div>
             </div>
             <p style="font-size:13px; background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:700;">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p>
-            <textarea id="ig-input" class="ig-textarea" placeholder="O que você responderia em inglês?..." style="min-height:80px;"></textarea>
-            <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="width:100%; margin-top:16px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Atuar e Enviar</button>`;
+            <textarea id="ig-input" class="ig-textarea" placeholder="Escreva ou dite no microfone o que você responderia em inglês..." style="min-height:80px;"></textarea>
+            <div style="display:flex; gap:10px; margin-top:16px; flex-wrap:wrap;">
+                <button data-action="ditar-para-input" class="ws-btn" style="flex:1; min-width:140px; background:#EEF2FF; color:#4F46E5; border:2px solid #818CF8; padding:16px; border-radius:12px; cursor:pointer; font-weight:bold;">🎤 Ditar com Voz</button>
+                <button data-action="verificar-envio" data-game="contextRole" class="ws-btn" style="flex:2; min-width:180px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer; font-weight:bold;">Atuar e Enviar 🎭</button>
+            </div>`;
     },
 
     renderGameDebateAI(){
-        const col = this.getColecaoDoJogoAtual();
-        this.desafioAtualObj = this.obterItemInteligente(col, 'debate');
+        if(!this.desafioAtualObj){
+            const col = this.getColecaoDoJogoAtual();
+            this.desafioAtualObj = this.obterItemInteligente(col, 'debate');
+        }
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         
-        if(!this.state._debateChat) this.state._debateChat=[];
-        if(this.state._debateChat.length === 0){
+        const falarInicial = !this.state._debateChat || this.state._debateChat.length === 0;
+        if(falarInicial){
             this.state._debateChat = [{role:'ai', text: this.desafioAtualObj.starter}];
+            if (this.state.magoConfig?.vozAtiva) {
+                VoiceService.falar(this.desafioAtualObj.starter, { isMago: true });
+            }
         }
         
+        const vozAtiva = this.state.magoConfig ? this.state.magoConfig.vozAtiva : true;
+
         const chatHtml = this.state._debateChat.map(m=>{
             if(m.role==='user'){
                 return `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;"><div style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:12px 16px; border-radius:16px 16px 4px 16px; max-width:80%; font-size:14px; box-shadow:0 4px 10px rgba(79,70,229,0.2);">${Workspace.escapeHTML(m.text)}</div></div>`;
             }else{
-                return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px;">🤖 MAGO IA</div>${Workspace.escapeHTML(m.text)}</div></div>`;
+                return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:10px;"><span>🤖 MAGO IA</span><button data-action="falar-frase" data-text="${Workspace.escapeHTML(m.text)}" style="background:transparent; border:none; color:#4F46E5; cursor:pointer; font-size:11px; font-weight:bold;">🔊 Ouvir</button></div>${Workspace.escapeHTML(m.text)}</div></div>`;
             }
         }).join('');
 
         document.getElementById('modalBody').innerHTML=`
-            <div style="background:#F8FAFC; padding:16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:16px;">
+            <div style="background:#F8FAFC; padding:14px 16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                 <div style="font-weight:800; color:#0F172A; font-size:15px;">⚔️ Tópico: ${Workspace.escapeHTML(this.desafioAtualObj.topic)}</div>
+                <button data-action="toggle-voz-mago" class="ws-btn" style="background:${vozAtiva ? '#EEF2FF' : '#F1F5F9'}; color:${vozAtiva ? '#4F46E5' : '#64748B'}; border:1px solid #CBD5E1; padding:6px 12px; border-radius:20px; font-size:12px;">${vozAtiva ? '🔊 Voz da IA: Ligada' : '🔇 Voz da IA: Muda'}</button>
             </div>
             <div id="ig-debate-chat" style="height:250px; overflow-y:auto; padding:10px; margin-bottom:16px; border:1px solid #E2E8F0; border-radius:12px;">${chatHtml}</div>
-            <div style="display:flex; gap:10px;">
-                <textarea id="ig-input" class="ig-textarea" placeholder="Escreva seu argumento..." style="flex:1; min-height:50px; border-radius:12px;"></textarea>
+            <div style="display:flex; gap:8px; align-items:stretch;">
+                <button data-action="ditar-para-input" class="ws-btn" style="background:#EEF2FF; color:#4F46E5; border:2px solid #818CF8; border-radius:12px; padding:0 14px; font-size:18px; cursor:pointer;" title="Ditar argumento em Inglês">🎤</button>
+                <textarea id="ig-input" class="ig-textarea" placeholder="Escreva ou dite o seu argumento..." style="flex:1; min-height:50px; border-radius:12px;"></textarea>
                 <button data-action="verificar-debate" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; border-radius:12px; padding:0 20px; font-size:20px; cursor:pointer;">➤</button>
             </div>`;
         const div = document.getElementById('ig-debate-chat');

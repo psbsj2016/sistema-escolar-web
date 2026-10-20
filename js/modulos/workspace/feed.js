@@ -171,13 +171,22 @@ Workspace.Feed = {
                     Workspace.Feed._removerPostDosCaches(idDoPost);
                 }
 
-                // 📌 ATUALIZAÇÃO EM TEMPO REAL QUANDO UM PROFESSOR FIXA OU DESAFIXA UM POST
+               // 📌 ATUALIZAÇÃO EM TEMPO REAL QUANDO UM PROFESSOR FIXA OU DESAFIXA UM POST
                 if (dados.type === 'POST_FIXADO') {
                     const postAlvo = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(dados.postId));
                     if (postAlvo) {
                         postAlvo.fixado = Boolean(dados.fixado);
                         Workspace.Feed._ordenarPostsComFixados();
                         Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo);
+                    }
+                }
+
+                // 🏴‍☠️ ATUALIZAÇÃO EM TEMPO REAL DO BAÚ DO INGLÊS QUANDO O PROFESSOR CRIA NOVOS DESAFIOS
+                if (dados.type === 'BAU_INGLES_UPDATE') {
+                    if (window.Workspace && Workspace.Ingles && typeof Workspace.Ingles.loadDados === 'function') {
+                        Workspace.Ingles.loadDados().then(() => {
+                            Workspace.Ingles.renderAlunoGrid();
+                        });
                     }
                 }
 
