@@ -2,7 +2,9 @@
 window.Workspace = window.Workspace || {};
 
 Workspace.InglesProfessor = {
-_groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium    
+    _groqHistory: [],
+    _iaHistory: [],
+
     handleAction: async function(acao, b) {
         const Ingles = Workspace.Ingles;
         const state = Ingles.state;
@@ -12,11 +14,13 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 Workspace.InglesProfessor.renderProfessorTab(b.dataset.tab);
                 break;
             case 'remover-item':
-                state[b.dataset.key] = state[b.dataset.key].filter(i => i.id !== b.dataset.id);
-                await Ingles.saveDados();
-                const activeTab = document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca';
-                Workspace.InglesProfessor.renderProfessorTab(activeTab);
-                Ingles.mostrarAvisoLocal('Item removido!', 'success');
+                if (Array.isArray(state[b.dataset.key])) {
+                    state[b.dataset.key] = state[b.dataset.key].filter(i => i.id !== b.dataset.id);
+                    await Ingles.saveDados();
+                    const activeTab = document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca';
+                    Workspace.InglesProfessor.renderProfessorTab(activeTab);
+                    Ingles.mostrarAvisoLocal('Item removido!', 'success');
+                }
                 break;
             case 'add-word':
                 const iW = document.getElementById('ig-nwWord'), iT = document.getElementById('ig-nwTrans'); 
@@ -37,17 +41,28 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Frase adicionada!', 'success'); 
                 break;
-           case 'add-quiz':
-                const iQ = document.getElementById('ig-qQuestion'), iO1 = document.getElementById('ig-qOpt1'), iO2 = document.getElementById('ig-qOpt2'); 
-                const iVid = document.getElementById('ig-qVideo'); // 🚀 NOVO CAMPO
-                const q = iQ?.value.trim(), o1 = iO1?.value.trim(), o2 = iO2?.value.trim(); 
+            case 'add-quiz':
+                const iQ = document.getElementById('ig-qQuestion');
+                const iO1 = document.getElementById('ig-qOpt1');
+                const iO2 = document.getElementById('ig-qOpt2');
+                const iO3 = document.getElementById('ig-qOpt3');
+                const iO4 = document.getElementById('ig-qOpt4');
+                const iVid = document.getElementById('ig-qVideo');
+                
+                const q = iQ?.value.trim(), oCorreta = iO2?.value.trim(), oErrada1 = iO1?.value.trim();
+                const oErrada2 = iO3?.value.trim(), oErrada3 = iO4?.value.trim();
                 const vid = iVid?.value.trim() || null; 
                 
-                if(!q || !o1 || !o2) return Ingles.mostrarAvisoLocal('Preencha a pergunta e opções!', 'warning'); 
-                state.quizzes.unshift({id: 'q'+Date.now(), question: q, options: [o1, o2], correct: 1, level: 'B1', videoUrl: vid}); 
+                if(!q || !oErrada1 || !oCorreta) return Ingles.mostrarAvisoLocal('Preencha a pergunta, a opção correta e pelo menos 1 incorreta!', 'warning'); 
+                
+                const opcoesQuiz = [oErrada1, oCorreta];
+                if (oErrada2) opcoesQuiz.push(oErrada2);
+                if (oErrada3) opcoesQuiz.push(oErrada3);
+
+                state.quizzes.unshift({id: 'q'+Date.now(), question: q, options: opcoesQuiz, correct: 1, level: 'B1', videoUrl: vid}); 
                 await Ingles.saveDados(); 
                 
-                if(iQ) iQ.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value=''; if(iVid) iVid.value='';
+                if(iQ) iQ.value=''; if(iO1) iO1.value=''; if(iO2) iO2.value=''; if(iO3) iO3.value=''; if(iO4) iO4.value=''; if(iVid) iVid.value='';
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Quiz adicionado!', 'success'); 
                 break;
@@ -110,51 +125,70 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Pergunta adicionada!','success');
                 break;
+            case 'add-statement':
+                const iAsT = document.getElementById('ig-asText'); const asTxt = iAsT?.value.trim();
+                if(!asTxt) return Ingles.mostrarAvisoLocal('Digite a afirmação/resposta base!', 'warning');
+                if(!Array.isArray(state.answerStatements)) state.answerStatements = [];
+                state.answerStatements.unshift({id: 'as'+Date.now(), text: asTxt, type: 'answerQuest'});
+                await Ingles.saveDados();
+                if(iAsT) iAsT.value='';
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca');
+                Ingles.mostrarAvisoLocal('Desafio adicionado ao Espelho do Oráculo!', 'success');
+                break;
             case 'ensinar-ia':
                 const inputFrase = document.getElementById('ig-ia-frase')?.value?.trim();
                 const inputCat = document.getElementById('ig-ia-categoria')?.value?.trim().toLowerCase();
-                const inputResp = document.getElementById('ig-ia-resposta')?.value?.trim(); // NOVO CAMPO
+                const inputResp = document.getElementById('ig-ia-resposta')?.value?.trim();
                 
                 if(!inputFrase || !inputCat) return Ingles.mostrarAvisoLocal('Preencha a frase e a categoria!', 'warning');
                 
                 b.innerText = 'A ensinar...';
-                // Enviamos a resposta desejada na mochila!
                 Workspace.api('/workspace/ingles/ia-teste/ensinar', 'POST', { frase: inputFrase, categoria: inputCat, resposta: inputResp })
                     .then(res => {
-                        b.innerText = '🧠 Ensinar Máquina';
+                        b.innerText = '🧠 Ensinar';
                         if(res && res.success) {
                             Ingles.mostrarAvisoLocal('Ptt AI aprendeu a nova regra!', 'success');
                             document.getElementById('ig-ia-frase').value = '';
-                            document.getElementById('ig-ia-resposta').value = ''; // Limpa a caixa
+                            document.getElementById('ig-ia-resposta').value = '';
                         } else {
                             Ingles.mostrarAvisoLocal('Falha ao ensinar.', 'error');
                         }
-                    }).catch(() => { b.innerText = '🧠 Ensinar Máquina'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
+                    }).catch(() => { b.innerText = '🧠 Ensinar'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
                 break;
             case 'falar-ia':
                 const inputFalar = document.getElementById('ig-ia-chat-input')?.value?.trim();
                 if(!inputFalar) return;
                 
+                if(!Workspace.InglesProfessor._iaHistory) Workspace.InglesProfessor._iaHistory = [];
+
                 const chatContainer = document.getElementById('ig-ia-chat-history');
-                chatContainer.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#4F46E5; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block;">${Workspace.escapeHTML(inputFalar)}</span></div>`;
+                chatContainer.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#4F46E5; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block; max-width:85%; word-break:break-word;">${Workspace.escapeHTML(inputFalar)}</span></div>`;
                 document.getElementById('ig-ia-chat-input').value = '';
                 chatContainer.scrollTop = chatContainer.scrollHeight;
                 
-                Workspace.api('/workspace/ingles/ia-teste/falar', 'POST', { mensagem: inputFalar })
-                    .then(res => {
-                        if(res && res.success) {
-                            chatContainer.innerHTML += `
-                                <div style="text-align:left; margin-bottom:10px;">
-                                    <span style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block;">
-                                        🤖 <b>Ptt AI:</b> ${Workspace.escapeHTML(res.resposta)}
-                                        <div style="font-size:10px; color:#10B981; margin-top:4px; font-weight:bold;">${Workspace.escapeHTML(res.bastidores)}</div>
-                                    </span>
-                                </div>`;
-                            chatContainer.scrollTop = chatContainer.scrollHeight;
+                Workspace.api('/workspace/ingles/ia-teste/falar', 'POST', { 
+                    mensagem: inputFalar,
+                    historico: Workspace.InglesProfessor._iaHistory
+                }).then(res => {
+                    if(res && res.success) {
+                        const ehBloqueio = String(res.bastidores || '').includes('🛡️');
+                        chatContainer.innerHTML += `
+                            <div style="text-align:left; margin-bottom:10px;">
+                                <span style="background:${ehBloqueio ? '#FEF2F2' : '#F1F5F9'}; border:1px solid ${ehBloqueio ? '#FECACA' : '#E2E8F0'}; color:#0F172A; padding:8px 12px; border-radius:12px; display:inline-block; max-width:85%; word-break:break-word;">
+                                    🤖 <b>Ptt AI:</b> ${Workspace.escapeHTML(res.resposta)}
+                                    <div style="font-size:10px; color:${ehBloqueio ? '#DC2626' : '#10B981'}; margin-top:4px; font-weight:bold;">${Workspace.escapeHTML(res.bastidores)}</div>
+                                </span>
+                            </div>`;
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        Workspace.InglesProfessor._iaHistory.push({ role: 'user', content: inputFalar });
+                        Workspace.InglesProfessor._iaHistory.push({ role: 'assistant', content: res.resposta });
+                        if (Workspace.InglesProfessor._iaHistory.length > 6) {
+                            Workspace.InglesProfessor._iaHistory = Workspace.InglesProfessor._iaHistory.slice(-6);
                         }
-                    });
+                    }
+                });
                 break;
-           // 🚀 CHAT PREMIUM (GROQ) - CORRIGIDO 2026
             case 'falar-groq':
                 const inputGroq = document.getElementById('ig-groq-chat-input');
                 const chatGroq = document.getElementById('ig-groq-chat-history');
@@ -163,7 +197,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
 
                 if(!Workspace.InglesProfessor._groqHistory) Workspace.InglesProfessor._groqHistory = [];
 
-                // Mostra usuário
                 chatGroq.innerHTML += `<div style="text-align:right; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:8px 12px; border-radius:12px; display:inline-block; max-width:80%; word-break:break-word;">${Workspace.escapeHTML(msgGroq)}</span></div>`;
                 inputGroq.value = '';
                 const btnGroq = b;
@@ -191,7 +224,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                                 </span>
                             </div>`;
                         
-                        // Salva memória para a próxima mensagem
                         Workspace.InglesProfessor._groqHistory.push({ role: 'user', content: msgGroq });
                         Workspace.InglesProfessor._groqHistory.push({ role: 'assistant', content: res.resposta });
                         if(Workspace.InglesProfessor._groqHistory.length > 6) {
@@ -211,7 +243,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                     inputGroq.focus();
                 }
                 break;
-            // 🚀 NOVA AÇÃO: O Professor clica em ensinar erro
             case 'ensinar-correcao':
                 const err = document.getElementById('ig-ia-erro')?.value?.trim();
                 const crt = document.getElementById('ig-ia-certo')?.value?.trim();
@@ -241,7 +272,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 state.pool.unshift({id: 'pool_'+Date.now(), type: sApp.game, text: sApp.text, word: sApp.text, origin: 'student', student: sApp.student, timestamp: Date.now()}); 
                 await Ingles.saveDados(); 
                 Workspace.InglesProfessor.renderProfessorTab('envios'); 
-                Ingles.mostrarAvisoLocal('Aprovado! 🌊', 'success');
+                Ingles.mostrarAvisoLocal('Aprovado e adicionado à Piscina Global! 🌊', 'success');
                 break;
             case 'rejeitar-envio':
                 state.submissions = state.submissions.filter(i => i.id !== b.dataset.id); 
@@ -320,10 +351,17 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
         const esc = Workspace.escapeHTML;
         const state = Workspace.Ingles.state; 
 
+        // Atualiza sempre o emblema de envios pendentes na barra lateral
+        const pendentesCountEl = document.getElementById('pendingCount');
+        if (pendentesCountEl && Array.isArray(state.submissions)) {
+            pendentesCountEl.textContent = state.submissions.filter(s => s.status === 'pending').length;
+        }
+
         if(tabId === 'biblioteca'){
+            const statementsList = Array.isArray(state.answerStatements) ? state.answerStatements : [];
             document.getElementById('tab-biblioteca').innerHTML=`
                 <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📚 Biblioteca Principal (SRS)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Os itens criados aqui serão treinados pelo algoritmo na área do aluno.</p>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Os itens criados aqui serão treinados pelo algoritmo de repetição espaçada na área do aluno.</p>
                 <div class="grid-cards">
                     <div class="prof-card">
                         <div class="ig-prof-header">Vocabulário <span style="color:#64748B;font-size:14px">(${state.words.length})</span></div>
@@ -352,13 +390,17 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             <input id="ig-qQuestion" class="ig-input" placeholder="Pergunta em Inglês">
                             <input id="ig-qVideo" class="ig-input" placeholder="Link YouTube (Opcional para Vídeo Quiz)" style="border-color:#818CF8; background:#EEF2FF;">
                             <div style="display:flex; gap:8px;">
-                                <input id="ig-qOpt1" class="ig-input" placeholder="Opção Errada" style="flex:1;">
-                                <input id="ig-qOpt2" class="ig-input" placeholder="Opção Correta" style="flex:1;">
+                                <input id="ig-qOpt2" class="ig-input" placeholder="✅ Opção Correta" style="flex:1; border-color:#10B981;">
+                                <input id="ig-qOpt1" class="ig-input" placeholder="❌ Opção Errada 1" style="flex:1;">
+                            </div>
+                            <div style="display:flex; gap:8px;">
+                                <input id="ig-qOpt3" class="ig-input" placeholder="❌ Errada 2 (Opcional)" style="flex:1;">
+                                <input id="ig-qOpt4" class="ig-input" placeholder="❌ Errada 3 (Opcional)" style="flex:1;">
                                 <button data-action="add-quiz" class="ws-btn-primary">➕</button>
                             </div>
                         </div>
                         <div class="prof-list-scroll">
-                            ${state.quizzes.length ? state.quizzes.map(q=>`<div class="prof-list-item"><span><b>${esc(q.question)}</b> ${q.videoUrl ? '🎬' : ''} <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(q.options[q.correct])}</small></span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                            ${state.quizzes.length ? state.quizzes.map(q=>`<div class="prof-list-item"><span><b>${esc(q.question)}</b>${q.videoUrl ? '🎬' : ''} <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(q.options[q.correct ?? 1])} (${q.options.length} opções)</small></span><button data-action="remover-item" data-key="quizzes" data-id="${q.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
                     <div class="prof-card">
@@ -366,13 +408,13 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
                             <input id="ig-wpText" class="ig-input" placeholder="Ex: I have ___ keys. (Use ___ )">
                             <div style="display:flex; gap:8px;">
-                                <input id="ig-wpOpt1" class="ig-input" placeholder="Errada" style="flex:1;">
-                                <input id="ig-wpOpt2" class="ig-input" placeholder="Correta" style="flex:1;">
+                                <input id="ig-wpOpt2" class="ig-input" placeholder="✅ Correta" style="flex:1; border-color:#10B981;">
+                                <input id="ig-wpOpt1" class="ig-input" placeholder="❌ Errada" style="flex:1;">
                                 <button data-action="add-wordPicker" class="ws-btn-primary">➕</button>
                             </div>
                         </div>
                         <div class="prof-list-scroll">
-                            ${state.wordPickers.length ? state.wordPickers.map(s=>`<div class="prof-list-item"><span><b>${esc(s.text)}</b> <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(s.options[s.correct])}</small></span><button data-action="remover-item" data-key="wordPickers" data-id="${s.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                            ${state.wordPickers.length ? state.wordPickers.map(s=>`<div class="prof-list-item"><span><b>${esc(s.text)}</b> <br><small style="color:#10b981;font-weight:700;">Correta: ${esc(s.options[s.correct ?? 0])}</small></span><button data-action="remover-item" data-key="wordPickers" data-id="${s.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
                     <div class="prof-card">
@@ -383,7 +425,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             <button data-action="add-minimal" class="ws-btn-primary">➕</button>
                         </div>
                         <div class="prof-list-scroll">
-                            ${state.minimalPairs.length ? state.minimalPairs.map(m=>`<div class="prof-list-item"><span>${esc(m.a)} <b>vs</b> ${esc(m.b)}</span><button data-action="remover-item" data-key="minimalPairs" data-id="${m.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                            ${state.minimalPairs.length ? state.minimalPairs.map(m=>`<div class="prof-list-item"><span>${esc(m.a)} <b>vs</b>${esc(m.b)}</span><button data-action="remover-item" data-key="minimalPairs" data-id="${m.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
                     <div class="prof-card">
@@ -391,7 +433,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:12px;">
                             <input id="ig-dbTopic" class="ig-input" placeholder="Tópico (ex: AI in schools)">
                             <div style="display:flex; gap:8px;">
-                                <input id="ig-dbStarter" class="ig-input" placeholder="Fala da IA..." style="flex:1;">
+                                <input id="ig-dbStarter" class="ig-input" placeholder="Fala inicial da IA..." style="flex:1;">
                                 <button data-action="add-debate" class="ws-btn-primary">➕</button>
                             </div>
                         </div>
@@ -423,6 +465,16 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             ${state.questions.length ? state.questions.map(q=>`<div class="prof-list-item"><span>${esc(q.text)}</span><button data-action="remover-item" data-key="questions" data-id="${q.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
+                    <div class="prof-card" style="border-top: 3px solid #C026D3;">
+                        <div class="ig-prof-header">🔮 Espelho do Oráculo <span style="color:#64748B;font-size:14px">(${statementsList.length})</span></div>
+                        <div style="display:flex; gap:8px; margin-bottom:12px;">
+                            <input id="ig-asText" class="ig-input" placeholder="Afirmação (ex: I live in London)" style="flex:1;">
+                            <button data-action="add-statement" class="ws-btn-primary">➕</button>
+                        </div>
+                        <div class="prof-list-scroll">
+                            ${statementsList.length ? statementsList.map(st=>`<div class="prof-list-item"><span>💬 "${esc(st.text)}"</span><button data-action="remover-item" data-key="answerStatements" data-id="${st.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                        </div>
+                    </div>
                 </div>`;
         }
         else if (tabId === 'envios'){
@@ -430,23 +482,23 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
             document.getElementById('pendingCount').textContent = pendentes.length;
             document.getElementById('tab-envios').innerHTML=`
                 <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📥 Forja de Conteúdo (Respostas dos Alunos)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">As respostas criativas dos alunos aparecem aqui.</p>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">As frases e respostas criativas validadas pela IA aparecem aqui para você aprovar e enviar para a Piscina Global.</p>
                 ${pendentes.length===0 ? '<div style="background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:40px; text-align:center;"><span style="font-size:40px;">📭</span><h3 style="color:#475569;margin-top:15px;">Nenhum envio pendente.</h3></div>' : 
                 pendentes.map(s=>`
                     <div class="prof-card" style="border-left: 4px solid #6366f1; margin-bottom:16px;">
-                        <div style="font-size:12px; color:#64748B; margin-bottom:10px;"><b>👤 ${esc(s.student)}</b> no jogo 🎮 ${esc(s.game)}</div>
+                        <div style="font-size:12px; color:#64748B; margin-bottom:10px;"><b>👤 ${esc(s.student)}</b> no jogo 🎮 <b>${esc(s.game)}</b></div>
                         <div style="font-size:16px; color:#0F172A; margin-bottom:16px; font-weight:600; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">"${esc(s.text)}"</div>
                         <div style="display:flex; flex-wrap:wrap; gap:12px;">
-                            <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn-success">🌟 Aprovar</button>
+                            <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn-success">🌟 Aprovar para a Piscina</button>
                             <button data-action="rejeitar-envio" data-id="${s.id}" class="ws-btn-danger">🗑 Rejeitar</button>
                         </div>
                     </div>
                 `).join('')}
-                <div class="ig-prof-header" style="margin-top:40px;">🌊 Piscina Global <span style="color:#64748B;font-size:14px">(${state.pool.length} Aprovados)</span></div>
+               <div class="ig-prof-header" style="margin-top:40px;">🌊 Piscina Global <span style="color:#64748B;font-size:14px">(${state.pool.length} Aprovados)</span></div>
                 <div class="prof-list-scroll" style="max-height:300px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:15px;">
                     ${state.pool.length === 0 ? '<div style="text-align:center; color:#94a3b8; padding:20px;">A piscina está vazia.</div>' : state.pool.map(p=>`
                         <div class="prof-list-item">
-                            <span style="font-size:13px;"><b>${esc(p.student||'Anónimo')}:</b> "${esc(p.text).substring(0,80)}..." <span style="color:#94a3b8;font-size:11px;margin-left:10px;">(${esc(p.type)})</span></span>
+                            <span style="font-size:13px;"><b>${esc(p.student ? p.student : 'Anónimo')}:</b> "${esc(p.text).substring(0,80)}" <span style="color:#94a3b8;font-size:11px;margin-left:10px;">(${esc(p.type)})</span></span>
                             <button data-action="remover-item" data-key="pool" data-id="${p.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px;">✕</button>
                         </div>
                     `).join('')}
@@ -456,7 +508,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
         else if (tabId === 'imagens'){
             document.getElementById('tab-imagens').innerHTML=`
                 <div class="ig-prof-header" style="border:none; margin-bottom:5px;">🖼 Banco de Figuras (Visão do Alquimista)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Adicione palavras e o emoji correspondente.</p>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Adicione palavras, tradução e o emoji correspondente para os alunos treinarem escrita e pronúncia.</p>
                 <div class="prof-card" style="margin-bottom:24px;">
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
                         <input id="ig-picWord" class="ig-input" placeholder="Palavra Inglês" style="flex:2; min-width:140px;">
@@ -476,18 +528,17 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 </div>
             `;
         }
-       else if (tabId === 'algoritmo'){
-            const totalProf = state.words.length + state.phrases.length + state.quizzes.length + state.pictures.length + state.wordPickers.length + state.minimalPairs.length + state.debates.length + state.roleplays.length + state.questions.length;
+        else if (tabId === 'algoritmo'){
+            const totalStatements = Array.isArray(state.answerStatements) ? state.answerStatements.length : 0;
+            const totalProf = state.words.length + state.phrases.length + state.quizzes.length + state.pictures.length + state.wordPickers.length + state.minimalPairs.length + state.debates.length + state.roleplays.length + state.questions.length + totalStatements;
             
-            // 🚀 Cálculos Dinâmicos do Termômetro
             const totalErros = state.errosRetidos.length;
             const taxaErros = totalProf > 0 ? Math.min(100, Math.round((totalErros / totalProf) * 100)) : 0;
             const corTermometro = taxaErros > 25 ? '#EF4444' : (taxaErros > 10 ? '#F59E0B' : '#10B981');
             const statusTermometro = taxaErros > 25 ? '🔥 Crítico (Turma com Dificuldades)' : (taxaErros > 10 ? '⚠️ Atenção (Muitos erros recentes)' : '❄️ Saudável (Aprendizagem Fluida)');
             
-            // 🚀 Análise da Piscina Colaborativa
             const totalPiscina = state.pool.length;
-            const metaPiscina = 50; // Exemplo de meta de criações aprovadas
+            const metaPiscina = 50;
             const progressoPiscina = Math.min(100, Math.round((totalPiscina / metaPiscina) * 100));
 
             document.getElementById('tab-algoritmo').innerHTML=`
@@ -495,7 +546,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Acompanhe a saúde da aprendizagem da turma em tempo real através dos dados do Sistema de Repetição Espaçada.</p>
                 
                 <div class="grid-cards">
-                    <!-- 1. Volume de Conteúdo -->
                     <div class="prof-card" style="border-top:4px solid #4F46E5;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h4 style="margin:0; color:#1e293b; font-size:16px;">📦 Base de Conhecimento</h4>
@@ -505,7 +555,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         <p style="margin:0; color:#64748B; font-size:13px;">Desafios totais criados por si para a turma.</p>
                     </div>
 
-                    <!-- 2. Termômetro de Dificuldade -->
                     <div class="prof-card" style="border-top:4px solid ${corTermometro};">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h4 style="margin:0; color:#1e293b; font-size:16px;">🌡️ Termômetro de Erros</h4>
@@ -515,15 +564,12 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             <div style="font-size:40px; font-weight:900; color:${corTermometro}; font-family:'Plus Jakarta Sans', sans-serif;">${taxaErros}%</div>
                             <div style="color:#64748B; font-size:13px; font-weight:bold;">(${totalErros} retidos)</div>
                         </div>
-                        
-                        <!-- Barra Visual do Termômetro -->
                         <div style="background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 8px;">
                             <div style="height: 100%; width: ${taxaErros}%; background: ${corTermometro}; border-radius: 10px; transition: width 1s ease-out;"></div>
                         </div>
                         <p style="margin:0; color:${corTermometro}; font-size:12px; font-weight:700;">${statusTermometro}</p>
                     </div>
 
-                    <!-- 3. Piscina Global -->
                     <div class="prof-card" style="border-top:4px solid #0CA5E9;">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <h4 style="margin:0; color:#1e293b; font-size:16px;">🌊 Piscina Criativa</h4>
@@ -533,8 +579,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                             <div style="font-size:40px; font-weight:900; color:#0CA5E9; font-family:'Plus Jakarta Sans', sans-serif;">${totalPiscina}</div>
                             <div style="color:#64748B; font-size:13px; font-weight:bold;">envios aprovados</div>
                         </div>
-                        
-                        <!-- Barra de Meta da Piscina -->
                         <div style="background: rgba(226, 232, 240, 0.5); border-radius: 10px; height: 8px; width: 100%; overflow: hidden; margin-bottom: 8px;">
                             <div style="height: 100%; width: ${progressoPiscina}%; background: #0CA5E9; border-radius: 10px; transition: width 1s ease-out;"></div>
                         </div>
@@ -542,7 +586,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                     </div>
                 </div>
 
-                <!-- 🚀 LISTA DETALHADA DOS ERROS RECORRENTES (DIAGNÓSTICO) -->
                 <div class="prof-card" style="margin-top:20px; border:1px solid #E2E8F0; border-top:4px solid #EF4444;">
                     <h4 style="margin:0 0 15px 0; color:#1e293b; font-size:16px;">🚨 Top Dificuldades Atuais da Turma</h4>
                     <p style="color:#64748B; font-size:13px; margin:0 0 15px 0;">Estes são os itens exatos onde o algoritmo está a forçar a repetição porque os alunos estão a falhar. Considere abordar estes temas na próxima aula ao vivo.</p>
@@ -555,7 +598,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                                     <div style="display:flex; align-items:center; gap:10px;">
                                         <span style="font-size:20px;">${erro._tipoDefeito === 'word' ? '🪄' : erro._tipoDefeito === 'phrase' ? '🗣️' : erro._tipoDefeito === 'picture' ? '🖼️' : '🧠'}</span>
                                         <div>
-                                            <div style="font-weight:700; color:#991B1B; font-size:14px;">${Workspace.escapeHTML(erro.word || erro.phrase || erro.question || erro.a || 'Desafio')}</div>
+                                            <div style="font-weight:700; color:#991B1B; font-size:14px;">${Workspace.escapeHTML(erro.word || erro.phrase || erro.question || erro.text || erro.a || 'Desafio')}</div>
                                             <div style="font-size:12px; color:#DC2626;">Origem: Jogo ${Workspace.escapeHTML(erro._tipoDefeito || 'Misto')}</div>
                                         </div>
                                     </div>
@@ -569,7 +612,7 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
         }
         else if (tabId === 'ranking'){
             document.getElementById('tab-ranking').innerHTML=`
-                <div class="ig-prof-header">🏆 Pódio Oficial da Escola</div>
+                <div class="ig-prof-header">🏆 Pódio Oficial da Escola <button data-action="atualizar-ranking" class="ws-btn-primary" style="padding:6px 14px; font-size:12px;">🔄 Atualizar</button></div>
                 <div id="ig-ranking-list" style="max-width:800px; margin:0 auto;"><div style="text-align:center;padding:40px;">⏳</div></div>
             `;
             this.carregarRanking();
@@ -577,10 +620,9 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
         else if (tabId === 'laboratorio'){
             document.getElementById('tab-laboratorio').innerHTML=`
                 <div class="ig-prof-header" style="color:#059669; border-bottom:2px solid #10B981;">🧪 Laboratório de Machine Learning (Ptt AI)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI. Torne a conversa natural usando a inteligência de espelhamento.</p>
-               <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Sandbox isolada para treinar a Ptt AI. Ensine novas intenções, adicione bloqueios no Olheiro Ortográfico e teste a conversa híbrida.</p>
+                <div class="grid-cards" style="grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));">
                     
-                    <!-- CENTRO DE TREINAMENTO (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #10B981;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">🏋️‍♂️ Treino Nativo</h3>
                         <div style="display:flex; flex-direction:column; gap:10px;">
@@ -591,7 +633,6 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         </div>
                     </div>
 
-                    <!-- OLHEIRO ORTOGRÁFICO (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #F59E0B;">
                         <h3 style="margin:0 0 15px 0; color:#0F172A;">🔍 Olheiro Ortográfico</h3>
                         <div style="display:flex; flex-direction:column; gap:10px;">
@@ -601,26 +642,24 @@ _groqHistory: [], // <-- ADICIONE ESSA LINHA para dar memória ao chat premium
                         </div>
                     </div>
 
-                    <!-- CHAT DE TESTE (NATIVO) -->
                     <div class="prof-card" style="border-top:4px solid #4F46E5; display:flex; flex-direction:column;">
-                        <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Teste Nativo</h3>
-                        <div id="ig-ia-chat-history" style="flex:1; min-height:100px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">💬 Teste Híbrido (Olheiro + IA)</h3>
+                        <div id="ig-ia-chat-history" style="flex:1; min-height:120px; max-height:220px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:10px; overflow-y:auto; margin-bottom:10px; font-size:14px;"></div>
                         <div style="display:flex; gap:8px;">
-                            <input id="ig-ia-chat-input" class="ig-input" placeholder="Fale com a IA Nativa...">
+                            <input id="ig-ia-chat-input" class="ig-input" placeholder="Teste um erro ou converse..." onkeydown="if(event.key==='Enter') this.nextElementSibling.click()">
                             <button data-action="falar-ia" class="ws-btn-primary">Enviar</button>
                         </div>
                     </div>
 
-                <!-- 🚀 CHAT PREMIUM (GROQ) - CORRIGIDO -->
-<div class="prof-card" style="border-top:4px solid #0F172A; display:flex; flex-direction:column; grid-column: 1 / -1;">
-    <h3 style="margin:0 0 15px 0; color:#0F172A;">⚡ Chat Gerativo Premium (Groq API)</h3>
-    <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Modelo atual: <b>openai/gpt-oss-20b</b> • Agora com memória de conversa.</p>
-    <div id="ig-groq-chat-history" style="height:280px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; overflow-y:auto; margin-bottom:10px; font-size:14px; display:flex; flex-direction:column; gap:8px;"></div>
-    <div style="display:flex; gap:8px;">
-        <input id="ig-groq-chat-input" class="ig-input" placeholder="Ex: I is very happy today..." onkeydown="if(event.key==='Enter') this.nextElementSibling.click()">
-        <button data-action="falar-groq" id="btn-groq" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 18px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enviar para Nuvem</button>
-    </div>
-</div>
+                    <div class="prof-card" style="border-top:4px solid #0F172A; display:flex; flex-direction:column; grid-column: 1 / -1;">
+                        <h3 style="margin:0 0 15px 0; color:#0F172A;">⚡ Chat Gerativo Direto (Groq API)</h3>
+                        <p style="font-size:13px; color:#64748B; margin-bottom:15px;">Modelo ativo com memória contínua de conversação.</p>
+                        <div id="ig-groq-chat-history" style="height:280px; background:#F8FAFC; border:1px solid #E2E8F0; border-radius:10px; padding:12px; overflow-y:auto; margin-bottom:10px; font-size:14px; display:flex; flex-direction:column; gap:8px;"></div>
+                        <div style="display:flex; gap:8px;">
+                            <input id="ig-groq-chat-input" class="ig-input" placeholder="Ex: I is very happy today..." onkeydown="if(event.key==='Enter') this.nextElementSibling.click()">
+                            <button data-action="falar-groq" id="btn-groq" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 18px; border:none; border-radius:10px; font-weight:bold; cursor:pointer;">Enviar para Nuvem</button>
+                        </div>
+                    </div>
 
                 </div>
             `;

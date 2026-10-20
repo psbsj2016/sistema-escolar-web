@@ -111,10 +111,10 @@ const SRSService = {
 };
 
 Workspace.Ingles = {
-    state: {
+   state: {
         _dbLoaded: false, 
         _roleplayChat: [],
-        streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], submissions:[], pool:[],
+        streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
@@ -128,6 +128,11 @@ Workspace.Ingles = {
         debates:[{id:'d1', topic:'Social media does more harm than good', starter:'Social media connects us, but also increases anxiety. What is your opinion?'}],
         wordPickers:[{id:'wp1', text:'I have _____ my keys.', options:['lost','lose'], correct:0}],
         questions:[{id:'aq1', text:'What did you do last weekend?'}],
+        answerStatements:[
+            {id:'as1', text:'I have lived in Brazil for five years.', type:'answerQuest'},
+            {id:'as2', text:'My favorite hobby is listening to rock music.', type:'answerQuest'},
+            {id:'as3', text:'She went to the hospital because she had a headache.', type:'answerQuest'}
+        ],
         roleplays:[{id:'rp1', title:'✈ No Aeroporto', prompt:'Attendant: Can I see your passport?', tip:'Use: Here you are'}],
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Crie uma frase com a palavra.', icon:'🪄', color:'#E0E7FF'},
@@ -141,7 +146,7 @@ Workspace.Ingles = {
             {id:'contextRole', title:'🎭 Manto do Metamorfo', desc:'Assuma o papel.', icon:'🎭', color:'#CCFBF1'},
             {id:'debateAI', title:'⚔ Duelo de Mentes', desc:'Debata com a IA.', icon:'⚔', color:'#E0F2FE'},
             {id:'minimalPairs', title:'♊ Sussurros Gêmeos', desc:'Diferencie os sons.', icon:'♊', color:'#FFEDD5'},
-            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale o que vê.', icon:'👁🗨', color:'#DCFCE7'},
+            {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale ou escreva o que vê.', icon:'👁🗨', color:'#DCFCE7'},
             {id:'memoryGame', title:'🃏 Ilusão do Mago', desc:'Encontre os pares ocultos.', icon:'🃏', color:'#FBCFE8'},
             {id:'hangman', title:'🔤 Enigma das Letras', desc:'Adivinhe a palavra (Forca).', icon:'🔤', color:'#FEE2E2'},
             {id:'videoQuiz', title:'🎬 Cinema do Mago', desc:'Assista e responda.', icon:'🎬', color:'#E0E7FF'}
@@ -155,27 +160,53 @@ Workspace.Ingles = {
         
         if(typeof Workspace.navegarPara==='function' && !this.navConfigurada){
             const orig=Workspace.navegarPara;
-            Workspace.navegarPara=(tela,hist)=>{
+            Workspace.navegarPara=(tela, hist, isInitialLoad)=>{
                 const c=document.getElementById('ws-ingles-container');
-                if(c) {
-                    if(tela==='ingles') {
-                        c.style.display='block';
-                        this.abrirBau();
-                    } else {
-                        c.style.display='none';
-                    }
+                if(c && tela !== 'ingles') {
+                    c.style.display='none';
                 }
-                orig(tela,hist);
-            }; this.navConfigurada=true;
+                orig(tela, hist, isInitialLoad);
+            }; 
+            this.navConfigurada=true;
         }
     },
 
     renderizarVisualizacao: function() {
-        this.abrirBau();
+        this.abrirBau(true);
     },
 
-    abrirBau(){ 
-        this.loadDados().then(() => {
+    // 🔥 Calcula e atualiza automaticamente a ofensiva diária (Streak) do aluno
+    verificarStreakDiario(){
+        const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
+        const hoje = new Date();
+        const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+        const ultimaData = localStorage.getItem(`${userK}_lastDate`);
+
+        if (!ultimaData) {
+            this.state.streak = Math.max(1, this.state.streak || 1);
+            localStorage.setItem(`${userK}_lastDate`, hojeStr);
+            localStorage.setItem(`${userK}_streak`, String(this.state.streak));
+            return;
+        }
+
+        if (ultimaData === hojeStr) return; // Já contabilizou hoje
+
+        const ontem = new Date(hoje);
+        ontem.setDate(hoje.getDate() - 1);
+        const ontemStr = `${ontem.getFullYear()}-${String(ontem.getMonth()+1).padStart(2,'0')}-${String(ontem.getDate()).padStart(2,'0')}`;
+
+        if (ultimaData === ontemStr) {
+            this.state.streak = (parseInt(this.state.streak) || 1) + 1;
+        } else {
+            this.state.streak = 1;
+        }
+
+        localStorage.setItem(`${userK}_lastDate`, hojeStr);
+        localStorage.setItem(`${userK}_streak`, String(this.state.streak));
+    },
+
+    abrirBau(jaCarregou = false){ 
+        const executarAbertura = () => {
             this.renderAlunoGrid();
             this.atualizarHUD();
             
@@ -196,17 +227,19 @@ Workspace.Ingles = {
                 
                 document.getElementById('alunoView').classList.remove('hidden');
                 document.getElementById('professorView').classList.add('hidden');
-  
-                // 🚀 Dispara a montagem do letreiro para os alunos
                 this.renderizarMarquee();
             }
-        });
+        };
+
+        if (jaCarregou) executarAbertura();
+        else this.loadDados().then(executarAbertura);
     },
 
     async loadDados(){
         try{
             const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-            const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}`,'GET');
+            const userId = Workspace.usuario?.id || '';
+            const res = await Workspace.api(`/workspace/ingles/dados?escolaId=${escolaId}&userId=${encodeURIComponent(userId)}`,'GET');
             
             if(res && res.success && res.dados){
                 const d = res.dados;
@@ -223,6 +256,7 @@ Workspace.Ingles = {
                     this.state.debates = Array.isArray(d.debates) ? d.debates : [];
                     this.state.roleplays = Array.isArray(d.roleplays) ? d.roleplays : [];
                     this.state.questions = Array.isArray(d.questions) ? d.questions : [];
+                    this.state.answerStatements = Array.isArray(d.answerStatements) && d.answerStatements.length ? d.answerStatements : [...this.defaults.answerStatements];
                 } else {
                     this.state._dbLoaded = false;
                     this.state.words = [...this.defaults.words];
@@ -234,6 +268,7 @@ Workspace.Ingles = {
                     this.state.debates = [...this.defaults.debates];
                     this.state.roleplays = [...this.defaults.roleplays];
                     this.state.questions = [...this.defaults.questions];
+                    this.state.answerStatements = [...this.defaults.answerStatements];
                 }
 
                 this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
@@ -246,14 +281,26 @@ Workspace.Ingles = {
                 this.state.quizzes=[...this.defaults.quizzes]; this.state.pictures=[...this.defaults.pictures];
                 this.state.wordPickers=[...this.defaults.wordPickers]; this.state.minimalPairs=[...this.defaults.minimalPairs];
                 this.state.debates=[...this.defaults.debates]; this.state.roleplays=[...this.defaults.roleplays];
-                this.state.questions=[...this.defaults.questions];
+                this.state.questions=[...this.defaults.questions]; this.state.answerStatements=[...this.defaults.answerStatements];
                 this.state.srs={};
             }
             
             const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
-            try{ this.state.coins = JSON.parse(localStorage.getItem(`${userK}_coins`)||'{"bronze":0,"prata":0,"ouro":0}'); }catch{ this.state.coins={bronze:0,prata:0,ouro:0}; }
-            this.state.streak = parseInt(localStorage.getItem(`${userK}_streak`)||'1');
-            this.state.itensConcluidos = JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
+            const statsNuvem = res?.dados?.statsAluno || null;
+
+            try{ 
+                const coinsLocal = JSON.parse(localStorage.getItem(`${userK}_coins`)||'{"bronze":0,"prata":0,"ouro":0}');
+                const bronzeNuvem = statsNuvem?.coins?.bronze || 0;
+                this.state.coins = (bronzeNuvem > (coinsLocal.bronze || 0)) ? statsNuvem.coins : coinsLocal;
+            }catch{ this.state.coins={bronze:0,prata:0,ouro:0}; }
+
+            this.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || statsNuvem?.streak || '1');
+            this.verificarStreakDiario();
+
+            const concluidosLocal = JSON.parse(localStorage.getItem(`${userK}_concluidos`)||'[]');
+            const concluidosNuvem = Array.isArray(statsNuvem?.itensConcluidos) ? statsNuvem.itensConcluidos : [];
+            this.state.itensConcluidos = Array.from(new Set([...concluidosLocal, ...concluidosNuvem]));
+
             try{
                 const localSRS = JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
@@ -273,23 +320,29 @@ Workspace.Ingles = {
         }catch{}
         
         try{
-            if(Workspace.usuario?.tipo==='Aluno'){
+            const ehAluno = Workspace.usuario?.tipo === 'Aluno';
+            if(ehAluno && Workspace.usuario?.id){
+                const nomeRealAluno = Workspace.usuario.nome || Workspace.usuario.login || 'Aluno';
                 Workspace.api('/workspace/ingles/xp','POST', {
                     userId: Workspace.usuario.id, 
-                    escolaId: Workspace.usuario.escolaId, 
+                    escolaId: Workspace.usuario.escolaId || 'DEFAULT', 
+                    nome: nomeRealAluno,
                     coins: this.state.coins,
-                    streak: this.state.streak
+                    streak: this.state.streak,
+                    srs: this.state.srs,
+                    itensConcluidos: this.state.itensConcluidos
                 }).catch(()=>{});
             }
             
             const res = await Workspace.api('/workspace/ingles/dados','PUT',{
                 escolaId: Workspace.usuario?.escolaId||'DEFAULT',
+                modoAluno: ehAluno,
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
-                wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions,
+                wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions, answerStatements:this.state.answerStatements,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs
             });
             if(res && res.success) {
-                this.state._dbLoaded = true; 
+                if (!ehAluno) this.state._dbLoaded = true; 
             } else {
                 this.mostrarAvisoLocal("Falha ao salvar na nuvem.", "error");
             }
@@ -762,13 +815,13 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-           // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
+         // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
             const profActions = [
                 'render-tab', 'remover-item', 'add-word', 'add-phrase', 
                 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 
-                'add-debate', 'add-roleplay', 'add-question', 'aprovar-envio', 
-                'rejeitar-envio', 'atualizar-ranking', 'ensinar-ia', 'falar-ia',
-                'ensinar-correcao', 'falar-groq' // <--- A NOVA AÇÃO ADICIONADA AQUI!
+                'add-debate', 'add-roleplay', 'add-question', 'add-statement',
+                'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking', 
+                'ensinar-ia', 'falar-ia', 'ensinar-correcao', 'falar-groq'
             ];
             
             if (profActions.includes(a)) {
@@ -806,24 +859,31 @@ Workspace.Ingles = {
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
             const inputGenerico = document.getElementById('ig-input')?.value?.trim()||'';
             
-            if(a === 'falar-frase'){
-                if(cur?.phrase) VoiceService.falar(cur.phrase, {isMago:false});
-                else if(cur?.word) VoiceService.falar(cur.word);
-                else if(b.dataset.text) VoiceService.falar(b.dataset.text);
+           if(a === 'falar-frase'){
+                if(b.dataset.text) VoiceService.falar(b.dataset.text, {rate:0.95, isMago:false});
+                else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.95, isMago:false});
+                else if(cur?.word) VoiceService.falar(cur.word, {rate:0.95, isMago:false});
+            }
+            if(a === 'falar-lento'){
+                if(b.dataset.text) VoiceService.falar(b.dataset.text, {rate:0.62, isMago:false});
+                else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.62, isMago:false});
+                else if(cur?.word) VoiceService.falar(cur.word, {rate:0.62, isMago:false});
+            }
+            if(a === 'revelar-dica-pic'){
+                const boxDica = document.getElementById('ig-pic-hint-box');
+                if(boxDica) boxDica.style.display = boxDica.style.display === 'none' ? 'block' : 'none';
             }
             if(a === 'iniciar-voz'){
                 const esperado = cur?.word||cur?.phrase||this.state._minimalTarget;
                 if(esperado) this.iniciarReconhecimentoDeVoz(esperado, cur, b.dataset.tipo||'phrase');
             }
             if(a === 'verificar-wordSpark'){
-                // 🚀 Removemos o bloqueio rígido do '.includes()'. A IA é que vai julgar se a palavra (ou conjugação) foi usada!
                 if(inputGenerico.length < 2){
                     this.mostrarAvisoLocal(`Escreva uma frase válida!`, 'warning');
                     return;
                 }
                 b.disabled = true; b.innerText = '🧙 Avaliando com IA...';
                 
-                // Nota: O prefixo /workspace é necessário na rota dependendo da configuração do servidor
                 Workspace.api('/workspace/ingles/jogo/avaliar','POST',{
                     jogo: 'wordSpark',
                     palavra: cur.word,
@@ -831,12 +891,20 @@ Workspace.Ingles = {
                 }).then(r=>{
                     b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
                     if(r.success && r.correto){
-                        document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${r.feedback}</b><br>📝 ${Workspace.escapeHTML(r.correcao)}</div>`;
-                        setTimeout(()=>{ this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(r.coins||50); }, 2000);
+                        VoiceService.falar(inputGenerico, {rate:0.95});
+                        this.state.submissions.unshift({
+                            id:'sub_'+Date.now(),
+                            student: Workspace.usuario?.nome || Workspace.usuario?.login || 'Aluno',
+                            game: 'wordSpark',
+                            text: inputGenerico,
+                            status: 'pending'
+                        });
+                        document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${Workspace.escapeHTML(r.feedback)}</b><br>📝 ${Workspace.escapeHTML(r.correcao)}</div>`;
+                        setTimeout(()=>{ this.updateSRS(cur.id,'word',true); this.superarErro(cur.id); this.sucessoGenerico(r.coins||50); }, 2200);
                     } else {
                         this.registrarErro(cur,'word');
                         document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;">❌ ${Workspace.escapeHTML(r.feedback || 'Tente melhorar')}<br>💡 Sugestão: ${Workspace.escapeHTML(r.correcao || '')}</div>`;
-                        setTimeout(()=> this.falhaGenerica(), 3000);
+                        setTimeout(()=> this.falhaGenerica(), 3200);
                     }
                 }).catch(()=>{
                     b.disabled = false; b.innerText = 'Lançar Feitiço ✨';
@@ -844,23 +912,65 @@ Workspace.Ingles = {
                 });
             }
             if(a === 'verificar-listen'){
+                if(!listen) return this.mostrarAvisoLocal('Ouça o áudio e escreva o que ouviu!', 'warning');
                 const sim = this.similaridade(listen, cur.phrase);
-                if(sim>=0.9){ this.updateSRS(cur.id,'phrase',true); this.superarErro(cur.id); this.sucessoGenerico(50); }
-                else { this.registrarErro(cur,'phrase'); this.falhaGenerica(); }
+                const fbBox = document.getElementById('ig-listen-feedback');
+                if(sim>=0.9){ 
+                    if(fbBox) {
+                        fbBox.style.display = 'block';
+                        fbBox.innerHTML = `<div style="background:#ECFDF5; border:1px solid #10B981; color:#065F46; padding:12px; border-radius:10px; font-size:14px; margin-top:15px;">✅ <b>Perfeito!</b> "${Workspace.escapeHTML(cur.phrase)}"</div>`;
+                    }
+                    VoiceService.falar(cur.phrase, {rate:0.95});
+                    this.updateSRS(cur.id,'phrase',true); 
+                    this.superarErro(cur.id); 
+                    this.sucessoGenerico(50); 
+                } else { 
+                    if(fbBox) {
+                        fbBox.style.display = 'block';
+                        fbBox.innerHTML = `
+                            <div style="background:#FEF2F2; border:1px solid #EF4444; color:#7F1D1D; padding:14px; border-radius:10px; font-size:13.5px; margin-top:15px; text-align:left;">
+                                <div>❌ <b>Você escreveu:</b> <i>"${Workspace.escapeHTML(listen)}"</i></div>
+                                <div style="margin-top:6px; color:#065F46; background:#ECFDF5; padding:8px; border-radius:6px;">✅ <b>Frase correta:</b> <b>"${Workspace.escapeHTML(cur.phrase)}"</b></div>
+                            </div>
+                        `;
+                    }
+                    VoiceService.falar(cur.phrase, {rate:0.80});
+                    this.registrarErro(cur,'phrase'); 
+                    setTimeout(() => this.falhaGenerica(), 2200); 
+                }
             }
             if(a === 'verificar-quiz'){
                 const idx = parseInt(b.dataset.index);
-                if(idx===cur.correct){ this.updateSRS(cur.id,'quiz',true); this.superarErro(cur.id); this.sucessoGenerico(30); }
-                else { this.registrarErro(cur,'quiz'); this.falhaGenerica(); }
+                const respostaCerta = (cur.correct !== undefined && cur.correct !== null) ? parseInt(cur.correct) : 1;
+                if(idx === respostaCerta){ 
+                    b.style.background = '#ECFDF5'; b.style.borderColor = '#10B981';
+                    if(cur.options && cur.options[respostaCerta]) VoiceService.falar(cur.options[respostaCerta]);
+                    this.updateSRS(cur.id,'quiz',true); this.superarErro(cur.id); this.sucessoGenerico(30); 
+                } else { 
+                    b.style.background = '#FEF2F2'; b.style.borderColor = '#EF4444';
+                    this.registrarErro(cur,'quiz'); this.falhaGenerica(); 
+                }
             }
             if(a === 'verificar-minimal'){
-                if(b.dataset.choice===this.state._minimalTarget){ this.updateSRS(cur.id,'minimal',true); this.superarErro(cur.id); this.sucessoGenerico(75); }
-                else { this.registrarErro(cur,'minimal'); this.falhaGenerica(); }
+                if(b.dataset.choice===this.state._minimalTarget){ 
+                    b.style.background = '#ECFDF5'; b.style.borderColor = '#10B981';
+                    this.updateSRS(cur.id,'minimal',true); this.superarErro(cur.id); this.sucessoGenerico(75); 
+                } else { 
+                    b.style.background = '#FEF2F2'; b.style.borderColor = '#EF4444';
+                    this.registrarErro(cur,'minimal'); this.falhaGenerica(); 
+                }
             }
             if(a === 'verificar-picker'){
                 const idx = parseInt(b.dataset.index);
-                if(idx===cur.correct){ this.updateSRS(cur.id,'picker',true); this.superarErro(cur.id); this.sucessoGenerico(20); }
-                else { this.registrarErro(cur,'picker'); this.falhaGenerica(); }
+                const respostaCerta = (cur.correct !== undefined && cur.correct !== null) ? parseInt(cur.correct) : 0;
+                if(idx === respostaCerta){ 
+                    b.style.background = '#ECFDF5'; b.style.borderColor = '#10B981';
+                    if(cur.options && cur.options[respostaCerta]) VoiceService.falar(cur.options[respostaCerta]);
+                    this.updateSRS(cur.id,'picker',true); this.superarErro(cur.id); this.sucessoGenerico(20); 
+                } else { 
+                    b.style.background = '#FEF2F2'; b.style.borderColor = '#EF4444';
+                    this.registrarErro(cur,'picker'); this.falhaGenerica(); 
+                }
             }
             if(a === 'verificar-picture-text'){
                 const sim = this.similaridade(inputGenerico, cur.word);
@@ -872,12 +982,12 @@ Workspace.Ingles = {
                 if(!this.state._hangmanGuessed.includes(letra)) {
                     this.state._hangmanGuessed.push(letra);
                     if(!this.state._hangmanWord.includes(letra)) {
-                        this.state._hangmanLives--; // Perde uma vida
+                        this.state._hangmanLives--;
                     }
                     this.atualizarTelaForca();
                 }
             }
-          if(a === 'verificar-envio'){
+            if(a === 'verificar-envio'){
                 const caixaDeTexto = document.querySelector('#modalBody #ig-input') || document.getElementById('ig-input');
                 const respostaDoAluno = caixaDeTexto?.value?.trim() || '';
 
@@ -885,14 +995,14 @@ Workspace.Ingles = {
                 
                 const gameId = b.dataset.game;
 
-                // 🚀 ADICIONADO: 'picturePop' na lista e captura da palavra alvo!
                 if(['contextRole','answerQuest','sentenceShuffle','questionMaker','picturePop'].includes(gameId)){
                     b.disabled = true; b.innerText = '🤖 A IA está a avaliar a sua resposta...';
                     
+                    // 🚀 CORREÇÃO BUG 2: Envia o gameId real ('sentenceShuffle') para a IA avaliar a transformação de frase corretamente!
                     const payload = {
-                        jogo: gameId === 'sentenceShuffle' ? 'answerQuest' : gameId,
+                        jogo: gameId,
                         pergunta: cur.text || cur.phrase || cur.title,
-                        palavra: cur.word || '', // 🚀 Enviamos a palavra que o emoji representa!
+                        palavra: cur.word || '',
                         tarefaEspecifica: cur.taskType || '',
                         respostaAluno: respostaDoAluno,
                         cenario: cur,
@@ -911,6 +1021,7 @@ Workspace.Ingles = {
                             if(!this.state._roleplayChat) this.state._roleplayChat = [];
                             this.state._roleplayChat.push({role:'user', content: respostaDoAluno});
                             this.state._roleplayChat.push({role:'assistant', content: r.npcResponse});
+                            VoiceService.falar(r.npcResponse, {rate:0.95});
                             
                             document.getElementById('modalBody').innerHTML = `
                                 <div style="background:#FEF3C7; padding:10px; border-radius:8px; font-size:12px; margin-bottom:12px; border-left:4px solid #D97706;">
@@ -925,13 +1036,22 @@ Workspace.Ingles = {
                             this.ganharCoins('bronze', 20);
                         } else {
                             if(r.correto){
-                                document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${r.feedback}</b><br>✨ Sugestão: ${Workspace.escapeHTML(r.correcao)}</div>`;
-                                setTimeout(()=>{ this.sucessoGenerico(50); }, 2000);
+                                // 🚀 CORREÇÃO BUG 3: Envia a resposta criativa aprovada para a aba '📥 Envios' do Professor!
+                                this.state.submissions.unshift({
+                                    id: 'sub_' + Date.now(),
+                                    student: Workspace.usuario?.nome || Workspace.usuario?.login || 'Aluno',
+                                    game: gameId,
+                                    text: respostaDoAluno,
+                                    status: 'pending'
+                                });
+                                VoiceService.falar(respostaDoAluno, {rate:0.95});
+
+                                document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;"><b>✅ ${Workspace.escapeHTML(r.feedback)}</b><br>✨ Sugestão: ${Workspace.escapeHTML(r.correcao || respostaDoAluno)}</div>`;
+                                setTimeout(()=>{ this.sucessoGenerico(r.coins || (gameId === 'picturePop' ? 75 : 50)); }, 2200);
                             } else {
                                 this.registrarErro(cur, gameId);
-                                // 🚀 CORREÇÃO DO ERRO DE SINTAXE: Substituído ']' por ')' em getElementById
                                 document.getElementById('modalBody').innerHTML += `<div style="margin-top:15px; background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s;">❌ ${Workspace.escapeHTML(r.feedback)}<br>💡 Sugestão: ${Workspace.escapeHTML(r.correcao)}</div>`;
-                                setTimeout(()=> this.renderDesafioAtual(), 2500);
+                                setTimeout(()=> this.renderDesafioAtual(), 2800);
                             }
                         }
                     }).catch(() => {
@@ -1114,32 +1234,23 @@ Workspace.Ingles = {
         }, 1500);
     },
 
-    getColecaoDoJogoAtual(){
-        const id = this.jogoAtual;
-        const db = this.state._dbLoaded; 
-        
-        if(id==='wordSpark') return db ? this.state.words : this.defaults.words;
-        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
-        if(id==='quiz') return db ? this.state.quizzes : this.defaults.quizzes;
-        if(id==='wordPicker') return db ? this.state.wordPickers : this.defaults.wordPickers;
-        if(id==='minimalPairs') return db ? this.state.minimalPairs : this.defaults.minimalPairs;
-        if(id==='picturePop') return db ? this.state.pictures : this.defaults.pictures;
-        if(id==='answerQuest') return db ? this.state.questions : this.defaults.questions;
-        if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
-        if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
-        if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
-        if(id==='hangman') return db ? this.state.words : this.defaults.words;
-       if(id==='videoQuiz') {
-            const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
-            // 🚀 PROTEÇÃO: Só tenta ler o vídeo se ele realmente existir e for um texto
-            return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
+    // 🎲 Baralha as opções do Quiz e da Poção Sintática mantendo o índice original intacto
+    _embaralharOpcoes(opcoes = []) {
+        const mapeadas = opcoes.map((texto, indexOriginal) => ({ texto, indexOriginal }));
+        for (let i = mapeadas.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [mapeadas[i], mapeadas[j]] = [mapeadas[j], mapeadas[i]];
         }
-        return null;
+        return mapeadas;
     },
 
-   getColecaoPorJogo: function(id){
+    getColecaoDoJogoAtual(){
+        return this.getColecaoPorJogo(this.jogoAtual);
+    },
+
+    getColecaoPorJogo: function(id){
         const db = this.state._dbLoaded; 
-        if(id==='wordSpark') return db ? this.state.words : this.defaults.words;
+        if(id==='wordSpark' || id==='memoryGame' || id==='hangman') return db ? this.state.words : this.defaults.words;
         if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
         if(id==='quiz') return db ? this.state.quizzes : this.defaults.quizzes;
         if(id==='wordPicker') return db ? this.state.wordPickers : this.defaults.wordPickers;
@@ -1148,11 +1259,13 @@ Workspace.Ingles = {
         if(id==='answerQuest') return db ? this.state.questions : this.defaults.questions;
         if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
-        if(id==='questionMaker') return this.state.pool.filter(p=>p.type==='answerQuest');
-        if(id==='hangman') return db ? this.state.words : this.defaults.words;
-       if(id==='videoQuiz') {
+        if(id==='questionMaker') {
+            const daPiscina = (this.state.pool || []).filter(p => p.type === 'answerQuest' || p.type === 'questionMaker');
+            const doProfessor = (this.state.answerStatements && this.state.answerStatements.length) ? this.state.answerStatements : this.defaults.answerStatements;
+            return [...daPiscina, ...doProfessor];
+        }
+        if(id==='videoQuiz') {
             const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
-            // 🚀 PROTEÇÃO: Só tenta ler o vídeo se ele realmente existir e for um texto
             return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
         }
         return [];
@@ -1219,8 +1332,12 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center;">
                 <div class="ig-big-phrase" style="font-size:32px; color:#4F46E5;">${Workspace.escapeHTML(w.word)}</div>
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
+                    <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:8px 16px; border-radius:20px; border:none; font-size:13px;">🔊 Ouvir Palavra</button>
+                    <button data-action="falar-lento" class="ws-btn" style="background:#475569; color:#fff; padding:8px 16px; border-radius:20px; border:none; font-size:13px;">🐢 Lento</button>
+                </div>
                 <p style="font-weight:700; color:#64748B;">Tradução: ${Workspace.escapeHTML(w.translation||'')}</p>
-                <p style="font-weight:600; margin-top:20px;">Crie uma frase usando esta palavra:</p>
+                <p style="font-weight:600; margin-top:20px;">Crie uma frase em inglês usando esta palavra:</p>
                 <textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence here..." style="min-height:100px; margin-top:10px;"></textarea>
                 <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:16px; border-radius:12px; margin-top:16px; cursor:pointer;">Lançar Feitiço ✨</button>
             </div>`;
@@ -1233,12 +1350,13 @@ Workspace.Ingles = {
         const p = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase">${Workspace.escapeHTML(p.phrase)}</div>
-            <div style="text-align:center; margin:15px 0;">
-                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir</button>
+            <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
+                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir Normal</button>
+                <button data-action="falar-lento" class="ws-btn" style="background:#475569; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🐢 Ouvir Devagar</button>
             </div>
             <div style="background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0; text-align:center;">
-                <p style="font-weight:600; margin:0 0 10px 0;">Sua vez de ler:</p>
-                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar</button>
+                <p style="font-weight:600; margin:0 0 10px 0;">Sua vez de ler em voz alta:</p>
+                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar Pronúncia</button>
                 <div id="ig-speechResult" style="margin-top:15px; font-weight:600;"></div>
             </div>`;
     },
@@ -1250,21 +1368,27 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center;">
                 <div style="font-size:48px; margin-bottom:10px;">🦉</div>
-                <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 30px; border-radius:20px; border:none; cursor:pointer; margin-bottom:20px;">🔊 Tocar Áudio</button>
-                <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;">
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+                    <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🔊 Tocar Áudio</button>
+                    <button data-action="falar-lento" class="ws-btn" style="background:#0F172A; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🐢 Tocar Devagar</button>
+                </div>
+                <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;" onkeydown="if(event.key==='Enter') document.querySelector('[data-action=\\'verificar-listen\\']')?.click()">
+                <div id="ig-listen-feedback" style="display:none;"></div>
                 <button data-action="verificar-listen" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer;">Desvendar Mistério</button>
             </div>`;
     },
 
-  renderGameQuiz(){
+    renderGameQuiz(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'quiz'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q = this.desafioAtualObj;
+        const opcoesBaralhadas = this._embaralharOpcoes(q.options || []);
+
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="font-size:22px;">${Workspace.escapeHTML(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
-                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
+                ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
     },
 
@@ -1273,20 +1397,21 @@ Workspace.Ingles = {
         this.desafioAtualObj = this.obterItemInteligente(col, 'picker'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const s = this.desafioAtualObj;
+        const opcoesBaralhadas = this._embaralharOpcoes(s.options || []);
+
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="color:#4F46E5;">${Workspace.escapeHTML(s.text)}</div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
-                ${s.options.map((o,i)=>`<button data-action="verificar-picker" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
+                ${opcoesBaralhadas.map(o => `<button data-action="verificar-picker" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
     },
 
-   renderGameSentenceShuffle(){
+    renderGameSentenceShuffle(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const phrase = this.desafioAtualObj; 
         
-        // 🚀 Sorteia a tarefa e guarda diretamente no objeto do desafio atual
         const task = ['Transforme em Pergunta (Interrogativa)', 'Transforme em Negativa'][Math.floor(Math.random()*2)];
         this.desafioAtualObj.taskType = task;
 
@@ -1294,7 +1419,7 @@ Workspace.Ingles = {
             <div style="text-align:center; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700;">${task}</span></div>
             <div class="ig-big-phrase">${Workspace.escapeHTML(phrase.phrase)}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua nova frase aqui..." style="min-height:80px;"></textarea>
-            <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter</button>`;
+            <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter Resposta</button>`;
     },
 
     renderGameAnswerQuest(){
@@ -1303,19 +1428,25 @@ Workspace.Ingles = {
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
             <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${Workspace.escapeHTML(this.desafioAtualObj.text)}</div>
+            <div style="text-align:center; margin-bottom:12px;">
+                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#92400E; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Pergunta</button>
+            </div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..." style="min-height:100px;"></textarea>
             <button data-action="verificar-envio" data-game="answerQuest" class="ws-btn" style="width:100%; margin-top:16px; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Enviar Resposta</button>`;
     },
 
     renderGameQuestionMaker(){
-        const pool = this.state.pool.filter(p=>p.type==='answerQuest');
-        this.desafioAtualObj = pool.length ? this.obterItemInteligente(pool, 'qmaker') : null;
+        const pool = this.getColecaoDoJogoAtual();
+        this.desafioAtualObj = (pool && pool.length) ? this.obterItemInteligente(pool, 'qmaker') : null;
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
             <p style="color:#64748B; font-weight:700; text-align:center;">Alguém respondeu isto:</p>
             <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${Workspace.escapeHTML(this.desafioAtualObj.text)}"</div>
-            <p style="text-align:center; font-weight:600; margin-top:20px;">Qual pergunta em inglês gerou essa resposta?</p>
-            <textarea id="ig-input" class="ig-textarea" placeholder="Ex: Why do you..."></textarea>
+            <div style="text-align:center; margin-bottom:10px;">
+                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#4F46E5; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Afirmação</button>
+            </div>
+            <p style="text-align:center; font-weight:600; margin-top:15px;">Qual pergunta em inglês gerou essa resposta?</p>
+            <textarea id="ig-input" class="ig-textarea" placeholder="Ex: How long have you... / What is your..."></textarea>
             <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
     },
 
@@ -1365,7 +1496,7 @@ Workspace.Ingles = {
         if(div) div.scrollTop = div.scrollHeight;
     },
 
-   renderGameMinimalPairs(){
+    renderGameMinimalPairs(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'minimal'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1377,15 +1508,18 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center; padding:20px 0;">
                 <div style="font-size:48px; margin-bottom:16px;">👄</div>
-                <button data-action="falar-frase" data-text="${target}" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:16px 40px; border-radius:30px; border:none; cursor:pointer; font-size:16px; box-shadow:0 4px 12px rgba(79,70,229,0.3);">🎧 Ouvir Palavra</button>
+                <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+                    <button data-action="falar-frase" data-text="${Workspace.escapeHTML(target)}" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:14px 30px; border-radius:30px; border:none; cursor:pointer; font-size:15px; box-shadow:0 4px 12px rgba(79,70,229,0.3);">🎧 Ouvir Palavra</button>
+                    <button data-action="falar-lento" data-text="${Workspace.escapeHTML(target)}" class="ws-btn" style="background:#0F172A; color:#fff; padding:14px 24px; border-radius:30px; border:none; cursor:pointer; font-size:15px;">🐢 Ouvir Devagar</button>
+                </div>
                 <div style="display:flex; gap:16px; justify-content:center; margin-top:30px;">
-                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.a}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${this.desafioAtualObj.a}</button>
-                    <button data-action="verificar-minimal" data-choice="${this.desafioAtualObj.b}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${this.desafioAtualObj.b}</button>
+                    <button data-action="verificar-minimal" data-choice="${Workspace.escapeHTML(this.desafioAtualObj.a)}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(this.desafioAtualObj.a)}</button>
+                    <button data-action="verificar-minimal" data-choice="${Workspace.escapeHTML(this.desafioAtualObj.b)}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:20px; border-radius:16px; cursor:pointer; font-size:20px; font-weight:800; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(this.desafioAtualObj.b)}</button>
                 </div>
             </div>`;
     },
 
-   renderGamePicturePop(){
+    renderGamePicturePop(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'picture'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1393,40 +1527,48 @@ Workspace.Ingles = {
         
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center;">
-                <div style="width:160px; height:160px; border-radius:30px; background:#F8FAFC; border:4px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:0 auto 24px auto; font-size:80px; box-shadow:0 10px 20px rgba(0,0,0,0.05);">${pic.emoji}</div>
-                <div style="background:#fff; border:2px solid #E2E8F0; padding:24px; border-radius:20px;">
-                    <p style="font-weight:800; color:#4F46E5; margin-bottom:15px;">O Alquimista pede: Crie uma frase sobre esta figura!</p>
-                    <textarea id="ig-input" class="ig-textarea" placeholder="Ex: This is a delicious apple..." style="min-height:80px; text-align:center;"></textarea>
-                    <button data-action="verificar-envio" data-game="picturePop" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; margin-top:16px; padding:16px; border-radius:12px; border:none; cursor:pointer; font-weight:bold;">Submeter Visão 👁️‍🗨️</button>
+                <div style="width:150px; height:150px; border-radius:30px; background:#F8FAFC; border:4px solid #E2E8F0; display:flex; align-items:center; justify-content:center; margin:0 auto 14px auto; font-size:76px; box-shadow:0 10px 20px rgba(0,0,0,0.05);">${pic.emoji}</div>
+                
+                <div style="display:flex; justify-content:center; gap:10px; margin-bottom:14px;">
+                    <button data-action="revelar-dica-pic" class="ws-btn" style="background:#FEF3C7; color:#92400E; border:1px solid #FDE68A; padding:6px 14px; border-radius:20px; font-size:12px;">💡 Ver Dica</button>
+                    <button data-action="falar-frase" data-text="${Workspace.escapeHTML(pic.word)}" class="ws-btn" style="background:#EEF2FF; color:#4F46E5; border:1px solid #C7D2FE; padding:6px 14px; border-radius:20px; font-size:12px;">🔊 Ouvir Palavra</button>
+                </div>
+                <div id="ig-pic-hint-box" style="display:none; background:#F8FAFC; border:1px dashed #CBD5E1; padding:8px 14px; border-radius:10px; margin-bottom:14px; font-size:13px; color:#334155;">
+                    Palavra-alvo: <b style="color:#4F46E5;">${Workspace.escapeHTML(pic.word)}</b> ${pic.translation ? `(${Workspace.escapeHTML(pic.translation)})` : ''}
+                </div>
+
+                <div style="background:#fff; border:2px solid #E2E8F0; padding:20px; border-radius:20px;">
+                    <p style="font-weight:800; color:#4F46E5; margin:0 0 12px 0;">Escolha como deseja responder ao Alquimista:</p>
+                    <textarea id="ig-input" class="ig-textarea" placeholder="Escreva uma frase (Ex: This is a delicious ${Workspace.escapeHTML(pic.word)}...)" style="min-height:75px; text-align:center;"></textarea>
+                    <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+                        <button data-action="verificar-envio" data-game="picturePop" class="ws-btn" style="flex:1; min-width:180px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; padding:14px; border-radius:12px; border:none; cursor:pointer; font-weight:bold;">✍️ Avaliar Frase Escrita</button>
+                        <button data-action="iniciar-voz" data-tipo="picture" class="ws-btn" style="flex:1; min-width:180px; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:14px; border-radius:12px; border:none; cursor:pointer; font-weight:bold;">🎤 Pronunciar no Microfone</button>
+                    </div>
+                    <div id="ig-speechResult" style="margin-top:12px; font-weight:600;"></div>
                 </div>
             </div>`;
     },
 
-   // =========================================================================
-   // 🃏 JOGO DA MEMÓRIA: ILUSÃO DO MAGO
-   // =========================================================================
-   renderGameMemory(){
-        // Usa a base de palavras do WordSpark
+    // =========================================================================
+    // 🃏 JOGO DA MEMÓRIA: ILUSÃO DO MAGO
+    // =========================================================================
+    renderGameMemory(){
         const col = this.getColecaoPorJogo('wordSpark'); 
         if(!col || col.length < 3) {
             document.getElementById('modalBody').innerHTML = `<div style="text-align:center;padding:40px;color:#64748B;">Para jogar, precisa ter pelo menos 3 palavras no Banco de Vocabulário do Professor.</div>`;
             return;
         }
         
-        // Pesca até 6 palavras aleatórias
         let selectedItems = [...col].sort(()=> 0.5 - Math.random()).slice(0, 6);
         
-        // Cria os pares (Inglês e Português)
         let cards = [];
         selectedItems.forEach((item, index) => {
             cards.push({ id: `card_w_${index}`, text: item.word, matchId: index, type: 'en', originalId: item.id });
             cards.push({ id: `card_t_${index}`, text: item.translation, matchId: index, type: 'pt', originalId: item.id });
         });
         
-        // Baralha as cartas
         cards.sort(()=> 0.5 - Math.random());
         
-        // Variáveis de Estado do Jogo da Memória
         this.state._memoryCards = cards;
         this.state._memorySelected = [];
         this.state._memoryMatches = 0;
@@ -1450,27 +1592,23 @@ Workspace.Ingles = {
     },
 
     virarCartaMemoria(index) {
-        if (this.state._memoryLock) return; // Trava se já houver 2 cartas viradas
+        if (this.state._memoryLock) return;
         const cardEl = document.getElementById(`mem-card-${index}`);
-        if (cardEl.classList.contains('is-flipped')) return; // Trava se a carta já estiver virada
+        if (cardEl.classList.contains('is-flipped')) return;
 
-        // Vira a carta visualmente
         cardEl.classList.add('is-flipped');
         const cardData = this.state._memoryCards[index];
         
-        // Se for a palavra em Inglês, a IA dita a pronúncia!
         if (cardData.type === 'en') VoiceService.falar(cardData.text);
 
         this.state._memorySelected.push({ index, el: cardEl, data: cardData });
 
-        // Verifica se formou o par
         if (this.state._memorySelected.length === 2) {
             this.state._memoryLock = true;
             this.state._memoryAttempts++;
             const [c1, c2] = this.state._memorySelected;
 
             if (c1.data.matchId === c2.data.matchId) {
-                // ACERTOU O PAR
                 this.state._memoryMatches++;
                 document.getElementById(`mem-back-${c1.index}`).classList.add('correct');
                 document.getElementById(`mem-back-${c2.index}`).classList.add('correct');
@@ -1479,16 +1617,13 @@ Workspace.Ingles = {
                 this.state._memorySelected = [];
                 this.state._memoryLock = false;
                 
-                // Se encontrou todos os pares, vence o jogo!
                 if (this.state._memoryMatches === (this.state._memoryCards.length / 2)) {
                     setTimeout(() => this.vencerJogoMemoria(), 800);
                 }
             } else {
-                // ERROU O PAR
                 document.getElementById(`mem-back-${c1.index}`).classList.add('wrong');
                 document.getElementById(`mem-back-${c2.index}`).classList.add('wrong');
                 
-                // Aguarda 1.2s para o aluno decorar e desvira as cartas
                 setTimeout(() => {
                     c1.el.classList.remove('is-flipped');
                     c2.el.classList.remove('is-flipped');
@@ -1502,33 +1637,29 @@ Workspace.Ingles = {
     },
 
     vencerJogoMemoria() {
-        // Regista o progresso no Algoritmo SRS para todas as palavras treinadas!
         this.state._memoryOriginalIds.forEach(id => {
             this.updateSRS(id, 'memoryGame', true);
             this.marcarComoConcluido(id);
             this.superarErro(id);
         });
         
-        // Sistema Dinâmico de Recompensa (Baseado na quantidade de erros)
         const pares = this.state._memoryCards.length / 2;
-        let bonus = 100; // Excelente (poucos erros)
-        if (this.state._memoryAttempts > pares + 2) bonus = 60; // Médio
-        if (this.state._memoryAttempts > pares + 5) bonus = 30; // Sofreu muito
+        let bonus = 100;
+        if (this.state._memoryAttempts > pares + 2) bonus = 60;
+        if (this.state._memoryAttempts > pares + 5) bonus = 30;
         
-        // Ativa a sua função fantástica de recompensa e fecha o jogo!
         this.sucessoGenerico(bonus);
     },
 
     // =========================================================================
-   // 🔤 JOGO DA FORCA E VÍDEO QUIZ
-   // =========================================================================
-   renderGameHangman() {
+    // 🔤 JOGO DA FORCA E VÍDEO QUIZ
+    // =========================================================================
+    renderGameHangman() {
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'word'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         
         const w = this.desafioAtualObj;
-        // Prepara o estado do jogo da forca
         this.state._hangmanWord = w.word.toUpperCase().trim();
         this.state._hangmanGuessed = [];
         this.state._hangmanLives = 3;
@@ -1542,7 +1673,6 @@ Workspace.Ingles = {
         
         let displayWord = '';
         let won = true;
-        // Desenha a palavra ou os espaços em branco
         for(let char of w) {
             if(char === ' ' || char === '-') {
                 displayWord += char;
@@ -1554,7 +1684,6 @@ Workspace.Ingles = {
             }
         }
         
-        // Desenha o teclado virtual
         const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split('');
         const keyboardHtml = alphabet.map(letter => {
             let extraClass = ''; let disabled = '';
@@ -1566,14 +1695,14 @@ Workspace.Ingles = {
             return `<button class="key-btn ${extraClass}" ${disabled} data-action="verificar-forca" data-letra="${letter}">${letter}</button>`;
         }).join('');
         
-        // Corações de vida
         let hearts = '❤️'.repeat(this.state._hangmanLives) + '🤍'.repeat(3 - this.state._hangmanLives);
         
         document.getElementById('modalBody').innerHTML = `
             <div style="text-align:center;">
-                <div style="background:#F8FAFC; padding:10px; border-radius:10px; border:1px solid #E2E8F0; margin-bottom:15px;">
+                <div style="background:#F8FAFC; padding:12px; border-radius:10px; border:1px solid #E2E8F0; margin-bottom:15px;">
                     <p style="font-weight:700; color:#64748B; margin:0; font-size:14px;">Tradução / Pista:</p>
-                    <p style="font-weight:800; color:#0F172A; margin:5px 0 0 0; font-size:18px;">${Workspace.escapeHTML(this.desafioAtualObj.translation)}</p>
+                    <p style="font-weight:800; color:#0F172A; margin:5px 0 8px 0; font-size:18px;">${Workspace.escapeHTML(this.desafioAtualObj.translation)}</p>
+                    <button data-action="falar-lento" class="ws-btn" style="background:#4F46E5; color:#fff; padding:5px 14px; border-radius:16px; border:none; font-size:12px;">🎧 Ouvir Dica Sonora</button>
                 </div>
                 <div class="lives-box" title="Vidas restantes">${hearts}</div>
                 <div class="hangman-word">${displayWord}</div>
@@ -1581,15 +1710,16 @@ Workspace.Ingles = {
             </div>
         `;
         
-        // Valida Vitória ou Derrota
         if(won) {
+            VoiceService.falar(this.desafioAtualObj.word);
             setTimeout(() => {
                 this.updateSRS(this.desafioAtualObj.id, 'hangman', true);
                 this.superarErro(this.desafioAtualObj.id);
                 this.sucessoGenerico(75);
             }, 600);
         } else if (this.state._hangmanLives <= 0) {
-            document.getElementById('modalBody').innerHTML += `<div style="margin-top:20px; background:#FEF2F2; border:1px solid #EF4444; color:#991B1B; padding:15px; border-radius:10px; font-weight:800; font-size:16px;">💀 Fim de jogo! A palavra era:<br><span style="font-size:24px;">${w}</span></div>`;
+            VoiceService.falar(this.desafioAtualObj.word);
+            document.getElementById('modalBody').innerHTML += `<div style="margin-top:20px; background:#FEF2F2; border:1px solid #EF4444; color:#991B1B; padding:15px; border-radius:10px; font-weight:800; font-size:16px;">💀 Fim de jogo! A palavra era:<br><span style="font-size:24px;">${Workspace.escapeHTML(w)}</span></div>`;
             this.registrarErro(this.desafioAtualObj, 'hangman');
             setTimeout(() => this.falhaGenerica(), 3500);
         }
@@ -1600,15 +1730,15 @@ Workspace.Ingles = {
         this.desafioAtualObj = this.obterItemInteligente(col, 'quiz');
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q = this.desafioAtualObj;
+        const opcoesBaralhadas = this._embaralharOpcoes(q.options || []);
         
-        // Converte links normais do YouTube para formato iframe embed
         let embedUrl = q.videoUrl || '';
         if(embedUrl.includes('youtube.com/watch?v=')) {
             embedUrl = embedUrl.replace('watch?v=', 'embed/');
         } else if(embedUrl.includes('youtu.be/')) {
             embedUrl = embedUrl.replace('youtu.be/', 'youtube.com/embed/');
         }
-        if(embedUrl.includes('&')) embedUrl = embedUrl.split('&')[0]; // Remove tempos ou playlists anexadas
+        if(embedUrl.includes('&')) embedUrl = embedUrl.split('&')[0];
         
         document.getElementById('modalBody').innerHTML = `
             <div class="video-container">
@@ -1616,7 +1746,7 @@ Workspace.Ingles = {
             </div>
             <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:10px;">
-                ${q.options.map((o,i)=>`<button data-action="verificar-quiz" data-index="${i}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o)}</button>`).join('')}
+                ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>
         `;
     },
