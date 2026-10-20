@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-MG2NIYfk.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-DUPCmRqa.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -396,6 +396,14 @@
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg> Playlist
                     </button>
                 </div>
+
+                <!-- 🔍 BARRA DE PESQUISA INSTANTÂNEA NO FEED -->
+                <div style="position: relative; margin-bottom: 20px; width: 100%;">
+                    <span style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); font-size: 15px; color: #94a3b8; pointer-events: none;">🔍</span>
+                    <input type="text" id="ws-input-pesquisa-feed" placeholder="Pesquisar no Feed por assunto, palavra, autor ou ficheiro..." autocomplete="off" style="width: 100%; padding: 12px 42px 12px 44px; border-radius: 50px; border: 1px solid #e2e8f0; background: #ffffff; font-size: 13.5px; color: #334155; font-family: inherit; outline: none; box-shadow: 0 2px 6px rgba(0,0,0,0.03); transition: 0.2s;" onfocus="this.style.borderColor='#2563eb'; this.style.boxShadow='0 0 0 3px rgba(37, 99, 235, 0.1)';" onblur="this.style.borderColor='#e2e8f0'; this.style.boxShadow='0 2px 6px rgba(0,0,0,0.03)';" oninput="Workspace.Feed.pesquisarNoFeed(this.value)">
+                    <button id="ws-btn-limpar-pesquisa-feed" onclick="Workspace.Feed.limparPesquisaFeed()" style="display: none; position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: #f1f5f9; border: none; color: #64748b; width: 26px; height: 26px; border-radius: 50%; font-size: 12px; font-weight: bold; cursor: pointer; align-items: center; justify-content: center; transition: 0.2s;" onmouseover="this.style.background='#e2e8f0'; this.style.color='#ef4444';" onmouseout="this.style.background='#f1f5f9'; this.style.color='#64748b';" title="Limpar Pesquisa">✖</button>
+                </div>
+
                 <div id="ws-posts-area"><div style="text-align: center; padding: 40px; color: #999;"></div></div>
             </section>
         </main>

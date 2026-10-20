@@ -679,6 +679,21 @@ Workspace.Feed = {
         }
     },
 
+    pesquisarNoFeed: (termo) => {
+        Workspace.Feed.termoPesquisaFeed = String(termo || '').trim();
+        const btnLimpar = document.getElementById('ws-btn-limpar-pesquisa-feed');
+        if (btnLimpar) {
+            btnLimpar.style.display = Workspace.Feed.termoPesquisaFeed.length > 0 ? 'flex' : 'none';
+        }
+        Workspace.Feed.filtrarFeed(Workspace.Feed.filtroAtivo || 'todos');
+    },
+
+    limparPesquisaFeed: () => {
+        const input = document.getElementById('ws-input-pesquisa-feed');
+        if (input) input.value = '';
+        Workspace.Feed.pesquisarNoFeed('');
+    },
+
     filtrarPorAutor: (nomeAutor) => {
         if (!nomeAutor) return;
         Workspace.Feed.autorFiltroAtivo = String(nomeAutor).trim();
@@ -724,13 +739,24 @@ Workspace.Feed = {
             listaFiltrada = Workspace.Feed.todosOsPosts.filter(p => String(p.autorNome || '').trim().toLowerCase() === alvoLower);
         }
 
+        // 🔍 FILTRO DA BARRA DE PESQUISA INSTANTÂNEA (Texto, Autor, Turma ou Nome do Anexo)
+        if (Workspace.Feed.termoPesquisaFeed && Workspace.Feed.termoPesquisaFeed.length > 0) {
+            const termoLower = Workspace.Feed.termoPesquisaFeed.toLowerCase();
+            listaFiltrada = listaFiltrada.filter(p => {
+                const matchTexto = String(p.texto || '').toLowerCase().includes(termoLower);
+                const matchAutor = String(p.autorNome || '').toLowerCase().includes(termoLower);
+                const matchTurma = String(p.destinoNome || '').toLowerCase().includes(termoLower);
+                const matchAnexo = Array.isArray(p.anexos) && p.anexos.some(a => String(a.nome || '').toLowerCase().includes(termoLower));
+                return matchTexto || matchAutor || matchTurma || matchAnexo;
+            });
+        }
+
         const container = document.getElementById('ws-posts-area');
         if (container) {
             if (Workspace.Feed.videoObserver) Workspace.Feed.videoObserver.disconnect();
             container.innerHTML = ''; 
         }
 
-        // Barra visual de filtro por membro (aparece apenas quando estamos a filtrar por autor)
         let bannerAutor = document.getElementById('ws-banner-filtro-autor');
         if (tipoFiltro === 'autor' && Workspace.Feed.autorFiltroAtivo && container) {
             if (!bannerAutor) {
@@ -1057,7 +1083,7 @@ Workspace.Feed = {
 
     reagir: async (postId, tipo) => {
         const meuId = Workspace.usuario.id;
-        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+        const post = Workspace.Feed.postsCache.find(p => String(p.id) === String(postId)) || Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(postId));
         if (!post) return;
 
         const likesArr = Array.isArray(post.likes) ? post.likes : [];
@@ -1091,6 +1117,8 @@ Workspace.Feed = {
             }
         }
 
+        Workspace.Feed._atualizarPostNoCache(post);
+
         const btnLike = document.getElementById(`btn-like-${postId}`);
         const countLike = document.getElementById(`count-like-${postId}`);
         if (countLike) countLike.innerText = post.likes.length;
@@ -1110,10 +1138,105 @@ Workspace.Feed = {
             btnDislike.style.borderColor = euNaoCurti ? '#e74c3c' : 'transparent';
         }
 
+        const btnVerReacoes = document.getElementById(`btn-ver-reacoes-${postId}`);
+        const totalReacoes = (post.likes ? post.likes.length : 0) + (post.dislikes ? post.dislikes.length : 0);
+        if (btnVerReacoes) {
+            btnVerReacoes.style.display = totalReacoes > 0 ? 'inline-flex' : 'none';
+        }
+
         try {
             const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
             await Workspace.api(`/workspace/posts/${postId}/reagir`, 'PUT', { tipo: tipoParaEnviar, userId: meuId, autorNome: meuNome });
         } catch (e) {}
+    },
+
+    // 👥 ABRE O MODAL COM A LISTA DE QUEM CURTIU E NÃO CURTIU A PUBLICAÇÃO
+    verQuemReagiu: async (postId) => {
+        const post = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(postId)) || Workspace.Feed.postsCache.find(p => String(p.id) === String(postId));
+        if (!post) return;
+
+        const likesIds = Array.isArray(post.likes) ? post.likes : [];
+        const dislikesIds = Array.isArray(post.dislikes) ? post.dislikes : [];
+
+        if (likesIds.length === 0 && dislikesIds.length === 0) {
+            if (window.Workspace && Workspace.mostrarAviso) Workspace.mostrarAviso("Ainda não há reações nesta publicação.", "info");
+            return;
+        }
+
+        const modalId = 'ws-modal-quem-reagiu';
+        if (document.getElementById(modalId)) document.getElementById(modalId).remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = modalId;
+        overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100dvh; background:rgba(15, 23, 42, 0.75); z-index:100025; display:flex; align-items:center; justify-content:center; backdrop-filter:blur(5px); opacity:0; transition: opacity 0.2s ease;";
+
+        overlay.innerHTML = `
+            <div class="ws-card" style="width: 90%; max-width: 400px; max-height: 80vh; padding: 0; background: #fff; border-radius: 18px; display: flex; flex-direction: column; overflow: hidden; margin: 0; box-shadow: 0 20px 50px rgba(0,0,0,0.3); transform: scale(0.95); transition: transform 0.2s ease;">
+                <div style="padding: 16px 20px; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                    <h3 style="margin: 0; font-size: 16px; color: #1e293b; display: flex; align-items: center; gap: 8px;">👥 Reações da Publicação</h3>
+                    <button onclick="document.getElementById('${modalId}').remove()" style="background: #e2e8f0; border: none; color: #475569; width: 30px; height: 30px; border-radius: 50%; font-weight: bold; cursor: pointer;">✖</button>
+                </div>
+                <div id="ws-lista-quem-reagiu-corpo" style="padding: 15px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 10px;">
+                    <div style="text-align: center; padding: 30px; color: #94a3b8; font-size: 13px;">A carregar lista de membros... ⏳</div>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+        requestAnimationFrame(() => {
+            overlay.style.opacity = '1';
+            overlay.children[0].style.transform = 'scale(1)';
+        });
+
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) overlay.remove();
+        });
+
+        try {
+            const res = await Workspace.api('/workspace/posts/reacoes-detalhes', 'POST', { likesIds, dislikesIds });
+            const corpo = document.getElementById('ws-lista-quem-reagiu-corpo');
+            if (!corpo) return;
+
+            if (res && res.success) {
+                const renderizarLinhaMembro = (u, iconeReacao, corBadge) => {
+                    if (u.avatar && u.nome) {
+                        window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
+                        window.Workspace.avatarsCache[u.nome] = u.avatar;
+                    }
+                    const avatarHtml = window.Workspace.renderizarAvatar(u.nome, 38);
+                    const nomeSeguroJS = Workspace.Feed.limparTexto(u.nome).replace(/'/g, "\\'");
+                    return `
+                        <div onclick="document.getElementById('${modalId}').remove(); Workspace.Feed.abrirPerfilUsuario('${nomeSeguroJS}');" style="display: flex; align-items: center; justify-content: space-between; padding: 8px 10px; border-radius: 12px; border: 1px solid #f1f5f9; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='transparent'">
+                            <div style="display: flex; align-items: center; gap: 12px; min-width: 0;">
+                                ${avatarHtml}
+                                <div style="min-width: 0;">
+                                    <div style="font-size: 13.5px; font-weight: 700; color: #1e293b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${Workspace.Feed.limparTexto(u.nome)}</div>
+                                    <div style="font-size: 11px; color: #64748b; font-weight: 600;">${u.tipo || 'Aluno'}</div>
+                                </div>
+                            </div>
+                            <span style="background: ${corBadge}; padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold;">${iconeReacao}</span>
+                        </div>
+                    `;
+                };
+
+                let htmlFinal = '';
+                if (res.likes && res.likes.length > 0) {
+                    htmlFinal += `<div style="font-size: 11px; font-weight: 800; color: #16a34a; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px;">👍 Curtiram (${res.likes.length})</div>`;
+                    res.likes.forEach(u => { htmlFinal += renderizarLinhaMembro(u, '👍', '#dcfce7'); });
+                }
+                if (res.dislikes && res.dislikes.length > 0) {
+                    htmlFinal += `<div style="font-size: 11px; font-weight: 800; color: #dc2626; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 10px;">👎 Não Curtiram (${res.dislikes.length})</div>`;
+                    res.dislikes.forEach(u => { htmlFinal += renderizarLinhaMembro(u, '👎', '#fee2e2'); });
+                }
+
+                corpo.innerHTML = htmlFinal || '<div style="text-align: center; padding: 20px; color: #94a3b8;">Nenhuma reação encontrada.</div>';
+            } else {
+                throw new Error();
+            }
+        } catch (e) {
+            const corpo = document.getElementById('ws-lista-quem-reagiu-corpo');
+            if (corpo) corpo.innerHTML = '<div style="text-align: center; padding: 20px; color: #ef4444;">Erro ao carregar os membros que reagiram.</div>';
+        }
     },
 
     toggleComentarios: (postId) => {
@@ -1477,7 +1600,7 @@ Workspace.Feed = {
 
                     ${Workspace.Feed.renderizarAnexos(p.anexos, p.id)}
                     
-                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap;">
+                    <div style="margin-top:20px; padding-top:15px; border-top:1px solid #eee; display:flex; gap:8px; flex-wrap:wrap; align-items:center;">
                         <button id="btn-like-${p.id}" class="ws-btn-gamified" style="background:${euCurti ? '#eafaf1' : '#f0f2f5'}; color:${euCurti ? '#27ae60' : '#555'}; border: 1px solid ${euCurti ? '#27ae60' : 'transparent'}; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.reagir('${p.id}', 'like')">
                             👍 <span id="count-like-${p.id}">${likesArr.length}</span>
                         </button>
@@ -1488,6 +1611,10 @@ Workspace.Feed = {
                         
                         <button class="ws-btn-gamified" style="background:#f0f2f5; color:#555; border:none; padding:8px 16px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:0.2s;" onclick="Workspace.Feed.toggleComentarios('${p.id}')">
                             💬 <span id="count-comment-${p.id}">${p.comentarios ? p.comentarios.length : 0}</span>
+                        </button>
+
+                        <button id="btn-ver-reacoes-${p.id}" class="ws-btn-gamified" style="display:${(likesArr.length + dislikesArr.length) > 0 ? 'inline-flex' : 'none'}; margin-left:auto; background:#eff6ff; color:#2563eb; border:1px solid #bfdbfe; padding:7px 14px; border-radius:20px; font-size:12px; font-weight:700; cursor:pointer; align-items:center; gap:5px; transition:0.2s;" onclick="Workspace.Feed.verQuemReagiu('${p.id}')" title="Ver quem reagiu a esta publicação">
+                            👥 Ver quem curtiu
                         </button>
                     </div>
 
