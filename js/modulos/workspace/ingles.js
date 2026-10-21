@@ -115,9 +115,10 @@ Workspace.Ingles = {
         _dbLoaded: false, 
         _roleplayChat: [],
         magoConfig: { vozAtiva: true },
-        streak:1, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
+        streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
+
     recognition:null, jogoAtual:null, desafioAtualObj:null,
 
     defaults: {
@@ -176,7 +177,7 @@ Workspace.Ingles = {
         this.abrirBau(true);
     },
 
-    // 🔥 Calcula e atualiza automaticamente a ofensiva diária (Streak) do aluno
+    // 🔥 Calcula a ofensiva diária (Streak) e aciona o Escudo Protetor se o aluno tiver faltado!
     verificarStreakDiario(){
         const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
         const hoje = new Date();
@@ -190,7 +191,7 @@ Workspace.Ingles = {
             return;
         }
 
-        if (ultimaData === hojeStr) return; // Já contabilizou hoje
+        if (ultimaData === hojeStr) return; // Já treinou hoje
 
         const ontem = new Date(hoje);
         ontem.setDate(hoje.getDate() - 1);
@@ -198,6 +199,13 @@ Workspace.Ingles = {
 
         if (ultimaData === ontemStr) {
             this.state.streak = (parseInt(this.state.streak) || 1) + 1;
+        } else if ((parseInt(this.state.streakFreeze) || 0) > 0) {
+            // 🛡️ O ESCUDO SALVA A OFENSIVA DO ALUNO!
+            this.state.streakFreeze = Math.max(0, (parseInt(this.state.streakFreeze) || 0) - 1);
+            localStorage.setItem(`${userK}_freeze`, String(this.state.streakFreeze));
+            setTimeout(() => {
+                this.mostrarAvisoLocal('🛡️ O seu Escudo de Ofensiva protegeu os seus dias seguidos de estudo!', 'success');
+            }, 800);
         } else {
             this.state.streak = 1;
         }
@@ -295,6 +303,10 @@ Workspace.Ingles = {
                 this.state.coins = (bronzeNuvem > (coinsLocal.bronze || 0)) ? statsNuvem.coins : coinsLocal;
             }catch{ this.state.coins={bronze:0,prata:0,ouro:0}; }
 
+            const freezeLocal = parseInt(localStorage.getItem(`${userK}_freeze`) || '0');
+            const freezeNuvem = parseInt(statsNuvem?.streakFreeze || '0');
+            this.state.streakFreeze = Math.max(freezeLocal, freezeNuvem);
+
             this.state.streak = parseInt(localStorage.getItem(`${userK}_streak`) || statsNuvem?.streak || '1');
             this.verificarStreakDiario();
 
@@ -316,6 +328,7 @@ Workspace.Ingles = {
         try{
             localStorage.setItem(`${userK}_coins`, JSON.stringify(this.state.coins));
             localStorage.setItem(`${userK}_streak`, String(this.state.streak));
+            localStorage.setItem(`${userK}_freeze`, String(this.state.streakFreeze || 0));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
             localStorage.setItem(`${userK}_srs`, JSON.stringify(this.state.srs));
         }catch{}
@@ -330,6 +343,7 @@ Workspace.Ingles = {
                     nome: nomeRealAluno,
                     coins: this.state.coins,
                     streak: this.state.streak,
+                    streakFreeze: this.state.streakFreeze || 0,
                     srs: this.state.srs,
                     itensConcluidos: this.state.itensConcluidos
                 }).catch(()=>{});
@@ -650,11 +664,14 @@ Workspace.Ingles = {
                         </div>
                     </div>
                     <div class="bau-actions">
-                        <!-- 🚀 A NOVA CARTEIRA FINANCEIRA (SISTEMA DE LIGAS) -->
+                       <!-- 🚀 A NOVA CARTEIRA FINANCEIRA (SISTEMA DE LIGAS + ESCUDO DE OFENSIVA) -->
                         <div class="ig-wallet" id="xpBadge">
                             <div id="leagueBadge" class="ig-league-badge liga-bronze">🥉 Bronze</div>
                             <div class="ig-wallet-item streak" title="Dias Seguidos de Estudo">🔥 <span id="streakCount">1</span>d</div>
-                            <div id="coinBag" class="ig-coin-bag" title="Total de Moedas Acumuladas">💰 <span id="coinsCount">0</span></div>
+                            <button type="button" data-action="comprar-escudo" id="freezeBadge" class="ig-wallet-item" style="display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:12px; font-size:13px; font-weight:800; color:#0284c7; background:#e0f2fe; border:1px solid #7dd3fc; border-bottom:2px solid #38bdf8; cursor:pointer; transition:0.2s;" title="Escudo de Ofensiva: Protege os seus dias seguidos se faltar 1 dia (Clique para comprar por 300 moedas)">
+                                🛡️ <span id="freezeCount">0</span>/2
+                            </button>
+                            <div id="coinBag" class="ig-coin-bag" title="Saldo Disponível de Moedas">💰 <span id="coinsCount">0</span></div>
                         </div>
                         
                         <!-- 🚀 O NOVO TOGGLE MODERNO -->
@@ -676,7 +693,6 @@ Workspace.Ingles = {
                             <button class="ig-side-item" data-action="render-tab" data-tab="laboratorio" style="border-color:#10B981; color:#059669; background:#ECFDF5; font-weight:800;">🧪 Laboratório IA</button>
                         </div>
                         <div class="content">
-                            <!-- Os painéis são renderizados via JS -->
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
@@ -686,14 +702,12 @@ Workspace.Ingles = {
                         </div>
                     </section>
 
-                  <section id="alunoView" class="view">
-                        <!-- 🚀 O Letreiro Animado (Ranking Top 9) -->
+                    <section id="alunoView" class="view">
                         <div class="marquee-wrapper" id="ig-marquee-wrapper" style="display:none;">
                             <div class="marquee-title">🏆 Top 9 Bilionários da Escola 🏆</div>
                             <div class="marquee-track" id="ig-marquee-track"></div>
                         </div>
 
-                        <!-- 🚀 A GRELHA DE JOGOS (Corrigido: Este elemento não pode sumir!) -->
                         <div class="games-grid" id="gamesGrid"></div>
                     </section>
                 </main>
@@ -716,7 +730,7 @@ Workspace.Ingles = {
         `;
     },
 
- atualizarHUD(valorAntigo = null){
+    atualizarHUD(valorAntigo = null){
         if (this.state.coins && (this.state.coins.prata > 0 || this.state.coins.ouro > 0)) {
             this.state.coins.bronze = (this.state.coins.bronze || 0) + (this.state.coins.prata * 100) + (this.state.coins.ouro * 10000);
             this.state.coins.prata = 0;
@@ -726,6 +740,7 @@ Workspace.Ingles = {
 
         const bzEl = document.getElementById('coinsCount');
         const stEl = document.getElementById('streakCount');
+        const frEl = document.getElementById('freezeCount');
         const leagueBadge = document.getElementById('leagueBadge');
         const coinBag = document.getElementById('coinBag');
         
@@ -733,7 +748,6 @@ Workspace.Ingles = {
         const recordeMoedas = Math.max(totalMoedas, this.state.coins?.maiorSaldo || 0);
         if (this.state.coins) this.state.coins.maiorSaldo = recordeMoedas;
         
-        // 🛡️ A Liga baseia-se no maiorSaldo para que o aluno nunca seja rebaixado ao gastar moedas em ajudas!
         let ligaInfo = { classe: 'liga-bronze', texto: '🥉 Bronze' };
         if (recordeMoedas >= 500000000) {
             ligaInfo = { classe: 'liga-diamante', texto: '💎 Diamante' };
@@ -761,6 +775,7 @@ Workspace.Ingles = {
             }
         }
         if (stEl) stEl.textContent = this.state.streak || 1;
+        if (frEl) frEl.textContent = this.state.streakFreeze || 0;
     },
 
     ganharCoins(tipo, qtd){
@@ -862,6 +877,30 @@ Workspace.Ingles = {
                 document.getElementById('professorView').classList.add('hidden');
             }
 
+            if(a === 'comprar-escudo') {
+                const escudosAtuais = parseInt(this.state.streakFreeze) || 0;
+                if (escudosAtuais >= 2) {
+                    return this.mostrarAvisoLocal('🛡️ Já possui a carga máxima de 2 Escudos de Ofensiva!', 'warning');
+                }
+                const confirmarCompra = () => {
+                    if (!this.gastarCoins(300)) return;
+                    this.state.streakFreeze = escudosAtuais + 1;
+                    this.atualizarHUD();
+                    this.saveDados();
+                    this.mostrarAvisoLocal(`🛡️ Escudo de Ofensiva equipado (${this.state.streakFreeze}/2)! A sua sequência está protegida!`, 'success');
+                };
+
+                if (window.Workspace?.Feed?.confirmarAcao) {
+                    window.Workspace.Feed.confirmarAcao(
+                        '🛡️ Comprar Escudo de Ofensiva?',
+                        `Deseja gastar 🪙 300 moedas para equipar 1 Escudo Protetor? Se você faltar 1 dia de treino, o escudo será ativado automaticamente para salvar os seus ${this.state.streak || 1} dia(s) de ofensiva!`,
+                        confirmarCompra
+                    );
+                } else if (confirm('Deseja comprar 1 Escudo de Ofensiva por 300 moedas?')) {
+                    confirmarCompra();
+                }
+                return;
+            }
             if(a === 'fechar-jogo') this.fecharJogo();
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
