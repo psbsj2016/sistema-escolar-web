@@ -716,8 +716,7 @@ Workspace.Ingles = {
         `;
     },
 
-  atualizarHUD(valorAntigo = null){
-        // 🚀 MIGRAR MOEDAS ANTIGAS SILENCIOSAMENTE: Converte a carteira velha para o saldo unificado!
+ atualizarHUD(valorAntigo = null){
         if (this.state.coins && (this.state.coins.prata > 0 || this.state.coins.ouro > 0)) {
             this.state.coins.bronze = (this.state.coins.bronze || 0) + (this.state.coins.prata * 100) + (this.state.coins.ouro * 10000);
             this.state.coins.prata = 0;
@@ -731,14 +730,16 @@ Workspace.Ingles = {
         const coinBag = document.getElementById('coinBag');
         
         const totalMoedas = this.state.coins?.bronze || 0;
+        const recordeMoedas = Math.max(totalMoedas, this.state.coins?.maiorSaldo || 0);
+        if (this.state.coins) this.state.coins.maiorSaldo = recordeMoedas;
         
-        // 🚀 O NOVO SISTEMA DE LIGAS
+        // 🛡️ A Liga baseia-se no maiorSaldo para que o aluno nunca seja rebaixado ao gastar moedas em ajudas!
         let ligaInfo = { classe: 'liga-bronze', texto: '🥉 Bronze' };
-        if (totalMoedas >= 500000000) {
+        if (recordeMoedas >= 500000000) {
             ligaInfo = { classe: 'liga-diamante', texto: '💎 Diamante' };
-        } else if (totalMoedas >= 1000000) {
+        } else if (recordeMoedas >= 1000000) {
             ligaInfo = { classe: 'liga-ouro', texto: '🥇 Ouro' };
-        } else if (totalMoedas >= 100000) {
+        } else if (recordeMoedas >= 100000) {
             ligaInfo = { classe: 'liga-prata', texto: '🥈 Prata' };
         }
 
@@ -747,13 +748,12 @@ Workspace.Ingles = {
             leagueBadge.innerHTML = ligaInfo.texto;
         }
 
-        // 🚀 O EFEITO VÍCIO: Rola os números e faz o saco pular!
         if (bzEl) {
             if (valorAntigo !== null && valorAntigo !== totalMoedas) {
-                this.animarContador('coinsCount', valorAntigo, totalMoedas, 1200); // 1.2 segundos rodando
+                this.animarContador('coinsCount', valorAntigo, totalMoedas, 900);
                 if (coinBag) {
                     coinBag.classList.remove('bounce-active');
-                    void coinBag.offsetWidth; // Força recomeço da animação
+                    void coinBag.offsetWidth;
                     coinBag.classList.add('bounce-active');
                 }
             } else {
@@ -764,19 +764,29 @@ Workspace.Ingles = {
     },
 
     ganharCoins(tipo, qtd){
-        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0};
-        
-        // Guarda o valor que tínhamos antes do acerto
+        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0, maiorSaldo:0};
         const valorAntigo = this.state.coins.bronze || 0;
-        
-        // Agora usamos o "bronze" como a moeda única universal do jogo
-        this.state.coins.bronze += qtd; 
+        this.state.coins.bronze = valorAntigo + qtd;
+        this.state.coins.maiorSaldo = Math.max(this.state.coins.bronze, this.state.coins.maiorSaldo || 0);
         
         this.tocarSom('coin'); 
-        
-        // Passa o valor antigo para o HUD calcular a animação de rolagem
         this.atualizarHUD(valorAntigo);
         this.saveDados();
+    },
+
+    // 💰 Desconta moedas da carteira quando o aluno compra uma ajuda ou item na loja
+    gastarCoins(custo){
+        this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0, maiorSaldo:0};
+        const saldoAtual = this.state.coins.bronze || 0;
+        if (saldoAtual < custo) {
+            this.mostrarAvisoLocal(`Moedas insuficientes! Precisa de 🪙 ${custo} moedas.`, 'warning');
+            return false;
+        }
+        const valorAntigo = saldoAtual;
+        this.state.coins.bronze = saldoAtual - custo;
+        this.atualizarHUD(valorAntigo);
+        this.saveDados();
+        return true;
     },
 
     animarContador: function(id, start, end, duration) {
@@ -887,8 +897,63 @@ Workspace.Ingles = {
                     if (ultimaIA) VoiceService.falar(ultimaIA.text, { isMago: true });
                 }
             }
-            if(a === 'ditar-para-input'){
+           if(a === 'ditar-para-input'){
                 this.ditarParaInput(b);
+            }
+            if(a === 'ajuda-5050'){
+                if(!cur) return;
+                const botoesOpcoes = Array.from(document.querySelectorAll('#modalBody [data-action="verificar-quiz"], #modalBody [data-action="verificar-picker"]'));
+                const respostaCerta = (cur.correct !== undefined && cur.correct !== null) ? parseInt(cur.correct) : (this.jogoAtual === 'wordPicker' ? 0 : 1);
+                const erradosDisponiveis = botoesOpcoes.filter(btn => parseInt(btn.dataset.index) !== respostaCerta && !btn.disabled);
+
+                if(erradosDisponiveis.length === 0) {
+                    return this.mostrarAvisoLocal('As opções incorretas já foram eliminadas!', 'warning');
+                }
+                if(!this.gastarCoins(30)) return;
+
+                const qtdCortar = Math.max(1, Math.floor(erradosDisponiveis.length / 2));
+                erradosDisponiveis.slice(0, qtdCortar).forEach(btn => {
+                    btn.disabled = true;
+                    btn.style.opacity = '0.35';
+                    btn.style.textDecoration = 'line-through';
+                    btn.style.pointerEvents = 'none';
+                });
+                b.disabled = true;
+                b.innerHTML = '⚡ 50/50 Usado';
+                b.style.opacity = '0.5';
+                this.mostrarAvisoLocal('⚡ Feitiço 50/50! Opção incorreta eliminada!', 'success');
+            }
+            if(a === 'ajuda-lupa'){
+                if(!cur || !cur.phrase) return;
+                if(!this.gastarCoins(25)) return;
+
+                const palavras = cur.phrase.trim().split(/\s+/);
+                const qtdRevelar = Math.max(1, Math.ceil(palavras.length / 2));
+                const inicioRevelado = palavras.slice(0, qtdRevelar).join(' ') + ' ...';
+                const traducaoDica = cur.translation ? `<br><small style="color:#64748B;">Tradução: ${Workspace.escapeHTML(cur.translation)}</small>` : '';
+
+                const fbBox = document.getElementById('ig-listen-feedback');
+                if(fbBox) {
+                    fbBox.style.display = 'block';
+                    fbBox.innerHTML = `<div style="background:#FEF3C7; border:1px solid #F59E0B; color:#92400E; padding:10px 14px; border-radius:10px; font-size:13.5px; margin-top:12px;">🔍 <b>Pista do Oráculo:</b> "${Workspace.escapeHTML(inicioRevelado)}"${traducaoDica}</div>`;
+                }
+                b.disabled = true;
+                b.innerHTML = '🔍 Pista Revelada';
+                b.style.opacity = '0.5';
+            }
+            if(a === 'ajuda-forca'){
+                if(!this.state._hangmanWord) return;
+                const w = this.state._hangmanWord;
+                const faltam = w.split('').filter(c => c !== ' ' && c !== '-' && !this.state._hangmanGuessed.includes(c));
+                if(faltam.length === 0) return;
+
+                if(!this.gastarCoins(40)) return;
+
+                const letraSorteada = faltam[Math.floor(Math.random() * faltam.length)];
+                this.state._hangmanGuessed.push(letraSorteada);
+                if(this.state._hangmanLives < 3) this.state._hangmanLives++;
+                this.mostrarAvisoLocal(`💡 Letra "${letraSorteada}" revelada + ❤️ Proteção!`, 'success');
+                this.atualizarTelaForca();
             }
             if(a === 'iniciar-voz'){
                 const esperado = cur?.word||cur?.phrase||this.state._minimalTarget;
@@ -1385,7 +1450,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-    renderGameListenType(){
+   renderGameListenType(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1395,6 +1460,7 @@ Workspace.Ingles = {
                 <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                     <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🔊 Tocar Áudio</button>
                     <button data-action="falar-lento" class="ws-btn" style="background:#0F172A; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🐢 Tocar Devagar</button>
+                    <button data-action="ajuda-lupa" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:12px 18px; border-radius:20px; cursor:pointer; font-size:13px;">🔍 Pista (-25 🪙)</button>
                 </div>
                 <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;" onkeydown="if(event.key==='Enter') document.querySelector('[data-action=\\'verificar-listen\\']')?.click()">
                 <div id="ig-listen-feedback" style="display:none;"></div>
@@ -1410,7 +1476,10 @@ Workspace.Ingles = {
         const opcoesBaralhadas = this._embaralharOpcoes(q.options || []);
 
         document.getElementById('modalBody').innerHTML=`
-            <div class="ig-big-phrase" style="font-size:22px;">${Workspace.escapeHTML(q.question)}</div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
+            </div>
+            <div class="ig-big-phrase" style="font-size:22px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
@@ -1424,7 +1493,10 @@ Workspace.Ingles = {
         const opcoesBaralhadas = this._embaralharOpcoes(s.options || []);
 
         document.getElementById('modalBody').innerHTML=`
-            <div class="ig-big-phrase" style="color:#4F46E5;">${Workspace.escapeHTML(s.text)}</div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
+            </div>
+            <div class="ig-big-phrase" style="color:#4F46E5; margin-top:0;">${Workspace.escapeHTML(s.text)}</div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-picker" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
@@ -1748,7 +1820,7 @@ Workspace.Ingles = {
         this.atualizarTelaForca();
     },
 
-    atualizarTelaForca() {
+   atualizarTelaForca() {
         const w = this.state._hangmanWord;
         const guessed = this.state._hangmanGuessed;
         
@@ -1783,7 +1855,10 @@ Workspace.Ingles = {
                 <div style="background:#F8FAFC; padding:12px; border-radius:10px; border:1px solid #E2E8F0; margin-bottom:15px;">
                     <p style="font-weight:700; color:#64748B; margin:0; font-size:14px;">Tradução / Pista:</p>
                     <p style="font-weight:800; color:#0F172A; margin:5px 0 8px 0; font-size:18px;">${Workspace.escapeHTML(this.desafioAtualObj.translation)}</p>
-                    <button data-action="falar-lento" class="ws-btn" style="background:#4F46E5; color:#fff; padding:5px 14px; border-radius:16px; border:none; font-size:12px;">🎧 Ouvir Dica Sonora</button>
+                    <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
+                        <button data-action="falar-lento" class="ws-btn" style="background:#4F46E5; color:#fff; padding:5px 14px; border-radius:16px; border:none; font-size:12px;">🎧 Ouvir Dica Sonora</button>
+                        <button data-action="ajuda-forca" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:5px 14px; border-radius:16px; font-size:12px; cursor:pointer;">💡 Revelar Letra + ❤️ (-40 🪙)</button>
+                    </div>
                 </div>
                 <div class="lives-box" title="Vidas restantes">${hearts}</div>
                 <div class="hangman-word">${displayWord}</div>
@@ -1824,6 +1899,9 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML = `
             <div class="video-container">
                 <iframe src="${Workspace.escapeHTML(embedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            </div>
+            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
             </div>
             <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:10px;">
