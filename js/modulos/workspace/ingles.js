@@ -517,8 +517,10 @@ Workspace.Ingles = {
             .modal-body { padding: 30px 20px; overflow-y: auto; flex: 1; display: flex; flex-direction: column; align-items: center; }
             .modal-body > * { width: 100%; max-width: 650px; margin: auto; }
             
-            /* INPUTS & TEXT */
-            .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; }
+            /* INPUTS & TEXT + PALAVRAS CLICÁVEIS (TAP-TO-SPEAK) */
+            .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; line-height: 1.5; }
+            .ig-tap-word { cursor: pointer; border-bottom: 2px dotted rgba(79, 70, 229, 0.35); border-radius: 6px; padding: 1px 3px; transition: all 0.15s ease; display: inline-block; }
+            .ig-tap-word:hover, .ig-tap-word:active { background: #EEF2FF; color: #4F46E5; border-bottom-color: #4F46E5; transform: translateY(-1px); }
             .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 10px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px 14px; box-sizing: border-box; outline: none; transition: 0.2s; font-family:'Inter', sans-serif;}
             .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
             
@@ -927,10 +929,21 @@ Workspace.Ingles = {
                 else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.95, isMago:false});
                 else if(cur?.word) VoiceService.falar(cur.word, {rate:0.95, isMago:false});
             }
-            if(a === 'falar-lento'){
+          if(a === 'falar-lento'){
                 if(b.dataset.text) VoiceService.falar(b.dataset.text, {rate:0.62, isMago:false});
                 else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.62, isMago:false});
                 else if(cur?.word) VoiceService.falar(cur.word, {rate:0.62, isMago:false});
+            }
+            if(a === 'falar-palavra-isolada'){
+                e.stopPropagation();
+                const palavraClicada = (b.dataset.word ? b.dataset.word : '').trim();
+                if(palavraClicada){
+                    b.style.background = '#C7D2FE';
+                    setTimeout(() => { b.style.background = ''; }, 450);
+                    VoiceService.falar(palavraClicada, {rate:0.82, isMago:false});
+                    this.mostrarAvisoLocal(`🔊 "${Workspace.escapeHTML(palavraClicada)}"`, 'success');
+                }
+                return;
             }
             if(a === 'revelar-dica-pic'){
                 const boxDica = document.getElementById('ig-pic-hint-box');
@@ -1166,7 +1179,7 @@ Workspace.Ingles = {
                                         <b>🎭 Personagem:</b>
                                         <button data-action="falar-frase" data-text="${Workspace.escapeHTML(r.npcResponse)}" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:4px 12px; border-radius:14px; font-size:11px;">🔊 Ouvir</button>
                                     </div>
-                                    ${Workspace.escapeHTML(r.npcResponse)}
+                                    ${this._tornarPalavrasClicaveis(r.npcResponse)}
                                 </div>
                                 <textarea id="ig-input" class="ig-textarea" placeholder="Escreva ou dite no microfone o que responde agora..." style="min-height:80px; margin-top:12px; border-color:#818CF8;"></textarea>
                                 <div style="display:flex; gap:10px; margin-top:12px; flex-wrap:wrap;">
@@ -1602,6 +1615,22 @@ Workspace.Ingles = {
         }, 1500);
     },
 
+    // 🔊 Transforma cada palavra de uma frase em inglês num elemento clicável para ouvir a pronúncia isolada
+    _tornarPalavrasClicaveis(texto) {
+        if (!texto) return '';
+        return String(texto).split(/(\s+)/).map(parte => {
+            if (/^\s+$/.test(parte)) return parte;
+            // Mantém lacunas como "_____" sem clique de pronúncia
+            const palavraLimpa = parte.replace(/^[^a-zA-Z0-9']+|[^a-zA-Z0-9']+$/g, '');
+            if (!palavraLimpa || /^_+$/.test(parte)) {
+                return Workspace.escapeHTML(parte);
+            }
+            const seguraHTML = Workspace.escapeHTML(parte);
+            const seguraAttr = Workspace.escapeHTML(palavraLimpa);
+            return `<span class="ig-tap-word" data-action="falar-palavra-isolada" data-word="${seguraAttr}" title="Clique para ouvir a pronúncia de '${seguraAttr}'">${seguraHTML}</span>`;
+        }).join('');
+    },
+
     // 🎲 Baralha as opções do Quiz e da Poção Sintática mantendo o índice original intacto
     _embaralharOpcoes(opcoes = []) {
         const mapeadas = opcoes.map((texto, indexOriginal) => ({ texto, indexOriginal }));
@@ -1628,7 +1657,7 @@ Workspace.Ingles = {
         if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
         if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') {
-            const daPiscina = (this.state.pool || []).filter(p => p.type === 'answerQuest' || p.type === 'questionMaker');
+            const daPiscina = (this.state.pool ? this.state.pool : []).filter(p => p.type === 'answerQuest' || p.type === 'questionMaker');
             const doProfessor = (this.state.answerStatements && this.state.answerStatements.length) ? this.state.answerStatements : this.defaults.answerStatements;
             return [...daPiscina, ...doProfessor];
         }
@@ -1667,7 +1696,7 @@ Workspace.Ingles = {
         }
 
         const ids = colecao.map(i=>i.id);
-        this.state.itensConcluidos = (this.state.itensConcluidos||[]).filter(id=>!ids.includes(id));
+        this.state.itensConcluidos = (this.state.itensConcluidos ? this.state.itensConcluidos : []).filter(id=>!ids.includes(id));
         this.saveDados();
         
         this.renderDesafioAtual();
@@ -1676,7 +1705,7 @@ Workspace.Ingles = {
     renderGameCapa(){
         const game = this.defaults.games.find(g=>g.id===this.jogoAtual);
         const col = this.getColecaoDoJogoAtual();
-        const totalItens = (col||[]).length;
+        const totalItens = (col ? col : []).length;
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center; padding:20px 0;">
                 <div style="font-size:60px; margin-bottom:16px;">${game.icon}</div>
@@ -1699,12 +1728,12 @@ Workspace.Ingles = {
         
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center;">
-                <div class="ig-big-phrase" style="font-size:32px; color:#4F46E5;">${Workspace.escapeHTML(w.word)}</div>
+                <div class="ig-big-phrase" style="font-size:32px; color:#4F46E5;">${this._tornarPalavrasClicaveis(w.word)}</div>
                 <div style="display:flex; justify-content:center; gap:10px; margin-bottom:10px;">
                     <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:8px 16px; border-radius:20px; border:none; font-size:13px;">🔊 Ouvir Palavra</button>
                     <button data-action="falar-lento" class="ws-btn" style="background:#475569; color:#fff; padding:8px 16px; border-radius:20px; border:none; font-size:13px;">🐢 Lento</button>
                 </div>
-                <p style="font-weight:700; color:#64748B;">Tradução: ${Workspace.escapeHTML(w.translation||'')}</p>
+                <p style="font-weight:700; color:#64748B;">Tradução: ${Workspace.escapeHTML(w.translation ? w.translation : '')}</p>
                 <p style="font-weight:600; margin-top:20px;">Crie uma frase em inglês usando esta palavra:</p>
                 <textarea id="ig-input" class="ig-textarea" placeholder="Type your sentence here..." style="min-height:100px; margin-top:10px;"></textarea>
                 <button data-action="verificar-wordSpark" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:16px; border-radius:12px; margin-top:16px; cursor:pointer;">Lançar Feitiço ✨</button>
@@ -1717,9 +1746,10 @@ Workspace.Ingles = {
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const p = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
-            <div class="ig-big-phrase">${Workspace.escapeHTML(p.phrase)}</div>
+            <div style="font-size:11px; color:#64748B; text-align:center; font-weight:700; margin-bottom:4px;">💡 Dica: Toque em qualquer palavra abaixo para ouvir a pronúncia isolada!</div>
+            <div class="ig-big-phrase" style="margin-top:4px;">${this._tornarPalavrasClicaveis(p.phrase)}</div>
             <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
-                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir Normal</button>
+                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir Frase</button>
                 <button data-action="falar-lento" class="ws-btn" style="background:#475569; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🐢 Ouvir Devagar</button>
             </div>
             <div style="background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0; text-align:center;">
@@ -1729,7 +1759,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-   renderGameListenType(){
+    renderGameListenType(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1752,13 +1782,14 @@ Workspace.Ingles = {
         this.desafioAtualObj = this.obterItemInteligente(col, 'quiz'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const q = this.desafioAtualObj;
-        const opcoesBaralhadas = this._embaralharOpcoes(q.options || []);
+        const opcoesBaralhadas = this._embaralharOpcoes(q.options ? q.options : []);
 
         document.getElementById('modalBody').innerHTML=`
-            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                <span style="font-size:11px; color:#64748B; font-weight:700;">💡 Toque numa palavra para ouvir</span>
                 <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
             </div>
-            <div class="ig-big-phrase" style="font-size:22px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
+            <div class="ig-big-phrase" style="font-size:22px; margin-top:0;">${this._tornarPalavrasClicaveis(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:16px; border-radius:12px; cursor:pointer; text-align:left; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
@@ -1769,13 +1800,14 @@ Workspace.Ingles = {
         this.desafioAtualObj = this.obterItemInteligente(col, 'picker'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const s = this.desafioAtualObj;
-        const opcoesBaralhadas = this._embaralharOpcoes(s.options || []);
+        const opcoesBaralhadas = this._embaralharOpcoes(s.options ? s.options : []);
 
         document.getElementById('modalBody').innerHTML=`
-            <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
+                <span style="font-size:11px; color:#64748B; font-weight:700;">💡 Toque numa palavra para ouvir</span>
                 <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
             </div>
-            <div class="ig-big-phrase" style="color:#4F46E5; margin-top:0;">${Workspace.escapeHTML(s.text)}</div>
+            <div class="ig-big-phrase" style="color:#4F46E5; margin-top:0;">${this._tornarPalavrasClicaveis(s.text)}</div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-picker" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 30px; border-radius:30px; cursor:pointer; font-size:16px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>`;
@@ -1792,7 +1824,7 @@ Workspace.Ingles = {
 
         document.getElementById('modalBody').innerHTML=`
             <div style="text-align:center; margin-bottom:10px;"><span style="background:#0F172A; color:#fff; padding:6px 12px; border-radius:20px; font-size:13px; font-weight:700;">${task}</span></div>
-            <div class="ig-big-phrase">${Workspace.escapeHTML(phrase.phrase)}</div>
+            <div class="ig-big-phrase">${this._tornarPalavrasClicaveis(phrase.phrase)}</div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua nova frase aqui..." style="min-height:80px;"></textarea>
             <button data-action="verificar-envio" data-game="sentenceShuffle" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Submeter Resposta</button>`;
     },
@@ -1802,9 +1834,9 @@ Workspace.Ingles = {
         this.desafioAtualObj = this.obterItemInteligente(col, 'question'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
-            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${Workspace.escapeHTML(this.desafioAtualObj.text)}</div>
+            <div class="ig-big-phrase" style="background:#FEF3C7; border-color:#F59E0B; color:#92400E;">❓ ${this._tornarPalavrasClicaveis(this.desafioAtualObj.text)}</div>
             <div style="text-align:center; margin-bottom:12px;">
-                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#92400E; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Pergunta</button>
+                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#92400E; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Pergunta Inteira</button>
             </div>
             <textarea id="ig-input" class="ig-textarea" placeholder="Sua resposta em inglês..." style="min-height:100px;"></textarea>
             <button data-action="verificar-envio" data-game="answerQuest" class="ws-btn" style="width:100%; margin-top:16px; background:linear-gradient(135deg, #d97706, #b45309); color:#fff; border:none; padding:16px; border-radius:12px; cursor:pointer;">Enviar Resposta</button>`;
@@ -1816,23 +1848,23 @@ Workspace.Ingles = {
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         document.getElementById('modalBody').innerHTML=`
             <p style="color:#64748B; font-weight:700; text-align:center;">Alguém respondeu isto:</p>
-            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${Workspace.escapeHTML(this.desafioAtualObj.text)}"</div>
+            <div class="ig-big-phrase" style="background:#EEF2FF; color:#4F46E5; font-style:italic;">💬 "${this._tornarPalavrasClicaveis(this.desafioAtualObj.text)}"</div>
             <div style="text-align:center; margin-bottom:10px;">
-                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#4F46E5; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Afirmação</button>
+                <button data-action="falar-frase" data-text="${Workspace.escapeHTML(this.desafioAtualObj.text)}" class="ws-btn" style="background:#4F46E5; color:#fff; padding:6px 16px; border-radius:20px; border:none; font-size:12px;">🔊 Ouvir Afirmação Inteira</button>
             </div>
             <p style="text-align:center; font-weight:600; margin-top:15px;">Qual pergunta em inglês gerou essa resposta?</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Ex: How long have you... / What is your..."></textarea>
             <button data-action="verificar-envio" data-game="questionMaker" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; margin-top:16px; border:none; padding:16px; border-radius:12px; cursor:pointer;">Testar Pergunta</button>`;
     },
 
-   ditarParaInput(btnEl){
+    ditarParaInput(btnEl){
         const inputEl = document.getElementById('ig-input');
         if(!inputEl) return;
         if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){
             return this.mostrarAvisoLocal('O seu navegador não suporta ditado por voz. Use o Google Chrome.', 'error');
         }
 
-        const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+        const SR = window.SpeechRecognition ? window.SpeechRecognition : window.webkitSpeechRecognition;
         const rec = new SR();
         rec.lang = 'en-US';
         rec.interimResults = false;
@@ -1878,7 +1910,7 @@ Workspace.Ingles = {
                     <div style="font-size:18px; font-weight:800;">${Workspace.escapeHTML(c.title)}</div>
                     <button data-action="falar-frase" data-text="${Workspace.escapeHTML(c.prompt)}" class="ws-btn" style="background:#4F46E5; color:#fff; border:none; padding:5px 12px; border-radius:14px; font-size:12px;">🔊 Ouvir Fala</button>
                 </div>
-                <div style="font-size:16px; color:#475569; font-weight:500;">${Workspace.escapeHTML(c.prompt)}</div>
+                <div style="font-size:16px; color:#475569; font-weight:500;">${this._tornarPalavrasClicaveis(c.prompt)}</div>
             </div>
             <p style="font-size:13px; background:#FEF3C7; color:#92400E; padding:12px; border-radius:8px; font-weight:700;">💡 Dica: ${Workspace.escapeHTML(c.tip)}</p>
             <textarea id="ig-input" class="ig-textarea" placeholder="Escreva ou dite no microfone o que você responderia em inglês..." style="min-height:80px;"></textarea>
@@ -1909,13 +1941,13 @@ Workspace.Ingles = {
             if(m.role==='user'){
                 return `<div style="display:flex; justify-content:flex-end; margin-bottom:12px;"><div style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:12px 16px; border-radius:16px 16px 4px 16px; max-width:80%; font-size:14px; box-shadow:0 4px 10px rgba(79,70,229,0.2);">${Workspace.escapeHTML(m.text)}</div></div>`;
             }else{
-                return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:10px;"><span>🤖 MAGO IA</span><button data-action="falar-frase" data-text="${Workspace.escapeHTML(m.text)}" style="background:transparent; border:none; color:#4F46E5; cursor:pointer; font-size:11px; font-weight:bold;">🔊 Ouvir</button></div>${Workspace.escapeHTML(m.text)}</div></div>`;
+                return `<div style="display:flex; margin-bottom:12px;"><div style="background:#F1F5F9; border:1px solid #E2E8F0; color:#0F172A; padding:12px 16px; border-radius:4px 16px 16px 16px; max-width:80%; font-size:14px; line-height:1.5;"><div style="font-size:11px; color:#64748B; font-weight:700; margin-bottom:4px; display:flex; justify-content:space-between; align-items:center; gap:10px;"><span>🤖 MAGO IA (Toque nas palavras para ouvir)</span><button data-action="falar-frase" data-text="${Workspace.escapeHTML(m.text)}" style="background:transparent; border:none; color:#4F46E5; cursor:pointer; font-size:11px; font-weight:bold;">🔊 Ouvir Tudo</button></div>${this._tornarPalavrasClicaveis(m.text)}</div></div>`;
             }
         }).join('');
 
         document.getElementById('modalBody').innerHTML=`
             <div style="background:#F8FAFC; padding:14px 16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:16px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                <div style="font-weight:800; color:#0F172A; font-size:15px;">⚔️ Tópico: ${Workspace.escapeHTML(this.desafioAtualObj.topic)}</div>
+                <div style="font-weight:800; color:#0F172A; font-size:15px;">⚔️ Tópico: ${this._tornarPalavrasClicaveis(this.desafioAtualObj.topic)}</div>
                 <button data-action="toggle-voz-mago" class="ws-btn" style="background:${vozAtiva ? '#EEF2FF' : '#F1F5F9'}; color:${vozAtiva ? '#4F46E5' : '#64748B'}; border:1px solid #CBD5E1; padding:6px 12px; border-radius:20px; font-size:12px;">${vozAtiva ? '🔊 Voz da IA: Ligada' : '🔇 Voz da IA: Muda'}</button>
             </div>
             <div id="ig-debate-chat" style="height:250px; overflow-y:auto; padding:10px; margin-bottom:16px; border:1px solid #E2E8F0; border-radius:12px;">${chatHtml}</div>
@@ -2182,7 +2214,7 @@ Workspace.Ingles = {
             <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
                 <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
             </div>
-            <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${Workspace.escapeHTML(q.question)}</div>
+            <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${this._tornarPalavrasClicaveis(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>
