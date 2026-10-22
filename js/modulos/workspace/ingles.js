@@ -115,6 +115,7 @@ Workspace.Ingles = {
         _dbLoaded: false, 
         _roleplayChat: [],
         magoConfig: { vozAtiva: true },
+        _comboCount: 0,
         streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
@@ -376,6 +377,8 @@ Workspace.Ingles = {
         return next;
     },
     registrarErro(itemOriginal, tipoConteudo){
+        this.state._comboCount = 0;
+        if (typeof this.atualizarComboUI === 'function') this.atualizarComboUI();
         if(!itemOriginal?.id) return;
         const ja = this.state.errosRetidos.find(e=>e.id===itemOriginal.id);
         if(!ja) this.state.errosRetidos.push({...itemOriginal, _tipoDefeito:tipoConteudo});
@@ -713,14 +716,17 @@ Workspace.Ingles = {
                 </main>
             </div>
 
-            <div id="gameModal" class="modal hidden">
+           <div id="gameModal" class="modal hidden">
                 <div class="modal-content">
                     <div class="modal-header">
                         <div class="modal-title">
                             <span id="modalIcon" style="font-size:24px;"></span>
                             <h2 id="modalTitle"></h2>
                         </div>
-                        <button data-action="fechar-jogo" class="close-btn">✕</button>
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            <div id="ig-combo-badge" style="display:none; padding:6px 14px; border-radius:20px; font-size:13px; font-weight:900; letter-spacing:0.5px; transition:all 0.3s;"></div>
+                            <button data-action="fechar-jogo" class="close-btn">✕</button>
+                        </div>
                     </div>
                     <div id="modalBody" class="modal-body"></div>
                 </div>
@@ -1284,6 +1290,42 @@ Workspace.Ingles = {
         }).join('');
     },
 
+   atualizarComboUI(){
+        const badge = document.getElementById('ig-combo-badge');
+        if (!badge) return;
+        const combo = this.state._comboCount || 0;
+
+        if (combo <= 0) {
+            badge.style.display = 'none';
+            return;
+        }
+
+        badge.style.display = 'inline-flex';
+        badge.style.alignItems = 'center';
+        badge.style.gap = '6px';
+
+        if (combo >= 5) {
+            badge.style.background = 'linear-gradient(135deg, #ef4444, #dc2626)';
+            badge.style.color = '#ffffff';
+            badge.style.boxShadow = '0 4px 15px rgba(239, 68, 68, 0.45)';
+            badge.innerHTML = `🔥 FRENESI 3x (${combo} seguidos!)`;
+        } else if (combo >= 3) {
+            badge.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+            badge.style.color = '#ffffff';
+            badge.style.boxShadow = '0 4px 12px rgba(245, 158, 11, 0.35)';
+            badge.innerHTML = `⚡ COMBO 2x (${combo} seguidos!)`;
+        } else {
+            badge.style.background = '#f1f5f9';
+            badge.style.color = '#475569';
+            badge.style.boxShadow = 'none';
+            badge.innerHTML = `🎯 Sequência: ${combo}/3 para 2x`;
+        }
+
+        badge.classList.remove('bounce-active');
+        void badge.offsetWidth;
+        badge.classList.add('bounce-active');
+    },
+
     abrirJogo(id){
         try{ speechSynthesis.cancel(); }catch{}
         this.jogoAtual = id;
@@ -1293,15 +1335,14 @@ Workspace.Ingles = {
         
         document.getElementById('modalIcon').textContent = game.icon;
         document.getElementById('modalTitle').textContent = game.title;
+        this.atualizarComboUI();
         
-        // 🚀 TEMATIZAÇÃO MÁGICA: O gradiente agora desce de forma mais imersiva
         const modalContent = document.querySelector('#gameModal .modal-content');
         if (modalContent) {
             modalContent.style.background = `linear-gradient(to bottom, #ffffff 30%, ${game.color}60 100%)`;
-            modalContent.style.borderColor = 'transparent'; // Sem borda na tela inteira
+            modalContent.style.borderColor = 'transparent';
         }
 
-        // 🚀 TRAVA O SCROLL DO FUNDO (UX de Aplicação Nativa)
         document.body.style.overflow = 'hidden';
 
         document.getElementById('gameModal').classList.remove('hidden');
@@ -1311,36 +1352,43 @@ Workspace.Ingles = {
     fecharJogo(){
         try{ speechSynthesis.cancel(); }catch{}
         document.getElementById('gameModal').classList.add('hidden');
-        
-        // 🚀 DESTRAVA O SCROLL DO FUNDO ao voltar ao Hub
         document.body.style.overflow = '';
-        
         this.renderAlunoGrid();
     },
 
-   sucessoGenerico: async function(bonusBase){
+    sucessoGenerico: async function(bonusBase){
         if(this.desafioAtualObj?.id){ 
             this.marcarComoConcluido(this.desafioAtualObj.id); 
             this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
         }
         
-        this.ganharCoins('bronze', bonusBase);
+        // 🔥 Incrementa a sequência de acertos e calcula o Multiplicador de Combo (1x, 2x ou 3x)
+        this.state._comboCount = (this.state._comboCount || 0) + 1;
+        const comboAtual = this.state._comboCount;
+        let multiplicador = 1;
+        if (comboAtual >= 5) multiplicador = 3;
+        else if (comboAtual >= 3) multiplicador = 2;
+
+        const bonusFinal = bonusBase * multiplicador;
+        this.atualizarComboUI();
+        this.ganharCoins('bronze', bonusFinal);
         this.tocarSom('coin'); 
         
-        // 🚀 A INJEÇÃO DA MOEDA VOADORA
+        // 🚀 Moeda voadora com indicação do Multiplicador de Combo
         const modalBody = document.getElementById('modalBody');
         if (modalBody) {
             const coinAnim = document.createElement('div');
             coinAnim.className = 'coin-anim';
-            coinAnim.innerText = `🪙 +${bonusBase}`;
+            coinAnim.innerText = multiplicador > 1 ? `🪙 +${bonusFinal} (${multiplicador}x 🔥)` : `🪙 +${bonusFinal}`;
             coinAnim.style.left = '50%';
             coinAnim.style.top = '30%';
             modalBody.appendChild(coinAnim);
-            setTimeout(() => coinAnim.remove(), 1000); // Limpa após a animação
+            setTimeout(() => coinAnim.remove(), 1100);
         }
 
         const srs = this.state.srs[this.desafioAtualObj?.id];
-        this.mostrarAvisoLocal(`Próxima revisão em ${srs?.interval||1} dia(s)`, 'success');
+        const msgCombo = multiplicador === 3 ? ' 🔥 FRENESI 3x ATIVO!' : (multiplicador === 2 ? ' ⚡ COMBO 2x ATIVO!' : '');
+        this.mostrarAvisoLocal(`Próxima revisão em ${srs?.interval ? srs.interval : 1} dia(s)!${msgCombo}`, 'success');
 
         setTimeout(() => {
             const modal = document.getElementById('gameModal');
@@ -1351,8 +1399,12 @@ Workspace.Ingles = {
     },
     
     falhaGenerica: async function(){
+        const tinhaCombo = (this.state._comboCount || 0) >= 3;
+        this.state._comboCount = 0;
+        this.atualizarComboUI();
+
         if(this.desafioAtualObj?.id) this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, false);
-        this.mostrarAvisoLocal(`❌ Erro guardado para revisão. Voltará em breve!`, 'error');
+        this.mostrarAvisoLocal(tinhaCombo ? `❌ Combo quebrado! Erro guardado para revisão.` : `❌ Erro guardado para revisão. Voltará em breve!`, 'error');
         
         setTimeout(() => {
             const modal = document.getElementById('gameModal');
