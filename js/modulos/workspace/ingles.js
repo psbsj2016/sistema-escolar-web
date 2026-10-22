@@ -705,11 +705,14 @@ Workspace.Ingles = {
                         </div>
                     </section>
 
-                    <section id="alunoView" class="view">
+                   <section id="alunoView" class="view">
                         <div class="marquee-wrapper" id="ig-marquee-wrapper" style="display:none;">
                             <div class="marquee-title">🏆 Top 9 Bilionários da Escola 🏆</div>
                             <div class="marquee-track" id="ig-marquee-track"></div>
                         </div>
+
+                        <!-- 📜 PERGAMINHO DE MISSÕES DIÁRIAS E BAÚ DOURADO -->
+                        <div id="ig-daily-quests-wrapper" style="margin-bottom: 28px;"></div>
 
                         <div class="games-grid" id="gamesGrid"></div>
                     </section>
@@ -905,6 +908,10 @@ Workspace.Ingles = {
                 } else if (confirm('Deseja comprar 1 Escudo de Ofensiva por 300 moedas?')) {
                     confirmarCompra();
                 }
+                return;
+            }
+            if(a === 'resgatar-bau-diario') {
+                this.resgatarBauDiario();
                 return;
             }
             if(a === 'fechar-jogo') this.fecharJogo();
@@ -1168,6 +1175,7 @@ Workspace.Ingles = {
                                 </div>
                             `;
                             this.ganharCoins('bronze', 20);
+                            this.registrarProgressoMissao('contextRole');
                         } else {
                             if(r.correto){
                                 // 🚀 CORREÇÃO BUG 3: Envia a resposta criativa aprovada para a aba '📥 Envios' do Professor!
@@ -1207,9 +1215,10 @@ Workspace.Ingles = {
                 
                 if(texto.length < 3) return this.mostrarAvisoLocal('Escreva o seu argumento para o debate!', 'error');
                 
-                this.state._debateChat.push({ role: 'user', text: texto });
+               this.state._debateChat.push({ role: 'user', text: texto });
                 this.ganharCoins('bronze', 15);
-                this.renderGameDebateAI(); 
+                this.registrarProgressoMissao('debateAI');
+                this.renderGameDebateAI();
                 
                 inputEl.value = '';
                 
@@ -1255,14 +1264,193 @@ Workspace.Ingles = {
         });
     },
 
-   renderAlunoGrid(){
+  // 📜 GERA OU CARREGA AS 3 MISSÕES DO DIA DO ALUNO
+    inicializarMissoesDiarias(){
+        const userK = `ws_ingles_user_${Workspace.usuario?.id ? Workspace.usuario.id : 'default'}_missoes`;
+        const hoje = new Date();
+        const hojeStr = `${hoje.getFullYear()}-${String(hoje.getMonth()+1).padStart(2,'0')}-${String(hoje.getDate()).padStart(2,'0')}`;
+
+        let salvas = null;
+        try { salvas = JSON.parse(localStorage.getItem(userK)); } catch(e) {}
+
+        if (salvas && salvas.data === hojeStr && Array.isArray(salvas.lista) && salvas.lista.length === 3) {
+            this.state.missoesDiarias = salvas;
+            return salvas;
+        }
+
+        // Sorteia 1 jogo de cada pilar pedagógico usando a data como semente
+        const semente = hoje.getFullYear() * 10000 + (hoje.getMonth() + 1) * 100 + hoje.getDate();
+        const grupoVocab = ['wordSpark', 'quiz', 'wordPicker', 'memoryGame', 'hangman'];
+        const grupoAudio = ['readAloud', 'listenType', 'minimalPairs'];
+        const grupoIA    = ['sentenceShuffle', 'answerQuest', 'questionMaker', 'contextRole', 'debateAI', 'picturePop'];
+
+        const j1 = grupoVocab[semente % grupoVocab.length];
+        const j2 = grupoAudio[(semente + 1) % grupoAudio.length];
+        const j3 = grupoIA[(semente + 2) % grupoIA.length];
+
+        const criarMissao = (gameId, categoriaLabel) => {
+            const info = this.defaults.games.find(g => g.id === gameId) || { title: gameId, icon: '🎮' };
+            return {
+                gameId: gameId,
+                titulo: info.title,
+                icone: info.icon,
+                categoria: categoriaLabel,
+                meta: 2,
+                atual: 0
+            };
+        };
+
+        const novasMissoes = {
+            data: hojeStr,
+            recompensado: false,
+            lista: [
+                criarMissao(j1, 'Vocabulário & Gramática'),
+                criarMissao(j2, 'Escuta & Pronúncia'),
+                criarMissao(j3, 'Escrita & Conversação IA')
+            ]
+        };
+
+        this.state.missoesDiarias = novasMissoes;
+        try { localStorage.setItem(userK, JSON.stringify(novasMissoes)); } catch(e) {}
+        return novasMissoes;
+    },
+
+    // 📈 SOMA +1 NO PROGRESSO DA MISSÃO QUANDO O ALUNO CONCLUI UM DESAFIO DAQUELE JOGO
+    registrarProgressoMissao(gameId){
+        if (!gameId) return;
+        const missoes = this.inicializarMissoesDiarias();
+        let alterou = false;
+
+        missoes.lista.forEach(m => {
+            if (m.gameId === gameId && m.atual < m.meta) {
+                m.atual++;
+                alterou = true;
+                if (m.atual === m.meta) {
+                    setTimeout(() => {
+                        this.mostrarAvisoLocal(`📜 Missão "${m.titulo}" concluída!`, 'success');
+                    }, 600);
+                }
+            }
+        });
+
+        if (alterou) {
+            const userK = `ws_ingles_user_${Workspace.usuario?.id ? Workspace.usuario.id : 'default'}_missoes`;
+            try { localStorage.setItem(userK, JSON.stringify(missoes)); } catch(e) {}
+            this.renderizarMissoesDiarias();
+        }
+    },
+
+    // 🎁 ENTREGA AS 250 MOEDAS DO BAÚ DE TESOURO DOURADO
+    resgatarBauDiario(){
+        const missoes = this.inicializarMissoesDiarias();
+        const todasConcluidas = missoes.lista.every(m => m.atual >= m.meta);
+
+        if (!todasConcluidas) {
+            return this.mostrarAvisoLocal('Complete as 3 missões diárias (2/2 em cada) para destrancar o Baú Dourado!', 'warning');
+        }
+        if (missoes.recompensado) {
+            return this.mostrarAvisoLocal('Você já resgatou o Baú Dourado de hoje! Volte amanhã para novas missões.', 'warning');
+        }
+
+        missoes.recompensado = true;
+        const userK = `ws_ingles_user_${Workspace.usuario?.id ? Workspace.usuario.id : 'default'}_missoes`;
+        try { localStorage.setItem(userK, JSON.stringify(missoes)); } catch(e) {}
+
+        this.ganharCoins('bronze', 250);
+        if (window.Workspace?.Feed?.dispararConfetes) {
+            window.Workspace.Feed.dispararConfetes();
+        }
+        this.mostrarAvisoLocal('🎉 TESOURO DESBLOQUEADO! Ganhou +250 Moedas no Baú Diário!', 'success');
+        this.renderizarMissoesDiarias();
+    },
+
+    // 🎨 DESENHA O PERGAMINHO DE MISSÕES DIÁRIAS NO TOPO DA ÁREA DO ALUNO
+    renderizarMissoesDiarias(){
+        const wrapper = document.getElementById('ig-daily-quests-wrapper');
+        if (!wrapper) return;
+
+        const missoes = this.inicializarMissoesDiarias();
+        const concluidasCount = missoes.lista.filter(m => m.atual >= m.meta).length;
+        const todasConcluidas = concluidasCount === 3;
+
+        const cartoesHTML = missoes.lista.map(m => {
+            const completa = m.atual >= m.meta;
+            const pct = Math.min(100, Math.round((m.atual / m.meta) * 100));
+            return `
+                <div style="flex: 1; min-width: 240px; background: ${completa ? '#ecfdf5' : '#f8fafc'}; border: 2px solid ${completa ? '#10b981' : '#e2e8f0'}; border-radius: 14px; padding: 14px 16px; display: flex; flex-direction: column; justify-content: space-between; gap: 10px; transition: 0.2s;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px;">
+                        <div style="display: flex; align-items: center; gap: 10px;">
+                            <div style="font-size: 26px; width: 42px; height: 42px; background: #fff; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(0,0,0,0.05);">${m.icone}</div>
+                            <div>
+                                <div style="font-size: 10px; font-weight: 800; text-transform: uppercase; color: ${completa ? '#059669' : '#6366f1'}; letter-spacing: 0.5px;">${Workspace.escapeHTML(m.categoria)}</div>
+                                <div style="font-size: 14px; font-weight: 800; color: #0f172a;">${Workspace.escapeHTML(m.titulo)}</div>
+                            </div>
+                        </div>
+                        <span style="font-size: 12px; font-weight: 900; padding: 4px 10px; border-radius: 20px; background: ${completa ? '#10b981' : '#e2e8f0'}; color: ${completa ? '#fff' : '#475569'};">
+                            ${completa ? '✅ Feito' : `${m.atual}/${m.meta}`}
+                        </span>
+                    </div>
+                    <div>
+                        <div style="background: rgba(203, 213, 225, 0.5); height: 6px; border-radius: 6px; overflow: hidden; margin-bottom: 10px;">
+                            <div style="width: ${pct}%; height: 100%; background: ${completa ? '#10b981' : '#4f46e5'}; transition: width 0.5s ease;"></div>
+                        </div>
+                        ${completa 
+                            ? `<div style="font-size: 12px; font-weight: 700; color: #059669; text-align: center;">🌟 Etapa concluída hoje!</div>`
+                            : `<button data-action="abrir-jogo" data-game-id="${m.gameId}" class="ws-btn" style="width: 100%; background: #fff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 7px 12px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer;">▶ Jogar Agora</button>`
+                        }
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        let botaoBauHTML = '';
+        if (missoes.recompensado) {
+            botaoBauHTML = `
+                <button disabled class="ws-btn" style="background: #ecfdf5; color: #059669; border: 2px solid #10b981; padding: 12px 22px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: default;">
+                    🔓 Baú de Hoje Resgatado (+250 🪙)
+                </button>
+            `;
+        } else if (todasConcluidas) {
+            botaoBauHTML = `
+                <button data-action="resgatar-bau-diario" class="ws-btn bounce-active" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: 2px solid #fde047; padding: 12px 24px; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);">
+                    🎁 Abrir Baú Dourado (+250 🪙)
+                </button>
+            `;
+        } else {
+            botaoBauHTML = `
+                <button data-action="resgatar-bau-diario" class="ws-btn" style="background: #f1f5f9; color: #64748b; border: 2px dashed #cbd5e1; padding: 10px 18px; border-radius: 14px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
+                    🔒 Baú Dourado (${concluidasCount}/3 Missões) • +250 🪙
+                </button>
+            `;
+        }
+
+        wrapper.innerHTML = `
+            <div style="background: #ffffff; border: 2px solid #fde68a; border-radius: 20px; padding: 20px 24px; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.08);">
+                <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 14px; margin-bottom: 18px; border-bottom: 1px solid #f1f5f9; padding-bottom: 14px;">
+                    <div style="display: flex; align-items: center; gap: 12px;">
+                        <span style="font-size: 30px;">📜</span>
+                        <div>
+                            <h3 style="margin: 0; font-size: 18px; color: #0f172a; font-family: 'Plus Jakarta Sans', sans-serif; font-weight: 800;">Pergaminho de Missões Diárias</h3>
+                            <p style="margin: 2px 0 0 0; font-size: 12.5px; color: #64748b; font-weight: 600;">Complete 2 desafios em cada uma das 3 áreas de hoje para abrir o Baú de Tesouro!</p>
+                        </div>
+                    </div>
+                    ${botaoBauHTML}
+                </div>
+                <div style="display: flex; flex-wrap: wrap; gap: 14px;">
+                    ${cartoesHTML}
+                </div>
+            </div>
+        `;
+    },
+
+    renderAlunoGrid(){
+        this.renderizarMissoesDiarias();
         const grid = document.getElementById('gamesGrid'); if(!grid) return;
         const concluidos = this.state.itensConcluidos || [];
 
         grid.innerHTML = this.defaults.games.map(g=>{
             const vencidos = Object.values(this.state.srs).filter(s=>s.tipo===g.id && s.due<=Date.now()).length;
             
-            // 🚀 CÁLCULO DE DOMÍNIO (PROGRESSO)
             const colecao = this.getColecaoPorJogo(g.id);
             const total = colecao.length;
             const feitos = colecao.filter(item => concluidos.includes(item.id)).length;
@@ -1277,7 +1465,6 @@ Workspace.Ingles = {
                 <h3>${g.title} ${vencidos?'🔥':''}</h3>
                 <p>${g.desc}</p>
                 
-                <!-- 🚀 A NOVA BARRA DE DOMÍNIO -->
                 <div class="ig-progress-bg" title="Domínio: ${percentagem}%">
                     <div class="ig-progress-fill" style="width: ${percentagem}%; background: ${corBarra};"></div>
                 </div>
@@ -1361,6 +1548,7 @@ Workspace.Ingles = {
             this.marcarComoConcluido(this.desafioAtualObj.id); 
             this.updateSRS(this.desafioAtualObj.id, this.jogoAtual, true); 
         }
+        this.registrarProgressoMissao(this.jogoAtual);
         
         // 🔥 Incrementa a sequência de acertos e calcula o Multiplicador de Combo (1x, 2x ou 3x)
         this.state._comboCount = (this.state._comboCount || 0) + 1;
