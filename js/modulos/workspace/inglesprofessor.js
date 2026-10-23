@@ -314,23 +314,27 @@ Workspace.InglesProfessor = {
                     avatarRenderizado = `<div style="width:100%; height:100%; background:linear-gradient(135deg, #4f46e5, #6366f1); color:white; border-radius:12px; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:20px;">${inicial}</div>`;
                 }
 
+               const mascoteBadge = r.mascoteAtivo ? ` <span style="font-size:18px;" title="Mascote">${Workspace.escapeHTML(r.mascoteAtivo)}</span>` : '';
+                const tituloBadge = r.tituloAtivo ? `<span style="font-size:10.5px; background:#f3e8ff; color:#6d28d9; padding:3px 9px; border-radius:10px; font-weight:800; border:1px solid #d8b4fe;">${Workspace.escapeHTML(r.tituloAtivo)}</span>` : '';
+
                 return `
                 <div class="ig-rank-item ${liga}" style="display:flex; align-items:center; gap:12px; padding:16px; background:#fff; border:2px solid #e2e8f0; border-radius:14px; margin-bottom:10px; transition:0.2s; ${bordaStyle}">
                     
                     <div style="position:relative; width:44px; height:44px; flex-shrink:0; border-radius: 12px; display: flex; align-items: center; justify-content: center;">
                         ${avatarRenderizado}
-                        <div style="position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; border:2px solid #fff;">${medalha || (i+1)}</div>
+                        <div style="position:absolute; bottom:-6px; right:-6px; width:22px; height:22px; background:${liga==='ouro'?'linear-gradient(135deg,#fde68a,#d4af37)': liga==='prata'?'#e2e8f0': liga==='bronze'?'#fed7aa':'#f1f5f9'}; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:11px; border:2px solid #fff;">${medalha ? medalha : (i+1)}</div>
                     </div>
 
                     <div style="flex:1;min-width:0">
                         <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
-                            <b style="color:#0f172a;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome||'Aluno')}</b>
+                            <b style="color:#0f172a;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${Workspace.escapeHTML(r.nome ? r.nome : 'Aluno')}${mascoteBadge}</b>
                             <span style="font-size:10px;background:${liga==='ouro'?'#fde68a': liga==='prata'?'#e2e8f0':'#ffedd5'};color:#000;padding:4px 8px;border-radius:12px;font-weight:800;text-transform:uppercase">${liga}</span>
+                            ${tituloBadge}
                         </div>
-                        <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#64748B;font-weight:600;"><span>🔥 Streak: ${r.streak||1}d</span></div>
+                        <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#64748B;font-weight:600;"><span>🔥 Streak: ${r.streak ? r.streak : 1}d</span></div>
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:800; border:1px solid #FDE68A;">💰 ${(r.coins?.bronze || 0).toLocaleString('pt-BR')}</div>
+                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:800; border:1px solid #FDE68A;">💰 ${(r.coins?.bronze ? r.coins.bronze : 0).toLocaleString('pt-BR')}</div>
                     </div>
                 </div>`;
             }).join('');

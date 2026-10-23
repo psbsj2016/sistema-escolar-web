@@ -116,13 +116,26 @@ Workspace.Ingles = {
         _roleplayChat: [],
         magoConfig: { vozAtiva: true },
         _comboCount: 0,
+        itensComprados: [], mascoteAtivo: '', tituloAtivo: '',
         streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
-
     recognition:null, jogoAtual:null, desafioAtualObj:null,
 
     defaults: {
+        catalogoLoja: [
+            { id: 'masc_owl', tipo: 'mascote', valor: '🦉', nome: 'Coruja Sábia', desc: 'Guardiã da sabedoria ao lado do seu nome', preco: 200 },
+            { id: 'masc_fox', tipo: 'mascote', valor: '🦊', nome: 'Raposa Astuta', desc: 'Agilidade mental nos desafios', preco: 350 },
+            { id: 'masc_lion', tipo: 'mascote', valor: '🦁', nome: 'Leão da Coragem', desc: 'Destemido nos discursos em inglês', preco: 500 },
+            { id: 'masc_unicorn', tipo: 'mascote', valor: '🦄', nome: 'Unicórnio Místico', desc: 'Raridade mágica no mural da escola', preco: 800 },
+            { id: 'masc_dragon', tipo: 'mascote', valor: '🐉', nome: 'Dragão Dourado', desc: 'Domínio supremo do Sopro do Dragão', preco: 1200 },
+            { id: 'masc_crown', tipo: 'mascote', valor: '👑', nome: 'Coroa Real', desc: 'Símbolo da realeza bilionária da escola', preco: 2500 },
+            { id: 'tit_apprentice', tipo: 'titulo', valor: '✨ Word Apprentice', nome: 'Word Apprentice', desc: 'Título exibido no Ranking e Letreiro', preco: 150 },
+            { id: 'tit_knight', tipo: 'titulo', valor: '🛡️ Grammar Knight', nome: 'Grammar Knight', desc: 'Defensor implacável da gramática', preco: 400 },
+            { id: 'tit_speaker', tipo: 'titulo', valor: '🔥 Voice Master', nome: 'Voice Master', desc: 'Especialista em pronúncia e conversação', preco: 750 },
+            { id: 'tit_lord', tipo: 'titulo', valor: '🧙‍♂️ Lord of Fluency', nome: 'Lord of Fluency', desc: 'Alto conselho da fluência em inglês', preco: 1500 },
+            { id: 'tit_legend', tipo: 'titulo', valor: '⚡ English Legend', nome: 'English Legend', desc: 'O título mais cobiçado do Baú do Inglês', preco: 3000 }
+        ],
         words:[{id:'w1', word:'Although', translation:'Embora', level:'B2'}],
         phrases:[{id:'p1', phrase:'Could you tell me where the nearest pharmacy is?', translation:'Você poderia me dizer onde fica a farmácia mais próxima?', level:'A2'}],
         quizzes:[{id:'q1', question:'Choose the correct sentence:', options:['I have been to London last year','I went to London last year'], correct:1, level:'B1'}],
@@ -137,6 +150,7 @@ Workspace.Ingles = {
             {id:'as3', text:'She went to the hospital because she had a headache.', type:'answerQuest'}
         ],
         roleplays:[{id:'rp1', title:'✈ No Aeroporto', prompt:'Attendant: Can I see your passport?', tip:'Use: Here you are'}],
+
         games:[
             {id:'wordSpark', title:'🪄 Feitiço das Palavras', desc:'Crie uma frase com a palavra.', icon:'🪄', color:'#E0E7FF'},
             {id:'readAloud', title:'🐉 Sopro do Dragão', desc:'Fale ao microfone.', icon:'🐉', color:'#D1FAE5'},
@@ -315,6 +329,13 @@ Workspace.Ingles = {
             const concluidosNuvem = Array.isArray(statsNuvem?.itensConcluidos) ? statsNuvem.itensConcluidos : [];
             this.state.itensConcluidos = Array.from(new Set([...concluidosLocal, ...concluidosNuvem]));
 
+            const compradosLocal = JSON.parse(localStorage.getItem(`${userK}_comprados`)||'[]');
+            const compradosNuvem = Array.isArray(statsNuvem?.itensComprados) ? statsNuvem.itensComprados : [];
+            this.state.itensComprados = Array.from(new Set([...compradosLocal, ...compradosNuvem]));
+
+            this.state.mascoteAtivo = localStorage.getItem(`${userK}_mascote`) || statsNuvem?.mascoteAtivo || '';
+            this.state.tituloAtivo = localStorage.getItem(`${userK}_titulo`) || statsNuvem?.tituloAtivo || '';
+
             try{
                 const localSRS = JSON.parse(localStorage.getItem(`${userK}_srs`)||'{}');
                 this.state.srs = {...this.state.srs, ...localSRS};
@@ -331,6 +352,9 @@ Workspace.Ingles = {
             localStorage.setItem(`${userK}_streak`, String(this.state.streak));
             localStorage.setItem(`${userK}_freeze`, String(this.state.streakFreeze || 0));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
+            localStorage.setItem(`${userK}_comprados`, JSON.stringify(this.state.itensComprados || []));
+            localStorage.setItem(`${userK}_mascote`, String(this.state.mascoteAtivo || ''));
+            localStorage.setItem(`${userK}_titulo`, String(this.state.tituloAtivo || ''));
             localStorage.setItem(`${userK}_srs`, JSON.stringify(this.state.srs));
         }catch{}
         
@@ -345,6 +369,9 @@ Workspace.Ingles = {
                     coins: this.state.coins,
                     streak: this.state.streak,
                     streakFreeze: this.state.streakFreeze || 0,
+                    itensComprados: this.state.itensComprados || [],
+                    mascoteAtivo: this.state.mascoteAtivo || '',
+                    tituloAtivo: this.state.tituloAtivo || '',
                     srs: this.state.srs,
                     itensConcluidos: this.state.itensConcluidos
                 }).catch(()=>{});
@@ -677,6 +704,9 @@ Workspace.Ingles = {
                                 🛡️ <span id="freezeCount">0</span>/2
                             </button>
                             <div id="coinBag" class="ig-coin-bag" title="Saldo Disponível de Moedas">💰 <span id="coinsCount">0</span></div>
+                            <button type="button" data-action="abrir-loja" class="ws-btn" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 4px 10px rgba(109,40,217,0.25); cursor:pointer;" title="Abrir Loja de Títulos e Mascotes">
+                                🏪 Loja
+                            </button>
                         </div>
                         
                         <!-- 🚀 O NOVO TOGGLE MODERNO -->
@@ -912,8 +942,16 @@ Workspace.Ingles = {
                 }
                 return;
             }
-            if(a === 'resgatar-bau-diario') {
+           if(a === 'resgatar-bau-diario') {
                 this.resgatarBauDiario();
+                return;
+            }
+            if(a === 'abrir-loja') {
+                this.abrirLoja();
+                return;
+            }
+            if(a === 'comprar-item-loja') {
+                this.comprarOuEquiparItem(b.dataset.itemId);
                 return;
             }
             if(a === 'fechar-jogo') this.fecharJogo();
@@ -2271,47 +2309,156 @@ Workspace.Ingles = {
         this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente (Erro no Microfone)'; btn.disabled = false; } };
     },
 
-async renderizarMarquee() {
+// 🏪 ABRE A LOJA DE TÍTULOS MÁGICOS E MASCOTES
+    abrirLoja(){
+        this.jogoAtual = 'store';
+        document.getElementById('modalIcon').textContent = '🏪';
+        document.getElementById('modalTitle').textContent = 'Tenda de Relíquias & Prestígio';
+
+        const modalContent = document.querySelector('#gameModal .modal-content');
+        if (modalContent) {
+            modalContent.style.background = 'linear-gradient(to bottom, #ffffff 30%, #f3e8ff 100%)';
+        }
+        const badgeCombo = document.getElementById('ig-combo-badge');
+        if (badgeCombo) badgeCombo.style.display = 'none';
+
+        document.body.style.overflow = 'hidden';
+        document.getElementById('gameModal').classList.remove('hidden');
+        this.renderizarConteudoLoja();
+    },
+
+    renderizarConteudoLoja(){
+        const saldoAtual = this.state.coins?.bronze ? this.state.coins.bronze : 0;
+        const comprados = Array.isArray(this.state.itensComprados) ? this.state.itensComprados : [];
+        const mascoteAtual = this.state.mascoteAtivo ? this.state.mascoteAtivo : '';
+        const tituloAtual = this.state.tituloAtivo ? this.state.tituloAtivo : '';
+        const nomeAluno = Workspace.usuario?.nome ? Workspace.usuario.nome : (Workspace.usuario?.login ? Workspace.usuario.login : 'Aluno');
+
+        const mascotes = this.defaults.catalogoLoja.filter(i => i.tipo === 'mascote');
+        const titulos = this.defaults.catalogoLoja.filter(i => i.tipo === 'titulo');
+
+        const renderCardItem = (item) => {
+            const jaComprou = comprados.includes(item.id);
+            const estaEquipado = (item.tipo === 'mascote' && mascoteAtual === item.valor) || (item.tipo === 'titulo' && tituloAtual === item.valor);
+
+            let btnHtml = '';
+            if (estaEquipado) {
+                btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:#10b981; color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">✅ Equipado (Clique p/ tirar)</button>`;
+            } else if (jaComprou) {
+                btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:#4f46e5; color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Equipar Agora</button>`;
+            } else {
+                btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">🪙 Comprar por ${item.preco.toLocaleString('pt-BR')}</button>`;
+            }
+
+            return `
+                <div style="background:#fff; border:2px solid ${estaEquipado ? '#10b981' : (jaComprou ? '#c7d2fe' : '#e2e8f0')}; border-radius:16px; padding:16px; display:flex; flex-direction:column; justify-content:space-between; gap:10px; text-align:center; box-shadow:0 4px 12px rgba(0,0,0,0.03);">
+                    <div>
+                        <div style="font-size:${item.tipo === 'mascote' ? '42px' : '15px'}; font-weight:900; color:#4f46e5; background:#f8fafc; padding:${item.tipo === 'mascote' ? '10px' : '14px 10px'}; border-radius:12px; margin-bottom:10px; border:1px solid #f1f5f9;">
+                            ${Workspace.escapeHTML(item.valor)}
+                        </div>
+                        <div style="font-size:14px; font-weight:800; color:#0f172a;">${Workspace.escapeHTML(item.nome)}</div>
+                        <div style="font-size:11.5px; color:#64748b; margin-top:4px; line-height:1.3;">${Workspace.escapeHTML(item.desc)}</div>
+                    </div>
+                    ${btnHtml}
+                </div>
+            `;
+        };
+
+        document.getElementById('modalBody').innerHTML = `
+            <div style="max-width:780px; width:100%; margin:0 auto;">
+                <!-- Cartão de Pré-visualização do Aluno no Ranking -->
+                <div style="background:linear-gradient(135deg, #1e1b4b, #312e81); color:#fff; padding:20px 24px; border-radius:20px; margin-bottom:24px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px; box-shadow:0 12px 25px rgba(49, 46, 129, 0.25);">
+                    <div>
+                        <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#a5b4fc; font-weight:800; margin-bottom:6px;">👑 A Sua Identidade no Ranking da Escola</div>
+                        <div style="font-size:20px; font-weight:900; display:flex; align-items:center; gap:8px;">
+                            <span>${Workspace.escapeHTML(nomeAluno)}</span>${mascoteAtual ? `<span style="font-size:24px;" title="Mascote Equipado">${Workspace.escapeHTML(mascoteAtual)}</span>` : ''}
+                        </div>
+                        <div style="margin-top:6px;">
+                            ${tituloAtual 
+                                ? `<span style="background:rgba(255,255,255,0.15); color:#fde047; padding:4px 12px; border-radius:20px; font-size:12px; font-weight:800; border:1px solid rgba(253,224,71,0.4);">${Workspace.escapeHTML(tituloAtual)}</span>` 
+                                : `<span style="color:#94a3b8; font-size:12px; font-style:italic;">Nenhum título equipado no momento</span>`
+                            }
+                        </div>
+                    </div>
+                    <div style="background:rgba(255,255,255,0.1); padding:12px 20px; border-radius:14px; text-align:right; border:1px solid rgba(255,255,255,0.15);">
+                        <div style="font-size:11px; color:#cbd5e1; font-weight:700;">Saldo Disponível</div>
+                        <div style="font-size:22px; font-weight:900; color:#fde047;">💰 ${saldoAtual.toLocaleString('pt-BR')}</div>
+                    </div>
+                </div>
+
+                <h3 style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; font-size:17px; margin:0 0 12px 0;">🐾 Mascotes Guardiões (Aparecem ao lado do seu nome)</h3>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-bottom:28px;">
+                    ${mascotes.map(renderCardItem).join('')}
+                </div>
+
+                <h3 style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; font-size:17px; margin:0 0 12px 0;">✨ Títulos de Honra (Aparecem no Top 9 e no Pódio)</h3>
+                <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-bottom:20px;">
+                    ${titulos.map(renderCardItem).join('')}
+                </div>
+            </div>
+        `;
+    },
+
+    comprarOuEquiparItem(itemId){
+        const item = this.defaults.catalogoLoja.find(i => i.id === itemId);
+        if (!item) return;
+
+        if (!Array.isArray(this.state.itensComprados)) this.state.itensComprados = [];
+        const jaComprou = this.state.itensComprados.includes(item.id);
+
+        if (!jaComprou) {
+            if (!this.gastarCoins(item.preco)) return;
+            this.state.itensComprados.push(item.id);
+            if (item.tipo === 'mascote') this.state.mascoteAtivo = item.valor;
+            if (item.tipo === 'titulo') this.state.tituloAtivo = item.valor;
+
+            this.saveDados();
+            this.renderizarConteudoLoja();
+            this.renderizarMarquee();
+            this.mostrarAvisoLocal(`🎉 Comprou e equipou "${item.nome}"!`, 'success');
+        } else {
+            // Se já comprou, alterna entre equipar e desequipar
+            if (item.tipo === 'mascote') {
+                this.state.mascoteAtivo = (this.state.mascoteAtivo === item.valor) ? '' : item.valor;
+            } else if (item.tipo === 'titulo') {
+                this.state.tituloAtivo = (this.state.tituloAtivo === item.valor) ? '' : item.valor;
+            }
+            this.saveDados();
+            this.renderizarConteudoLoja();
+            this.renderizarMarquee();
+            this.mostrarAvisoLocal('✨ Identidade atualizada no Ranking!', 'success');
+        }
+    },
+
+    async renderizarMarquee() {
         const track = document.getElementById('ig-marquee-track');
         const wrapper = document.getElementById('ig-marquee-wrapper');
         if(!track || !wrapper) return;
 
         try {
-            const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-            const res = await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');
-            
-            if(res && res.success && res.ranking && res.ranking.length > 0) {
-                const top9 = res.ranking.slice(0, 9);
-                
-               let htmlCartoes = top9.map((aluno, index) => {
-                    const posicao = index + 1;
-                    let classeDestaque = '';
-                    let medalha = '';
+            const escolaId = Workspace.usuario?.escolaId ? Workspace.usuario.escolaId : 'DEFAULT';
+            const res = await Workspace.api(`/workspace/ingles/ranking?escolaId=${escolaId}`,'GET');  if(res && res.success && res.ranking && res.ranking.length > 0) { const top9 = res.ranking.slice(0, 9);  let htmlCartoes = top9.map((aluno, index) => { const posicao = index + 1; let classeDestaque = ''; let medalha = '';  if(posicao === 1) { classeDestaque = 'marquee-rank-1'; medalha = '🥇'; } else if(posicao === 2) { classeDestaque = 'marquee-rank-2'; medalha = '🥈'; } else if(posicao === 3) { classeDestaque = 'marquee-rank-3'; medalha = '🥉'; } else { medalha = `<span>#${posicao}</span>`; }
                     
-                    if(posicao === 1) { classeDestaque = 'marquee-rank-1'; medalha = '🥇'; }
-                    else if(posicao === 2) { classeDestaque = 'marquee-rank-2'; medalha = '🥈'; }
-                    else if(posicao === 3) { classeDestaque = 'marquee-rank-3'; medalha = '🥉'; }
-                    else { medalha = `<span>#${posicao}</span>`; }
-                    
-                    // 🚀 CORREÇÃO 1: Restaurar as variáveis apagadas!
-                    const totalMoedas = aluno.coins?.bronze || 0;
+                    const totalMoedas = aluno.coins?.bronze ? aluno.coins.bronze : 0;
                     const ligaTexto = aluno.liga === 'diamante' ? '💎 Diamante' : aluno.liga === 'ouro' ? '🥇 Ouro' : aluno.liga === 'prata' ? '🥈 Prata' : aluno.liga === 'bronze' ? '🥉 Bronze' : 'Aprendiz';
                     
-                    // 🚀 CORREÇÃO 2: Criar avatar com a Inicial do Nome se não houver foto!
                     let avatarSrc = '';
                     if (aluno.avatar) {
                         avatarSrc = `<img src="${aluno.avatar}" style="width:100%; height:100%; object-fit:cover;">`;
                     } else {
-                        const inicial = (aluno.nome || 'A').charAt(0).toUpperCase();
+                        const inicial = (aluno.nome ? aluno.nome : 'A').charAt(0).toUpperCase();
                         avatarSrc = `<div style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:22px;">${inicial}</div>`;
                     }
+
+                    const mascoteHtml = aluno.mascoteAtivo ? ` <span title="Mascote Guardião">${Workspace.escapeHTML(aluno.mascoteAtivo)}</span>` : '';
+                    const tituloHtml = aluno.tituloAtivo ? `<span style="font-size:10.5px; color:#6d28d9; background:#f3e8ff; padding:2px 8px; border-radius:10px; font-weight:800; width:fit-content; margin-top:2px;">${Workspace.escapeHTML(aluno.tituloAtivo)}</span>` : '';
 
                     return `
                     <div class="marquee-card ${classeDestaque}">
                         <div class="marquee-medal">${medalha}</div>
                         <div class="marquee-avatar">${avatarSrc}</div>
                         <div class="marquee-info">
-                            <span class="marquee-name">${Workspace.escapeHTML(aluno.nome)}</span>
+                            <span class="marquee-name">${Workspace.escapeHTML(aluno.nome)}${mascoteHtml}</span>${tituloHtml}
                             <span class="marquee-stats">
                                 <span style="color:#d97706;">💰 ${totalMoedas.toLocaleString('pt-BR')}</span> 
                                 <span style="color:#cbd5e1;">|</span>
@@ -2326,7 +2473,6 @@ async renderizarMarquee() {
             }
         } catch(e) { console.error("Falha ao carregar letreiro de líderes", e); }
     }
-
 };
 
 setTimeout(()=> Workspace.Ingles.init(), 100);
