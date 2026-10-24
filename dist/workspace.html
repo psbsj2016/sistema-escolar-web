@@ -164,7 +164,7 @@
         .ws-spotlight-item .icone { font-size: 20px; background: white; width: 35px; height: 35px; border-radius: 8px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .ws-spotlight-item.active .icone { background: #2563eb; color: white; }
     </style>
-  <script type="module" crossorigin src="/assets/workspace-nbd7ECoc.js"></script>
+  <script type="module" crossorigin src="/assets/workspace-Bn07paYX.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
   <link rel="modulepreload" crossorigin href="/assets/pwa-updater-De2OFdSU.js">
   <link rel="modulepreload" crossorigin href="/assets/site-DaSd-N01.js">
@@ -832,14 +832,16 @@
             </div>
         </section>
 
-        <!-- ⚙️ CONFIGURAÇÕES -->
+       <!-- ⚙️ CONFIGURAÇÕES -->
         <section id="ws-config-container" style="display: none; max-width: 800px; margin: 0 auto; width: 100%; padding: 20px; box-sizing: border-box;">
+            <button style="background:transparent; border:none; color:#3498db; cursor:pointer; margin-bottom:15px; font-weight:bold; display:flex; align-items:center; gap:5px; font-size:14px;" onclick="Workspace.voltarAoFeed()"><span>↩</span> Voltar ao Feed Principal</button>
             <div class="ws-card">
-                <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações</h3>
+                <h3 style="margin-top:0; color:#2c3e50; border-bottom:1px solid #eee; padding-bottom:10px;">⚙️ Configurações da Conta</h3>
                 <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px;">
-                    <div style="border: 1px solid #eee; border-radius: 12px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s;" onmouseover="this.style.boxShadow='0 5px 15px rgba(0,0,0,0.05)'" onmouseout="this.style.boxShadow='none'" onclick="Workspace.abrirModalSenha()">
-                        <div style="font-size: 30px; margin-bottom: 10px;">🔑</div>
-                        <h4 style="margin: 0 0 5px 0; color: #333;">Alterar Senha</h4>
+                    <div style="border: 1px solid #e2e8f0; border-radius: 14px; padding: 24px 20px; text-align: center; cursor: pointer; transition: 0.2s; background: #f8fafc;" onmouseover="this.style.boxShadow='0 8px 20px rgba(0,0,0,0.06)'; this.style.borderColor='#3498db'; this.style.background='#ffffff';" onmouseout="this.style.boxShadow='none'; this.style.borderColor='#e2e8f0'; this.style.background='#f8fafc';" onclick="Workspace.abrirModalSenha()">
+                        <div style="font-size: 34px; margin-bottom: 10px;">🔑</div>
+                        <h4 style="margin: 0 0 6px 0; color: #1e293b; font-size: 16px;">Alterar Senha de Acesso</h4>
+                        <p style="margin: 0; font-size: 12.5px; color: #64748b;">Atualize a sua palavra-passe com segurança.</p>
                     </div>
                 </div>
             </div>
@@ -1049,20 +1051,39 @@
         </div>
     </div>
 
-    <!-- 🔑 MODAL SENHA -->
+    <!-- 🔑 MODAL SENHA (COM VISUALIZADOR DE SENHA E FECHO LIMPO) -->
     <div id="ws-senha-modal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 10001; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
-        <div class="ws-card" style="width: 95%; max-width: 350px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5);">
-            <div style="background: #2c3e50; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center;">
+        <div class="ws-card" style="width: 95%; max-width: 380px; padding: 0; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.5); border-radius: 16px;">
+            <div style="background: #2c3e50; color: white; padding: 16px 20px; display: flex; justify-content: space-between; align-items: center;">
                 <h3 style="margin: 0; font-size: 16px;">🔑 Alterar Senha</h3>
-                <button onclick="document.getElementById('ws-senha-modal').style.display='none'" style="background: rgba(255,255,255,0.1); border: none; color: white; width: 30px; height: 30px; border-radius: 50%; cursor: pointer;">✖</button>
+                <button type="button" onclick="Workspace.fecharModalSenha()" style="background: rgba(255,255,255,0.15); border: none; color: white; width: 32px; height: 32px; border-radius: 50%; cursor: pointer; font-weight: bold;">✖</button>
             </div>
-            <div style="padding: 20px;">
+            <div style="padding: 22px 20px;">
                 <form onsubmit="event.preventDefault(); Workspace.salvarNovaSenha();" style="width: 100%;">
                     <input type="text" autocomplete="username" value="user_oculto" style="display: none;">
-                    <input type="password" id="ws-senha-atual" placeholder="Senha Atual" autocomplete="current-password" class="ws-post-input" style="margin-bottom: 15px;">
-                    <input type="password" id="ws-nova-senha" placeholder="Nova Senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 10px;">
-                    <input type="password" id="ws-confirma-senha" placeholder="Confirmar" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 20px;">
-                    <button type="submit" class="ws-btn" id="ws-btn-salvar-senha" style="width: 100%; background: #27ae60; padding: 12px; font-size: 14px;">💾 Salvar</button>
+                    
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Senha Atual</label>
+                    <div style="position: relative; margin-bottom: 14px;">
+                        <input type="password" id="ws-senha-atual" placeholder="Digite a sua senha atual" autocomplete="current-password" class="ws-post-input" style="margin-bottom: 0; padding: 12px 42px 12px 14px;">
+                        <button type="button" onclick="Workspace.toggleOlhoSenhaModal('ws-senha-atual', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 16px;" title="Mostrar/Ocultar Senha">👁️</button>
+                    </div>
+
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Nova Senha</label>
+                    <div style="position: relative; margin-bottom: 14px;">
+                        <input type="password" id="ws-nova-senha" placeholder="Digite a nova senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 0; padding: 12px 42px 12px 14px;">
+                        <button type="button" onclick="Workspace.toggleOlhoSenhaModal('ws-nova-senha', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 16px;" title="Mostrar/Ocultar Senha">👁️</button>
+                    </div>
+
+                    <label style="font-size: 12px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px;">Confirmar Nova Senha</label>
+                    <div style="position: relative; margin-bottom: 20px;">
+                        <input type="password" id="ws-confirma-senha" placeholder="Repita a nova senha" autocomplete="new-password" class="ws-post-input" style="margin-bottom: 0; padding: 12px 42px 12px 14px;">
+                        <button type="button" onclick="Workspace.toggleOlhoSenhaModal('ws-confirma-senha', this)" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: transparent; border: none; cursor: pointer; font-size: 16px;" title="Mostrar/Ocultar Senha">👁️</button>
+                    </div>
+
+                    <div style="display: flex; gap: 10px;">
+                        <button type="button" onclick="Workspace.fecharModalSenha()" class="ws-btn" style="flex: 1; background: #94a3b8; padding: 12px; font-size: 14px;">Cancelar</button>
+                        <button type="submit" class="ws-btn" id="ws-btn-salvar-senha" style="flex: 2; background: #27ae60; padding: 12px; font-size: 14px;">💾 Salvar Nova Senha</button>
+                    </div>
                 </form>
             </div>
         </div>
@@ -1077,7 +1098,7 @@
             <input type="time" id="ws-alarme-hora" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 18px; margin-bottom: 15px; outline: none;">
             <input type="text" id="ws-alarme-msg" placeholder="Ex: Estudar" style="width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 8px; font-size: 14px; margin-bottom: 20px; outline: none;">
             <div style="display: flex; gap: 10px;">
-                <button onclick="document.getElementById('ws-modal-alarme').style.display='none'" class="ws-btn" style="flex: 1; background: #95a5a6;">Cancelar</button>
+                <button onclick="Workspace.salvarEstadoNavegacao('modal', null); document.getElementById('ws-modal-alarme').style.display='none'" class="ws-btn" style="flex: 1; background: #95a5a6;">Cancelar</button>
                 <button onclick="Workspace.Bau.confirmarAgendamento()" class="ws-btn" style="flex: 1; background: #3498db;">Agendar</button>
             </div>
         </div>

@@ -317,14 +317,22 @@ Object.assign(Workspace, {
    // ============================================================================
     // 🚀 INICIALIZADOR MESTRE DA PLATAFORMA (VELOCIDADE DA LUZ)
     // ============================================================================
-   init: async () => {
-        // 🚀 VERIFICA SE HOUVE UM LOGOUT FORÇADO E MOSTRA A NOTIFICAÇÃO PENDENTE
+  init: async () => {
+        // 🚀 1. VERIFICA SE HOUVE UM LOGOUT POR INATIVIDADE OU UMA TROCA DE SENHA BEM-SUCEDIDA
         const avisoExpirado = sessionStorage.getItem('ws_aviso_expirado');
         if (avisoExpirado) {
             setTimeout(() => {
                 if (Workspace.mostrarAviso) Workspace.mostrarAviso(avisoExpirado, "warning", 6000);
-            }, 800);
+            }, 600);
             sessionStorage.removeItem('ws_aviso_expirado');
+        }
+
+        const avisoSucessoLogin = sessionStorage.getItem('ws_aviso_sucesso_login');
+        if (avisoSucessoLogin) {
+            setTimeout(() => {
+                if (Workspace.mostrarAviso) Workspace.mostrarAviso(avisoSucessoLogin, "success", 7000);
+            }, 500);
+            sessionStorage.removeItem('ws_aviso_sucesso_login');
         }
 
         const cacheUser = localStorage.getItem('ws_usuario_logado');
@@ -350,14 +358,13 @@ Object.assign(Workspace, {
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost) boxCriarPost.style.display = 'block';
 
-       // 🚀 O SEGREDO 1: Preenche imediatamente a foto do utilizador logado e busca o resto em segundo plano
         if (Workspace.usuario.avatar) {
             if (Workspace.usuario.nome) Workspace.avatarsCache[Workspace.usuario.nome.trim()] = Workspace.usuario.avatar;
             if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = Workspace.usuario.avatar;
         }
         Workspace.atualizarCacheAvatares();
 
-        // 🚀 PASSO 1: PREPARA AS PAREDES DA CASA (Execução Imediata)
+        // 🚀 PASSO 1: PREPARA OS MÓDULOS
         if (Workspace.Ingles) Workspace.Ingles.init(); 
         if (Workspace.Materiais) Workspace.Materiais.init();
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
@@ -376,22 +383,23 @@ Object.assign(Workspace, {
                 telaDestino = window.location.hash.replace('#', '').replace(/-/g, '_');
             }
         }
-        Workspace.navegarPara(telaDestino, true, true); // O 'true' final avisa o sistema que é o carregamento inicial!
+        Workspace.navegarPara(telaDestino, true, true);
 
-        // 🚀 PASSO 3: PUXA OS MÓVEIS (Dados pesados carregados em Background sem o 'await')
+        // 🚀 PASSO 3: CARREGA DADOS EM SEGUNDO PLANO
         if (Workspace.Feed) Workspace.Feed.init(); 
         if (Workspace.Sidebar) Workspace.Sidebar.init(); 
         if (Workspace.Bau) Workspace.Bau.carregarDadosDaNuvem();
-            // 🚀 O MOTOR DE RESTAURO PROFUNDO (Anti-Amnésia de Subtelas e Modais)
+
+        // 🛡️ MOTOR DE RESTAURO PROFUNDO (Com vacina que limpa o modal de senha preso!)
         const estadoProfundo = JSON.parse(localStorage.getItem('ws_estado_profundo'));
         if (estadoProfundo) {
+            if (estadoProfundo.modal === 'senha') {
+                // Remove imediatamente qualquer fantasma antigo do modal de senha!
+                Workspace.salvarEstadoNavegacao('modal', null);
+            }
             setTimeout(() => {
-                if (estadoProfundo.modal) {
-                    if (estadoProfundo.modal.id === 'alarme' && Workspace.Bau.abrirModalAgendamento) {
-                        Workspace.Bau.abrirModalAgendamento(estadoProfundo.modal.ano, estadoProfundo.modal.mes, estadoProfundo.modal.dia);
-                    } else if (estadoProfundo.modal === 'senha') {
-                        Workspace.abrirModalSenha();
-                    }
+                if (estadoProfundo.modal && estadoProfundo.modal.id === 'alarme' && Workspace.Bau.abrirModalAgendamento) {
+                    Workspace.Bau.abrirModalAgendamento(estadoProfundo.modal.ano, estadoProfundo.modal.mes, estadoProfundo.modal.dia);
                 }
                 
                 if (estadoProfundo.subtela_bau && Workspace.Bau && Workspace.Bau.notasCache.length > 0) {
@@ -405,7 +413,7 @@ Object.assign(Workspace, {
                         }
                     }
                 }
-            }, 800); // Dá tempo para as listas da Base de Dados carregarem na memória primeiro
+            }, 800);
         }
         if (Workspace.Alertas) Workspace.Alertas.init(); 
         if (Workspace.Arena) Workspace.Arena.init();        
@@ -1133,27 +1141,64 @@ Object.assign(Workspace, {
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 
-    abrirModalSenha: () => {
-        Workspace.salvarEstadoNavegacao('modal', 'senha');
-        document.getElementById('ws-senha-modal').style.display = 'flex';
-        document.getElementById('ws-senha-atual').value = '';
-        document.getElementById('ws-nova-senha').value = '';
-        document.getElementById('ws-confirma-senha').value = '';
+   abrirModalSenha: () => {
+        // 🛡️ Nunca grava 'senha' no estado profundo para jamais reabrir sozinho ao entrar!
+        Workspace.salvarEstadoNavegacao('modal', null);
+        const modal = document.getElementById('ws-senha-modal');
+        if (modal) modal.style.display = 'flex';
+
+        ['ws-senha-atual', 'ws-nova-senha', 'ws-confirma-senha'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) {
+                el.value = '';
+                el.type = 'password';
+            }
+        });
     },
 
-   // ============================================================================
-    // 🔑 MOTOR DE ALTERAÇÃO DE SENHA (FRONTEND)
+    fecharModalSenha: () => {
+        Workspace.salvarEstadoNavegacao('modal', null);
+        const modal = document.getElementById('ws-senha-modal');
+        if (modal) modal.style.display = 'none';
+    },
+
+    toggleOlhoSenhaModal: (inputId, btnEl) => {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            if (btnEl) btnEl.innerText = '🙈';
+        } else {
+            input.type = 'password';
+            if (btnEl) btnEl.innerText = '👁️';
+        }
+    },
+
+    // ============================================================================
+    // 🔑 MOTOR DE ALTERAÇÃO DE SENHA (FRONTEND BLINDADO)
     // ============================================================================
     salvarNovaSenha: async () => {
         const senhaAtual = document.getElementById('ws-senha-atual').value.trim();
         const novaSenha = document.getElementById('ws-nova-senha').value.trim();
         const confirmaSenha = document.getElementById('ws-confirma-senha').value.trim();
         
-        if (!senhaAtual || !novaSenha || !confirmaSenha) return Workspace.mostrarAviso("Preencha todos os campos para continuar.", "warning");
-        if (novaSenha !== confirmaSenha) return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
+        if (!senhaAtual || !novaSenha || !confirmaSenha) {
+            return Workspace.mostrarAviso("Preencha todos os campos para continuar.", "warning");
+        }
+        if (novaSenha.length < 4) {
+            return Workspace.mostrarAviso("A nova senha deve ter pelo menos 4 caracteres.", "warning");
+        }
+        if (novaSenha !== confirmaSenha) {
+            return Workspace.mostrarAviso("A nova senha e a confirmação não coincidem.", "warning");
+        }
+        if (senhaAtual === novaSenha) {
+            return Workspace.mostrarAviso("A nova senha deve ser diferente da senha atual.", "warning");
+        }
         
         const btn = document.getElementById('ws-btn-salvar-senha');
-        const txt = btn.innerText; btn.innerText = "Fazendo criptografia e salvando... ⏳"; btn.disabled = true;
+        const txt = btn.innerText; 
+        btn.innerText = "Criptografando e salvando... ⏳"; 
+        btn.disabled = true;
         
         try {
             const res = await Workspace.api('/workspace/perfil', 'PUT', { 
@@ -1164,48 +1209,52 @@ Object.assign(Workspace, {
             });
             
             if (res && res.success) {
-                Workspace.mostrarAviso("Senha atualizada com sucesso! Por favor, entre novamente.", "success");
-                document.getElementById('ws-senha-modal').style.display = 'none';
-                setTimeout(() => Workspace.logout(), 2500);
+                // 1. Fecha o modal e limpa qualquer estado pendente
+                Workspace.fecharModalSenha();
+                localStorage.removeItem('ws_estado_profundo');
+                localStorage.setItem('ws_ultima_tela_global', 'feed');
+
+                // 2. Guarda o aviso de confirmação para exibir também na tela de Login após o reload
+                sessionStorage.setItem('ws_aviso_sucesso_login', '✅ A sua nova senha foi ativada com sucesso! Entre abaixo com a senha nova.');
+                Workspace.mostrarAviso("✅ Senha atualizada com sucesso! Redirecionando para o login...", "success", 3000);
+                
+                setTimeout(() => Workspace.logout(false), 1800);
             } else {
-                // 🚀 PROTEÇÃO: Lê a mensagem amigável que o novo "mensageiro" transportou!
-                Workspace.mostrarAviso(res?.error || "Erro ao atualizar a senha.", "error");
+                Workspace.mostrarAviso(res?.error ? res.error : "Erro ao atualizar a senha.", "error");
             }
         } catch (e) { 
             Workspace.mostrarAviso("Falha de comunicação com o servidor.", "error"); 
-        } 
-        finally { btn.innerText = txt; btn.disabled = false; }
+        } finally { 
+            btn.innerText = txt; 
+            btn.disabled = false; 
+        }
     },
 
-  // ============================================================================
+    // ============================================================================
     // 🚪 SISTEMA DE LOGOUT E "AMNÉSIA" DE NAVEGAÇÃO SEGURA
     // ============================================================================
     logout: async (forcado = false) => {
-        // 1. Desliga o radar de notificações para poupar internet
         if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
         
-        // 2. Apaga o utilizador logado
         localStorage.removeItem('ws_usuario_logado');
+        sessionStorage.removeItem('ws_rascunho_global');
         
-        // 3. A NOVA MÁGICA: A "Amnésia Seletiva" para computadores partilhados
-        // Listamos aqui todas as "pegadas" de navegação que o sistema guarda
+        // 🚀 Apaga TODAS as chaves de navegação e modais (incluindo ws_estado_profundo!)
         const chavesDeNavegacao = [
             'ws_ultima_tela_global', 
             'ws_avaliacoes_prof_subtela',
             'ws_bau_aba_ativa',
-            'ws_aba_encontros_arquivo'
+            'ws_aba_encontros_arquivo',
+            'ws_estado_profundo',
+            'ws_tarefas_prof_subtela'
         ];
-        
-        // Varremos a lista e apagamos cada uma da memória do navegador
         chavesDeNavegacao.forEach(chave => localStorage.removeItem(chave));
         
-        // 4. Lógica visual e redirecionamento
         if (forcado) {
             document.getElementById('ws-login-screen').style.display = 'flex';
             document.getElementById('ws-navbar').style.display = 'none';
             document.getElementById('ws-main-container').style.display = 'none';
             
-            // 🚀 LIMPEZA VISUAL: Fecha as janelas flutuantes que possam ter ficado perdidas no ecrã!
             const modais = ['ws-senha-modal', 'ws-perfil-modal', 'ws-chat-modal', 'ws-tarefa-modal', 'ws-modal-alarme'];
             modais.forEach(id => {
                 const modal = document.getElementById(id);

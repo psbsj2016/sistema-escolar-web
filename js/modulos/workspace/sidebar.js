@@ -1,4 +1,21 @@
 window.Workspace = window.Workspace || {};
+if (typeof window.Workspace.verificarTurma !== 'function') {
+    window.Workspace.verificarTurma = (usuario, turmaId, turmaNome) => {
+        if (!usuario) return false;
+        const idAlvo = String(turmaId || '').toLowerCase().trim();
+        const nomeAlvo = String(turmaNome || '').toLowerCase().trim();
+        if (idAlvo === 'global' || nomeAlvo === 'global' || nomeAlvo === 'geral') return true;
+        const lista = [];
+        if (usuario.turma) lista.push(usuario.turma);
+        if (usuario.turmaId) lista.push(usuario.turmaId);
+        if (Array.isArray(usuario.turmas)) lista.push(...usuario.turmas);
+        else if (usuario.turmas) lista.push(usuario.turmas);
+        return lista.some(t => {
+            const tLimpo = String(t || '').toLowerCase().trim();
+            return tLimpo && (tLimpo === idAlvo || tLimpo === nomeAlvo);
+        });
+    };
+}
 
 Workspace.Sidebar = {
     turmaIdAberta: null,
@@ -542,6 +559,18 @@ Workspace.Sidebar = {
             Workspace.Sidebar.chatStream = null;
         }
         Workspace.Sidebar.ocultarDigitando();
+    },
+
+   notificarDigitando: () => {
+        if (!Workspace.Sidebar.isTyping) {
+            Workspace.Sidebar.isTyping = true;
+            Workspace.Sidebar.enviarStatusDigitacao(true);
+        }
+        clearTimeout(Workspace.Sidebar.typingTimer);
+        Workspace.Sidebar.typingTimer = setTimeout(() => {
+            Workspace.Sidebar.isTyping = false;
+            Workspace.Sidebar.enviarStatusDigitacao(false);
+        }, 1500);
     },
 
     enviarStatusDigitacao: (status) => {
@@ -1145,10 +1174,10 @@ Workspace.Sidebar = {
                                 mediaHtml = `<audio controls src="${urlCorrigida}" style="display: block; width: 100%; margin-top: 10px; outline: none;"></audio>`;
                             }
 
-                            if (ehImagemAnexo) {
-                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"\``;
+                          if (ehImagemAnexo) {
+                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.abrirVisualizadorImagem('${urlCorrigida}', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"`;
                             } else if (ehOffice && window.Workspace && Workspace.Materiais && Workspace.Materiais.abrirVisualizador) {
-                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.Materiais.abrirVisualizador('${urlCorrigida}', 'document', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"\``;
+                                acaoArquivo = `href="javascript:void(0)" onclick="event.preventDefault(); Workspace.Materiais.abrirVisualizador('${urlCorrigida}', 'document', 'Trabalho de ${Workspace.Sidebar.escapeHTML(ent.alunoNome)}')"`;
                             }
 
                             htmlEntregas += `
@@ -1671,7 +1700,7 @@ Workspace.Sidebar = {
         `;
     },
 
-    salvarEdicaoFeedback: async (entregaId, eventoId, feedbackId) => {
+   salvarEdicaoFeedback: async (entregaId, eventoId, feedbackId) => {
         const input = document.getElementById(`input-edit-fb-${feedbackId}`);
         if(!input) return;
         const novoTexto = input.value.trim();
@@ -1680,6 +1709,8 @@ Workspace.Sidebar = {
         try {
             const res = await Workspace.api(`/workspace/entregas/${entregaId}/feedback/${feedbackId}`, 'PUT', { texto: novoTexto });
             if(res && res.success) {
+                Workspace.mostrarAviso("Comentário atualizado com sucesso!", "success");
+                Workspace.Sidebar.abrirModalFeedback(entregaId, eventoId);
             }
         } catch(e) { Workspace.mostrarAviso("Erro ao salvar comentário.", "error"); }
     },
