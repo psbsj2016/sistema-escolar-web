@@ -262,6 +262,37 @@ Workspace.InglesProfessor = {
                         }
                     }).catch(() => { b.innerText = '🚫 Adicionar Regra'; Ingles.mostrarAvisoLocal('Erro de ligação.', 'error'); });
                 break;
+           case 'add-coupon':
+                const iCEmoji = document.getElementById('ig-cupEmoji');
+                const iCTitulo = document.getElementById('ig-cupTitulo');
+                const iCDesc = document.getElementById('ig-cupDesc');
+                const iCPreco = document.getElementById('ig-cupPreco');
+
+                const cEmoji = (iCEmoji?.value ? iCEmoji.value.trim() : '') || '🎟️';
+                const cTitulo = iCTitulo?.value ? iCTitulo.value.trim() : '';
+                const cDesc = iCDesc?.value ? iCDesc.value.trim() : '';
+                const cPreco = parseInt(iCPreco?.value) || 1000;
+
+                if (!cTitulo) return Ingles.mostrarAvisoLocal('Digite o título da recompensa/cupom!', 'warning');
+                if (!Array.isArray(state.recompensasProf)) state.recompensasProf = [];
+
+                state.recompensasProf.unshift({
+                    id: 'cup_' + Date.now(),
+                    emoji: cEmoji,
+                    titulo: cTitulo,
+                    desc: cDesc || 'Recompensa especial da turma',
+                    preco: Math.max(10, cPreco)
+                });
+
+                await Ingles.saveDados();
+                if (iCEmoji) iCEmoji.value = '';
+                if (iCTitulo) iCTitulo.value = '';
+                if (iCDesc) iCDesc.value = '';
+                if (iCPreco) iCPreco.value = '';
+
+                Workspace.InglesProfessor.renderProfessorTab('cupons');
+                Ingles.mostrarAvisoLocal('🎟️ Novo Cupom publicado na Loja dos Alunos!', 'success');
+                break;
             case 'atualizar-ranking':
                 Workspace.InglesProfessor.carregarRanking();
                 break;
@@ -269,16 +300,21 @@ Workspace.InglesProfessor = {
                 const sApp = state.submissions.find(x => x.id === b.dataset.id); 
                 if(!sApp) return; 
                 sApp.status = 'approved'; 
-                state.pool.unshift({id: 'pool_'+Date.now(), type: sApp.game, text: sApp.text, word: sApp.text, origin: 'student', student: sApp.student, timestamp: Date.now()}); 
+                // Se NÃO for um cupom, envia a frase criativa para a Piscina Global do Espelho do Oráculo
+                if (!sApp.isCoupon) {
+                    state.pool.unshift({id: 'pool_'+Date.now(), type: sApp.game, text: sApp.text, word: sApp.text, origin: 'student', student: sApp.student, timestamp: Date.now()}); 
+                }
                 await Ingles.saveDados(); 
-                Workspace.InglesProfessor.renderProfessorTab('envios'); 
-                Ingles.mostrarAvisoLocal('Aprovado e adicionado à Piscina Global! 🌊', 'success');
+                const abaAtualAprovar = document.querySelector('.ig-side-item.active')?.dataset.tab || 'envios';
+                Workspace.InglesProfessor.renderProfessorTab(abaAtualAprovar); 
+                Ingles.mostrarAvisoLocal(sApp.isCoupon ? '🎟️ Entrega de Cupom confirmada com sucesso!' : 'Aprovado e adicionado à Piscina Global! 🌊', 'success');
                 break;
             case 'rejeitar-envio':
                 state.submissions = state.submissions.filter(i => i.id !== b.dataset.id); 
                 await Ingles.saveDados(); 
-                Workspace.InglesProfessor.renderProfessorTab('envios'); 
-                Ingles.mostrarAvisoLocal('Envio apagado!', 'success');
+                const abaAtualRejeitar = document.querySelector('.ig-side-item.active')?.dataset.tab || 'envios';
+                Workspace.InglesProfessor.renderProfessorTab(abaAtualRejeitar); 
+                Ingles.mostrarAvisoLocal('Registo removido!', 'success');
                 break;
         }
     },
@@ -481,29 +517,87 @@ Workspace.InglesProfessor = {
                     </div>
                 </div>`;
         }
-        else if (tabId === 'envios'){
+       else if (tabId === 'envios'){
             const pendentes = state.submissions.filter(s=>s.status==='pending');
             document.getElementById('pendingCount').textContent = pendentes.length;
             document.getElementById('tab-envios').innerHTML=`
-                <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📥 Forja de Conteúdo (Respostas dos Alunos)</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">As frases e respostas criativas validadas pela IA aparecem aqui para você aprovar e enviar para a Piscina Global.</p>
-                ${pendentes.length===0 ? '<div style="background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:40px; text-align:center;"><span style="font-size:40px;">📭</span><h3 style="color:#475569;margin-top:15px;">Nenhum envio pendente.</h3></div>' : 
+                <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📥 Forja de Conteúdo & Resgates (${pendentes.length})</div>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Aprove as frases criativas dos alunos para a Piscina Global ou confirme os cupons resgatados na Loja.</p>
+                ${pendentes.length===0 ? '<div style="background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:40px; text-align:center;"><span style="font-size:40px;">📭</span><h3 style="color:#475569;margin-top:15px;">Nenhum envio ou resgate pendente.</h3></div>' : 
                 pendentes.map(s=>`
-                    <div class="prof-card" style="border-left: 4px solid #6366f1; margin-bottom:16px;">
-                        <div style="font-size:12px; color:#64748B; margin-bottom:10px;"><b>👤 ${esc(s.student)}</b> no jogo 🎮 <b>${esc(s.game)}</b></div>
-                        <div style="font-size:16px; color:#0F172A; margin-bottom:16px; font-weight:600; background:#f8fafc; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">"${esc(s.text)}"</div>
+                    <div class="prof-card" style="border-left: 5px solid ${s.isCoupon ? '#f59e0b' : '#6366f1'}; background:${s.isCoupon ? '#fffbeb' : '#ffffff'}; margin-bottom:16px;">
+                        <div style="font-size:12px; color:#64748B; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
+                            <span><b>👤 ${esc(s.student)}</b> • ${s.isCoupon ? '<b style="color:#d97706;">🎟️ RESGATE DE CUPOM DA LOJA</b>' : `no jogo 🎮 <b>${esc(s.game)}</b>`}</span>
+                            ${s.precoPago ? `<span style="background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800;">Pagou 🪙 ${s.precoPago.toLocaleString('pt-BR')}</span>` : ''}
+                        </div>
+                        <div style="font-size:16px; color:#0F172A; margin-bottom:16px; font-weight:700; background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">"${esc(s.text)}"</div>
                         <div style="display:flex; flex-wrap:wrap; gap:12px;">
-                            <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn-success">🌟 Aprovar para a Piscina</button>
-                            <button data-action="rejeitar-envio" data-id="${s.id}" class="ws-btn-danger">🗑 Rejeitar</button>
+                            <button data-action="aprovar-envio" data-id="${s.id}" class="ws-btn-success">${s.isCoupon ? '✅ Confirmar Entrega do Prémio' : '🌟 Aprovar para a Piscina'}</button>
+                            <button data-action="rejeitar-envio" data-id="${s.id}" class="ws-btn-danger">🗑 Remover</button>
                         </div>
                     </div>
                 `).join('')}
-               <div class="ig-prof-header" style="margin-top:40px;">🌊 Piscina Global <span style="color:#64748B;font-size:14px">(${state.pool.length} Aprovados)</span></div>
+                <div class="ig-prof-header" style="margin-top:40px;">🌊 Piscina Global <span style="color:#64748B;font-size:14px">(${state.pool.length} Aprovados)</span></div>
                 <div class="prof-list-scroll" style="max-height:300px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:15px;">
                     ${state.pool.length === 0 ? '<div style="text-align:center; color:#94a3b8; padding:20px;">A piscina está vazia.</div>' : state.pool.map(p=>`
                         <div class="prof-list-item">
                             <span style="font-size:13px;"><b>${esc(p.student ? p.student : 'Anónimo')}:</b> "${esc(p.text).substring(0,80)}" <span style="color:#94a3b8;font-size:11px;margin-left:10px;">(${esc(p.type)})</span></span>
                             <button data-action="remover-item" data-key="pool" data-id="${p.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px;">✕</button>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+        else if (tabId === 'cupons'){
+            const listaCupons = Array.isArray(state.recompensasProf) ? state.recompensasProf : [];
+            const resgatesAlunos = (Array.isArray(state.submissions) ? state.submissions : []).filter(s => s.isCoupon);
+
+            document.getElementById('tab-cupons').innerHTML=`
+                <div class="ig-prof-header" style="border:none; margin-bottom:5px;">🎟️ Fábrica de Recompensas & Cupons da Turma</div>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Crie prémios reais para os alunos comprarem com as moedas ganhas nos jogos (ex: Escolher música, Ponto extra, Passe livre de tarefa).</p>
+
+                <div class="prof-card" style="margin-bottom:24px; border-top:4px solid #f59e0b;">
+                    <h4 style="margin:0 0 12px 0; color:#0f172a; font-size:15px;">➕ Criar Novo Cupom na Loja</h4>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px;">
+                        <input id="ig-cupEmoji" class="ig-input" placeholder="Emoji 🎟️" style="width:90px; text-align:center; font-size:18px;">
+                        <input id="ig-cupTitulo" class="ig-input" placeholder="Título (ex: Escolher a Música da Semana)" style="flex:2; min-width:200px;">
+                        <input id="ig-cupPreco" type="number" class="ig-input" placeholder="Preço 🪙 (ex: 1500)" style="flex:1; min-width:140px;">
+                    </div>
+                    <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
+                        <input id="ig-cupDesc" class="ig-input" placeholder="Regras / Descrição curta para o aluno..." style="flex:1; min-width:220px;">
+                        <button data-action="add-coupon" class="ws-btn-primary" style="background:linear-gradient(135deg, #f59e0b, #d97706);">➕ Publicar Cupom na Loja</button>
+                    </div>
+                </div>
+
+                <div class="ig-prof-header">🏪 Cupons Ativos na Loja dos Alunos (${listaCupons.length})</div>
+                <div class="grid-cards" style="margin-bottom:32px;">
+                    ${listaCupons.length === 0 ? '<div style="color:#94a3b8; font-size:13px;">Nenhum cupom cadastrado.</div>' : listaCupons.map(c => `
+                        <div class="prof-card" style="border:2px dashed #fcd34d; background:#fffbeb;">
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span style="font-size:32px;">${esc(c.emoji ? c.emoji : '🎟️')}</span>
+                                <span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:20px; font-weight:900; font-size:13px; border:1px solid #fde68a;">🪙 ${(c.preco ? c.preco : 1000).toLocaleString('pt-BR')}</span>
+                            </div>
+                            <h4 style="margin:0 0 6px 0; color:#0f172a; font-size:16px;">${esc(c.titulo)}</h4>
+                            <p style="margin:0 0 14px 0; color:#64748b; font-size:12.5px; line-height:1.4;">${esc(c.desc ? c.desc : '')}</p>
+                            <button data-action="remover-item" data-key="recompensasProf" data-id="${c.id}" class="ws-btn-danger" style="width:100%;">✕ Remover da Loja</button>
+                        </div>
+                    `).join('')}
+                </div>
+
+                <div class="ig-prof-header">📋 Histórico de Cupons Resgatados pelos Alunos (${resgatesAlunos.length})</div>
+                <div class="prof-list-scroll" style="max-height:300px; background:#fff; border:1px solid #e2e8f0; border-radius:16px; padding:15px;">
+                    ${resgatesAlunos.length === 0 ? '<div style="text-align:center; color:#94a3b8; padding:20px;">Nenhum aluno resgatou cupons ainda.</div>' : resgatesAlunos.map(r => `
+                        <div class="prof-list-item" style="background:${r.status === 'pending' ? '#fffbeb' : '#f8fafc'}; border-color:${r.status === 'pending' ? '#fcd34d' : '#e2e8f0'};">
+                            <div>
+                                <b>👤 ${esc(r.student)}:</b> ${esc(r.text)}
+                                <span style="margin-left:8px; font-size:11px; font-weight:800; padding:2px 8px; border-radius:10px; background:${r.status === 'pending' ? '#fef3c7' : '#dcfce7'}; color:${r.status === 'pending' ? '#b45309' : '#166534'};">
+                                    ${r.status === 'pending' ? '⏳ Pendente' : '✅ Entregue'}
+                                </span>
+                            </div>
+                            <div style="display:flex; gap:6px;">
+                                ${r.status === 'pending' ? `<button data-action="aprovar-envio" data-id="${r.id}" class="ws-btn-success" style="padding:5px 10px; font-size:11px;">✅ Entregar</button>` : ''}
+                                <button data-action="rejeitar-envio" data-id="${r.id}" class="ws-btn-danger" style="padding:5px 10px; font-size:11px;">✕</button>
+                            </div>
                         </div>
                     `).join('')}
                 </div>

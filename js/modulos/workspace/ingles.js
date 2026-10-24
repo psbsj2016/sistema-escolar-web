@@ -116,11 +116,17 @@ Workspace.Ingles = {
         _roleplayChat: [],
         magoConfig: { vozAtiva: true },
         _comboCount: 0,
-        itensComprados: [], mascoteAtivo: '', tituloAtivo: '',
+        itensComprados: [], mascoteAtivo: '', tituloAtivo: '', recompensasProf: [],
         streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
+
+    defaultsRecompensasProf: [
+        { id: 'cup_1', emoji: '🎵', titulo: 'DJ da Turma (Escolher Música)', desc: 'Escolha a próxima música em inglês para o treino da turma no Feed!', preco: 1000 },
+        { id: 'cup_2', emoji: '🃏', titulo: 'Passe Livre de Exercício', desc: 'Vale a dispensa de 1 exercício semanal à sua escolha.', preco: 2500 },
+        { id: 'cup_3', emoji: '⭐', titulo: 'Bónus de +0,5 Ponto na Prova', desc: 'Adiciona meio ponto extra na sua próxima avaliação escrita ou oral.', preco: 4000 }
+    ],
 
     defaults: {
         catalogoLoja: [
@@ -281,6 +287,7 @@ Workspace.Ingles = {
                     this.state.roleplays = Array.isArray(d.roleplays) ? d.roleplays : [];
                     this.state.questions = Array.isArray(d.questions) ? d.questions : [];
                     this.state.answerStatements = Array.isArray(d.answerStatements) && d.answerStatements.length ? d.answerStatements : [...this.defaults.answerStatements];
+                    this.state.recompensasProf = Array.isArray(d.recompensasProf) && d.recompensasProf.length ? d.recompensasProf : [...this.defaultsRecompensasProf];
                 } else {
                     this.state._dbLoaded = false;
                     this.state.words = [...this.defaults.words];
@@ -293,6 +300,7 @@ Workspace.Ingles = {
                     this.state.roleplays = [...this.defaults.roleplays];
                     this.state.questions = [...this.defaults.questions];
                     this.state.answerStatements = [...this.defaults.answerStatements];
+                    this.state.recompensasProf = [...this.defaultsRecompensasProf];
                 }
 
                 this.state.submissions = Array.isArray(d.submissions) ? d.submissions : [];
@@ -306,6 +314,7 @@ Workspace.Ingles = {
                 this.state.wordPickers=[...this.defaults.wordPickers]; this.state.minimalPairs=[...this.defaults.minimalPairs];
                 this.state.debates=[...this.defaults.debates]; this.state.roleplays=[...this.defaults.roleplays];
                 this.state.questions=[...this.defaults.questions]; this.state.answerStatements=[...this.defaults.answerStatements];
+                this.state.recompensasProf=[...this.defaultsRecompensasProf];
                 this.state.srs={};
             }
             
@@ -378,10 +387,10 @@ Workspace.Ingles = {
             }
             
             const res = await Workspace.api('/workspace/ingles/dados','PUT',{
-                escolaId: Workspace.usuario?.escolaId||'DEFAULT',
+                escolaId: Workspace.usuario?.escolaId ? Workspace.usuario.escolaId : 'DEFAULT',
                 modoAluno: ehAluno,
                 words:this.state.words, phrases:this.state.phrases, quizzes:this.state.quizzes, pictures:this.state.pictures,
-                wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions, answerStatements:this.state.answerStatements,
+                wordPickers:this.state.wordPickers, minimalPairs:this.state.minimalPairs, debates:this.state.debates, roleplays:this.state.roleplays, questions:this.state.questions, answerStatements:this.state.answerStatements, recompensasProf:this.state.recompensasProf,
                 submissions:this.state.submissions, pool:this.state.pool, errosRetidos:this.state.errosRetidos, srs:this.state.srs
             });
             if(res && res.success) {
@@ -718,10 +727,11 @@ Workspace.Ingles = {
                 </div>
 
                 <main id="app">
-                    <section id="professorView" class="view hidden">
+                   <section id="professorView" class="view hidden">
                         <div class="ig-sidebar">
                             <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="ig-side-item" data-action="render-tab" data-tab="cupons">🎟️ Cupons</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount" style="background:#F59E0B; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="ranking">🏆 Ranking</button>
@@ -730,6 +740,7 @@ Workspace.Ingles = {
                         <div class="content">
                             <div id="tab-biblioteca" class="tab-panel active"></div>
                             <div id="tab-imagens" class="tab-panel"></div>
+                            <div id="tab-cupons" class="tab-panel"></div>
                             <div id="tab-envios" class="tab-panel"></div>
                             <div id="tab-algoritmo" class="tab-panel"></div>
                             <div id="tab-ranking" class="tab-panel"></div>
@@ -882,11 +893,11 @@ Workspace.Ingles = {
             const b = e.target.closest('[data-action]'); if(!b) return;
             const a = b.dataset.action;
             
-         // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
+        // 🚀 LISTA OFICIAL DE TODAS AS AÇÕES DO PROFESSOR
             const profActions = [
                 'render-tab', 'remover-item', 'add-word', 'add-phrase', 
                 'add-quiz', 'add-pic', 'add-wordPicker', 'add-minimal', 
-                'add-debate', 'add-roleplay', 'add-question', 'add-statement',
+                'add-debate', 'add-roleplay', 'add-question', 'add-statement', 'add-coupon',
                 'aprovar-envio', 'rejeitar-envio', 'atualizar-ranking', 
                 'ensinar-ia', 'falar-ia', 'ensinar-correcao', 'falar-groq'
             ];
@@ -952,6 +963,10 @@ Workspace.Ingles = {
             }
             if(a === 'comprar-item-loja') {
                 this.comprarOuEquiparItem(b.dataset.itemId);
+                return;
+            }
+            if(a === 'resgatar-cupom-loja') {
+                this.resgatarCupomProfessor(b.dataset.cupomId);
                 return;
             }
             if(a === 'fechar-jogo') this.fecharJogo();
@@ -2327,7 +2342,7 @@ Workspace.Ingles = {
         this.renderizarConteudoLoja();
     },
 
-    renderizarConteudoLoja(){
+   renderizarConteudoLoja(){
         const saldoAtual = this.state.coins?.bronze ? this.state.coins.bronze : 0;
         const comprados = Array.isArray(this.state.itensComprados) ? this.state.itensComprados : [];
         const mascoteAtual = this.state.mascoteAtivo ? this.state.mascoteAtivo : '';
@@ -2336,6 +2351,12 @@ Workspace.Ingles = {
 
         const mascotes = this.defaults.catalogoLoja.filter(i => i.tipo === 'mascote');
         const titulos = this.defaults.catalogoLoja.filter(i => i.tipo === 'titulo');
+        const cuponsProf = (Array.isArray(this.state.recompensasProf) && this.state.recompensasProf.length)
+            ? this.state.recompensasProf
+            : this.defaultsRecompensasProf;
+
+        const meusCuponsResgatados = (Array.isArray(this.state.submissions) ? this.state.submissions : [])
+            .filter(s => s.isCoupon && s.student === nomeAluno);
 
         const renderCardItem = (item) => {
             const jaComprou = comprados.includes(item.id);
@@ -2364,6 +2385,26 @@ Workspace.Ingles = {
             `;
         };
 
+        const renderCardCupom = (cup) => {
+            const pendenteMeu = meusCuponsResgatados.find(s => s.couponId === cup.id && s.status === 'pending');
+            return `
+                <div style="background:linear-gradient(to bottom, #fffbeb, #ffffff); border:2px dashed #f59e0b; border-radius:16px; padding:18px; display:flex; flex-direction:column; justify-content:space-between; gap:12px; position:relative; box-shadow:0 6px 15px rgba(245, 158, 11, 0.08);">
+                    <div>
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                            <span style="font-size:36px;">${Workspace.escapeHTML(cup.emoji ? cup.emoji : '🎟️')}</span>
+                            <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:900;">🪙 ${(cup.preco ? cup.preco : 1000).toLocaleString('pt-BR')}</span>
+                        </div>
+                        <div style="font-size:15px; font-weight:800; color:#0f172a;">${Workspace.escapeHTML(cup.titulo)}</div>
+                        <div style="font-size:12px; color:#64748b; margin-top:4px; line-height:1.4;">${Workspace.escapeHTML(cup.desc ? cup.desc : '')}</div>
+                    </div>
+                    ${pendenteMeu 
+                        ? `<button disabled class="ws-btn" style="width:100%; background:#fef3c7; color:#b45309; border:1px solid #f59e0b; padding:10px; border-radius:10px; font-size:12px; font-weight:800;">⏳ Aguardando aprovação do Professor</button>`
+                        : `<button data-action="resgatar-cupom-loja" data-cupom-id="${cup.id}" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:11px; border-radius:10px; font-size:13px; font-weight:800; cursor:pointer; box-shadow:0 4px 10px rgba(16,185,129,0.25);">🎟️ Resgatar Recompensa</button>`
+                    }
+                </div>
+            `;
+        };
+
         document.getElementById('modalBody').innerHTML = `
             <div style="max-width:780px; width:100%; margin:0 auto;">
                 <!-- Cartão de Pré-visualização do Aluno no Ranking -->
@@ -2371,7 +2412,8 @@ Workspace.Ingles = {
                     <div>
                         <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#a5b4fc; font-weight:800; margin-bottom:6px;">👑 A Sua Identidade no Ranking da Escola</div>
                         <div style="font-size:20px; font-weight:900; display:flex; align-items:center; gap:8px;">
-                            <span>${Workspace.escapeHTML(nomeAluno)}</span>${mascoteAtual ? `<span style="font-size:24px;" title="Mascote Equipado">${Workspace.escapeHTML(mascoteAtual)}</span>` : ''}
+                            <span>${Workspace.escapeHTML(nomeAluno)}</span>
+                            ${mascoteAtual ? `<span style="font-size:24px;" title="Mascote Equipado">${Workspace.escapeHTML(mascoteAtual)}</span>` : ''}
                         </div>
                         <div style="margin-top:6px;">
                             ${tituloAtual 
@@ -2386,17 +2428,74 @@ Workspace.Ingles = {
                     </div>
                 </div>
 
+                <!-- 🎟️ SECÇÃO 1: CUPONS E RECOMPENSAS REAIS DO PROFESSOR -->
+                <div style="margin-bottom:30px;">
+                    <h3 style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; font-size:17px; margin:0 0 6px 0;">🎟️ Recompensas & Cupons do Professor (Sala de Aula)</h3>
+                    <p style="font-size:12.5px; color:#64748b; margin:0 0 14px 0;">Troque as suas moedas por benefícios reais na aula! O professor receberá o seu pedido de resgate imediatamente.</p>
+                    <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); gap:14px;">
+                        ${cuponsProf.map(renderCardCupom).join('')}
+                    </div>
+                </div>
+
+                <!-- 🐾 SECÇÃO 2: MASCOTES -->
                 <h3 style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; font-size:17px; margin:0 0 12px 0;">🐾 Mascotes Guardiões (Aparecem ao lado do seu nome)</h3>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-bottom:28px;">
                     ${mascotes.map(renderCardItem).join('')}
                 </div>
 
+                <!-- ✨ SECÇÃO 3: TÍTULOS -->
                 <h3 style="font-family:'Plus Jakarta Sans', sans-serif; color:#0f172a; font-size:17px; margin:0 0 12px 0;">✨ Títulos de Honra (Aparecem no Top 9 e no Pódio)</h3>
                 <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:14px; margin-bottom:20px;">
                     ${titulos.map(renderCardItem).join('')}
                 </div>
             </div>
         `;
+    },
+
+    resgatarCupomProfessor(cupomId){
+        const cuponsProf = (Array.isArray(this.state.recompensasProf) && this.state.recompensasProf.length)
+            ? this.state.recompensasProf
+            : this.defaultsRecompensasProf;
+
+        const cupom = cuponsProf.find(c => c.id === cupomId);
+        if (!cupom) return;
+
+        const preco = parseInt(cupom.preco) ? parseInt(cupom.preco) : 1000;
+        const nomeAluno = Workspace.usuario?.nome ? Workspace.usuario.nome : (Workspace.usuario?.login ? Workspace.usuario.login : 'Aluno');
+
+        const executarResgate = async () => {
+            if (!this.gastarCoins(preco)) return;
+
+            if (!Array.isArray(this.state.submissions)) this.state.submissions = [];
+            this.state.submissions.unshift({
+                id: 'cupom_sub_' + Date.now(),
+                student: nomeAluno,
+                game: '🎟️ Cupom Resgatado',
+                text: `${cupom.emoji ? cupom.emoji : '🎟️'} ${cupom.titulo} — (${cupom.desc ? cupom.desc : 'Recompensa da Turma'})`,
+                isCoupon: true,
+                couponId: cupom.id,
+                precoPago: preco,
+                dataResgate: new Date().toISOString(),
+                status: 'pending'
+            });
+
+            await this.saveDados();
+            this.renderizarConteudoLoja();
+            if (window.Workspace?.Feed?.dispararConfetes) {
+                window.Workspace.Feed.dispararConfetes();
+            }
+            this.mostrarAvisoLocal(`🎟️ Cupom "${cupom.titulo}" resgatado! Enviado para o Professor!`, 'success');
+        };
+
+        if (window.Workspace?.Feed?.confirmarAcao) {
+            window.Workspace.Feed.confirmarAcao(
+                `🎟️ Resgatar "${cupom.titulo}"?`,
+                `Deseja gastar 🪙 ${preco.toLocaleString('pt-BR')} moedas para resgatar este cupom? O seu professor receberá um aviso na aba de Envios/Cupons para validar o seu prémio!`,
+                executarResgate
+            );
+        } else if (confirm(`Deseja resgatar "${cupom.titulo}" por ${preco} moedas?`)) {
+            executarResgate();
+        }
     },
 
     comprarOuEquiparItem(itemId){
@@ -2417,7 +2516,6 @@ Workspace.Ingles = {
             this.renderizarMarquee();
             this.mostrarAvisoLocal(`🎉 Comprou e equipou "${item.nome}"!`, 'success');
         } else {
-            // Se já comprou, alterna entre equipar e desequipar
             if (item.tipo === 'mascote') {
                 this.state.mascoteAtivo = (this.state.mascoteAtivo === item.valor) ? '' : item.valor;
             } else if (item.tipo === 'titulo') {
