@@ -635,6 +635,11 @@ Workspace.Alertas = {
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? String(n.destinoNome).replace(/'/g, "\\'") : '';
                         const nomeRemetente = n.remetenteNome || 'Utilizador';
+                        if (n.remetenteAvatar && window.Workspace) {
+                            Workspace.avatarsCache = Workspace.avatarsCache || {};
+                            Workspace.avatarsCache[nomeRemetente.trim()] = n.remetenteAvatar;
+                            if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[nomeRemetente.trim()] = n.remetenteAvatar;
+                        }
                         const nomeSeguro = Workspace.escapeHTML(nomeRemetente);
                         const avatarSino = window.Workspace.renderizarAvatar(nomeRemetente, 36);
                         const msgBruta = String(n.mensagem || '');
