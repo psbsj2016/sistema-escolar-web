@@ -751,7 +751,7 @@ Object.assign(Workspace, {
         });
     },
 
-    // 🔄 Troca o Nome Antigo pelo Novo Nome em todos os elementos já desenhados no Feed/Comentários
+   // 🔄 Troca o Nome Antigo pelo Novo Nome no Feed, Comentários e Sininho de Notificações!
     atualizarNomeNaTela: (nomeAntigo, novoNome, avatarUrl = null) => {
         if (!nomeAntigo || !novoNome) return;
         const antigoSeguro = Workspace.escapeHTML(String(nomeAntigo).trim());
@@ -779,8 +779,21 @@ Object.assign(Workspace, {
             }
         });
 
-        // 3. Atualiza a foto (ou as novas iniciais caso não tenha foto)
-        const fotoFinal = avatarUrl || Workspace.obterUrlAvatar(novoNome) || Workspace.obterUrlAvatar(nomeAntigo);
+        // 3. Atualiza os nomes dentro da gaveta do Sininho de Notificações
+        document.querySelectorAll('[data-noti-autor]').forEach(el => {
+            const autorAttr = (el.getAttribute('data-noti-autor') || '').trim().toLowerCase();
+            if (autorAttr === antigoLower) {
+                el.setAttribute('data-noti-autor', novoSeguro);
+                el.textContent = novoNome;
+            }
+        });
+
+        if (Workspace.Alertas && typeof Workspace.Alertas.sincronizarPerfilNasNotificacoes === 'function') {
+            Workspace.Alertas.sincronizarPerfilNasNotificacoes(nomeAntigo, novoNome, Workspace.usuario?.login, avatarUrl);
+        }
+
+        // 4. Atualiza a foto (ou as novas iniciais caso não tenha foto)
+        const fotoFinal = avatarUrl !== undefined ? avatarUrl : (Workspace.obterUrlAvatar(novoNome) || Workspace.obterUrlAvatar(nomeAntigo));
         if (fotoFinal) {
             Workspace.avatarsCache[novoNome.trim()] = fotoFinal;
             if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[novoNome.trim()] = fotoFinal;
@@ -1233,8 +1246,11 @@ Object.assign(Workspace, {
     // ============================================================================
     // 🚪 SISTEMA DE LOGOUT E "AMNÉSIA" DE NAVEGAÇÃO SEGURA
     // ============================================================================
-    logout: async (forcado = false) => {
-        if (Workspace.Alertas && Workspace.Alertas.radar) clearInterval(Workspace.Alertas.radar);
+   logout: async (forcado = false) => {
+        if (Workspace.Alertas) {
+            if (Workspace.Alertas.radarPolling) clearInterval(Workspace.Alertas.radarPolling);
+            if (Workspace.Alertas.conexaoSSE) Workspace.Alertas.conexaoSSE.close();
+        }
         
         localStorage.removeItem('ws_usuario_logado');
         sessionStorage.removeItem('ws_rascunho_global');

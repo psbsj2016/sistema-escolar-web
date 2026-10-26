@@ -31,11 +31,55 @@ Workspace.Alertas = {
                 if (Workspace.Alertas.radarPolling) clearInterval(Workspace.Alertas.radarPolling);
                 Workspace.Alertas.radarPolling = setInterval(() => {
                     if (document.visibilityState === 'visible' && Workspace.usuario) {
-                        Workspace.Alertas.buscarNotificacoes();
+                        Workspace.Alertas.buscarNotificacoes(true);
                     }
                 }, 15000);
             }
         }, 1000);
+    },
+
+    // ============================================================================
+    // 🔄 SINCRONIZADOR DE NOME E FOTO DENTRO DO SININHO
+    // ============================================================================
+    sincronizarPerfilNasNotificacoes: (nomeAntigo, novoNome, loginUser, avatarUrl) => {
+        const alvos = [nomeAntigo, loginUser, novoNome]
+            .filter(Boolean)
+            .map(s => String(s).trim().toLowerCase());
+
+        let houveMudanca = false;
+
+        // 1. Atualiza o cache de avatares global se veio uma foto
+        if (novoNome) {
+            if (!Workspace.avatarsCache) Workspace.avatarsCache = {};
+            if (avatarUrl) {
+                Workspace.avatarsCache[novoNome.trim()] = avatarUrl;
+                if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[novoNome.trim()] = avatarUrl;
+            } else if (avatarUrl === null) {
+                delete Workspace.avatarsCache[novoNome.trim()];
+                if (nomeAntigo) delete Workspace.avatarsCache[String(nomeAntigo).trim()];
+            }
+        }
+
+        // 2. Atualiza os nomes dentro da lista de notificações em memória
+        if (novoNome && Array.isArray(Workspace.Alertas.notificacoesAtuais)) {
+            Workspace.Alertas.notificacoesAtuais.forEach(n => {
+                const remAtual = String(n.remetenteNome || '').trim().toLowerCase();
+                if (alvos.includes(remAtual) && n.remetenteNome !== novoNome) {
+                    n.remetenteNome = novoNome;
+                    houveMudanca = true;
+                }
+                const destAtual = String(n.destinatarioNome || '').trim().toLowerCase();
+                if (alvos.includes(destAtual) && n.destinatarioNome !== novoNome) {
+                    n.destinatarioNome = novoNome;
+                    houveMudanca = true;
+                }
+            });
+        }
+
+        // 3. Re-renderiza o dropdown do sininho preservando a posição do scroll
+        if (houveMudanca || avatarUrl !== undefined) {
+            Workspace.Alertas.atualizarInterface();
+        }
     },
 
     // ============================================================================
@@ -70,6 +114,9 @@ Workspace.Alertas = {
 
         // 2. Manda cada departamento recarregar as suas listas em silêncio
         if (window.Workspace) {
+            if (typeof Workspace.atualizarCacheAvatares === 'function') {
+                await Workspace.atualizarCacheAvatares();
+            }
             if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes();
             
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) Workspace.Avaliacoes.carregarLobbies();
@@ -112,6 +159,22 @@ Workspace.Alertas = {
         sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
+            // 👤 ATUALIZAÇÃO EM TEMPO REAL DE NOME E FOTO NO SININHO E NA TELA
+            if (data.type === 'PERFIL_ATUALIZADO') {
+                Workspace.Alertas.sincronizarPerfilNasNotificacoes(
+                    data.nomeAntigo,
+                    data.novoNome,
+                    data.login,
+                    data.avatar
+                );
+                if (typeof Workspace.atualizarNomeNaTela === 'function' && data.novoNome) {
+                    Workspace.atualizarNomeNaTela(data.nomeAntigo || data.novoNome, data.novoNome, data.avatar);
+                }
+                if (typeof Workspace.atualizarAvataresNaTela === 'function' && data.novoNome) {
+                    Workspace.atualizarAvataresNaTela(data.novoNome, data.avatar);
+                }
+            }
+
             if (data.type === 'POST_UPDATE') {
                 if (window.Workspace && Workspace.Feed && Workspace.Feed.sincronizarPostSilencioso) {
                     Workspace.Feed.sincronizarPostSilencioso(data.postId);
@@ -215,7 +278,8 @@ Workspace.Alertas = {
                     
                     if (!(chatAberto && modalChatVisivel)) {
                         const nomeTurma = data.turmaNome ? data.turmaNome : 'Fórum da Turma';
-                        const textoCurto = data.mensagem.texto.length > 30 ? data.mensagem.texto.substring(0, 30) + '...' : data.mensagem.texto;
+                        const textoBruto = data.mensagem.texto || (data.mensagem.anexoNome ? `📎 ${data.mensagem.anexoNome}` : '📎 Anexo');
+                        const textoCurto = textoBruto.length > 30 ? textoBruto.substring(0, 30) + '...' : textoBruto;
                         
                         const idLocal = `alerta_local_${Date.now()}_${Math.floor(Math.random()*1000)}`;
                         const novaNotificacaoLocal = {
@@ -244,8 +308,8 @@ Workspace.Alertas = {
                                     ${avatarHtml}
                                 </div>
                                 <div style="display: flex; flex-direction: column; line-height: 1.3;">
-                                    <span style="font-size: 14px; font-weight: bold; color: white;">${data.mensagem.autorNome}</span>
-                                    <span style="font-size: 12.5px; color: rgba(255,255,255,0.95);">disse lá no grupo: <i>"${textoCurto}"</i></span>
+                                    <span style="font-size: 14px; font-weight: bold; color: white;">${Workspace.escapeHTML(data.mensagem.autorNome)}</span>
+                                    <span style="font-size: 12.5px; color: rgba(255,255,255,0.95);">disse lá no grupo: <i>"${Workspace.escapeHTML(textoCurto)}"</i></span>
                                 </div>
                             </div>
                         `;
@@ -300,8 +364,8 @@ Workspace.Alertas = {
 
             #ws-noti-count {
                 position: absolute !important;
-                top: -6px !important;
-                right: -6px !important;
+                top: -4px !important;
+                right: -4px !important;
                 background: #e74c3c !important;
                 color: white !important;
                 font-family: 'Poppins', sans-serif !important;
@@ -349,7 +413,12 @@ Workspace.Alertas = {
                 bell.addEventListener('click', (e) => {
                     e.preventDefault();
                     e.stopPropagation();
-                    dropdown.style.display = dropdown.style.display === 'block' ? 'none' : 'block';
+                    const vaiAbrir = dropdown.style.display !== 'block';
+                    dropdown.style.display = vaiAbrir ? 'block' : 'none';
+                    if (vaiAbrir) {
+                        // Garante que as fotos e tempos relativos estejam frescos ao abrir a gaveta
+                        Workspace.Alertas.atualizarInterface();
+                    }
                     const perfilDropdown = document.getElementById('ws-perfil-dropdown');
                     if (perfilDropdown) perfilDropdown.style.display = 'none';
                 });
@@ -364,7 +433,7 @@ Workspace.Alertas = {
         }
     },
 
-    buscarNotificacoes: async () => {
+    buscarNotificacoes: async (isPollingSilencioso = false) => {
         const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
         if (!meuNome) return;
         
@@ -372,6 +441,10 @@ Workspace.Alertas = {
             const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(meuNome.trim())}`);
             
             if (Array.isArray(data)) {                
+                const assinaturaAntiga = Workspace.Alertas.notificacoesAtuais
+                    .map(n => `${n.id}_${n.remetenteNome}`)
+                    .join('|');
+
                 const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
                 Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
                 
@@ -499,16 +572,30 @@ Workspace.Alertas = {
                     });
                 } 
                 
+                const assinaturaNova = Workspace.Alertas.notificacoesAtuais
+                    .map(n => `${n.id}_${n.remetenteNome}`)
+                    .join('|');
+
                 Workspace.Alertas.idsConhecidos = new Set(idsAtuais);
+                const eraPrimeiraBusca = !Workspace.Alertas.primeiraBuscaConcluida;
                 Workspace.Alertas.primeiraBuscaConcluida = true;
                 
-                Workspace.Alertas.atualizarInterface();
+                // Só reconstrói o HTML se houve alteração na lista ou se foi o primeiro carregamento
+                if (!isPollingSilencioso || eraPrimeiraBusca || assinaturaAntiga !== assinaturaNova) {
+                    Workspace.Alertas.atualizarInterface();
+                } else {
+                    // Atualiza apenas os textos "Há X min" sem destruir o scroll!
+                    document.querySelectorAll('#ws-lista-notificacoes .ws-time-ago').forEach(el => {
+                        const t = el.getAttribute('data-time');
+                        if (t) el.innerText = Workspace.Alertas.tempoRelativo(t);
+                    });
+                }
             }
         } catch (e) {}
     },
 
     atualizarInterface: () => {
-        const badges = document.querySelectorAll('#ws-noti-count, .ws-badge');
+        const badges = document.querySelectorAll('#ws-noti-count');
         const dropdown = document.getElementById('ws-noti-dropdown');
         const qtd = Workspace.Alertas.notificacoesAtuais.length;
 
@@ -524,15 +611,19 @@ Workspace.Alertas = {
         });
 
         if (dropdown) {
+            // Preserva a posição de rolagem atual caso a gaveta esteja aberta
+            const listaAnterior = document.getElementById('ws-lista-notificacoes');
+            const scrollSalvo = listaAnterior ? listaAnterior.scrollTop : 0;
+
             if (qtd === 0) {
                 dropdown.innerHTML = `
-                    <div style="display:flex; justify-content:flex-end; padding-bottom:10px; border-bottom:1px solid #eee;">
+                    <div style="display:flex; justify-content:flex-end; padding:12px 15px; border-bottom:1px solid #eee;">
                         <button onclick="document.getElementById('ws-noti-dropdown').style.display='none'" style="background:#f0f2f5; border:none; color:#555; width:32px; height:32px; border-radius:50%; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:0.2s;" onmouseover="this.style.background='#e74c3c'; this.style.color='white'" title="Fechar Painel">✖</button>
                     </div>
                     <div style="text-align:center; color:#94a3b8; padding:50px 0;"><div style="font-size:45px; margin-bottom:10px;">🔔</div><div style="font-weight:600; font-size:16px;">Parabéns! </div><div style="font-size:13px; margin-top:5px;">Nenhuma notificação pendente.</div></div>`;
             } else {
                 dropdown.innerHTML = `
-                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:15px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
+                    <div style="font-weight:bold; margin-bottom:10px; border-bottom:1px solid #eee; padding:15px 15px 12px 15px; color:#2c3e50; display:flex; justify-content:space-between; align-items:center; flex-shrink: 0;">
                         <span style="font-size: 16px;">🔔 Notificações (${qtd})</span>
                         <div style="display:flex; gap: 10px; align-items: center;">
                             <button onclick="Workspace.Alertas.limparTodas()" style="background:transparent; border:none; color:#3498db; cursor:pointer; font-size:12px; font-weight:bold; padding:4px 8px; border-radius:4px; transition:0.2s;" onmouseover="this.style.background='#ebf5fb'" onmouseout="this.style.background='transparent'" title="Marcar todas como lidas">Excluir Todas</button>
@@ -540,16 +631,21 @@ Workspace.Alertas = {
                         </div>
                     </div>
                     
-                    <div id="ws-lista-notificacoes" class="ws-scroll-suave" style="display:flex; flex-direction:column; gap:2px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain; padding-right: 4px;">
+                    <div id="ws-lista-notificacoes" class="ws-scroll-suave" style="display:flex; flex-direction:column; gap:2px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 15px 10px;">
                     ${Workspace.Alertas.notificacoesAtuais.map(n => {
-                        const destino = n.destinoNome ? n.destinoNome.replace(/'/g, "\\'") : '';
-                        const avatarSino = window.Workspace.renderizarAvatar(n.remetenteNome, 36);
+                        const destino = n.destinoNome ? String(n.destinoNome).replace(/'/g, "\\'") : '';
+                        const nomeRemetente = n.remetenteNome || 'Utilizador';
+                        const nomeSeguro = Workspace.escapeHTML(nomeRemetente);
+                        const avatarSino = window.Workspace.renderizarAvatar(nomeRemetente, 36);
+                        const msgBruta = String(n.mensagem || '');
+                        const msgEspacada = msgBruta.startsWith(' ') ? msgBruta : ' ' + msgBruta;
+
                         return `
                         <div class="ws-noti-item" id="notif-item-${n.id}">
                             <div onclick="Workspace.Alertas.lerEIr('${n.id}', '${n.origem}', '${n.origemId}', '${destino}')" style="display: flex; gap: 12px; flex: 1; align-items: flex-start;">
                                 ${avatarSino}
                                 <div style="flex: 1; min-width: 0;">
-                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong style="color:#3498db;">${n.remetenteNome}</strong>${n.mensagem}</div>
+                                    <div style="font-size:12.5px; color:#334155; line-height:1.4;"><strong data-noti-autor="${nomeSeguro}" style="color:#3498db;">${nomeSeguro}</strong>${msgEspacada}</div>
                                     <div class="ws-time-ago" data-time="${n.data}" style="font-size:10.5px; color:#94a3b8; font-weight:600; margin-top:4px;">${Workspace.Alertas.tempoRelativo(n.data)}</div>
                                 </div>
                             </div>
@@ -557,6 +653,11 @@ Workspace.Alertas = {
                         </div>`;
                     }).join('')}
                     </div>`;
+
+                const novaLista = document.getElementById('ws-lista-notificacoes');
+                if (novaLista && scrollSalvo > 0) {
+                    novaLista.scrollTop = scrollSalvo;
+                }
             }
         }
     },
@@ -688,7 +789,7 @@ Workspace.Alertas = {
             }, 300);
         }
         else if (origem === 'lousa_espera') {
-            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('sala_aula');
+            if (window.Workspace && Workspace.navegarPara) Workspace.navegarPara('encontros_prof');
             
             setTimeout(() => {
                 const painelLousa = document.getElementById('ws-cartao-lousa-prof');
@@ -698,7 +799,7 @@ Workspace.Alertas = {
                     void painelLousa.offsetWidth; 
                     painelLousa.classList.add('ws-highlight-magic');
                     
-                    const seletorTurma = document.getElementById('ws-prof-turma-lousa');
+                    const seletorTurma = document.getElementById('ws-prof-turma-lousa-modal') || document.getElementById('ws-prof-turma-lousa');
                     if (seletorTurma && origemId && origemId !== 'global') {
                         seletorTurma.value = origemId;
                     }
