@@ -1077,37 +1077,130 @@ Object.assign(Workspace.Avaliacoes, {
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-  abrirGerenciador: async (restauro = false) => {
+  // 🔄 Cruza a ficha da secretaria (/alunos) com o perfil escolhido pelo aluno no WorkSpace (/usuarios)
+    sincronizarIdentidadesAlunos: (alunosBrutos, usuariosBrutos, mapaAvatars) => {
+        const alunos = Array.isArray(alunosBrutos) ? alunosBrutos : [];
+        const usuarios = Array.isArray(usuariosBrutos) ? usuariosBrutos : [];
+        const avatares = mapaAvatars && !mapaAvatars.error ? mapaAvatars : {};
+
+        window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
+        Object.entries(avatares).forEach(([k, v]) => {
+            if (k && v) window.Workspace.avatarsCache[k.trim()] = v;
+        });
+
+        const mapaUsuariosPorRef = {};
+        const mapaUsuariosPorNome = {};
+
+        usuarios.forEach(u => {
+            const nomeEscolhido = String(u.nome || u.login || '').trim();
+            const foto = u.avatar || (nomeEscolhido && window.Workspace.avatarsCache[nomeEscolhido]) || null;
+
+            if (nomeEscolhido && foto) {
+                window.Workspace.avatarsCache[nomeEscolhido] = foto;
+            }
+            if (u.id) mapaUsuariosPorRef[String(u.id)] = { ...u, nomeEscolhido, foto };
+            if (u.alunoRefId) mapaUsuariosPorRef[String(u.alunoRefId)] = { ...u, nomeEscolhido, foto };
+            if (u.login) mapaUsuariosPorNome[String(u.login).toLowerCase().trim()] = { ...u, nomeEscolhido, foto };
+            if (u.nome) mapaUsuariosPorNome[String(u.nome).toLowerCase().trim()] = { ...u, nomeEscolhido, foto };
+        });
+
+        Workspace.Avaliacoes.mapaUsuariosWorkspace = { porId: mapaUsuariosPorRef, porNome: mapaUsuariosPorNome };
+
+        return alunos.map(a => {
+            const nomeOriginal = String(a.nome || '').trim();
+            const conta = (a.id && mapaUsuariosPorRef[String(a.id)])
+                || (nomeOriginal && mapaUsuariosPorNome[nomeOriginal.toLowerCase()])
+                || (a.login && mapaUsuariosPorNome[String(a.login).toLowerCase().trim()])
+                || null;
+
+            const nomeFinal = (conta && conta.nomeEscolhido) ? conta.nomeEscolhido : nomeOriginal;
+            const fotoFinal = (conta && conta.foto)
+                || a.avatar
+                || window.Workspace.avatarsCache[nomeFinal]
+                || window.Workspace.avatarsCache[nomeOriginal]
+                || null;
+
+            if (fotoFinal) {
+                if (nomeFinal) window.Workspace.avatarsCache[nomeFinal] = fotoFinal;
+                if (nomeOriginal) window.Workspace.avatarsCache[nomeOriginal] = fotoFinal;
+            }
+
+            return {
+                ...a,
+                userId: conta ? conta.id : a.userId,
+                nomeMatricula: nomeOriginal,
+                nome: nomeFinal,
+                avatar: fotoFinal
+            };
+        });
+    },
+
+    // 🔍 Resolve o nome escolhido e a foto atual para qualquer entrega ou acesso
+    resolverIdentidadeEntrega: (entregaOuNome) => {
+        const mapa = Workspace.Avaliacoes.mapaUsuariosWorkspace || { porId: {}, porNome: {} };
+        const cacheFotos = window.Workspace.avatarsCache || {};
+
+        if (typeof entregaOuNome === 'string') {
+            const bruto = entregaOuNome.trim();
+            const matchAp = bruto.match(/^(.*?)\s*\(@([^)]+)\)\s*$/);
+            const limpo = matchAp ? matchAp[2].trim() : bruto;
+            const conta = mapa.porNome[limpo.toLowerCase()] || (matchAp && mapa.porNome[matchAp[1].trim().toLowerCase()]);
+            const nomeFinal = (conta && conta.nomeEscolhido) ? conta.nomeEscolhido : limpo;
+            const fotoFinal = (conta && conta.foto) || cacheFotos[nomeFinal] || cacheFotos[bruto] || null;
+            return { nome: nomeFinal, avatar: fotoFinal };
+        }
+
+        const e = entregaOuNome || {};
+        const bruto = String(e.alunoNome || 'Aluno').trim();
+        const matchAp = bruto.match(/^(.*?)\s*\(@([^)]+)\)\s*$/);
+        const parteApelido = matchAp ? matchAp[2].trim() : bruto;
+        const parteCompleta = matchAp ? matchAp[1].trim() : bruto;
+
+        const conta = (e.alunoId && mapa.porId[String(e.alunoId)])
+            || (e.alunoRefId && mapa.porId[String(e.alunoRefId)])
+            || mapa.porNome[parteApelido.toLowerCase()]
+            || mapa.porNome[parteCompleta.toLowerCase()]
+            || null;
+
+        const nomeFinal = (conta && conta.nomeEscolhido) ? conta.nomeEscolhido : parteApelido;
+        const fotoFinal = e.alunoAvatar || (conta && conta.foto) || cacheFotos[nomeFinal] || cacheFotos[parteCompleta] || null;
+
+        if (fotoFinal && nomeFinal) {
+            window.Workspace.avatarsCache = window.Workspace.avatarsCache || {};
+            window.Workspace.avatarsCache[nomeFinal] = fotoFinal;
+        }
+
+        return { nome: nomeFinal, avatar: fotoFinal };
+    },
+
+    abrirGerenciador: async (restauro = false) => {
         if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'gerir');
         
-        // 🚀 1. Exibe a estrutura da tela IMEDIATAMENTE
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none'; 
         document.getElementById('ws-prof-submenu-gestao').style.display = 'none'; 
         document.getElementById('ws-prof-menu-encontros').style.display = 'none'; 
         document.getElementById('ws-prof-gerir-lista-container').style.display = 'block';
         
-        // 🚀 2. OPTIMISTIC UI: Se já houver dados na cache, desenha-os num milissegundo!
         if (Workspace.Avaliacoes.avaliacoesGerenciadorCache && Workspace.Avaliacoes.avaliacoesGerenciadorCache.length > 0) {
             Workspace.Avaliacoes.renderizarListaGerenciador();
         } else {
-            // Se for o 1º clique do dia e não houver memória, mostra o aviso
             const container = document.getElementById('ws-prof-gerir-lista'); 
             if (container) container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando dados da nuvem... ⏳</div>';
         }
 
-        // 🚀 3. OPERAÇÃO EM SEGUNDO PLANO (Silenciosa)
         try {
-            // Promessas paralelas para ser 3x mais rápido
             const pAlunos = Workspace.api(`/alunos?_t=${Date.now()}`, 'GET');
+            const pUsuarios = Workspace.api(`/usuarios?_t=${Date.now()}`, 'GET');
+            const pAvatars = Workspace.api(`/workspace/avatars?_t=${Date.now()}`, 'GET');
             const pAvals = Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
             const pEntregas = Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
             
-            const [resAlunos, resAvals, resEntregas] = await Promise.all([pAlunos, pAvals, pEntregas]);
+            const [resAlunos, resUsuarios, resAvatars, resAvals, resEntregas] = await Promise.all([pAlunos, pUsuarios, pAvatars, pAvals, pEntregas]);
 
             let houveMudanca = false;
 
             if (resAlunos && !resAlunos.error) {
-                Workspace.Avaliacoes.todosAlunosCache = resAlunos;
+                Workspace.Avaliacoes.todosAlunosCache = Workspace.Avaliacoes.sincronizarIdentidadesAlunos(resAlunos, resUsuarios, resAvatars);
                 houveMudanca = true;
             }
             if (resAvals && resAvals.success) {
@@ -1119,7 +1212,6 @@ Object.assign(Workspace.Avaliacoes, {
                 houveMudanca = true;
             }
 
-            // Apenas re-desenha se chegou informação fresca
             if (houveMudanca) {
                 Workspace.Avaliacoes.renderizarListaGerenciador();
             }
@@ -1488,15 +1580,26 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
                 alunosLista.sort((a, b) => (a.nome || '').localeCompare(b.nome || ''));
 
-                alunosLista.forEach(aluno => {
+               alunosLista.forEach(aluno => {
+                    const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega({
+                        alunoId: aluno.userId || aluno.id,
+                        alunoRefId: aluno.id,
+                        alunoNome: aluno.nome,
+                        alunoAvatar: aluno.avatar
+                    });
+                    const nomeExibicao = ident.nome || aluno.nome || 'Aluno';
+                    const fotoExibicao = ident.avatar || aluno.avatar || null;
+
                     const acessoFeito = acessos.find(e => 
                         String(e.alunoId) === String(aluno.id) || 
+                        (aluno.userId && String(e.alunoId) === String(aluno.userId)) ||
                         (e.alunoRefId && String(e.alunoRefId) === String(aluno.id)) || 
-                        (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim())
+                        (e.alunoNome && String(e.alunoNome).toLowerCase().trim() === nomeExibicao.toLowerCase().trim()) ||
+                        (e.alunoNome && aluno.nomeMatricula && String(e.alunoNome).toLowerCase().includes(String(aluno.nomeMatricula).toLowerCase().trim()))
                     );
-                    const avatar = window.Workspace.renderizarAvatar(aluno.nome, 35);
+                    const avatar = window.Workspace.renderizarAvatar(nomeExibicao, 35, fotoExibicao);
                     const foiReativado = idsReativados.includes(aluno.id);
-                    const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
+                    const nomeSeguro = nomeExibicao.replace(/'/g, "\\'");
                     const badgeConvidado = (prova.convidados && prova.convidados.some(c => c.id === aluno.id)) ? `<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 5px; border-radius: 4px; margin-left: 5px;">Convidado</span>` : '';
                     
                     const taOculto = listaOcultos.includes(String(aluno.id));
@@ -1524,7 +1627,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     <input type="checkbox" class="ws-check-reativar" value="${acessoFeito.id}" data-alunoid="${aluno.id}" data-alunonome="${nomeSeguro}" style="transform: scale(1.3); cursor: pointer;">
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)} ${badgeConvidado}</div>
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">${txtUsado} ${horaFormatada}</div>
                                     </div>
                                 </div>
@@ -1538,7 +1641,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)} ${badgeConvidado}</div>
                                         <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">${txtReativado} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
@@ -1552,7 +1655,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome} ${badgeConvidado}</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)} ${badgeConvidado}</div>
                                         <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#27ae60'}; font-weight:bold;">${txtAtivo} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
@@ -1569,8 +1672,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     htmlLista += `<div style="text-align: center; padding: 20px; color: #999;">${txtVazio}</div>`;
                 } else {
                     acessos.forEach(acesso => {
-                        const avatar = window.Workspace.renderizarAvatar(acesso.alunoNome, 35);
-                        const nomeSeguro = acesso.alunoNome ? acesso.alunoNome.replace(/'/g, "\\'") : 'Aluno';
+                        const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(acesso);
+                        const nomeExibicao = ident.nome || 'Aluno';
+                        const avatar = window.Workspace.renderizarAvatar(nomeExibicao, 35, ident.avatar);
+                        const nomeSeguro = nomeExibicao.replace(/'/g, "\\'");
 
                         let horaFormatada = '';
                         if (acesso.dataEntrega) {
@@ -1584,7 +1689,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     <input type="checkbox" class="ws-check-reativar" value="${acesso.id}" data-alunoid="${acesso.alunoId}" data-alunonome="${nomeSeguro}" style="transform: scale(1.3); cursor: pointer;">
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${acesso.alunoNome}</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)}</div>
                                         <div style="font-size:11px; color:#e74c3c; font-weight:bold;">${txtUsado} ${horaFormatada}</div>
                                     </div>
                                 </div>
@@ -1594,7 +1699,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     });
                     
                     reativadosLista.forEach(reativado => {
-                        const avatar = window.Workspace.renderizarAvatar(reativado.nome, 35);
+                        const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(reativado.nome);
+                        const nomeExibicao = ident.nome || reativado.nome;
+                        const avatar = window.Workspace.renderizarAvatar(nomeExibicao, 35, ident.avatar);
                         const taOculto = listaOcultos.includes(String(reativado.id));
                         alunosAtivosParaOcultar.push(String(reativado.id));
 
@@ -1611,7 +1718,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                                     <div style="width: 17px;"></div>
                                     ${avatar}
                                     <div>
-                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${reativado.nome}</div>
+                                        <div style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)}</div>
                                         <div style="font-size:11px; color:${taOculto ? '#95a5a6' : '#3498db'}; font-weight:bold;">${txtReativado} (Aguardando) ${taOculto ? '<span style="color:#e74c3c;">[Bloqueado]</span>' : ''}</div>
                                     </div>
                                 </div>
@@ -2326,7 +2433,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-   abrirRecebidas: async (restauro = false) => {
+  abrirRecebidas: async (restauro = false) => {
         if(!restauro) localStorage.setItem('ws_avaliacoes_prof_subtela', 'recebidas');
         document.getElementById('ws-prof-menu-avaliacoes').style.display = 'none';
         document.getElementById('ws-prof-submenu-gestao').style.display = 'none';
@@ -2337,8 +2444,17 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Carregando provas recebidas... ⏳</div>';
 
         try {
-            const resProvas = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
-            const resEntregas = await Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET');
+            const [resProvas, resEntregas, resAlunos, resUsuarios, resAvatars] = await Promise.all([
+                Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET'),
+                Workspace.api(`/workspace/avaliacoes/entregas?_t=${Date.now()}`, 'GET'),
+                Workspace.api(`/alunos?_t=${Date.now()}`, 'GET'),
+                Workspace.api(`/usuarios?_t=${Date.now()}`, 'GET'),
+                Workspace.api(`/workspace/avatars?_t=${Date.now()}`, 'GET')
+            ]);
+
+            if (resAlunos && !resAlunos.error) {
+                Workspace.Avaliacoes.todosAlunosCache = Workspace.Avaliacoes.sincronizarIdentidadesAlunos(resAlunos, resUsuarios, resAvatars);
+            }
 
             if (resEntregas && resEntregas.success && resProvas && resProvas.success) {
                 const provasMap = {};
@@ -2364,15 +2480,11 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             termoBusca = inputAtual ? inputAtual.value : '';
         }
 
-        // 🚀 FILTRO 1: Remove "online". Ficam estritamente provas escritas e orais!
         const entregasValidas = Workspace.Avaliacoes.entregasEmCache.filter(e => {
             const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
             return prova && prova.tipo !== 'online';
         });
 
-        // ==========================================
-        // 📊 DASHBOARD ANALYTICS (Baseado nas provas válidas)
-        // ==========================================
         let totalAlertas = 0;
         const erroPorQuestao = {};
         let somaAcertos = 0;
@@ -2449,20 +2561,19 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         </div>
         `;
 
-        // 🚀 FILTRO 2: Barra de Pesquisa
         let entregasFiltradas = entregasValidas;
         if (termoBusca.trim() !== '') {
             const termo = termoBusca.toLowerCase().trim();
             entregasFiltradas = entregasFiltradas.filter(e => {
                 const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
                 const tituloProva = prova ? prova.titulo.toLowerCase() : '';
-                const alunoNome = (e.alunoNome || '').toLowerCase();
+                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                const alunoNome = (ident.nome || e.alunoNome || '').toLowerCase();
                 const dataFormatada = new Date(e.dataEntrega).toLocaleDateString('pt-BR');
                 return tituloProva.includes(termo) || alunoNome.includes(termo) || dataFormatada.includes(termo);
             });
         }
 
-        // 🚀 BARRA DE FERRAMENTAS COM CHECKBOX "TODOS"
         const topBar = `
             <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 8px;">
@@ -2496,6 +2607,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 const dataObj = new Date(e.dataEntrega);
                 const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
                 
+                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                const nomeExibicao = ident.nome || e.alunoNome || 'Aluno';
+                const avatarHtml = window.Workspace.renderizarAvatar(nomeExibicao, 34, ident.avatar);
+
                 const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
                     ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
                     : '';
@@ -2504,9 +2619,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                     <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
                         <div style="display: flex; gap: 12px; align-items: center;">
                             <input type="checkbox" class="ws-check-entrega" value="${e.id}" style="transform: scale(1.3); cursor: pointer;">
+                            ${avatarHtml}
                             <div>
                                 <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
-                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${e.alunoNome}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
+                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${Workspace.escapeHTML(nomeExibicao)}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
                             </div>
                         </div>
                         <div style="display: flex; gap: 8px;">
@@ -2519,7 +2635,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
         container.innerHTML = htmlAnalytics + topBar + tituloLista + htmlListaAlunos;
 
-        // Repor o foco no input sem perder o que o professor escreveu
         const inputNovo = document.getElementById('ws-busca-recebidas');
         if (inputNovo && termoBusca !== '') {
             inputNovo.focus();
