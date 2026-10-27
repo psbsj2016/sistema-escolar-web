@@ -48,6 +48,54 @@ Workspace.atualizarCacheAvatares = async function() {
     }
 };
 
+/**
+ * 🔄 Sincronizador Multi-Aparelhos (Cloud Profile Sync)
+ * Garante que quando o utilizador abre o WorkSpace noutro telemóvel, tablet ou PC,
+ * o nome escolhido, a foto, a bio e as turmas atualizam-se no primeiro segundo!
+ */
+Workspace.sincronizarMeuPerfilDaNuvem = async function() {
+    if (!Workspace.usuario || !Workspace.usuario.id) return;
+    try {
+        const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(Workspace.usuario.id)}?_t=${Date.now()}`, 'GET');
+        if (res && res.success) {
+            const nomeAntigoLocal = Workspace.usuario.nome || Workspace.usuario.login;
+            let mudouAlgo = false;
+
+            if (res.nome && res.nome !== Workspace.usuario.nome) {
+                Workspace.usuario.nome = res.nome;
+                mudouAlgo = true;
+            }
+            if (res.avatar !== undefined && res.avatar !== Workspace.usuario.avatar) {
+                Workspace.usuario.avatar = res.avatar;
+                mudouAlgo = true;
+            }
+            if (res.bio !== undefined && res.bio !== Workspace.usuario.bio) {
+                Workspace.usuario.bio = res.bio;
+                mudouAlgo = true;
+            }
+            if (res.turma) Workspace.usuario.turma = res.turma;
+            if (res.turmas) Workspace.usuario.turmas = res.turmas;
+
+            localStorage.setItem('ws_usuario_logado', JSON.stringify(Workspace.usuario));
+
+            if (Workspace.usuario.avatar) {
+                Workspace.avatarsCache = Workspace.avatarsCache || {};
+                Workspace.avatarsCache[Workspace.usuario.nome.trim()] = Workspace.usuario.avatar;
+                if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = Workspace.usuario.avatar;
+            }
+
+            if (mudouAlgo) {
+                if (typeof Workspace.atualizarNomeNaTela === 'function') {
+                    Workspace.atualizarNomeNaTela(nomeAntigoLocal, Workspace.usuario.nome, Workspace.usuario.avatar);
+                }
+                if (Workspace.Alertas && typeof Workspace.Alertas.buscarNotificacoes === 'function') {
+                    Workspace.Alertas.buscarNotificacoes();
+                }
+            }
+        }
+    } catch (e) {}
+};
+
 Object.assign(Workspace, {
     // ============================================================================
     // 🗺️ MOTOR DE ESTADO PROFUNDO E AUTO-RASCUNHO (STATE HYDRATION & ANTI-AMNÉSIA)
@@ -369,7 +417,18 @@ Object.assign(Workspace, {
             if (Workspace.usuario.nome) Workspace.avatarsCache[Workspace.usuario.nome.trim()] = Workspace.usuario.avatar;
             if (Workspace.usuario.login) Workspace.avatarsCache[Workspace.usuario.login.trim()] = Workspace.usuario.avatar;
         }
+        Workspace.sincronizarMeuPerfilDaNuvem();
         Workspace.atualizarCacheAvatares();
+
+        if (!Workspace._syncMultiDeviceConfigurado) {
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && Workspace.usuario) {
+                    Workspace.sincronizarMeuPerfilDaNuvem();
+                    Workspace.atualizarCacheAvatares();
+                }
+            });
+            Workspace._syncMultiDeviceConfigurado = true;
+        }
 
         // 🚀 PASSO 1: PREPARA OS MÓDULOS
         if (Workspace.Ingles) Workspace.Ingles.init(); 

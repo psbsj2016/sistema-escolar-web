@@ -2,13 +2,38 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
+import fs from 'fs';
+
+// 🚀 carimbo único gerado a cada "npm run build"
+const BUILD_VERSION = String(Date.now());
+
+// Plugin que grava automaticamente o ficheiro dist/version.json em cada compilação
+function geradorVersaoBuild() {
+  return {
+    name: 'gerador-versao-build',
+    writeBundle() {
+      try {
+        const versionData = JSON.stringify({
+          version: BUILD_VERSION,
+          builtAt: new Date().toISOString()
+        });
+        fs.writeFileSync(resolve(__dirname, 'dist', 'version.json'), versionData, 'utf-8');
+        console.log(`✅ [Versão Global] dist/version.json gerado com sucesso: ${BUILD_VERSION}`);
+      } catch (e) {
+        console.error('Erro ao gerar version.json:', e);
+      }
+    }
+  };
+}
 
 export default defineConfig({
+  define: {
+    __APP_BUILD_VERSION__: JSON.stringify(BUILD_VERSION)
+  },
   plugins: [
+    geradorVersaoBuild(),
     VitePWA({
-      registerType: 'prompt', // 🚀 A REGRA DE OURO: Agora o PWA espera pela permissão do usuário
-      
-      // 🚀 O PASSAPORTE DOS ÁUDIOS: Ensinamos o PWA a reconhecer e autorizar os sons da Arena!
+      registerType: 'prompt', // 🚀 Espera pelo clique do utilizador no card de atualização
       includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
       
       manifest: {        
@@ -25,18 +50,20 @@ export default defineConfig({
         ]
       },
       workbox: {
-        // 🔥 O TRUQUE DE MESTRE: Injeta as nossas notificações sem estragar as suas rotas!
+        cleanupOutdatedCaches: true, // 🧹 Limpa automaticamente caches de versões antigas
+        clientsClaim: true,
         importScripts: ['/push-sw.js'], 
         
-        // 🚀 O ESCUDO ANTI-SEQUESTRO
+        // 🚀 O ESCUDO ANTI-SEQUESTRO (inclui version.json para nunca ficar preso em cache)
         navigateFallbackDenylist: [
           /^\/api/,
+          /version\.json/,
           /hub-matriculas\.html/,
           /matricula\.html/,
           /matricula-online\.html/,
           /workspace\.html/,
           /admin\.html/,
-          /workspace-lousa\.html/ // 🚀 AQUI: Adicionamos a Lousa ao escudo do PWA!
+          /workspace-lousa\.html/
         ] 
       }
     })
@@ -66,7 +93,7 @@ export default defineConfig({
         hub: resolve(__dirname, 'hub-matriculas.html'),
         online: resolve(__dirname, 'matricula-online.html'),
         workspace: resolve(__dirname, 'workspace.html'),
-        lousa: resolve(__dirname, 'workspace-lousa.html') // 🚀 AQUI: Colocamos a Lousa na lista VIP do Vite!
+        lousa: resolve(__dirname, 'workspace-lousa.html')
       }
     }
   }
