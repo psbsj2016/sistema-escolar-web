@@ -23,7 +23,12 @@ Workspace.atualizarCacheAvatares = async function() {
     try {
         const resposta = await Workspace.api('/workspace/avatars', 'GET');
         if (resposta && !resposta.error) {
-            Workspace.avatarsCache = { ...(Workspace.avatarsCache || {}), ...resposta };
+            Workspace.avatarsCache = Workspace.avatarsCache || {};
+            Object.entries(resposta).forEach(([nomeChave, urlFoto]) => {
+                if (nomeChave && urlFoto) {
+                    Workspace.avatarsCache[nomeChave.trim()] = urlFoto;
+                }
+            });
             if (Workspace.usuario && Workspace.usuario.avatar) {
                 const meuNome = (Workspace.usuario.nome || Workspace.usuario.login || '').trim();
                 if (meuNome) Workspace.avatarsCache[meuNome] = Workspace.usuario.avatar;
@@ -31,9 +36,11 @@ Workspace.atualizarCacheAvatares = async function() {
             }
             window.Workspace.mapaAvatars = Workspace.avatarsCache;
 
-            // Varre o ecrã e substitui imediatamente qualquer inicial pela foto carregada!
             if (typeof Workspace.sincronizarTodosAvataresVisiveis === 'function') {
                 Workspace.sincronizarTodosAvataresVisiveis();
+            }
+            if (Workspace.Alertas && typeof Workspace.Alertas.atualizarInterface === 'function') {
+                Workspace.Alertas.atualizarInterface();
             }
         }
     } catch (erro) {
@@ -673,22 +680,39 @@ Object.assign(Workspace, {
         const cache = Workspace.avatarsCache || window.Workspace.mapaAvatars || {};
         if (cache[nomeLimpo]) return cache[nomeLimpo];
 
-        const chaveEncontrada = Object.keys(cache).find(k => k.toLowerCase().trim() === nomeLimpo.toLowerCase());
+        const alvoLower = nomeLimpo.toLowerCase();
+        const chaveEncontrada = Object.keys(cache).find(k => k.toLowerCase().trim() === alvoLower && cache[k]);
         if (chaveEncontrada && cache[chaveEncontrada]) return cache[chaveEncontrada];
+
+        // Se vier num formato antigo "Nome Completo (@Apelido)", procura também pelas partes separadas
+        const matchApelido = nomeLimpo.match(/^(.*?)\s*\(@([^)]+)\)\s*$/);
+        if (matchApelido) {
+            const p1 = matchApelido[1].trim().toLowerCase();
+            const p2 = matchApelido[2].trim().toLowerCase();
+            const chaveParte = Object.keys(cache).find(k => {
+                const kl = k.toLowerCase().trim();
+                return (kl === p2 || kl === p1) && cache[k];
+            });
+            if (chaveParte && cache[chaveParte]) return cache[chaveParte];
+        }
 
         if (Workspace.usuario && Workspace.usuario.avatar) {
             const meuNome = String(Workspace.usuario.nome || '').trim().toLowerCase();
             const meuLogin = String(Workspace.usuario.login || '').trim().toLowerCase();
-            if (nomeLimpo.toLowerCase() === meuNome || nomeLimpo.toLowerCase() === meuLogin) {
+            if (alvoLower === meuNome || alvoLower === meuLogin) {
                 return Workspace.usuario.avatar;
             }
         }
         return null;
     },
 
-    renderizarAvatar: (nomeAutor, tamanho = 40) => {
+    renderizarAvatar: (nomeAutor, tamanho = 40, urlForcada = null) => {
         const nomeStr = String(nomeAutor || 'Desconhecido').trim();
-        const url = Workspace.obterUrlAvatar(nomeStr);
+        const url = urlForcada || Workspace.obterUrlAvatar(nomeStr);
+        if (url && nomeStr) {
+            Workspace.avatarsCache = Workspace.avatarsCache || {};
+            Workspace.avatarsCache[nomeStr] = url;
+        }
         const nomeSeguro = Workspace.escapeHTML(nomeStr);
 
         const isOnline = Workspace.usuariosOnline.has(nomeSeguro.trim());

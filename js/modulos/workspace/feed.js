@@ -88,13 +88,9 @@ Workspace.Feed = {
         
         if (window.Workspace && Workspace.Arena) Workspace.Arena.init();
 
-        try {
-            const avataresRes = await Workspace.api('/workspace/avatars', 'GET');
-            if (avataresRes && !avataresRes.error) {
-                window.Workspace.avatarsCache = { ...(window.Workspace.avatarsCache || {}), ...avataresRes };
-                window.Workspace.mapaAvatars = window.Workspace.avatarsCache;
-            }
-        } catch(e) {}
+        if (typeof Workspace.atualizarCacheAvatares === 'function') {
+            Workspace.atualizarCacheAvatares();
+        }
 
         await Workspace.Feed.carregarPosts();
         Workspace.Feed.configurarEventosCriacao();

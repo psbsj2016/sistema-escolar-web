@@ -632,16 +632,19 @@ Workspace.Alertas = {
                     </div>
                     
                     <div id="ws-lista-notificacoes" class="ws-scroll-suave" style="display:flex; flex-direction:column; gap:2px; max-height: 75vh; overflow-y: auto; overscroll-behavior: contain; padding: 0 10px 15px 10px;">
-                    ${Workspace.Alertas.notificacoesAtuais.map(n => {
+                  ${Workspace.Alertas.notificacoesAtuais.map(n => {
                         const destino = n.destinoNome ? String(n.destinoNome).replace(/'/g, "\\'") : '';
-                        const nomeRemetente = n.remetenteNome || 'Utilizador';
+                        const remBruto = String(n.remetenteNome || 'Utilizador').trim();
+                        const matchAp = remBruto.match(/^(.*?)\s*\(@([^)]+)\)\s*$/);
+                        const nomeRemetente = matchAp ? matchAp[2].trim() : remBruto;
+
                         if (n.remetenteAvatar && window.Workspace) {
                             Workspace.avatarsCache = Workspace.avatarsCache || {};
-                            Workspace.avatarsCache[nomeRemetente.trim()] = n.remetenteAvatar;
-                            if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[nomeRemetente.trim()] = n.remetenteAvatar;
+                            Workspace.avatarsCache[nomeRemetente] = n.remetenteAvatar;
+                            if (window.Workspace.mapaAvatars) window.Workspace.mapaAvatars[nomeRemetente] = n.remetenteAvatar;
                         }
                         const nomeSeguro = Workspace.escapeHTML(nomeRemetente);
-                        const avatarSino = window.Workspace.renderizarAvatar(nomeRemetente, 36);
+                        const avatarSino = window.Workspace.renderizarAvatar(nomeRemetente, 36, n.remetenteAvatar || null);
                         const msgBruta = String(n.mensagem || '');
                         const msgEspacada = msgBruta.startsWith(' ') ? msgBruta : ' ' + msgBruta;
 
