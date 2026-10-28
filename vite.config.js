@@ -4,7 +4,7 @@ import { resolve } from 'path';
 import { VitePWA } from 'vite-plugin-pwa';
 import fs from 'fs';
 
-// 🚀 carimbo único gerado a cada "npm run build"
+// 🚀 Carimbo único gerado a cada "npm run build"
 const BUILD_VERSION = String(Date.now());
 
 // Plugin que grava automaticamente o ficheiro dist/version.json em cada compilação
@@ -50,11 +50,19 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cleanupOutdatedCaches: true, // 🧹 Limpa automaticamente caches de versões antigas
+        cleanupOutdatedCaches: true, // 🧹 Apaga caches de versões antigas automaticamente
         clientsClaim: true,
+        // 🚀 OTIMIZAÇÃO CRÍTICA: Faz precache apenas do código e estrutura leve (reduz de 409MB para ~3MB!)
+        globPatterns: ['**/*.{js,css,html,svg,ico}'],
+        globIgnores: [
+          '**/node_modules/**/*',
+          '**/uploads/**/*',
+          '**/*.{mp4,webm,avi,mov,pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx}'
+        ],
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // Ignora qualquer ficheiro isolado maior que 3MB no precache
         importScripts: ['/push-sw.js'], 
         
-        // 🚀 O ESCUDO ANTI-SEQUESTRO (inclui version.json para nunca ficar preso em cache)
+        // 🚀 O ESCUDO ANTI-SEQUESTRO
         navigateFallbackDenylist: [
           /^\/api/,
           /version\.json/,
@@ -85,6 +93,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
+    chunkSizeWarningLimit: 3000, // 🔇 Silencia o aviso amarelo de chunks maiores que 500kB
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
