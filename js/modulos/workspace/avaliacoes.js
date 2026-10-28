@@ -1224,16 +1224,58 @@ Object.assign(Workspace.Avaliacoes, {
         }
     }, // <--- 🚨 VÍRGULA VITAL!
 
-    renderizarListaGerenciador: (termoBusca = null) => {
+   // 🔤 Remove acentos e padroniza minúsculas para a Pesquisa Universal (OmniSearch)
+    normalizarTextoBusca: (str) => {
+        if (!str) return '';
+        return String(str).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
+    },
+
+    limparBuscaGerenciador: () => {
+        const input = document.getElementById('ws-busca-avaliacoes');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        Workspace.Avaliacoes.renderizarListaGerenciador('', true);
+    },
+
+    copiarLinkSala: (link) => {
+        if (!link) return;
+        if (navigator.clipboard && window.isSecureContext) {
+            navigator.clipboard.writeText(link).then(() => {
+                Workspace.mostrarAviso("🔗 Link da sessão copiado para a área de transferência!", "success");
+            });
+        } else {
+            const ta = document.createElement('textarea');
+            ta.value = link;
+            ta.style.position = 'fixed';
+            ta.style.left = '-9999px';
+            document.body.appendChild(ta);
+            ta.select();
+            document.execCommand('copy');
+            document.body.removeChild(ta);
+            Workspace.mostrarAviso("🔗 Link da sessão copiado!", "success");
+        }
+    },
+
+    renderizarListaGerenciador: (termoBusca = null, apenasCards = false) => {
         const container = document.getElementById('ws-prof-gerir-lista');
         if (!container) return;
 
+        const inputExistente = document.getElementById('ws-busca-avaliacoes');
         if (termoBusca === null) {
-            const inputAtual = document.getElementById('ws-busca-avaliacoes');
-            termoBusca = inputAtual ? inputAtual.value : '';
+            termoBusca = inputExistente ? inputExistente.value : '';
         }
 
-        let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache;
+        const btnLimpar = document.getElementById('ws-btn-limpar-busca-aval');
+        if (btnLimpar) {
+            btnLimpar.style.display = termoBusca.trim().length > 0 ? 'flex' : 'none';
+        }
+
+        const norm = Workspace.Avaliacoes.normalizarTextoBusca;
+        const termoNorm = norm(termoBusca);
+
+        let avaliacoes = Workspace.Avaliacoes.avaliacoesGerenciadorCache || [];
         const contexto = Workspace.Avaliacoes.contextoAtual;
         const abaAtiva = Workspace.Avaliacoes.abaEncontrosArquivo || 'ativas';
 
@@ -1244,13 +1286,297 @@ Object.assign(Workspace.Avaliacoes, {
             avaliacoes = avaliacoes.filter(a => a.tipo !== 'online');
         }
 
-        if (termoBusca.trim() !== '') {
-            const termo = termoBusca.toLowerCase().trim();
+        // Cache auxiliar de alunos de cada avaliação para a OmniSearch e para o Destaque Individual (Ideia 5)
+        const mapaAlunosDaSessao = {};
+        const mapaPresencasDaSessao = {};
+
+        avaliacoes.forEach(a => {
+            let alunosSessao = [];
+            if (Workspace.Avaliacoes.todosAlunosCache) {
+                const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
+                    return Workspace.verificarTurma(aluno, a.destino, a.destinoNome);
+                });
+                alunosSessao = [...alunosDaTurma];
+
+                const convidados = a.convidados || [];
+                convidados.forEach(c => {
+                    if (!alunosSessao.some(al => String(al.id) === String(c.id))) {
+                        const identConv = Workspace.Avaliacoes.resolverIdentidadeEntrega({ alunoId: c.id, alunoNome: c.nome });
+                        alunosSessao.push({
+                            id: c.id,
+                            nome: identConv.nome || c.nome,
+                            nomeMatricula: c.nome,
+                            avatar: identConv.avatar || null,
+                            isConvidado: true
+                        });
+                    }
+                });
+            }
+            mapaAlunosDaSessao[a.id] = alunosSessao;
+            mapaPresencasDaSessao[a.id] = (Workspace.Avaliacoes.entregasEmCache || []).filter(e => e.avaliacaoId === a.id);
+        });
+
+        // 🔍 MOTOR OMNISEARCH: Pesquisa por Título, Turma, Link, Data/Hora, Questões, Tipo e Nomes de Alunos!
+        if (termoNorm !== '') {
             avaliacoes = avaliacoes.filter(a => {
-                const titulo = (a.titulo || '').toLowerCase();
-                const destino = (a.destinoNome || '').toLowerCase();
-                return titulo.includes(termo) || destino.includes(termo);
+                const dataCriacaoFmt = a.dataCriacao ? new Date(a.dataCriacao).toLocaleDateString('pt-BR') : '';
+                let dataAgendadaFmt = '';
+                if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                    const pT = a.dataAgendada.split('T');
+                    const pD = pT[0].split('-');
+                    if (pD.length === 3) dataAgendadaFmt = `${pD[2]}/${pD[1]}/${pD[0]} ${pT[1].substring(0, 5)}`;
+                }
+
+                const textosQuestoes = Array.isArray(a.questoes)
+                    ? a.questoes.map(q => `${q.pergunta || ''} ${(q.opcoes || []).join(' ')}`).join(' ')
+                    : '';
+
+                const camposDiretos = norm([
+                    a.titulo,
+                    a.destinoNome,
+                    a.destino,
+                    a.linkSala,
+                    a.instrucoes,
+                    a.tipo === 'online' ? 'online ao vivo sessao link meet zoom' : (a.tipo === 'oral' ? 'oral audio voz' : 'escrita prova exame'),
+                    a.status,
+                    dataCriacaoFmt,
+                    dataAgendadaFmt,
+                    textosQuestoes
+                ].join(' '));
+
+                if (camposDiretos.includes(termoNorm)) return true;
+
+                // Procura nos alunos da turma / convidados
+                const alunosSessao = mapaAlunosDaSessao[a.id] || [];
+                const achouAlunoTurma = alunosSessao.some(al => {
+                    return norm(al.nome).includes(termoNorm)
+                        || norm(al.nomeMatricula).includes(termoNorm)
+                        || norm(al.login).includes(termoNorm);
+                });
+                if (achouAlunoTurma) return true;
+
+                // Procura nos alunos que já entregaram/acessaram
+                const presencas = mapaPresencasDaSessao[a.id] || [];
+                return presencas.some(e => {
+                    const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                    return norm(ident.nome).includes(termoNorm) || norm(e.alunoNome).includes(termoNorm);
+                });
             });
+        }
+
+        // Constrói o HTML apenas dos cartões
+        let htmlCards = '';
+        if (avaliacoes.length === 0) {
+            htmlCards = `<div style="text-align: center; padding: 40px; color: #94a3b8; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">🔍 Nenhum resultado encontrado para <strong>"${Workspace.escapeHTML(termoBusca)}"</strong>.</div>`;
+        } else {
+            htmlCards = avaliacoes.map(a => {
+                let icone = '🖥️'; 
+                if (a.tipo === 'escrita') icone = '✍️'; 
+                if (a.tipo === 'oral') icone = '🎤';
+
+                const alunosSessao = mapaAlunosDaSessao[a.id] || [];
+                const totalAlunos = alunosSessao.length;
+                const presencasReais = mapaPresencasDaSessao[a.id] || [];
+                const presencasCount = presencasReais.length;
+                const faltam = Math.max(0, totalAlunos - presencasCount);
+
+                // 🎯 IDEIA 5: Destaque Inteligente do Aluno Pesquisado no Cartão
+                let htmlDestaquePesquisaAluno = '';
+                if (termoNorm.length >= 2) {
+                    const alunosEncontrados = [];
+                    alunosSessao.forEach(al => {
+                        if (norm(al.nome).includes(termoNorm) || norm(al.nomeMatricula).includes(termoNorm) || norm(al.login).includes(termoNorm)) {
+                            const registo = presencasReais.find(e =>
+                                String(e.alunoId) === String(al.id) ||
+                                (al.userId && String(e.alunoId) === String(al.userId)) ||
+                                (e.alunoRefId && String(e.alunoRefId) === String(al.id)) ||
+                                norm(e.alunoNome) === norm(al.nome) ||
+                                (al.nomeMatricula && norm(e.alunoNome).includes(norm(al.nomeMatricula)))
+                            );
+                            alunosEncontrados.push({ nome: al.nome, avatar: al.avatar, registo, bloqueado: (a.ocultos || []).includes(String(al.id)) });
+                        }
+                    });
+
+                    // Caso seja turma global sem lista prévia mas o aluno já tenha entrega/acesso registado
+                    if (alunosEncontrados.length === 0) {
+                        presencasReais.forEach(e => {
+                            const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                            if (norm(ident.nome).includes(termoNorm) || norm(e.alunoNome).includes(termoNorm)) {
+                                alunosEncontrados.push({ nome: ident.nome, avatar: ident.avatar, registo: e, bloqueado: false });
+                            }
+                        });
+                    }
+
+                    if (alunosEncontrados.length > 0) {
+                        const badgesAlunos = alunosEncontrados.slice(0, 3).map(item => {
+                            const avMini = window.Workspace.renderizarAvatar(item.nome, 22, item.avatar);
+                            if (item.registo) {
+                                const hora = item.registo.dataEntrega
+                                    ? new Date(item.registo.dataEntrega).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })
+                                    : '';
+                                return `<div style="display:inline-flex; align-items:center; gap:6px; background:#ecfdf5; border:1px solid #6ee7b7; color:#065f46; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:700;">${avMini} <span>${Workspace.escapeHTML(item.nome)}: ✅ ${a.tipo === 'online' ? 'Presente' : 'Entregue'}${hora ? ` às ${hora}` : ''}</span></div>`;
+                            } else if (item.bloqueado) {
+                                return `<div style="display:inline-flex; align-items:center; gap:6px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:700;">${avMini} <span>${Workspace.escapeHTML(item.nome)}: ⏸️ Bloqueado</span></div>`;
+                            } else if (a.status === 'arquivada') {
+                                return `<div style="display:inline-flex; align-items:center; gap:6px; background:#fef2f2; border:1px solid #fecaca; color:#dc2626; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:700;">${avMini} <span>${Workspace.escapeHTML(item.nome)}: ❌ Ausente</span></div>`;
+                            } else {
+                                return `<div style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; color:#1e40af; padding:4px 10px; border-radius:20px; font-size:11.5px; font-weight:700;">${avMini} <span>${Workspace.escapeHTML(item.nome)}: ⏳ Aguardando</span></div>`;
+                            }
+                        }).join('');
+
+                        htmlDestaquePesquisaAluno = `<div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:8px; padding-top:8px; border-top:1px dashed #e2e8f0;">${badgesAlunos}</div>`;
+                    }
+                }
+
+                // 👥 IDEIA 4: Radar Visual de Avatares Empilhados no Cartão
+                let htmlAvataresEmpilhados = '';
+                if (presencasReais.length > 0) {
+                    const maxAvatares = 6;
+                    const visiveis = presencasReais.slice(0, maxAvatares);
+                    const extras = presencasReais.length - visiveis.length;
+
+                    const pilha = visiveis.map((ent, idx) => {
+                        const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(ent);
+                        const av = window.Workspace.renderizarAvatar(ident.nome, 26, ident.avatar);
+                        return `<div title="${Workspace.escapeHTML(ident.nome)}" style="margin-left:${idx === 0 ? '0' : '-8px'}; border:2px solid #fff; border-radius:50%; display:inline-flex; box-shadow:0 1px 3px rgba(0,0,0,0.12);">${av}</div>`;
+                    }).join('');
+
+                    const badgeExtras = extras > 0
+                        ? `<div style="margin-left:-6px; width:26px; height:26px; border-radius:50%; background:#1e293b; color:#fff; font-size:10px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; border:2px solid #fff;">+${extras}</div>`
+                        : '';
+
+                    htmlAvataresEmpilhados = `
+                        <div onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')" style="display:inline-flex; align-items:center; cursor:pointer; padding:2px 6px; border-radius:20px; background:#f8fafc; border:1px solid #e2e8f0;" title="Clique para ver todos os acessos">
+                            ${pilha}${badgeExtras}
+                        </div>
+                    `;
+                }
+
+                if (a.status === 'arquivada') {
+                    const dArquivada = new Date(a.ultimaAtualizacao);
+                    const dataArqFormatada = `${dArquivada.toLocaleDateString('pt-BR')} às ${dArquivada.getHours().toString().padStart(2, '0')}h${dArquivada.getMinutes().toString().padStart(2, '0')}`;
+                    
+                    const presentes = [];
+                    const ausentes = [];
+                    
+                    alunosSessao.forEach(aluno => {
+                        const acessou = presencasReais.some(e =>
+                            String(e.alunoId) === String(aluno.id) ||
+                            (aluno.userId && String(e.alunoId) === String(aluno.userId)) ||
+                            (e.alunoRefId && String(e.alunoRefId) === String(aluno.id)) ||
+                            norm(e.alunoNome) === norm(aluno.nome) ||
+                            (aluno.nomeMatricula && norm(e.alunoNome).includes(norm(aluno.nomeMatricula)))
+                        );
+                        if (acessou) presentes.push(aluno);
+                        else ausentes.push(aluno);
+                    });
+
+                    presentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
+                    ausentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
+
+                    const htmlPresentes = presentes.length > 0 
+                        ? presentes.map(p => `<div style="font-size: 12px; color: #27ae60; padding: 4px 0; border-bottom: 1px dashed #eee; display:flex; align-items:center; gap:6px;">${window.Workspace.renderizarAvatar(p.nome, 20, p.avatar)} <span>✅ ${Workspace.escapeHTML(p.nome)}</span> ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px;">Convidado</span>' : ''}</div>`).join('')
+                        : '<div style="font-size: 12px; color: #999; font-style: italic;">Ninguém compareceu.</div>';
+                        
+                    const htmlAusentes = ausentes.length > 0 
+                        ? ausentes.map(p => `<div style="font-size: 12px; color: #e74c3c; padding: 4px 0; border-bottom: 1px dashed #eee; display:flex; align-items:center; gap:6px;">${window.Workspace.renderizarAvatar(p.nome, 20, p.avatar)} <span>❌ ${Workspace.escapeHTML(p.nome)}</span> ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px;">Convidado</span>' : ''}</div>`).join('')
+                        : '<div style="font-size: 12px; color: #999; font-style: italic;">Não houve ausências!</div>';
+
+                    return `
+                    <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                            <div style="flex: 1; min-width: 220px;">
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">📂 ${Workspace.escapeHTML(a.titulo)} (Relatório de Sessão)</h4>
+                                <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Arquivado em: <span style="color:#e67e22;">${dataArqFormatada}</span> &nbsp;|&nbsp; 👥 Turma: <span style="color:#8e44ad;">${Workspace.escapeHTML(a.destinoNome || 'Global')}</span></div>
+                                ${htmlDestaquePesquisaAluno}
+                            </div>
+                            <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                <button class="ws-btn" style="background:#e8f4f8; color:#2980b9; font-size:12px; padding:8px 14px; border-radius: 8px; font-weight: bold; border: 1px solid #bde0fe; cursor: pointer;" onclick="Workspace.Avaliacoes.copiarRelatorioChamada('${a.id}')">📋 Copiar Chamada</button>
+                                <button class="ws-btn" style="background:#f3e8ff; color:#7e22ce; font-size:12px; padding:8px 14px; border-radius: 8px; font-weight: bold; border: 1px solid #d8b4fe; cursor: pointer;" onclick="Workspace.Avaliacoes.clonarAvaliacao('${a.id}')" title="Duplicar esta sessão para reagendar rapidamente">📑 Clonar</button>
+                                <button class="ws-btn" style="background:#f0f2f5; color:#2c3e50; font-size:12px; padding:8px 14px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarSessaoOnline('${a.id}', 'ativa')">📂 Desarquivar</button>
+                                <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 14px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
+                            </div>
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                            <div>
+                                <h5 style="margin: 0 0 10px 0; color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">Presentes (${presentes.length})</h5>
+                                <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlPresentes}</div>
+                            </div>
+                            <div>
+                                <h5 style="margin: 0 0 10px 0; color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Ausentes (${ausentes.length})</h5>
+                                <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlAusentes}</div>
+                            </div>
+                        </div>
+                    </div>`;
+                } else {
+                    let corStatus = '#27ae60'; let textoStatus = 'Online';
+
+                    if (a.status === 'ativa') {
+                        if (a.tipo === 'online') {
+                            if (totalAlunos === 0) { textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db'; } 
+                            else if (presencasCount === 0) { textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60'; } 
+                            else if (presencasCount >= totalAlunos) { textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c'; } 
+                            else { textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12'; }
+                        } else { corStatus = '#27ae60'; textoStatus = `Ativa • Entregas: ${presencasCount}`; }
+                    }
+
+                    const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
+                    let dataApresentada = '';
+                    if (a.dataAgendada && a.dataAgendada.includes('T')) {
+                        const partesTempo = a.dataAgendada.split('T'); 
+                        const partesData = partesTempo[0].split('-');
+                        const horaExata = partesTempo[1].substring(0, 5); 
+                        if(partesData.length === 3) dataApresentada = `📅 Agendada para: ${partesData[2]}/${partesData[1]}/${partesData[0]} às ${horaExata}`;
+                    }
+
+                    let btnEntrarSala = '';
+                    let btnCopiarLink = '';
+                    let resumoLinkHtml = '';
+                    if (a.tipo === 'online' && a.linkSala) {
+                        let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
+                        const linkSeguroJS = linkFinal.replace(/'/g, "\\'");
+                        btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
+                        btnCopiarLink = `<button type="button" class="ws-btn" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 12px; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.copiarLinkSala('${linkSeguroJS}')" title="${Workspace.escapeHTML(linkFinal)}">🔗 Copiar Link</button>`;
+                        resumoLinkHtml = `<div style="font-size: 11px; color: #64748b; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px;">🔗 <span style="font-family: monospace;">${Workspace.escapeHTML(a.linkSala)}</span></div>`;
+                    }
+
+                    let btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
+
+                    return `
+                    <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 12px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; flex-wrap: wrap;">
+                            <div style="display: flex; gap: 12px; align-items: flex-start; flex: 1; min-width: 240px;">
+                                <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db; margin-top: 5px;">
+                                <div style="flex: 1; min-width: 0;">
+                                    <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">${icone} ${Workspace.escapeHTML(a.titulo)}</h4>
+                                    <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 6px; font-weight: bold;">Criada em: ${dataCriacaoFmt} ${dataApresentada ? `| ${dataApresentada}` : ''}</div>
+                                    ${resumoLinkHtml}
+                                    <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 8px;">
+                                        <span style="font-size: 11px; color: #8e44ad; font-weight:bold; background: #f4e8f8; padding: 3px 8px; border-radius: 6px;">👥 ${Workspace.escapeHTML(a.destinoNome || 'Global')}</span>
+                                        <span style="font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
+                                        ${htmlAvataresEmpilhados}
+                                    </div>
+                                    ${htmlDestaquePesquisaAluno}
+                                </div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap: 8px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
+                            ${btnEntrarSala}
+                            ${btnCopiarLink}
+                            ${btnGestao}
+                            <button type="button" class="ws-btn" style="background:#e8f4f8; color:#3498db; font-size:12px; padding:8px 14px; border-radius: 8px; border: 1px solid #bde0fe; cursor: pointer; font-weight: bold; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'" onmouseout="this.style.background='#e8f4f8'" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>
+                            <button type="button" class="ws-btn" style="background:#f3e8ff; color:#7e22ce; font-size:12px; padding:8px 14px; border-radius: 8px; border: 1px solid #d8b4fe; cursor: pointer; font-weight: bold; transition:0.2s;" onmouseover="this.style.background='#e9d5ff'" onmouseout="this.style.background='#f3e8ff'" onclick="Workspace.Avaliacoes.clonarAvaliacao('${a.id}')" title="Criar uma cópia pronta para reagendar ou aplicar noutra turma">📑 Clonar</button>
+                        </div>
+                    </div>`;
+                }
+            }).join('');
+        }
+
+        // 🛡️ SEPARAÇÃO CIRÚRGICA DO DOM: Se estiver apenas a digitar na barra de pesquisa, atualiza só os cartões sem tocar no <input>!
+        const areaCardsExistente = document.getElementById('ws-gerir-cards-list');
+        if (apenasCards && areaCardsExistente) {
+            areaCardsExistente.innerHTML = htmlCards;
+            return;
         }
 
         let abasHtml = '';
@@ -1264,163 +1590,28 @@ Object.assign(Workspace.Avaliacoes, {
         }
 
         const topBar = `
-            ${abasHtml}
-            <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                <div style="display: flex; align-items: center; gap: 8px;">
-                    <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
-                    <label for="ws-check-todos" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
-                </div>
-                <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
-                <div style="flex: 1; min-width: 200px; position: relative;">
-                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por título ou turma..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" onkeyup="Workspace.Avaliacoes.renderizarListaGerenciador(this.value)">
-                </div>
-                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                    <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
-                    ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>` : ''}
+            <div id="ws-gerir-topbar-fixed">
+                ${abasHtml}
+                <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" id="ws-check-todos" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db;" onclick="const cbs = document.querySelectorAll('.ws-check-avaliacao'); cbs.forEach(cb => cb.checked = this.checked);">
+                        <label for="ws-check-todos" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
+                    </div>
+                    <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
+                    <div style="flex: 1; min-width: 220px; position: relative;">
+                        <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; pointer-events: none;">🔍</span>
+                        <input type="text" id="ws-busca-avaliacoes" placeholder="Pesquisar por aluno, título, link, turma, data ou horário..." value="${Workspace.escapeHTML(termoBusca)}" autocomplete="off" style="width: 100%; padding: 10px 34px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box;" oninput="Workspace.Avaliacoes.renderizarListaGerenciador(this.value, true)">
+                        <button type="button" id="ws-btn-limpar-busca-aval" onclick="Workspace.Avaliacoes.limparBuscaGerenciador()" style="display: ${termoBusca.trim().length > 0 ? 'flex' : 'none'}; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #e2e8f0; border: none; color: #475569; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; align-items: center; justify-content: center;">✖</button>
+                    </div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        <button class="ws-btn" style="background: #e74c3c; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacoesSelecionadas()">🗑️ Apagar</button>
+                        ${abaAtiva === 'ativas' ? `<button class="ws-btn" style="background: #7f8c8d; color: white; padding: 8px 15px; border-radius: 20px; font-weight: bold; font-size: 11px; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarAvaliacoesSelecionadas()">📂 Arquivar</button>` : ''}
+                    </div>
                 </div>
             </div>
         `;
 
-        if (avaliacoes.length === 0) {
-            container.innerHTML = topBar + '<div style="text-align: center; padding: 40px; color: #999;">Nenhuma sessão encontrada.</div>';
-            return;
-        }
-
-        const htmlLista = avaliacoes.map(a => {
-            let icone = '🖥️'; 
-            if (a.tipo === 'escrita') icone = '✍️'; 
-            if (a.tipo === 'oral') icone = '🎤';
-
-            let alunosSessao = [];
-            if (Workspace.Avaliacoes.todosAlunosCache) {
-                // 🚀 O FILTRO ABSOLUTO ENTRA AQUI! Garante que apenas alunos da turma exata aparecem.
-                const alunosDaTurma = Workspace.Avaliacoes.todosAlunosCache.filter(aluno => {
-                    return Workspace.verificarTurma(aluno, a.destino, a.destinoNome);
-                });
-                
-                alunosSessao = [...alunosDaTurma];
-
-                const convidados = a.convidados || [];
-                convidados.forEach(c => { 
-                    if (!alunosSessao.some(al => al.id === c.id)) {
-                        alunosSessao.push({ id: c.id, nome: c.nome, isConvidado: true });
-                    }
-                });
-            }
-
-            const totalAlunos = alunosSessao.length;
-            const presencasReais = Workspace.Avaliacoes.entregasEmCache.filter(e => e.avaliacaoId === a.id);
-            const presencasCount = presencasReais.length;
-            const faltam = totalAlunos - presencasCount;
-
-            if (a.status === 'arquivada') {
-                const dArquivada = new Date(a.ultimaAtualizacao);
-                const dataArqFormatada = `${dArquivada.toLocaleDateString('pt-BR')} às ${dArquivada.getHours().toString().padStart(2, '0')}h${dArquivada.getMinutes().toString().padStart(2, '0')}`;
-                
-                const presentes = [];
-                const ausentes = [];
-                
-                alunosSessao.forEach(aluno => {
-                    const acessou = presencasReais.some(e => String(e.alunoId) === String(aluno.id) || (e.alunoRefId && String(e.alunoRefId) === String(aluno.id)) || (e.alunoNome && aluno.nome && String(e.alunoNome).toLowerCase().trim() === String(aluno.nome).toLowerCase().trim()));
-                    if (acessou) presentes.push(aluno);
-                    else ausentes.push(aluno);
-                });
-
-                presentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
-                ausentes.sort((x, y) => (x.nome || '').localeCompare(y.nome || ''));
-
-                const htmlPresentes = presentes.length > 0 
-                    ? presentes.map(p => `<div style="font-size: 12px; color: #27ae60; padding: 4px 0; border-bottom: 1px dashed #eee;">✅ ${Workspace.escapeHTML(p.nome)} ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px;">Convidado</span>' : ''}</div>`).join('')
-                    : '<div style="font-size: 12px; color: #999; font-style: italic;">Ninguém compareceu.</div>';
-                    
-                const htmlAusentes = ausentes.length > 0 
-                    ? ausentes.map(p => `<div style="font-size: 12px; color: #e74c3c; padding: 4px 0; border-bottom: 1px dashed #eee;">❌ ${Workspace.escapeHTML(p.nome)} ${p.isConvidado ? '<span style="font-size: 9px; background: #9b59b6; color: white; padding: 2px 4px; border-radius: 4px; margin-left: 5px;">Convidado</span>' : ''}</div>`).join('')
-                    : '<div style="font-size: 12px; color: #999; font-style: italic;">Não houve ausências!</div>';
-
-                return `
-                <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 10px rgba(0,0,0,0.03); border-left: 5px solid #7f8c8d;">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-bottom: 15px;">
-                        <div style="flex: 1;">
-                            <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">📂 ${a.titulo} (Relatório de Sessão)</h4>
-                            <div style="font-size: 12px; color: #7f8c8d; font-weight: bold;">Arquivado em: <span style="color:#e67e22;">${dataArqFormatada}</span> &nbsp;|&nbsp; 👥 Turma: <span style="color:#8e44ad;">${a.destinoNome || 'Global'}</span></div>
-                        </div>
-                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                            <button class="ws-btn" style="background:#e8f4f8; color:#2980b9; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: 1px solid #bde0fe; cursor: pointer;" onclick="Workspace.Avaliacoes.copiarRelatorioChamada('${a.id}')">📋 Copiar Chamada</button>
-                            <button class="ws-btn" style="background:#f0f2f5; color:#2c3e50; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.arquivarSessaoOnline('${a.id}', 'ativa')">📂 Desarquivar</button>
-                            <button class="ws-btn" style="background:#fdf2f2; color:#e74c3c; font-size:12px; padding:8px 15px; border-radius: 8px; font-weight: bold; border: none; cursor: pointer;" onclick="Workspace.Avaliacoes.excluirAvaliacao('${a.id}')">🗑️ Apagar</button>
-                        </div>
-                    </div>
-                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                        <div>
-                            <h5 style="margin: 0 0 10px 0; color: #27ae60; border-bottom: 2px solid #27ae60; padding-bottom: 5px;">Presentes (${presentes.length})</h5>
-                            <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlPresentes}</div>
-                        </div>
-                        <div>
-                            <h5 style="margin: 0 0 10px 0; color: #e74c3c; border-bottom: 2px solid #e74c3c; padding-bottom: 5px;">Ausentes (${ausentes.length})</h5>
-                            <div style="max-height: 200px; overflow-y: auto; padding-right: 5px;">${htmlAusentes}</div>
-                        </div>
-                    </div>
-                </div>`;
-            } else {
-                let corStatus = '#27ae60'; let textoStatus = 'Online';
-
-                if (a.status === 'ativa') {
-                    if (a.tipo === 'online') {
-                        if (totalAlunos === 0) { textoStatus = `Acessos: ${presencasCount}`; corStatus = '#3498db'; } 
-                        else if (presencasCount === 0) { textoStatus = 'Acesso Online (Todos)'; corStatus = '#27ae60'; } 
-                        else if (presencasCount >= totalAlunos) { textoStatus = 'Acesso Offline (Todos)'; corStatus = '#e74c3c'; } 
-                        else { textoStatus = `Acesso Online (${faltam}) e Acesso Offline (${presencasCount})`; corStatus = '#f39c12'; }
-                    } else { corStatus = '#27ae60'; textoStatus = 'Online'; }
-                }
-
-                const dataCriacaoFmt = new Date(a.dataCriacao).toLocaleDateString('pt-BR');
-                let dataApresentada = '';
-                if (a.dataAgendada && a.dataAgendada.includes('T')) {
-                    const partesTempo = a.dataAgendada.split('T'); 
-                    const partesData = partesTempo[0].split('-');
-                    const horaExata = partesTempo[1].substring(0, 5); 
-                    if(partesData.length === 3) dataApresentada = `📅 Agendada para: ${partesData[2]}/${partesData[1]}/${partesData[0]} às ${horaExata}`;
-                }
-
-                let btnEntrarSala = '';
-                if (a.tipo === 'online' && a.linkSala) {
-                    let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
-                    btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
-                }
-
-                let btnGestao = `<button class="ws-btn" style="background: #3498db; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirModalAcessos('${a.id}', '${a.destino}')">📊 Gestão de Acessos</button>`;
-
-               return `
-                <div id="card-prof-${a.id}" style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; flex-direction:column; gap: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
-                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                        <div style="display: flex; gap: 12px; align-items: flex-start;">
-                            <input type="checkbox" class="ws-check-avaliacao" value="${a.id}" style="transform: scale(1.3); cursor: pointer; accent-color: #3498db; margin-top: 5px;">
-                            <div style="flex: 1; min-width: 0;">
-                                <h4 style="margin: 0 0 5px 0; color: #2c3e50; font-size: 16px;">${icone} ${a.titulo}</h4>
-                                <div style="font-size: 11px; color: #7f8c8d; margin-bottom: 8px; font-weight: bold;">Criada em: ${dataCriacaoFmt} ${dataApresentada ? `| ${dataApresentada}` : ''}</div>
-                                <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
-                                    <span style="font-size: 11px; color: #8e44ad; font-weight:bold; background: #f4e8f8; padding: 3px 8px; border-radius: 6px;">👥 ${a.destinoNome || 'Global'}</span>
-                                    <span style="font-size: 11px; font-weight: bold; padding: 3px 8px; border-radius: 6px; background: ${corStatus}20; color: ${corStatus};">${textoStatus}</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap: 10px; border-top: 1px dashed #eee; padding-top: 10px; flex-wrap: wrap;">
-                        ${btnEntrarSala}
-                        ${btnGestao}
-                        <button type="button" class="ws-btn" style="background:#e8f4f8; color:#3498db; font-size:12px; padding:8px 15px; border-radius: 8px; border: 1px solid #bde0fe; cursor: pointer; font-weight: bold; transition:0.2s;" onmouseover="this.style.background='#d5ebf6'" onmouseout="this.style.background='#e8f4f8'" onclick="Workspace.Avaliacoes.editarAvaliacao('${a.id}')">✏️ Editar</button>
-                    </div>
-                </div>`;
-            }
-        }).join('');
-
-        container.innerHTML = topBar + htmlLista;
-        
-        const inputNovo = document.getElementById('ws-busca-avaliacoes');
-        if (inputNovo && termoBusca !== '') {
-            inputNovo.focus(); const val = inputNovo.value; inputNovo.value = ''; inputNovo.value = val;
-        }
+        container.innerHTML = `${topBar}<div id="ws-gerir-cards-list">${htmlCards}</div>`;
     },
 
    // ========================================================================
@@ -1940,21 +2131,35 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-    buscarConvidado: (avaliacaoId, termo) => {
+   buscarConvidado: (avaliacaoId, termo) => {
         const container = document.getElementById(`ws-lista-convidados-${avaliacaoId}`);
-        if (!termo || termo.trim().length < 2) { container.innerHTML = ''; return; }
+        if (!container) return;
+        const norm = Workspace.Avaliacoes.normalizarTextoBusca;
+        const termoNorm = norm(termo);
+        if (!termoNorm || termoNorm.length < 1) { container.innerHTML = ''; return; }
         
-        termo = termo.toLowerCase().trim();
-        const resultados = (Workspace.Avaliacoes.todosAlunosCache || []).filter(a => (a.nome || '').toLowerCase().includes(termo)).slice(0, 10);
+        const resultados = (Workspace.Avaliacoes.todosAlunosCache || []).filter(a => {
+            return norm(a.nome).includes(termoNorm)
+                || norm(a.nomeMatricula).includes(termoNorm)
+                || norm(a.login).includes(termoNorm);
+        }).slice(0, 12);
 
-        if (resultados.length === 0) { container.innerHTML = '<div style="font-size:12px; color:#999; padding:5px;">Nenhum aluno encontrado.</div>'; return; }
+        if (resultados.length === 0) {
+            container.innerHTML = '<div style="font-size:12px; color:#999; padding:8px; text-align:center;">Nenhum aluno encontrado com este nome.</div>';
+            return;
+        }
 
         container.innerHTML = resultados.map(aluno => {
-            const nomeSeguro = aluno.nome ? aluno.nome.replace(/'/g, "\\'") : 'Aluno';
+            const nomeExibicao = aluno.nome || 'Aluno';
+            const nomeSeguro = nomeExibicao.replace(/'/g, "\\'");
+            const avatarMini = window.Workspace.renderizarAvatar(nomeExibicao, 28, aluno.avatar);
             return `
-            <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:6px; border:1px solid #eee;">
-                <span style="font-size:13px; font-weight:bold; color:#2c3e50;">${aluno.nome}</span>
-                <button class="ws-btn" style="background:#8e44ad; font-size:11px; padding:4px 10px; border-radius:15px; border:none; color:white; cursor:pointer;" onclick="Workspace.Avaliacoes.adicionarConvidadoSessao('${avaliacaoId}', '${aluno.id}', '${nomeSeguro}')">Adicionar</button>
+            <div style="display:flex; justify-content:space-between; align-items:center; background:white; padding:8px 12px; border-radius:8px; border:1px solid #e2e8f0;">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    ${avatarMini}
+                    <span style="font-size:13px; font-weight:bold; color:#2c3e50;">${Workspace.escapeHTML(nomeExibicao)}</span>
+                </div>
+                <button type="button" class="ws-btn" style="background:#8e44ad; font-size:11px; padding:5px 12px; border-radius:15px; border:none; color:white; cursor:pointer;" onclick="Workspace.Avaliacoes.adicionarConvidadoSessao('${avaliacaoId}', '${aluno.id}', '${nomeSeguro}')">➕ Convidar</button>
             </div>`;
         }).join('');
     },
@@ -2128,7 +2333,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         );
     },
 
-    editarAvaliacao: async (id) => {
+   editarAvaliacao: async (id) => {
         await Workspace.Avaliacoes.carregarTurmasProf();
         const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
         if(!prova) return;
@@ -2158,13 +2363,12 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
             document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-oral').innerText = "💾 Salvar Alterações";
-     } else if (prova.tipo === 'online') { 
+        } else if (prova.tipo === 'online') { 
             document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
             document.getElementById('ws-prof-nova-online').style.display = 'block';
             
             document.getElementById('ws-nova-online-titulo').value = prova.titulo || '';
             
-            // 🚀 Formatação rigorosa para YYYY-MM-DDThh:mm
             let dataFormatadaInput = '';
             if (prova.dataAgendada && prova.dataAgendada.includes('T')) {
                 dataFormatadaInput = prova.dataAgendada.substring(0, 16);
@@ -2175,6 +2379,59 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
             document.getElementById('ws-btn-salvar-online').innerText = "💾 Salvar Alterações";
         }
+    },
+
+    // 📑 IDEIA 3: Clona qualquer Sessão Online ou Avaliação em 1 clique para reagendar ou aplicar noutra turma!
+    clonarAvaliacao: async (id) => {
+        await Workspace.Avaliacoes.carregarTurmasProf();
+        const prova = Workspace.Avaliacoes.avaliacoesGerenciadorCache.find(p => p.id === id);
+        if (!prova) return;
+
+        // Importante: Define como null para que ao salvar seja criada uma NOVA sessão/avaliação!
+        Workspace.Avaliacoes.avaliacaoEmEdicao = null;
+
+        if (prova.tipo === 'escrita') {
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-escrita').style.display = 'block';
+
+            document.getElementById('ws-nova-prova-titulo').value = `${prova.titulo} (Cópia)`;
+            document.getElementById('ws-nova-prova-tempo').value = prova.tempo || 60;
+            document.getElementById('ws-nova-prova-tentativas').value = prova.tentativas || 1;
+            document.getElementById('ws-nova-prova-destino').value = prova.destino || 'global';
+            document.getElementById('ws-btn-salvar-escrita').innerText = "🚀 Publicar Cópia do Exame";
+
+            document.getElementById('ws-builder-questoes').innerHTML = '';
+            if (prova.questoes) {
+                prova.questoes.forEach(q => Workspace.Avaliacoes.adicionarQuestaoBuilder(q.tipo, q));
+            }
+            Workspace.mostrarAviso("📑 Prova clonada! Ajuste a turma ou o título e clique em Publicar.", "info");
+        } else if (prova.tipo === 'oral') {
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-oral').style.display = 'block';
+
+            document.getElementById('ws-nova-oral-titulo').value = `${prova.titulo} (Cópia)`;
+            document.getElementById('ws-nova-oral-instrucoes').value = prova.instrucoes || '';
+            document.getElementById('ws-nova-oral-tentativas').value = prova.tentativas || 1;
+            document.getElementById('ws-nova-oral-destino').value = prova.destino || 'global';
+            document.getElementById('ws-btn-salvar-oral').innerText = "🎤 Publicar Cópia do Teste Oral";
+            Workspace.mostrarAviso("📑 Teste Oral clonado! Ajuste os detalhes e clique em Publicar.", "info");
+        } else if (prova.tipo === 'online') {
+            document.getElementById('ws-prof-gerir-lista-container').style.display = 'none';
+            document.getElementById('ws-prof-nova-online').style.display = 'block';
+
+            document.getElementById('ws-nova-online-titulo').value = prova.titulo || '';
+
+            let dataSugerida = '';
+            if (prova.dataAgendada && prova.dataAgendada.includes('T')) {
+                dataSugerida = prova.dataAgendada.substring(0, 16);
+            }
+            document.getElementById('ws-nova-online-data').value = dataSugerida;
+            document.getElementById('ws-nova-online-link').value = prova.linkSala || '';
+            document.getElementById('ws-nova-online-destino').value = prova.destino || 'global';
+            document.getElementById('ws-btn-salvar-online').innerText = "🖥️ Agendar Nova Sessão Clonada";
+            Workspace.mostrarAviso("📑 Sessão clonada com o link original! Escolha a nova data/hora e publique.", "info");
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
     },
 
     adicionarQuestaoBuilder: (tipo, questaoExistente = null) => {
@@ -2472,18 +2729,109 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         }
     },
 
-    renderizarListaRecebidas: (termoBusca = null) => {
+   limparBuscaRecebidas: () => {
+        const input = document.getElementById('ws-busca-recebidas');
+        if (input) {
+            input.value = '';
+            input.focus();
+        }
+        Workspace.Avaliacoes.renderizarListaRecebidas('', true);
+    },
+
+    renderizarListaRecebidas: (termoBusca = null, apenasCards = false) => {
         const container = document.getElementById('ws-prof-recebidas-lista');
+        if (!container) return;
         
+        const inputAtual = document.getElementById('ws-busca-recebidas');
         if (termoBusca === null) {
-            const inputAtual = document.getElementById('ws-busca-recebidas');
             termoBusca = inputAtual ? inputAtual.value : '';
         }
+
+        const btnLimparRec = document.getElementById('ws-btn-limpar-busca-rec');
+        if (btnLimparRec) {
+            btnLimparRec.style.display = termoBusca.trim().length > 0 ? 'flex' : 'none';
+        }
+
+        const norm = Workspace.Avaliacoes.normalizarTextoBusca;
+        const termoNorm = norm(termoBusca);
 
         const entregasValidas = Workspace.Avaliacoes.entregasEmCache.filter(e => {
             const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
             return prova && prova.tipo !== 'online';
         });
+
+        if (entregasValidas.length === 0) {
+            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem provas recebidas.</div>';
+            return;
+        }
+
+        let entregasFiltradas = entregasValidas;
+        if (termoNorm !== '') {
+            entregasFiltradas = entregasFiltradas.filter(e => {
+                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                const dataObj = new Date(e.dataEntrega);
+                const dataFormatada = dataObj.toLocaleDateString('pt-BR');
+                const horaFormatada = dataObj.toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' });
+                const respostasTxt = e.respostas ? Object.values(e.respostas).join(' ') : '';
+
+                const tudoNorm = norm([
+                    prova ? prova.titulo : '',
+                    prova ? prova.destinoNome : '',
+                    prova && prova.tipo === 'oral' ? 'oral audio voz' : 'escrita prova exame',
+                    ident.nome,
+                    e.alunoNome,
+                    dataFormatada,
+                    horaFormatada,
+                    respostasTxt,
+                    (e.relatorioFraude && e.relatorioFraude.fugas > 0) ? 'fraude ausencia alerta' : ''
+                ].join(' '));
+
+                return tudoNorm.includes(termoNorm);
+            });
+        }
+
+        const htmlListaAlunos = entregasFiltradas.length === 0 
+            ? `<div style="text-align: center; padding: 40px; color: #94a3b8; background: #fff; border-radius: 12px; border: 1px dashed #cbd5e1;">🔍 Nenhum exame encontrado para <strong>"${Workspace.escapeHTML(termoBusca)}"</strong>.</div>`
+            : entregasFiltradas.map(e => {
+                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
+                const tituloProva = prova ? prova.titulo : 'Prova Excluída';
+                const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
+                const dataObj = new Date(e.dataEntrega);
+                const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+                
+                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
+                const nomeExibicao = ident.nome || e.alunoNome || 'Aluno';
+                const avatarHtml = window.Workspace.renderizarAvatar(nomeExibicao, 34, ident.avatar);
+
+                const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
+                    ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
+                    : '';
+
+                return `
+                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s; flex-wrap: wrap; gap: 10px;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <input type="checkbox" class="ws-check-entrega" value="${e.id}" style="transform: scale(1.3); cursor: pointer;">
+                            ${avatarHtml}
+                            <div>
+                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${Workspace.escapeHTML(tituloProva)}</h4>
+                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${Workspace.escapeHTML(nomeExibicao)}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
+                            </div>
+                        </div>
+                        <div style="display: flex; gap: 8px;">
+                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
+                            <button class="ws-btn" style="background: #fdf2f2; color: #e74c3c; padding: 8px 15px; font-size: 12px; border-radius: 20px; border: 1px solid #fadbd8;" title="Apagar Exame" onclick="Workspace.Avaliacoes.excluirEntregaIndividual('${e.id}')">🗑️</button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+        // 🛡️ Se o utilizador estiver a digitar no campo de busca, atualiza apenas a área dos cartões sem destruir o <input>!
+        const areaCardsRec = document.getElementById('ws-recebidas-cards-list');
+        if (apenasCards && areaCardsRec) {
+            areaCardsRec.innerHTML = htmlListaAlunos;
+            return;
+        }
 
         let totalAlertas = 0;
         const erroPorQuestao = {};
@@ -2538,8 +2886,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             htmlAnalytics += `
             <div style="background: #fdf2f2; border: 1px solid #fadbd8; border-radius: 12px; padding: 15px; border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.01);">
                 <div style="font-size: 11px; font-weight: bold; color: #c0392b; text-transform: uppercase; margin-bottom: 5px;">🔥 Zona Crítica (Mapa de Calor)</div>
-                <div style="font-size: 13px; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="${piorQuestao.pergunta}">${piorQuestao.pergunta}</div>
-                <div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-top: 4px;">Falha de ${taxaErroFormatada}% em: ${piorQuestao.tituloProva}</div>
+                <div style="font-size: 13px; font-weight: bold; color: #2c3e50; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%;" title="${Workspace.escapeHTML(piorQuestao.pergunta)}">${Workspace.escapeHTML(piorQuestao.pergunta)}</div>
+                <div style="font-size: 11px; color: #e74c3c; font-weight: bold; margin-top: 4px;">Falha de ${taxaErroFormatada}% em: ${Workspace.escapeHTML(piorQuestao.tituloProva)}</div>
             </div>
             `;
         } else {
@@ -2561,29 +2909,17 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         </div>
         `;
 
-        let entregasFiltradas = entregasValidas;
-        if (termoBusca.trim() !== '') {
-            const termo = termoBusca.toLowerCase().trim();
-            entregasFiltradas = entregasFiltradas.filter(e => {
-                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
-                const tituloProva = prova ? prova.titulo.toLowerCase() : '';
-                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
-                const alunoNome = (ident.nome || e.alunoNome || '').toLowerCase();
-                const dataFormatada = new Date(e.dataEntrega).toLocaleDateString('pt-BR');
-                return tituloProva.includes(termo) || alunoNome.includes(termo) || dataFormatada.includes(termo);
-            });
-        }
-
         const topBar = `
-            <div style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
+            <div id="ws-recebidas-topbar-fixed" style="display: flex; gap: 15px; margin-bottom: 20px; align-items: center; flex-wrap: wrap; background: #f8fafc; padding: 15px; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
                 <div style="display: flex; align-items: center; gap: 8px;">
                     <input type="checkbox" id="ws-check-todos-recebidas" style="transform: scale(1.3); cursor: pointer;" onclick="const cbs = document.querySelectorAll('.ws-check-entrega'); cbs.forEach(cb => cb.checked = this.checked);">
                     <label for="ws-check-todos-recebidas" style="font-size: 13px; font-weight: bold; color: #2c3e50; cursor: pointer;">Todos</label>
                 </div>
                 <div style="width: 1px; height: 25px; background: #cbd5e1;"></div>
-                <div style="flex: 1; min-width: 200px; position: relative;">
-                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5;">🔍</span>
-                    <input type="text" id="ws-busca-recebidas" placeholder="Pesquisar por aluno, prova ou data..." value="${termoBusca}" style="width: 100%; padding: 10px 10px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" onkeyup="Workspace.Avaliacoes.renderizarListaRecebidas(this.value)">
+                <div style="flex: 1; min-width: 220px; position: relative;">
+                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); opacity: 0.5; pointer-events: none;">🔍</span>
+                    <input type="text" id="ws-busca-recebidas" placeholder="Pesquisar por aluno, prova, turma, data ou resposta..." value="${Workspace.escapeHTML(termoBusca)}" autocomplete="off" style="width: 100%; padding: 10px 34px 10px 35px; border-radius: 20px; border: 1px solid #cbd5e1; outline: none; font-size: 13px; box-sizing: border-box; transition: 0.3s;" onfocus="this.style.borderColor='#3498db'" onblur="this.style.borderColor='#cbd5e1'" oninput="Workspace.Avaliacoes.renderizarListaRecebidas(this.value, true)">
+                    <button type="button" id="ws-btn-limpar-busca-rec" onclick="Workspace.Avaliacoes.limparBuscaRecebidas()" style="display: ${termoBusca.trim().length > 0 ? 'flex' : 'none'}; position: absolute; right: 8px; top: 50%; transform: translateY(-50%); background: #e2e8f0; border: none; color: #475569; width: 22px; height: 22px; border-radius: 50%; font-size: 11px; font-weight: bold; cursor: pointer; align-items: center; justify-content: center;">✖</button>
                 </div>
                 <button class="ws-btn" style="background: #e74c3c; color: white; padding: 10px 20px; border-radius: 20px; font-weight: bold; border: none; cursor: pointer; font-size: 12px; display: flex; align-items: center; gap: 8px; transition: 0.2s;" onmouseover="this.style.background='#c0392b'" onmouseout="this.style.background='#e74c3c'" onclick="Workspace.Avaliacoes.excluirEntregasSelecionadas()">
                     🗑️ Apagar Selecionados
@@ -2591,57 +2927,9 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             </div>
         `;
 
-        if (entregasValidas.length === 0) {
-            container.innerHTML = '<div style="text-align: center; padding: 40px; color: #999;">Ainda não existem provas recebidas.</div>';
-            return;
-        }
-
         const tituloLista = `<h3 style="font-size:15px; color:#2c3e50; margin:25px 0 15px 0; font-weight:bold; border-bottom:2px solid #eee; padding-bottom:8px;">📥 Exames Recebidos para Avaliação</h3>`;
 
-        const htmlListaAlunos = entregasFiltradas.length === 0 
-            ? '<div style="text-align: center; padding: 40px; color: #999;">Nenhum exame encontrado nesta pesquisa.</div>'
-            : entregasFiltradas.map(e => {
-                const prova = Workspace.Avaliacoes.provasEmCache[e.avaliacaoId];
-                const tituloProva = prova ? prova.titulo : 'Prova Excluída';
-                const icone = (prova && prova.tipo === 'oral') ? '🎤' : '✍️';
-                const dataObj = new Date(e.dataEntrega);
-                const horaFormatada = dataObj.toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
-                
-                const ident = Workspace.Avaliacoes.resolverIdentidadeEntrega(e);
-                const nomeExibicao = ident.nome || e.alunoNome || 'Aluno';
-                const avatarHtml = window.Workspace.renderizarAvatar(nomeExibicao, 34, ident.avatar);
-
-                const fraudeBadge = (e.relatorioFraude && e.relatorioFraude.fugas > 0) 
-                    ? `<span style="background:#fdf2f2; color:#e74c3c; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:bold; margin-left:5px;">⚠️ ${e.relatorioFraude.fugas} Ausência(s)</span>` 
-                    : '';
-
-                return `
-                    <div style="background: #fff; border: 1px solid #eee; padding: 15px; border-radius: 8px; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.02); transition: 0.2s;" onmouseover="this.style.borderColor='#3498db'" onmouseout="this.style.borderColor='#eee'">
-                        <div style="display: flex; gap: 12px; align-items: center;">
-                            <input type="checkbox" class="ws-check-entrega" value="${e.id}" style="transform: scale(1.3); cursor: pointer;">
-                            ${avatarHtml}
-                            <div>
-                                <h4 style="margin: 0 0 5px 0; color: #2c3e50;">${icone} ${tituloProva}</h4>
-                                <span style="font-size: 11px; color: #7f8c8d;">Aluno: <strong style="color:#3498db;">${Workspace.escapeHTML(nomeExibicao)}</strong> | ${dataObj.toLocaleDateString('pt-BR')} às ${horaFormatada} ${fraudeBadge}</span>
-                            </div>
-                        </div>
-                        <div style="display: flex; gap: 8px;">
-                            <button class="ws-btn" style="background: #27ae60; padding: 8px 15px; font-size: 12px; border-radius: 20px;" onclick="Workspace.Avaliacoes.verCorrecao('${e.id}', false)">Ver Respostas</button>
-                            <button class="ws-btn" style="background: #fdf2f2; color: #e74c3c; padding: 8px 15px; font-size: 12px; border-radius: 20px; border: 1px solid #fadbd8;" title="Apagar Exame" onclick="Workspace.Avaliacoes.excluirEntregaIndividual('${e.id}')">🗑️</button>
-                        </div>
-                    </div>
-                `;
-            }).join('');
-
-        container.innerHTML = htmlAnalytics + topBar + tituloLista + htmlListaAlunos;
-
-        const inputNovo = document.getElementById('ws-busca-recebidas');
-        if (inputNovo && termoBusca !== '') {
-            inputNovo.focus();
-            const val = inputNovo.value;
-            inputNovo.value = '';
-            inputNovo.value = val;
-        }
+        container.innerHTML = `${htmlAnalytics}${topBar}${tituloLista}<div id="ws-recebidas-cards-list">${htmlListaAlunos}</div>`;
     },
 
     excluirEntregaIndividual: (id) => {
