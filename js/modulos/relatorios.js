@@ -25,16 +25,17 @@ const relSelect = (label, id, options, extra='') => `
         <select id="${id}" style="width:100%; padding:10px; border:1px solid #ccc; border-radius:5px;" ${extra}>${options}</select>
     </div>`;
 
-// --- ESTILOS COMUNS PARA IMPRESSÃO E MOBILE ---
+// --- ESTILOS COMUNS PARA IMPRESSÃO E MOBILE (RETRATO E PAISAGEM BLINDADOS) ---
 const reportStyles = `
     <style>
-        .print-sheet { background: white; max-width: 210mm; margin: 0 auto; padding: 40px; box-shadow: 0 5px 15px rgba(0,0,0,0.1); border-radius: 8px; font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; }
+        .print-sheet { background: white; max-width: 210mm; width: 100%; margin: 0 auto; padding: 40px; box-shadow: 0 5px 20px rgba(0,0,0,0.08); border-radius: 8px; font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; overflow: hidden; }
+        .print-sheet-landscape { background: white; max-width: 297mm; width: 100%; margin: 0 auto; padding: 28px 32px; box-shadow: 0 8px 25px rgba(0,0,0,0.08); border-radius: 10px; font-family: 'Segoe UI', Arial, sans-serif; box-sizing: border-box; border: 1px solid #e2e8f0; overflow-x: auto; }
         .table-responsive { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: 20px; }
         .kpi-container { display: flex; justify-content: space-between; gap: 15px; flex-wrap: wrap; }
         .kpi-box { flex: 1; min-width: 120px; padding: 15px; border-radius: 8px; text-align: center; }
         
         @media (max-width: 768px) {
-            .print-sheet { padding: 15px !important; margin: 0 !important; width: 100% !important; border-radius: 0 !important; box-shadow: none !important; }
+            .print-sheet, .print-sheet-landscape { padding: 15px !important; margin: 0 !important; width: 100% !important; border-radius: 6px !important; }
             .doc-header { flex-direction: column !important; align-items: flex-start !important; gap: 15px !important; }
             .doc-header > div { text-align: left !important; width: 100% !important; }
             .kpi-container { flex-direction: column; }
@@ -42,16 +43,43 @@ const reportStyles = `
         }
         
         @media print {
-            .no-print { display: none !important; }
-            body, html { background: white !important; margin: 0 !important; padding: 0 !important; }
-            .print-sheet { box-shadow: none !important; margin: 0 !important; padding: 0 !important; max-width: 100% !important; width: 100% !important; border: none !important; }
-            .table-responsive { overflow-x: visible !important; }
-            
-            /* 🖨️ NOVAS REGRAS DE IMPRESSÃO INTELIGENTE */
-            /* 1. Impede o rodapé (Total) de se repetir em todas as folhas */
+            /* 🧹 ESCONDE TUDO DO SISTEMA E DEIXA APENAS A FOLHA DO DOCUMENTO */
+            .no-print,
+            .sidebar,
+            nav.sidebar,
+            header.header-moderno,
+            .barra-pesquisa-abaixo,
+            #offline-banner,
+            #update-banner,
+            #pwa-install-banner,
+            #global-pwa-update-prompt {
+                display: none !important;
+            }
+
+            body, html, #tela-sistema, main.content, .content-wrapper, #app-content, #diario-area, #ficha-area, #doc-area-oficial {
+                background: white !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                box-shadow: none !important;
+                border: none !important;
+                overflow: visible !important;
+            }
+
+            .print-sheet, .print-sheet-landscape {
+                box-shadow: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                max-width: 100% !important;
+                width: 100% !important;
+                border: none !important;
+                overflow: visible !important;
+            }
+
+            .table-responsive { overflow: visible !important; }
             tfoot { display: table-row-group !important; }
             
-            /* 2. Força as caixas de resumo a ficarem lado a lado e reduz o espaço vertical */
             .kpi-container { 
                 flex-direction: row !important; 
                 flex-wrap: nowrap !important; 
@@ -61,7 +89,7 @@ const reportStyles = `
             .kpi-box { 
                 padding: 10px !important; 
                 min-width: auto !important; 
-                border: 1px solid #ccc !important; /* Adiciona uma borda leve na impressão */
+                border: 1px solid #ccc !important;
             }
         }
     </style>
@@ -849,7 +877,8 @@ App.gerarDossie = async () => {
 // ---------------------------------------------------------
 App.renderizarDiarioSetup = async () => {
     App.setTitulo("Diário de Classe");
-    const div = document.getElementById('app-content'); div.innerHTML = '<p style="text-align:center;">Carregando turmas... ⏳</p>';
+    const div = document.getElementById('app-content'); 
+    div.innerHTML = '<p style="text-align:center;">Carregando turmas... ⏳</p>';
     
     try {
         const turmas = await App.api('/turmas');
@@ -859,14 +888,19 @@ App.renderizarDiarioSetup = async () => {
         const opMeses = meses.map((m,i)=>`<option value="${m}" ${i===new Date().getMonth()?'selected':''}>${m}</option>`).join('');
 
         const formFicha = `
-            <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 20px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:12px; margin-bottom:18px; flex-wrap:wrap; gap:10px;">
+                <span style="color:#64748b; font-size:13px;">Selecione a turma e o mês para gerar a pauta oficial de presença em formato A4 Paisagem.</span>
+                <button onclick="App.renderizarGeradorDocumentos()" style="background:#ecf0f1; border:none; padding:8px 15px; border-radius:6px; cursor:pointer; font-weight:bold; color:#7f8c8d;">⬅ Voltar à Fábrica</button>
+            </div>
+            <div style="display:flex; gap:15px; align-items:flex-end; flex-wrap:wrap; margin-bottom: 10px;">
                 ${relSelect('Turma:', 'diario-turma', opTurmas, 'style="min-width:250px;"')}
                 ${relSelect('Mês de Referência:', 'diario-mes', opMeses, 'style="min-width:150px;"')}
-                <button onclick="App.gerarDiarioImprimir()" class="btn-primary" style="height:41px; padding:0 25px; margin-bottom:5px;">GERAR DIÁRIO</button>
+                <button onclick="App.gerarDiarioImprimir()" class="btn-primary" style="height:41px; padding:0 25px; margin-bottom:2px; background:#27ae60; border:none;">📝 GERAR DIÁRIO</button>
             </div>
         `;
         
-        div.innerHTML = App.UI.card('📝 Gerar Pauta de Frequência', '', formFicha, '100%') + `<div id="diario-area" style="margin-top:30px;"></div>`;
+        // 🛡️ Envolvido em .no-print para que o formulário de escolha NUNCA saia na impressão!
+        div.innerHTML = `<div class="no-print">${App.UI.card('📝 Gerar Pauta de Frequência', '', formFicha, '100%')}</div><div id="diario-area" style="margin-top:25px;"></div>`;
     } catch(e) { div.innerHTML = "Erro ao carregar as turmas."; }
 };
 
@@ -883,61 +917,129 @@ App.gerarDiarioImprimir = async () => {
         const [alunos, escola, turmas] = await Promise.all([ App.api('/alunos'), App.api('/escola'), App.api('/turmas') ]);
         const turmaObj = turmas.find(t => t.nome === nomeTurma) || { dia: '-', horario: '-', curso: '-' };
         const logo = escola.foto ? `<img src="${escola.foto}" style="height:45px; object-fit:contain;">` : '';
+        const anoAtual = new Date().getFullYear();
         
         // Puxa apenas alunos ativos dessa turma
         const alunosTurma = alunos.filter(a => a.turma === nomeTurma && (!a.status || a.status === 'Ativo'))
                                   .sort((a,b) => a.nome.localeCompare(b.nome));
 
-        // Cria colunas para até 31 dias
+        // Cria as 31 colunas de dias com largura matemática fixa para caber 100% dentro da folha branca
         let diasHtml = '';
-        for(let i=1; i<=31; i++) { diasHtml += `<th style="border: 1px solid #000; width: 2.5%; text-align: center; font-size: 10px; padding: 2px;">${i}</th>`; }
+        for(let i=1; i<=31; i++) {
+            diasHtml += `<th class="diario-col-dia">${String(i).padStart(2, '0')}</th>`;
+        }
 
         let linhasHtml = '';
         if(alunosTurma.length === 0) {
-            linhasHtml = `<tr><td colspan="32" style="text-align:center; padding: 20px;">Nenhum aluno ativo matriculado nesta turma.</td></tr>`;
+            linhasHtml = `<tr><td colspan="32" style="text-align:center; padding: 25px; border: 1px solid #334155; font-size: 12px; color: #64748b;">Nenhum aluno ativo matriculado nesta turma.</td></tr>`;
         } else {
             alunosTurma.forEach((aluno, idx) => {
                 let caixasDia = '';
-                for(let i=1; i<=31; i++) { caixasDia += `<td style="border: 1px solid #000;"></td>`; }
+                for(let i=1; i<=31; i++) {
+                    caixasDia += `<td class="diario-celula-dia"></td>`;
+                }
+                const bgLinha = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
                 linhasHtml += `
-                    <tr>
-                        <td style="border: 1px solid #000; padding: 4px 6px; font-size: 11px;">${idx + 1}. ${App.escapeHTML(aluno.nome)}</td>
+                    <tr style="background: ${bgLinha};">
+                        <td class="diario-col-nome" title="${App.escapeHTML(aluno.nome)}">
+                            <span style="font-weight:700; color:#475569; margin-right:4px;">${String(idx + 1).padStart(2, '0')}.</span>${App.escapeHTML(aluno.nome)}
+                        </td>
                         ${caixasDia}
                     </tr>`;
             });
         }
 
-        // Tabela A4 em Paisagem
+        // Folha A4 Paisagem com enquadramento perfeito na tela e na impressora
         divArea.innerHTML = `
             ${reportStyles}
             <style>
+                .diario-tabela {
+                    width: 100% !important;
+                    table-layout: fixed !important;
+                    border-collapse: collapse !important;
+                    margin: 0 !important;
+                }
+                .diario-col-nome {
+                    width: 24% !important;
+                    border: 1px solid #1e293b !important;
+                    padding: 5px 8px !important;
+                    font-size: 11px !important;
+                    color: #0f172a !important;
+                    white-space: nowrap !important;
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                    text-align: left !important;
+                }
+                .diario-col-dia {
+                    width: calc(76% / 31) !important;
+                    border: 1px solid #1e293b !important;
+                    text-align: center !important;
+                    font-size: 9.5px !important;
+                    font-weight: 800 !important;
+                    padding: 4px 0 !important;
+                    color: #0f172a !important;
+                    background: #e2e8f0 !important;
+                }
+                .diario-celula-dia {
+                    border: 1px solid #334155 !important;
+                    height: 22px !important;
+                    padding: 0 !important;
+                }
                 @media print { 
-                    @page { size: A4 landscape; margin: 10mm; }
-                    .print-sheet { max-width: 100% !important; }
+                    @page { size: A4 landscape; margin: 8mm; }
+                    * {
+                        -webkit-print-color-adjust: exact !important;
+                        print-color-adjust: exact !important;
+                    }
+                    .print-sheet-landscape {
+                        max-width: 100% !important;
+                        width: 100% !important;
+                        padding: 0 !important;
+                        border: none !important;
+                        box-shadow: none !important;
+                    }
                 }
             </style>
+
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:10px 20px; background:#2980b9; border:none;">🖨️ IMPRIMIR DIÁRIO (PAISAGEM)</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:12px 24px; background:#2980b9; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(41,128,185,0.3);">🖨️ IMPRIMIR DIÁRIO DE CLASSE (A4 PAISAGEM)</button>
             </div>
-            <div class="print-sheet" style="padding: 20px;">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #000; padding-bottom:10px; margin-bottom:15px;">
-                    <div style="display:flex; align-items:center; gap:15px;">${logo}<div><h2 style="margin:0; font-size:16px; text-transform:uppercase;">${App.escapeHTML(escola.nome)}</h2><div style="font-size:11px;">Diário de Classe / Pauta de Frequência</div></div></div>
-                    <div style="text-align:right; font-size:12px; font-weight:bold;">
-                        Turma: <span style="color:#2980b9;">${App.escapeHTML(nomeTurma)}</span><br>
-                        Mês: <span style="color:#27ae60;">${mesRef}</span><br>
-                        Horário: ${App.escapeHTML(turmaObj.horario)}
+
+            <div class="print-sheet-landscape">
+                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:14px; flex-wrap:wrap; gap:12px;">
+                    <div style="display:flex; align-items:center; gap:14px;">
+                        ${logo}
+                        <div>
+                            <h2 style="margin:0; font-size:16px; text-transform:uppercase; color:#0f172a; font-weight:900;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO DE ENSINO')}</h2>
+                            <div style="font-size:11px; color:#475569; font-weight:600;">Diário de Classe • Pauta Oficial de Frequência Mensal</div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:18px; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; padding:8px 14px; border-radius:8px; font-size:11.5px;">
+                        <div><strong>Turma:</strong> <span style="color:#2563eb; font-weight:800;">${App.escapeHTML(nomeTurma)}</span></div>
+                        <div><strong>Mês/Ano:</strong> <span style="color:#16a34a; font-weight:800;">${mesRef} / ${anoAtual}</span></div>
+                        <div><strong>Horário:</strong> <span style="color:#0f172a; font-weight:700;">${App.escapeHTML(turmaObj.horario || '-')}</span></div>
+                        <div><strong>Total:</strong> <span style="color:#0f172a; font-weight:700;">${alunosTurma.length} aluno(s)</span></div>
                     </div>
                 </div>
-                <table style="width: 100%; border-collapse: collapse;">
+
+                <table class="diario-tabela">
                     <thead>
-                        <tr style="background: #f0f0f0;">
-                            <th style="border: 1px solid #000; text-align: left; padding: 5px; width: 25%; font-size: 11px;">NOME DO ALUNO</th>
+                        <tr>
+                            <th class="diario-col-nome" style="background:#cbd5e1 !important; font-weight:900 !important; font-size:10.5px !important; text-transform:uppercase;">NOME DO ALUNO (${alunosTurma.length})</th>
                             ${diasHtml}
                         </tr>
                     </thead>
                     <tbody>${linhasHtml}</tbody>
                 </table>
-                <div style="margin-top: 15px; font-size: 10px; color: #555;">Legenda de Preenchimento: (P) Presente | (F) Falta | (J) Falta Justificada</div>
+
+                <div style="margin-top: 16px; display:flex; justify-content:space-between; align-items:flex-end; font-size: 10.5px; color: #334155; flex-wrap:wrap; gap:15px;">
+                    <div>
+                        <strong>Legenda de Preenchimento:</strong> ( <b>P</b> ) Presente &nbsp;|&nbsp; ( <b>F</b> ) Falta &nbsp;|&nbsp; ( <b>J</b> ) Falta Justificada
+                    </div>
+                    <div style="width: 260px; border-top: 1px solid #0f172a; padding-top: 4px; text-align: center; font-weight: 700; color: #0f172a;">
+                        Assinatura do(a) Professor(a) Responsável
+                    </div>
+                </div>
             </div>
         `;
     } catch(e) { App.showToast("Erro ao gerar o Diário.", "error"); }
@@ -962,7 +1064,7 @@ App.gerarFichaSetup = async () => {
             </div>
         `;
         
-        div.innerHTML = App.UI.card('📄 Imprimir Ficha de Matrícula', '', formFicha, '100%') + `<div id="ficha-area" style="margin-top:30px;"></div>`;
+        div.innerHTML = `<div class="no-print">${App.UI.card('📄 Imprimir Ficha de Matrícula', '', formFicha, '100%')}</div><div id="ficha-area" style="margin-top:30px;"></div>`;
     } catch(e) { div.innerHTML = "Erro ao carregar os alunos."; }
 };
 
@@ -1138,7 +1240,7 @@ App.renderizarMenuDocumentosOficiais = async () => {
             : `<option value="">Nenhum aluno ativo encontrado</option>`;
 
         const formHTML = `
-            <div class="card" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #3498db;">
+            <div class="card no-print" style="max-width: 700px; margin: 0 auto; border-top: 4px solid #3498db;">
                 <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #eee; padding-bottom:15px; margin-bottom:25px;">
                     <h3 style="color:#2c3e50; margin:0; display:flex; align-items:center; gap:10px; font-size:18px;">
                         📄 Emissão de Documentos Oficiais
