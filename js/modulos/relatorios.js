@@ -910,137 +910,201 @@ App.gerarDiarioImprimir = async () => {
     if(!nomeTurma) return App.showToast("Selecione uma turma.", "warning");
     
     const divArea = document.getElementById('diario-area'); 
-    divArea.innerHTML = '<p style="text-align:center;">Desenhando grelha... ⏳</p>';
+    divArea.innerHTML = '<p style="text-align:center;">Desenhando grelha paginada... ⏳</p>';
     document.body.style.cursor = 'wait';
     
     try {
         const [alunos, escola, turmas] = await Promise.all([ App.api('/alunos'), App.api('/escola'), App.api('/turmas') ]);
         const turmaObj = turmas.find(t => t.nome === nomeTurma) || { dia: '-', horario: '-', curso: '-' };
-        const logo = escola.foto ? `<img src="${escola.foto}" style="height:45px; object-fit:contain;">` : '';
+        const logo = escola.foto ? `<img src="${escola.foto}" style="height:42px; object-fit:contain;">` : '';
         const anoAtual = new Date().getFullYear();
         
-        // Puxa apenas alunos ativos dessa turma
+        // 1. Filtra e ordena alfabeticamente apenas os alunos ativos da turma
         const alunosTurma = alunos.filter(a => a.turma === nomeTurma && (!a.status || a.status === 'Ativo'))
-                                  .sort((a,b) => a.nome.localeCompare(b.nome));
+                                  .sort((a,b) => (a.nome || '').localeCompare(b.nome || ''));
 
-        // Cria as 31 colunas de dias com largura matemática fixa para caber 100% dentro da folha branca
-        let diasHtml = '';
-        for(let i=1; i<=31; i++) {
-            diasHtml += `<th class="diario-col-dia">${String(i).padStart(2, '0')}</th>`;
+        // 2. Define a largura exata das 32 colunas (1 Nome + 31 Dias) para NUNCA cortar na margem direita
+        let colgroupHtml = `<col style="width: 22.5%;">`;
+        let diasHeaderHtml = '';
+        for(let i = 1; i <= 31; i++) {
+            colgroupHtml += `<col style="width: 2.5%;">`;
+            diasHeaderHtml += `<th class="diario-col-dia">${String(i).padStart(2, '0')}</th>`;
         }
 
-        let linhasHtml = '';
-        if(alunosTurma.length === 0) {
-            linhasHtml = `<tr><td colspan="32" style="text-align:center; padding: 25px; border: 1px solid #334155; font-size: 12px; color: #64748b;">Nenhum aluno ativo matriculado nesta turma.</td></tr>`;
+        // 3. Motor de Paginação Automática A4 Paisagem (Máximo de 20 alunos por folha A4)
+        const ALUNOS_POR_PAGINA = 20;
+        const lotesPaginas = [];
+        if (alunosTurma.length === 0) {
+            lotesPaginas.push([]);
         } else {
-            alunosTurma.forEach((aluno, idx) => {
-                let caixasDia = '';
-                for(let i=1; i<=31; i++) {
-                    caixasDia += `<td class="diario-celula-dia"></td>`;
-                }
-                const bgLinha = idx % 2 === 0 ? '#ffffff' : '#f8fafc';
-                linhasHtml += `
-                    <tr style="background: ${bgLinha};">
-                        <td class="diario-col-nome" title="${App.escapeHTML(aluno.nome)}">
-                            <span style="font-weight:700; color:#475569; margin-right:4px;">${String(idx + 1).padStart(2, '0')}.</span>${App.escapeHTML(aluno.nome)}
-                        </td>
-                        ${caixasDia}
-                    </tr>`;
-            });
+            for (let i = 0; i < alunosTurma.length; i += ALUNOS_POR_PAGINA) {
+                lotesPaginas.push(alunosTurma.slice(i, i + ALUNOS_POR_PAGINA));
+            }
         }
 
-        // Folha A4 Paisagem com enquadramento perfeito na tela e na impressora
+        const totalPaginas = lotesPaginas.length;
+
+        // 4. Constrói cada Folha A4 Paisagem com cabeçalho próprio, grelha, assinatura mais abaixo e número de página
+        const paginasHtml = lotesPaginas.map((loteAlunos, pageIndex) => {
+            const numeroPagina = pageIndex + 1;
+            const ehUltimaPagina = numeroPagina === totalPaginas;
+            const indiceInicial = pageIndex * ALUNOS_POR_PAGINA;
+
+            let linhasPaginaHtml = '';
+            if (loteAlunos.length === 0) {
+                linhasPaginaHtml = `<tr><td colspan="32" style="text-align:center; padding: 25px; border: 1px solid #334155; font-size: 12px; color: #64748b;">Nenhum aluno ativo matriculado nesta turma.</td></tr>`;
+            } else {
+                loteAlunos.forEach((aluno, idxLocal) => {
+                    const numeroAlunoGlobal = indiceInicial + idxLocal + 1;
+                    let caixasDia = '';
+                    for(let i = 1; i <= 31; i++) {
+                        caixasDia += `<td class="diario-celula-dia"></td>`;
+                    }
+                    const bgLinha = idxLocal % 2 === 0 ? '#ffffff' : '#f8fafc';
+                    linhasPaginaHtml += `
+                        <tr class="diario-linha-aluno" style="background: ${bgLinha};">
+                            <td class="diario-col-nome" title="${App.escapeHTML(aluno.nome)}">
+                                <span style="font-weight:700; color:#475569; margin-right:4px;">${String(numeroAlunoGlobal).padStart(2, '0')}.</span>${App.escapeHTML(aluno.nome)}
+                            </td>
+                            ${caixasDia}
+                        </tr>`;
+                });
+            }
+
+            return `
+                <div class="print-sheet-landscape diario-folha-a4 ${!ehUltimaPagina ? 'diario-quebra-pagina' : ''}">
+                    <!-- CABEÇALHO DA FOLHA -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:10px; margin-bottom:12px; flex-wrap:wrap; gap:10px; width:99%; margin-left:auto; margin-right:auto;">
+                        <div style="display:flex; align-items:center; gap:12px;">
+                            ${logo}
+                            <div>
+                                <h2 style="margin:0; font-size:15px; text-transform:uppercase; color:#0f172a; font-weight:900;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO DE ENSINO')}</h2>
+                                <div style="font-size:10.5px; color:#475569; font-weight:600;">Diário de Classe • Pauta Oficial de Frequência Mensal</div>
+                            </div>
+                        </div>
+                        <div style="display:flex; gap:14px; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; padding:6px 12px; border-radius:6px; font-size:11px;">
+                            <div><strong>Turma:</strong> <span style="color:#2563eb; font-weight:800;">${App.escapeHTML(nomeTurma)}</span></div>
+                            <div><strong>Mês/Ano:</strong> <span style="color:#16a34a; font-weight:800;">${mesRef} / ${anoAtual}</span></div>
+                            <div><strong>Horário:</strong> <span style="color:#0f172a; font-weight:700;">${App.escapeHTML(turmaObj.horario || '-')}</span></div>
+                            <div><strong>Alunos:</strong> <span style="color:#0f172a; font-weight:700;">${alunosTurma.length}</span></div>
+                        </div>
+                    </div>
+
+                    <!-- TABELA DA GRELHA COM MARGEM DE SEGURANÇA DE 99% PARA NÃO CORTAR NA DIREITA -->
+                    <table class="diario-tabela">
+                        <colgroup>${colgroupHtml}</colgroup>
+                        <thead>
+                            <tr>
+                                <th class="diario-col-nome" style="background:#cbd5e1 !important; font-weight:900 !important; font-size:10px !important; text-transform:uppercase;">NOME DO ALUNO</th>
+                                ${diasHeaderHtml}
+                            </tr>
+                        </thead>
+                        <tbody>${linhasPaginaHtml}</tbody>
+                    </table>
+
+                    <!-- RODAPÉ COM LEGENDA, ASSINATURA MAIS ABAIXO E NUMERAÇÃO DE PÁGINAS -->
+                    <div class="diario-rodape-bloco">
+                        <div style="font-size: 10px; color: #334155;">
+                            <strong>Legenda de Preenchimento:</strong> ( <b>P</b> ) Presente &nbsp;|&nbsp; ( <b>F</b> ) Falta &nbsp;|&nbsp; ( <b>J</b> ) Falta Justificada
+                        </div>
+
+                        <div style="display:flex; align-items:flex-end; gap:35px;">
+                            <div style="width: 270px; border-top: 1.5px solid #0f172a; padding-top: 5px; text-align: center; font-weight: 700; font-size: 10.5px; color: #0f172a;">
+                                Assinatura do(a) Professor(a) Responsável
+                            </div>
+                            <div style="font-size: 10px; font-weight: 800; color: #475569; background: #f1f5f9; padding: 4px 10px; border-radius: 6px; border: 1px solid #cbd5e1; white-space: nowrap;">
+                                Página ${numeroPagina} de ${totalPaginas}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+
         divArea.innerHTML = `
             ${reportStyles}
             <style>
+                .diario-folha-a4 {
+                    margin-bottom: 30px !important;
+                }
                 .diario-tabela {
-                    width: 100% !important;
+                    width: 99% !important;
+                    max-width: 99% !important;
+                    margin: 0 auto !important;
                     table-layout: fixed !important;
                     border-collapse: collapse !important;
-                    margin: 0 !important;
+                    box-sizing: border-box !important;
+                }
+                .diario-linha-aluno {
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                 }
                 .diario-col-nome {
-                    width: 24% !important;
                     border: 1px solid #1e293b !important;
-                    padding: 5px 8px !important;
-                    font-size: 11px !important;
+                    padding: 4px 6px !important;
+                    font-size: 10.5px !important;
                     color: #0f172a !important;
                     white-space: nowrap !important;
                     overflow: hidden !important;
                     text-overflow: ellipsis !important;
                     text-align: left !important;
+                    box-sizing: border-box !important;
                 }
                 .diario-col-dia {
-                    width: calc(76% / 31) !important;
                     border: 1px solid #1e293b !important;
                     text-align: center !important;
-                    font-size: 9.5px !important;
+                    font-size: 9px !important;
                     font-weight: 800 !important;
-                    padding: 4px 0 !important;
+                    padding: 3px 0 !important;
                     color: #0f172a !important;
                     background: #e2e8f0 !important;
+                    box-sizing: border-box !important;
                 }
                 .diario-celula-dia {
                     border: 1px solid #334155 !important;
-                    height: 22px !important;
+                    height: 21px !important;
                     padding: 0 !important;
+                    box-sizing: border-box !important;
+                }
+                /* 📝 Espaço generoso (48px) acima da linha de assinatura do professor */
+                .diario-rodape-bloco {
+                    width: 99% !important;
+                    margin: 48px auto 0 auto !important;
+                    display: flex !important;
+                    justify-content: space-between !important;
+                    align-items: flex-end !important;
+                    flex-wrap: wrap !important;
+                    gap: 15px !important;
+                    page-break-inside: avoid !important;
+                    break-inside: avoid !important;
                 }
                 @media print { 
-                    @page { size: A4 landscape; margin: 8mm; }
+                    @page { size: A4 landscape; margin: 7mm 8mm; }
                     * {
                         -webkit-print-color-adjust: exact !important;
                         print-color-adjust: exact !important;
                     }
-                    .print-sheet-landscape {
-                        max-width: 100% !important;
+                    .diario-folha-a4 {
+                        margin-bottom: 0 !important;
+                        padding: 2mm 1mm !important;
                         width: 100% !important;
-                        padding: 0 !important;
-                        border: none !important;
-                        box-shadow: none !important;
+                        max-width: 100% !important;
+                        box-sizing: border-box !important;
+                    }
+                    .diario-quebra-pagina {
+                        page-break-after: always !important;
+                        break-after: page !important;
                     }
                 }
             </style>
 
             <div class="no-print" style="text-align:center; margin-bottom:20px;">
-                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:12px 24px; background:#2980b9; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(41,128,185,0.3);">🖨️ IMPRIMIR DIÁRIO DE CLASSE (A4 PAISAGEM)</button>
+                <button onclick="window.print()" class="btn-primary" style="width:auto; padding:12px 24px; background:#2980b9; border:none; border-radius:8px; font-weight:bold; cursor:pointer; box-shadow:0 4px 12px rgba(41,128,185,0.3);">
+                    🖨️ IMPRIMIR DIÁRIO DE CLASSE (${totalPaginas} ${totalPaginas > 1 ? 'PÁGINAS' : 'PÁGINA'})
+                </button>
             </div>
 
-            <div class="print-sheet-landscape">
-                <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid #0f172a; padding-bottom:12px; margin-bottom:14px; flex-wrap:wrap; gap:12px;">
-                    <div style="display:flex; align-items:center; gap:14px;">
-                        ${logo}
-                        <div>
-                            <h2 style="margin:0; font-size:16px; text-transform:uppercase; color:#0f172a; font-weight:900;">${App.escapeHTML(escola.nome || 'INSTITUIÇÃO DE ENSINO')}</h2>
-                            <div style="font-size:11px; color:#475569; font-weight:600;">Diário de Classe • Pauta Oficial de Frequência Mensal</div>
-                        </div>
-                    </div>
-                    <div style="display:flex; gap:18px; align-items:center; background:#f8fafc; border:1px solid #cbd5e1; padding:8px 14px; border-radius:8px; font-size:11.5px;">
-                        <div><strong>Turma:</strong> <span style="color:#2563eb; font-weight:800;">${App.escapeHTML(nomeTurma)}</span></div>
-                        <div><strong>Mês/Ano:</strong> <span style="color:#16a34a; font-weight:800;">${mesRef} / ${anoAtual}</span></div>
-                        <div><strong>Horário:</strong> <span style="color:#0f172a; font-weight:700;">${App.escapeHTML(turmaObj.horario || '-')}</span></div>
-                        <div><strong>Total:</strong> <span style="color:#0f172a; font-weight:700;">${alunosTurma.length} aluno(s)</span></div>
-                    </div>
-                </div>
-
-                <table class="diario-tabela">
-                    <thead>
-                        <tr>
-                            <th class="diario-col-nome" style="background:#cbd5e1 !important; font-weight:900 !important; font-size:10.5px !important; text-transform:uppercase;">NOME DO ALUNO (${alunosTurma.length})</th>
-                            ${diasHtml}
-                        </tr>
-                    </thead>
-                    <tbody>${linhasHtml}</tbody>
-                </table>
-
-                <div style="margin-top: 16px; display:flex; justify-content:space-between; align-items:flex-end; font-size: 10.5px; color: #334155; flex-wrap:wrap; gap:15px;">
-                    <div>
-                        <strong>Legenda de Preenchimento:</strong> ( <b>P</b> ) Presente &nbsp;|&nbsp; ( <b>F</b> ) Falta &nbsp;|&nbsp; ( <b>J</b> ) Falta Justificada
-                    </div>
-                    <div style="width: 260px; border-top: 1px solid #0f172a; padding-top: 4px; text-align: center; font-weight: 700; color: #0f172a;">
-                        Assinatura do(a) Professor(a) Responsável
-                    </div>
-                </div>
-            </div>
+            ${paginasHtml}
         `;
     } catch(e) { App.showToast("Erro ao gerar o Diário.", "error"); }
     finally { document.body.style.cursor = 'default'; }
