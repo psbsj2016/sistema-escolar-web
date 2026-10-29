@@ -24,12 +24,12 @@
     import { Tldraw } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
 
-    // Identificador único desta janela para nunca sofrer "eco" dos próprios traços
+    // Identificador exclusivo desta sessão para nunca sofrer interferência dos próprios envios
     const CLIENT_ID = 'lousa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
 
-    // Filtra apenas registos de desenho/documento (nunca sobrescreve a câmara ou ferramenta de quem está a usar)
-    const TIPOS_SINCRONIZAVEIS = new Set(['shape', 'asset', 'binding', 'page']);
-    const ehRegistoSincronizavel = (r) => r && TIPOS_SINCRONIZAVEIS.has(r.typeName);
+    // ⚠️ REGRA DE OURO DO TLDRAW: Sincronizar APENAS formas, imagens e ligações (NUNCA 'page', 'camera' ou 'instance'!)
+    const TIPOS_DESENHO = new Set(['shape', 'asset', 'binding']);
+    const ehRegistoDeDesenho = (r) => Boolean(r && TIPOS_DESENHO.has(r.typeName));
 
     function getInitialParams() {
       let role = 'professor', roomId = 'global';
@@ -49,6 +49,29 @@
     }
     const init = getInitialParams();
 
+    // 🛡️ Escudo Anti-Tela-Branca: Se qualquer erro gráfico ocorrer no Tldraw, recupera a lousa automaticamente
+    class LousaErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false, resetKey: 0 };
+      }
+      static getDerivedStateFromError() {
+        return { hasError: true };
+      }
+      componentDidCatch(err) {
+        console.warn('Escudo da Lousa intercetou um erro gráfico e restaurou o quadro:', err);
+        setTimeout(() => {
+          this.setState(prev => ({ hasError: false, resetKey: prev.resetKey + 1 }));
+        }, 150);
+      }
+      render() {
+        if (this.state.hasError) {
+          return React.createElement('div', { className: 'tldraw-wrapper' });
+        }
+        return React.cloneElement(this.props.children, { key: this.state.resetKey });
+      }
+    }
+
     function App() {
         const [editor, setEditor] = useState(null);
         const [isAllowed, setIsAllowedState] = useState(init.role !== 'aluno');
@@ -59,14 +82,38 @@
         const roomIdRef = useRef(init.roomId);
         const isAllowedRef = useRef(init.role !== 'aluno');
         const dynamicLockedRef = useRef(init.role === 'aluno');
+
+        // Travas para proteger a caneta enquanto o utilizador está a desenhar
         const isRemoteUpdateRef = useRef(false);
+        const isPointerDownRef = useRef(false);
+        const isSavingRef = useRef(false);
+        const lastLocalDrawRef = useRef(0);
         const saveTimeoutRef = useRef(null);
-        const jaAjustouZoomInicialRef = useRef(false);
 
         const setIsAllowed = useCallback((v) => { isAllowedRef.current = !!v; setIsAllowedState(!!v); }, []);
         const setDynamicLocked = useCallback((v) => { dynamicLockedRef.current = !!v; setDynamicLockedState(!!v); }, []);
 
-        // Recebe comandos via postMessage do painel principal
+        // Deteta quando o utilizador está com o rato ou dedo pressionado a desenhar
+        useEffect(() => {
+            const onDown = () => {
+                isPointerDownRef.current = true;
+                lastLocalDrawRef.current = Date.now();
+            };
+            const onUp = () => {
+                isPointerDownRef.current = false;
+                lastLocalDrawRef.current = Date.now();
+            };
+            window.addEventListener('pointerdown', onDown, true);
+            window.addEventListener('pointerup', onUp, true);
+            window.addEventListener('pointercancel', onUp, true);
+            return () => {
+                window.removeEventListener('pointerdown', onDown, true);
+                window.removeEventListener('pointerup', onUp, true);
+                window.removeEventListener('pointercancel', onUp, true);
+            };
+        }, []);
+
+        // Recebe comandos via postMessage da plataforma
         useEffect(() => {
             const onInit = (e) => {
                 const d = e.data || {};
@@ -79,14 +126,14 @@
                     if (d.role && d.role !== 'aluno') setIsAllowed(true);
                 }
                 if (d.type === 'LOCK_STATE') setDynamicLocked(!!d.locked);
-                if (d.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud();
+                if (d.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud(true);
             };
             window.addEventListener('message', onInit);
             try { window.parent?.postMessage({ type: 'LOUSA_READY' }, '*'); } catch(e){}
             return () => window.removeEventListener('message', onInit);
         }, [setIsAllowed, setDynamicLocked]);
 
-        // 1. Polling para o Aluno (Verifica liberação, ferramentas e sintoniza na sala ativa do Professor)
+        // 1. Polling de Status para o Aluno
         useEffect(() => {
             if (roleRef.current !== 'aluno') return;
             const check = async () => {
@@ -106,7 +153,7 @@
                         setDynamicLocked(!data.recursos);
 
                         if ((mudouSala || acabouDeLiberar) && window._loadCloud) {
-                            setTimeout(() => window._loadCloud(), 150);
+                            setTimeout(() => window._loadCloud(true), 150);
                         }
                     } else {
                         setIsAllowed(false);
@@ -114,11 +161,11 @@
                 } catch(e) {}
             };
             check();
-            const inv = setInterval(check, 2000);
+            const inv = setInterval(check, 2500);
             return () => clearInterval(inv);
         }, [setIsAllowed, setDynamicLocked]);
 
-        // 2. Aplica o Cadeado às Ferramentas (Professor nunca fica travado; Aluno só desenha quando recursos = true)
+        // 2. Aplica o Cadeado às Ferramentas (Professor nunca fica travado)
         useEffect(() => {
             if (editor) {
                 try {
@@ -128,44 +175,69 @@
             }
         }, [editor, dynamicLocked]);
 
-        // 3. Arranque e Sincronização Inteligente do Tldraw
+        // 3. Arranque e Sincronização Segura do Tldraw
         const onMount = useCallback((ed) => {
             setEditor(ed);
             try {
                 ed.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current });
             } catch(e){}
 
-            const loadCloud = async () => {
-                if (roleRef.current === 'aluno' && !isAllowedRef.current) return; 
+            const loadCloud = async (isInitialLoad = false) => {
+                if (roleRef.current === 'aluno' && !isAllowedRef.current) return;
+
+                // 🛡️ PROTEÇÃO CRÍTICA: Jamais interrompe ou sobrescreve a tela enquanto o utilizador está a desenhar!
+                if (!isInitialLoad) {
+                    if (isPointerDownRef.current || isSavingRef.current) return;
+                    if (Date.now() - lastLocalDrawRef.current < 3500) return;
+                    try {
+                        if (ed.inputs && (ed.inputs.isPointing || ed.inputs.isDragging)) return;
+                    } catch(e){}
+                }
+
                 try {
                     const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}?_t=${Date.now()}`, {
                         cache: 'no-store',
                         credentials: 'include'
                     });
                     const data = await res.json();
+
+                    // Verifica novamente se o utilizador não começou a desenhar enquanto o fetch viajava pela rede!
+                    if (isPointerDownRef.current || isSavingRef.current) return;
+                    if (!isInitialLoad && (Date.now() - lastLocalDrawRef.current < 3500)) return;
+
                     if (data?.success && Array.isArray(data.records)) {
-                        const remotos = data.records.filter(ehRegistoSincronizavel);
-                        const idsRemotos = new Set(remotos.map(r => r.id));
+                        const paginaAtualId = ed.getCurrentPageId();
+
+                        // Normaliza apenas formas válidas garantindo que pertencem à página atual desta lousa
+                        const remotosValidos = data.records
+                            .filter(ehRegistoDeDesenho)
+                            .map(rec => {
+                                if (rec.typeName === 'shape' && typeof rec.parentId === 'string' && rec.parentId.startsWith('page:') && rec.parentId !== paginaAtualId) {
+                                    return { ...rec, parentId: paginaAtualId };
+                                }
+                                return rec;
+                            });
+
+                        const idsRemotos = new Set(remotosValidos.map(r => r.id));
 
                         isRemoteUpdateRef.current = true;
                         ed.store.mergeRemoteChanges(() => {
                             try {
-                                // Remove formas que foram apagadas com a borracha pelo outro utilizador
-                                const atuais = ed.store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding');
-                                const paraRemover = atuais.filter(r => !idsRemotos.has(r.id)).map(r => r.id);
-                                if (paraRemover.length > 0 && (remotos.length > 0 || data.records.length === 0)) {
-                                    ed.store.remove(paraRemover);
+                                // Só remove formas apagadas remotamente se não for o carregamento inicial em cima de um traço novo
+                                if (!isInitialLoad) {
+                                    const atuais = ed.store.allRecords().filter(ehRegistoDeDesenho);
+                                    const paraRemover = atuais.filter(r => !idsRemotos.has(r.id)).map(r => r.id);
+                                    if (paraRemover.length > 0) {
+                                        ed.store.remove(paraRemover);
+                                    }
                                 }
-                                if (remotos.length > 0) {
-                                    ed.store.put(remotos);
+                                if (remotosValidos.length > 0) {
+                                    ed.store.put(remotosValidos);
                                 }
-                            } catch(e){}
+                            } catch(errMerge) {
+                                console.warn('Aviso ao mesclar formas na lousa:', errMerge);
+                            }
                         });
-
-                        if (!jaAjustouZoomInicialRef.current && remotos.some(r => r.typeName === 'shape')) {
-                            jaAjustouZoomInicialRef.current = true;
-                            setTimeout(() => { try { ed.zoomToFit(); } catch(e){} }, 120);
-                        }
                         isRemoteUpdateRef.current = false;
                     }
                 } catch(e) {
@@ -174,46 +246,55 @@
             };
 
             window._loadCloud = loadCloud;
-            loadCloud();
+            loadCloud(true);
 
-            const ro = new ResizeObserver(() => {
-                try { window.dispatchEvent(new Event('resize')); ed.updateViewportScreenBounds(); } catch(e){}
-            });
-            try { ro.observe(document.getElementById('root')); } catch(e){}
-
+            // Escuta apenas criações/edições de desenhos feitas pelo utilizador
             const unsub = ed.store.listen((entry) => {
                 if (entry.source !== 'user') return;
                 if (isRemoteUpdateRef.current) return;
                 if (roleRef.current === 'aluno' && dynamicLockedRef.current) return;
 
-                // Ignora movimentos simples de ponteiro/câmara para não sobrecarregar a rede
+                const added = Object.values(entry.changes.added || {});
+                const updated = Object.values(entry.changes.updated || {});
+                const removed = Object.values(entry.changes.removed || {});
+
                 const mudouDesenho =
-                    Object.values(entry.changes.added || {}).some(ehRegistoSincronizavel) ||
-                    Object.values(entry.changes.updated || {}).some(par => ehRegistoSincronizavel(par[1])) ||
-                    Object.values(entry.changes.removed || {}).some(ehRegistoSincronizavel);
+                    added.some(ehRegistoDeDesenho) ||
+                    updated.some(par => Array.isArray(par) && ehRegistoDeDesenho(par[1])) ||
+                    removed.some(ehRegistoDeDesenho);
 
                 if (!mudouDesenho) return;
 
+                lastLocalDrawRef.current = Date.now();
                 clearTimeout(saveTimeoutRef.current);
+
                 saveTimeoutRef.current = setTimeout(() => {
-                    const records = ed.store.allRecords().filter(ehRegistoSincronizavel);
+                    // Se o utilizador ainda estiver a arrastar o traço, aguarda mais um pouco para salvar o traço completo
+                    if (isPointerDownRef.current) {
+                        lastLocalDrawRef.current = Date.now();
+                    }
+                    isSavingRef.current = true;
+                    const records = ed.store.allRecords().filter(ehRegistoDeDesenho);
                     fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}`, {
                         method: 'PUT',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ records, senderId: CLIENT_ID })
-                    }).catch(()=>{});
-                }, 250); 
+                    })
+                    .catch(()=>{})
+                    .finally(() => {
+                        isSavingRef.current = false;
+                    });
+                }, 400); 
             }, { scope: 'document', source: 'user' });
             
             return () => {
-                try { ro.disconnect(); } catch(e){}
                 try { unsub(); } catch(e){}
                 clearTimeout(saveTimeoutRef.current);
             };
         }, []);
 
-        // 4. Escutador SSE em Tempo Real (Ignora o próprio senderId para nunca travar quem está a desenhar)
+        // 4. Escutador SSE em Tempo Real
         useEffect(() => {
             let escolaId = 'DEFAULT';
             try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
@@ -225,7 +306,10 @@
                     try {
                         const data = JSON.parse(event.data);
                         if (data.type === 'LOUSA_DADOS_CHANGED') {
+                            // Ignora se o evento veio desta própria janela ou se este utilizador está a desenhar agora
                             if (data.senderId && data.senderId === CLIENT_ID) return;
+                            if (isPointerDownRef.current || (Date.now() - lastLocalDrawRef.current < 3500)) return;
+
                             const mesmaSala =
                                 data.turmaId === roomIdRef.current ||
                                 data.turmaNome === roomIdRef.current ||
@@ -233,7 +317,7 @@
                                 data.turmaNome === roomIdOriginalRef.current ||
                                 data.turmaId === 'global';
                             if (mesmaSala && window._loadCloud) {
-                                window._loadCloud();
+                                window._loadCloud(false);
                             }
                         }
                         if (data.type === 'LOUSA_STATUS_CHANGED' && roleRef.current === 'aluno') {
@@ -246,7 +330,7 @@
                                     roomIdRef.current = data.turmaId || roomIdOriginalRef.current;
                                     setIsAllowed(true);
                                     setDynamicLocked(!data.recursos);
-                                    setTimeout(() => { if (window._loadCloud) window._loadCloud(); }, 150);
+                                    setTimeout(() => { if (window._loadCloud) window._loadCloud(true); }, 150);
                                 } else {
                                     setIsAllowed(false);
                                 }
@@ -267,8 +351,10 @@
             );
         }
 
-        return React.createElement('div', {className: 'tldraw-wrapper'},
-            React.createElement(Tldraw, { onMount: onMount, inferDarkMode: false, autoFocus: true })
+        return React.createElement(LousaErrorBoundary, null,
+            React.createElement('div', { className: 'tldraw-wrapper' },
+                React.createElement(Tldraw, { onMount: onMount, inferDarkMode: false, autoFocus: true })
+            )
         );
     }
 
