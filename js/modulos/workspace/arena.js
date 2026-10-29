@@ -443,14 +443,14 @@ Workspace.Arena = {
         }
     },
 
-   escutarEventosTempoReal: () => {
+  escutarEventosTempoReal: () => {
         if (Workspace.Arena.evtSource) return; 
+        Workspace.Arena.evtSource = true;
         
-        Workspace.Arena.evtSource = new EventSource(`/api/workspace/stream?escolaId=${Workspace.usuario.escolaId}`);
-        
-       Workspace.Arena.evtSource.onmessage = (event) => {
+        window.addEventListener('ws-sse-message', (e) => {
             try {
-                const dados = JSON.parse(event.data);
+                const dados = e.detail;
+                if (!dados) return;
                 const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
                 const meuIdStr = String(Workspace.usuario.id);
                 
@@ -583,7 +583,7 @@ Workspace.Arena = {
             } catch (err) {
                 // Silencia erros de parse para não quebrar a conexão
             }
-        };
+        });
     },
 
  iniciarPartida: (salaId, oponente, limiteMinutos, cenarioObj) => {

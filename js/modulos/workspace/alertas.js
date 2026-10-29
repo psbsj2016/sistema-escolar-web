@@ -156,9 +156,12 @@ Workspace.Alertas = {
         Workspace.Alertas.conexaoSSE = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
         const sse = Workspace.Alertas.conexaoSSE; 
 
-        sse.onmessage = (event) => {
+       sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
+            // 📡 BARRAMENTO INTERNO UNIFICADO: Partilha o evento com Feed, Arena e Chat usando 1 única conexão SSE!
+            window.dispatchEvent(new CustomEvent('ws-sse-message', { detail: data }));
+
             // 👤 ATUALIZAÇÃO EM TEMPO REAL DE NOME E FOTO NO SININHO E NA TELA
             if (data.type === 'PERFIL_ATUALIZADO') {
                 Workspace.Alertas.sincronizarPerfilNasNotificacoes(

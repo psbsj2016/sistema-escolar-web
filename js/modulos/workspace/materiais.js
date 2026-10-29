@@ -120,8 +120,9 @@ Workspace.Materiais = {
 
     carregarMateriais: async () => {
         try {
+            const refId = Workspace.usuario.alunoRefId || Workspace.usuario.id;
             const endpoint = Workspace.usuario.tipo === 'Aluno' 
-                ? `/workspace/materiais?escolaId=${Workspace.usuario.escolaId}&alunoRefId=${Workspace.usuario.id}`
+                ? `/workspace/materiais?escolaId=${Workspace.usuario.escolaId}&alunoRefId=${refId}`
                 : `/workspace/materiais?escolaId=${Workspace.usuario.escolaId}`;
             const res = await Workspace.api(endpoint, 'GET');
             if (res && res.success) Workspace.Materiais.listaMateriais = res.materiais;

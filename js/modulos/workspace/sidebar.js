@@ -495,54 +495,48 @@ Workspace.Sidebar = {
 
         Workspace.Sidebar.carregarMensagensChat();
 
-        if (Workspace.Sidebar.chatStream) Workspace.Sidebar.chatStream.close();
-        
-        const escolaId = Workspace.usuario.escolaId || 'DEFAULT';
-        Workspace.Sidebar.chatStream = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
-        
-        Workspace.Sidebar.chatStream.onmessage = (event) => {
-            const data = JSON.parse(event.data);
-            
-            if (data.type === 'NOVA_MENSAGEM' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
-                Workspace.Sidebar.injetarNovaMensagem(data.mensagem);
-                Workspace.Sidebar.ocultarDigitando();
-            }
-            
-            if (data.type === 'MSG_APAGADA') {
-                const elMsg = document.getElementById(`msg-${data.mensagemId}`);
-                if (elMsg) {
-                    elMsg.remove();
-                    Workspace.Sidebar.mensagensRenderizadas.delete(data.mensagemId);
-                }
-            }
+       if (!Workspace.Sidebar._chatSSEListenerConfigurado) {
+            window.addEventListener('ws-sse-message', (e) => {
+                const data = e.detail;
+                if (!data || !Workspace.Sidebar.turmaIdAberta) return;
 
-            else if (data.type === 'MSG_APAGADA_MASSA') {
-                if (data.mensagensIds && Array.isArray(data.mensagensIds)) {
-                    data.mensagensIds.forEach(idApagar => {
-                        const elMsg = document.getElementById(`msg-${idApagar}`);
-                        if (elMsg) elMsg.remove();
-                        Workspace.Sidebar.mensagensRenderizadas.delete(idApagar);
+                if (data.type === 'NOVA_MENSAGEM' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                    Workspace.Sidebar.injetarNovaMensagem(data.mensagem);
+                    Workspace.Sidebar.ocultarDigitando();
+                }
+                if (data.type === 'MSG_APAGADA') {
+                    const elMsg = document.getElementById(`msg-${data.mensagemId}`);
+                    if (elMsg) {
+                        elMsg.remove();
+                        Workspace.Sidebar.mensagensRenderizadas.delete(data.mensagemId);
+                    }
+                } else if (data.type === 'MSG_APAGADA_MASSA') {
+                    if (data.mensagensIds && Array.isArray(data.mensagensIds)) {
+                        data.mensagensIds.forEach(idApagar => {
+                            const elMsg = document.getElementById(`msg-${idApagar}`);
+                            if (elMsg) elMsg.remove();
+                            Workspace.Sidebar.mensagensRenderizadas.delete(idApagar);
+                        });
+                    }
+                }
+                if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                    const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+                    if (data.autorNome !== meuNome) {
+                        Workspace.Sidebar.mostrarDigitando(data.autorNome, data.isTyping);
+                    }
+                }
+                if (data.type === 'SALA_UPDATE' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
+                    Workspace.api(`/workspace/chat/info/${Workspace.Sidebar.turmaIdAberta}`, 'GET').then(info => {
+                        if(info) {
+                            Workspace.Sidebar.infoTurmaAberta = info;
+                            Workspace.Sidebar.atualizarCabecalhoChat(info);
+                            Workspace.Sidebar.carregarTurmas(); 
+                        }
                     });
                 }
-            }
-
-            if (data.type === 'DIGITANDO' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
-                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-                if (data.autorNome !== meuNome) {
-                    Workspace.Sidebar.mostrarDigitando(data.autorNome, data.isTyping);
-                }
-            }
-
-            if (data.type === 'SALA_UPDATE' && data.turmaId === Workspace.Sidebar.turmaIdAberta) {
-                Workspace.api(`/workspace/chat/info/${Workspace.Sidebar.turmaIdAberta}`, 'GET').then(info => {
-                    if(info) {
-                        Workspace.Sidebar.infoTurmaAberta = info;
-                        Workspace.Sidebar.atualizarCabecalhoChat(info);
-                        Workspace.Sidebar.carregarTurmas(); 
-                    }
-                });
-            }
-        };
+            });
+            Workspace.Sidebar._chatSSEListenerConfigurado = true;
+        }
     },
 
     fecharChat: () => {

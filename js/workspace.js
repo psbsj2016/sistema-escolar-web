@@ -57,6 +57,11 @@ Workspace.sincronizarMeuPerfilDaNuvem = async function() {
     if (!Workspace.usuario || !Workspace.usuario.id) return;
     try {
         const res = await Workspace.api(`/workspace/perfil/info/${encodeURIComponent(Workspace.usuario.id)}?_t=${Date.now()}`, 'GET');
+        if (res && res.revogado) {
+            sessionStorage.setItem('ws_aviso_expirado', 'O seu acesso ao WorkSpace foi encerrado ou a matrícula está inativa.');
+            Workspace.logout(false);
+            return;
+        }
         if (res && res.success) {
             const nomeAntigoLocal = Workspace.usuario.nome || Workspace.usuario.login;
             let mudouAlgo = false;
@@ -537,20 +542,50 @@ Object.assign(Workspace, {
             localStorage.setItem('ws_ultima_tela_global', tela);
         }
         
-        // 🚀 O SILENCIADOR GLOBAL
+        // 🔇 1. SILENCIADOR GLOBAL DE VOZ E MÍDIAS (Pausa vídeos, áudios e iframes do YouTube ao mudar de tela)
         if ('speechSynthesis' in window) {
             window.speechSynthesis.cancel();
         }
+        document.querySelectorAll('video, audio').forEach(media => {
+            try { if (!media.paused) media.pause(); } catch (e) {}
+        });
+        document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+            try {
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
+                }
+            } catch (e) {}
+        });
         
-        // 🚀 A VASSOURA DO INGLÊS: Impede que os timers do jogo corram noutro ecrã
+        // 🧹 2. FECHA MODAIS DE TELA CHEIA E DESTRAVA O SCROLL DO BODY
         if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
-            Workspace.Ingles.fecharJogo(); // Limpa as vozes, caixas abertas e timers da IA
+            Workspace.Ingles.fecharJogo();
         }
+        ['ws-imersao-modal', 'ws-imersao-musical-modal', 'ws-spotlight-overlay'].forEach(idModal => {
+            const m = document.getElementById(idModal);
+            if (m && m.style.display !== 'none') {
+                m.style.opacity = '0';
+                m.style.display = 'none';
+            }
+        });
+        ['ws-modal-visualizador-material', 'ws-doc-modal', 'ws-leitor-externo-modal', 'ws-lightbox-modal'].forEach(idTemp => {
+            const elTemp = document.getElementById(idTemp);
+            if (elTemp) elTemp.remove();
+        });
+        document.body.style.overflow = '';
 
         const dropdown = document.getElementById('ws-main-menu-dropdown');
         if (dropdown) dropdown.style.display = 'none';
+        const notiDropdown = document.getElementById('ws-noti-dropdown');
+        if (notiDropdown) notiDropdown.style.display = 'none';
         const modalChat = document.getElementById('ws-chat-modal');
-        if (modalChat) modalChat.style.display = 'none';
+        if (modalChat) {
+            if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta && typeof Workspace.Sidebar.fecharChat === 'function') {
+                Workspace.Sidebar.fecharChat();
+            } else {
+                modalChat.style.display = 'none';
+            }
+        }
 
         const ecras = {
             'feed': 'ws-main-container', 'bau': 'ws-bau-container', 'configuracoes': 'ws-config-container',

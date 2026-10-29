@@ -1602,11 +1602,15 @@ Workspace.Ingles = {
         this.renderGameCapa();
     },
 
-    fecharJogo(){
+   fecharJogo(){
         try{ speechSynthesis.cancel(); }catch{}
-        document.getElementById('gameModal').classList.add('hidden');
-        document.body.style.overflow = '';
-        this.renderAlunoGrid();
+        const modal = document.getElementById('gameModal');
+        const estavaAberto = modal && !modal.classList.contains('hidden');
+        if (modal) modal.classList.add('hidden');
+        if (estavaAberto) {
+            document.body.style.overflow = '';
+            this.renderAlunoGrid();
+        }
     },
 
     sucessoGenerico: async function(bonusBase){

@@ -149,17 +149,15 @@ Workspace.Feed = {
         }
     },
 
-  conectarTempoReal: () => {
-        if (Workspace.Feed._evtSource) Workspace.Feed._evtSource.close();
-        
-        const escolaId = Workspace.usuario ? Workspace.usuario.escolaId : 'DEFAULT';
-        Workspace.Feed._evtSource = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
-        
-        Workspace.Feed._evtSource.onopen = () => { Workspace.Feed._retrySSECount = 0; };
+ conectarTempoReal: () => {
+        if (Workspace.Feed._sseListenerAtivo) return;
+        Workspace.Feed._sseListenerAtivo = true;
 
-        Workspace.Feed._evtSource.onmessage = (event) => {
+        window.addEventListener('ws-sse-message', (e) => {
             try {
-                const dados = JSON.parse(event.data);
+                const dados = e.detail;
+                if (!dados) return;
+
                 if (dados.type === 'POST_APAGADO') {
                     const idDoPost = String(dados.postId);
                     const elementoHTML = document.getElementById(`post-${idDoPost}`);
@@ -167,7 +165,6 @@ Workspace.Feed = {
                     Workspace.Feed._removerPostDosCaches(idDoPost);
                 }
 
-               // 📌 ATUALIZAÇÃO EM TEMPO REAL QUANDO UM PROFESSOR FIXA OU DESAFIXA UM POST
                 if (dados.type === 'POST_FIXADO') {
                     const postAlvo = Workspace.Feed.todosOsPosts.find(p => String(p.id) === String(dados.postId));
                     if (postAlvo) {
@@ -177,7 +174,6 @@ Workspace.Feed = {
                     }
                 }
 
-                // 🏴‍☠️ ATUALIZAÇÃO EM TEMPO REAL DO BAÚ DO INGLÊS QUANDO O PROFESSOR CRIA NOVOS DESAFIOS
                 if (dados.type === 'BAU_INGLES_UPDATE') {
                     if (window.Workspace && Workspace.Ingles && typeof Workspace.Ingles.loadDados === 'function') {
                         Workspace.Ingles.loadDados().then(() => {
@@ -186,7 +182,6 @@ Workspace.Feed = {
                     }
                 }
 
-                // 🚀 ATUALIZAÇÃO EM TEMPO REAL DE FOTO (OU REMOÇÃO PARA INICIAIS) E NOME NO FEED
                 if (dados.type === 'PERFIL_ATUALIZADO') {
                     const nomeAntigo = dados.nomeAntigo || dados.novoNome;
                     const novoNome = dados.novoNome || dados.nomeAntigo;
@@ -221,24 +216,18 @@ Workspace.Feed = {
                     }
                 }
 
-                // 🚀 RECETOR DO SINALIZADOR DA ARENA
                 if (dados.type === 'DESAFIO_ALEATORIO_BROADCAST') {
                     const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-                    // Só mostra o popup se EU NÃO FOR o desafiante
                     if (dados.desafianteNome !== meuNome) {
                         Workspace.Feed.exibirConviteAleatorio(dados);
                     }
                 }
 
-                // 🚀 FECHO DO SINALIZADOR (QUANDO ALGUÉM ACEITA)
                 if (dados.type === 'DESAFIO_ALEATORIO_FECHADO') {
                     const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-                    
-                    // 1. Remove o popup de todos os ecrãs
                     const conviteUI = document.getElementById(`convite-rnd-${dados.desafioId}`);
                     if (conviteUI) conviteUI.remove();
 
-                    // 2. A plataforma avisa e a arena.js puxa o jogador a seguir!
                     if (dados.desafianteNome === meuNome) {
                         if (window.Workspace && Workspace.mostrarAviso) {
                             Workspace.mostrarAviso(`⚔️ O(A) ${dados.desafiadoNome} aceitou o seu desafio! A ligar...`, "success", 6000);
@@ -246,21 +235,7 @@ Workspace.Feed = {
                     }
                 }
             } catch (err) {}
-        };
-
-        Workspace.Feed._evtSource.onerror = () => {
-            Workspace.Feed._evtSource.close();
-            Workspace.Feed._retrySSECount = (Workspace.Feed._retrySSECount || 0) + 1;
-            const timeout = Math.min(1000 * Math.pow(2, Workspace.Feed._retrySSECount), 30000);
-            setTimeout(Workspace.Feed.conectarTempoReal, timeout);
-        };
-
-        if (!Workspace.Feed._listenerUnloadConfigurado) {
-            window.addEventListener('beforeunload', () => {
-                if (Workspace.Feed._evtSource) Workspace.Feed._evtSource.close();
-            });
-            Workspace.Feed._listenerUnloadConfigurado = true;
-        }
+        });
     },
 
     // 🚀 DESENHA O POP-UP GIGANTE NO ECRÃ
@@ -785,7 +760,7 @@ Workspace.Feed = {
             container.parentNode.insertBefore(sentinela, container.nextSibling);
         }
         sentinela.style.display = 'block';
-        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#249; font-size:13px; animation: pulse 2.5s infinite ease-in-out;"><strong><h3>🚨 Se você está lendo esta mensagem é porque ficou muito tempo sem acessar o WorkSpace! Por favor, saia do WorkSpace e entre novamente para que tudo seja atualizado e este aviso deixe de aparecer.</h3></strong></div>';
+        sentinela.innerHTML = '<div style="text-align:center; padding:20px; color:#94a3b8; font-size:13px; font-weight:600;">Carregando mais publicações... ⏳</div>';
 
         Workspace.Feed.carregarLoteFiltrado(listaFiltrada);
     },

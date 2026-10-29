@@ -305,9 +305,10 @@ Object.assign(Workspace.Avaliacoes, {
         });
     },
 
-   iniciarRadarAvaliacoes: () => {
+  iniciarRadarAvaliacoes: () => {
         if (Workspace.Avaliacoes.radarInterval) clearInterval(Workspace.Avaliacoes.radarInterval);
         Workspace.Avaliacoes.radarInterval = setInterval(async () => {
+            if (document.visibilityState === 'hidden' && !Workspace.Avaliacoes.exameAtivo && !Workspace.Avaliacoes.estudioAtivo) return;
             try {
                 // 🚀 DESTRUIDOR DE CACHE: O timestamp ?_t= força o navegador a buscar os dados reais
                 const resAval = await Workspace.api(`/workspace/avaliacoes?escolaId=${Workspace.usuario.escolaId}&_t=${Date.now()}`, 'GET');
@@ -1201,9 +1202,22 @@ Object.assign(Workspace.Avaliacoes, {
         document.getElementById('ws-nova-online-titulo').value = ''; document.getElementById('ws-nova-online-data').value = ''; document.getElementById('ws-nova-online-link').value = ''; document.getElementById('ws-nova-online-destino').value = 'global';
     },
 
-  // 🔄 Cruza a ficha da secretaria (/alunos) com o perfil escolhido pelo aluno no WorkSpace (/usuarios)
+  // 🛡️ Verifica se o aluno está estritamente ATIVO no Sistema Principal (ignora Cancelados, Trancados, Excluídos e Inativos)
+    ehAlunoAtivo: (aluno) => {
+        if (!aluno) return false;
+        const st = String(aluno.status || 'Ativo').trim().toLowerCase();
+        if (st.includes('cancel') || st.includes('tranc') || st.includes('exclu') || st.includes('inativ') || st.includes('desist')) {
+            return false;
+        }
+        return st === 'ativo' || st === '';
+    },
+
+    // 🔄 Cruza a ficha da secretaria (/alunos) com o perfil escolhido pelo aluno no WorkSpace (/usuarios) mantendo APENAS alunos Ativos!
     sincronizarIdentidadesAlunos: (alunosBrutos, usuariosBrutos, mapaAvatars) => {
-        const alunos = Array.isArray(alunosBrutos) ? alunosBrutos : [];
+        const listaBruta = Array.isArray(alunosBrutos) ? alunosBrutos : [];
+        // Filtra imediatamente para que alunos Cancelados/Trancados/Excluídos jamais entrem nas turmas do WorkSpace!
+        const alunos = listaBruta.filter(a => Workspace.Avaliacoes.ehAlunoAtivo(a));
+
         const usuarios = Array.isArray(usuariosBrutos) ? usuariosBrutos : [];
         const avatares = mapaAvatars && !mapaAvatars.error ? mapaAvatars : {};
 
@@ -3373,15 +3387,20 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         } catch(e) {}
     },
 
-    abrirLousaProfessor: async (turmaId = 'global') => {
+   abrirLousaProfessor: async (turmaId = 'global') => {
         const tid = String(turmaId).trim();
         
-        // 🚀 O SEGREDO 1: Força o encerramento da Lousa na Base de Dados ao entrar
-        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { 
-            turmaId: tid, ativa: false, recursos: false, escolaId: Workspace.usuario?.escolaId || 'DEFAULT' 
-        });
-        
-        Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+        // Consulta o estado real salvo no banco para não desligar uma lousa já ativa na turma
+        try {
+            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}`, 'GET');
+            if (res && res.success) {
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: !!res.ativa, recursos: !!res.recursos };
+            } else {
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+            }
+        } catch (e) {
+            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+        }
         
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
