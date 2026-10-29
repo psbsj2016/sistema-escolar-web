@@ -3387,12 +3387,15 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         } catch(e) {}
     },
 
-   abrirLousaProfessor: async (turmaId = 'global') => {
-        const tid = String(turmaId).trim();
+ abrirLousaProfessor: async (turmaId = 'global') => {
+        const tid = String(turmaId || 'global').trim();
         
-        // Consulta o estado real salvo no banco para não desligar uma lousa já ativa na turma
+        // 1. Garante que a lista de turmas está carregada no seletor do topo da Lousa
+        await Workspace.Avaliacoes.carregarTurmasLousaProf();
+
+        // 2. Consulta o estado atual daquela turma no banco (estrito=true para ver o estado real da turma escolhida)
         try {
-            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}`, 'GET');
+            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
             if (res && res.success) {
                 Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: !!res.ativa, recursos: !!res.recursos };
             } else {
@@ -3407,7 +3410,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         
         if (selModal) selModal.value = tid;
-        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}`);
+        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`);
         
         if (modal) {
             modal.style.display = 'flex';
@@ -3416,24 +3419,23 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
-   mudarTurmaLousaIframe: async (turmaId) => {
-    // Apenas troca o iframe, mantém o estado salvo no banco
-    const iframe = document.getElementById('iframeLousaProf');
-    if (iframe) iframe.src = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(turmaId)}`;
-    
-    // Busca o estado real do banco pra atualizar os botões
-    try {
-        const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(turmaId)}`, 'GET');
-        if(res?.success){
-            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: !!res.ativa, recursos: !!res.recursos };
-        } else {
-            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: false, recursos: false };
+    mudarTurmaLousaIframe: async (turmaId) => {
+        const tid = String(turmaId || 'global').trim();
+        const iframe = document.getElementById('iframeLousaProf');
+        if (iframe) iframe.src = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`;
+        
+        try {
+            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
+            if (res?.success) {
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: !!res.ativa, recursos: !!res.recursos };
+            } else {
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+            }
+        } catch (e) {
+            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
         }
-    } catch(e){
-        Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: false, recursos: false };
-    }
-    Workspace.Avaliacoes.renderizarBotoesLousaProf();
-},
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
+    },
 
  renderizarBotoesLousaProf: () => {
         const btnView = document.getElementById('btn-toggle-view');

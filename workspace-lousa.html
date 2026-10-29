@@ -7,11 +7,9 @@
   <style>
     *,*::before,*::after{box-sizing:border-box}
     html,body{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#f8fafc;overscroll-behavior:none;}
-    /* FIX: altura real dentro da plataforma (iframe) */
     #root{width:100%;height:100vh;height:100dvh;min-height:480px;display:flex;flex-direction:column;position:relative;background:#f8fafc;isolation:isolate;}
     .tldraw-wrapper{position:relative;flex:1;width:100%;height:100%;min-height:480px;overflow:hidden;display:flex;}
     .tldraw-wrapper > div{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;}
-    /* FIX: impede CSS da plataforma esconder a toolbar */
     .tlui-toolbar, .tlui-style-panel{visibility:visible !important;opacity:1 !important;pointer-events:auto !important;}
     .tela-preta { position:absolute; inset:0; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; text-align:center; padding:20px; z-index:50; width:100%; height:100%; }
     @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
@@ -26,13 +24,19 @@
     import { Tldraw } from '@tldraw/tldraw';
     import '@tldraw/tldraw/tldraw.css';
 
+    // Identificador único desta janela para nunca sofrer "eco" dos próprios traços
+    const CLIENT_ID = 'lousa_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+
+    // Filtra apenas registos de desenho/documento (nunca sobrescreve a câmara ou ferramenta de quem está a usar)
+    const TIPOS_SINCRONIZAVEIS = new Set(['shape', 'asset', 'binding', 'page']);
+    const ehRegistoSincronizavel = (r) => r && TIPOS_SINCRONIZAVEIS.has(r.typeName);
+
     function getInitialParams() {
       let role = 'professor', roomId = 'global';
       try {
         const p = new URLSearchParams(window.location.search);
         if (p.get('role')) role = p.get('role');
         if (p.get('room') || p.get('turma')) roomId = p.get('room') || p.get('turma');
-        // fallback: tenta parent se a plataforma tira a query
         if (window.parent && window.parent !== window) {
           try {
             const pp = new URLSearchParams(window.parent.location.search);
@@ -48,27 +52,31 @@
     function App() {
         const [editor, setEditor] = useState(null);
         const [isAllowed, setIsAllowedState] = useState(init.role !== 'aluno');
-        const [dynamicLocked, setDynamicLockedState] = useState(true);
+        const [dynamicLocked, setDynamicLockedState] = useState(init.role === 'aluno');
 
-        // REFS - correção do bug de closure que travava a lousa
         const roleRef = useRef(init.role);
+        const roomIdOriginalRef = useRef(init.roomId);
         const roomIdRef = useRef(init.roomId);
         const isAllowedRef = useRef(init.role !== 'aluno');
-        const dynamicLockedRef = useRef(true);
+        const dynamicLockedRef = useRef(init.role === 'aluno');
         const isRemoteUpdateRef = useRef(false);
         const saveTimeoutRef = useRef(null);
+        const jaAjustouZoomInicialRef = useRef(false);
 
         const setIsAllowed = useCallback((v) => { isAllowedRef.current = !!v; setIsAllowedState(!!v); }, []);
         const setDynamicLocked = useCallback((v) => { dynamicLockedRef.current = !!v; setDynamicLockedState(!!v); }, []);
 
-        // Recebe INIT da plataforma se ela enviar via postMessage
+        // Recebe comandos via postMessage do painel principal
         useEffect(() => {
             const onInit = (e) => {
                 const d = e.data || {};
                 if (d.type === 'INIT_LOUSA' || d.type === 'LOUSA_INIT') {
-                  if (d.role) roleRef.current = d.role;
-                  if (d.room || d.roomId || d.turmaId) roomIdRef.current = d.room || d.roomId || d.turmaId;
-                  if (d.role && d.role !== 'aluno') setIsAllowed(true);
+                    if (d.role) roleRef.current = d.role;
+                    if (d.room || d.roomId || d.turmaId) {
+                        roomIdRef.current = d.room || d.roomId || d.turmaId;
+                        roomIdOriginalRef.current = roomIdRef.current;
+                    }
+                    if (d.role && d.role !== 'aluno') setIsAllowed(true);
                 }
                 if (d.type === 'LOCK_STATE') setDynamicLocked(!!d.locked);
                 if (d.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud();
@@ -78,68 +86,98 @@
             return () => window.removeEventListener('message', onInit);
         }, [setIsAllowed, setDynamicLocked]);
 
-        // 1. Polling de Segurança para o Aluno (MANTIDO)
+        // 1. Polling para o Aluno (Verifica liberação, ferramentas e sintoniza na sala ativa do Professor)
         useEffect(() => {
             if (roleRef.current !== 'aluno') return;
             const check = async () => {
                 try {
-                    const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdRef.current)}`, { cache: 'no-store' });
+                    const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdOriginalRef.current)}?_t=${Date.now()}`, {
+                        cache: 'no-store',
+                        credentials: 'include'
+                    });
                     const data = await res.json();
                     if (data?.success && data.ativa) {
+                        const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginalRef.current;
+                        const mudouSala = roomIdRef.current !== salaAlvo;
+                        const acabouDeLiberar = !isAllowedRef.current;
+
+                        roomIdRef.current = salaAlvo;
                         setIsAllowed(true);
                         setDynamicLocked(!data.recursos);
+
+                        if ((mudouSala || acabouDeLiberar) && window._loadCloud) {
+                            setTimeout(() => window._loadCloud(), 150);
+                        }
                     } else {
                         setIsAllowed(false);
                     }
                 } catch(e) {}
             };
             check();
-            const inv = setInterval(check, 2500);
+            const inv = setInterval(check, 2000);
             return () => clearInterval(inv);
         }, [setIsAllowed, setDynamicLocked]);
 
-        // 2. Ouve Comandos em Tempo Real (MANTIDO)
-        useEffect(() => {
-            const onMsg = (e) => {
-                if (e.data?.type === 'LOCK_STATE') setDynamicLocked(!!e.data.locked);
-                if (e.data?.type === 'RELOAD_DADOS' && window._loadCloud) window._loadCloud();
-            };
-            window.addEventListener('message', onMsg);
-            return () => window.removeEventListener('message', onMsg);
-        }, [setDynamicLocked]);
-
-        // 3. Aplica o Cadeado às Ferramentas (MANTIDO, agora com ref)
+        // 2. Aplica o Cadeado às Ferramentas (Professor nunca fica travado; Aluno só desenha quando recursos = true)
         useEffect(() => {
             if (editor) {
-              try { editor.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current }); } catch(e){}
+                try {
+                    const deveTravar = roleRef.current === 'aluno' && dynamicLockedRef.current;
+                    editor.updateInstanceState({ isReadonly: deveTravar });
+                } catch(e){}
             }
         }, [editor, dynamicLocked]);
 
-        // 4. Arranque da Tldraw - FIX PRINCIPAL: callback estável
+        // 3. Arranque e Sincronização Inteligente do Tldraw
         const onMount = useCallback((ed) => {
             setEditor(ed);
-            try { ed.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current }); } catch(e){}
+            try {
+                ed.updateInstanceState({ isReadonly: roleRef.current === 'aluno' && dynamicLockedRef.current });
+            } catch(e){}
 
             const loadCloud = async () => {
-                if(roleRef.current === 'aluno' && !isAllowedRef.current) return; 
+                if (roleRef.current === 'aluno' && !isAllowedRef.current) return; 
                 try {
-                    const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}`, { cache: 'no-store' });
+                    const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}?_t=${Date.now()}`, {
+                        cache: 'no-store',
+                        credentials: 'include'
+                    });
                     const data = await res.json();
-                    if (data?.success && data.records?.length > 0) {
+                    if (data?.success && Array.isArray(data.records)) {
+                        const remotos = data.records.filter(ehRegistoSincronizavel);
+                        const idsRemotos = new Set(remotos.map(r => r.id));
+
                         isRemoteUpdateRef.current = true;
-                        ed.store.mergeRemoteChanges(() => { try { ed.store.put(data.records); } catch(e){} });
-                        setTimeout(() => { try { ed.zoomToFit(); } catch(e){} }, 100);
+                        ed.store.mergeRemoteChanges(() => {
+                            try {
+                                // Remove formas que foram apagadas com a borracha pelo outro utilizador
+                                const atuais = ed.store.allRecords().filter(r => r.typeName === 'shape' || r.typeName === 'binding');
+                                const paraRemover = atuais.filter(r => !idsRemotos.has(r.id)).map(r => r.id);
+                                if (paraRemover.length > 0 && (remotos.length > 0 || data.records.length === 0)) {
+                                    ed.store.remove(paraRemover);
+                                }
+                                if (remotos.length > 0) {
+                                    ed.store.put(remotos);
+                                }
+                            } catch(e){}
+                        });
+
+                        if (!jaAjustouZoomInicialRef.current && remotos.some(r => r.typeName === 'shape')) {
+                            jaAjustouZoomInicialRef.current = true;
+                            setTimeout(() => { try { ed.zoomToFit(); } catch(e){} }, 120);
+                        }
                         isRemoteUpdateRef.current = false;
                     }
-                } catch(e) {}
+                } catch(e) {
+                    isRemoteUpdateRef.current = false;
+                }
             };
 
             window._loadCloud = loadCloud;
             loadCloud();
 
-            // FIX: recalcula tamanho quando a plataforma redimensiona o iframe
             const ro = new ResizeObserver(() => {
-              try { window.dispatchEvent(new Event('resize')); ed.updateViewportScreenBounds(); } catch(e){}
+                try { window.dispatchEvent(new Event('resize')); ed.updateViewportScreenBounds(); } catch(e){}
             });
             try { ro.observe(document.getElementById('root')); } catch(e){}
 
@@ -148,46 +186,84 @@
                 if (isRemoteUpdateRef.current) return;
                 if (roleRef.current === 'aluno' && dynamicLockedRef.current) return;
 
+                // Ignora movimentos simples de ponteiro/câmara para não sobrecarregar a rede
+                const mudouDesenho =
+                    Object.values(entry.changes.added || {}).some(ehRegistoSincronizavel) ||
+                    Object.values(entry.changes.updated || {}).some(par => ehRegistoSincronizavel(par[1])) ||
+                    Object.values(entry.changes.removed || {}).some(ehRegistoSincronizavel);
+
+                if (!mudouDesenho) return;
+
                 clearTimeout(saveTimeoutRef.current);
                 saveTimeoutRef.current = setTimeout(() => {
-                    const records = ed.store.allRecords();
+                    const records = ed.store.allRecords().filter(ehRegistoSincronizavel);
                     fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdRef.current)}`, {
-                        method: 'PUT', headers: {'Content-Type': 'application/json'},
-                        body: JSON.stringify({ records })
+                        method: 'PUT',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ records, senderId: CLIENT_ID })
                     }).catch(()=>{});
-                }, 350); 
+                }, 250); 
             }, { scope: 'document', source: 'user' });
             
-            return () => { try{ro.disconnect()}catch(e){} try{unsub()}catch(e){} clearTimeout(saveTimeoutRef.current); };
-        }, []); // << VAZIO DE PROPÓSITO - não remonta mais e não some as ferramentas
+            return () => {
+                try { ro.disconnect(); } catch(e){}
+                try { unsub(); } catch(e){}
+                clearTimeout(saveTimeoutRef.current);
+            };
+        }, []);
 
-        // 5. Escutador SSE (MANTIDO)
+        // 4. Escutador SSE em Tempo Real (Ignora o próprio senderId para nunca travar quem está a desenhar)
         useEffect(() => {
             let escolaId = 'DEFAULT';
-            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId; } catch(e){
-              try { const p = new URLSearchParams(window.location.search); if(p.get('escolaId')) escolaId = p.get('escolaId'); } catch(e2){}
-            }
+            try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
+
             let es;
             try {
-              es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-              es.onmessage = (event) => {
-                  try {
-                      const data = JSON.parse(event.data);
-                      if (data.type === 'LOUSA_DADOS_CHANGED' && (data.turmaId === roomIdRef.current || data.turmaId === 'global')) {
-                          if (window._loadCloud) window._loadCloud();
-                      }
-                  } catch(e){}
-              };
+                es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+                es.onmessage = (event) => {
+                    try {
+                        const data = JSON.parse(event.data);
+                        if (data.type === 'LOUSA_DADOS_CHANGED') {
+                            if (data.senderId && data.senderId === CLIENT_ID) return;
+                            const mesmaSala =
+                                data.turmaId === roomIdRef.current ||
+                                data.turmaNome === roomIdRef.current ||
+                                data.turmaId === roomIdOriginalRef.current ||
+                                data.turmaNome === roomIdOriginalRef.current ||
+                                data.turmaId === 'global';
+                            if (mesmaSala && window._loadCloud) {
+                                window._loadCloud();
+                            }
+                        }
+                        if (data.type === 'LOUSA_STATUS_CHANGED' && roleRef.current === 'aluno') {
+                            const mesmaTurma =
+                                data.turmaId === roomIdOriginalRef.current ||
+                                data.turmaNome === roomIdOriginalRef.current ||
+                                data.turmaId === 'global';
+                            if (mesmaTurma) {
+                                if (data.ativa) {
+                                    roomIdRef.current = data.turmaId || roomIdOriginalRef.current;
+                                    setIsAllowed(true);
+                                    setDynamicLocked(!data.recursos);
+                                    setTimeout(() => { if (window._loadCloud) window._loadCloud(); }, 150);
+                                } else {
+                                    setIsAllowed(false);
+                                }
+                            }
+                        }
+                    } catch(e){}
+                };
             } catch(e){}
-            return () => { try{es?.close()}catch(e){} };
-        }, []);
+            return () => { try { es?.close(); } catch(e){} };
+        }, [setIsAllowed, setDynamicLocked]);
 
         if (!isAllowed) {
             return React.createElement('div', { className: 'tela-preta' },
                 React.createElement('div', {style:{fontSize:'60px', filter:'grayscale(100%) opacity(0.5)', animation:'pulse 2s infinite'}}, '⏳'),
                 React.createElement('h2', {style:{fontSize:'22px', margin:'0 0 10px 0'}}, 'Aguardando Liberação...'),
-                React.createElement('p', {style:{color:'#94a3b8', fontSize:'14px', maxWidth:'350px'}}, 'O professor está a preparar a lousa. Ela será exibida aqui assim que for ativada no painel de controlo.'),
-                React.createElement('div', {style:{background:'rgba(255,255,255,0.1)', padding:'8px 16px', borderRadius:'20px', fontSize:'12px', fontWeight:'bold'}}, '🔄 Conectado de forma segura')
+                React.createElement('p', {style:{color:'#94a3b8', fontSize:'14px', maxWidth:'350px'}}, 'O professor está a preparar a lousa. Ela aparecerá aqui automaticamente assim que for ativada.'),
+                React.createElement('div', {style:{background:'rgba(255,255,255,0.1)', padding:'8px 16px', borderRadius:'20px', fontSize:'12px', fontWeight:'bold'}}, '🔄 Conectado em tempo real')
             );
         }
 
