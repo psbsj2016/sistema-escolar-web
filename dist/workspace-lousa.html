@@ -1,26 +1,906 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" translate="no">
 <head>
   <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Lousa Interativa Tldraw</title>
+  <title>Lousa Digital Interativa</title>
   <style>
-    *,*::before,*::after{box-sizing:border-box}
-    html,body{width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,sans-serif;overflow:hidden;background:#f8fafc;overscroll-behavior:none;}
-    #root{width:100%;height:100vh;height:100dvh;min-height:480px;display:flex;flex-direction:column;position:relative;background:#f8fafc;isolation:isolate;}
-    .tldraw-wrapper{position:relative;flex:1;width:100%;height:100%;min-height:480px;overflow:hidden;display:flex;}
-    .tldraw-wrapper > div{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;}
-    .tlui-toolbar, .tlui-style-panel{visibility:visible !important;opacity:1 !important;pointer-events:auto !important;}
-    .tela-preta { position:absolute; inset:0; background:#0f172a; color:#fff; display:flex; align-items:center; justify-content:center; flex-direction:column; gap:20px; text-align:center; padding:20px; z-index:50; width:100%; height:100%; }
-    @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
+    *, *::before, *::after { box-sizing: border-box; user-select: none; -webkit-user-select: none; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      overflow: hidden; background: #f8fafc; overscroll-behavior: none;
+      touch-action: none;
+    }
+
+    #lousa-app {
+      position: relative; width: 100vw; height: 100vh; height: 100dvh;
+      overflow: hidden; display: flex; flex-direction: column;
+      background: #ffffff;
+    }
+
+    /* Padrões de Fundo do Quadro */
+    .bg-branco { background-color: #ffffff; background-image: none; }
+    .bg-pontos {
+      background-color: #ffffff;
+      background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
+      background-size: 24px 24px;
+    }
+    .bg-grade {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
+        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+    .bg-pauta {
+      background-color: #fffef9;
+      background-image: linear-gradient(to bottom, transparent 31px, #93c5fd 31px, #93c5fd 32px);
+      background-size: 100% 32px;
+    }
+
+    #lousa-canvas {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      display: block; z-index: 2; cursor: crosshair;
+      touch-action: none;
+    }
+
+    /* Barra de Ferramentas Principal (Inferior Central) */
+    .toolbar-dock {
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+      border: 1px solid #334155; border-radius: 18px;
+      padding: 8px 12px; display: flex; align-items: center; gap: 6px;
+      z-index: 20; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
+      max-width: 96vw; overflow-x: auto; scrollbar-width: none;
+    }
+    .toolbar-dock::-webkit-scrollbar { display: none; }
+
+    .tool-btn {
+      background: transparent; border: 1px solid transparent; color: #cbd5e1;
+      width: 40px; height: 40px; border-radius: 12px; font-size: 18px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
+    .tool-btn.active {
+      background: #2563eb; color: #ffffff; border-color: #60a5fa;
+      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45); transform: translateY(-2px);
+    }
+    .tool-divider { width: 1px; height: 26px; background: #334155; margin: 0 4px; flex-shrink: 0; }
+
+    /* Barra de Cores e Espessura (Superior Esquerda) */
+    .style-dock {
+      position: fixed; top: 14px; left: 14px;
+      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
+      border: 1px solid #cbd5e1; border-radius: 16px;
+      padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+      z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      flex-wrap: wrap; max-width: calc(100vw - 28px);
+    }
+
+    .color-dot {
+      width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+      border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
+      transition: transform 0.15s ease; flex-shrink: 0;
+    }
+    .color-dot.active {
+      transform: scale(1.25); box-shadow: 0 0 0 2.5px #0f172a;
+    }
+
+    .size-btn {
+      background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
+      padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: 0.15s;
+    }
+    .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+
+    /* Barra de Ações Rápidas (Superior Direita) */
+    .actions-dock {
+      position: fixed; top: 14px; right: 14px;
+      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
+      border: 1px solid #cbd5e1; border-radius: 14px;
+      padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+      z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+    }
+    .action-pill {
+      background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
+      padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
+    }
+    .action-pill:hover { background: #e2e8f0; }
+    .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+    .action-pill.danger:hover { background: #fee2e2; }
+
+    /* Caixa Flutuante para Digitar Texto no Quadro */
+    #text-editor-box {
+      display: none; position: fixed; z-index: 30;
+      background: rgba(255, 255, 255, 0.98); border: 2px solid #2563eb;
+      border-radius: 12px; padding: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      flex-direction: column; gap: 6px; min-width: 220px;
+    }
+    #text-editor-input {
+      border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;
+      font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700;
+      outline: none; resize: both; min-width: 200px; min-height: 46px;
+      user-select: text !important; -webkit-user-select: text !important;
+    }
+
+    /* Ecrã de Espera do Aluno */
+    #tela-espera-aluno {
+      display: none; position: absolute; inset: 0; background: #0f172a; color: #fff;
+      align-items: center; justify-content: center; flex-direction: column;
+      gap: 18px; text-align: center; padding: 24px; z-index: 50;
+    }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
+
+    /* Selo de Apenas Leitura para o Aluno */
+    #badge-somente-leitura {
+      display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 8px 18px;
+      border-radius: 30px; font-size: 12.5px; font-weight: 700; z-index: 25;
+      border: 1px solid #334155; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+    }
+
+    @media (max-width: 768px) {
+      .style-dock { top: 10px; left: 10px; padding: 6px 8px; gap: 6px; }
+      .actions-dock { top: 62px; right: 10px; padding: 5px 8px; }
+      .toolbar-dock { bottom: 12px; padding: 6px 8px; }
+      .tool-btn { width: 36px; height: 36px; font-size: 16px; }
+    }
   </style>
-  <script type="module" crossorigin src="/assets/lousa-Gl89GDcK.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/chunk-bqFK08oC.js">
-  <link rel="modulepreload" crossorigin href="/assets/preload-helper-B83JGOQx.js">
-  <link rel="stylesheet" crossorigin href="/assets/lousa-C9iOKnfK.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
-  <div id="root"></div>
-
+
+  <div id="lousa-app" class="bg-grade">
+    <!-- Quadro Vetorial em HTML5 Canvas -->
+    <canvas id="lousa-canvas"></canvas>
+
+    <!-- Barra Superior Esquerda: Cores, Espessura e Fundo -->
+    <div id="ui-style-dock" class="style-dock">
+      <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;" title="Preto"></div>
+      <div class="color-dot" data-color="#2563eb" style="background:#2563eb;" title="Azul"></div>
+      <div class="color-dot" data-color="#dc2626" style="background:#dc2626;" title="Vermelho"></div>
+      <div class="color-dot" data-color="#16a34a" style="background:#16a34a;" title="Verde"></div>
+      <div class="color-dot" data-color="#d97706" style="background:#d97706;" title="Laranja"></div>
+      <div class="color-dot" data-color="#9333ea" style="background:#9333ea;" title="Roxo"></div>
+      <div class="color-dot" data-color="#db2777" style="background:#db2777;" title="Rosa"></div>
+
+      <div style="width:1px; height:20px; background:#cbd5e1; margin:0 2px;"></div>
+
+      <button class="size-btn" data-size="3" title="Traço Fino">Fino</button>
+      <button class="size-btn active" data-size="6" title="Traço Médio">Médio</button>
+      <button class="size-btn" data-size="12" title="Traço Grosso">Grosso</button>
+
+      <div style="width:1px; height:20px; background:#cbd5e1; margin:0 2px;"></div>
+
+      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:700; color:#334155; background:#f8fafc; cursor:pointer; outline:none;" title="Estilo da Folha">
+        <option value="bg-grade">📐 Quadriculado</option>
+        <option value="bg-pauta">📝 Caderno Pautado</option>
+        <option value="bg-pontos">⠿ Pontilhado</option>
+        <option value="bg-branco">⬜ Quadro Branco</option>
+      </select>
+    </div>
+
+    <!-- Barra Superior Direita: Desfazer, Refazer, Salvar PNG e Limpar -->
+    <div id="ui-actions-dock" class="actions-dock">
+      <button class="action-pill" id="btn-undo" title="Desfazer último traço (Ctrl+Z)">↩️ Desfazer</button>
+      <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
+      <button class="action-pill" id="btn-center" title="Centralizar Quadro (100%)">🎯 100%</button>
+      <button class="action-pill" id="btn-download" title="Guardar imagem da aula (PNG)">📥 PNG</button>
+      <button class="action-pill danger" id="btn-clear" title="Apagar todo o quadro">🗑️ Limpar</button>
+    </div>
+
+    <!-- Barra Inferior: Ferramentas de Desenho e Escrita -->
+    <div id="ui-toolbar-dock" class="toolbar-dock">
+      <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
+      <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
+      <button class="tool-btn" data-tool="text" title="Inserir Texto (Clique no quadro para digitar)">🔤</button>
+      <button class="tool-btn" data-tool="eraser" title="Borracha (Toque ou arraste sobre o que deseja apagar)">🧽</button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" data-tool="line" title="Linha Reta">📏</button>
+      <button class="tool-btn" data-tool="arrow" title="Seta Indicativa">↗️</button>
+      <button class="tool-btn" data-tool="rect" title="Retângulo / Caixa">▭</button>
+      <button class="tool-btn" data-tool="circle" title="Círculo / Destaque">⭕</button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" data-tool="move" title="Mover Objetos (Arraste qualquer texto ou desenho)">🖐️</button>
+      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha pelo Ecrã">🧭</button>
+      <button class="tool-btn" data-tool="laser" title="Apontador Laser (Some após 1 segundo)">🔴</button>
+    </div>
+
+    <!-- Caixa Flutuante de Digitação de Texto -->
+    <div id="text-editor-box">
+      <textarea id="text-editor-input" rows="2" placeholder="Digite o texto aqui..."></textarea>
+      <div style="display:flex; justify-content:flex-end; gap:6px;">
+        <button id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
+        <button id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:5px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Inserir no Quadro</button>
+      </div>
+    </div>
+
+    <!-- Selo de Visualização para Alunos com Recursos Bloqueados -->
+    <div id="badge-somente-leitura">👁️ Modo Visualização Ao Vivo (Acompanhe a explicação do professor)</div>
+
+    <!-- Ecrã de Espera do Aluno quando a Lousa está Desativada -->
+    <div id="tela-espera-aluno">
+      <div style="font-size:60px; animation:pulse 2s infinite;">⏳</div>
+      <h2 style="font-size:22px; margin:0;">Aguardando Liberação...</h2>
+      <p style="color:#94a3b8; font-size:14px; max-width:360px; margin:0; line-height:1.5;">
+        O professor está a preparar a lousa. Ela aparecerá aqui automaticamente assim que for ativada na aula.
+      </p>
+      <div style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;">
+        🔄 Conectado em tempo real
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      const CLIENT_ID = 'lousa_ptt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
+
+      // 1. Leitura dos Parâmetros da URL (role e room)
+      const params = new URLSearchParams(window.location.search);
+      let role = params.get('role') || 'professor';
+      let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
+      let roomIdAtivo = roomIdOriginal;
+
+      let isAllowed = (role !== 'aluno');
+      let isReadonly = (role === 'aluno');
+
+      // 2. Estado Vetorial da Lousa
+      let shapes = [];
+      let redoStack = [];
+      let currentTool = 'pen';
+      let currentColor = '#0f172a';
+      let currentSize = 6;
+
+      let isPointerDown = false;
+      let activeShape = null;
+      let movingShape = null;
+      let moveLastPt = null;
+      let panStartPt = null;
+      let camera = { x: 0, y: 0, zoom: 1 };
+      let laserTrail = [];
+
+      let lastLocalEditTime = 0;
+      let isSaving = false;
+      let saveTimer = null;
+
+      const appEl = document.getElementById('lousa-app');
+      const canvas = document.getElementById('lousa-canvas');
+      const ctx = canvas.getContext('2d');
+      const telaEspera = document.getElementById('tela-espera-aluno');
+      const badgeLeitura = document.getElementById('badge-somente-leitura');
+      const uiToolbar = document.getElementById('ui-toolbar-dock');
+      const uiStyle = document.getElementById('ui-style-dock');
+      const uiActions = document.getElementById('ui-actions-dock');
+
+      // 3. Atualização Visual de Permissões (Professor vs Aluno)
+      function atualizarPermissoesUI() {
+        if (!isAllowed) {
+          telaEspera.style.display = 'flex';
+          return;
+        }
+        telaEspera.style.display = 'none';
+
+        const bloquearFerramentas = (role === 'aluno' && isReadonly);
+        uiToolbar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiStyle.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiActions.style.display = bloquearFerramentas ? 'none' : 'flex';
+        badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
+        canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
+      }
+
+      // 4. Redimensionamento Automático de Alta Nitidez (Retina / DPI)
+      function ajustarTamanhoCanvas() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = appEl.getBoundingClientRect();
+        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
+        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        desenharQuadro();
+      }
+      window.addEventListener('resize', ajustarTamanhoCanvas);
+
+      // Converte coordenadas do ecrã para coordenadas do quadro
+      function telaParaQuadro(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (clientX - rect.left - camera.x) / camera.zoom,
+          y: (clientY - rect.top - camera.y) / camera.zoom
+        };
+      }
+
+      // 5. Renderizador Gráfico Vetorial a 60 FPS
+      function desenharElemento(context, item) {
+        if (!item) return;
+        context.save();
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+        context.strokeStyle = item.color || '#0f172a';
+        context.fillStyle = item.color || '#0f172a';
+        context.lineWidth = item.size || 4;
+
+        if (item.tool === 'highlighter') {
+          context.globalAlpha = 0.35;
+          context.lineWidth = (item.size || 6) * 3.2;
+        }
+
+        if ((item.tool === 'pen' || item.tool === 'highlighter') && Array.isArray(item.points) && item.points.length > 0) {
+          const pts = item.points;
+          context.beginPath();
+          context.moveTo(pts[0].x, pts[0].y);
+          if (pts.length === 1) {
+            context.arc(pts[0].x, pts[0].y, (context.lineWidth / 2), 0, Math.PI * 2);
+            context.fill();
+          } else {
+            for (let i = 1; i < pts.length - 1; i++) {
+              const midX = (pts[i].x + pts[i + 1].x) / 2;
+              const midY = (pts[i].y + pts[i + 1].y) / 2;
+              context.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+            }
+            const last = pts[pts.length - 1];
+            context.lineTo(last.x, last.y);
+            context.stroke();
+          }
+        } else if (item.tool === 'line') {
+          context.beginPath();
+          context.moveTo(item.x1, item.y1);
+          context.lineTo(item.x2, item.y2);
+          context.stroke();
+        } else if (item.tool === 'arrow') {
+          const headlen = Math.max(12, (item.size || 4) * 3);
+          const angle = Math.atan2(item.y2 - item.y1, item.x2 - item.x1);
+          context.beginPath();
+          context.moveTo(item.x1, item.y1);
+          context.lineTo(item.x2, item.y2);
+          context.stroke();
+
+          context.beginPath();
+          context.moveTo(item.x2, item.y2);
+          context.lineTo(item.x2 - headlen * Math.cos(angle - Math.PI / 6), item.y2 - headlen * Math.sin(angle - Math.PI / 6));
+          context.lineTo(item.x2 - headlen * Math.cos(angle + Math.PI / 6), item.y2 - headlen * Math.sin(angle + Math.PI / 6));
+          context.closePath();
+          context.fill();
+        } else if (item.tool === 'rect') {
+          const rx = Math.min(item.x1, item.x2);
+          const ry = Math.min(item.y1, item.y2);
+          const rw = Math.abs(item.x2 - item.x1);
+          const rh = Math.abs(item.y2 - item.y1);
+          context.strokeRect(rx, ry, rw, rh);
+        } else if (item.tool === 'circle') {
+          const cx = (item.x1 + item.x2) / 2;
+          const cy = (item.y1 + item.y2) / 2;
+          const rx = Math.abs(item.x2 - item.x1) / 2;
+          const ry = Math.abs(item.y2 - item.y1) / 2;
+          context.beginPath();
+          context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+          context.stroke();
+        } else if (item.tool === 'text' && item.text) {
+          const fontSize = Math.max(18, (item.size || 6) * 4);
+          context.font = `700 ${fontSize}px "Segoe UI", sans-serif`;
+          context.textBaseline = 'top';
+          const linhas = String(item.text).split('\n');
+          linhas.forEach((linha, idx) => {
+            context.fillText(linha, item.x, item.y + idx * (fontSize * 1.25));
+          });
+        }
+        context.restore();
+      }
+
+      function desenharQuadro() {
+        const rect = appEl.getBoundingClientRect();
+        ctx.clearRect(0, 0, rect.width, rect.height);
+
+        ctx.save();
+        ctx.translate(camera.x, camera.y);
+        ctx.scale(camera.zoom, camera.zoom);
+
+        for (let i = 0; i < shapes.length; i++) {
+          desenharElemento(ctx, shapes[i]);
+        }
+        if (activeShape) {
+          desenharElemento(ctx, activeShape);
+        }
+
+        // Desenha o rastro do apontador Laser
+        if (laserTrail.length > 1) {
+          ctx.save();
+          ctx.strokeStyle = '#ef4444';
+          ctx.shadowColor = '#ef4444';
+          ctx.shadowBlur = 10;
+          ctx.lineWidth = 5;
+          ctx.lineCap = 'round';
+          ctx.beginPath();
+          ctx.moveTo(laserTrail[0].x, laserTrail[0].y);
+          for (let i = 1; i < laserTrail.length; i++) {
+            ctx.lineTo(laserTrail[i].x, laserTrail[i].y);
+          }
+          ctx.stroke();
+          ctx.restore();
+        }
+
+        ctx.restore();
+      }
+
+      // 6. Detetor de Colisão para Borracha e Ferramenta Mover
+      function pontoPertoDoElemento(pt, item, raio = 16) {
+        if (!item) return false;
+        if (item.tool === 'pen' || item.tool === 'highlighter') {
+          return (item.points || []).some(p => Math.hypot(p.x - pt.x, p.y - pt.y) <= raio);
+        }
+        if (item.tool === 'text') {
+          const fontSize = Math.max(18, (item.size || 6) * 4);
+          const linhas = String(item.text || '').split('\n');
+          const larg = Math.max(...linhas.map(l => l.length), 3) * (fontSize * 0.6);
+          const alt = linhas.length * (fontSize * 1.25);
+          return pt.x >= item.x - 10 && pt.x <= item.x + larg + 10 && pt.y >= item.y - 10 && pt.y <= item.y + alt + 10;
+        }
+        const minX = Math.min(item.x1 ?? 0, item.x2 ?? 0) - raio;
+        const maxX = Math.max(item.x1 ?? 0, item.x2 ?? 0) + raio;
+        const minY = Math.min(item.y1 ?? 0, item.y2 ?? 0) - raio;
+        const maxY = Math.max(item.y1 ?? 0, item.y2 ?? 0) + raio;
+        return pt.x >= minX && pt.x <= maxX && pt.y >= minY && pt.y <= maxY;
+      }
+
+      function deslocarElemento(item, dx, dy) {
+        if (item.tool === 'pen' || item.tool === 'highlighter') {
+          item.points = (item.points || []).map(p => ({ x: p.x + dx, y: p.y + dy }));
+        } else if (item.tool === 'text') {
+          item.x += dx;
+          item.y += dy;
+        } else {
+          item.x1 += dx; item.y1 += dy;
+          item.x2 += dx; item.y2 += dy;
+        }
+      }
+
+      // 7. Eventos de Desenho (Rato, Toque e Caneta Stylus)
+      canvas.addEventListener('pointerdown', (e) => {
+        if (role === 'aluno' && isReadonly) return;
+        if (e.button !== undefined && e.button !== 0 && currentTool !== 'pan') return;
+
+        // Fecha a caixa de texto se estiver aberta
+        if (textEditorBox.style.display === 'flex') {
+          confirmarTextoFlutuante();
+          return;
+        }
+
+        const pt = telaParaQuadro(e.clientX, e.clientY);
+
+        if (currentTool === 'text') {
+          abrirCaixaTexto(e.clientX, e.clientY, pt.x, pt.y);
+          return;
+        }
+
+        isPointerDown = true;
+        lastLocalEditTime = Date.now();
+        try { canvas.setPointerCapture(e.pointerId); } catch(err){}
+
+        if (currentTool === 'pan') {
+          panStartPt = { x: e.clientX - camera.x, y: e.clientY - camera.y };
+          canvas.style.cursor = 'grabbing';
+          return;
+        }
+
+        if (currentTool === 'move') {
+          for (let i = shapes.length - 1; i >= 0; i--) {
+            if (pontoPertoDoElemento(pt, shapes[i], 20)) {
+              movingShape = shapes[i];
+              moveLastPt = pt;
+              canvas.style.cursor = 'grabbing';
+              break;
+            }
+          }
+          return;
+        }
+
+        if (currentTool === 'eraser') {
+          const antes = shapes.length;
+          shapes = shapes.filter(s => !pontoPertoDoElemento(pt, s, 18));
+          if (shapes.length !== antes) {
+            desenharQuadro();
+            agendarSalvamentoNuvem();
+          }
+          return;
+        }
+
+        if (currentTool === 'laser') {
+          laserTrail = [pt];
+          desenharQuadro();
+          return;
+        }
+
+        redoStack = [];
+        const novoId = 'sh_' + Date.now() + '_' + Math.random().toString(36).substring(2, 7);
+
+        if (currentTool === 'pen' || currentTool === 'highlighter') {
+          activeShape = {
+            id: novoId,
+            typeName: 'shape',
+            pttV2: true,
+            tool: currentTool,
+            color: currentColor,
+            size: currentSize,
+            points: [{ x: Math.round(pt.x * 10) / 10, y: Math.round(pt.y * 10) / 10 }]
+          };
+        } else {
+          activeShape = {
+            id: novoId,
+            typeName: 'shape',
+            pttV2: true,
+            tool: currentTool,
+            color: currentColor,
+            size: currentSize,
+            x1: pt.x, y1: pt.y,
+            x2: pt.x, y2: pt.y
+          };
+        }
+        desenharQuadro();
+      });
+
+      canvas.addEventListener('pointermove', (e) => {
+        if (!isPointerDown) return;
+        lastLocalEditTime = Date.now();
+        const pt = telaParaQuadro(e.clientX, e.clientY);
+
+        if (currentTool === 'pan' && panStartPt) {
+          camera.x = e.clientX - panStartPt.x;
+          camera.y = e.clientY - panStartPt.y;
+          desenharQuadro();
+          return;
+        }
+
+        if (currentTool === 'move' && movingShape && moveLastPt) {
+          const dx = pt.x - moveLastPt.x;
+          const dy = pt.y - moveLastPt.y;
+          deslocarElemento(movingShape, dx, dy);
+          moveLastPt = pt;
+          desenharQuadro();
+          return;
+        }
+
+        if (currentTool === 'eraser') {
+          const antes = shapes.length;
+          shapes = shapes.filter(s => !pontoPertoDoElemento(pt, s, 18));
+          if (shapes.length !== antes) {
+            desenharQuadro();
+            agendarSalvamentoNuvem();
+          }
+          return;
+        }
+
+        if (currentTool === 'laser') {
+          laserTrail.push(pt);
+          if (laserTrail.length > 25) laserTrail.shift();
+          desenharQuadro();
+          return;
+        }
+
+        if (!activeShape) return;
+
+        if (activeShape.tool === 'pen' || activeShape.tool === 'highlighter') {
+          const pts = activeShape.points;
+          const ult = pts[pts.length - 1];
+          if (!ult || Math.hypot(pt.x - ult.x, pt.y - ult.y) >= 1.5) {
+            pts.push({ x: Math.round(pt.x * 10) / 10, y: Math.round(pt.y * 10) / 10 });
+          }
+        } else {
+          activeShape.x2 = pt.x;
+          activeShape.y2 = pt.y;
+        }
+        desenharQuadro();
+      });
+
+      function finalizarToque(e) {
+        if (!isPointerDown) return;
+        isPointerDown = false;
+        lastLocalEditTime = Date.now();
+
+        if (currentTool === 'pan') {
+          panStartPt = null;
+          canvas.style.cursor = 'grab';
+          return;
+        }
+
+        if (currentTool === 'move') {
+          if (movingShape) {
+            movingShape = null;
+            moveLastPt = null;
+            agendarSalvamentoNuvem();
+          }
+          canvas.style.cursor = 'grab';
+          return;
+        }
+
+        if (currentTool === 'laser') {
+          setTimeout(() => {
+            laserTrail = [];
+            desenharQuadro();
+          }, 400);
+          return;
+        }
+
+        if (activeShape) {
+          shapes.push(activeShape);
+          activeShape = null;
+          desenharQuadro();
+          agendarSalvamentoNuvem();
+        }
+      }
+
+      canvas.addEventListener('pointerup', finalizarToque);
+      canvas.addEventListener('pointercancel', finalizarToque);
+
+      // 8. Ferramenta de Texto Flutuante
+      const textEditorBox = document.getElementById('text-editor-box');
+      const textEditorInput = document.getElementById('text-editor-input');
+      let textTargetCoords = { x: 100, y: 100 };
+
+      function abrirCaixaTexto(screenX, screenY, boardX, boardY) {
+        textTargetCoords = { x: boardX, y: boardY };
+        const left = Math.min(screenX, window.innerWidth - 250);
+        const top = Math.min(screenY, window.innerHeight - 130);
+        textEditorBox.style.left = Math.max(10, left) + 'px';
+        textEditorBox.style.top = Math.max(10, top) + 'px';
+        textEditorInput.style.color = currentColor;
+        textEditorInput.value = '';
+        textEditorBox.style.display = 'flex';
+        setTimeout(() => textEditorInput.focus(), 50);
+      }
+
+      function confirmarTextoFlutuante() {
+        const val = textEditorInput.value.trim();
+        textEditorBox.style.display = 'none';
+        if (!val) return;
+
+        shapes.push({
+          id: 'txt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          typeName: 'shape',
+          pttV2: true,
+          tool: 'text',
+          color: currentColor,
+          size: currentSize,
+          x: textTargetCoords.x,
+          y: textTargetCoords.y,
+          text: val
+        });
+        redoStack = [];
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
+      }
+
+      document.getElementById('btn-text-confirm').onclick = confirmarTextoFlutuante;
+      document.getElementById('btn-text-cancel').onclick = () => {
+        textEditorInput.value = '';
+        textEditorBox.style.display = 'none';
+      };
+      textEditorInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          confirmarTextoFlutuante();
+        }
+        if (e.key === 'Escape') {
+          textEditorInput.value = '';
+          textEditorBox.style.display = 'none';
+        }
+      });
+
+      // 9. Controles das Barras de Ferramentas
+      document.querySelectorAll('.tool-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentTool = btn.dataset.tool;
+          canvas.style.cursor = (currentTool === 'pan' || currentTool === 'move') ? 'grab' : 'crosshair';
+        };
+      });
+
+      document.querySelectorAll('.color-dot').forEach(dot => {
+        dot.onclick = () => {
+          document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+          dot.classList.add('active');
+          currentColor = dot.dataset.color;
+        };
+      });
+
+      document.querySelectorAll('.size-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.size-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          currentSize = parseInt(btn.dataset.size, 10) || 6;
+        };
+      });
+
+      document.getElementById('select-fundo').onchange = function() {
+        appEl.className = this.value;
+      };
+
+      document.getElementById('btn-undo').onclick = () => {
+        if (shapes.length === 0) return;
+        redoStack.push(shapes.pop());
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
+      };
+
+      document.getElementById('btn-redo').onclick = () => {
+        if (redoStack.length === 0) return;
+        shapes.push(redoStack.pop());
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
+      };
+
+      document.getElementById('btn-center').onclick = () => {
+        camera = { x: 0, y: 0, zoom: 1 };
+        desenharQuadro();
+      };
+
+      document.getElementById('btn-clear').onclick = () => {
+        if (shapes.length === 0) return;
+        if (!confirm('Deseja limpar todo o quadro desta turma?')) return;
+        shapes = [];
+        redoStack = [];
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
+      };
+
+      document.getElementById('btn-download').onclick = () => {
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = canvas.width;
+        tempCanvas.height = canvas.height;
+        const tCtx = tempCanvas.getContext('2d');
+        tCtx.fillStyle = '#ffffff';
+        tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+        tCtx.drawImage(canvas, 0, 0);
+
+        const link = document.createElement('a');
+        link.download = `Lousa_Aula_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
+        link.href = tempCanvas.toDataURL('image/png');
+        link.click();
+      };
+
+      // Atalhos de Teclado (Ctrl+Z / Ctrl+Y)
+      window.addEventListener('keydown', (e) => {
+        if (textEditorBox.style.display === 'flex') return;
+        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
+          e.preventDefault();
+          document.getElementById('btn-undo').click();
+        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
+          e.preventDefault();
+          document.getElementById('btn-redo').click();
+        }
+      });
+
+      // 10. Sincronização com a Nuvem (MongoDB + SSE)
+      function agendarSalvamentoNuvem() {
+        if (role === 'aluno' && isReadonly) return;
+        clearTimeout(saveTimer);
+        saveTimer = setTimeout(async () => {
+          isSaving = true;
+          try {
+            await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
+              method: 'PUT',
+              credentials: 'include',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ records: shapes, senderId: CLIENT_ID })
+            });
+          } catch (e) {}
+          finally { isSaving = false; }
+        }, 220);
+      }
+
+      async function carregarDadosDaNuvem(forcar = false) {
+        if (role === 'aluno' && !isAllowed) return;
+        if (!forcar) {
+          if (isPointerDown || isSaving) return;
+          if (Date.now() - lastLocalEditTime < 2500) return;
+        }
+
+        try {
+          const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}?_t=${Date.now()}`, {
+            cache: 'no-store',
+            credentials: 'include'
+          });
+          const data = await res.json();
+          if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2500))) return;
+
+          if (data && data.success && Array.isArray(data.records)) {
+            shapes = data.records.filter(r => r && r.pttV2 === true);
+            desenharQuadro();
+          }
+        } catch (e) {}
+      }
+
+      window._loadCloud = () => carregarDadosDaNuvem(true);
+
+      // 11. Comunicação com o Painel Principal (postMessage)
+      window.addEventListener('message', (e) => {
+        const d = e.data || {};
+        if (d.type === 'LOCK_STATE') {
+          isReadonly = (role === 'aluno' && !!d.locked);
+          atualizarPermissoesUI();
+        }
+        if (d.type === 'RELOAD_DADOS') {
+          carregarDadosDaNuvem(true);
+        }
+      });
+
+      // 12. Radar de Permissões para o Aluno
+      if (role === 'aluno') {
+        const verificarStatusAluno = async () => {
+          try {
+            const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdOriginal)}?_t=${Date.now()}`, {
+              cache: 'no-store',
+              credentials: 'include'
+            });
+            const data = await res.json();
+            if (data && data.success && data.ativa) {
+              const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
+              const mudouSala = (roomIdAtivo !== salaAlvo);
+              const acabouDeLiberar = !isAllowed;
+
+              roomIdAtivo = salaAlvo;
+              isAllowed = true;
+              isReadonly = !data.recursos;
+              atualizarPermissoesUI();
+
+              if (mudouSala || acabouDeLiberar) {
+                carregarDadosDaNuvem(true);
+              }
+            } else {
+              isAllowed = false;
+              atualizarPermissoesUI();
+            }
+          } catch (e) {}
+        };
+        verificarStatusAluno();
+        setInterval(verificarStatusAluno, 2500);
+      }
+
+      // 13. Escuta em Tempo Real via SSE
+      try {
+        let escolaId = 'DEFAULT';
+        try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
+        const es = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
+        es.onmessage = (event) => {
+          try {
+            const data = JSON.parse(event.data);
+            if (data.type === 'LOUSA_DADOS_CHANGED') {
+              if (data.senderId && data.senderId === CLIENT_ID) return;
+              const mesmaSala =
+                data.turmaId === roomIdAtivo ||
+                data.turmaNome === roomIdAtivo ||
+                data.turmaId === roomIdOriginal ||
+                data.turmaNome === roomIdOriginal ||
+                data.turmaId === 'global';
+              if (mesmaSala) carregarDadosDaNuvem(false);
+            }
+            if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
+              const mesmaTurma =
+                data.turmaId === roomIdOriginal ||
+                data.turmaNome === roomIdOriginal ||
+                data.turmaId === 'global';
+              if (mesmaTurma) {
+                isAllowed = !!data.ativa;
+                isReadonly = !data.recursos;
+                if (data.ativa && data.turmaId) roomIdAtivo = data.turmaId;
+                atualizarPermissoesUI();
+                if (data.ativa) carregarDadosDaNuvem(true);
+              }
+            }
+          } catch (e) {}
+        };
+      } catch (e) {}
+
+      // Inicialização Imediata
+      atualizarPermissoesUI();
+      ajustarTamanhoCanvas();
+      carregarDadosDaNuvem(true);
+    })();
+  </script>
 </body>
 </html>
