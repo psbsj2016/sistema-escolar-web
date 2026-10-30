@@ -17,6 +17,7 @@
     #lousa-app {
       position: relative; width: 100vw; height: 100vh; height: 100dvh;
       overflow: hidden; display: flex; flex-direction: column;
+      background: #ffffff;
     }
 
     #lousa-canvas {
@@ -400,6 +401,7 @@
 
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
+      let initialLoadDone = false;
 
       // Estado Vetorial e Fundo da Lousa
       let shapes = [];
@@ -409,11 +411,11 @@
       let currentColor = '#0f172a';
       let currentSize = 6;
 
-      // Estado da Câmara do Professor para Sincronização Proporcional no Aluno
+      // Estado da Câmara (Local e Sincronizada com o Professor)
       let camera = { x: 0, y: 0, zoom: 1 };
       let targetStudentCamera = null;
       let animFrameCamera = null;
-      let profViewportRemoto = { w: 1280, h: 720, centerX: 640, centerY: 360, zoom: 1 };
+      let profViewportRemoto = null;
 
       let editingShapeId = null;
 
@@ -453,6 +455,21 @@
       const selectFundo = document.getElementById('select-fundo');
       const hScrollThumb = document.getElementById('board-hscroll-thumb');
 
+      function obterDimensoesTelaSeguras() {
+        const rect = appEl.getBoundingClientRect();
+        const w = (rect && rect.width > 50) ? rect.width : (window.innerWidth || 1024);
+        const h = (rect && rect.height > 50) ? rect.height : (window.innerHeight || 640);
+        return { w: Math.max(280, w), h: Math.max(200, h) };
+      }
+
+      function validarCameraSegura() {
+        if (!Number.isFinite(camera.zoom) || camera.zoom < 0.15 || camera.zoom > 5) {
+          camera.zoom = 1;
+        }
+        if (!Number.isFinite(camera.x)) camera.x = 0;
+        if (!Number.isFinite(camera.y)) camera.y = 0;
+      }
+
       function atualizarPermissoesUI() {
         if (!isAllowed) {
           telaEspera.style.display = 'flex';
@@ -473,15 +490,15 @@
       // 📐 1. MOTOR DE ENQUADRAMENTO PROPORCIONAL (ALUNO ACOMPANHA O PROFESSOR)
       // =========================================================================
       function obterEstadoCameraProfessor() {
-        const rect = appEl.getBoundingClientRect();
-        const w = Math.max(320, rect.width || window.innerWidth);
-        const h = Math.max(240, rect.height || window.innerHeight);
-        // Centro exato da tela do professor em coordenadas do quadro
+        validarCameraSegura();
+        const { w, h } = obterDimensoesTelaSeguras();
         const centerX = (w / 2 - camera.x) / camera.zoom;
         const centerY = (h / 2 - camera.y) / camera.zoom;
         return {
           w: Math.round(w),
           h: Math.round(h),
+          camX: Math.round(camera.x * 10) / 10,
+          camY: Math.round(camera.y * 10) / 10,
           centerX: Math.round(centerX * 10) / 10,
           centerY: Math.round(centerY * 10) / 10,
           zoom: Math.round(camera.zoom * 1000) / 1000
@@ -489,20 +506,27 @@
       }
 
       function aplicarCameraDoProfessorNoAluno(profView, animar = true) {
-        if (!profView || !profView.w || !profView.h) return;
+        if (!profView || !Number.isFinite(profView.w) || !Number.isFinite(profView.h) || profView.w < 100 || profView.h < 100) {
+          return;
+        }
         profViewportRemoto = profView;
 
-        const rect = appEl.getBoundingClientRect();
-        const alunoW = Math.max(280, rect.width || window.innerWidth);
-        const alunoH = Math.max(200, rect.height || window.innerHeight);
+        const { w: alunoW, h: alunoH } = obterDimensoesTelaSeguras();
+        const profZoom = (Number.isFinite(profView.zoom) && profView.zoom > 0.1) ? profView.zoom : 1;
 
-        // Calcula a proporção exata entre a tela do aluno e a tela do professor
-        // garantindo que 100% do espaço de trabalho do professor caiba na tela do aluno sem cortar nada!
+        // Calcula a escala proporcional exata entre a tela do aluno e a tela do professor
         const escalaAdaptativa = Math.min(alunoW / profView.w, alunoH / profView.h);
-        const zoomFinal = (profView.zoom || 1) * escalaAdaptativa;
+        const zoomFinal = Math.max(0.2, Math.min(3.5, profZoom * escalaAdaptativa));
 
-        const novoX = (alunoW / 2) - (profView.centerX * zoomFinal);
-        const novoY = (alunoH / 2) - (profView.centerY * zoomFinal);
+        const cX = Number.isFinite(profView.centerX) ? profView.centerX : (profView.w / 2);
+        const cY = Number.isFinite(profView.centerY) ? profView.centerY : (profView.h / 2);
+
+        const novoX = (alunoW / 2) - (cX * zoomFinal);
+        const novoY = (alunoH / 2) - (cY * zoomFinal);
+
+        if (!Number.isFinite(novoX) || !Number.isFinite(novoY) || !Number.isFinite(zoomFinal)) {
+          return;
+        }
 
         if (!animar) {
           camera.zoom = zoomFinal;
@@ -523,7 +547,7 @@
             const dy = targetStudentCamera.y - camera.y;
             const dz = targetStudentCamera.zoom - camera.zoom;
 
-            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 0.002) {
+            if (Math.abs(dx) < 0.6 && Math.abs(dy) < 0.6 && Math.abs(dz) < 0.002) {
               camera.x = targetStudentCamera.x;
               camera.y = targetStudentCamera.y;
               camera.zoom = targetStudentCamera.zoom;
@@ -533,9 +557,9 @@
               return;
             }
 
-            camera.x += dx * 0.28;
-            camera.y += dy * 0.28;
-            camera.zoom += dz * 0.28;
+            camera.x += dx * 0.3;
+            camera.y += dy * 0.3;
+            camera.zoom += dz * 0.3;
             desenharQuadro();
             animFrameCamera = requestAnimationFrame(animarPasso);
           };
@@ -545,9 +569,9 @@
 
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const rect = appEl.getBoundingClientRect();
-        canvas.width = Math.max(1, Math.floor(rect.width * dpr));
-        canvas.height = Math.max(1, Math.floor(rect.height * dpr));
+        const { w, h } = obterDimensoesTelaSeguras();
+        canvas.width = Math.max(1, Math.floor(w * dpr));
+        canvas.height = Math.max(1, Math.floor(h * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
         if (role === 'aluno' && profViewportRemoto) {
@@ -558,7 +582,14 @@
       }
       window.addEventListener('resize', ajustarTamanhoCanvas);
 
+      // Observador automático de tamanho para quando o modal do aluno ou professor abre em tela cheia
+      if (window.ResizeObserver) {
+        const ro = new ResizeObserver(() => ajustarTamanhoCanvas());
+        ro.observe(appEl);
+      }
+
       function telaParaQuadro(clientX, clientY) {
+        validarCameraSegura();
         const rect = canvas.getBoundingClientRect();
         return {
           x: (clientX - rect.left - camera.x) / camera.zoom,
@@ -568,7 +599,9 @@
 
       function atualizarBarraRolagemVisual() {
         if (!hScrollThumb) return;
-        const viewW = window.innerWidth / camera.zoom;
+        validarCameraSegura();
+        const { w } = obterDimensoesTelaSeguras();
+        const viewW = w / camera.zoom;
         let maxRight = viewW;
         shapes.forEach(s => {
           const r = (s.x || s.x2 || 0) + ((s.w || 300) * (s.scale || 1));
@@ -588,11 +621,12 @@
       // 🎨 2. FUNDO NATIVO NO CANVAS (INFINITO E PROPORCIONAL)
       // =========================================================================
       function desenharFundoCanvas(context, width, height) {
+        validarCameraSegura();
         context.save();
         if (currentBg === 'bg-pauta') {
           context.fillStyle = '#fffef7';
           context.fillRect(0, 0, width, height);
-          const step = 32 * camera.zoom;
+          const step = Math.max(8, 32 * camera.zoom);
           const offsetY = ((camera.y % step) + step) % step;
           context.strokeStyle = '#93c5fd';
           context.lineWidth = 1;
@@ -613,7 +647,7 @@
         } else if (currentBg === 'bg-grade') {
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, width, height);
-          const step = 28 * camera.zoom;
+          const step = Math.max(8, 28 * camera.zoom);
           const offsetX = ((camera.x % step) + step) % step;
           const offsetY = ((camera.y % step) + step) % step;
           context.strokeStyle = '#e2e8f0';
@@ -631,7 +665,7 @@
         } else if (currentBg === 'bg-pontos') {
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, width, height);
-          const step = 24 * camera.zoom;
+          const step = Math.max(8, 24 * camera.zoom);
           const offsetX = ((camera.x % step) + step) % step;
           const offsetY = ((camera.y % step) + step) % step;
           context.fillStyle = '#cbd5e1';
@@ -1323,8 +1357,18 @@
       }
 
       function desenharQuadro() {
-        const rect = appEl.getBoundingClientRect();
-        desenharFundoCanvas(ctx, rect.width, rect.height);
+        validarCameraSegura();
+        const dpr = window.devicePixelRatio || 1;
+        const { w, h } = obterDimensoesTelaSeguras();
+        const targetW = Math.max(1, Math.floor(w * dpr));
+        const targetH = Math.max(1, Math.floor(h * dpr));
+        if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.width = targetW;
+          canvas.height = targetH;
+        }
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+        desenharFundoCanvas(ctx, w, h);
 
         ctx.save();
         ctx.translate(camera.x, camera.y);
@@ -1652,7 +1696,6 @@
         if (currentTool === 'pan') {
           panStartPt = null;
           canvas.style.cursor = 'grab';
-          // Sincroniza a nova posição da câmara do professor com os alunos!
           if (role !== 'aluno') agendarSalvamentoNuvem(100);
           return;
         }
@@ -1688,7 +1731,6 @@
       canvas.addEventListener('pointerup', finalizarToque);
       canvas.addEventListener('pointercancel', finalizarToque);
 
-      // Zoom com Roda do Rato e Deslizamento Horizontal (Sincroniza com o Aluno!)
       canvas.addEventListener('wheel', (e) => {
         if (role === 'aluno' && isReadonly) return;
         e.preventDefault();
@@ -1704,6 +1746,7 @@
       }, { passive: false });
 
       function aplicarZoomTela(fator, centerX = window.innerWidth / 2, centerY = window.innerHeight / 2) {
+        validarCameraSegura();
         const antigoZoom = camera.zoom;
         const novoZoom = Math.max(0.35, Math.min(3.0, antigoZoom * fator));
         camera.x = centerX - ((centerX - camera.x) / antigoZoom) * novoZoom;
@@ -2121,8 +2164,8 @@
           }
           editingShapeId = null;
         } else {
-          const rect = appEl.getBoundingClientRect();
-          const pos = telaParaQuadro(Math.max(50, (rect.width - 540) / 2), Math.max(70, (rect.height - 300) / 2));
+          const { w, h } = obterDimensoesTelaSeguras();
+          const pos = telaParaQuadro(Math.max(50, (w - 540) / 2), Math.max(70, (h - 300) / 2));
           const novo = {
             id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             typeName: 'shape',
@@ -2153,7 +2196,7 @@
       };
 
       // =========================================================================
-      // 🛠️ 9. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO EM TEMPO REAL
+      // 🛠️ 9. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO BLINDADA
       // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
@@ -2196,19 +2239,21 @@
         if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
 
-      // Botões de Expansão Rápida da Lousa (Sincronizam a Câmara com os Alunos!)
       document.getElementById('btn-pan-right').onclick = () => {
-        camera.x -= Math.round(window.innerWidth * 0.55);
+        const { w } = obterDimensoesTelaSeguras();
+        camera.x -= Math.round(w * 0.55);
         desenharQuadro();
         if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
       document.getElementById('btn-pan-left').onclick = () => {
-        camera.x = Math.min(200, camera.x + Math.round(window.innerWidth * 0.55));
+        const { w } = obterDimensoesTelaSeguras();
+        camera.x = Math.min(200, camera.x + Math.round(w * 0.55));
         desenharQuadro();
         if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
       document.getElementById('btn-pan-down').onclick = () => {
-        camera.y -= Math.round(window.innerHeight * 0.45);
+        const { h } = obterDimensoesTelaSeguras();
+        camera.y -= Math.round(h * 0.45);
         desenharQuadro();
         if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
@@ -2246,8 +2291,9 @@
         link.click();
       };
 
-      // Salva os desenhos, o fundo, a câmara do professor e o laser na nuvem
+      // 🛡️ Só permite salvar depois que o carregamento inicial terminou (nunca apaga desenhos existentes ao abrir!)
       function agendarSalvamentoNuvem(delayMs = 200) {
+        if (!initialLoadDone) return;
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
         saveTimer = setTimeout(async () => {
@@ -2261,7 +2307,8 @@
               tool: 'meta_bg',
               bgType: currentBg,
               profView: estadoProf,
-              laserTrail: role !== 'aluno' ? laserTrail : []
+              laserTrail: role !== 'aluno' ? laserTrail : [],
+              updatedAt: Date.now()
             };
             const payloadRecords = [metaBg, ...shapes];
             await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
@@ -2275,6 +2322,7 @@
         }, delayMs);
       }
 
+      // 🔍 Sintonizador Inteligente: No Aluno, verifica tanto a sala da turma quanto a sala 'global'
       async function carregarDadosDaNuvem(forcar = false) {
         if (role === 'aluno' && !isAllowed) return;
         if (!forcar) {
@@ -2287,30 +2335,59 @@
             cache: 'no-store',
             credentials: 'include'
           });
-          const data = await res.json();
+          let data = await res.json();
+
+          // Se for Aluno e a sala da turma estiver vazia, consulta também a sala 'global' onde o Professor pode estar a desenhar!
+          if (role === 'aluno' && roomIdAtivo !== 'global') {
+            const listaTurma = Array.isArray(data?.records) ? data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg') : [];
+            try {
+              const resGlobal = await fetch(`/api/workspace/sala/workspace-lousa/dados/global?_t=${Date.now()}`, {
+                cache: 'no-store',
+                credentials: 'include'
+              });
+              const dataGlobal = await resGlobal.json();
+              const listaGlobal = Array.isArray(dataGlobal?.records) ? dataGlobal.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg') : [];
+
+              if (listaTurma.length === 0 && listaGlobal.length > 0) {
+                data = dataGlobal;
+              } else if (listaTurma.length > 0 && listaGlobal.length > 0) {
+                const metaT = (data.records || []).find(r => r && r.tool === 'meta_bg');
+                const metaG = (dataGlobal.records || []).find(r => r && r.tool === 'meta_bg');
+                if ((metaG?.updatedAt || 0) > (metaT?.updatedAt || 0)) {
+                  data = dataGlobal;
+                }
+              }
+            } catch (errG) {}
+          }
+
           if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2200))) return;
 
           if (data && data.success && Array.isArray(data.records)) {
+            shapes = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
+
             const metaBg = data.records.find(r => r && r.tool === 'meta_bg');
             if (metaBg) {
               if (metaBg.bgType) {
                 currentBg = metaBg.bgType;
                 if (selectFundo) selectFundo.value = currentBg;
               }
-              // Se for Aluno, sincroniza o Laser Seta e faz a câmara acompanhar a tela do Professor!
               if (role === 'aluno') {
-                if (Array.isArray(metaBg.laserTrail)) {
-                  laserTrail = metaBg.laserTrail;
-                }
+                laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
                 if (metaBg.profView) {
                   aplicarCameraDoProfessorNoAluno(metaBg.profView, !forcar);
                 }
               }
             }
-            shapes = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
+            initialLoadDone = true;
+            desenharQuadro();
+          } else {
+            initialLoadDone = true;
             desenharQuadro();
           }
-        } catch (e) {}
+        } catch (e) {
+          initialLoadDone = true;
+          desenharQuadro();
+        }
       }
 
       window._loadCloud = () => carregarDadosDaNuvem(true);
@@ -2326,6 +2403,7 @@
         }
       });
 
+      // Radar Contínuo do Aluno (Verifica Permissão + Sincroniza Desenhos e Câmara a cada 2s)
       if (role === 'aluno') {
         const verificarStatusAluno = async () => {
           try {
@@ -2333,7 +2411,23 @@
               cache: 'no-store',
               credentials: 'include'
             });
-            const data = await res.json();
+            let data = await res.json();
+
+            // Se a turma específica não estiver ativa, verifica também se o Professor ativou o 'Público Geral' ('global')
+            if ((!data || !data.ativa) && roomIdOriginal !== 'global') {
+              try {
+                const resG = await fetch(`/api/workspace/sala/workspace-lousa/status/global?_t=${Date.now()}`, {
+                  cache: 'no-store',
+                  credentials: 'include'
+                });
+                const dataG = await resG.json();
+                if (dataG && dataG.success && dataG.ativa) {
+                  data = dataG;
+                  data.salaAtivaId = 'global';
+                }
+              } catch (eG) {}
+            }
+
             if (data && data.success && data.ativa) {
               const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
               const mudouSala = (roomIdAtivo !== salaAlvo);
@@ -2344,9 +2438,8 @@
               isReadonly = !data.recursos;
               atualizarPermissoesUI();
 
-              if (mudouSala || acabouDeLiberar) {
-                carregarDadosDaNuvem(true);
-              }
+              // Carrega na abertura e mantém sincronizado a cada ciclo
+              await carregarDadosDaNuvem(mudouSala || acabouDeLiberar);
             } else {
               isAllowed = false;
               atualizarPermissoesUI();
@@ -2354,7 +2447,7 @@
           } catch (e) {}
         };
         verificarStatusAluno();
-        setInterval(verificarStatusAluno, 2500);
+        setInterval(verificarStatusAluno, 2000);
       }
 
       try {
@@ -2394,10 +2487,6 @@
       atualizarPermissoesUI();
       ajustarTamanhoCanvas();
       carregarDadosDaNuvem(true);
-      // Garante que logo ao abrir a lousa como professor, o tamanho da janela seja registado para os alunos
-      if (role !== 'aluno') {
-        setTimeout(() => agendarSalvamentoNuvem(300), 500);
-      }
     })();
   </script>
 </body>
