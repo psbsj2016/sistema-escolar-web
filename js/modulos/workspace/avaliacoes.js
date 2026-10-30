@@ -3371,7 +3371,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     
 // ========================================================================
-    // 🖍 LOUSA DIGITAL - MOTOR PREMIUM V14 - (CONTROLO CENTRAL)
+    // 🖍 LOUSA DIGITAL - MOTOR PREMIUM V15 - (CONTROLO CENTRAL E TRAVA DE RECURSOS)
     // ========================================================================
     lousaInterval: null,
     _lousaSSE: null,
@@ -3383,21 +3383,23 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             const turmas = await Workspace.api('/turmas', 'GET');
             const optionsHtml = '<option value="global">🌍 Público Geral</option>' + 
                 (turmas || []).map(t => `<option value="${t.id || t._id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
-            if(selModal) selModal.innerHTML = optionsHtml;
+            if (selModal) selModal.innerHTML = optionsHtml;
         } catch(e) {}
     },
 
- abrirLousaProfessor: async (turmaId = 'global') => {
+    abrirLousaProfessor: async (turmaId = 'global') => {
         const tid = String(turmaId || 'global').trim();
-        
-        // 1. Garante que a lista de turmas está carregada no seletor do topo da Lousa
         await Workspace.Avaliacoes.carregarTurmasLousaProf();
 
-        // 2. Consulta o estado atual daquela turma no banco (estrito=true para ver o estado real da turma escolhida)
         try {
             const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
             if (res && res.success) {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: !!res.ativa, recursos: !!res.recursos };
+                const isAtiva = !!res.ativa;
+                Workspace.Avaliacoes._lousaProfState = {
+                    turmaId: tid,
+                    ativa: isAtiva,
+                    recursos: isAtiva ? !!res.recursos : false
+                };
             } else {
                 Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
             }
@@ -3421,13 +3423,16 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     mudarTurmaLousaIframe: async (turmaId) => {
         const tid = String(turmaId || 'global').trim();
-        const iframe = document.getElementById('iframeLousaProf');
-        if (iframe) iframe.src = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`;
-        
+        // Não recarrega o iframe para não perder a tela numerada atual; apenas atualiza a turma-alvo!
         try {
             const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
             if (res?.success) {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: !!res.ativa, recursos: !!res.recursos };
+                const isAtiva = !!res.ativa;
+                Workspace.Avaliacoes._lousaProfState = {
+                    turmaId: tid,
+                    ativa: isAtiva,
+                    recursos: isAtiva ? !!res.recursos : false
+                };
             } else {
                 Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
             }
@@ -3437,58 +3442,84 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
- renderizarBotoesLousaProf: () => {
+    renderizarBotoesLousaProf: () => {
         const btnView = document.getElementById('btn-toggle-view');
         const btnRecursos = document.getElementById('btn-toggle-resources');
         const statusText = document.getElementById('ws-prof-lousa-status-modal');
         const { ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
 
         if (btnView) {
-            btnView.innerHTML = ativa ? '🚫 Desativar Visualização' : '👁️ Ativar Visualização';
+            btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa para Turma';
             btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
         }
         if (btnRecursos) {
-            btnRecursos.innerHTML = recursos ? '🔒 Bloquear Recursos' : '🔓 Liberar Recursos';
-            btnRecursos.style.background = recursos ? '#e74c3c' : '#f59e0b';
-            btnRecursos.style.display = ativa ? 'inline-flex' : 'none'; 
+            // 🔒 Os recursos SÓ ficam disponíveis quando a lousa estiver ATIVA para a turma!
+            if (!ativa) {
+                btnRecursos.style.display = 'inline-flex';
+                btnRecursos.disabled = true;
+                btnRecursos.style.opacity = '0.45';
+                btnRecursos.style.cursor = 'not-allowed';
+                btnRecursos.style.background = '#475569';
+                btnRecursos.innerHTML = '🔒 Recursos (Ative a Lousa)';
+            } else {
+                btnRecursos.style.display = 'inline-flex';
+                btnRecursos.disabled = false;
+                btnRecursos.style.opacity = '1';
+                btnRecursos.style.cursor = 'pointer';
+                btnRecursos.innerHTML = recursos ? '🔒 Bloquear Recursos dos Alunos' : '🔓 Liberar Recursos p/ Alunos';
+                btnRecursos.style.background = recursos ? '#e74c3c' : '#f59e0b';
+            }
         }
         if (statusText) {
-            statusText.innerHTML = ativa ? (recursos ? '🟢 Online e Liberada' : '🟡 Apenas Leitura') : '⚪ Inativa';
+            statusText.innerHTML = ativa ? (recursos ? '🟢 Ativa + Recursos Liberados' : '🟡 Ativa (Apenas Visualização)') : '⚪ Lousa Inativa';
             statusText.style.color = ativa ? (recursos ? '#10B981' : '#F59E0B') : '#94a3b8';
         }
     },
 
-   toggleVisualizacao: async () => {
-    const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
-    const novoEstado = !ativa;
-    // mantém o recursos que já estava, não força false
-    await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstado, recursos);
-},
+    toggleVisualizacao: async () => {
+        const { turmaId, ativa } = Workspace.Avaliacoes._lousaProfState;
+        const novoEstadoAtiva = !ativa;
+        // 🔒 Se desativar a lousa, força recursos = false automaticamente! E ao ativar, inicia com recursos = false.
+        const novosRecursos = false;
+        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstadoAtiva, novosRecursos);
+    },
 
     toggleRecursos: async () => {
         const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
-        if (!ativa) return; 
-        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, ativa, !recursos);
+        if (!ativa) {
+            Workspace.mostrarAviso('Ative primeiro a Lousa para a turma antes de liberar os recursos!', 'warning');
+            return;
+        }
+        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, true, !recursos);
     },
 
- enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
+    enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
         const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+        const lousaAtiva = !!ativa;
+        const recursosAtivos = lousaAtiva ? !!recursos : false;
         try {
-            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
-            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
+                turmaId,
+                ativa: lousaAtiva,
+                recursos: recursosAtivos,
+                escolaId
+            });
+            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: lousaAtiva, recursos: recursosAtivos };
             Workspace.Avaliacoes.renderizarBotoesLousaProf();
             
             const iframeProf = document.getElementById('iframeLousaProf');
             if (iframeProf && iframeProf.contentWindow) {
                 try { 
-                    iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: false }, '*');
-                    // 🚀 Quando o professor ativa a visualização, força a lousa a salvar e transmitir a tela atual imediatamente para os alunos!
-                    if (ativa) {
+                    // 🔒 Libera ou bloqueia os recursos também conforme a ativação da lousa!
+                    iframeProf.contentWindow.postMessage({
+                        type: 'STATUS_LOUSA_PROF',
+                        ativa: lousaAtiva,
+                        recursos: recursosAtivos,
+                        turmaId: turmaId
+                    }, '*');
+                    if (lousaAtiva) {
                         iframeProf.contentWindow.postMessage({ type: 'FORCE_SAVE_DADOS' }, '*');
                     }
-                    setTimeout(() => {
-                        iframeProf.contentWindow.dispatchEvent(new Event('resize'));
-                    }, 200);
                 } catch (err) {}
             }
         } catch(e) {
@@ -3543,7 +3574,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             iframe.setAttribute('src', urlMagica);
         }
     }
-
 }); // <--- 🚀 ESTA LINHA FECHA O Object.assign E É MUITO IMPORTANTE!
 
 document.addEventListener('DOMContentLoaded', () => {

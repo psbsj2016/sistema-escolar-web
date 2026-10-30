@@ -10,14 +10,83 @@
     html, body {
       width: 100%; height: 100%; margin: 0; padding: 0;
       font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      overflow: hidden; background: #f8fafc; overscroll-behavior: none;
+      overflow: hidden; background: #0f172a; overscroll-behavior: none;
       touch-action: none;
     }
 
+    /* Estrutura Principal em 3 Faixas (Nunca sobrepõe ferramentas no PC nem no Telemóvel!) */
     #lousa-app {
       position: relative; width: 100vw; height: 100vh; height: 100dvh;
       overflow: hidden; display: flex; flex-direction: column;
       background: #ffffff;
+    }
+
+    /* 1. BARRA SUPERIOR UNIFICADA (Telas Numeradas + Estilo + Zoom/Ações) */
+    .lousa-top-bar {
+      width: 100%; background: #ffffff; border-bottom: 1px solid #cbd5e1;
+      padding: 6px 10px; display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; z-index: 25; flex-shrink: 0;
+      overflow-x: auto; scrollbar-width: none;
+      box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
+    }
+    .lousa-top-bar::-webkit-scrollbar { display: none; }
+
+    .top-group {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .top-divider {
+      width: 1px; height: 22px; background: #cbd5e1; margin: 0 2px; flex-shrink: 0;
+    }
+
+    /* Botões de Telas Numeradas */
+    .screens-group {
+      background: #0f172a; padding: 4px 8px; border-radius: 10px;
+      display: flex; align-items: center; gap: 5px; flex-shrink: 0;
+    }
+    .screen-nav-btn {
+      background: rgba(255, 255, 255, 0.12); border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc; padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 3px; transition: 0.15s; white-space: nowrap;
+    }
+    .screen-nav-btn:hover { background: #2563eb; border-color: #60a5fa; }
+    .screen-nav-btn.add { background: #10b981; border-color: #34d399; color: #ffffff; }
+    .screen-nav-btn.add:hover { background: #059669; }
+    .screen-nav-btn.del { background: rgba(239, 68, 68, 0.25); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+    .screen-nav-btn.del:hover { background: #dc2626; color: #ffffff; }
+    #select-screen-number {
+      background: #1e293b; color: #f8fafc; border: 1px solid #475569;
+      border-radius: 6px; padding: 4px 6px; font-size: 11.5px; font-weight: 800;
+      cursor: pointer; outline: none;
+    }
+
+    /* Cores e Espessura */
+    .color-dot {
+      width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
+      border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
+      transition: transform 0.15s ease; flex-shrink: 0;
+    }
+    .color-dot.active { transform: scale(1.25); box-shadow: 0 0 0 2px #0f172a; }
+
+    .size-btn {
+      background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
+      padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      cursor: pointer; transition: 0.15s; white-space: nowrap;
+    }
+    .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
+
+    .action-pill {
+      background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
+      padding: 4px 8px; border-radius: 6px; font-size: 11px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 3px; transition: 0.15s; white-space: nowrap;
+    }
+    .action-pill:hover { background: #e2e8f0; }
+    .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
+    .action-pill.danger:hover { background: #fee2f2; }
+
+    /* 2. PALCO CENTRAL DO CANVAS (100% Livre de Sobreposição) */
+    #canvas-stage {
+      position: relative; flex: 1; width: 100%; min-height: 0;
+      overflow: hidden; background: #ffffff;
     }
 
     #lousa-canvas {
@@ -26,128 +95,52 @@
       touch-action: none;
     }
 
-    /* Barra de Ferramentas Principal (Inferior Central) */
-    .toolbar-dock {
-      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px);
-      border: 1px solid #334155; border-radius: 18px;
-      padding: 7px 10px; display: flex; align-items: center; gap: 5px;
-      z-index: 20; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
-      max-width: 96vw; overflow-x: auto; scrollbar-width: none;
-    }
-    .toolbar-dock::-webkit-scrollbar { display: none; }
-
-    .tool-btn {
-      background: transparent; border: 1px solid transparent; color: #cbd5e1;
-      width: 38px; height: 38px; border-radius: 11px; font-size: 17px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.15s ease; flex-shrink: 0;
-    }
-    .tool-btn:hover { background: rgba(255, 255, 255, 0.1); color: #ffffff; }
-    .tool-btn.active {
-      background: #2563eb; color: #ffffff; border-color: #60a5fa;
-      box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45); transform: translateY(-2px);
-    }
-    .tool-divider { width: 1px; height: 24px; background: #334155; margin: 0 3px; flex-shrink: 0; }
-
-    /* Barra de Cores, Espessura e Fundo (Superior Esquerda) */
-    .style-dock {
-      position: fixed; top: 12px; left: 12px;
-      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
-      border: 1px solid #cbd5e1; border-radius: 14px;
-      padding: 7px 11px; display: flex; align-items: center; gap: 7px;
-      z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      flex-wrap: wrap; max-width: calc(100vw - 24px);
-    }
-
-    .color-dot {
-      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
-      border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
-      transition: transform 0.15s ease; flex-shrink: 0;
-    }
-    .color-dot.active { transform: scale(1.25); box-shadow: 0 0 0 2.5px #0f172a; }
-
-    .size-btn {
-      background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
-      padding: 4px 9px; border-radius: 8px; font-size: 11px; font-weight: 700;
-      cursor: pointer; transition: 0.15s;
-    }
-    .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
-
-    /* 📑 NOVO: Barra Central de Numeração de Telas (Quadros Numerados) */
-    .screens-dock {
-      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
-      border: 1px solid #334155; border-radius: 14px;
-      padding: 6px 10px; display: flex; align-items: center; gap: 6px;
-      z-index: 21; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
-      color: #ffffff;
-    }
-    .screen-nav-btn {
-      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
-      color: #f8fafc; padding: 5px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 800;
-      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
-    }
-    .screen-nav-btn:hover { background: #2563eb; border-color: #60a5fa; }
-    .screen-nav-btn.add { background: #10b981; border-color: #34d399; color: #ffffff; }
-    .screen-nav-btn.add:hover { background: #059669; }
-    .screen-nav-btn.del { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
-    .screen-nav-btn.del:hover { background: #dc2626; color: #ffffff; }
-    #select-screen-number {
-      background: #1e293b; color: #f8fafc; border: 1px solid #475569;
-      border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 800;
-      cursor: pointer; outline: none;
-    }
-
-    /* Barra de Ações e Zoom (Superior Direita) */
-    .actions-dock {
-      position: fixed; top: 12px; right: 12px;
-      background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
-      border: 1px solid #cbd5e1; border-radius: 14px;
-      padding: 6px 10px; display: flex; align-items: center; gap: 5px;
-      z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      flex-wrap: wrap;
-    }
-    .action-pill {
-      background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
-      padding: 5px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
-      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
-    }
-    .action-pill:hover { background: #e2e8f0; }
-    .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
-    .action-pill.danger:hover { background: #fee2e2; }
-
-    /* Barra de Expansão Horizontal da Lousa (Canto Inferior Direito) */
-    .pan-nav-dock {
-      position: fixed; bottom: 20px; right: 14px;
-      background: rgba(255, 255, 255, 0.95); border: 1px solid #cbd5e1;
-      border-radius: 12px; padding: 4px 6px; display: flex; align-items: center; gap: 4px;
-      z-index: 20; box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    }
-    .pan-btn {
-      background: #f1f5f9; border: 1px solid #e2e8f0; color: #0f172a;
-      padding: 5px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;
-      cursor: pointer; transition: 0.15s;
-    }
-    .pan-btn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
-
-    /* Barra de Rolagem Visual Dinâmica no Fundo */
+    /* Barra de Rolagem Visual Dinâmica no Fundo do Palco */
     #board-hscroll-track {
-      position: fixed; bottom: 3px; left: 16px; right: 16px; height: 6px;
-      background: rgba(148, 163, 184, 0.25); border-radius: 6px; z-index: 15;
+      position: absolute; bottom: 3px; left: 12px; right: 12px; height: 5px;
+      background: rgba(148, 163, 184, 0.25); border-radius: 5px; z-index: 15;
       pointer-events: none;
     }
     #board-hscroll-thumb {
       position: absolute; top: 0; height: 100%; width: 20%; left: 0;
-      background: rgba(37, 99, 235, 0.55); border-radius: 6px; transition: left 0.1s, width 0.1s;
+      background: rgba(37, 99, 235, 0.55); border-radius: 5px; transition: left 0.08s, width 0.08s;
     }
+
+    /* 3. BARRA INFERIOR UNIFICADA (Ferramentas + Expansão de Espaço) */
+    .lousa-bottom-bar {
+      width: 100%; background: #0f172a; border-top: 1px solid #334155;
+      padding: 6px 10px; display: flex; align-items: center; justify-content: center;
+      gap: 5px; z-index: 25; flex-shrink: 0;
+      overflow-x: auto; scrollbar-width: none;
+    }
+    .lousa-bottom-bar::-webkit-scrollbar { display: none; }
+
+    .tool-btn {
+      background: rgba(255, 255, 255, 0.06); border: 1px solid transparent; color: #cbd5e1;
+      width: 36px; height: 36px; border-radius: 9px; font-size: 16px;
+      display: flex; align-items: center; justify-content: center;
+      cursor: pointer; transition: all 0.15s ease; flex-shrink: 0;
+    }
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+    .tool-btn.active {
+      background: #2563eb; color: #ffffff; border-color: #60a5fa;
+      box-shadow: 0 3px 10px rgba(37, 99, 235, 0.45);
+    }
+    .tool-divider { width: 1px; height: 22px; background: #334155; margin: 0 3px; flex-shrink: 0; }
+
+    .pan-btn {
+      background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
+      padding: 5px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;
+      cursor: pointer; transition: 0.15s; flex-shrink: 0; white-space: nowrap;
+    }
+    .pan-btn:hover { background: #2563eb; color: #fff; border-color: #60a5fa; }
 
     /* Caixa Flutuante de Texto Rico */
     #text-editor-box {
-      display: none; position: fixed; z-index: 35;
+      display: none; position: fixed; z-index: 40;
       background: rgba(255, 255, 255, 0.99); border: 2px solid #2563eb;
-      border-radius: 14px; padding: 10px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-      flex-direction: column; gap: 8px; width: 330px; max-width: 92vw;
+      border-radius: 14px; padding: 10px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.28);
+      flex-direction: column; gap: 8px; width: 320px; max-width: 92vw;
     }
     .fmt-toolbar {
       display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
@@ -175,22 +168,22 @@
     #infographic-modal {
       display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
       backdrop-filter: blur(4px); z-index: 45; align-items: center; justify-content: center;
-      padding: 16px;
+      padding: 12px;
     }
     .info-modal-card {
-      background: #ffffff; width: 100%; max-width: 700px; max-height: 90vh;
-      border-radius: 18px; border: 1px solid #cbd5e1;
+      background: #ffffff; width: 100%; max-width: 680px; max-height: 90vh;
+      border-radius: 16px; border: 1px solid #cbd5e1;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
       display: flex; flex-direction: column; overflow: hidden;
     }
     .info-type-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
-      gap: 8px; margin-bottom: 14px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 7px; margin-bottom: 12px;
     }
     .info-type-btn {
       background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
-      padding: 8px 10px; text-align: left; cursor: pointer; transition: 0.15s;
-      display: flex; flex-direction: column; gap: 3px;
+      padding: 7px 9px; text-align: left; cursor: pointer; transition: 0.15s;
+      display: flex; flex-direction: column; gap: 2px;
     }
     .info-type-btn:hover { border-color: #93c5fd; background: #eff6ff; }
     .info-type-btn.active {
@@ -198,124 +191,119 @@
       box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
     }
     .info-input {
-      width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
+      width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
       font-size: 13px; font-family: inherit; outline: none;
       user-select: text !important; -webkit-user-select: text !important;
     }
     .info-input:focus { border-color: #2563eb; }
 
     #tela-espera-aluno {
-      display: none; position: absolute; inset: 0; background: #0f172a; color: #fff;
+      display: none; position: fixed; inset: 0; background: #0f172a; color: #fff;
       align-items: center; justify-content: center; flex-direction: column;
-      gap: 18px; text-align: center; padding: 24px; z-index: 50;
+      gap: 18px; text-align: center; padding: 24px; z-index: 60;
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
     #badge-somente-leitura {
-      display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.92); color: #f8fafc; padding: 8px 18px;
-      border-radius: 30px; font-size: 12px; font-weight: 700; z-index: 25;
+      display: none; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.92); color: #f8fafc; padding: 6px 16px;
+      border-radius: 30px; font-size: 11.5px; font-weight: 700; z-index: 20;
       border: 1px solid #334155; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
-      white-space: nowrap;
+      white-space: nowrap; pointer-events: none;
     }
 
-    @media (max-width: 1100px) {
-      .screens-dock { top: 58px; left: 12px; transform: none; }
-    }
-    @media (max-width: 768px) {
-      .style-dock { top: 8px; left: 8px; padding: 6px 8px; gap: 5px; }
-      .screens-dock { top: 54px; left: 8px; padding: 5px 8px; gap: 4px; max-width: calc(100vw - 16px); overflow-x: auto; }
-      .actions-dock { top: 100px; right: 8px; padding: 5px 8px; }
-      .toolbar-dock { bottom: 12px; padding: 6px 8px; }
-      .pan-nav-dock { bottom: 68px; right: 8px; }
-      .tool-btn { width: 34px; height: 34px; font-size: 15px; }
+    @media (max-width: 900px) {
+      .lousa-bottom-bar { justify-content: flex-start; }
     }
   </style>
 </head>
 <body>
 
   <div id="lousa-app">
-    <canvas id="lousa-canvas"></canvas>
+    <!-- 1. BARRA SUPERIOR UNIFICADA E ALINHADA (PC e Telemóvel) -->
+    <div id="ui-top-bar" class="lousa-top-bar">
+      <!-- Grupo A: Numeração de Telas -->
+      <div id="ui-screens-dock" class="screens-group">
+        <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀</button>
+        <select id="select-screen-number" title="Escolher Tela Numerada">
+          <option value="0">🖥️ Tela 1 / 1</option>
+        </select>
+        <button class="screen-nav-btn" id="btn-next-screen" title="Próxima Tela">▶</button>
+        <button class="screen-nav-btn add" id="btn-new-screen" title="Criar Nova Tela (Tela 2, Tela 3...)">➕ Tela</button>
+        <button class="screen-nav-btn" id="btn-copy-screen" title="Copiar esta Tela">📋</button>
+        <button class="screen-nav-btn" id="btn-paste-screen" title="Colar Tela copiada" style="display:none;">📥</button>
+        <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
+      </div>
 
-    <!-- Barra Superior Esquerda: Cores, Espessura e Fundo -->
-    <div id="ui-style-dock" class="style-dock">
-      <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;" title="Preto"></div>
-      <div class="color-dot" data-color="#2563eb" style="background:#2563eb;" title="Azul"></div>
-      <div class="color-dot" data-color="#dc2626" style="background:#dc2626;" title="Vermelho"></div>
-      <div class="color-dot" data-color="#16a34a" style="background:#16a34a;" title="Verde"></div>
-      <div class="color-dot" data-color="#d97706" style="background:#d97706;" title="Laranja"></div>
-      <div class="color-dot" data-color="#9333ea" style="background:#9333ea;" title="Roxo"></div>
-      <div class="color-dot" data-color="#db2777" style="background:#db2777;" title="Rosa"></div>
+      <!-- Grupo B: Cores, Espessura e Fundo -->
+      <div id="ui-style-dock" class="top-group">
+        <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;" title="Preto"></div>
+        <div class="color-dot" data-color="#2563eb" style="background:#2563eb;" title="Azul"></div>
+        <div class="color-dot" data-color="#dc2626" style="background:#dc2626;" title="Vermelho"></div>
+        <div class="color-dot" data-color="#16a34a" style="background:#16a34a;" title="Verde"></div>
+        <div class="color-dot" data-color="#d97706" style="background:#d97706;" title="Laranja"></div>
+        <div class="color-dot" data-color="#9333ea" style="background:#9333ea;" title="Roxo"></div>
+        <div class="color-dot" data-color="#db2777" style="background:#db2777;" title="Rosa"></div>
 
-      <div style="width:1px; height:18px; background:#cbd5e1; margin:0 2px;"></div>
+        <div class="top-divider"></div>
 
-      <button class="size-btn" data-size="3" title="Traço Fino">Fino</button>
-      <button class="size-btn active" data-size="6" title="Traço Médio">Médio</button>
-      <button class="size-btn" data-size="11" title="Traço Grosso">Grosso</button>
+        <button class="size-btn" data-size="3" title="Traço Fino">Fino</button>
+        <button class="size-btn active" data-size="6" title="Traço Médio">Médio</button>
+        <button class="size-btn" data-size="11" title="Traço Grosso">Grosso</button>
 
-      <div style="width:1px; height:18px; background:#cbd5e1; margin:0 2px;"></div>
+        <div class="top-divider"></div>
 
-      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11.5px; font-weight:700; color:#1e293b; background:#f8fafc; cursor:pointer; outline:none;" title="Escolher Fundo desta Tela">
-        <option value="bg-grade">📐 Quadriculado</option>
-        <option value="bg-pauta">📝 Caderno Pautado</option>
-        <option value="bg-pontos">⠿ Pontilhado</option>
-        <option value="bg-branco">⬜ Quadro Branco</option>
-      </select>
+        <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:6px; padding:4px 6px; font-size:11px; font-weight:700; color:#1e293b; background:#f8fafc; cursor:pointer; outline:none;" title="Fundo desta Tela">
+          <option value="bg-grade">📐 Grade</option>
+          <option value="bg-pauta">📝 Pauta</option>
+          <option value="bg-pontos">⠿ Pontos</option>
+          <option value="bg-branco">⬜ Branco</option>
+        </select>
+      </div>
+
+      <!-- Grupo C: Zoom, Desfazer/Refazer, PNG e Limpar -->
+      <div id="ui-actions-dock" class="top-group">
+        <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom">🔍-</button>
+        <button class="action-pill" id="btn-center" title="Voltar Zoom ao Normal (100%)">🎯 100%</button>
+        <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom">🔍+</button>
+        <div class="top-divider"></div>
+        <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
+        <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
+        <button class="action-pill" id="btn-download" title="Baixar Imagem da Tela (PNG)">📥 PNG</button>
+        <button class="action-pill danger" id="btn-clear" title="Limpar desenhos desta Tela">🧹 Limpar</button>
+      </div>
     </div>
 
-    <!-- 📑 NOVO: Barra Central de Numeração de Telas (Quadros Numerados + Copiar/Colar entre Turmas) -->
-    <div id="ui-screens-dock" class="screens-dock">
-      <button class="screen-nav-btn" id="btn-prev-screen" title="Ir para a Tela Anterior">◀</button>
-      <select id="select-screen-number" title="Selecionar Tela Numerada">
-        <option value="0">🖥️ Tela 1 de 1</option>
-      </select>
-      <button class="screen-nav-btn" id="btn-next-screen" title="Ir para a Próxima Tela">▶</button>
-      <button class="screen-nav-btn add" id="btn-new-screen" title="Criar uma Nova Tela em Branco (Tela 2, Tela 3...)">➕ Nova Tela</button>
-      <button class="screen-nav-btn" id="btn-copy-screen" title="Copiar esta Tela para colar noutra Turma ou noutra Tela">📋 Copiar</button>
-      <button class="screen-nav-btn" id="btn-paste-screen" title="Colar a Tela copiada aqui" style="display:none;">📥 Colar</button>
-      <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
+    <!-- 2. PALCO CENTRAL DO QUADRO (Sem ferramentas por cima!) -->
+    <div id="canvas-stage">
+      <canvas id="lousa-canvas"></canvas>
+      <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
+      <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
     </div>
 
-    <!-- Barra Superior Direita: Zoom, Desfazer, Refazer, PNG e Limpar -->
-    <div id="ui-actions-dock" class="actions-dock">
-      <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom da Lousa">🔍-</button>
-      <button class="action-pill" id="btn-center" title="Voltar Zoom e Posição ao Normal (100%)">🎯 100%</button>
-      <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom da Lousa">🔍+</button>
-      <div style="width:1px; height:18px; background:#cbd5e1;"></div>
-      <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
-      <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
-      <button class="action-pill" id="btn-download" title="Guardar imagem da aula (PNG)">📥 PNG</button>
-      <button class="action-pill danger" id="btn-clear" title="Limpar apenas os desenhos desta Tela">🧹 Limpar</button>
-    </div>
-
-    <!-- Controlador Rápido de Expansão da Tela (Direita / Esquerda / Baixo) -->
-    <div id="ui-pan-dock" class="pan-nav-dock" title="Expandir e navegar pelo quadro infinito">
-      <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
-      <button class="pan-btn" id="btn-pan-right" title="Expandir / Avançar tela para a direita">➡️ +Espaço</button>
-      <button class="pan-btn" id="btn-pan-down" title="Expandir / Descer tela">⬇️</button>
-    </div>
-
-    <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
-
-    <!-- Barra Inferior: Ferramentas de Desenho, Formas, Infográficos e Laser Seta -->
-    <div id="ui-toolbar-dock" class="toolbar-dock">
+    <!-- 3. BARRA INFERIOR UNIFICADA (Ferramentas + Expansão de Espaço) -->
+    <div id="ui-bottom-bar" class="lousa-bottom-bar">
       <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
       <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
-      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (Duplo clique num texto na tela para editar)">🔤</button>
+      <button class="tool-btn" data-tool="text" title="Texto Rico (Duplo clique num texto para editar)">🔤</button>
       <button class="tool-btn" data-tool="eraser" title="Borracha">🧽</button>
       <div class="tool-divider"></div>
       <button class="tool-btn" data-tool="line" title="Linha Reta">📏</button>
-      <button class="tool-btn" data-tool="arrow" title="Seta Indicativa">↗️</button>
+      <button class="tool-btn" data-tool="arrow" title="Seta">↗️</button>
       <button class="tool-btn" data-tool="rect" title="Retângulo">▭</button>
       <button class="tool-btn" data-tool="circle" title="Círculo">⭕</button>
       <button class="tool-btn" data-tool="triangle" title="Triângulo">△</button>
       <button class="tool-btn" data-tool="hexagon" title="Hexágono">⬡</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos Editáveis)" style="background:rgba(16,185,129,0.22); border-color:#10b981; color:#6ee7b7;">📊</button>
+      <button class="tool-btn" id="btn-open-infographic" title="Inserir Infográfico (8 Modelos Editáveis)" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#6ee7b7;">📊</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" data-tool="move" title="Mover, Editar, Redimensionar (⤡) ou Clicar em Infográficos">🖐️</button>
-      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha Livremente">🧭</button>
-      <button class="tool-btn" data-tool="laser" title="Laser Seta Luminoso (Aponta com seta neon na direção do movimento)">🏹</button>
+      <button class="tool-btn" data-tool="move" title="Mover Objetos, Redimensionar (⤡) ou Clicar em Infográficos">🖐️</button>
+      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha">🧭</button>
+      <button class="tool-btn" data-tool="laser" title="Laser Seta Luminoso">🏹</button>
+      <div class="tool-divider"></div>
+      <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
+      <button class="pan-btn" id="btn-pan-right" title="Expandir espaço para a direita">➡️ +Espaço</button>
+      <button class="pan-btn" id="btn-pan-down" title="Expandir espaço para baixo">⬇️</button>
     </div>
 
     <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
@@ -348,81 +336,79 @@
     <!-- Modal Construtor e Editor dos 8 Tipos de Infográficos -->
     <div id="infographic-modal">
       <div class="info-modal-card">
-        <div style="padding:14px 20px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:20px;">📊</span>
-            <h3 id="info-modal-header-title" style="margin:0; font-size:16px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
+            <span style="font-size:18px;">📊</span>
+            <h3 id="info-modal-header-title" style="margin:0; font-size:15px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
           </div>
-          <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
+          <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
         </div>
 
-        <div style="padding:16px 20px; overflow-y:auto; flex:1;">
-          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha a Categoria de Infográfico:</label>
+        <div style="padding:14px 18px; overflow-y:auto; flex:1;">
+          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha o Modelo de Infográfico:</label>
           <div class="info-type-grid" id="info-type-grid">
             <button type="button" class="info-type-btn active" data-info-type="estatistico">
               <strong style="font-size:12px; color:#0f172a;">📊 1. Estatístico</strong>
-              <span style="font-size:10.5px; color:#64748b;">Gráfico de barras e métricas</span>
+              <span style="font-size:10px; color:#64748b;">Barras e métricas</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="informativo">
               <strong style="font-size:12px; color:#0f172a;">📌 2. Informativo</strong>
-              <span style="font-size:10.5px; color:#64748b;">Tópicos e resumo visual</span>
+              <span style="font-size:10px; color:#64748b;">Tópicos numerados</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="comparativo">
               <strong style="font-size:12px; color:#0f172a;">⚖️ 3. Comparativo</strong>
-              <span style="font-size:10.5px; color:#64748b;">Lado A vs Lado B</span>
+              <span style="font-size:10px; color:#64748b;">Lado A vs Lado B</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="processos">
               <strong style="font-size:12px; color:#0f172a;">⚙️ 4. Processos</strong>
-              <span style="font-size:10.5px; color:#64748b;">Etapas 1 ➔ 2 ➔ 3...</span>
+              <span style="font-size:10px; color:#64748b;">Etapas 1 ➔ 2 ➔ 3...</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="linha_tempo">
               <strong style="font-size:12px; color:#0f172a;">⏳ 5. Linha do Tempo</strong>
-              <span style="font-size:10.5px; color:#64748b;">Marcos cronológicos</span>
+              <span style="font-size:10px; color:#64748b;">Marcos cronológicos</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="espaco_tempo">
               <strong style="font-size:12px; color:#0f172a;">🌍 6. Espaço-Tempo</strong>
-              <span style="font-size:10.5px; color:#64748b;">Narrativa Lugar + Época</span>
+              <span style="font-size:10px; color:#64748b;">Lugar + Época</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="relacional">
               <strong style="font-size:12px; color:#0f172a;">🕸️ 7. Relacional</strong>
-              <span style="font-size:10.5px; color:#64748b;">Mapa central e conexões</span>
+              <span style="font-size:10px; color:#64748b;">Mapa de conexões</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="interativo">
               <strong style="font-size:12px; color:#0f172a;">👆 8. Interativo</strong>
-              <span style="font-size:10.5px; color:#64748b;">Cartões clicáveis ao vivo</span>
+              <span style="font-size:10px; color:#64748b;">Cartões clicáveis</span>
             </button>
           </div>
 
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
             <div style="margin-bottom:10px;">
               <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título Principal do Infográfico:</label>
               <input type="text" id="info-title-input" class="info-input" value="Simple Past vs Present Perfect">
             </div>
 
             <div id="info-extra-headers" style="margin-bottom:8px;"></div>
-            <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:8px;"></div>
+            <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:7px;"></div>
 
-            <button type="button" id="btn-add-info-option" style="margin-top:12px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:9px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:0.15s;">
+            <button type="button" id="btn-add-info-option" style="margin-top:10px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:8px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">
               ➕ Adicionar Mais Opção / Item ao Infográfico
             </button>
           </div>
         </div>
 
-        <div style="padding:12px 20px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-          <span style="font-size:11.5px; color:#64748b;">💡 Na lousa: clique em <b>✏️</b> para editar, <b>➕</b> para expandir ou puxe <b>⤡</b> no canto para dar zoom!</span>
+        <div style="padding:10px 18px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
+          <span style="font-size:11px; color:#64748b;">💡 Na lousa: clique em <b>✏️</b> p/ editar, <b>➕</b> p/ expandir ou puxe <b>⤡</b> no canto p/ dar zoom!</span>
           <div style="display:flex; gap:8px;">
-            <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">Cancelar</button>
-            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:8px 18px; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
+            <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
+            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:7px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
           </div>
         </div>
       </div>
     </div>
 
-    <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
-
     <div id="tela-espera-aluno">
-      <div style="font-size:60px; animation:pulse 2s infinite;">⏳</div>
-      <h2 style="font-size:22px; margin:0;">Aguardando Liberação...</h2>
+      <div style="font-size:56px; animation:pulse 2s infinite;">⏳</div>
+      <h2 style="font-size:21px; margin:0;">Aguardando Liberação...</h2>
       <p style="color:#94a3b8; font-size:14px; max-width:360px; margin:0; line-height:1.5;">
         O professor está a preparar a lousa. Ela aparecerá aqui automaticamente assim que for ativada na aula.
       </p>
@@ -441,7 +427,7 @@
       let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
       let userIdParam = params.get('userId') || '';
       let alunoRefIdParam = params.get('alunoRefId') || '';
-      let roomIdAtivo = roomIdOriginal;
+      let roomIdAtivo = 'LOUSA_MESTRA_UNIFICADA';
       let nomeTurmaAtiva = roomIdOriginal === 'global' ? 'Público Geral' : roomIdOriginal;
 
       let isAllowed = (role !== 'aluno');
@@ -454,7 +440,6 @@
       ];
       let activeScreenIndex = 0;
 
-      // Variáveis da Tela Ativa Atual
       let shapes = [];
       let redoStack = [];
       let currentBg = 'bg-grade';
@@ -462,7 +447,6 @@
       let currentColor = '#0f172a';
       let currentSize = 6;
 
-      // Estado da Câmara (Local e Sincronizada com o Professor)
       let camera = { x: 0, y: 0, zoom: 1 };
       let targetStudentCamera = null;
       let animFrameCamera = null;
@@ -488,22 +472,19 @@
       let panStartPt = null;
       let laserTrail = [];
       let laserFadeTimer = null;
-      let lastLaserSyncTime = 0;
+      let lastLiveStreamTime = 0;
+      let pendingRemoteRecords = null;
 
-      let lastLocalEditTime = 0;
       let isSaving = false;
       let saveTimer = null;
 
-      const appEl = document.getElementById('lousa-app');
+      const stageEl = document.getElementById('canvas-stage');
       const canvas = document.getElementById('lousa-canvas');
       const ctx = canvas.getContext('2d');
       const telaEspera = document.getElementById('tela-espera-aluno');
       const badgeLeitura = document.getElementById('badge-somente-leitura');
-      const uiToolbar = document.getElementById('ui-toolbar-dock');
-      const uiStyle = document.getElementById('ui-style-dock');
-      const uiScreens = document.getElementById('ui-screens-dock');
-      const uiActions = document.getElementById('ui-actions-dock');
-      const uiPanDock = document.getElementById('ui-pan-dock');
+      const uiTopBar = document.getElementById('ui-top-bar');
+      const uiBottomBar = document.getElementById('ui-bottom-bar');
       const selectFundo = document.getElementById('select-fundo');
       const selectScreenNumber = document.getElementById('select-screen-number');
       const btnPasteScreen = document.getElementById('btn-paste-screen');
@@ -515,13 +496,13 @@
         btnPasteScreen.style.display = temCopia ? 'inline-flex' : 'none';
       }
 
-      // 📑 Sincroniza os dados da tela ativa com o array de Telas Numeradas
       function guardarEstadoNaTelaAtual() {
         if (!screens[activeScreenIndex]) {
           screens[activeScreenIndex] = { id: 'tela_' + (activeScreenIndex + 1), bgType: currentBg, shapes: [], cam: { x: 0, y: 0, zoom: 1 } };
         }
+        const listaDeFormas = activeShape ? [...shapes, activeShape] : [...shapes];
         screens[activeScreenIndex].bgType = currentBg;
-        screens[activeScreenIndex].shapes = shapes;
+        screens[activeScreenIndex].shapes = listaDeFormas;
         if (role !== 'aluno') {
           screens[activeScreenIndex].cam = { x: camera.x, y: camera.y, zoom: camera.zoom };
         }
@@ -531,11 +512,11 @@
         if (selectScreenNumber) {
           selectScreenNumber.innerHTML = screens.map((sc, idx) => {
             const qtdItens = Array.isArray(sc.shapes) ? sc.shapes.length : 0;
-            return `<option value="${idx}" ${idx === activeScreenIndex ? 'selected' : ''}>🖥️ Tela ${idx + 1} de ${screens.length}${qtdItens > 0 ? ` (${qtdItens})` : ''}</option>`;
+            return `<option value="${idx}" ${idx === activeScreenIndex ? 'selected' : ''}>🖥️ Tela ${idx + 1} / ${screens.length}${qtdItens > 0 ? ` (${qtdItens})` : ''}</option>`;
           }).join('');
         }
         if (badgeLeitura) {
-          badgeLeitura.innerHTML = `📡 Ao Vivo (${nomeTurmaAtiva}) • <b>🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}</b>`;
+          badgeLeitura.innerHTML = `📡 Ao Vivo • <b>🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}</b>`;
         }
         verificarClipboardTela();
       }
@@ -556,16 +537,15 @@
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
         if (dispararSave) {
-          lastLocalEditTime = Date.now();
-          agendarSalvamentoNuvem(80);
+          agendarSalvamentoNuvem(10);
         }
       }
 
       function obterDimensoesTelaSeguras() {
-        const rect = appEl.getBoundingClientRect();
+        const rect = stageEl.getBoundingClientRect();
         const w = (rect && rect.width > 50) ? rect.width : (window.innerWidth || 1024);
-        const h = (rect && rect.height > 50) ? rect.height : (window.innerHeight || 640);
-        return { w: Math.max(280, w), h: Math.max(200, h) };
+        const h = (rect && rect.height > 50) ? rect.height : (window.innerHeight || 600);
+        return { w: Math.max(260, w), h: Math.max(180, h) };
       }
 
       function validarCameraSegura() {
@@ -584,18 +564,16 @@
         telaEspera.style.display = 'none';
 
         const bloquearFerramentas = (role === 'aluno' && isReadonly);
-        uiToolbar.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiStyle.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiScreens.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiActions.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiPanDock.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiTopBar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiBottomBar.style.display = bloquearFerramentas ? 'none' : 'flex';
         badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
         canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
         atualizarBarraNumeracaoTelas();
+        setTimeout(ajustarTamanhoCanvas, 20);
       }
 
       // =========================================================================
-      // 📐 1. MOTOR DE ENQUADRAMENTO PROPORCIONAL (ALUNO ACOMPANHA O PROFESSOR)
+      // 📐 1. ENQUADRAMENTO PROPORCIONAL AUTOMÁTICO (ALUNO ACOMPANHA PROFESSOR)
       // =========================================================================
       function obterEstadoCameraProfessor() {
         validarCameraSegura();
@@ -664,9 +642,9 @@
               return;
             }
 
-            camera.x += dx * 0.3;
-            camera.y += dy * 0.3;
-            camera.zoom += dz * 0.3;
+            camera.x += dx * 0.35;
+            camera.y += dy * 0.35;
+            camera.zoom += dz * 0.35;
             desenharQuadro();
             animFrameCamera = requestAnimationFrame(animarPasso);
           };
@@ -691,7 +669,7 @@
 
       if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => ajustarTamanhoCanvas());
-        ro.observe(appEl);
+        ro.observe(stageEl);
       }
 
       function telaParaQuadro(clientX, clientY) {
@@ -785,12 +763,11 @@
           context.fillRect(0, 0, width, height);
         }
 
-        // Marca d'água discreta da Numeração da Tela no canto inferior esquerdo do quadro
-        context.fillStyle = 'rgba(100, 116, 139, 0.55)';
+        context.fillStyle = 'rgba(100, 116, 139, 0.65)';
         context.font = '800 12px "Segoe UI", sans-serif';
         context.textAlign = 'left';
         context.textBaseline = 'bottom';
-        context.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 16, height - 14);
+        context.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 14, height - 10);
         context.restore();
       }
 
@@ -1534,9 +1511,8 @@
               }
               if (lx >= w - 52 && lx <= w - 4) {
                 sh.scale = 1;
-                lastLocalEditTime = Date.now();
                 desenharQuadro();
-                agendarSalvamentoNuvem();
+                agendarSalvamentoNuvem(10);
                 return 'action';
               }
             }
@@ -1559,9 +1535,8 @@
               const boxH = rowH - 14;
               if (lx >= cx && lx <= cx + boxW && ly >= cy && ly <= cy + boxH) {
                 cards[cIdx].revealed = !cards[cIdx].revealed;
-                lastLocalEditTime = Date.now();
                 desenharQuadro();
-                agendarSalvamentoNuvem();
+                agendarSalvamentoNuvem(10);
                 return 'action';
               }
             }
@@ -1606,6 +1581,15 @@
         }
       }
 
+      // Disparo contínuo em tempo real durante o movimento da caneta/objeto/laser (a cada 90ms)
+      function transmitirMovimentoAoVivo() {
+        const agora = Date.now();
+        if (agora - lastLiveStreamTime > 90) {
+          lastLiveStreamTime = agora;
+          agendarSalvamentoNuvem(10);
+        }
+      }
+
       canvas.addEventListener('dblclick', (e) => {
         if (role === 'aluno' && isReadonly) return;
         const pt = telaParaQuadro(e.clientX, e.clientY);
@@ -1638,7 +1622,6 @@
         if (acaoInfo === 'action') return;
         if (acaoInfo === 'resize') {
           isPointerDown = true;
-          lastLocalEditTime = Date.now();
           try { canvas.setPointerCapture(e.pointerId); } catch(err){}
           return;
         }
@@ -1649,7 +1632,6 @@
         }
 
         isPointerDown = true;
-        lastLocalEditTime = Date.now();
         try { canvas.setPointerCapture(e.pointerId); } catch(err){}
 
         if (currentTool === 'pan') {
@@ -1676,7 +1658,7 @@
           if (shapes.length !== antes) {
             atualizarBarraNumeracaoTelas();
             desenharQuadro();
-            agendarSalvamentoNuvem();
+            agendarSalvamentoNuvem(10);
           }
           return;
         }
@@ -1685,7 +1667,7 @@
           clearTimeout(laserFadeTimer);
           laserTrail = [pt];
           desenharQuadro();
-          agendarSalvamentoNuvem(80);
+          agendarSalvamentoNuvem(10);
           return;
         }
 
@@ -1719,7 +1701,6 @@
 
       canvas.addEventListener('pointermove', (e) => {
         if (!isPointerDown) return;
-        lastLocalEditTime = Date.now();
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
         if (resizingShape) {
@@ -1727,6 +1708,7 @@
           const novaEscala = Math.max(0.45, Math.min(2.8, resizeStartScale * (distAtual / resizeStartDist)));
           resizingShape.scale = Math.round(novaEscala * 100) / 100;
           desenharQuadro();
+          transmitirMovimentoAoVivo();
           return;
         }
 
@@ -1734,6 +1716,7 @@
           camera.x = e.clientX - panStartPt.x;
           camera.y = e.clientY - panStartPt.y;
           desenharQuadro();
+          if (role !== 'aluno') transmitirMovimentoAoVivo();
           return;
         }
 
@@ -1742,7 +1725,7 @@
           const dy = pt.y - moveLastPt.y;
           deslocarElemento(movingShape, dx, dy);
 
-          const margemBorda = 55;
+          const margemBorda = 50;
           if (e.clientX > window.innerWidth - margemBorda) {
             camera.x -= 14;
             deslocarElemento(movingShape, 14 / camera.zoom, 0);
@@ -1757,6 +1740,7 @@
 
           moveLastPt = telaParaQuadro(e.clientX, e.clientY);
           desenharQuadro();
+          transmitirMovimentoAoVivo();
           return;
         }
 
@@ -1766,7 +1750,7 @@
           if (shapes.length !== antes) {
             atualizarBarraNumeracaoTelas();
             desenharQuadro();
-            agendarSalvamentoNuvem();
+            transmitirMovimentoAoVivo();
           }
           return;
         }
@@ -1775,10 +1759,7 @@
           laserTrail.push({ x: Math.round(pt.x), y: Math.round(pt.y) });
           if (laserTrail.length > 28) laserTrail.shift();
           desenharQuadro();
-          if (Date.now() - lastLaserSyncTime > 120) {
-            lastLaserSyncTime = Date.now();
-            agendarSalvamentoNuvem(60);
-          }
+          transmitirMovimentoAoVivo();
           return;
         }
 
@@ -1795,23 +1776,23 @@
           activeShape.y2 = pt.y;
         }
         desenharQuadro();
+        transmitirMovimentoAoVivo();
       });
 
       function finalizarToque() {
         if (!isPointerDown) return;
         isPointerDown = false;
-        lastLocalEditTime = Date.now();
 
         if (resizingShape) {
           resizingShape = null;
-          agendarSalvamentoNuvem();
+          agendarSalvamentoNuvem(10);
           return;
         }
 
         if (currentTool === 'pan') {
           panStartPt = null;
           canvas.style.cursor = 'grab';
-          if (role !== 'aluno') agendarSalvamentoNuvem(100);
+          if (role !== 'aluno') agendarSalvamentoNuvem(10);
           return;
         }
 
@@ -1819,7 +1800,7 @@
           if (movingShape) {
             movingShape = null;
             moveLastPt = null;
-            agendarSalvamentoNuvem();
+            agendarSalvamentoNuvem(10);
           }
           canvas.style.cursor = 'grab';
           return;
@@ -1830,8 +1811,8 @@
           laserFadeTimer = setTimeout(() => {
             laserTrail = [];
             desenharQuadro();
-            if (role !== 'aluno') agendarSalvamentoNuvem(80);
-          }, 1400);
+            if (role !== 'aluno') agendarSalvamentoNuvem(10);
+          }, 1200);
           return;
         }
 
@@ -1840,7 +1821,14 @@
           activeShape = null;
           atualizarBarraNumeracaoTelas();
           desenharQuadro();
-          agendarSalvamentoNuvem();
+          agendarSalvamentoNuvem(10);
+        }
+
+        // Se chegou atualização remota enquanto o dedo estava pressionado, aplica imediatamente!
+        if (pendingRemoteRecords) {
+          const rec = pendingRemoteRecords;
+          pendingRemoteRecords = null;
+          aplicarRegistrosRecebidos(rec, false);
         }
       }
 
@@ -1857,7 +1845,7 @@
           camera.x -= e.deltaX;
           camera.y -= e.deltaY;
           desenharQuadro();
-          if (role !== 'aluno') agendarSalvamentoNuvem(150);
+          if (role !== 'aluno') agendarSalvamentoNuvem(40);
         }
       }, { passive: false });
 
@@ -1869,7 +1857,7 @@
         camera.y = centerY - ((centerY - camera.y) / antigoZoom) * novoZoom;
         camera.zoom = Math.round(novoZoom * 100) / 100;
         desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(120);
+        if (role !== 'aluno') agendarSalvamentoNuvem(20);
       }
 
       // =========================================================================
@@ -1923,7 +1911,7 @@
           textEditorInput.value = '';
         }
 
-        const left = Math.min(screenX, window.innerWidth - 340);
+        const left = Math.min(screenX, window.innerWidth - 335);
         const top = Math.min(screenY, window.innerHeight - 180);
         textEditorBox.style.left = Math.max(10, left) + 'px';
         textEditorBox.style.top = Math.max(10, top) + 'px';
@@ -1972,10 +1960,9 @@
           });
         }
         redoStack = [];
-        lastLocalEditTime = Date.now();
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       }
 
       document.getElementById('btn-text-confirm').onclick = confirmarTextoFlutuante;
@@ -2282,7 +2269,7 @@
           editingShapeId = null;
         } else {
           const { w, h } = obterDimensoesTelaSeguras();
-          const pos = telaParaQuadro(Math.max(50, (w - 540) / 2), Math.max(70, (h - 300) / 2));
+          const pos = telaParaQuadro(Math.max(40, (w - 540) / 2), Math.max(40, (h - 300) / 2));
           const novo = {
             id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             typeName: 'shape',
@@ -2307,10 +2294,9 @@
         currentTool = 'move';
         canvas.style.cursor = 'grab';
 
-        lastLocalEditTime = Date.now();
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       };
 
       // =========================================================================
@@ -2349,8 +2335,8 @@
         verificarClipboardTela();
         const btnC = document.getElementById('btn-copy-screen');
         const txtOrig = btnC.innerHTML;
-        btnC.innerHTML = '✅ Copiada!';
-        setTimeout(() => { btnC.innerHTML = txtOrig; }, 1500);
+        btnC.innerHTML = '✅';
+        setTimeout(() => { btnC.innerHTML = txtOrig; }, 1200);
       };
 
       document.getElementById('btn-paste-screen').onclick = () => {
@@ -2371,9 +2357,8 @@
           }
           guardarEstadoNaTelaAtual();
           atualizarBarraNumeracaoTelas();
-          lastLocalEditTime = Date.now();
           desenharQuadro();
-          agendarSalvamentoNuvem(60);
+          agendarSalvamentoNuvem(10);
         } catch (e) {}
       };
 
@@ -2384,9 +2369,8 @@
           redoStack = [];
           guardarEstadoNaTelaAtual();
           atualizarBarraNumeracaoTelas();
-          lastLocalEditTime = Date.now();
           desenharQuadro();
-          agendarSalvamentoNuvem(80);
+          agendarSalvamentoNuvem(10);
           return;
         }
         if (!confirm(`Deseja apagar a Tela ${activeScreenIndex + 1} de ${screens.length}?`)) return;
@@ -2398,13 +2382,12 @@
         currentBg = sc.bgType || 'bg-grade';
         if (selectFundo) selectFundo.value = currentBg;
         atualizarBarraNumeracaoTelas();
-        lastLocalEditTime = Date.now();
         desenharQuadro();
-        agendarSalvamentoNuvem(80);
+        agendarSalvamentoNuvem(10);
       };
 
       // =========================================================================
-      // 🛠️ 10. CONTROLES GERAIS E SINCRONIZAÇÃO EM TEMPO REAL
+      // ⚡ 10. MOTOR DE TEMPO REAL NA VELOCIDADE DA LUZ (PROFESSOR ⇄ ALUNO)
       // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
@@ -2435,9 +2418,8 @@
       selectFundo.onchange = function() {
         currentBg = this.value;
         guardarEstadoNaTelaAtual();
-        lastLocalEditTime = Date.now();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-zoom-in').onclick = () => aplicarZoomTela(1.18);
@@ -2445,26 +2427,26 @@
       document.getElementById('btn-center').onclick = () => {
         camera = { x: 0, y: 0, zoom: 1 };
         desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(100);
+        if (role !== 'aluno') agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-pan-right').onclick = () => {
         const { w } = obterDimensoesTelaSeguras();
         camera.x -= Math.round(w * 0.55);
         desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(100);
+        if (role !== 'aluno') agendarSalvamentoNuvem(10);
       };
       document.getElementById('btn-pan-left').onclick = () => {
         const { w } = obterDimensoesTelaSeguras();
         camera.x = Math.min(200, camera.x + Math.round(w * 0.55));
         desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(100);
+        if (role !== 'aluno') agendarSalvamentoNuvem(10);
       };
       document.getElementById('btn-pan-down').onclick = () => {
         const { h } = obterDimensoesTelaSeguras();
         camera.y -= Math.round(h * 0.45);
         desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(100);
+        if (role !== 'aluno') agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-undo').onclick = () => {
@@ -2472,9 +2454,8 @@
         redoStack.push(shapes.pop());
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
-        lastLocalEditTime = Date.now();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-redo').onclick = () => {
@@ -2482,9 +2463,8 @@
         shapes.push(redoStack.pop());
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
-        lastLocalEditTime = Date.now();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-clear').onclick = () => {
@@ -2494,9 +2474,8 @@
         redoStack = [];
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
-        lastLocalEditTime = Date.now();
         desenharQuadro();
-        agendarSalvamentoNuvem();
+        agendarSalvamentoNuvem(10);
       };
 
       document.getElementById('btn-download').onclick = () => {
@@ -2506,7 +2485,50 @@
         link.click();
       };
 
-      function agendarSalvamentoNuvem(delayMs = 180) {
+      // Aplica os registos recebidos diretamente pelo túnel SSE (0ms de atraso!)
+      function aplicarRegistrosRecebidos(listaRecords, ehCarregamentoInicial = false) {
+        if (!Array.isArray(listaRecords)) return;
+
+        // Se este utilizador estiver no meio de um risco com o dedo no ecrã, guarda na fila para aplicar assim que soltar
+        if (isPointerDown && !ehCarregamentoInicial) {
+          pendingRemoteRecords = listaRecords;
+          return;
+        }
+
+        const metaBg = listaRecords.find(r => r && r.tool === 'meta_bg');
+        const formasAvulsas = listaRecords.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
+
+        if (metaBg && Array.isArray(metaBg.screens) && metaBg.screens.length > 0) {
+          screens = metaBg.screens;
+          activeScreenIndex = Math.max(0, Math.min(screens.length - 1, parseInt(metaBg.activeScreenIndex, 10) || 0));
+          const telaAtiva = screens[activeScreenIndex] || screens[0];
+          shapes = Array.isArray(telaAtiva.shapes) ? telaAtiva.shapes : formasAvulsas;
+          currentBg = telaAtiva.bgType || metaBg.bgType || 'bg-grade';
+        } else {
+          currentBg = (metaBg && metaBg.bgType) ? metaBg.bgType : 'bg-grade';
+          shapes = formasAvulsas;
+          screens = [{ id: 'tela_1', bgType: currentBg, shapes: shapes, cam: { x: 0, y: 0, zoom: 1 } }];
+          activeScreenIndex = 0;
+        }
+
+        if (selectFundo) selectFundo.value = currentBg;
+
+        if (metaBg) {
+          laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
+          if (metaBg.profView) {
+            profViewportRemoto = metaBg.profView;
+            if (role === 'aluno') {
+              aplicarCameraDoProfessorNoAluno(metaBg.profView, !ehCarregamentoInicial);
+            }
+          }
+        }
+
+        initialLoadDone = true;
+        atualizarBarraNumeracaoTelas();
+        desenharQuadro();
+      }
+
+      function agendarSalvamentoNuvem(delayMs = 25) {
         if (!initialLoadDone) return;
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
@@ -2515,6 +2537,7 @@
           try {
             guardarEstadoNaTelaAtual();
             const estadoProf = role !== 'aluno' ? obterEstadoCameraProfessor() : profViewportRemoto;
+            const formasAtuais = activeShape ? [...shapes, activeShape] : [...shapes];
             const metaBg = {
               id: 'meta_bg',
               typeName: 'shape',
@@ -2524,11 +2547,11 @@
               activeScreenIndex: activeScreenIndex,
               screens: screens,
               profView: estadoProf,
-              laserTrail: role !== 'aluno' ? laserTrail : [],
+              laserTrail: laserTrail,
               updatedAt: Date.now()
             };
-            const payloadRecords = [metaBg, ...shapes];
-            await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
+            const payloadRecords = [metaBg, ...formasAtuais];
+            await fetch(`/api/workspace/sala/workspace-lousa/dados/LOUSA_MESTRA_UNIFICADA`, {
               method: 'PUT',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
@@ -2541,53 +2564,16 @@
 
       async function carregarDadosDaNuvem(forcar = false) {
         if (role === 'aluno' && !isAllowed) return;
-        if (!forcar) {
-          if (isPointerDown || isSaving) return;
-          if (Date.now() - lastLocalEditTime < 2200) return;
-        }
+        if (!forcar && isPointerDown) return;
 
         try {
-          const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}?_t=${Date.now()}`, {
+          const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/LOUSA_MESTRA_UNIFICADA?_t=${Date.now()}`, {
             cache: 'no-store',
             credentials: 'include'
           });
           const data = await res.json();
-
-          if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2200))) return;
-
           if (data && data.success && Array.isArray(data.records)) {
-            if (data.nomeTurma) {
-              nomeTurmaAtiva = data.nomeTurma === 'global' ? 'Público Geral' : data.nomeTurma;
-            }
-            const metaBg = data.records.find(r => r && r.tool === 'meta_bg');
-            const formasAvulsas = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
-
-            if (metaBg && Array.isArray(metaBg.screens) && metaBg.screens.length > 0) {
-              screens = metaBg.screens;
-              activeScreenIndex = Math.max(0, Math.min(screens.length - 1, parseInt(metaBg.activeScreenIndex, 10) || 0));
-              const telaAtiva = screens[activeScreenIndex] || screens[0];
-              shapes = Array.isArray(telaAtiva.shapes) ? telaAtiva.shapes : formasAvulsas;
-              currentBg = telaAtiva.bgType || metaBg.bgType || 'bg-grade';
-            } else {
-              // Migra automaticamente desenhos antigos para a Tela 1
-              currentBg = (metaBg && metaBg.bgType) ? metaBg.bgType : 'bg-grade';
-              shapes = formasAvulsas;
-              screens = [{ id: 'tela_1', bgType: currentBg, shapes: shapes, cam: { x: 0, y: 0, zoom: 1 } }];
-              activeScreenIndex = 0;
-            }
-
-            if (selectFundo) selectFundo.value = currentBg;
-
-            if (role === 'aluno' && metaBg) {
-              laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
-              if (metaBg.profView) {
-                aplicarCameraDoProfessorNoAluno(metaBg.profView, !forcar);
-              }
-            }
-
-            initialLoadDone = true;
-            atualizarBarraNumeracaoTelas();
-            desenharQuadro();
+            aplicarRegistrosRecebidos(data.records, forcar);
           } else {
             initialLoadDone = true;
             atualizarBarraNumeracaoTelas();
@@ -2608,17 +2594,19 @@
           isReadonly = (role === 'aluno' && !!d.locked);
           atualizarPermissoesUI();
         }
+        if (d.type === 'STATUS_LOUSA_PROF') {
+          if (d.turmaId) roomIdOriginal = d.turmaId;
+        }
         if (d.type === 'RELOAD_DADOS') {
           carregarDadosDaNuvem(true);
         }
-        // Quando o professor clica em "Ativar Visualização", grava e transmite a tela atual imediatamente!
         if (d.type === 'FORCE_SAVE_DADOS') {
           initialLoadDone = true;
-          agendarSalvamentoNuvem(20);
+          agendarSalvamentoNuvem(5);
         }
       });
 
-      // Radar Contínuo do Aluno (Conecta automaticamente à sala ativa do Professor)
+      // Radar de Permissões do Aluno
       if (role === 'aluno') {
         const verificarStatusAluno = async () => {
           try {
@@ -2630,29 +2618,30 @@
             const data = await res.json();
 
             if (data && data.success && data.ativa) {
-              const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
-              if (data.nomeTurma) {
-                nomeTurmaAtiva = data.nomeTurma === 'global' ? 'Público Geral' : data.nomeTurma;
-              }
-              const mudouSala = (roomIdAtivo !== salaAlvo);
               const acabouDeLiberar = !isAllowed;
+              const mudouPermissao = (isReadonly !== !data.recursos);
 
-              roomIdAtivo = salaAlvo;
               isAllowed = true;
               isReadonly = !data.recursos;
-              atualizarPermissoesUI();
 
-              await carregarDadosDaNuvem(mudouSala || acabouDeLiberar);
+              if (acabouDeLiberar || mudouPermissao) {
+                atualizarPermissoesUI();
+              }
+              if (acabouDeLiberar) {
+                await carregarDadosDaNuvem(true);
+              }
             } else {
               isAllowed = false;
+              isReadonly = true;
               atualizarPermissoesUI();
             }
           } catch (e) {}
         };
         verificarStatusAluno();
-        setInterval(verificarStatusAluno, 1800);
+        setInterval(verificarStatusAluno, 2000);
       }
 
+      // Escutador SSE Direto (Recebe os traços dentro do evento em 0ms!)
       try {
         let escolaId = 'DEFAULT';
         try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
@@ -2662,18 +2651,18 @@
             const data = JSON.parse(event.data);
             if (data.type === 'LOUSA_DADOS_CHANGED') {
               if (data.senderId && data.senderId === CLIENT_ID) return;
-              const mesmaSala =
-                data.turmaId === roomIdAtivo ||
-                data.turmaNome === roomIdAtivo ||
-                data.turmaId === roomIdOriginal ||
-                data.turmaNome === roomIdOriginal ||
-                data.turmaId === 'global';
-              if (mesmaSala) carregarDadosDaNuvem(false);
+              // Se o pacote SSE já trouxer os records, desenha na mesma fração de segundo!
+              if (Array.isArray(data.records)) {
+                aplicarRegistrosRecebidos(data.records, false);
+              } else {
+                carregarDadosDaNuvem(false);
+              }
             }
             if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
-              setTimeout(() => {
-                if (window._loadCloud) window._loadCloud();
-              }, 100);
+              isAllowed = !!data.ativa;
+              isReadonly = data.ativa ? !data.recursos : true;
+              atualizarPermissoesUI();
+              if (data.ativa) carregarDadosDaNuvem(true);
             }
           } catch (e) {}
         };
