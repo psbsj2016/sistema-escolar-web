@@ -27,7 +27,7 @@
 
     /* Barra de Ferramentas Principal (Inferior Central) */
     .toolbar-dock {
-      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px);
       border: 1px solid #334155; border-radius: 18px;
       padding: 7px 10px; display: flex; align-items: center; gap: 5px;
@@ -73,29 +73,55 @@
     }
     .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
 
-    /* Barra de Ações Rápidas (Superior Direita) */
+    /* Barra de Ações e Zoom (Superior Direita) */
     .actions-dock {
       position: fixed; top: 12px; right: 12px;
       background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
       border: 1px solid #cbd5e1; border-radius: 14px;
-      padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+      padding: 6px 10px; display: flex; align-items: center; gap: 5px;
       z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+      flex-wrap: wrap;
     }
     .action-pill {
       background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
-      padding: 5px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
+      padding: 5px 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
     }
     .action-pill:hover { background: #e2e8f0; }
     .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
     .action-pill.danger:hover { background: #fee2e2; }
 
-    /* Caixa Flutuante de Texto Rico (Negrito, Itálico, Sublinhar, Riscar + 10 Fontes) */
+    /* Barra de Expansão Horizontal da Lousa (Canto Inferior Direito) */
+    .pan-nav-dock {
+      position: fixed; bottom: 20px; right: 14px;
+      background: rgba(255, 255, 255, 0.95); border: 1px solid #cbd5e1;
+      border-radius: 12px; padding: 4px 6px; display: flex; align-items: center; gap: 4px;
+      z-index: 20; box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+    }
+    .pan-btn {
+      background: #f1f5f9; border: 1px solid #e2e8f0; color: #0f172a;
+      padding: 5px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;
+      cursor: pointer; transition: 0.15s;
+    }
+    .pan-btn:hover { background: #2563eb; color: #fff; border-color: #2563eb; }
+
+    /* Barra de Rolagem Visual Dinâmica no Fundo */
+    #board-hscroll-track {
+      position: fixed; bottom: 3px; left: 16px; right: 16px; height: 6px;
+      background: rgba(148, 163, 184, 0.25); border-radius: 6px; z-index: 15;
+      pointer-events: none;
+    }
+    #board-hscroll-thumb {
+      position: absolute; top: 0; height: 100%; width: 20%; left: 0;
+      background: rgba(37, 99, 235, 0.55); border-radius: 6px; transition: left 0.1s, width 0.1s;
+    }
+
+    /* Caixa Flutuante de Texto Rico */
     #text-editor-box {
       display: none; position: fixed; z-index: 35;
       background: rgba(255, 255, 255, 0.99); border: 2px solid #2563eb;
       border-radius: 14px; padding: 10px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
-      flex-direction: column; gap: 8px; width: 320px; max-width: 92vw;
+      flex-direction: column; gap: 8px; width: 330px; max-width: 92vw;
     }
     .fmt-toolbar {
       display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
@@ -115,18 +141,18 @@
     #text-editor-input {
       border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;
       font-family: 'Segoe UI', sans-serif; font-size: 16px;
-      outline: none; resize: both; width: 100%; min-height: 62px;
+      outline: none; resize: both; width: 100%; min-height: 68px;
       user-select: text !important; -webkit-user-select: text !important;
     }
 
-    /* Modal do Construtor de Infográficos */
+    /* Modal do Construtor e Editor de Infográficos */
     #infographic-modal {
       display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
       backdrop-filter: blur(4px); z-index: 45; align-items: center; justify-content: center;
       padding: 16px;
     }
     .info-modal-card {
-      background: #ffffff; width: 100%; max-width: 680px; max-height: 88vh;
+      background: #ffffff; width: 100%; max-width: 700px; max-height: 90vh;
       border-radius: 18px; border: 1px solid #cbd5e1;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
       display: flex; flex-direction: column; overflow: hidden;
@@ -152,7 +178,6 @@
     }
     .info-input:focus { border-color: #2563eb; }
 
-    /* Ecrã de Espera do Aluno */
     #tela-espera-aluno {
       display: none; position: absolute; inset: 0; background: #0f172a; color: #fff;
       align-items: center; justify-content: center; flex-direction: column;
@@ -170,7 +195,8 @@
     @media (max-width: 768px) {
       .style-dock { top: 8px; left: 8px; padding: 6px 8px; gap: 5px; }
       .actions-dock { top: 58px; right: 8px; padding: 5px 8px; }
-      .toolbar-dock { bottom: 10px; padding: 6px 8px; }
+      .toolbar-dock { bottom: 12px; padding: 6px 8px; }
+      .pan-nav-dock { bottom: 68px; right: 8px; }
       .tool-btn { width: 34px; height: 34px; font-size: 15px; }
     }
   </style>
@@ -206,20 +232,32 @@
       </select>
     </div>
 
-    <!-- Barra Superior Direita: Desfazer, Refazer, Salvar PNG e Limpar -->
+    <!-- Barra Superior Direita: Zoom, Desfazer, Refazer, PNG e Limpar -->
     <div id="ui-actions-dock" class="actions-dock">
-      <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️ Desfazer</button>
+      <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom da Lousa">🔍-</button>
+      <button class="action-pill" id="btn-center" title="Voltar Zoom e Posição ao Normal (100%)">🎯 100%</button>
+      <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom da Lousa">🔍+</button>
+      <div style="width:1px; height:18px; background:#cbd5e1;"></div>
+      <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
       <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
-      <button class="action-pill" id="btn-center" title="Centralizar Quadro (100%)">🎯 100%</button>
       <button class="action-pill" id="btn-download" title="Guardar imagem da aula (PNG)">📥 PNG</button>
-      <button class="action-pill danger" id="btn-clear" title="Apagar todo o quadro">🗑️ Limpar</button>
+      <button class="action-pill danger" id="btn-clear" title="Apagar todo o quadro">🗑️</button>
     </div>
 
-    <!-- Barra Inferior: Ferramentas de Desenho, Formas e Infográficos -->
+    <!-- Controlador Rápido de Expansão da Tela (Direita / Esquerda / Baixo) -->
+    <div id="ui-pan-dock" class="pan-nav-dock" title="Expandir e navegar pelo quadro infinito">
+      <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
+      <button class="pan-btn" id="btn-pan-right" title="Expandir / Avançar tela para a direita">➡️ +Tela</button>
+      <button class="pan-btn" id="btn-pan-down" title="Expandir / Descer tela">⬇️</button>
+    </div>
+
+    <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
+
+    <!-- Barra Inferior: Ferramentas de Desenho, Formas, Infográficos e Laser Seta -->
     <div id="ui-toolbar-dock" class="toolbar-dock">
       <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
       <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
-      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (10 Fontes, Negrito, Itálico, Sublinhado, Riscado)">🔤</button>
+      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (Duplo clique num texto na tela para editar)">🔤</button>
       <button class="tool-btn" data-tool="eraser" title="Borracha">🧽</button>
       <div class="tool-divider"></div>
       <button class="tool-btn" data-tool="line" title="Linha Reta">📏</button>
@@ -229,11 +267,11 @@
       <button class="tool-btn" data-tool="triangle" title="Triângulo">△</button>
       <button class="tool-btn" data-tool="hexagon" title="Hexágono">⬡</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos Pedagógicos)" style="background:rgba(16,185,129,0.2); border-color:#10b981; color:#6ee7b7;">📊</button>
+      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos Editáveis)" style="background:rgba(16,185,129,0.22); border-color:#10b981; color:#6ee7b7;">📊</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" data-tool="move" title="Mover Objetos ou Clicar em Infográficos Interativos">🖐️</button>
-      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha pelo Ecrã">🧭</button>
-      <button class="tool-btn" data-tool="laser" title="Apontador Laser">🔴</button>
+      <button class="tool-btn" data-tool="move" title="Mover, Editar, Redimensionar (⤡) ou Clicar em Infográficos">🖐️</button>
+      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha Livremente">🧭</button>
+      <button class="tool-btn" data-tool="laser" title="Laser Seta Luminoso (Aponta com seta neon na direção do movimento)">🏹</button>
     </div>
 
     <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
@@ -259,17 +297,17 @@
       <textarea id="text-editor-input" rows="2" placeholder="Digite o texto aqui..."></textarea>
       <div style="display:flex; justify-content:flex-end; gap:6px;">
         <button type="button" id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
-        <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Inserir Texto</button>
+        <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Salvar no Quadro</button>
       </div>
     </div>
 
-    <!-- Modal Construtor dos 8 Tipos de Infográficos -->
+    <!-- Modal Construtor e Editor dos 8 Tipos de Infográficos -->
     <div id="infographic-modal">
       <div class="info-modal-card">
         <div style="padding:14px 20px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span style="font-size:20px;">📊</span>
-            <h3 style="margin:0; font-size:16px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
+            <h3 id="info-modal-header-title" style="margin:0; font-size:16px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
           </div>
           <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
         </div>
@@ -291,7 +329,7 @@
             </button>
             <button type="button" class="info-type-btn" data-info-type="processos">
               <strong style="font-size:12px; color:#0f172a;">⚙️ 4. Processos</strong>
-              <span style="font-size:10.5px; color:#64748b;">Passo a passo 1 ➔ 2 ➔ 3 ➔ 4</span>
+              <span style="font-size:10.5px; color:#64748b;">Etapas 1 ➔ 2 ➔ 3...</span>
             </button>
             <button type="button" class="info-type-btn" data-info-type="linha_tempo">
               <strong style="font-size:12px; color:#0f172a;">⏳ 5. Linha do Tempo</strong>
@@ -316,15 +354,22 @@
               <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título Principal do Infográfico:</label>
               <input type="text" id="info-title-input" class="info-input" value="Simple Past vs Present Perfect">
             </div>
+
+            <div id="info-extra-headers" style="margin-bottom:8px;"></div>
             <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:8px;"></div>
+
+            <!-- Botão + para expandir e adicionar mais opções ao infográfico -->
+            <button type="button" id="btn-add-info-option" style="margin-top:12px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:9px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:0.15s;">
+              ➕ Adicionar Mais Opção / Item ao Infográfico
+            </button>
           </div>
         </div>
 
-        <div style="padding:12px 20px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
-          <span style="font-size:11.5px; color:#64748b;">💡 Dica: Use a mãozinha (🖐️) para arrastar o infográfico na lousa!</span>
+        <div style="padding:12px 20px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
+          <span style="font-size:11.5px; color:#64748b;">💡 Na lousa: clique em <b>✏️</b> para editar, <b>➕</b> para expandir ou puxe <b>⤡</b> no canto para dar zoom!</span>
           <div style="display:flex; gap:8px;">
             <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">Cancelar</button>
-            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:8px 18px; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Inserir na Lousa</button>
+            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:8px 18px; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
           </div>
         </div>
       </div>
@@ -364,7 +409,9 @@
       let currentColor = '#0f172a';
       let currentSize = 6;
 
-      // Estado da Formatação de Texto Rico
+      // Estado de Edição de Texto ou Infográfico Existente
+      let editingShapeId = null;
+
       let textStyle = {
         bold: true,
         italic: false,
@@ -376,10 +423,14 @@
       let isPointerDown = false;
       let activeShape = null;
       let movingShape = null;
+      let resizingShape = null;
+      let resizeStartDist = 1;
+      let resizeStartScale = 1;
       let moveLastPt = null;
       let panStartPt = null;
       let camera = { x: 0, y: 0, zoom: 1 };
       let laserTrail = [];
+      let laserFadeTimer = null;
 
       let lastLocalEditTime = 0;
       let isSaving = false;
@@ -393,7 +444,9 @@
       const uiToolbar = document.getElementById('ui-toolbar-dock');
       const uiStyle = document.getElementById('ui-style-dock');
       const uiActions = document.getElementById('ui-actions-dock');
+      const uiPanDock = document.getElementById('ui-pan-dock');
       const selectFundo = document.getElementById('select-fundo');
+      const hScrollThumb = document.getElementById('board-hscroll-thumb');
 
       function atualizarPermissoesUI() {
         if (!isAllowed) {
@@ -406,6 +459,7 @@
         uiToolbar.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiStyle.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiActions.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiPanDock.style.display = bloquearFerramentas ? 'none' : 'flex';
         badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
         canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
       }
@@ -428,8 +482,26 @@
         };
       }
 
+      function atualizarBarraRolagemVisual() {
+        if (!hScrollThumb) return;
+        const viewW = window.innerWidth / camera.zoom;
+        let maxRight = viewW;
+        shapes.forEach(s => {
+          const r = (s.x || s.x2 || 0) + ((s.w || 300) * (s.scale || 1));
+          if (r > maxRight) maxRight = r;
+        });
+        const totalMundo = Math.max(viewW * 2, maxRight + 600);
+        const posX = Math.max(0, -camera.x / camera.zoom);
+        const thumbPct = Math.max(10, Math.min(90, (viewW / totalMundo) * 100));
+        const leftPct = Math.max(0, Math.min(100 - thumbPct, (posX / totalMundo) * 100));
+        hScrollThumb.style.width = thumbPct + '%';
+        hScrollThumb.style.left = leftPct + '%';
+        const btnCenter = document.getElementById('btn-center');
+        if (btnCenter) btnCenter.innerText = `🎯 ${Math.round(camera.zoom * 100)}%`;
+      }
+
       // =========================================================================
-      // 🎨 1. DESENHO DO FUNDO DIRETAMENTE NO CANVAS (SEMPRE VISÍVEL E SINCRONIZADO)
+      // 🎨 1. FUNDO NATIVO NO CANVAS (INFINITO E SINCRONIZADO)
       // =========================================================================
       function desenharFundoCanvas(context, width, height) {
         context.save();
@@ -446,7 +518,6 @@
             context.lineTo(width, y);
           }
           context.stroke();
-          // Margem vertical vermelha de caderno
           const margemX = 64 * camera.zoom + camera.x;
           if (margemX > 0 && margemX < width) {
             context.strokeStyle = '#fca5a5';
@@ -492,9 +563,8 @@
         context.restore();
       }
 
-      // Auxiliar de Retângulo com Cantos Arredondados no Canvas
       function roundRect(context, x, y, w, h, r) {
-        const radius = Math.min(r, w / 2, h / 2);
+        const radius = Math.max(0, Math.min(r, w / 2, h / 2));
         context.beginPath();
         context.moveTo(x + radius, y);
         context.arcTo(x + w, y, x + w, y + h, radius);
@@ -505,24 +575,148 @@
       }
 
       // =========================================================================
-      // 📊 2. RENDERIZADOR DOS 8 TIPOS DE INFOGRÁFICOS NO CANVAS
+      // 📐 2. MOTOR DE AUTO-AJUSTE E QUEBRA DE LINHA DE TEXTO (NUNCA VAZA DA CAIXA)
       // =========================================================================
+      function quebrarLinhas(context, texto, maxWidth) {
+        const palavrasBrutas = String(texto || '').split(/\s+/);
+        const palavras = [];
+        // Se uma única palavra for maior que a largura da caixa, divide-a com segurança
+        palavrasBrutas.forEach(p => {
+          if (context.measureText(p).width <= maxWidth) {
+            palavras.push(p);
+          } else {
+            let pedaco = '';
+            for (const ch of p) {
+              if (context.measureText(pedaco + ch).width > maxWidth && pedaco.length > 0) {
+                palavras.push(pedaco);
+                pedaco = ch;
+              } else {
+                pedaco += ch;
+              }
+            }
+            if (pedaco) palavras.push(pedaco);
+          }
+        });
+
+        const linhas = [];
+        let linhaAtual = '';
+        for (let i = 0; i < palavras.length; i++) {
+          const teste = linhaAtual ? (linhaAtual + ' ' + palavras[i]) : palavras[i];
+          if (context.measureText(teste).width > maxWidth && linhaAtual !== '') {
+            linhas.push(linhaAtual);
+            linhaAtual = palavras[i];
+          } else {
+            linhaAtual = teste;
+          }
+        }
+        if (linhaAtual) linhas.push(linhaAtual);
+        return linhas.length > 0 ? linhas : [''];
+      }
+
+      function desenharTextoAjustado(context, texto, x, y, maxW, maxH, opts = {}) {
+        const weight = opts.weight || '700';
+        const align = opts.align || 'left';
+        const color = opts.color || '#1e293b';
+        const vAlign = opts.vAlign || 'middle';
+        let fontSize = opts.maxFont || 13.5;
+        const minFont = opts.minFont || 9;
+        let linhas = [];
+        let lineHeight = fontSize * 1.22;
+
+        // Reduz automaticamente a fonte até caber na largura e na altura máxima da caixa!
+        while (fontSize >= minFont) {
+          context.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
+          lineHeight = fontSize * 1.22;
+          linhas = quebrarLinhas(context, texto, Math.max(24, maxW));
+          if (linhas.length * lineHeight <= maxH || fontSize === minFont) break;
+          fontSize -= 0.8;
+        }
+
+        const maxLinhasPossiveis = Math.max(1, Math.floor(maxH / lineHeight));
+        if (linhas.length > maxLinhasPossiveis) {
+          linhas = linhas.slice(0, maxLinhasPossiveis);
+        }
+
+        context.save();
+        context.fillStyle = color;
+        context.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
+        context.textAlign = align;
+        context.textBaseline = 'top';
+
+        const totalH = linhas.length * lineHeight;
+        let startY = y;
+        if (vAlign === 'middle') {
+          startY = y + Math.max(0, (maxH - totalH) / 2);
+        }
+
+        const drawX = align === 'center' ? (x + maxW / 2) : x;
+        linhas.forEach((l, i) => {
+          context.fillText(l, drawX, startY + i * lineHeight);
+        });
+        context.restore();
+      }
+
+      // =========================================================================
+      // 📊 3. RENDERIZADOR DOS 8 INFOGRÁFICOS (EDITÁVEIS, EXPANSÍVEIS E COM ZOOM)
+      // =========================================================================
+      function calcularDimensoesInfografico(item) {
+        const d = item.infoData || {};
+        let baseW = 540;
+        let baseH = 300;
+
+        if (item.infoType === 'estatistico') {
+          const qtd = (d.items || []).length || 4;
+          baseH = Math.max(260, 74 + qtd * 48);
+        } else if (item.infoType === 'informativo') {
+          const qtd = (d.topics || []).length || 3;
+          baseH = Math.max(260, 74 + qtd * 62);
+        } else if (item.infoType === 'comparativo') {
+          const qtd = Math.max((d.itemsA || []).length, (d.itemsB || []).length, 3);
+          baseH = Math.max(270, 105 + qtd * 48);
+        } else if (item.infoType === 'processos') {
+          const qtd = (d.steps || []).length || 4;
+          const linhas = Math.ceil(qtd / 4);
+          baseH = Math.max(250, 74 + linhas * 145);
+        } else if (item.infoType === 'linha_tempo') {
+          const qtd = (d.events || []).length || 4;
+          baseW = Math.max(540, qtd * 135);
+          baseH = 290;
+        } else if (item.infoType === 'espaco_tempo') {
+          const qtd = (d.stages || []).length || 3;
+          const linhas = Math.ceil(qtd / 3);
+          baseH = Math.max(260, 74 + linhas * 150);
+        } else if (item.infoType === 'relacional') {
+          baseW = 560;
+          baseH = 340;
+        } else if (item.infoType === 'interativo') {
+          const qtd = (d.cards || []).length || 3;
+          const linhas = Math.ceil(qtd / 3);
+          baseH = Math.max(260, 74 + linhas * 155);
+        }
+
+        item.w = baseW;
+        item.h = baseH;
+        return { w: baseW, h: baseH, scale: item.scale || 1 };
+      }
+
       function desenharInfografico(context, item) {
         const x = item.x || 80;
         const y = item.y || 80;
-        const w = item.w || 520;
-        const h = item.h || 300;
+        const { w, h, scale } = calcularDimensoesInfografico(item);
         const cor = item.color || '#2563eb';
         const d = item.infoData || {};
         const titulo = item.title || 'Infográfico';
 
         context.save();
-        // Sombra e Cartão Base
-        context.shadowColor = 'rgba(15, 23, 42, 0.12)';
+        context.translate(x, y);
+        context.scale(scale, scale);
+
+        // Cartão Principal
+        context.shadowColor = 'rgba(15, 23, 42, 0.14)';
         context.shadowBlur = 18;
         context.shadowOffsetY = 6;
         context.fillStyle = '#ffffff';
-        roundRect(context, x, y, w, h, 14);
+        roundRect(context, 0, 0, w, h, 14);
         context.fill();
 
         context.shadowColor = 'transparent';
@@ -530,59 +724,88 @@
         context.strokeStyle = cor;
         context.stroke();
 
-        // Faixa de Cabeçalho
+        // Cabeçalho
         context.fillStyle = cor;
-        roundRect(context, x, y, w, 42, 12);
+        roundRect(context, 0, 0, w, 44, 12);
         context.fill();
-        context.fillRect(x, y + 28, w, 14);
+        context.fillRect(0, 28, w, 16);
 
-        context.fillStyle = '#ffffff';
-        context.font = '800 15px "Segoe UI", sans-serif';
-        context.textBaseline = 'middle';
-        context.fillText(titulo, x + 16, y + 21);
+        // Título auto-ajustado no cabeçalho (deixa espaço à direita para os botões ➕, ✏️ e 100%)
+        desenharTextoAjustado(context, titulo, 16, 4, w - 165, 36, {
+          weight: '800', maxFont: 15, minFont: 10, color: '#ffffff', align: 'left', vAlign: 'middle'
+        });
 
-        const bodyY = y + 54;
+        // Botões Interativos no Cabeçalho do Infográfico (para quem tem permissão de edição)
+        if (!(role === 'aluno' && isReadonly)) {
+          // Botão [➕] Adicionar Opção
+          context.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(context, w - 142, 8, 38, 28, 7);
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.font = '800 13px "Segoe UI", sans-serif';
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillText('➕', w - 123, 22);
+
+          // Botão [✏️] Editar Infográfico
+          context.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(context, w - 98, 8, 42, 28, 7);
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.fillText('✏️', w - 77, 22);
+
+          // Botão [100%] Resetar Zoom do Infográfico
+          context.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(context, w - 50, 8, 42, 28, 7);
+          context.fill();
+          context.font = '800 10px "Segoe UI", sans-serif';
+          context.fillText(`${Math.round(scale * 100)}%`, w - 29, 22);
+          context.textAlign = 'left';
+        }
+
+        const bodyY = 54;
         const bodyH = h - 66;
 
         // 1. ESTATÍSTICO
         if (item.infoType === 'estatistico') {
-          const itens = d.items || [
-            { label: 'Speaking', val: 85 },
-            { label: 'Listening', val: 70 },
-            { label: 'Grammar', val: 92 },
-            { label: 'Reading', val: 65 }
-          ];
+          const itens = d.items || [{ label: 'Speaking', val: 85 }];
           const rowH = bodyH / itens.length;
           itens.forEach((it, idx) => {
             const ry = bodyY + idx * rowH;
             const pct = Math.max(0, Math.min(100, Number(it.val) || 0));
-            context.fillStyle = '#1e293b';
-            context.font = '700 13px "Segoe UI", sans-serif';
-            context.fillText(`${it.label}`, x + 18, ry + 14);
+
+            desenharTextoAjustado(context, it.label, 16, ry + 4, 145, rowH - 8, {
+              weight: '700', maxFont: 13, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
+            });
+
+            const barX = 168;
+            const barMaxW = w - 235;
+            const barY = ry + (rowH - 22) / 2;
 
             context.fillStyle = '#e2e8f0';
-            roundRect(context, x + 140, ry + 4, w - 210, 20, 10);
+            roundRect(context, barX, barY, barMaxW, 22, 11);
             context.fill();
 
-            const barW = Math.max(14, ((w - 210) * pct) / 100);
+            const barW = Math.max(14, (barMaxW * pct) / 100);
             context.fillStyle = cor;
-            roundRect(context, x + 140, ry + 4, barW, 20, 10);
+            roundRect(context, barX, barY, barW, 22, 11);
             context.fill();
 
-            context.fillStyle = '#0f172a';
-            context.font = '800 12px "Segoe UI", sans-serif';
-            context.fillText(`${pct}%`, x + w - 55, ry + 14);
+            desenharTextoAjustado(context, `${pct}%`, w - 58, ry + 4, 48, rowH - 8, {
+              weight: '800', maxFont: 12.5, minFont: 10, color: '#0f172a', align: 'right', vAlign: 'middle'
+            });
           });
         }
 
         // 2. INFORMATIVO
         else if (item.infoType === 'informativo') {
-          const topicos = d.topics || ['Tópico 1', 'Tópico 2', 'Tópico 3'];
+          const topicos = d.topics || ['Tópico 1'];
           const rowH = bodyH / topicos.length;
           topicos.forEach((t, idx) => {
             const ry = bodyY + idx * rowH;
+            const boxH = rowH - 8;
             context.fillStyle = '#f8fafc';
-            roundRect(context, x + 16, ry, w - 32, rowH - 8, 10);
+            roundRect(context, 16, ry, w - 32, boxH, 10);
             context.fill();
             context.strokeStyle = '#cbd5e1';
             context.lineWidth = 1;
@@ -590,63 +813,75 @@
 
             context.fillStyle = cor;
             context.beginPath();
-            context.arc(x + 38, ry + (rowH - 8) / 2, 13, 0, Math.PI * 2);
+            context.arc(38, ry + boxH / 2, 13, 0, Math.PI * 2);
             context.fill();
 
             context.fillStyle = '#ffffff';
             context.font = '800 12px "Segoe UI", sans-serif';
             context.textAlign = 'center';
-            context.fillText(String(idx + 1), x + 38, ry + (rowH - 8) / 2);
+            context.textBaseline = 'middle';
+            context.fillText(String(idx + 1), 38, ry + boxH / 2);
 
-            context.textAlign = 'left';
-            context.fillStyle = '#1e293b';
-            context.font = '600 13.5px "Segoe UI", sans-serif';
-            context.fillText(String(t), x + 62, ry + (rowH - 8) / 2);
+            desenharTextoAjustado(context, String(t), 60, ry + 4, w - 86, boxH - 8, {
+              weight: '600', maxFont: 13.5, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
+            });
           });
         }
 
         // 3. COMPARATIVO
         else if (item.infoType === 'comparativo') {
           const colW = (w - 44) / 2;
+          const itemsA = d.itemsA || [];
+          const itemsB = d.itemsB || [];
+          const maxRows = Math.max(itemsA.length, itemsB.length, 1);
+          const itemH = (bodyH - 42) / maxRows;
+
           // Coluna A
           context.fillStyle = '#eff6ff';
-          roundRect(context, x + 16, bodyY, colW, bodyH, 10);
+          roundRect(context, 16, bodyY, colW, bodyH, 10);
           context.fill();
-          context.fillStyle = '#1d4ed8';
-          context.font = '800 14px "Segoe UI", sans-serif';
-          context.fillText(d.colA || 'Opção A', x + 28, bodyY + 20);
-
-          (d.itemsA || []).forEach((txt, i) => {
-            context.fillStyle = '#334155';
-            context.font = '600 12.5px "Segoe UI", sans-serif';
-            context.fillText(`• ${txt}`, x + 26, bodyY + 50 + i * 28);
+          desenharTextoAjustado(context, d.colA || 'Lado A', 26, bodyY + 6, colW - 20, 28, {
+            weight: '800', maxFont: 14, minFont: 10, color: '#1d4ed8', align: 'center', vAlign: 'middle'
+          });
+          itemsA.forEach((txt, i) => {
+            desenharTextoAjustado(context, `• ${txt}`, 24, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+              weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
+            });
           });
 
           // Coluna B
-          const colBX = x + 28 + colW;
+          const colBX = 28 + colW;
           context.fillStyle = '#fef2f2';
           roundRect(context, colBX, bodyY, colW, bodyH, 10);
           context.fill();
-          context.fillStyle = '#dc2626';
-          context.font = '800 14px "Segoe UI", sans-serif';
-          context.fillText(d.colB || 'Opção B', colBX + 12, bodyY + 20);
-
-          (d.itemsB || []).forEach((txt, i) => {
-            context.fillStyle = '#334155';
-            context.font = '600 12.5px "Segoe UI", sans-serif';
-            context.fillText(`• ${txt}`, colBX + 12, bodyY + 50 + i * 28);
+          desenharTextoAjustado(context, d.colB || 'Lado B', colBX + 10, bodyY + 6, colW - 20, 28, {
+            weight: '800', maxFont: 14, minFont: 10, color: '#dc2626', align: 'center', vAlign: 'middle'
+          });
+          itemsB.forEach((txt, i) => {
+            desenharTextoAjustado(context, `• ${txt}`, colBX + 10, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+              weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
+            });
           });
         }
 
-        // 4. PROCESSOS
+        // 4. PROCESSOS (Suporta múltiplas linhas se adicionar + de 4 passos!)
         else if (item.infoType === 'processos') {
-          const steps = d.steps || ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'];
-          const stepW = (w - 36) / steps.length;
+          const steps = d.steps || ['Passo 1'];
+          const cols = Math.min(4, steps.length);
+          const rows = Math.ceil(steps.length / cols);
+          const stepW = (w - 32) / cols;
+          const rowH = bodyH / rows;
+
           steps.forEach((st, idx) => {
-            const sx = x + 18 + idx * stepW;
-            const sy = bodyY + 20;
+            const r = Math.floor(idx / cols);
+            const c = idx % cols;
+            const sx = 16 + c * stepW;
+            const sy = bodyY + r * rowH + 6;
+            const boxW = stepW - 14;
+            const boxH = rowH - 14;
+
             context.fillStyle = '#f8fafc';
-            roundRect(context, sx + 4, sy, stepW - 14, bodyH - 35, 10);
+            roundRect(context, sx + 4, sy, boxW, boxH, 10);
             context.fill();
             context.strokeStyle = cor;
             context.lineWidth = 1.5;
@@ -654,126 +889,119 @@
 
             context.fillStyle = cor;
             context.beginPath();
-            context.arc(sx + (stepW - 6) / 2, sy + 24, 14, 0, Math.PI * 2);
+            context.arc(sx + 4 + boxW / 2, sy + 20, 12, 0, Math.PI * 2);
             context.fill();
 
             context.fillStyle = '#fff';
-            context.font = '800 12px "Segoe UI", sans-serif';
+            context.font = '800 11.5px "Segoe UI", sans-serif';
             context.textAlign = 'center';
-            context.fillText(String(idx + 1), sx + (stepW - 6) / 2, sy + 24);
+            context.textBaseline = 'middle';
+            context.fillText(String(idx + 1), sx + 4 + boxW / 2, sy + 20);
 
-            context.fillStyle = '#1e293b';
-            context.font = '700 12px "Segoe UI", sans-serif';
-            const palavras = String(st).split(' ');
-            let l1 = palavras.slice(0, 2).join(' ');
-            let l2 = palavras.slice(2).join(' ');
-            context.fillText(l1, sx + (stepW - 6) / 2, sy + 64);
-            if (l2) context.fillText(l2, sx + (stepW - 6) / 2, sy + 82);
+            desenharTextoAjustado(context, String(st), sx + 10, sy + 36, boxW - 12, boxH - 42, {
+              weight: '700', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'center', vAlign: 'middle'
+            });
 
-            if (idx < steps.length - 1) {
+            if (c < cols - 1 && idx < steps.length - 1) {
               context.fillStyle = cor;
-              context.font = '900 16px "Segoe UI", sans-serif';
-              context.fillText('➔', sx + stepW - 4, sy + (bodyH - 35) / 2);
+              context.font = '900 14px "Segoe UI", sans-serif';
+              context.textAlign = 'center';
+              context.fillText('➔', sx + stepW - 3, sy + boxH / 2);
             }
           });
-          context.textAlign = 'left';
         }
 
         // 5. LINHA DO TEMPO
         else if (item.infoType === 'linha_tempo') {
-          const events = d.events || [
-            { time: '1990', label: 'Início' },
-            { time: '2005', label: 'Expansão' },
-            { time: '2015', label: 'Digital' },
-            { time: 'Hoje', label: 'Futuro IA' }
-          ];
+          const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
           context.strokeStyle = cor;
           context.lineWidth = 3;
           context.beginPath();
-          context.moveTo(x + 30, midY);
-          context.lineTo(x + w - 30, midY);
+          context.moveTo(26, midY);
+          context.lineTo(w - 26, midY);
           context.stroke();
 
-          const slotW = (w - 60) / events.length;
+          const slotW = (w - 52) / events.length;
           events.forEach((ev, idx) => {
-            const cx = x + 30 + slotW * idx + slotW / 2;
+            const cx = 26 + slotW * idx + slotW / 2;
             const acima = (idx % 2 === 0);
 
             context.fillStyle = '#ffffff';
             context.strokeStyle = cor;
             context.lineWidth = 3;
             context.beginPath();
-            context.arc(cx, midY, 9, 0, Math.PI * 2);
+            context.arc(cx, midY, 8, 0, Math.PI * 2);
             context.fill();
             context.stroke();
 
-            context.textAlign = 'center';
-            context.fillStyle = cor;
-            context.font = '800 12.5px "Segoe UI", sans-serif';
-            context.fillText(ev.time, cx, acima ? midY - 38 : midY + 24);
-
-            context.fillStyle = '#334155';
-            context.font = '600 12px "Segoe UI", sans-serif';
-            context.fillText(ev.label, cx, acima ? midY - 20 : midY + 42);
+            const boxX = cx - slotW / 2 + 4;
+            const boxW = slotW - 8;
+            if (acima) {
+              desenharTextoAjustado(context, ev.time, boxX, bodyY + 4, boxW, 24, {
+                weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
+              });
+              desenharTextoAjustado(context, ev.label, boxX, bodyY + 30, boxW, midY - bodyY - 42, {
+                weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
+              });
+            } else {
+              desenharTextoAjustado(context, ev.time, boxX, midY + 14, boxW, 24, {
+                weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
+              });
+              desenharTextoAjustado(context, ev.label, boxX, midY + 40, boxW, bodyH / 2 - 46, {
+                weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
+              });
+            }
           });
-          context.textAlign = 'left';
         }
 
         // 6. NARRATIVO DE ESPAÇO-TEMPO
         else if (item.infoType === 'espaco_tempo') {
-          const stages = d.stages || [
-            { place: '📍 Londres (Passado)', desc: 'I lived there in 2018' },
-            { place: '📍 Aeroporto (Transição)', desc: 'Flying to New York' },
-            { place: '📍 Nova Iorque (Presente)', desc: 'I work here now' }
-          ];
-          const colW = (w - 40) / stages.length;
-          // Curva de conexão espaço-tempo
-          context.strokeStyle = '#94a3b8';
-          context.setLineDash([5, 4]);
-          context.lineWidth = 2;
-          context.beginPath();
-          context.moveTo(x + 40, bodyY + bodyH / 2);
-          context.lineTo(x + w - 40, bodyY + bodyH / 2);
-          context.stroke();
-          context.setLineDash([]);
+          const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
+          const cols = Math.min(3, stages.length);
+          const rows = Math.ceil(stages.length / cols);
+          const colW = (w - 36) / cols;
+          const rowH = bodyH / rows;
 
           stages.forEach((st, idx) => {
-            const sx = x + 20 + idx * colW;
-            const sy = bodyY + 18;
-            context.fillStyle = idx === 1 ? '#fef3c7' : (idx === 2 ? '#ecfdf5' : '#eff6ff');
-            roundRect(context, sx + 4, sy, colW - 10, bodyH - 36, 12);
+            const r = Math.floor(idx / cols);
+            const c = idx % cols;
+            const sx = 18 + c * colW;
+            const sy = bodyY + r * rowH + 8;
+            const boxW = colW - 10;
+            const boxH = rowH - 16;
+
+            context.fillStyle = idx % 3 === 1 ? '#fef3c7' : (idx % 3 === 2 ? '#ecfdf5' : '#eff6ff');
+            roundRect(context, sx + 4, sy, boxW, boxH, 12);
             context.fill();
             context.strokeStyle = cor;
             context.lineWidth = 1.5;
             context.stroke();
 
-            context.fillStyle = '#0f172a';
-            context.font = '800 12px "Segoe UI", sans-serif';
-            context.fillText(st.place, sx + 12, sy + 24);
-
-            context.fillStyle = '#475569';
-            context.font = '600 12px "Segoe UI", sans-serif';
-            context.fillText(st.desc, sx + 12, sy + 56);
+            desenharTextoAjustado(context, st.place, sx + 12, sy + 8, boxW - 16, 30, {
+              weight: '800', maxFont: 12.5, minFont: 9.5, color: '#0f172a', align: 'left', vAlign: 'middle'
+            });
+            desenharTextoAjustado(context, st.desc, sx + 12, sy + 42, boxW - 16, boxH - 48, {
+              weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'left', vAlign: 'middle'
+            });
           });
         }
 
-        // 7. RELACIONAL
+        // 7. RELACIONAL (Distribui qualquer número de nós em círculo ao redor do centro!)
         else if (item.infoType === 'relacional') {
-          const cx = x + w / 2;
+          const cx = w / 2;
           const cy = bodyY + bodyH / 2;
           const centerText = d.center || 'Tema Central';
-          const nodes = d.nodes || ['Causa 1', 'Causa 2', 'Efeito 1', 'Efeito 2'];
-          const offsets = [
-            { dx: -w * 0.3, dy: -bodyH * 0.28 },
-            { dx: w * 0.3, dy: -bodyH * 0.28 },
-            { dx: -w * 0.3, dy: bodyH * 0.28 },
-            { dx: w * 0.3, dy: bodyH * 0.28 }
-          ];
+          const nodes = d.nodes || ['Item 1', 'Item 2'];
+          const total = Math.max(1, nodes.length);
+          const rx = w * 0.33;
+          const ry = bodyH * 0.34;
 
-          offsets.forEach((off, idx) => {
-            const nx = cx + off.dx;
-            const ny = cy + off.dy;
+          nodes.forEach((nd, idx) => {
+            const ang = (Math.PI * 2 * idx) / total - Math.PI / 4;
+            const nx = cx + rx * Math.cos(ang);
+            const ny = cy + ry * Math.sin(ang);
+
             context.strokeStyle = cor;
             context.lineWidth = 2;
             context.beginPath();
@@ -781,43 +1009,47 @@
             context.lineTo(nx, ny);
             context.stroke();
 
+            const nw = 132;
+            const nh = 44;
             context.fillStyle = '#f8fafc';
-            roundRect(context, nx - 68, ny - 20, 136, 40, 10);
+            roundRect(context, nx - nw / 2, ny - nh / 2, nw, nh, 10);
             context.fill();
             context.stroke();
 
-            context.fillStyle = '#1e293b';
-            context.font = '700 12px "Segoe UI", sans-serif';
-            context.textAlign = 'center';
-            context.fillText(nodes[idx] || '', nx, ny);
+            desenharTextoAjustado(context, nd, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
+              weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
+            });
           });
 
+          const cw = 154;
+          const ch = 50;
           context.fillStyle = cor;
-          roundRect(context, cx - 78, cy - 24, 156, 48, 24);
+          roundRect(context, cx - cw / 2, cy - ch / 2, cw, ch, 25);
           context.fill();
-          context.fillStyle = '#ffffff';
-          context.font = '800 13px "Segoe UI", sans-serif';
-          context.textAlign = 'center';
-          context.fillText(centerText, cx, cy);
-          context.textAlign = 'left';
+          desenharTextoAjustado(context, centerText, cx - cw / 2 + 10, cy - ch / 2 + 6, cw - 20, ch - 12, {
+            weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
+          });
         }
 
-        // 8. INTERATIVO (CARTÕES CLICÁVEIS AO VIVO NA LOUSA!)
+        // 8. INTERATIVO (CARTÕES CLICÁVEIS AO VIVO)
         else if (item.infoType === 'interativo') {
-          const cards = d.cards || [
-            { front: '1. Past of GO?', back: '✅ WENT', revealed: false },
-            { front: '2. Past of BUY?', back: '✅ BOUGHT', revealed: false },
-            { front: '3. Past of SEE?', back: '✅ SAW', revealed: false }
-          ];
-          const cardW = (w - 40) / cards.length;
+          const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta', revealed: false }];
+          const cols = Math.min(3, cards.length);
+          const rows = Math.ceil(cards.length / cols);
+          const cardW = (w - 36) / cols;
+          const rowH = bodyH / rows;
+
           cards.forEach((c, idx) => {
-            const cx = x + 16 + idx * (cardW + 4);
-            const cy = bodyY + 12;
-            const ch = bodyH - 24;
+            const r = Math.floor(idx / cols);
+            const col = idx % cols;
+            const cx = 18 + col * cardW;
+            const cy = bodyY + r * rowH + 6;
+            const boxW = cardW - 8;
+            const boxH = rowH - 14;
             const aberto = !!c.revealed;
 
             context.fillStyle = aberto ? '#ecfdf5' : '#eff6ff';
-            roundRect(context, cx, cy, cardW - 6, ch, 12);
+            roundRect(context, cx, cy, boxW, boxH, 12);
             context.fill();
             context.strokeStyle = aberto ? '#10b981' : '#3b82f6';
             context.lineWidth = 2;
@@ -825,22 +1057,78 @@
 
             context.textAlign = 'center';
             context.fillStyle = aberto ? '#047857' : '#1d4ed8';
-            context.font = '800 11px "Segoe UI", sans-serif';
-            context.fillText(aberto ? '🔓 REVELADO (Clique p/ ocultar)' : '👆 CLIQUE PARA REVELAR', cx + (cardW - 6) / 2, cy + 22);
+            context.font = '800 10px "Segoe UI", sans-serif';
+            context.textBaseline = 'top';
+            context.fillText(aberto ? '🔓 REVELADO (Clique)' : '👆 CLIQUE P/ REVELAR', cx + boxW / 2, cy + 8);
 
-            context.fillStyle = '#0f172a';
-            context.font = '800 14px "Segoe UI", sans-serif';
-            context.fillText(aberto ? c.back : c.front, cx + (cardW - 6) / 2, cy + ch / 2 + 6);
+            desenharTextoAjustado(context, aberto ? c.back : c.front, cx + 8, cy + 26, boxW - 16, boxH - 32, {
+              weight: '800', maxFont: 13.5, minFont: 9.5, color: '#0f172a', align: 'center', vAlign: 'middle'
+            });
           });
-          context.textAlign = 'left';
+        }
+
+        // Alça de Puxar para Dar Zoom / Redimensionar no Canto Inferior Direito (⤡)
+        if (!(role === 'aluno' && isReadonly)) {
+          context.fillStyle = cor;
+          roundRect(context, w - 26, h - 26, 24, 24, 6);
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.font = '900 13px "Segoe UI", sans-serif';
+          context.textAlign = 'center';
+          context.textBaseline = 'middle';
+          context.fillText('⤡', w - 14, h - 14);
         }
 
         context.restore();
       }
 
       // =========================================================================
-      // ✏️ 3. RENDERIZADOR DE FORMAS, TRIÂNGULO, HEXÁGONO E TEXTO RICO
+      // 🏹 4. RENDERIZADOR DO LASER SETA NEON E ELEMENTOS DO QUADRO
       // =========================================================================
+      function desenharLaserSeta(context, pts) {
+        if (!Array.isArray(pts) || pts.length === 0) return;
+        context.save();
+        context.shadowColor = '#ef4444';
+        context.shadowBlur = 14;
+        context.strokeStyle = '#ef4444';
+        context.fillStyle = '#ef4444';
+        context.lineWidth = 5;
+        context.lineCap = 'round';
+        context.lineJoin = 'round';
+
+        context.beginPath();
+        context.moveTo(pts[0].x, pts[0].y);
+        for (let i = 1; i < pts.length; i++) {
+          context.lineTo(pts[i].x, pts[i].y);
+        }
+        context.stroke();
+
+        // Núcleo branco luminoso
+        context.strokeStyle = '#fecaca';
+        context.lineWidth = 2;
+        context.stroke();
+
+        // Ponta de Seta Laser Dinâmica na extremidade do feixe!
+        const tip = pts[pts.length - 1];
+        const refIdx = Math.max(0, pts.length - 4);
+        const prev = pts[refIdx];
+        const angle = (pts.length > 1 && (tip.x !== prev.x || tip.y !== prev.y))
+          ? Math.atan2(tip.y - prev.y, tip.x - prev.x)
+          : -Math.PI / 4;
+
+        const headLen = 20;
+        context.fillStyle = '#ef4444';
+        context.beginPath();
+        context.moveTo(tip.x, tip.y);
+        context.lineTo(tip.x - headLen * Math.cos(angle - Math.PI / 6), tip.y - headLen * Math.sin(angle - Math.PI / 6));
+        context.lineTo(tip.x - headLen * 0.72 * Math.cos(angle), tip.y - headLen * 0.72 * Math.sin(angle));
+        context.lineTo(tip.x - headLen * Math.cos(angle + Math.PI / 6), tip.y - headLen * Math.sin(angle + Math.PI / 6));
+        context.closePath();
+        context.fill();
+
+        context.restore();
+      }
+
       function desenharElemento(context, item) {
         if (!item || item.tool === 'meta_bg') return;
         if (item.tool === 'infographic') {
@@ -911,7 +1199,6 @@
           context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
           context.stroke();
         } else if (item.tool === 'triangle') {
-          // △ Triângulo
           const topX = (item.x1 + item.x2) / 2;
           const topY = item.y1;
           context.beginPath();
@@ -921,7 +1208,6 @@
           context.closePath();
           context.stroke();
         } else if (item.tool === 'hexagon') {
-          // ⬡ Hexágono Regular Proporcional
           const cx = (item.x1 + item.x2) / 2;
           const cy = (item.y1 + item.y2) / 2;
           const rx = Math.abs(item.x2 - item.x1) / 2;
@@ -937,7 +1223,8 @@
           context.closePath();
           context.stroke();
         } else if (item.tool === 'text' && item.text) {
-          const fontSize = Math.max(18, (item.size || 6) * 4);
+          const scale = item.scale || 1;
+          const fontSize = Math.max(18, (item.size || 6) * 4) * scale;
           const styleItalic = item.italic ? 'italic ' : '';
           const styleBold = item.bold !== false ? '700 ' : '400 ';
           const family = item.fontFamily || "'Segoe UI', sans-serif";
@@ -950,7 +1237,6 @@
             context.fillText(linha, item.x, ly);
             const larguraLinha = context.measureText(linha).width;
 
-            // Sublinhado
             if (item.underline) {
               context.save();
               context.lineWidth = Math.max(1.5, fontSize * 0.07);
@@ -960,7 +1246,6 @@
               context.stroke();
               context.restore();
             }
-            // Riscado (Strikethrough)
             if (item.strike) {
               context.save();
               context.lineWidth = Math.max(1.5, fontSize * 0.07);
@@ -989,36 +1274,101 @@
         if (activeShape) {
           desenharElemento(ctx, activeShape);
         }
-
-        if (laserTrail.length > 1) {
-          ctx.save();
-          ctx.strokeStyle = '#ef4444';
-          ctx.shadowColor = '#ef4444';
-          ctx.shadowBlur = 10;
-          ctx.lineWidth = 5;
-          ctx.lineCap = 'round';
-          ctx.beginPath();
-          ctx.moveTo(laserTrail[0].x, laserTrail[0].y);
-          for (let i = 1; i < laserTrail.length; i++) {
-            context.lineTo(laserTrail[i].x, laserTrail[i].y);
-          }
-          context.stroke();
-          context.restore();
+        if (laserTrail.length > 0) {
+          desenharLaserSeta(ctx, laserTrail);
         }
 
         ctx.restore();
+        atualizarBarraRolagemVisual();
+      }
+
+      // =========================================================================
+      // 🎯 5. INTERAÇÕES NOS INFOGRÁFICOS (EDITAR ✏️, EXPANDIR ➕, ZOOM ⤡ E CARTÕES)
+      // =========================================================================
+      function verificarAcoesInfografico(pt) {
+        for (let i = shapes.length - 1; i >= 0; i--) {
+          const sh = shapes[i];
+          if (sh.tool !== 'infographic') continue;
+
+          const { w, h, scale } = calcularDimensoesInfografico(sh);
+          const lx = (pt.x - sh.x) / scale;
+          const ly = (pt.y - sh.y) / scale;
+
+          if (lx < 0 || lx > w || ly < 0 || ly > h) continue;
+
+          if (!(role === 'aluno' && isReadonly)) {
+            // 1. Clique na Alça de Puxar para Dar Zoom no Canto Inferior Direito [⤡]
+            if (lx >= w - 32 && ly >= h - 32) {
+              resizingShape = sh;
+              resizeStartScale = sh.scale || 1;
+              resizeStartDist = Math.max(40, Math.hypot(pt.x - sh.x, pt.y - sh.y));
+              return 'resize';
+            }
+
+            // 2. Clique nos Botões do Cabeçalho (ly entre 0 e 44)
+            if (ly <= 44) {
+              // Botão [➕] Expandir e Adicionar Nova Opção
+              if (lx >= w - 145 && lx <= w - 102) {
+                abrirEdicaoInfograficoExistente(sh, true);
+                return 'action';
+              }
+              // Botão [✏️] Editar Infográfico
+              if (lx >= w - 100 && lx <= w - 54) {
+                abrirEdicaoInfograficoExistente(sh, false);
+                return 'action';
+              }
+              // Botão [100%] Voltar Zoom ao Normal
+              if (lx >= w - 52 && lx <= w - 4) {
+                sh.scale = 1;
+                lastLocalEditTime = Date.now();
+                desenharQuadro();
+                agendarSalvamentoNuvem();
+                return 'action';
+              }
+            }
+          }
+
+          // 3. Clique nos Cartões do Infográfico Interativo
+          if (sh.infoType === 'interativo' && ly > 54 && sh.infoData && Array.isArray(sh.infoData.cards)) {
+            const cards = sh.infoData.cards;
+            const cols = Math.min(3, cards.length);
+            const rows = Math.ceil(cards.length / cols);
+            const cardW = (w - 36) / cols;
+            const bodyH = h - 66;
+            const rowH = bodyH / rows;
+
+            for (let cIdx = 0; cIdx < cards.length; cIdx++) {
+              const r = Math.floor(cIdx / cols);
+              const col = cIdx % cols;
+              const cx = 18 + col * cardW;
+              const cy = 54 + r * rowH + 6;
+              const boxW = cardW - 8;
+              const boxH = rowH - 14;
+              if (lx >= cx && lx <= cx + boxW && ly >= cy && ly <= cy + boxH) {
+                cards[cIdx].revealed = !cards[cIdx].revealed;
+                lastLocalEditTime = Date.now();
+                desenharQuadro();
+                agendarSalvamentoNuvem();
+                return 'action';
+              }
+            }
+          }
+        }
+        return null;
       }
 
       function pontoPertoDoElemento(pt, item, raio = 16) {
         if (!item || item.tool === 'meta_bg') return false;
         if (item.tool === 'infographic') {
-          return pt.x >= item.x && pt.x <= item.x + (item.w || 520) && pt.y >= item.y && pt.y <= item.y + (item.h || 300);
+          const { w, h, scale } = calcularDimensoesInfografico(item);
+          return pt.x >= item.x && pt.x <= item.x + w * scale && pt.y >= item.y && pt.y <= item.y + h * scale;
         }
         if (item.tool === 'pen' || item.tool === 'highlighter') {
           return (item.points || []).some(p => Math.hypot(p.x - pt.x, p.y - pt.y) <= raio);
         }
         if (item.tool === 'text') {
-          const fontSize = Math.max(18, (item.size || 6) * 4);
+          const scale = item.scale || 1;
+          const fontSize = Math.max(18, (item.size || 6) * 4) * scale;
           const linhas = String(item.text || '').split('\n');
           const larg = Math.max(...linhas.map(l => l.length), 3) * (fontSize * 0.62);
           const alt = linhas.length * (fontSize * 1.25);
@@ -1043,33 +1393,24 @@
         }
       }
 
-      // Verifica se o clique foi num cartão de Infográfico Interativo para virar a carta ao vivo
-      function verificarCliqueInfograficoInterativo(pt) {
+      // Duplo Clique em qualquer Infográfico ou Texto na Lousa abre a Edição!
+      canvas.addEventListener('dblclick', (e) => {
+        if (role === 'aluno' && isReadonly) return;
+        const pt = telaParaQuadro(e.clientX, e.clientY);
         for (let i = shapes.length - 1; i >= 0; i--) {
           const sh = shapes[i];
-          if (sh.tool === 'infographic' && sh.infoType === 'interativo' && sh.infoData && Array.isArray(sh.infoData.cards)) {
-            const bodyY = sh.y + 54;
-            const bodyH = (sh.h || 300) - 66;
-            const cards = sh.infoData.cards;
-            const cardW = ((sh.w || 520) - 40) / cards.length;
-            for (let cIdx = 0; cIdx < cards.length; cIdx++) {
-              const cx = sh.x + 16 + cIdx * (cardW + 4);
-              const cy = bodyY + 12;
-              const ch = bodyH - 24;
-              if (pt.x >= cx && pt.x <= cx + cardW - 6 && pt.y >= cy && pt.y <= cy + ch) {
-                cards[cIdx].revealed = !cards[cIdx].revealed;
-                lastLocalEditTime = Date.now();
-                desenharQuadro();
-                agendarSalvamentoNuvem();
-                return true;
-              }
-            }
+          if (!pontoPertoDoElemento(pt, sh, 16)) continue;
+          if (sh.tool === 'infographic') {
+            abrirEdicaoInfograficoExistente(sh, false);
+            return;
+          }
+          if (sh.tool === 'text') {
+            abrirCaixaTexto(e.clientX, e.clientY, sh.x, sh.y, sh);
+            return;
           }
         }
-        return false;
-      }
+      });
 
-      // Eventos do Quadro
       canvas.addEventListener('pointerdown', (e) => {
         if (role === 'aluno' && isReadonly) return;
         if (e.button !== undefined && e.button !== 0 && currentTool !== 'pan') return;
@@ -1081,18 +1422,18 @@
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        // Se clicou num cartão de Infográfico Interativo com a ferramenta Mover, vira o cartão
-        if (currentTool === 'move' && pt.y > 0) {
-          for (let i = shapes.length - 1; i >= 0; i--) {
-            const sh = shapes[i];
-            if (sh.tool === 'infographic' && sh.infoType === 'interativo' && pt.y > sh.y + 54) {
-              if (verificarCliqueInfograficoInterativo(pt)) return;
-            }
-          }
+        // Verifica sempre se clicou nos botões ➕, ✏️, 100%, alça ⤡ ou cartão interativo de um Infográfico!
+        const acaoInfo = verificarAcoesInfografico(pt);
+        if (acaoInfo === 'action') return;
+        if (acaoInfo === 'resize') {
+          isPointerDown = true;
+          lastLocalEditTime = Date.now();
+          try { canvas.setPointerCapture(e.pointerId); } catch(err){}
+          return;
         }
 
         if (currentTool === 'text') {
-          abrirCaixaTexto(e.clientX, e.clientY, pt.x, pt.y);
+          abrirCaixaTexto(e.clientX, e.clientY, pt.x, pt.y, null);
           return;
         }
 
@@ -1129,6 +1470,7 @@
         }
 
         if (currentTool === 'laser') {
+          clearTimeout(laserFadeTimer);
           laserTrail = [pt];
           desenharQuadro();
           return;
@@ -1167,6 +1509,15 @@
         lastLocalEditTime = Date.now();
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
+        // Redimensionamento / Zoom do Infográfico puxando a alça ⤡
+        if (resizingShape) {
+          const distAtual = Math.max(40, Math.hypot(pt.x - resizingShape.x, pt.y - resizingShape.y));
+          const novaEscala = Math.max(0.45, Math.min(2.8, resizeStartScale * (distAtual / resizeStartDist)));
+          resizingShape.scale = Math.round(novaEscala * 100) / 100;
+          desenharQuadro();
+          return;
+        }
+
         if (currentTool === 'pan' && panStartPt) {
           camera.x = e.clientX - panStartPt.x;
           camera.y = e.clientY - panStartPt.y;
@@ -1178,7 +1529,22 @@
           const dx = pt.x - moveLastPt.x;
           const dy = pt.y - moveLastPt.y;
           deslocarElemento(movingShape, dx, dy);
-          moveLastPt = pt;
+
+          // 🚀 EXPANSÃO AUTOMÁTICA DA TELA: Quando move o objeto perto da borda direita/inferior, expande a tela acompanhando!
+          const margemBorda = 55;
+          if (e.clientX > window.innerWidth - margemBorda) {
+            camera.x -= 14;
+            deslocarElemento(movingShape, 14 / camera.zoom, 0);
+          } else if (e.clientX < margemBorda && camera.x < 0) {
+            camera.x += 14;
+            deslocarElemento(movingShape, -14 / camera.zoom, 0);
+          }
+          if (e.clientY > window.innerHeight - margemBorda) {
+            camera.y -= 12;
+            deslocarElemento(movingShape, 0, 12 / camera.zoom);
+          }
+
+          moveLastPt = telaParaQuadro(e.clientX, e.clientY);
           desenharQuadro();
           return;
         }
@@ -1195,7 +1561,7 @@
 
         if (currentTool === 'laser') {
           laserTrail.push(pt);
-          if (laserTrail.length > 25) laserTrail.shift();
+          if (laserTrail.length > 32) laserTrail.shift();
           desenharQuadro();
           return;
         }
@@ -1220,6 +1586,12 @@
         isPointerDown = false;
         lastLocalEditTime = Date.now();
 
+        if (resizingShape) {
+          resizingShape = null;
+          agendarSalvamentoNuvem();
+          return;
+        }
+
         if (currentTool === 'pan') {
           panStartPt = null;
           canvas.style.cursor = 'grab';
@@ -1237,10 +1609,11 @@
         }
 
         if (currentTool === 'laser') {
-          setTimeout(() => {
+          clearTimeout(laserFadeTimer);
+          laserFadeTimer = setTimeout(() => {
             laserTrail = [];
             desenharQuadro();
-          }, 400);
+          }, 1400);
           return;
         }
 
@@ -1255,8 +1628,30 @@
       canvas.addEventListener('pointerup', finalizarToque);
       canvas.addEventListener('pointercancel', finalizarToque);
 
+      // Zoom com Roda do Rato (Mouse Wheel) e Deslizamento Horizontal
+      canvas.addEventListener('wheel', (e) => {
+        e.preventDefault();
+        if (e.ctrlKey || e.metaKey) {
+          const fator = e.deltaY < 0 ? 1.12 : 0.89;
+          aplicarZoomTela(fator, e.clientX, e.clientY);
+        } else {
+          camera.x -= e.deltaX;
+          camera.y -= e.deltaY;
+          desenharQuadro();
+        }
+      }, { passive: false });
+
+      function aplicarZoomTela(fator, centerX = window.innerWidth / 2, centerY = window.innerHeight / 2) {
+        const antigoZoom = camera.zoom;
+        const novoZoom = Math.max(0.35, Math.min(3.0, antigoZoom * fator));
+        camera.x = centerX - ((centerX - camera.x) / antigoZoom) * novoZoom;
+        camera.y = centerY - ((centerY - camera.y) / antigoZoom) * novoZoom;
+        camera.zoom = Math.round(novoZoom * 100) / 100;
+        desenharQuadro();
+      }
+
       // =========================================================================
-      // 🔤 4. CAIXA DE TEXTO RICO (NEGRITO, ITÁLICO, SUBLINHAR, RISCAR + 10 FONTES)
+      // 🔤 6. CAIXA DE TEXTO RICO (CRIAÇÃO E EDIÇÃO AO VIVO)
       // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
@@ -1289,13 +1684,27 @@
       btnStrike.onclick = () => { textStyle.strike = !textStyle.strike; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
       fontSelect.onchange = function() { textStyle.fontFamily = this.value; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
 
-      function abrirCaixaTexto(screenX, screenY, boardX, boardY) {
+      function abrirCaixaTexto(screenX, screenY, boardX, boardY, shapeExistente = null) {
+        editingShapeId = shapeExistente ? shapeExistente.id : null;
         textTargetCoords = { x: boardX, y: boardY };
-        const left = Math.min(screenX, window.innerWidth - 335);
-        const top = Math.min(screenY, window.innerHeight - 175);
+
+        if (shapeExistente) {
+          textStyle.bold = shapeExistente.bold !== false;
+          textStyle.italic = !!shapeExistente.italic;
+          textStyle.underline = !!shapeExistente.underline;
+          textStyle.strike = !!shapeExistente.strike;
+          textStyle.fontFamily = shapeExistente.fontFamily || "'Segoe UI', sans-serif";
+          fontSelect.value = textStyle.fontFamily;
+          currentColor = shapeExistente.color || currentColor;
+          textEditorInput.value = shapeExistente.text || '';
+        } else {
+          textEditorInput.value = '';
+        }
+
+        const left = Math.min(screenX, window.innerWidth - 340);
+        const top = Math.min(screenY, window.innerHeight - 180);
         textEditorBox.style.left = Math.max(10, left) + 'px';
         textEditorBox.style.top = Math.max(10, top) + 'px';
-        textEditorInput.value = '';
         sincronizarEstiloInputTexto();
         textEditorBox.style.display = 'flex';
         setTimeout(() => textEditorInput.focus(), 50);
@@ -1304,24 +1713,42 @@
       function confirmarTextoFlutuante() {
         const val = textEditorInput.value.trim();
         textEditorBox.style.display = 'none';
-        if (!val) return;
+        if (!val) {
+          editingShapeId = null;
+          return;
+        }
 
-        shapes.push({
-          id: 'txt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-          typeName: 'shape',
-          pttV2: true,
-          tool: 'text',
-          color: currentColor,
-          size: currentSize,
-          x: textTargetCoords.x,
-          y: textTargetCoords.y,
-          text: val,
-          bold: textStyle.bold,
-          italic: textStyle.italic,
-          underline: textStyle.underline,
-          strike: textStyle.strike,
-          fontFamily: textStyle.fontFamily
-        });
+        if (editingShapeId) {
+          const alvo = shapes.find(s => s.id === editingShapeId);
+          if (alvo) {
+            alvo.text = val;
+            alvo.color = currentColor;
+            alvo.size = currentSize;
+            alvo.bold = textStyle.bold;
+            alvo.italic = textStyle.italic;
+            alvo.underline = textStyle.underline;
+            alvo.strike = textStyle.strike;
+            alvo.fontFamily = textStyle.fontFamily;
+          }
+          editingShapeId = null;
+        } else {
+          shapes.push({
+            id: 'txt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            typeName: 'shape',
+            pttV2: true,
+            tool: 'text',
+            color: currentColor,
+            size: currentSize,
+            x: textTargetCoords.x,
+            y: textTargetCoords.y,
+            text: val,
+            bold: textStyle.bold,
+            italic: textStyle.italic,
+            underline: textStyle.underline,
+            strike: textStyle.strike,
+            fontFamily: textStyle.fontFamily
+          });
+        }
         redoStack = [];
         lastLocalEditTime = Date.now();
         desenharQuadro();
@@ -1330,188 +1757,330 @@
 
       document.getElementById('btn-text-confirm').onclick = confirmarTextoFlutuante;
       document.getElementById('btn-text-cancel').onclick = () => {
+        editingShapeId = null;
         textEditorInput.value = '';
         textEditorBox.style.display = 'none';
       };
 
       // =========================================================================
-      // 📊 5. ESTÚDIO DOS 8 MODELOS DE INFOGRÁFICOS
+      // 📊 7. CONSTRUTOR E EDITOR DINÂMICO DOS 8 INFOGRÁFICOS (COM BOTÃO +)
       // =========================================================================
       const infoModal = document.getElementById('infographic-modal');
       const infoFieldsBox = document.getElementById('info-dynamic-fields');
+      const infoExtraHeaders = document.getElementById('info-extra-headers');
       const infoTitleInput = document.getElementById('info-title-input');
+      const infoModalHeaderTitle = document.getElementById('info-modal-header-title');
       let selectedInfoType = 'estatistico';
+      let draftInfoData = {};
 
-      function renderizarCamposInfografico(tipo) {
-        selectedInfoType = tipo;
+      function obterDadosPadraoInfografico(tipo) {
         if (tipo === 'estatistico') {
-          infoTitleInput.value = 'Indicadores de Domínio na Turma';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:2fr 1fr; gap:8px;">
-              <input class="info-input" id="inf-est-l1" value="Speaking (Conversação)">
-              <input class="info-input" id="inf-est-v1" type="number" value="85" placeholder="%">
-              <input class="info-input" id="inf-est-l2" value="Listening (Compreensão)">
-              <input class="info-input" id="inf-est-v2" type="number" value="75" placeholder="%">
-              <input class="info-input" id="inf-est-l3" value="Grammar (Estrutura)">
-              <input class="info-input" id="inf-est-v3" type="number" value="90" placeholder="%">
-              <input class="info-input" id="inf-est-l4" value="Vocabulary (Vocabulário)">
-              <input class="info-input" id="inf-est-v4" type="number" value="80" placeholder="%">
-            </div>`;
-        } else if (tipo === 'informativo') {
-          infoTitleInput.value = 'Regras Essenciais do Present Perfect';
-          infoFieldsBox.innerHTML = `
-            <input class="info-input" id="inf-info-1" value="Usa-se Have / Has + Participio Passado (V3)">
-            <input class="info-input" id="inf-info-2" value="Ações no passado com reflexo no presente">
-            <input class="info-input" id="inf-info-3" value="Palavras-chave: already, yet, ever, never, just">`;
+          return {
+            titulo: 'Indicadores de Domínio na Turma',
+            items: [
+              { label: 'Speaking (Conversação)', val: 85 },
+              { label: 'Listening (Compreensão)', val: 75 },
+              { label: 'Grammar (Estrutura)', val: 90 },
+              { label: 'Vocabulary (Vocabulário)', val: 80 }
+            ]
+          };
+        }
+        if (tipo === 'informativo') {
+          return {
+            titulo: 'Regras Essenciais do Present Perfect',
+            topics: [
+              'Usa-se Have / Has + Particípio Passado (V3)',
+              'Ações no passado com reflexo no presente',
+              'Palavras-chave: already, yet, ever, never, just'
+            ]
+          };
+        }
+        if (tipo === 'comparativo') {
+          return {
+            titulo: 'Comparativo: Simple Past vs Present Perfect',
+            colA: 'Simple Past',
+            colB: 'Present Perfect',
+            itemsA: ['Tempo definido (yesterday)', 'Ação 100% encerrada', 'Ex: I visited London in 2022'],
+            itemsB: ['Tempo indefinido', 'Experiência de vida', 'Ex: I have visited London']
+          };
+        }
+        if (tipo === 'processos') {
+          return {
+            titulo: 'Processo de Construção da Fluência',
+            steps: ['Palavras-Chave', 'Frases Curtas', 'Diálogos Reais', 'Fluência Natural']
+          };
+        }
+        if (tipo === 'linha_tempo') {
+          return {
+            titulo: 'Linha do Tempo (Tempos Verbais)',
+            events: [
+              { time: 'Past', label: 'I studied English' },
+              { time: 'Continuous', label: 'I was studying' },
+              { time: 'Present', label: 'I study every day' },
+              { time: 'Future', label: 'I will speak fluently' }
+            ]
+          };
+        }
+        if (tipo === 'espaco_tempo') {
+          return {
+            titulo: 'Narrativa de Espaço-Tempo (Viagem)',
+            stages: [
+              { place: '📍 Brasil (Ontem)', desc: 'I packed my bags' },
+              { place: '✈️ Voo (Hoje)', desc: 'I am flying now' },
+              { place: '🗽 NY (Amanhã)', desc: 'I will visit Central Park' }
+            ]
+          };
+        }
+        if (tipo === 'relacional') {
+          return {
+            titulo: 'Mapa Relacional de Phrasal Verbs (GET)',
+            center: 'GET (Verbo Base)',
+            nodes: ['Get up (Acordar)', 'Get in (Entrar)', 'Get out (Sair)', 'Get over (Superar)']
+          };
+        }
+        return {
+          titulo: 'Desafio Interativo (Clique nos Cartões na Lousa!)',
+          cards: [
+            { front: '1. Past of GO?', back: '✅ WENT', revealed: false },
+            { front: '2. Past of BUY?', back: '✅ BOUGHT', revealed: false },
+            { front: '3. Past of SEE?', back: '✅ SAW', revealed: false }
+          ]
+        };
+      }
+
+      function lerInputsAtuaisParaDraft() {
+        const tipo = selectedInfoType;
+        if (tipo === 'estatistico' && draftInfoData.items) {
+          draftInfoData.items = draftInfoData.items.map((it, idx) => ({
+            label: document.getElementById(`inf-est-l-${idx}`)?.value ?? it.label,
+            val: Number(document.getElementById(`inf-est-v-${idx}`)?.value ?? it.val)
+          }));
+        } else if (tipo === 'informativo' && draftInfoData.topics) {
+          draftInfoData.topics = draftInfoData.topics.map((t, idx) => document.getElementById(`inf-info-${idx}`)?.value ?? t);
         } else if (tipo === 'comparativo') {
-          infoTitleInput.value = 'Comparativo: Simple Past vs Present Perfect';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <div>
-                <input class="info-input" id="inf-cmp-ta" value="Simple Past" style="font-weight:bold; margin-bottom:6px;">
-                <input class="info-input" id="inf-cmp-a1" value="Tempo definido (yesterday)" style="margin-bottom:4px;">
-                <input class="info-input" id="inf-cmp-a2" value="Ação 100% encerrada" style="margin-bottom:4px;">
-                <input class="info-input" id="inf-cmp-a3" value="Ex: I visited London in 2022">
-              </div>
-              <div>
-                <input class="info-input" id="inf-cmp-tb" value="Present Perfect" style="font-weight:bold; margin-bottom:6px;">
-                <input class="info-input" id="inf-cmp-b1" value="Tempo indefinido" style="margin-bottom:4px;">
-                <input class="info-input" id="inf-cmp-b2" value="Experiência de vida" style="margin-bottom:4px;">
-                <input class="info-input" id="inf-cmp-b3" value="Ex: I have visited London">
-              </div>
-            </div>`;
-        } else if (tipo === 'processos') {
-          infoTitleInput.value = 'Processo de Construção da Fluência';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-              <input class="info-input" id="inf-prc-1" value="Palavras-Chave">
-              <input class="info-input" id="inf-prc-2" value="Frases Curtas">
-              <input class="info-input" id="inf-prc-3" value="Diálogos Reais">
-              <input class="info-input" id="inf-prc-4" value="Fluência Natural">
-            </div>`;
-        } else if (tipo === 'linha_tempo') {
-          infoTitleInput.value = 'Linha do Tempo (Tempos Verbais)';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 2fr; gap:6px;">
-              <input class="info-input" id="inf-tl-t1" value="Past">
-              <input class="info-input" id="inf-tl-l1" value="I studied English">
-              <input class="info-input" id="inf-tl-t2" value="Continuous">
-              <input class="info-input" id="inf-tl-l2" value="I was studying">
-              <input class="info-input" id="inf-tl-t3" value="Present">
-              <input class="info-input" id="inf-tl-l3" value="I study every day">
-              <input class="info-input" id="inf-tl-t4" value="Future">
-              <input class="info-input" id="inf-tl-l4" value="I will speak fluently">
-            </div>`;
-        } else if (tipo === 'espaco_tempo') {
-          infoTitleInput.value = 'Narrativa de Espaço-Tempo (Viagem)';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 1.4fr; gap:6px;">
-              <input class="info-input" id="inf-et-p1" value="📍 Brasil (Ontem)">
-              <input class="info-input" id="inf-et-d1" value="I packed my bags">
-              <input class="info-input" id="inf-et-p2" value="✈️ Voo (Hoje)">
-              <input class="info-input" id="inf-et-d2" value="I am flying now">
-              <input class="info-input" id="inf-et-p3" value="🗽 NY (Amanhã)">
-              <input class="info-input" id="inf-et-d3" value="I will visit Central Park">
-            </div>`;
-        } else if (tipo === 'relacional') {
-          infoTitleInput.value = 'Mapa Relacional de Phrasal Verbs (GET)';
-          infoFieldsBox.innerHTML = `
-            <input class="info-input" id="inf-rel-c" value="GET (Verbo Base)" style="font-weight:bold; margin-bottom:6px;">
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-              <input class="info-input" id="inf-rel-1" value="Get up (Acordar)">
-              <input class="info-input" id="inf-rel-2" value="Get in (Entrar)">
-              <input class="info-input" id="inf-rel-3" value="Get out (Sair)">
-              <input class="info-input" id="inf-rel-4" value="Get over (Superar)">
-            </div>`;
-        } else if (tipo === 'interativo') {
-          infoTitleInput.value = 'Desafio Interativo (Clique nos Cartões na Lousa!)';
-          infoFieldsBox.innerHTML = `
-            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
-              <input class="info-input" id="inf-int-f1" value="1. Past of GO?">
-              <input class="info-input" id="inf-int-b1" value="✅ WENT">
-              <input class="info-input" id="inf-int-f2" value="2. Past of BUY?">
-              <input class="info-input" id="inf-int-b2" value="✅ BOUGHT">
-              <input class="info-input" id="inf-int-f3" value="3. Past of SEE?">
-              <input class="info-input" id="inf-int-b3" value="✅ SAW">
-            </div>`;
+          draftInfoData.colA = document.getElementById('inf-cmp-ta')?.value ?? draftInfoData.colA;
+          draftInfoData.colB = document.getElementById('inf-cmp-tb')?.value ?? draftInfoData.colB;
+          const qtd = Math.max((draftInfoData.itemsA || []).length, (draftInfoData.itemsB || []).length);
+          const nA = [], nB = [];
+          for (let i = 0; i < qtd; i++) {
+            nA.push(document.getElementById(`inf-cmp-a-${i}`)?.value ?? '');
+            nB.push(document.getElementById(`inf-cmp-b-${i}`)?.value ?? '');
+          }
+          draftInfoData.itemsA = nA;
+          draftInfoData.itemsB = nB;
+        } else if (tipo === 'processos' && draftInfoData.steps) {
+          draftInfoData.steps = draftInfoData.steps.map((s, idx) => document.getElementById(`inf-prc-${idx}`)?.value ?? s);
+        } else if (tipo === 'linha_tempo' && draftInfoData.events) {
+          draftInfoData.events = draftInfoData.events.map((ev, idx) => ({
+            time: document.getElementById(`inf-tl-t-${idx}`)?.value ?? ev.time,
+            label: document.getElementById(`inf-tl-l-${idx}`)?.value ?? ev.label
+          }));
+        } else if (tipo === 'espaco_tempo' && draftInfoData.stages) {
+          draftInfoData.stages = draftInfoData.stages.map((st, idx) => ({
+            place: document.getElementById(`inf-et-p-${idx}`)?.value ?? st.place,
+            desc: document.getElementById(`inf-et-d-${idx}`)?.value ?? st.desc
+          }));
+        } else if (tipo === 'relacional' && draftInfoData.nodes) {
+          draftInfoData.center = document.getElementById('inf-rel-center')?.value ?? draftInfoData.center;
+          draftInfoData.nodes = draftInfoData.nodes.map((n, idx) => document.getElementById(`inf-rel-n-${idx}`)?.value ?? n);
+        } else if (tipo === 'interativo' && draftInfoData.cards) {
+          draftInfoData.cards = draftInfoData.cards.map((c, idx) => ({
+            front: document.getElementById(`inf-int-f-${idx}`)?.value ?? c.front,
+            back: document.getElementById(`inf-int-b-${idx}`)?.value ?? c.back,
+            revealed: !!c.revealed
+          }));
         }
       }
 
+      window.removerOpcaoDraft = function(idx) {
+        lerInputsAtuaisParaDraft();
+        const t = selectedInfoType;
+        if (t === 'estatistico' && draftInfoData.items.length > 1) draftInfoData.items.splice(idx, 1);
+        else if (t === 'informativo' && draftInfoData.topics.length > 1) draftInfoData.topics.splice(idx, 1);
+        else if (t === 'comparativo' && draftInfoData.itemsA.length > 1) {
+          draftInfoData.itemsA.splice(idx, 1);
+          draftInfoData.itemsB.splice(idx, 1);
+        }
+        else if (t === 'processos' && draftInfoData.steps.length > 1) draftInfoData.steps.splice(idx, 1);
+        else if (t === 'linha_tempo' && draftInfoData.events.length > 1) draftInfoData.events.splice(idx, 1);
+        else if (t === 'espaco_tempo' && draftInfoData.stages.length > 1) draftInfoData.stages.splice(idx, 1);
+        else if (t === 'relacional' && draftInfoData.nodes.length > 1) draftInfoData.nodes.splice(idx, 1);
+        else if (t === 'interativo' && draftInfoData.cards.length > 1) draftInfoData.cards.splice(idx, 1);
+        desenharInputsDraft();
+      };
+
+      function desenharInputsDraft() {
+        infoExtraHeaders.innerHTML = '';
+        const t = selectedInfoType;
+        const btnDel = (i) => `<button type="button" onclick="window.removerOpcaoDraft(${i})" style="background:#fef2f2; border:1px solid #fecaca; color:#dc2626; border-radius:6px; width:30px; cursor:pointer; font-weight:bold;" title="Remover este item">✕</button>`;
+
+        if (t === 'estatistico') {
+          infoFieldsBox.innerHTML = (draftInfoData.items || []).map((it, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-est-l-${idx}" value="${it.label}" placeholder="Tópico" style="flex:2;">
+              <input class="info-input" id="inf-est-v-${idx}" type="number" value="${it.val}" placeholder="%" style="flex:1;">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'informativo') {
+          infoFieldsBox.innerHTML = (draftInfoData.topics || []).map((top, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-info-${idx}" value="${top}" placeholder="Tópico ${idx + 1}">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'comparativo') {
+          infoExtraHeaders.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr 30px; gap:6px;">
+              <input class="info-input" id="inf-cmp-ta" value="${draftInfoData.colA || 'Lado A'}" style="font-weight:bold; background:#eff6ff;">
+              <input class="info-input" id="inf-cmp-tb" value="${draftInfoData.colB || 'Lado B'}" style="font-weight:bold; background:#fef2f2;">
+              <div></div>
+            </div>`;
+          const qtd = Math.max((draftInfoData.itemsA || []).length, (draftInfoData.itemsB || []).length);
+          let rowsHtml = '';
+          for (let i = 0; i < qtd; i++) {
+            rowsHtml += `
+              <div style="display:grid; grid-template-columns:1fr 1fr 30px; gap:6px;">
+                <input class="info-input" id="inf-cmp-a-${i}" value="${draftInfoData.itemsA[i] || ''}" placeholder="Item A${i + 1}">
+                <input class="info-input" id="inf-cmp-b-${i}" value="${draftInfoData.itemsB[i] || ''}" placeholder="Item B${i + 1}">
+                ${btnDel(i)}
+              </div>`;
+          }
+          infoFieldsBox.innerHTML = rowsHtml;
+        } else if (t === 'processos') {
+          infoFieldsBox.innerHTML = (draftInfoData.steps || []).map((st, idx) => `
+            <div style="display:flex; gap:6px; align-items:center;">
+              <span style="font-size:12px; font-weight:800; color:#2563eb; width:65px;">Etapa ${idx + 1}:</span>
+              <input class="info-input" id="inf-prc-${idx}" value="${st}" style="flex:1;">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'linha_tempo') {
+          infoFieldsBox.innerHTML = (draftInfoData.events || []).map((ev, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-tl-t-${idx}" value="${ev.time}" placeholder="Data/Tempo" style="flex:1;">
+              <input class="info-input" id="inf-tl-l-${idx}" value="${ev.label}" placeholder="Acontecimento / Exemplo" style="flex:2;">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'espaco_tempo') {
+          infoFieldsBox.innerHTML = (draftInfoData.stages || []).map((st, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-et-p-${idx}" value="${st.place}" placeholder="📍 Lugar / Tempo" style="flex:1;">
+              <input class="info-input" id="inf-et-d-${idx}" value="${st.desc}" placeholder="Ação / Narrativa" style="flex:1.6;">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'relacional') {
+          infoExtraHeaders.innerHTML = `
+            <input class="info-input" id="inf-rel-center" value="${draftInfoData.center || 'Tema Central'}" placeholder="Conceito Central" style="font-weight:bold; background:#eff6ff;">`;
+          infoFieldsBox.innerHTML = (draftInfoData.nodes || []).map((nd, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-rel-n-${idx}" value="${nd}" placeholder="Ramificação ${idx + 1}">
+              ${btnDel(idx)}
+            </div>`).join('');
+        } else if (t === 'interativo') {
+          infoFieldsBox.innerHTML = (draftInfoData.cards || []).map((c, idx) => `
+            <div style="display:flex; gap:6px;">
+              <input class="info-input" id="inf-int-f-${idx}" value="${c.front}" placeholder="Frente (Pergunta)" style="flex:1;">
+              <input class="info-input" id="inf-int-b-${idx}" value="${c.back}" placeholder="Verso (Resposta ao clicar)" style="flex:1;">
+              ${btnDel(idx)}
+            </div>`).join('');
+        }
+      }
+
+      function adicionarOpcaoNoDraft() {
+        lerInputsAtuaisParaDraft();
+        const t = selectedInfoType;
+        if (t === 'estatistico') draftInfoData.items.push({ label: `Novo Indicador ${draftInfoData.items.length + 1}`, val: 80 });
+        else if (t === 'informativo') draftInfoData.topics.push(`Novo tópico explicativo ${draftInfoData.topics.length + 1}`);
+        else if (t === 'comparativo') {
+          draftInfoData.itemsA.push(`Novo ponto A${draftInfoData.itemsA.length + 1}`);
+          draftInfoData.itemsB.push(`Novo ponto B${draftInfoData.itemsB.length + 1}`);
+        }
+        else if (t === 'processos') draftInfoData.steps.push(`Etapa ${draftInfoData.steps.length + 1}`);
+        else if (t === 'linha_tempo') draftInfoData.events.push({ time: `Marco ${draftInfoData.events.length + 1}`, label: 'Nova descrição' });
+        else if (t === 'espaco_tempo') draftInfoData.stages.push({ place: `📍 Etapa ${draftInfoData.stages.length + 1}`, desc: 'Nova narrativa' });
+        else if (t === 'relacional') draftInfoData.nodes.push(`Nova Conexão ${draftInfoData.nodes.length + 1}`);
+        else if (t === 'interativo') draftInfoData.cards.push({ front: `${draftInfoData.cards.length + 1}. Nova Pergunta?`, back: '✅ Resposta!', revealed: false });
+        desenharInputsDraft();
+      }
+
+      document.getElementById('btn-add-info-option').onclick = adicionarOpcaoNoDraft;
+
+      // Abre o modal para criar um novo infográfico
       document.getElementById('btn-open-infographic').onclick = () => {
-        renderizarCamposInfografico(selectedInfoType);
+        editingShapeId = null;
+        infoModalHeaderTitle.innerText = 'Criar Novo Infográfico Pedagógico';
+        const padrao = obterDadosPadraoInfografico(selectedInfoType);
+        infoTitleInput.value = padrao.titulo;
+        draftInfoData = JSON.parse(JSON.stringify(padrao));
+        desenharInputsDraft();
         infoModal.style.display = 'flex';
       };
-      document.getElementById('btn-close-info-modal').onclick = () => { infoModal.style.display = 'none'; };
-      document.getElementById('btn-cancel-info').onclick = () => { infoModal.style.display = 'none'; };
+
+      // Abre o modal para editar ou expandir (+) um infográfico que já está na lousa!
+      function abrirEdicaoInfograficoExistente(shapeAlvo, adicionarMaisUm = false) {
+        editingShapeId = shapeAlvo.id;
+        selectedInfoType = shapeAlvo.infoType || 'estatistico';
+        document.querySelectorAll('.info-type-btn').forEach(b => {
+          b.classList.toggle('active', b.dataset.infoType === selectedInfoType);
+        });
+        infoModalHeaderTitle.innerText = '✏️ Editar Infográfico da Lousa';
+        infoTitleInput.value = shapeAlvo.title || 'Infográfico';
+        draftInfoData = JSON.parse(JSON.stringify(shapeAlvo.infoData || obterDadosPadraoInfografico(selectedInfoType)));
+        desenharInputsDraft();
+        if (adicionarMaisUm) {
+          adicionarOpcaoNoDraft();
+        }
+        infoModal.style.display = 'flex';
+      }
+
+      document.getElementById('btn-close-info-modal').onclick = () => { infoModal.style.display = 'none'; editingShapeId = null; };
+      document.getElementById('btn-cancel-info').onclick = () => { infoModal.style.display = 'none'; editingShapeId = null; };
 
       document.querySelectorAll('.info-type-btn').forEach(btn => {
         btn.onclick = () => {
           document.querySelectorAll('.info-type-btn').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
-          renderizarCamposInfografico(btn.dataset.infoType);
+          selectedInfoType = btn.dataset.infoType;
+          const padrao = obterDadosPadraoInfografico(selectedInfoType);
+          infoTitleInput.value = padrao.titulo;
+          draftInfoData = JSON.parse(JSON.stringify(padrao));
+          desenharInputsDraft();
         };
       });
 
       document.getElementById('btn-insert-info').onclick = () => {
+        lerInputsAtuaisParaDraft();
         const titulo = infoTitleInput.value.trim() || 'Infográfico';
-        let infoData = {};
 
-        if (selectedInfoType === 'estatistico') {
-          infoData.items = [1, 2, 3, 4].map(i => ({
-            label: document.getElementById(`inf-est-l${i}`)?.value || `Item ${i}`,
-            val: Number(document.getElementById(`inf-est-v${i}`)?.value || 50)
-          }));
-        } else if (selectedInfoType === 'informativo') {
-          infoData.topics = [1, 2, 3].map(i => document.getElementById(`inf-info-${i}`)?.value || '').filter(Boolean);
-        } else if (selectedInfoType === 'comparativo') {
-          infoData.colA = document.getElementById('inf-cmp-ta')?.value || 'Lado A';
-          infoData.colB = document.getElementById('inf-cmp-tb')?.value || 'Lado B';
-          infoData.itemsA = [1, 2, 3].map(i => document.getElementById(`inf-cmp-a${i}`)?.value || '').filter(Boolean);
-          infoData.itemsB = [1, 2, 3].map(i => document.getElementById(`inf-cmp-b${i}`)?.value || '').filter(Boolean);
-        } else if (selectedInfoType === 'processos') {
-          infoData.steps = [1, 2, 3, 4].map(i => document.getElementById(`inf-prc-${i}`)?.value || '').filter(Boolean);
-        } else if (selectedInfoType === 'linha_tempo') {
-          infoData.events = [1, 2, 3, 4].map(i => ({
-            time: document.getElementById(`inf-tl-t${i}`)?.value || '',
-            label: document.getElementById(`inf-tl-l${i}`)?.value || ''
-          }));
-        } else if (selectedInfoType === 'espaco_tempo') {
-          infoData.stages = [1, 2, 3].map(i => ({
-            place: document.getElementById(`inf-et-p${i}`)?.value || '',
-            desc: document.getElementById(`inf-et-d${i}`)?.value || ''
-          }));
-        } else if (selectedInfoType === 'relacional') {
-          infoData.center = document.getElementById('inf-rel-c')?.value || 'Centro';
-          infoData.nodes = [1, 2, 3, 4].map(i => document.getElementById(`inf-rel-${i}`)?.value || '');
-        } else if (selectedInfoType === 'interativo') {
-          infoData.cards = [1, 2, 3].map(i => ({
-            front: document.getElementById(`inf-int-f${i}`)?.value || `Pergunta ${i}`,
-            back: document.getElementById(`inf-int-b${i}`)?.value || `Resposta ${i}`,
-            revealed: false
-          }));
+        if (editingShapeId) {
+          const existente = shapes.find(s => s.id === editingShapeId);
+          if (existente) {
+            existente.infoType = selectedInfoType;
+            existente.title = titulo;
+            existente.infoData = JSON.parse(JSON.stringify(draftInfoData));
+            calcularDimensoesInfografico(existente);
+          }
+          editingShapeId = null;
+        } else {
+          const rect = appEl.getBoundingClientRect();
+          const pos = telaParaQuadro(Math.max(50, (rect.width - 540) / 2), Math.max(70, (rect.height - 300) / 2));
+          const novo = {
+            id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            typeName: 'shape',
+            pttV2: true,
+            tool: 'infographic',
+            infoType: selectedInfoType,
+            title: titulo,
+            color: currentColor,
+            x: pos.x,
+            y: pos.y,
+            scale: 1,
+            infoData: JSON.parse(JSON.stringify(draftInfoData))
+          };
+          calcularDimensoesInfografico(novo);
+          shapes.push(novo);
         }
 
-        const rect = appEl.getBoundingClientRect();
-        const pos = telaParaQuadro(Math.max(60, (rect.width - 540) / 2), Math.max(80, (rect.height - 300) / 2));
-
-        shapes.push({
-          id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-          typeName: 'shape',
-          pttV2: true,
-          tool: 'infographic',
-          infoType: selectedInfoType,
-          title: titulo,
-          color: currentColor,
-          x: pos.x,
-          y: pos.y,
-          w: 540,
-          h: 290,
-          infoData: infoData
-        });
-
         infoModal.style.display = 'none';
-        // Muda automaticamente para a mãozinha (Mover) para o professor posicionar ou clicar no infográfico
-        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
         const moveBtn = document.querySelector('.tool-btn[data-tool="move"]');
         if (moveBtn) moveBtn.classList.add('active');
         currentTool = 'move';
@@ -1523,7 +2092,7 @@
       };
 
       // =========================================================================
-      // 🛠️ 6. CONTROLES GERAIS E SINCRONIZAÇÃO COM A NUVEM
+      // 🛠️ 8. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO
       // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
@@ -1558,6 +2127,27 @@
         agendarSalvamentoNuvem();
       };
 
+      document.getElementById('btn-zoom-in').onclick = () => aplicarZoomTela(1.18);
+      document.getElementById('btn-zoom-out').onclick = () => aplicarZoomTela(0.84);
+      document.getElementById('btn-center').onclick = () => {
+        camera = { x: 0, y: 0, zoom: 1 };
+        desenharQuadro();
+      };
+
+      // Botões de Expansão Rápida da Lousa para a Direita, Esquerda e Baixo
+      document.getElementById('btn-pan-right').onclick = () => {
+        camera.x -= Math.round(window.innerWidth * 0.55);
+        desenharQuadro();
+      };
+      document.getElementById('btn-pan-left').onclick = () => {
+        camera.x = Math.min(200, camera.x + Math.round(window.innerWidth * 0.55));
+        desenharQuadro();
+      };
+      document.getElementById('btn-pan-down').onclick = () => {
+        camera.y -= Math.round(window.innerHeight * 0.45);
+        desenharQuadro();
+      };
+
       document.getElementById('btn-undo').onclick = () => {
         if (shapes.length === 0) return;
         redoStack.push(shapes.pop());
@@ -1572,11 +2162,6 @@
         lastLocalEditTime = Date.now();
         desenharQuadro();
         agendarSalvamentoNuvem();
-      };
-
-      document.getElementById('btn-center').onclick = () => {
-        camera = { x: 0, y: 0, zoom: 1 };
-        desenharQuadro();
       };
 
       document.getElementById('btn-clear').onclick = () => {
