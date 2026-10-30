@@ -14,31 +14,26 @@
       touch-action: none;
     }
 
-    /* Estrutura Principal em 3 Faixas (Alinhamento perfeito no PC e no Telemóvel) */
     #lousa-app {
       position: relative; width: 100vw; height: 100vh; height: 100dvh;
       overflow: hidden; display: flex; flex-direction: column;
       background: #ffffff;
     }
 
-    /* 1. BARRA SUPERIOR UNIFICADA (Telas Numeradas + Estilo + Zoom/Ações) */
+    /* 1. BARRA SUPERIOR UNIFICADA */
     .lousa-top-bar {
       width: 100%; background: #ffffff; border-bottom: 1px solid #cbd5e1;
       padding: 6px 10px; display: flex; align-items: center; justify-content: space-between;
-      gap: 10px; z-index: 25; flex-shrink: 0;
+      gap: 8px; z-index: 25; flex-shrink: 0;
       overflow-x: auto; scrollbar-width: none;
       box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06);
     }
     .lousa-top-bar::-webkit-scrollbar { display: none; }
 
-    .top-group {
-      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
-    }
-    .top-divider {
-      width: 1px; height: 22px; background: #cbd5e1; margin: 0 2px; flex-shrink: 0;
-    }
+    .top-group { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+    .top-divider { width: 1px; height: 22px; background: #cbd5e1; margin: 0 2px; flex-shrink: 0; }
 
-    /* Botões de Telas Numeradas */
+    /* Navegador de Telas Numeradas */
     .screens-group {
       background: #0f172a; padding: 4px 8px; border-radius: 10px;
       display: flex; align-items: center; gap: 5px; flex-shrink: 0;
@@ -59,13 +54,17 @@
       cursor: pointer; outline: none;
     }
 
-    /* Cores e Espessura */
-    .color-dot {
-      width: 20px; height: 20px; border-radius: 50%; cursor: pointer;
-      border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
-      transition: transform 0.15s ease; flex-shrink: 0;
+    /* Botão do Seletor de Cores e Espessura */
+    .picker-trigger-btn {
+      background: #f8fafc; border: 1.5px solid #cbd5e1; color: #1e293b;
+      padding: 4px 10px; border-radius: 8px; font-size: 11.5px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 6px; white-space: nowrap;
     }
-    .color-dot.active { transform: scale(1.25); box-shadow: 0 0 0 2px #0f172a; }
+    .picker-trigger-btn:hover { background: #eff6ff; border-color: #3b82f6; }
+    .color-preview-circle {
+      width: 16px; height: 16px; border-radius: 50%; border: 2px solid #fff;
+      box-shadow: 0 0 0 1px #64748b; display: inline-block;
+    }
 
     .size-btn {
       background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
@@ -83,14 +82,42 @@
     .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
     .action-pill.danger:hover { background: #fee2f2; }
 
-    /* 2. PALCO CENTRAL DO CANVAS */
+    /* Popovers Flutuantes (Seletor de Cores e Seletor de Formas Geométricas) */
+    .floating-popover {
+      display: none; position: fixed; z-index: 50;
+      background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 14px;
+      padding: 12px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
+      flex-direction: column; gap: 10px; min-width: 220px;
+    }
+    .color-grid {
+      display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
+    }
+    .color-swatch {
+      width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
+      border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1; transition: transform 0.15s;
+    }
+    .color-swatch:hover, .color-swatch.active { transform: scale(1.2); box-shadow: 0 0 0 2px #0f172a; }
+
+    .shape-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
+    }
+    .shape-option-btn {
+      background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
+      padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.15s;
+    }
+    .shape-option-btn:hover, .shape-option-btn.active {
+      background: #eff6ff; border-color: #2563eb; color: #1d4ed8;
+    }
+
+    /* 2. PALCO CENTRAL DO CANVAS (Proporção 1:1 Garantida, Nunca Espicha!) */
     #canvas-stage {
       position: relative; flex: 1; width: 100%; min-height: 0;
       overflow: hidden; background: #ffffff;
     }
 
     #lousa-canvas {
-      position: absolute; inset: 0; width: 100%; height: 100%;
+      position: absolute; top: 0; left: 0;
       display: block; z-index: 2; cursor: crosshair;
       touch-action: none;
     }
@@ -105,31 +132,31 @@
       background: rgba(37, 99, 235, 0.55); border-radius: 5px; transition: left 0.08s, width 0.08s;
     }
 
-    /* 3. BARRA INFERIOR UNIFICADA (Ferramentas + Expansão de Espaço) */
+    /* 3. BARRA INFERIOR UNIFICADA */
     .lousa-bottom-bar {
       width: 100%; background: #0f172a; border-top: 1px solid #334155;
       padding: 6px 10px; display: flex; align-items: center; justify-content: center;
-      gap: 5px; z-index: 25; flex-shrink: 0;
+      gap: 6px; z-index: 25; flex-shrink: 0;
       overflow-x: auto; scrollbar-width: none;
     }
     .lousa-bottom-bar::-webkit-scrollbar { display: none; }
 
     .tool-btn {
-      background: rgba(255, 255, 255, 0.06); border: 1px solid transparent; color: #cbd5e1;
-      width: 36px; height: 36px; border-radius: 9px; font-size: 16px;
-      display: flex; align-items: center; justify-content: center;
-      cursor: pointer; transition: all 0.15s ease; flex-shrink: 0;
+      background: rgba(255, 255, 255, 0.07); border: 1px solid rgba(255, 255, 255, 0.1); color: #cbd5e1;
+      height: 36px; padding: 0 11px; border-radius: 9px; font-size: 13px; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; gap: 5px;
+      cursor: pointer; transition: all 0.15s ease; flex-shrink: 0; white-space: nowrap;
     }
-    .tool-btn:hover { background: rgba(255, 255, 255, 0.14); color: #ffffff; }
+    .tool-btn:hover { background: rgba(255, 255, 255, 0.15); color: #ffffff; }
     .tool-btn.active {
       background: #2563eb; color: #ffffff; border-color: #60a5fa;
       box-shadow: 0 3px 10px rgba(37, 99, 235, 0.45);
     }
-    .tool-divider { width: 1px; height: 22px; background: #334155; margin: 0 3px; flex-shrink: 0; }
+    .tool-divider { width: 1px; height: 22px; background: #334155; margin: 0 2px; flex-shrink: 0; }
 
     .pan-btn {
       background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
-      padding: 5px 8px; border-radius: 8px; font-size: 11px; font-weight: 800;
+      padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: 800;
       cursor: pointer; transition: 0.15s; flex-shrink: 0; white-space: nowrap;
     }
     .pan-btn:hover { background: #2563eb; color: #fff; border-color: #60a5fa; }
@@ -163,20 +190,20 @@
       user-select: text !important; -webkit-user-select: text !important;
     }
 
-    /* Modal do Construtor e Editor de Infográficos */
-    #infographic-modal {
+    /* Modais de Infográficos e Mapas Mentais */
+    .studio-modal {
       display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
       backdrop-filter: blur(4px); z-index: 45; align-items: center; justify-content: center;
       padding: 12px;
     }
     .info-modal-card {
-      background: #ffffff; width: 100%; max-width: 680px; max-height: 90vh;
+      background: #ffffff; width: 100%; max-width: 700px; max-height: 90vh;
       border-radius: 16px; border: 1px solid #cbd5e1;
       box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
       display: flex; flex-direction: column; overflow: hidden;
     }
     .info-type-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
       gap: 7px; margin-bottom: 12px;
     }
     .info-type-btn {
@@ -221,26 +248,25 @@
   <div id="lousa-app">
     <!-- 1. BARRA SUPERIOR UNIFICADA -->
     <div id="ui-top-bar" class="lousa-top-bar">
+      <!-- Telas Numeradas -->
       <div id="ui-screens-dock" class="screens-group">
         <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀</button>
         <select id="select-screen-number" title="Escolher Tela Numerada">
           <option value="0">🖥️ Tela 1 / 1</option>
         </select>
         <button class="screen-nav-btn" id="btn-next-screen" title="Próxima Tela">▶</button>
-        <button class="screen-nav-btn add" id="btn-new-screen" title="Criar Nova Tela (Tela 2, Tela 3...)">➕ Tela</button>
+        <button class="screen-nav-btn add" id="btn-new-screen" title="Criar Nova Tela">➕ Tela</button>
         <button class="screen-nav-btn" id="btn-copy-screen" title="Copiar esta Tela">📋</button>
         <button class="screen-nav-btn" id="btn-paste-screen" title="Colar Tela copiada" style="display:none;">📥</button>
         <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
       </div>
 
+      <!-- Seletor Compacto de Cores + Espessura + Fundo -->
       <div id="ui-style-dock" class="top-group">
-        <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;" title="Preto"></div>
-        <div class="color-dot" data-color="#2563eb" style="background:#2563eb;" title="Azul"></div>
-        <div class="color-dot" data-color="#dc2626" style="background:#dc2626;" title="Vermelho"></div>
-        <div class="color-dot" data-color="#16a34a" style="background:#16a34a;" title="Verde"></div>
-        <div class="color-dot" data-color="#d97706" style="background:#d97706;" title="Laranja"></div>
-        <div class="color-dot" data-color="#9333ea" style="background:#9333ea;" title="Roxo"></div>
-        <div class="color-dot" data-color="#db2777" style="background:#db2777;" title="Rosa"></div>
+        <button type="button" class="picker-trigger-btn" id="btn-open-color-popover" title="Escolher ou Personalizar Cor">
+          <span id="current-color-circle" class="color-preview-circle" style="background:#0f172a;"></span>
+          <span>Cor ▾</span>
+        </button>
 
         <div class="top-divider"></div>
 
@@ -258,15 +284,53 @@
         </select>
       </div>
 
+      <!-- Zoom no Lugar + Desfazer/Refazer + PNG + Limpar -->
       <div id="ui-actions-dock" class="top-group">
-        <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom">🔍-</button>
+        <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom na Posição Atual">🔍-</button>
         <button class="action-pill" id="btn-center" title="Voltar Zoom ao Normal (100%)">🎯 100%</button>
-        <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom">🔍+</button>
+        <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom na Posição Atual">🔍+</button>
         <div class="top-divider"></div>
         <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
         <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
         <button class="action-pill" id="btn-download" title="Baixar Imagem da Tela (PNG)">📥 PNG</button>
         <button class="action-pill danger" id="btn-clear" title="Limpar desenhos desta Tela">🧹 Limpar</button>
+      </div>
+    </div>
+
+    <!-- Popover Flutuante do Seletor de Cores Personalizável -->
+    <div id="color-popover" class="floating-popover">
+      <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">🎨 Paleta de Cores</div>
+      <div class="color-grid">
+        <div class="color-swatch active" data-color="#0f172a" style="background:#0f172a;"></div>
+        <div class="color-swatch" data-color="#2563eb" style="background:#2563eb;"></div>
+        <div class="color-swatch" data-color="#dc2626" style="background:#dc2626;"></div>
+        <div class="color-swatch" data-color="#16a34a" style="background:#16a34a;"></div>
+        <div class="color-swatch" data-color="#d97706" style="background:#d97706;"></div>
+        <div class="color-swatch" data-color="#9333ea" style="background:#9333ea;"></div>
+        <div class="color-swatch" data-color="#db2777" style="background:#db2777;"></div>
+        <div class="color-swatch" data-color="#0891b2" style="background:#0891b2;"></div>
+        <div class="color-swatch" data-color="#4f46e5" style="background:#4f46e5;"></div>
+        <div class="color-swatch" data-color="#65a30d" style="background:#65a30d;"></div>
+        <div class="color-swatch" data-color="#ea580c" style="background:#ea580c;"></div>
+        <div class="color-swatch" data-color="#475569" style="background:#475569;"></div>
+      </div>
+      <div style="border-top:1px solid #e2e8f0; padding-top:8px; display:flex; align-items:center; justify-content:space-between; gap:8px;">
+        <label for="custom-color-input" style="font-size:11.5px; font-weight:700; color:#1e293b; cursor:pointer;">🌈 Personalizar Cor:</label>
+        <input type="color" id="custom-color-input" value="#2563eb" style="width:40px; height:28px; border:none; background:transparent; cursor:pointer;">
+      </div>
+    </div>
+
+    <!-- Popover Flutuante do Seletor de Figuras Geométricas -->
+    <div id="shapes-popover" class="floating-popover">
+      <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">📐 Figuras Geométricas</div>
+      <div class="shape-grid">
+        <button type="button" class="shape-option-btn" data-shape-tool="line" data-shape-label="📏 Linha">📏 Linha Reta</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="arrow" data-shape-label="↗️ Seta">↗️ Seta</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="rect" data-shape-label="▭ Retângulo">▭ Retângulo</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="circle" data-shape-label="⭕ Círculo">⭕ Círculo</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="triangle" data-shape-label="△ Triângulo">△ Triângulo</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="hexagon" data-shape-label="⬡ Hexágono">⬡ Hexágono</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="diamond" data-shape-label="◇ Losango">◇ Losango</button>
       </div>
     </div>
 
@@ -277,32 +341,34 @@
       <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
     </div>
 
-    <!-- 3. BARRA INFERIOR UNIFICADA -->
+    <!-- 3. BARRA INFERIOR UNIFICADA E COMPACTA -->
     <div id="ui-bottom-bar" class="lousa-bottom-bar">
-      <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
-      <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
-      <button class="tool-btn" data-tool="text" title="Texto Rico (Duplo clique num texto para editar)">🔤</button>
-      <button class="tool-btn" data-tool="eraser" title="Borracha">🧽</button>
+      <button class="tool-btn active" data-tool="pen" title="Caneta">✏️ Caneta</button>
+      <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️ Marca</button>
+      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (Duplo clique para editar)">🔤 Texto</button>
+      <button class="tool-btn" data-tool="eraser" title="Borracha">🧽 Borracha</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" data-tool="line" title="Linha Reta">📏</button>
-      <button class="tool-btn" data-tool="arrow" title="Seta">↗️</button>
-      <button class="tool-btn" data-tool="rect" title="Retângulo">▭</button>
-      <button class="tool-btn" data-tool="circle" title="Círculo">⭕</button>
-      <button class="tool-btn" data-tool="triangle" title="Triângulo">△</button>
-      <button class="tool-btn" data-tool="hexagon" title="Hexágono">⬡</button>
+
+      <!-- Seletor Compacto de Figuras Geométricas -->
+      <button class="tool-btn" id="btn-open-shapes-popover" title="Escolher Figura Geométrica">
+        <span id="shapes-btn-label">📐 Formas ▾</span>
+      </button>
+
       <div class="tool-divider"></div>
-      <button class="tool-btn" id="btn-open-infographic" title="Inserir Infográfico (8 Modelos Editáveis)" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#6ee7b7;">📊</button>
+      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos)" style="background:rgba(16,185,129,0.22); border-color:#10b981; color:#6ee7b7;">📊 Infográficos</button>
+      <button class="tool-btn" id="btn-open-mindmap" title="Criar Mapa Mental (8 Modelos)" style="background:rgba(139,92,246,0.25); border-color:#8b5cf6; color:#c4b5fd;">🧠 Mapas Mentais</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" data-tool="move" title="Mover Objetos, Redimensionar (⤡) ou Clicar em Infográficos">🖐️</button>
-      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha">🧭</button>
-      <button class="tool-btn" data-tool="laser" title="Laser Seta Luminoso">🏹</button>
+
+      <button class="tool-btn" data-tool="move" title="Mover Objetos, Redimensionar (⤡) ou Clicar em Cartões">🖐️ Mover</button>
+      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha">🧭 Folha</button>
+      <button class="tool-btn" data-tool="laser" title="Seta Laser (Fica acesa ao escolher; segure o clique para fazer rastro)">🏹 Laser Seta</button>
       <div class="tool-divider"></div>
       <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
       <button class="pan-btn" id="btn-pan-right" title="Expandir espaço para a direita">➡️ +Espaço</button>
       <button class="pan-btn" id="btn-pan-down" title="Expandir espaço para baixo">⬇️</button>
     </div>
 
-    <!-- Caixa Flutuante de Texto Rico -->
+    <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
     <div id="text-editor-box">
       <div class="fmt-toolbar">
         <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
@@ -329,57 +395,24 @@
       </div>
     </div>
 
-    <!-- Modal Construtor e Editor dos 8 Tipos de Infográficos -->
-    <div id="infographic-modal">
+    <!-- Modal Construtor e Editor de Infográficos (8 Modelos) e Mapas Mentais (8 Modelos) -->
+    <div id="infographic-modal" class="studio-modal">
       <div class="info-modal-card">
-        <div style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div id="studio-modal-header" style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
-            <span style="font-size:18px;">📊</span>
+            <span id="studio-modal-icon" style="font-size:18px;">📊</span>
             <h3 id="info-modal-header-title" style="margin:0; font-size:15px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
           </div>
           <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
         </div>
 
         <div style="padding:14px 18px; overflow-y:auto; flex:1;">
-          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha o Modelo de Infográfico:</label>
-          <div class="info-type-grid" id="info-type-grid">
-            <button type="button" class="info-type-btn active" data-info-type="estatistico">
-              <strong style="font-size:12px; color:#0f172a;">📊 1. Estatístico</strong>
-              <span style="font-size:10px; color:#64748b;">Barras e métricas</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="informativo">
-              <strong style="font-size:12px; color:#0f172a;">📌 2. Informativo</strong>
-              <span style="font-size:10px; color:#64748b;">Tópicos numerados</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="comparativo">
-              <strong style="font-size:12px; color:#0f172a;">⚖️ 3. Comparativo</strong>
-              <span style="font-size:10px; color:#64748b;">Lado A vs Lado B</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="processos">
-              <strong style="font-size:12px; color:#0f172a;">⚙️ 4. Processos</strong>
-              <span style="font-size:10px; color:#64748b;">Etapas 1 ➔ 2 ➔ 3...</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="linha_tempo">
-              <strong style="font-size:12px; color:#0f172a;">⏳ 5. Linha do Tempo</strong>
-              <span style="font-size:10px; color:#64748b;">Marcos cronológicos</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="espaco_tempo">
-              <strong style="font-size:12px; color:#0f172a;">🌍 6. Espaço-Tempo</strong>
-              <span style="font-size:10px; color:#64748b;">Lugar + Época</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="relacional">
-              <strong style="font-size:12px; color:#0f172a;">🕸️ 7. Relacional</strong>
-              <span style="font-size:10px; color:#64748b;">Mapa de conexões</span>
-            </button>
-            <button type="button" class="info-type-btn" data-info-type="interativo">
-              <strong style="font-size:12px; color:#0f172a;">👆 8. Interativo</strong>
-              <span style="font-size:10px; color:#64748b;">Cartões clicáveis</span>
-            </button>
-          </div>
+          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha o Modelo:</label>
+          <div class="info-type-grid" id="info-type-grid"></div>
 
           <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
             <div style="margin-bottom:10px;">
-              <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título Principal do Infográfico:</label>
+              <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título / Tema Principal:</label>
               <input type="text" id="info-title-input" class="info-input" value="Simple Past vs Present Perfect">
             </div>
 
@@ -387,13 +420,13 @@
             <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:7px;"></div>
 
             <button type="button" id="btn-add-info-option" style="margin-top:10px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:8px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">
-              ➕ Adicionar Mais Opção / Item ao Infográfico
+              ➕ Adicionar Mais Opção / Ramo
             </button>
           </div>
         </div>
 
         <div style="padding:10px 18px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <span style="font-size:11px; color:#64748b;">💡 Na lousa: clique em <b>✏️</b> p/ editar, <b>➕</b> p/ expandir ou puxe <b>⤡</b> no canto p/ dar zoom!</span>
+          <span style="font-size:11px; color:#64748b;">💡 Na lousa: clique em <b>✏️</b> p/ editar, <b>➕</b> p/ expandir ou puxe <b>⤡</b> no canto p/ dar zoom no lugar!</span>
           <div style="display:flex; gap:8px;">
             <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
             <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:7px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
@@ -423,7 +456,6 @@
       let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
       let userIdParam = params.get('userId') || '';
       let alunoRefIdParam = params.get('alunoRefId') || '';
-      let roomIdAtivo = 'LOUSA_MESTRA_UNIFICADA';
 
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
@@ -446,6 +478,7 @@
       let targetStudentCamera = null;
       let animFrameCamera = null;
       let profViewportRemoto = null;
+      let lastFocusPoint = null;
 
       let editingShapeId = null;
 
@@ -463,8 +496,12 @@
       let resizingShape = null;
       let resizeStartDist = 1;
       let resizeStartScale = 1;
+      let resizeCenterPt = null;
       let moveLastPt = null;
       let panStartPt = null;
+
+      // 🏹 Estado da Seta Laser (Fica acesa imediatamente ao escolher a ferramenta!)
+      let laserHead = null;
       let laserTrail = [];
       let laserFadeTimer = null;
       let lastLiveStreamTime = 0;
@@ -475,7 +512,6 @@
 
       const stageEl = document.getElementById('canvas-stage');
       const canvas = document.getElementById('lousa-canvas');
-      // 🛡️ BLINDAGEM DUPLA: Define tanto 'ctx' quanto 'context' (inclusive em window) para nunca existir ReferenceError!
       const ctx = canvas.getContext('2d');
       const context = ctx;
       window.ctx = ctx;
@@ -489,6 +525,14 @@
       const selectScreenNumber = document.getElementById('select-screen-number');
       const btnPasteScreen = document.getElementById('btn-paste-screen');
       const hScrollThumb = document.getElementById('board-hscroll-thumb');
+
+      function notificarCronometroParent(ativa, ativadaEm) {
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'LOUSA_TIMER_SYNC', ativa: !!ativa, ativadaEm: ativadaEm || null }, '*');
+          }
+        } catch (e) {}
+      }
 
       function verificarClipboardTela() {
         if (!btnPasteScreen) return;
@@ -549,7 +593,7 @@
       }
 
       function validarCameraSegura() {
-        if (!Number.isFinite(camera.zoom) || camera.zoom < 0.15 || camera.zoom > 5) {
+        if (!Number.isFinite(camera.zoom) || camera.zoom < 0.25 || camera.zoom > 4) {
           camera.zoom = 1;
         }
         if (!Number.isFinite(camera.x)) camera.x = 0;
@@ -572,24 +616,56 @@
         setTimeout(ajustarTamanhoCanvas, 20);
       }
 
+      // =========================================================================
+      // 📐 1. CÂMARA INTELIGENTE E LEGÍVEL NO TELEMÓVEL (SEM LETRAS MINÚSCULAS!)
+      // =========================================================================
+      function calcularCentroConteudoAtivo() {
+        if (lastFocusPoint && Number.isFinite(lastFocusPoint.x) && Number.isFinite(lastFocusPoint.y)) {
+          return lastFocusPoint;
+        }
+        if (shapes.length > 0) {
+          const ult = shapes[shapes.length - 1];
+          if (ult.tool === 'infographic') {
+            const { w, h, scale } = calcularDimensoesInfografico(ult);
+            return { x: (ult.x || 0) + (w * scale) / 2, y: (ult.y || 0) + (h * scale) / 2 };
+          }
+          if (ult.tool === 'text') {
+            return { x: (ult.x || 0) + 80, y: (ult.y || 0) + 20 };
+          }
+          if (Array.isArray(ult.points) && ult.points.length > 0) {
+            const p = ult.points[ult.points.length - 1];
+            return { x: p.x, y: p.y };
+          }
+          if (ult.x1 !== undefined && ult.x2 !== undefined) {
+            return { x: (ult.x1 + ult.x2) / 2, y: (ult.y1 + ult.y2) / 2 };
+          }
+        }
+        const { w, h } = obterDimensoesTelaSeguras();
+        return {
+          x: (w / 2 - camera.x) / camera.zoom,
+          y: (h / 2 - camera.y) / camera.zoom
+        };
+      }
+
       function obterEstadoCameraProfessor() {
         validarCameraSegura();
         const { w, h } = obterDimensoesTelaSeguras();
         const centerX = (w / 2 - camera.x) / camera.zoom;
         const centerY = (h / 2 - camera.y) / camera.zoom;
+        const foco = calcularCentroConteudoAtivo();
         return {
           w: Math.round(w),
           h: Math.round(h),
-          camX: Math.round(camera.x * 10) / 10,
-          camY: Math.round(camera.y * 10) / 10,
           centerX: Math.round(centerX * 10) / 10,
           centerY: Math.round(centerY * 10) / 10,
+          focusX: Math.round(foco.x * 10) / 10,
+          focusY: Math.round(foco.y * 10) / 10,
           zoom: Math.round(camera.zoom * 1000) / 1000
         };
       }
 
       function aplicarCameraDoProfessorNoAluno(profView, animar = true) {
-        if (!profView || !Number.isFinite(profView.w) || !Number.isFinite(profView.h) || profView.w < 100 || profView.h < 100) {
+        if (!profView || !Number.isFinite(profView.w) || !Number.isFinite(profView.h)) {
           return;
         }
         profViewportRemoto = profView;
@@ -597,14 +673,18 @@
         const { w: alunoW, h: alunoH } = obterDimensoesTelaSeguras();
         const profZoom = (Number.isFinite(profView.zoom) && profView.zoom > 0.1) ? profView.zoom : 1;
 
-        const escalaAdaptativa = Math.min(alunoW / profView.w, alunoH / profView.h);
-        const zoomFinal = Math.max(0.2, Math.min(3.5, profZoom * escalaAdaptativa));
+        // 📱 ESCALA DE LEITURA CONFORTÁVEL: No telemóvel, nunca encolhe abaixo de 72% para que o texto e desenhos fiquem grandes e legíveis!
+        const ratioW = alunoW / Math.max(360, profView.w);
+        const escalaLeitura = Math.max(0.72, Math.min(1.08, ratioW * 1.35));
+        const zoomFinal = Math.max(0.55, Math.min(3.0, profZoom * escalaLeitura));
 
-        const cX = Number.isFinite(profView.centerX) ? profView.centerX : (profView.w / 2);
-        const cY = Number.isFinite(profView.centerY) ? profView.centerY : (profView.h / 2);
+        // Foca no ponto exato onde o professor está a escrever/apontar (ou no centro da visão se a tela couber inteira)
+        const usarFocoAtivo = (alunoW < profView.w * 0.8) && Number.isFinite(profView.focusX) && Number.isFinite(profView.focusY);
+        const alvoX = usarFocoAtivo ? profView.focusX : (Number.isFinite(profView.centerX) ? profView.centerX : profView.w / 2);
+        const alvoY = usarFocoAtivo ? profView.focusY : (Number.isFinite(profView.centerY) ? profView.centerY : profView.h / 2);
 
-        const novoX = (alunoW / 2) - (cX * zoomFinal);
-        const novoY = (alunoH / 2) - (cY * zoomFinal);
+        const novoX = (alunoW / 2) - (alvoX * zoomFinal);
+        const novoY = (alunoH / 2) - (alvoY * zoomFinal);
 
         if (!Number.isFinite(novoX) || !Number.isFinite(novoY) || !Number.isFinite(zoomFinal)) {
           return;
@@ -639,9 +719,9 @@
               return;
             }
 
-            camera.x += dx * 0.35;
-            camera.y += dy * 0.35;
-            camera.zoom += dz * 0.35;
+            camera.x += dx * 0.32;
+            camera.y += dy * 0.32;
+            camera.zoom += dz * 0.32;
             desenharQuadro();
             animFrameCamera = requestAnimationFrame(animarPasso);
           };
@@ -649,9 +729,12 @@
         }
       }
 
+      // Garante Proporção 1:1 Exata entre Píxeis Reais e CSS (Nunca espicha!)
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const { w, h } = obterDimensoesTelaSeguras();
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
         canvas.width = Math.max(1, Math.floor(w * dpr));
         canvas.height = Math.max(1, Math.floor(h * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -817,7 +900,7 @@
         const color = opts.color || '#1e293b';
         const vAlign = opts.vAlign || 'middle';
         let fontSize = opts.maxFont || 13.5;
-        const minFont = opts.minFont || 9;
+        const minFont = opts.minFont || 8.5;
         let linhas = [];
         let lineHeight = fontSize * 1.22;
 
@@ -853,36 +936,44 @@
         c.restore();
       }
 
+      // =========================================================================
+      // 📊🧠 4. RENDERIZADOR DOS 8 INFOGRÁFICOS E DOS 8 MAPAS MENTAIS
+      // =========================================================================
       function calcularDimensoesInfografico(item) {
         const d = item.infoData || {};
         let baseW = 540;
         let baseH = 300;
+        const t = item.infoType;
 
-        if (item.infoType === 'estatistico') {
+        if (t === 'estatistico') {
           const qtd = (d.items || []).length || 4;
           baseH = Math.max(260, 74 + qtd * 48);
-        } else if (item.infoType === 'informativo') {
+        } else if (t === 'informativo' || t === 'mm_texto') {
           const qtd = (d.topics || []).length || 3;
           baseH = Math.max(260, 74 + qtd * 62);
-        } else if (item.infoType === 'comparativo') {
+        } else if (t === 'comparativo') {
           const qtd = Math.max((d.itemsA || []).length, (d.itemsB || []).length, 3);
           baseH = Math.max(270, 105 + qtd * 48);
-        } else if (item.infoType === 'processos') {
+        } else if (t === 'processos' || t === 'mm_fluxo') {
           const qtd = (d.steps || []).length || 4;
           const linhas = Math.ceil(qtd / 4);
           baseH = Math.max(250, 74 + linhas * 145);
-        } else if (item.infoType === 'linha_tempo') {
+        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
           const qtd = (d.events || []).length || 4;
           baseW = Math.max(540, qtd * 135);
-          baseH = 290;
-        } else if (item.infoType === 'espaco_tempo') {
+          baseH = 295;
+        } else if (t === 'espaco_tempo') {
           const qtd = (d.stages || []).length || 3;
           const linhas = Math.ceil(qtd / 3);
           baseH = Math.max(260, 74 + linhas * 150);
-        } else if (item.infoType === 'relacional') {
-          baseW = 560;
-          baseH = 340;
-        } else if (item.infoType === 'interativo') {
+        } else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_ciclo' || t === 'mm_conceitos') {
+          baseW = 580;
+          baseH = 360;
+        } else if (t === 'mm_arvore' || t === 'mm_organograma') {
+          const qtd = (d.nodes || []).length || 4;
+          baseW = Math.max(560, qtd * 130);
+          baseH = 320;
+        } else if (t === 'interativo') {
           const qtd = (d.cards || []).length || 3;
           const linhas = Math.ceil(qtd / 3);
           baseH = Math.max(260, 74 + linhas * 155);
@@ -899,7 +990,8 @@
         const { w, h, scale } = calcularDimensoesInfografico(item);
         const cor = item.color || '#2563eb';
         const d = item.infoData || {};
-        const titulo = item.title || 'Infográfico';
+        const titulo = item.title || 'Quadro Visual';
+        const t = item.infoType;
 
         c.save();
         c.translate(x, y);
@@ -953,7 +1045,8 @@
         const bodyY = 54;
         const bodyH = h - 66;
 
-        if (item.infoType === 'estatistico') {
+        // 1. ESTATÍSTICO
+        if (t === 'estatistico') {
           const itens = d.items || [{ label: 'Speaking', val: 85 }];
           const rowH = bodyH / itens.length;
           itens.forEach((it, idx) => {
@@ -983,37 +1076,38 @@
           });
         }
 
-        else if (item.infoType === 'informativo') {
+        // 2. INFORMATIVO OU MAPA DE TEXTO
+        else if (t === 'informativo' || t === 'mm_texto') {
           const topicos = d.topics || ['Tópico 1'];
           const rowH = bodyH / topicos.length;
-          topicos.forEach((t, idx) => {
+          topicos.forEach((topico, idx) => {
             const ry = bodyY + idx * rowH;
             const boxH = rowH - 8;
-            c.fillStyle = '#f8fafc';
+            c.fillStyle = t === 'mm_texto' ? '#fefce8' : '#f8fafc';
             roundRect(c, 16, ry, w - 32, boxH, 10);
             c.fill();
-            c.strokeStyle = '#cbd5e1';
-            c.lineWidth = 1;
+            c.strokeStyle = t === 'mm_texto' ? '#fde047' : '#cbd5e1';
+            c.lineWidth = 1.5;
             c.stroke();
 
             c.fillStyle = cor;
-            c.beginPath();
-            c.arc(38, ry + boxH / 2, 13, 0, Math.PI * 2);
+            roundRect(c, 24, ry + (boxH - 24) / 2, 26, 24, 6);
             c.fill();
 
             c.fillStyle = '#ffffff';
-            c.font = '800 12px "Segoe UI", sans-serif';
+            c.font = '800 11.5px "Segoe UI", sans-serif';
             c.textAlign = 'center';
             c.textBaseline = 'middle';
-            c.fillText(String(idx + 1), 38, ry + boxH / 2);
+            c.fillText(t === 'mm_texto' ? '📝' : String(idx + 1), 37, ry + boxH / 2);
 
-            desenharTextoAjustado(c, String(t), 60, ry + 4, w - 86, boxH - 8, {
+            desenharTextoAjustado(c, String(topico), 60, ry + 4, w - 86, boxH - 8, {
               weight: '600', maxFont: 13.5, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
         }
 
-        else if (item.infoType === 'comparativo') {
+        // 3. COMPARATIVO
+        else if (t === 'comparativo') {
           const colW = (w - 44) / 2;
           const itemsA = d.itemsA || [];
           const itemsB = d.itemsB || [];
@@ -1046,7 +1140,8 @@
           });
         }
 
-        else if (item.infoType === 'processos') {
+        // 4. PROCESSOS OU MAPA DE FLUXO
+        else if (t === 'processos' || t === 'mm_fluxo') {
           const steps = d.steps || ['Passo 1'];
           const cols = Math.min(4, steps.length);
           const rows = Math.ceil(steps.length / cols);
@@ -1061,11 +1156,11 @@
             const boxW = stepW - 14;
             const boxH = rowH - 14;
 
-            c.fillStyle = '#f8fafc';
+            c.fillStyle = t === 'mm_fluxo' ? '#f0fdf4' : '#f8fafc';
             roundRect(c, sx + 4, sy, boxW, boxH, 10);
             c.fill();
             c.strokeStyle = cor;
-            c.lineWidth = 1.5;
+            c.lineWidth = 1.8;
             c.stroke();
 
             c.fillStyle = cor;
@@ -1085,14 +1180,15 @@
 
             if (col < cols - 1 && idx < steps.length - 1) {
               c.fillStyle = cor;
-              c.font = '900 14px "Segoe UI", sans-serif';
+              c.font = '900 15px "Segoe UI", sans-serif';
               c.textAlign = 'center';
               c.fillText('➔', sx + stepW - 3, sy + boxH / 2);
             }
           });
         }
 
-        else if (item.infoType === 'linha_tempo') {
+        // 5. LINHA DO TEMPO (INFOGRÁFICO OU MAPA DE LINHA DO TEMPO)
+        else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
           const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
           c.strokeStyle = cor;
@@ -1135,7 +1231,8 @@
           });
         }
 
-        else if (item.infoType === 'espaco_tempo') {
+        // 6. ESPAÇO-TEMPO
+        else if (t === 'espaco_tempo') {
           const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
           const cols = Math.min(3, stages.length);
           const rows = Math.ceil(stages.length / cols);
@@ -1166,14 +1263,15 @@
           });
         }
 
-        else if (item.infoType === 'relacional') {
+        // 7. RELACIONAL, MAPA DA ARANHA OU MAPA DE CONCEITOS
+        else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
           const centerText = d.center || 'Tema Central';
-          const nodes = d.nodes || ['Item 1', 'Item 2'];
+          const nodes = d.nodes || ['Ideia 1', 'Ideia 2', 'Ideia 3', 'Ideia 4'];
           const total = Math.max(1, nodes.length);
-          const rx = w * 0.33;
-          const ry = bodyH * 0.34;
+          const rx = w * 0.34;
+          const ry = bodyH * 0.35;
 
           nodes.forEach((nd, idx) => {
             const ang = (Math.PI * 2 * idx) / total - Math.PI / 4;
@@ -1181,35 +1279,161 @@
             const ny = cy + ry * Math.sin(ang);
 
             c.strokeStyle = cor;
-            c.lineWidth = 2;
+            c.lineWidth = t === 'mm_aranha' ? 2.5 : 2;
             c.beginPath();
             c.moveTo(cx, cy);
-            c.lineTo(nx, ny);
+            if (t === 'mm_aranha') {
+              c.quadraticCurveTo((cx + nx) / 2, cy, nx, ny);
+            } else {
+              c.lineTo(nx, ny);
+            }
             c.stroke();
 
-            const nw = 132;
+            // Se for Mapa de Conceitos, desenha etiqueta conectora no meio da linha
+            const textoBruto = String(nd || '');
+            let conector = '';
+            let conceito = textoBruto;
+            if (t === 'mm_conceitos' && textoBruto.includes(':')) {
+              const partes = textoBruto.split(':');
+              conector = partes[0].trim();
+              conceito = partes.slice(1).join(':').trim();
+            } else if (t === 'mm_conceitos') {
+              conector = 'liga-se a';
+            }
+
+            if (conector) {
+              const mx = (cx + nx) / 2;
+              const my = (cy + ny) / 2;
+              c.fillStyle = '#fef3c7';
+              roundRect(c, mx - 38, my - 10, 76, 20, 6);
+              c.fill();
+              desenharTextoAjustado(c, conector, mx - 34, my - 8, 68, 16, {
+                weight: '700', maxFont: 9.5, minFont: 8, color: '#b45309', align: 'center', vAlign: 'middle'
+              });
+            }
+
+            const nw = 134;
             const nh = 44;
             c.fillStyle = '#f8fafc';
-            roundRect(c, nx - nw / 2, ny - nh / 2, nw, nh, 10);
+            roundRect(c, nx - nw / 2, ny - nh / 2, nw, nh, t === 'mm_aranha' ? 22 : 10);
             c.fill();
+            c.strokeStyle = cor;
             c.stroke();
 
-            desenharTextoAjustado(c, nd, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
+            desenharTextoAjustado(c, conceito, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
               weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
             });
           });
 
-          const cw = 154;
-          const ch = 50;
+          const cw = 156;
+          const ch = 52;
           c.fillStyle = cor;
-          roundRect(c, cx - cw / 2, cy - ch / 2, cw, ch, 25);
+          roundRect(c, cx - cw / 2, cy - ch / 2, cw, ch, 26);
           c.fill();
           desenharTextoAjustado(c, centerText, cx - cw / 2 + 10, cy - ch / 2 + 6, cw - 20, ch - 12, {
             weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
           });
         }
 
-        else if (item.infoType === 'interativo') {
+        // 8. MAPA DE CICLO (ANEL CIRCULAR CONTÍNUO)
+        else if (t === 'mm_ciclo') {
+          const cx = w / 2;
+          const cy = bodyY + bodyH / 2;
+          const steps = d.steps || ['Fase 1', 'Fase 2', 'Fase 3', 'Fase 4'];
+          const total = Math.max(1, steps.length);
+          const rx = w * 0.31;
+          const ry = bodyH * 0.33;
+
+          // Anel tracejado central do ciclo
+          c.save();
+          c.strokeStyle = cor;
+          c.lineWidth = 2.5;
+          c.setLineDash([7, 5]);
+          c.beginPath();
+          c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+          c.stroke();
+          c.restore();
+
+          steps.forEach((st, idx) => {
+            const ang = (Math.PI * 2 * idx) / total - Math.PI / 2;
+            const nx = cx + rx * Math.cos(ang);
+            const ny = cy + ry * Math.sin(ang);
+
+            const nw = 132;
+            const nh = 46;
+            c.fillStyle = '#eff6ff';
+            roundRect(c, nx - nw / 2, ny - nh / 2, nw, nh, 14);
+            c.fill();
+            c.strokeStyle = cor;
+            c.lineWidth = 2;
+            c.stroke();
+
+            desenharTextoAjustado(c, `${idx + 1}. ${st}`, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
+              weight: '800', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
+            });
+          });
+
+          desenharTextoAjustado(c, '🔄 CICLO', cx - 50, cy - 14, 100, 28, {
+            weight: '900', maxFont: 13, minFont: 10, color: cor, align: 'center', vAlign: 'middle'
+          });
+        }
+
+        // 9. MAPA DE ÁRVORE OU MAPA DE ORGANOGRAMA
+        else if (t === 'mm_arvore' || t === 'mm_organograma') {
+          const rootText = d.center || 'Raiz / Direção';
+          const nodes = d.nodes || ['Ramo 1', 'Ramo 2', 'Ramo 3', 'Ramo 4'];
+          const total = Math.max(1, nodes.length);
+
+          const rootW = 180;
+          const rootH = 46;
+          const rootX = (w - rootW) / 2;
+          const rootY = bodyY + 10;
+
+          c.fillStyle = cor;
+          roundRect(c, rootX, rootY, rootW, rootH, 10);
+          c.fill();
+          desenharTextoAjustado(c, rootText, rootX + 8, rootY + 4, rootW - 16, rootH - 8, {
+            weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
+          });
+
+          const slotW = (w - 32) / total;
+          const childY = bodyY + bodyH - 76;
+          const midLineY = rootY + rootH + (childY - (rootY + rootH)) / 2;
+
+          nodes.forEach((nd, idx) => {
+            const childCenterX = 16 + idx * slotW + slotW / 2;
+            const childW = Math.min(140, slotW - 10);
+            const childH = 56;
+
+            c.strokeStyle = cor;
+            c.lineWidth = 2;
+            c.beginPath();
+            if (t === 'mm_organograma') {
+              // Linhas ortogonais clássicas de organograma
+              c.moveTo(w / 2, rootY + rootH);
+              c.lineTo(w / 2, midLineY);
+              c.lineTo(childCenterX, midLineY);
+              c.lineTo(childCenterX, childY);
+            } else {
+              // Ramos curvos orgânicos de árvore
+              c.moveTo(w / 2, rootY + rootH);
+              c.bezierCurveTo(w / 2, midLineY, childCenterX, midLineY, childCenterX, childY);
+            }
+            c.stroke();
+
+            c.fillStyle = '#f8fafc';
+            roundRect(c, childCenterX - childW / 2, childY, childW, childH, 10);
+            c.fill();
+            c.stroke();
+
+            desenharTextoAjustado(c, nd, childCenterX - childW / 2 + 6, childY + 4, childW - 12, childH - 8, {
+              weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
+            });
+          });
+        }
+
+        // 10. INTERATIVO
+        else if (t === 'interativo') {
           const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta', revealed: false }];
           const cols = Math.min(3, cards.length);
           const rows = Math.ceil(cards.length / cols);
@@ -1258,44 +1482,67 @@
         c.restore();
       }
 
-      function desenharLaserSeta(c, pts) {
-        if (!Array.isArray(pts) || pts.length === 0) return;
+      // =========================================================================
+      // 🏹 5. SETA LASER SEMPRE ACESA + RASTRO AO PRESSIONAR
+      // =========================================================================
+      function desenharLaserSeta(c, pts, headPos) {
         c.save();
         c.shadowColor = '#ef4444';
-        c.shadowBlur = 14;
+        c.shadowBlur = 15;
         c.strokeStyle = '#ef4444';
         c.fillStyle = '#ef4444';
-        c.lineWidth = 5;
         c.lineCap = 'round';
         c.lineJoin = 'round';
 
-        c.beginPath();
-        c.moveTo(pts[0].x, pts[0].y);
-        for (let i = 1; i < pts.length; i++) {
-          c.lineTo(pts[i].x, pts[i].y);
+        // Desenha o rastro luminoso (somente quando pressionado)
+        if (Array.isArray(pts) && pts.length > 1) {
+          c.lineWidth = 5;
+          c.beginPath();
+          c.moveTo(pts[0].x, pts[0].y);
+          for (let i = 1; i < pts.length; i++) {
+            c.lineTo(pts[i].x, pts[i].y);
+          }
+          c.stroke();
+
+          c.strokeStyle = '#fecaca';
+          c.lineWidth = 2;
+          c.stroke();
         }
-        c.stroke();
 
-        c.strokeStyle = '#fecaca';
-        c.lineWidth = 2;
-        c.stroke();
+        // Desenha a Seta Laser Acesa (sempre visível enquanto a ferramenta Laser estiver ativa!)
+        const ponta = headPos || (Array.isArray(pts) && pts.length > 0 ? pts[pts.length - 1] : null);
+        if (ponta && Number.isFinite(ponta.x) && Number.isFinite(ponta.y)) {
+          let angle = Number.isFinite(ponta.angle) ? ponta.angle : -Math.PI / 4;
+          if (Array.isArray(pts) && pts.length > 1) {
+            const ref = pts[Math.max(0, pts.length - 4)];
+            if (ponta.x !== ref.x || ponta.y !== ref.y) {
+              angle = Math.atan2(ponta.y - ref.y, ponta.x - ref.x);
+            }
+          }
 
-        const tip = pts[pts.length - 1];
-        const refIdx = Math.max(0, pts.length - 4);
-        const prev = pts[refIdx];
-        const angle = (pts.length > 1 && (tip.x !== prev.x || tip.y !== prev.y))
-          ? Math.atan2(tip.y - prev.y, tip.x - prev.x)
-          : -Math.PI / 4;
+          // Halo externo pulsante
+          c.fillStyle = 'rgba(239, 68, 68, 0.28)';
+          c.beginPath();
+          c.arc(ponta.x, ponta.y, 16, 0, Math.PI * 2);
+          c.fill();
 
-        const headLen = 20;
-        c.fillStyle = '#ef4444';
-        c.beginPath();
-        c.moveTo(tip.x, tip.y);
-        c.lineTo(tip.x - headLen * Math.cos(angle - Math.PI / 6), tip.y - headLen * Math.sin(angle - Math.PI / 6));
-        c.lineTo(tip.x - headLen * 0.72 * Math.cos(angle), tip.y - headLen * 0.72 * Math.sin(angle));
-        c.lineTo(tip.x - headLen * Math.cos(angle + Math.PI / 6), tip.y - headLen * Math.sin(angle + Math.PI / 6));
-        c.closePath();
-        c.fill();
+          // Seta Laser Neon Direcional
+          const headLen = 22;
+          c.fillStyle = '#ef4444';
+          c.beginPath();
+          c.moveTo(ponta.x, ponta.y);
+          c.lineTo(ponta.x - headLen * Math.cos(angle - Math.PI / 5.5), ponta.y - headLen * Math.sin(angle - Math.PI / 5.5));
+          c.lineTo(ponta.x - headLen * 0.68 * Math.cos(angle), ponta.y - headLen * 0.68 * Math.sin(angle));
+          c.lineTo(ponta.x - headLen * Math.cos(angle + Math.PI / 5.5), ponta.y - headLen * Math.sin(angle + Math.PI / 5.5));
+          c.closePath();
+          c.fill();
+
+          // Ponto branco incandescente na ponta da seta
+          c.fillStyle = '#ffffff';
+          c.beginPath();
+          c.arc(ponta.x, ponta.y, 3.2, 0, Math.PI * 2);
+          c.fill();
+        }
 
         c.restore();
       }
@@ -1378,6 +1625,16 @@
           c.lineTo(item.x1, item.y2);
           c.closePath();
           c.stroke();
+        } else if (item.tool === 'diamond') {
+          const cx = (item.x1 + item.x2) / 2;
+          const cy = (item.y1 + item.y2) / 2;
+          c.beginPath();
+          c.moveTo(cx, item.y1);
+          c.lineTo(item.x2, cy);
+          c.lineTo(cx, item.y2);
+          c.lineTo(item.x1, cy);
+          c.closePath();
+          c.stroke();
         } else if (item.tool === 'hexagon') {
           const cx = (item.x1 + item.x2) / 2;
           const cy = (item.y1 + item.y2) / 2;
@@ -1438,6 +1695,8 @@
         const targetW = Math.max(1, Math.floor(w * dpr));
         const targetH = Math.max(1, Math.floor(h * dpr));
         if (canvas.width !== targetW || canvas.height !== targetH) {
+          canvas.style.width = w + 'px';
+          canvas.style.height = h + 'px';
           canvas.width = targetW;
           canvas.height = targetH;
         }
@@ -1455,8 +1714,8 @@
         if (activeShape) {
           desenharElemento(ctx, activeShape);
         }
-        if (laserTrail.length > 0) {
-          desenharLaserSeta(ctx, laserTrail);
+        if (laserHead || laserTrail.length > 0) {
+          desenharLaserSeta(ctx, laserTrail, laserHead);
         }
 
         ctx.restore();
@@ -1475,10 +1734,15 @@
           if (lx < 0 || lx > w || ly < 0 || ly > h) continue;
 
           if (!(role === 'aluno' && isReadonly)) {
+            // Alça de Zoom no Lugar [⤡] (Expande/Diminui mantendo o centro fixo no lugar!)
             if (lx >= w - 32 && ly >= h - 32) {
               resizingShape = sh;
               resizeStartScale = sh.scale || 1;
-              resizeStartDist = Math.max(40, Math.hypot(pt.x - sh.x, pt.y - sh.y));
+              resizeCenterPt = {
+                cx: sh.x + (w * resizeStartScale) / 2,
+                cy: sh.y + (h * resizeStartScale) / 2
+              };
+              resizeStartDist = Math.max(30, Math.hypot(pt.x - resizeCenterPt.cx, pt.y - resizeCenterPt.cy));
               return 'resize';
             }
 
@@ -1492,7 +1756,12 @@
                 return 'action';
               }
               if (lx >= w - 52 && lx <= w - 4) {
+                const oldScale = sh.scale || 1;
+                const cx = sh.x + (w * oldScale) / 2;
+                const cy = sh.y + (h * oldScale) / 2;
                 sh.scale = 1;
+                sh.x = cx - w / 2;
+                sh.y = cy - h / 2;
                 desenharQuadro();
                 agendarSalvamentoNuvem(10);
                 return 'action';
@@ -1589,6 +1858,7 @@
       });
 
       canvas.addEventListener('pointerdown', (e) => {
+        fecharPopoversFlutuantes();
         if (role === 'aluno' && isReadonly) return;
         if (e.button !== undefined && e.button !== 0 && currentTool !== 'pan') return;
 
@@ -1598,6 +1868,7 @@
         }
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
+        lastFocusPoint = { x: pt.x, y: pt.y };
 
         const acaoInfo = verificarAcoesInfografico(pt);
         if (acaoInfo === 'action') return;
@@ -1646,7 +1917,8 @@
 
         if (currentTool === 'laser') {
           clearTimeout(laserFadeTimer);
-          laserTrail = [pt];
+          laserHead = { x: Math.round(pt.x), y: Math.round(pt.y), angle: laserHead?.angle ?? (-Math.PI / 4) };
+          laserTrail = [{ x: Math.round(pt.x), y: Math.round(pt.y) }];
           desenharQuadro();
           agendarSalvamentoNuvem(10);
           return;
@@ -1681,13 +1953,33 @@
       });
 
       canvas.addEventListener('pointermove', (e) => {
-        if (!isPointerDown) return;
+        if (role === 'aluno' && isReadonly) return;
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        if (resizingShape) {
-          const distAtual = Math.max(40, Math.hypot(pt.x - resizingShape.x, pt.y - resizingShape.y));
-          const novaEscala = Math.max(0.45, Math.min(2.8, resizeStartScale * (distAtual / resizeStartDist)));
+        // 🏹 Seta Laser SEMPRE ACESA ao mover pela tela (mesmo sem clicar!)
+        if (currentTool === 'laser' && !isPointerDown) {
+          let ang = laserHead?.angle ?? (-Math.PI / 4);
+          if (laserHead && Math.hypot(pt.x - laserHead.x, pt.y - laserHead.y) > 2) {
+            ang = Math.atan2(pt.y - laserHead.y, pt.x - laserHead.x);
+          }
+          laserHead = { x: Math.round(pt.x), y: Math.round(pt.y), angle: ang };
+          lastFocusPoint = { x: pt.x, y: pt.y };
+          desenharQuadro();
+          transmitirMovimentoAoVivo();
+          return;
+        }
+
+        if (!isPointerDown) return;
+        lastFocusPoint = { x: pt.x, y: pt.y };
+
+        // Zoom no Lugar do Infográfico / Mapa Mental (Mantém o centro fixo sem deslizar!)
+        if (resizingShape && resizeCenterPt) {
+          const { w, h } = calcularDimensoesInfografico(resizingShape);
+          const distAtual = Math.max(30, Math.hypot(pt.x - resizeCenterPt.cx, pt.y - resizeCenterPt.cy));
+          const novaEscala = Math.max(0.45, Math.min(2.6, resizeStartScale * (distAtual / resizeStartDist)));
           resizingShape.scale = Math.round(novaEscala * 100) / 100;
+          resizingShape.x = resizeCenterPt.cx - (w * resizingShape.scale) / 2;
+          resizingShape.y = resizeCenterPt.cy - (h * resizingShape.scale) / 2;
           desenharQuadro();
           transmitirMovimentoAoVivo();
           return;
@@ -1736,7 +2028,13 @@
           return;
         }
 
+        // 🏹 Laser Pressionado = Seta Acesa + Rastro Luminoso
         if (currentTool === 'laser') {
+          let ang = laserHead?.angle ?? (-Math.PI / 4);
+          if (laserHead && Math.hypot(pt.x - laserHead.x, pt.y - laserHead.y) > 2) {
+            ang = Math.atan2(pt.y - laserHead.y, pt.x - laserHead.x);
+          }
+          laserHead = { x: Math.round(pt.x), y: Math.round(pt.y), angle: ang };
           laserTrail.push({ x: Math.round(pt.x), y: Math.round(pt.y) });
           if (laserTrail.length > 28) laserTrail.shift();
           desenharQuadro();
@@ -1766,6 +2064,7 @@
 
         if (resizingShape) {
           resizingShape = null;
+          resizeCenterPt = null;
           agendarSalvamentoNuvem(10);
           return;
         }
@@ -1793,7 +2092,7 @@
             laserTrail = [];
             desenharQuadro();
             if (role !== 'aluno') agendarSalvamentoNuvem(10);
-          }, 1200);
+          }, 900);
           return;
         }
 
@@ -1820,7 +2119,8 @@
         e.preventDefault();
         if (e.ctrlKey || e.metaKey) {
           const fator = e.deltaY < 0 ? 1.12 : 0.89;
-          aplicarZoomTela(fator, e.clientX, e.clientY);
+          const rect = canvas.getBoundingClientRect();
+          aplicarZoomTela(fator, e.clientX - rect.left, e.clientY - rect.top);
         } else {
           camera.x -= e.deltaX;
           camera.y -= e.deltaY;
@@ -1829,17 +2129,128 @@
         }
       }, { passive: false });
 
-      function aplicarZoomTela(fator, centerX = window.innerWidth / 2, centerY = window.innerHeight / 2) {
+      // 🔍 Zoom da Tela Firme no Lugar (Ancorado no centro exato do Palco)
+      function aplicarZoomTela(fator, stagePivotX = null, stagePivotY = null) {
         validarCameraSegura();
+        const { w, h } = obterDimensoesTelaSeguras();
+        const px = stagePivotX !== null ? stagePivotX : (w / 2);
+        const py = stagePivotY !== null ? stagePivotY : (h / 2);
+
         const antigoZoom = camera.zoom;
-        const novoZoom = Math.max(0.35, Math.min(3.0, antigoZoom * fator));
-        camera.x = centerX - ((centerX - camera.x) / antigoZoom) * novoZoom;
-        camera.y = centerY - ((centerY - camera.y) / antigoZoom) * novoZoom;
-        camera.zoom = Math.round(novoZoom * 100) / 100;
+        const novoZoom = Math.max(0.4, Math.min(2.8, Math.round(antigoZoom * fator * 100) / 100));
+
+        const worldX = (px - camera.x) / antigoZoom;
+        const worldY = (py - camera.y) / antigoZoom;
+
+        camera.zoom = novoZoom;
+        camera.x = px - worldX * novoZoom;
+        camera.y = py - worldY * novoZoom;
+
         desenharQuadro();
         if (role !== 'aluno') agendarSalvamentoNuvem(20);
       }
 
+      // =========================================================================
+      // 🎨📐 6. SELETORES FLUTUANTES DE CORES E DE FIGURAS GEOMÉTRICAS
+      // =========================================================================
+      const colorPopover = document.getElementById('color-popover');
+      const shapesPopover = document.getElementById('shapes-popover');
+      const btnOpenColor = document.getElementById('btn-open-color-popover');
+      const btnOpenShapes = document.getElementById('btn-open-shapes-popover');
+      const currentColorCircle = document.getElementById('current-color-circle');
+      const customColorInput = document.getElementById('custom-color-input');
+      const shapesBtnLabel = document.getElementById('shapes-btn-label');
+
+      function fecharPopoversFlutuantes() {
+        if (colorPopover) colorPopover.style.display = 'none';
+        if (shapesPopover) shapesPopover.style.display = 'none';
+      }
+
+      function definirCorAtiva(novaCor) {
+        currentColor = novaCor;
+        if (currentColorCircle) currentColorCircle.style.background = novaCor;
+        if (customColorInput && /^#[0-9a-fA-F]{6}$/.test(novaCor)) customColorInput.value = novaCor;
+        document.querySelectorAll('.color-swatch').forEach(sw => {
+          sw.classList.toggle('active', sw.dataset.color === novaCor);
+        });
+        sincronizarEstiloInputTexto();
+      }
+
+      btnOpenColor.onclick = (e) => {
+        e.stopPropagation();
+        const aberto = colorPopover.style.display === 'flex';
+        fecharPopoversFlutuantes();
+        if (!aberto) {
+          const rect = btnOpenColor.getBoundingClientRect();
+          colorPopover.style.top = (rect.bottom + 6) + 'px';
+          colorPopover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 235)) + 'px';
+          colorPopover.style.display = 'flex';
+        }
+      };
+
+      document.querySelectorAll('.color-swatch').forEach(sw => {
+        sw.onclick = () => {
+          definirCorAtiva(sw.dataset.color);
+          fecharPopoversFlutuantes();
+        };
+      });
+
+      customColorInput.oninput = function() {
+        definirCorAtiva(this.value);
+      };
+
+      btnOpenShapes.onclick = (e) => {
+        e.stopPropagation();
+        const aberto = shapesPopover.style.display === 'flex';
+        fecharPopoversFlutuantes();
+        if (!aberto) {
+          const rect = btnOpenShapes.getBoundingClientRect();
+          shapesPopover.style.bottom = (window.innerHeight - rect.top + 8) + 'px';
+          shapesPopover.style.left = Math.max(8, Math.min(rect.left, window.innerWidth - 250)) + 'px';
+          shapesPopover.style.display = 'flex';
+        }
+      };
+
+      function ativarFerramenta(toolName) {
+        currentTool = toolName;
+        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
+          b.classList.toggle('active', b.dataset.tool === toolName);
+        });
+        const ehForma = ['line', 'arrow', 'rect', 'circle', 'triangle', 'hexagon', 'diamond'].includes(toolName);
+        btnOpenShapes.classList.toggle('active', ehForma);
+
+        // 🏹 Se escolheu a Seta Laser, acende imediatamente no centro da vista!
+        if (toolName === 'laser') {
+          const { w, h } = obterDimensoesTelaSeguras();
+          const centro = telaParaQuadro(w / 2, h / 2);
+          if (!laserHead) {
+            laserHead = { x: Math.round(centro.x), y: Math.round(centro.y), angle: -Math.PI / 4 };
+          }
+          desenharQuadro();
+          agendarSalvamentoNuvem(10);
+        } else if (laserHead) {
+          laserHead = null;
+          laserTrail = [];
+          desenharQuadro();
+          if (role !== 'aluno') agendarSalvamentoNuvem(10);
+        }
+
+        canvas.style.cursor = (currentTool === 'pan' || currentTool === 'move') ? 'grab' : 'crosshair';
+      }
+
+      document.querySelectorAll('.shape-option-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.shape-option-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          shapesBtnLabel.innerText = btn.dataset.shapeLabel + ' ▾';
+          ativarFerramenta(btn.dataset.shapeTool);
+          fecharPopoversFlutuantes();
+        };
+      });
+
+      // =========================================================================
+      // 🔤 7. CAIXA DE TEXTO RICO
+      // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
       const fontSelect = document.getElementById('text-font-select');
@@ -1882,7 +2293,7 @@
           textStyle.strike = !!shapeExistente.strike;
           textStyle.fontFamily = shapeExistente.fontFamily || "'Segoe UI', sans-serif";
           fontSelect.value = textStyle.fontFamily;
-          currentColor = shapeExistente.color || currentColor;
+          definirCorAtiva(shapeExistente.color || currentColor);
           textEditorInput.value = shapeExistente.text || '';
         } else {
           textEditorInput.value = '';
@@ -1936,6 +2347,7 @@
             fontFamily: textStyle.fontFamily
           });
         }
+        lastFocusPoint = { x: textTargetCoords.x + 80, y: textTargetCoords.y + 20 };
         redoStack = [];
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
@@ -1949,13 +2361,40 @@
         textEditorBox.style.display = 'none';
       };
 
+      // =========================================================================
+      // 📊🧠 8. ESTÚDIO DE INFOGRÁFICOS (8) E MAPAS MENTAIS (8)
+      // =========================================================================
       const infoModal = document.getElementById('infographic-modal');
+      const infoTypeGrid = document.getElementById('info-type-grid');
       const infoFieldsBox = document.getElementById('info-dynamic-fields');
       const infoExtraHeaders = document.getElementById('info-extra-headers');
       const infoTitleInput = document.getElementById('info-title-input');
       const infoModalHeaderTitle = document.getElementById('info-modal-header-title');
+      const studioModalIcon = document.getElementById('studio-modal-icon');
       let selectedInfoType = 'estatistico';
       let draftInfoData = {};
+
+      const CATALOGO_INFO = [
+        { id: 'estatistico', title: '📊 1. Estatístico', desc: 'Barras e métricas' },
+        { id: 'informativo', title: '📌 2. Informativo', desc: 'Tópicos numerados' },
+        { id: 'comparativo', title: '⚖️ 3. Comparativo', desc: 'Lado A vs Lado B' },
+        { id: 'processos', title: '⚙️ 4. Processos', desc: 'Etapas 1 ➔ 2 ➔ 3' },
+        { id: 'linha_tempo', title: '⏳ 5. Linha do Tempo', desc: 'Marcos cronológicos' },
+        { id: 'espaco_tempo', title: '🌍 6. Espaço-Tempo', desc: 'Lugar + Época' },
+        { id: 'relacional', title: '🕸️ 7. Relacional', desc: 'Conexões em rede' },
+        { id: 'interativo', title: '👆 8. Interativo', desc: 'Cartões clicáveis' }
+      ];
+
+      const CATALOGO_MINDMAPS = [
+        { id: 'mm_aranha', title: '🕷️ 1. Mapa da Aranha', desc: 'Centro e patas radiais' },
+        { id: 'mm_arvore', title: '🌳 2. Mapa de Árvore', desc: 'Raiz e ramificações' },
+        { id: 'mm_fluxo', title: '🌊 3. Mapa de Fluxo', desc: 'Sequência encadeada' },
+        { id: 'mm_conceitos', title: '💡 4. Mapa de Conceitos', desc: 'Nós com conectores' },
+        { id: 'mm_ciclo', title: '🔄 5. Mapa de Ciclo', desc: 'Anel circular contínuo' },
+        { id: 'mm_organograma', title: '🏢 6. Organograma', desc: 'Hierarquia estruturada' },
+        { id: 'mm_linha_tempo', title: '⏳ 7. Linha do Tempo', desc: 'Marcos cronológicos' },
+        { id: 'mm_texto', title: '📝 8. Mapa de Texto', desc: 'Quadro de definições' }
+      ];
 
       function obterDadosPadraoInfografico(tipo) {
         if (tipo === 'estatistico') {
@@ -1979,6 +2418,16 @@
             ]
           };
         }
+        if (tipo === 'mm_texto') {
+          return {
+            titulo: 'Mapa de Texto: Modal Verbs',
+            topics: [
+              'CAN / COULD: Habilidade ou permissão (Ex: I can swim)',
+              'MUST: Obrigação forte ou dedução lógica (Ex: You must study)',
+              'SHOULD: Conselho ou recomendação (Ex: You should rest)'
+            ]
+          };
+        }
         if (tipo === 'comparativo') {
           return {
             titulo: 'Comparativo: Simple Past vs Present Perfect',
@@ -1988,13 +2437,21 @@
             itemsB: ['Tempo indefinido', 'Experiência de vida', 'Ex: I have visited London']
           };
         }
-        if (tipo === 'processos') {
+        if (tipo === 'processos' || tipo === 'mm_fluxo') {
           return {
-            titulo: 'Processo de Construção da Fluência',
-            steps: ['Palavras-Chave', 'Frases Curtas', 'Diálogos Reais', 'Fluência Natural']
+            titulo: tipo === 'mm_fluxo' ? 'Mapa de Fluxo: Estrutura da Frase' : 'Processo de Construção da Fluência',
+            steps: tipo === 'mm_fluxo'
+              ? ['Subject (Sujeito)', 'Auxiliary / Verb', 'Object (Complemento)', 'Time / Place']
+              : ['Palavras-Chave', 'Frases Curtas', 'Diálogos Reais', 'Fluência Natural']
           };
         }
-        if (tipo === 'linha_tempo') {
+        if (tipo === 'mm_ciclo') {
+          return {
+            titulo: 'Mapa de Ciclo: Hábito de Fluência Diária',
+            steps: ['1. Listen (Ouvir)', '2. Repeat (Repetir)', '3. Write (Escrever)', '4. Speak (Praticar)']
+          };
+        }
+        if (tipo === 'linha_tempo' || tipo === 'mm_linha_tempo') {
           return {
             titulo: 'Linha do Tempo (Tempos Verbais)',
             events: [
@@ -2015,11 +2472,29 @@
             ]
           };
         }
-        if (tipo === 'relacional') {
+        if (tipo === 'relacional' || tipo === 'mm_aranha') {
           return {
-            titulo: 'Mapa Relacional de Phrasal Verbs (GET)',
-            center: 'GET (Verbo Base)',
-            nodes: ['Get up (Acordar)', 'Get in (Entrar)', 'Get out (Sair)', 'Get over (Superar)']
+            titulo: tipo === 'mm_aranha' ? 'Mapa da Aranha: Vocabulário de Viagem' : 'Mapa Relacional de Phrasal Verbs (GET)',
+            center: tipo === 'mm_aranha' ? 'TRAVEL (Viagem)' : 'GET (Verbo Base)',
+            nodes: tipo === 'mm_aranha'
+              ? ['Airport & Boarding Pass', 'Hotel & Reservation', 'Restaurant & Menu', 'Sightseeing & Tours']
+              : ['Get up (Acordar)', 'Get in (Entrar)', 'Get out (Sair)', 'Get over (Superar)']
+          };
+        }
+        if (tipo === 'mm_conceitos') {
+          return {
+            titulo: 'Mapa de Conceitos: Conditionals',
+            center: 'IF CLAUSES',
+            nodes: ['fatos reais: Zero Conditional', 'futuro provável: First Conditional', 'hipótese: Second Conditional', 'passado irreal: Third Conditional']
+          };
+        }
+        if (tipo === 'mm_arvore' || tipo === 'mm_organograma') {
+          return {
+            titulo: tipo === 'mm_arvore' ? 'Mapa de Árvore: Classes de Palavras' : 'Mapa de Organograma: Equipa / Estrutura',
+            center: tipo === 'mm_arvore' ? 'ENGLISH WORDS' : 'CEO / Direção Geral',
+            nodes: tipo === 'mm_arvore'
+              ? ['Nouns (Substantivos)', 'Verbs (Ações)', 'Adjectives (Qualidades)', 'Adverbs (Modo/Tempo)']
+              : ['Marketing Dept.', 'Sales Team', 'Tech & Product', 'Customer Support']
           };
         }
         return {
@@ -2032,16 +2507,37 @@
         };
       }
 
+      function renderizarBotoesCatalogoModal(catalogo, tipoSelecionado) {
+        infoTypeGrid.innerHTML = catalogo.map(item => `
+          <button type="button" class="info-type-btn ${item.id === tipoSelecionado ? 'active' : ''}" data-info-type="${item.id}">
+            <strong style="font-size:12px; color:#0f172a;">${item.title}</strong>
+            <span style="font-size:10px; color:#64748b;">${item.desc}</span>
+          </button>
+        `).join('');
+
+        infoTypeGrid.querySelectorAll('.info-type-btn').forEach(btn => {
+          btn.onclick = () => {
+            infoTypeGrid.querySelectorAll('.info-type-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            selectedInfoType = btn.dataset.infoType;
+            const padrao = obterDadosPadraoInfografico(selectedInfoType);
+            infoTitleInput.value = padrao.titulo;
+            draftInfoData = JSON.parse(JSON.stringify(padrao));
+            desenharInputsDraft();
+          };
+        });
+      }
+
       function lerInputsAtuaisParaDraft() {
-        const tipo = selectedInfoType;
-        if (tipo === 'estatistico' && draftInfoData.items) {
+        const t = selectedInfoType;
+        if (t === 'estatistico' && draftInfoData.items) {
           draftInfoData.items = draftInfoData.items.map((it, idx) => ({
             label: document.getElementById(`inf-est-l-${idx}`)?.value ?? it.label,
             val: Number(document.getElementById(`inf-est-v-${idx}`)?.value ?? it.val)
           }));
-        } else if (tipo === 'informativo' && draftInfoData.topics) {
-          draftInfoData.topics = draftInfoData.topics.map((t, idx) => document.getElementById(`inf-info-${idx}`)?.value ?? t);
-        } else if (tipo === 'comparativo') {
+        } else if ((t === 'informativo' || t === 'mm_texto') && draftInfoData.topics) {
+          draftInfoData.topics = draftInfoData.topics.map((top, idx) => document.getElementById(`inf-info-${idx}`)?.value ?? top);
+        } else if (t === 'comparativo') {
           draftInfoData.colA = document.getElementById('inf-cmp-ta')?.value ?? draftInfoData.colA;
           draftInfoData.colB = document.getElementById('inf-cmp-tb')?.value ?? draftInfoData.colB;
           const qtd = Math.max((draftInfoData.itemsA || []).length, (draftInfoData.itemsB || []).length);
@@ -2052,22 +2548,22 @@
           }
           draftInfoData.itemsA = nA;
           draftInfoData.itemsB = nB;
-        } else if (tipo === 'processos' && draftInfoData.steps) {
+        } else if ((t === 'processos' || t === 'mm_fluxo' || t === 'mm_ciclo') && draftInfoData.steps) {
           draftInfoData.steps = draftInfoData.steps.map((s, idx) => document.getElementById(`inf-prc-${idx}`)?.value ?? s);
-        } else if (tipo === 'linha_tempo' && draftInfoData.events) {
+        } else if ((t === 'linha_tempo' || t === 'mm_linha_tempo') && draftInfoData.events) {
           draftInfoData.events = draftInfoData.events.map((ev, idx) => ({
             time: document.getElementById(`inf-tl-t-${idx}`)?.value ?? ev.time,
             label: document.getElementById(`inf-tl-l-${idx}`)?.value ?? ev.label
           }));
-        } else if (tipo === 'espaco_tempo' && draftInfoData.stages) {
+        } else if (t === 'espaco_tempo' && draftInfoData.stages) {
           draftInfoData.stages = draftInfoData.stages.map((st, idx) => ({
             place: document.getElementById(`inf-et-p-${idx}`)?.value ?? st.place,
             desc: document.getElementById(`inf-et-d-${idx}`)?.value ?? st.desc
           }));
-        } else if (tipo === 'relacional' && draftInfoData.nodes) {
+        } else if ((t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos' || t === 'mm_arvore' || t === 'mm_organograma') && draftInfoData.nodes) {
           draftInfoData.center = document.getElementById('inf-rel-center')?.value ?? draftInfoData.center;
           draftInfoData.nodes = draftInfoData.nodes.map((n, idx) => document.getElementById(`inf-rel-n-${idx}`)?.value ?? n);
-        } else if (tipo === 'interativo' && draftInfoData.cards) {
+        } else if (t === 'interativo' && draftInfoData.cards) {
           draftInfoData.cards = draftInfoData.cards.map((card, idx) => ({
             front: document.getElementById(`inf-int-f-${idx}`)?.value ?? card.front,
             back: document.getElementById(`inf-int-b-${idx}`)?.value ?? card.back,
@@ -2080,15 +2576,15 @@
         lerInputsAtuaisParaDraft();
         const t = selectedInfoType;
         if (t === 'estatistico' && draftInfoData.items.length > 1) draftInfoData.items.splice(idx, 1);
-        else if (t === 'informativo' && draftInfoData.topics.length > 1) draftInfoData.topics.splice(idx, 1);
+        else if ((t === 'informativo' || t === 'mm_texto') && draftInfoData.topics.length > 1) draftInfoData.topics.splice(idx, 1);
         else if (t === 'comparativo' && draftInfoData.itemsA.length > 1) {
           draftInfoData.itemsA.splice(idx, 1);
           draftInfoData.itemsB.splice(idx, 1);
         }
-        else if (t === 'processos' && draftInfoData.steps.length > 1) draftInfoData.steps.splice(idx, 1);
-        else if (t === 'linha_tempo' && draftInfoData.events.length > 1) draftInfoData.events.splice(idx, 1);
+        else if ((t === 'processos' || t === 'mm_fluxo' || t === 'mm_ciclo') && draftInfoData.steps.length > 1) draftInfoData.steps.splice(idx, 1);
+        else if ((t === 'linha_tempo' || t === 'mm_linha_tempo') && draftInfoData.events.length > 1) draftInfoData.events.splice(idx, 1);
         else if (t === 'espaco_tempo' && draftInfoData.stages.length > 1) draftInfoData.stages.splice(idx, 1);
-        else if (t === 'relacional' && draftInfoData.nodes.length > 1) draftInfoData.nodes.splice(idx, 1);
+        else if ((t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos' || t === 'mm_arvore' || t === 'mm_organograma') && draftInfoData.nodes.length > 1) draftInfoData.nodes.splice(idx, 1);
         else if (t === 'interativo' && draftInfoData.cards.length > 1) draftInfoData.cards.splice(idx, 1);
         desenharInputsDraft();
       };
@@ -2105,10 +2601,10 @@
               <input class="info-input" id="inf-est-v-${idx}" type="number" value="${it.val}" placeholder="%" style="flex:1;">
               ${btnDel(idx)}
             </div>`).join('');
-        } else if (t === 'informativo') {
+        } else if (t === 'informativo' || t === 'mm_texto') {
           infoFieldsBox.innerHTML = (draftInfoData.topics || []).map((top, idx) => `
             <div style="display:flex; gap:6px;">
-              <input class="info-input" id="inf-info-${idx}" value="${top}" placeholder="Tópico ${idx + 1}">
+              <input class="info-input" id="inf-info-${idx}" value="${top}" placeholder="Tópico / Definição ${idx + 1}">
               ${btnDel(idx)}
             </div>`).join('');
         } else if (t === 'comparativo') {
@@ -2129,14 +2625,14 @@
               </div>`;
           }
           infoFieldsBox.innerHTML = rowsHtml;
-        } else if (t === 'processos') {
+        } else if (t === 'processos' || t === 'mm_fluxo' || t === 'mm_ciclo') {
           infoFieldsBox.innerHTML = (draftInfoData.steps || []).map((st, idx) => `
             <div style="display:flex; gap:6px; align-items:center;">
               <span style="font-size:12px; font-weight:800; color:#2563eb; width:65px;">Etapa ${idx + 1}:</span>
               <input class="info-input" id="inf-prc-${idx}" value="${st}" style="flex:1;">
               ${btnDel(idx)}
             </div>`).join('');
-        } else if (t === 'linha_tempo') {
+        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
           infoFieldsBox.innerHTML = (draftInfoData.events || []).map((ev, idx) => `
             <div style="display:flex; gap:6px;">
               <input class="info-input" id="inf-tl-t-${idx}" value="${ev.time}" placeholder="Data/Tempo" style="flex:1;">
@@ -2150,12 +2646,12 @@
               <input class="info-input" id="inf-et-d-${idx}" value="${st.desc}" placeholder="Ação / Narrativa" style="flex:1.6;">
               ${btnDel(idx)}
             </div>`).join('');
-        } else if (t === 'relacional') {
+        } else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos' || t === 'mm_arvore' || t === 'mm_organograma') {
           infoExtraHeaders.innerHTML = `
-            <input class="info-input" id="inf-rel-center" value="${draftInfoData.center || 'Tema Central'}" placeholder="Conceito Central" style="font-weight:bold; background:#eff6ff;">`;
+            <input class="info-input" id="inf-rel-center" value="${draftInfoData.center || 'Tema Central'}" placeholder="Nó Central / Raiz" style="font-weight:bold; background:#eff6ff;">`;
           infoFieldsBox.innerHTML = (draftInfoData.nodes || []).map((nd, idx) => `
             <div style="display:flex; gap:6px;">
-              <input class="info-input" id="inf-rel-n-${idx}" value="${nd}" placeholder="Ramificação ${idx + 1}">
+              <input class="info-input" id="inf-rel-n-${idx}" value="${nd}" placeholder="${t === 'mm_conceitos' ? 'conector: Conceito' : 'Ramo ' + (idx + 1)}">
               ${btnDel(idx)}
             </div>`).join('');
         } else if (t === 'interativo') {
@@ -2172,24 +2668,44 @@
         lerInputsAtuaisParaDraft();
         const t = selectedInfoType;
         if (t === 'estatistico') draftInfoData.items.push({ label: `Novo Indicador ${draftInfoData.items.length + 1}`, val: 80 });
-        else if (t === 'informativo') draftInfoData.topics.push(`Novo tópico explicativo ${draftInfoData.topics.length + 1}`);
+        else if (t === 'informativo' || t === 'mm_texto') draftInfoData.topics.push(`Novo tópico explicativo ${draftInfoData.topics.length + 1}`);
         else if (t === 'comparativo') {
           draftInfoData.itemsA.push(`Novo ponto A${draftInfoData.itemsA.length + 1}`);
           draftInfoData.itemsB.push(`Novo ponto B${draftInfoData.itemsB.length + 1}`);
         }
-        else if (t === 'processos') draftInfoData.steps.push(`Etapa ${draftInfoData.steps.length + 1}`);
-        else if (t === 'linha_tempo') draftInfoData.events.push({ time: `Marco ${draftInfoData.events.length + 1}`, label: 'Nova descrição' });
+        else if (t === 'processos' || t === 'mm_fluxo' || t === 'mm_ciclo') draftInfoData.steps.push(`Etapa ${draftInfoData.steps.length + 1}`);
+        else if (t === 'linha_tempo' || t === 'mm_linha_tempo') draftInfoData.events.push({ time: `Marco ${draftInfoData.events.length + 1}`, label: 'Nova descrição' });
         else if (t === 'espaco_tempo') draftInfoData.stages.push({ place: `📍 Etapa ${draftInfoData.stages.length + 1}`, desc: 'Nova narrativa' });
-        else if (t === 'relacional') draftInfoData.nodes.push(`Nova Conexão ${draftInfoData.nodes.length + 1}`);
+        else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos' || t === 'mm_arvore' || t === 'mm_organograma') draftInfoData.nodes.push(`Novo Ramo ${draftInfoData.nodes.length + 1}`);
         else if (t === 'interativo') draftInfoData.cards.push({ front: `${draftInfoData.cards.length + 1}. Nova Pergunta?`, back: '✅ Resposta!', revealed: false });
         desenharInputsDraft();
       }
 
       document.getElementById('btn-add-info-option').onclick = adicionarOpcaoNoDraft;
 
+      // Abre o Construtor de Infográficos (8 Modelos)
       document.getElementById('btn-open-infographic').onclick = () => {
+        fecharPopoversFlutuantes();
         editingShapeId = null;
-        infoModalHeaderTitle.innerText = 'Criar Novo Infográfico Pedagógico';
+        studioModalIcon.innerText = '📊';
+        infoModalHeaderTitle.innerText = 'Construtor de Infográficos (8 Modelos)';
+        selectedInfoType = 'estatistico';
+        renderizarBotoesCatalogoModal(CATALOGO_INFO, selectedInfoType);
+        const padrao = obterDadosPadraoInfografico(selectedInfoType);
+        infoTitleInput.value = padrao.titulo;
+        draftInfoData = JSON.parse(JSON.stringify(padrao));
+        desenharInputsDraft();
+        infoModal.style.display = 'flex';
+      };
+
+      // 🧠 Abre o Construtor de Mapas Mentais (8 Modelos)
+      document.getElementById('btn-open-mindmap').onclick = () => {
+        fecharPopoversFlutuantes();
+        editingShapeId = null;
+        studioModalIcon.innerText = '🧠';
+        infoModalHeaderTitle.innerText = 'Construtor de Mapas Mentais (8 Modelos)';
+        selectedInfoType = 'mm_aranha';
+        renderizarBotoesCatalogoModal(CATALOGO_MINDMAPS, selectedInfoType);
         const padrao = obterDadosPadraoInfografico(selectedInfoType);
         infoTitleInput.value = padrao.titulo;
         draftInfoData = JSON.parse(JSON.stringify(padrao));
@@ -2200,11 +2716,12 @@
       function abrirEdicaoInfograficoExistente(shapeAlvo, adicionarMaisUm = false) {
         editingShapeId = shapeAlvo.id;
         selectedInfoType = shapeAlvo.infoType || 'estatistico';
-        document.querySelectorAll('.info-type-btn').forEach(b => {
-          b.classList.toggle('active', b.dataset.infoType === selectedInfoType);
-        });
-        infoModalHeaderTitle.innerText = '✏️ Editar Infográfico da Lousa';
-        infoTitleInput.value = shapeAlvo.title || 'Infográfico';
+        const ehMapaMental = String(selectedInfoType).startsWith('mm_');
+        studioModalIcon.innerText = ehMapaMental ? '🧠' : '📊';
+        infoModalHeaderTitle.innerText = ehMapaMental ? '✏️ Editar Mapa Mental da Lousa' : '✏️ Editar Infográfico da Lousa';
+        renderizarBotoesCatalogoModal(ehMapaMental ? CATALOGO_MINDMAPS : CATALOGO_INFO, selectedInfoType);
+
+        infoTitleInput.value = shapeAlvo.title || 'Quadro Visual';
         draftInfoData = JSON.parse(JSON.stringify(shapeAlvo.infoData || obterDadosPadraoInfografico(selectedInfoType)));
         desenharInputsDraft();
         if (adicionarMaisUm) {
@@ -2216,21 +2733,9 @@
       document.getElementById('btn-close-info-modal').onclick = () => { infoModal.style.display = 'none'; editingShapeId = null; };
       document.getElementById('btn-cancel-info').onclick = () => { infoModal.style.display = 'none'; editingShapeId = null; };
 
-      document.querySelectorAll('.info-type-btn').forEach(btn => {
-        btn.onclick = () => {
-          document.querySelectorAll('.info-type-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          selectedInfoType = btn.dataset.infoType;
-          const padrao = obterDadosPadraoInfografico(selectedInfoType);
-          infoTitleInput.value = padrao.titulo;
-          draftInfoData = JSON.parse(JSON.stringify(padrao));
-          desenharInputsDraft();
-        };
-      });
-
       document.getElementById('btn-insert-info').onclick = () => {
         lerInputsAtuaisParaDraft();
-        const titulo = infoTitleInput.value.trim() || 'Infográfico';
+        const titulo = infoTitleInput.value.trim() || 'Quadro Visual';
 
         if (editingShapeId) {
           const existente = shapes.find(s => s.id === editingShapeId);
@@ -2239,6 +2744,7 @@
             existente.title = titulo;
             existente.infoData = JSON.parse(JSON.stringify(draftInfoData));
             calcularDimensoesInfografico(existente);
+            lastFocusPoint = { x: existente.x + existente.w / 2, y: existente.y + existente.h / 2 };
           }
           editingShapeId = null;
         } else {
@@ -2259,20 +2765,20 @@
           };
           calcularDimensoesInfografico(novo);
           shapes.push(novo);
+          lastFocusPoint = { x: novo.x + novo.w / 2, y: novo.y + novo.h / 2 };
         }
 
         infoModal.style.display = 'none';
-        document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
-        const moveBtn = document.querySelector('.tool-btn[data-tool="move"]');
-        if (moveBtn) moveBtn.classList.add('active');
-        currentTool = 'move';
-        canvas.style.cursor = 'grab';
+        ativarFerramenta('move');
 
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem(10);
       };
 
+      // =========================================================================
+      // 📑 9. BARRA DE NUMERAÇÃO DE TELAS E SINCRONIZAÇÃO EM TEMPO REAL
+      // =========================================================================
       document.getElementById('btn-prev-screen').onclick = () => {
         if (activeScreenIndex > 0) carregarTelaPorIndice(activeScreenIndex - 1, true);
       };
@@ -2359,19 +2865,8 @@
 
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
-          document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          currentTool = btn.dataset.tool;
-          canvas.style.cursor = (currentTool === 'pan' || currentTool === 'move') ? 'grab' : 'crosshair';
-        };
-      });
-
-      document.querySelectorAll('.color-dot').forEach(dot => {
-        dot.onclick = () => {
-          document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
-          dot.classList.add('active');
-          currentColor = dot.dataset.color;
-          sincronizarEstiloInputTexto();
+          fecharPopoversFlutuantes();
+          ativarFerramenta(btn.dataset.tool);
         };
       });
 
@@ -2480,6 +2975,7 @@
         if (selectFundo) selectFundo.value = currentBg;
 
         if (metaBg) {
+          laserHead = metaBg.laserHead || null;
           laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
           if (metaBg.profView) {
             profViewportRemoto = metaBg.profView;
@@ -2494,7 +2990,7 @@
         desenharQuadro();
       }
 
-      function agendarSalvamentoNuvem(delayMs = 25) {
+      function agendarSalvamentoNuvem(delayMs = 20) {
         if (!initialLoadDone) return;
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
@@ -2513,6 +3009,7 @@
               activeScreenIndex: activeScreenIndex,
               screens: screens,
               profView: estadoProf,
+              laserHead: laserHead,
               laserTrail: laserTrail,
               updatedAt: Date.now()
             };
@@ -2588,6 +3085,7 @@
 
               isAllowed = true;
               isReadonly = !data.recursos;
+              notificarCronometroParent(true, data.ativadaEm);
 
               if (acabouDeLiberar || mudouPermissao) {
                 atualizarPermissoesUI();
@@ -2598,6 +3096,7 @@
             } else {
               isAllowed = false;
               isReadonly = true;
+              notificarCronometroParent(false, null);
               atualizarPermissoesUI();
             }
           } catch (e) {}
@@ -2624,6 +3123,7 @@
             if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
               isAllowed = !!data.ativa;
               isReadonly = data.ativa ? !data.recursos : true;
+              notificarCronometroParent(!!data.ativa, data.ativadaEm);
               atualizarPermissoesUI();
               if (data.ativa) carregarDadosDaNuvem(true);
             }

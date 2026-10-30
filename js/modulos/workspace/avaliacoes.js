@@ -3371,11 +3371,86 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     
 // ========================================================================
-    // 🖍 LOUSA DIGITAL - MOTOR PREMIUM V15 - (CONTROLO CENTRAL E TRAVA DE RECURSOS)
+    // 🖍 LOUSA DIGITAL - MOTOR PREMIUM V16 (COM CRONÓMETRO AO VIVO PRÓXIMO AO X)
     // ========================================================================
     lousaInterval: null,
+    _lousaTimerInterval: null,
     _lousaSSE: null,
-    _lousaProfState: { ativa: false, recursos: false, turmaId: 'global' },
+    _lousaProfState: { ativa: false, recursos: false, turmaId: 'global', ativadaEm: null },
+
+    // ⏱️ Injeta e atualiza o cronómetro ao lado do botão X na barra superior do Professor e do Aluno
+    garantirElementoCronometroLousa: () => {
+        const modalProfHeader = document.querySelector('#ws-modal-lousa-prof > div:first-child');
+        if (modalProfHeader && !document.getElementById('ws-lousa-timer-prof')) {
+            const btnCloseProf = modalProfHeader.querySelector('button[onclick*="fecharLousaProfessor"]');
+            const badgeProf = document.createElement('div');
+            badgeProf.id = 'ws-lousa-timer-prof';
+            badgeProf.style.cssText = 'background: rgba(15, 23, 42, 0.75); border: 1px solid #334155; color: #94a3b8; padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; margin-left: auto; margin-right: 12px; white-space: nowrap;';
+            badgeProf.innerHTML = '⏱️ 00:00:00';
+            if (btnCloseProf) modalProfHeader.insertBefore(badgeProf, btnCloseProf);
+            else modalProfHeader.appendChild(badgeProf);
+        }
+
+        const modalAlunoHeader = document.querySelector('#ws-modal-lousa-aluno-fullscreen > div:first-child');
+        if (modalAlunoHeader && !document.getElementById('ws-lousa-timer-aluno')) {
+            const btnCloseAluno = modalAlunoHeader.querySelector('button[onclick*="fecharLousaFullscreen"]');
+            const badgeAluno = document.createElement('div');
+            badgeAluno.id = 'ws-lousa-timer-aluno';
+            badgeAluno.style.cssText = 'background: rgba(15, 23, 42, 0.75); border: 1px solid #10b981; color: #34d399; padding: 6px 12px; border-radius: 10px; font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; display: flex; align-items: center; gap: 6px; margin-left: auto; margin-right: 12px; white-space: nowrap;';
+            badgeAluno.innerHTML = '⏱️ 00:00:00';
+            if (btnCloseAluno) modalAlunoHeader.insertBefore(badgeAluno, btnCloseAluno);
+            else modalAlunoHeader.appendChild(badgeAluno);
+        }
+
+        if (!Workspace.Avaliacoes._listenerMsgTimerLousa) {
+            window.addEventListener('message', (e) => {
+                const d = e.data || {};
+                if (d.type === 'LOUSA_TIMER_SYNC') {
+                    Workspace.Avaliacoes.gerirRelogioUsoLousa(!!d.ativa, d.ativadaEm || null);
+                }
+            });
+            Workspace.Avaliacoes._listenerMsgTimerLousa = true;
+        }
+    },
+
+    gerirRelogioUsoLousa: (ativa, ativadaEm) => {
+        Workspace.Avaliacoes.garantirElementoCronometroLousa();
+        if (Workspace.Avaliacoes._lousaTimerInterval) {
+            clearInterval(Workspace.Avaliacoes._lousaTimerInterval);
+            Workspace.Avaliacoes._lousaTimerInterval = null;
+        }
+
+        const elProf = document.getElementById('ws-lousa-timer-prof');
+        const elAluno = document.getElementById('ws-lousa-timer-aluno');
+
+        if (!ativa || !ativadaEm) {
+            [elProf, elAluno].forEach(el => {
+                if (!el) return;
+                el.innerHTML = '⏱️ 00:00:00';
+                el.style.color = '#94a3b8';
+                el.style.borderColor = '#334155';
+            });
+            return;
+        }
+
+        const inicioMs = Number(ativadaEm) || Date.now();
+        const atualizarVisores = () => {
+            const diffSeg = Math.max(0, Math.floor((Date.now() - inicioMs) / 1000));
+            const h = String(Math.floor(diffSeg / 3600)).padStart(2, '0');
+            const m = String(Math.floor((diffSeg % 3600) / 60)).padStart(2, '0');
+            const s = String(diffSeg % 60).padStart(2, '0');
+            const texto = `⏱️ ${h}:${m}:${s}`;
+            [elProf, elAluno].forEach(el => {
+                if (!el) return;
+                el.innerHTML = texto;
+                el.style.color = '#34d399';
+                el.style.borderColor = '#10b981';
+            });
+        };
+
+        atualizarVisores();
+        Workspace.Avaliacoes._lousaTimerInterval = setInterval(atualizarVisores, 1000);
+    },
 
     carregarTurmasLousaProf: async () => {
         const selModal = document.getElementById('ws-prof-turma-lousa-modal');
@@ -3389,6 +3464,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     abrirLousaProfessor: async (turmaId = 'global') => {
         const tid = String(turmaId || 'global').trim();
+        Workspace.Avaliacoes.garantirElementoCronometroLousa();
         await Workspace.Avaliacoes.carregarTurmasLousaProf();
 
         try {
@@ -3398,13 +3474,14 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 Workspace.Avaliacoes._lousaProfState = {
                     turmaId: tid,
                     ativa: isAtiva,
-                    recursos: isAtiva ? !!res.recursos : false
+                    recursos: isAtiva ? !!res.recursos : false,
+                    ativadaEm: isAtiva ? (res.ativadaEm || Date.now()) : null
                 };
             } else {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
             }
         } catch (e) {
-            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
         }
         
         const modal = document.getElementById('ws-modal-lousa-prof');
@@ -3423,7 +3500,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     mudarTurmaLousaIframe: async (turmaId) => {
         const tid = String(turmaId || 'global').trim();
-        // Não recarrega o iframe para não perder a tela numerada atual; apenas atualiza a turma-alvo!
         try {
             const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
             if (res?.success) {
@@ -3431,13 +3507,14 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 Workspace.Avaliacoes._lousaProfState = {
                     turmaId: tid,
                     ativa: isAtiva,
-                    recursos: isAtiva ? !!res.recursos : false
+                    recursos: isAtiva ? !!res.recursos : false,
+                    ativadaEm: isAtiva ? (res.ativadaEm || Date.now()) : null
                 };
             } else {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
             }
         } catch (e) {
-            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false };
+            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
         }
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
@@ -3446,14 +3523,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const btnView = document.getElementById('btn-toggle-view');
         const btnRecursos = document.getElementById('btn-toggle-resources');
         const statusText = document.getElementById('ws-prof-lousa-status-modal');
-        const { ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
+        const { ativa, recursos, ativadaEm } = Workspace.Avaliacoes._lousaProfState;
 
         if (btnView) {
             btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa para Turma';
             btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
         }
         if (btnRecursos) {
-            // 🔒 Os recursos SÓ ficam disponíveis quando a lousa estiver ATIVA para a turma!
             if (!ativa) {
                 btnRecursos.style.display = 'inline-flex';
                 btnRecursos.disabled = true;
@@ -3474,12 +3550,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             statusText.innerHTML = ativa ? (recursos ? '🟢 Ativa + Recursos Liberados' : '🟡 Ativa (Apenas Visualização)') : '⚪ Lousa Inativa';
             statusText.style.color = ativa ? (recursos ? '#10B981' : '#F59E0B') : '#94a3b8';
         }
+
+        Workspace.Avaliacoes.gerirRelogioUsoLousa(ativa, ativadaEm);
     },
 
     toggleVisualizacao: async () => {
         const { turmaId, ativa } = Workspace.Avaliacoes._lousaProfState;
         const novoEstadoAtiva = !ativa;
-        // 🔒 Se desativar a lousa, força recursos = false automaticamente! E ao ativar, inicia com recursos = false.
         const novosRecursos = false;
         await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstadoAtiva, novosRecursos);
     },
@@ -3498,19 +3575,24 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const lousaAtiva = !!ativa;
         const recursosAtivos = lousaAtiva ? !!recursos : false;
         try {
-            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
+            const res = await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
                 turmaId,
                 ativa: lousaAtiva,
                 recursos: recursosAtivos,
                 escolaId
             });
-            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa: lousaAtiva, recursos: recursosAtivos };
+            const ativadaEmFinal = lousaAtiva ? (res?.ativadaEm || Workspace.Avaliacoes._lousaProfState.ativadaEm || Date.now()) : null;
+            Workspace.Avaliacoes._lousaProfState = {
+                turmaId,
+                ativa: lousaAtiva,
+                recursos: recursosAtivos,
+                ativadaEm: ativadaEmFinal
+            };
             Workspace.Avaliacoes.renderizarBotoesLousaProf();
             
             const iframeProf = document.getElementById('iframeLousaProf');
             if (iframeProf && iframeProf.contentWindow) {
                 try { 
-                    // 🔒 Libera ou bloqueia os recursos também conforme a ativação da lousa!
                     iframeProf.contentWindow.postMessage({
                         type: 'STATUS_LOUSA_PROF',
                         ativa: lousaAtiva,
@@ -3536,6 +3618,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     },
 
     abrirLousaFullscreen: () => {
+        Workspace.Avaliacoes.garantirElementoCronometroLousa();
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
         if (modal) {
             modal.style.display = 'flex';
@@ -3547,6 +3630,10 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     fecharLousaFullscreen: () => {
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
         if (modal) { modal.style.display = 'none'; document.body.style.overflow = ''; }
+        if (Workspace.Avaliacoes._lousaTimerInterval) {
+            clearInterval(Workspace.Avaliacoes._lousaTimerInterval);
+            Workspace.Avaliacoes._lousaTimerInterval = null;
+        }
         Workspace.Avaliacoes.iniciarMonitorLousa(false);
         const iframe = document.getElementById('iframeLousaAluno');
         if (iframe) iframe.setAttribute('src', ''); 
