@@ -14,7 +14,7 @@
       touch-action: none;
     }
 
-    /* Estrutura Principal em 3 Faixas (Nunca sobrepõe ferramentas no PC nem no Telemóvel!) */
+    /* Estrutura Principal em 3 Faixas (Alinhamento perfeito no PC e no Telemóvel) */
     #lousa-app {
       position: relative; width: 100vw; height: 100vh; height: 100dvh;
       overflow: hidden; display: flex; flex-direction: column;
@@ -83,7 +83,7 @@
     .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
     .action-pill.danger:hover { background: #fee2f2; }
 
-    /* 2. PALCO CENTRAL DO CANVAS (100% Livre de Sobreposição) */
+    /* 2. PALCO CENTRAL DO CANVAS */
     #canvas-stage {
       position: relative; flex: 1; width: 100%; min-height: 0;
       overflow: hidden; background: #ffffff;
@@ -95,7 +95,6 @@
       touch-action: none;
     }
 
-    /* Barra de Rolagem Visual Dinâmica no Fundo do Palco */
     #board-hscroll-track {
       position: absolute; bottom: 3px; left: 12px; right: 12px; height: 5px;
       background: rgba(148, 163, 184, 0.25); border-radius: 5px; z-index: 15;
@@ -220,9 +219,8 @@
 <body>
 
   <div id="lousa-app">
-    <!-- 1. BARRA SUPERIOR UNIFICADA E ALINHADA (PC e Telemóvel) -->
+    <!-- 1. BARRA SUPERIOR UNIFICADA -->
     <div id="ui-top-bar" class="lousa-top-bar">
-      <!-- Grupo A: Numeração de Telas -->
       <div id="ui-screens-dock" class="screens-group">
         <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀</button>
         <select id="select-screen-number" title="Escolher Tela Numerada">
@@ -235,7 +233,6 @@
         <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
       </div>
 
-      <!-- Grupo B: Cores, Espessura e Fundo -->
       <div id="ui-style-dock" class="top-group">
         <div class="color-dot active" data-color="#0f172a" style="background:#0f172a;" title="Preto"></div>
         <div class="color-dot" data-color="#2563eb" style="background:#2563eb;" title="Azul"></div>
@@ -261,7 +258,6 @@
         </select>
       </div>
 
-      <!-- Grupo C: Zoom, Desfazer/Refazer, PNG e Limpar -->
       <div id="ui-actions-dock" class="top-group">
         <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom">🔍-</button>
         <button class="action-pill" id="btn-center" title="Voltar Zoom ao Normal (100%)">🎯 100%</button>
@@ -274,14 +270,14 @@
       </div>
     </div>
 
-    <!-- 2. PALCO CENTRAL DO QUADRO (Sem ferramentas por cima!) -->
+    <!-- 2. PALCO CENTRAL DO QUADRO -->
     <div id="canvas-stage">
       <canvas id="lousa-canvas"></canvas>
       <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
       <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
     </div>
 
-    <!-- 3. BARRA INFERIOR UNIFICADA (Ferramentas + Expansão de Espaço) -->
+    <!-- 3. BARRA INFERIOR UNIFICADA -->
     <div id="ui-bottom-bar" class="lousa-bottom-bar">
       <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
       <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
@@ -306,7 +302,7 @@
       <button class="pan-btn" id="btn-pan-down" title="Expandir espaço para baixo">⬇️</button>
     </div>
 
-    <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
+    <!-- Caixa Flutuante de Texto Rico -->
     <div id="text-editor-box">
       <div class="fmt-toolbar">
         <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
@@ -428,13 +424,12 @@
       let userIdParam = params.get('userId') || '';
       let alunoRefIdParam = params.get('alunoRefId') || '';
       let roomIdAtivo = 'LOUSA_MESTRA_UNIFICADA';
-      let nomeTurmaAtiva = roomIdOriginal === 'global' ? 'Público Geral' : roomIdOriginal;
 
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
       let initialLoadDone = false;
 
-      // 📑 SISTEMA DE MULTI-TELAS NUMERADAS (Tela 1, Tela 2, Tela 3...)
+      // 📑 SISTEMA DE MULTI-TELAS NUMERADAS
       let screens = [
         { id: 'tela_1', bgType: 'bg-grade', shapes: [], cam: { x: 0, y: 0, zoom: 1 } }
       ];
@@ -480,7 +475,12 @@
 
       const stageEl = document.getElementById('canvas-stage');
       const canvas = document.getElementById('lousa-canvas');
+      // 🛡️ BLINDAGEM DUPLA: Define tanto 'ctx' quanto 'context' (inclusive em window) para nunca existir ReferenceError!
       const ctx = canvas.getContext('2d');
+      const context = ctx;
+      window.ctx = ctx;
+      window.context = ctx;
+
       const telaEspera = document.getElementById('tela-espera-aluno');
       const badgeLeitura = document.getElementById('badge-somente-leitura');
       const uiTopBar = document.getElementById('ui-top-bar');
@@ -572,9 +572,6 @@
         setTimeout(ajustarTamanhoCanvas, 20);
       }
 
-      // =========================================================================
-      // 📐 1. ENQUADRAMENTO PROPORCIONAL AUTOMÁTICO (ALUNO ACOMPANHA PROFESSOR)
-      // =========================================================================
       function obterEstadoCameraProfessor() {
         validarCameraSegura();
         const { w, h } = obterDimensoesTelaSeguras();
@@ -701,100 +698,94 @@
         if (btnCenter) btnCenter.innerText = `🎯 ${Math.round(camera.zoom * 100)}%`;
       }
 
-      // =========================================================================
-      // 🎨 2. FUNDO NATIVO NO CANVAS (INFINITO E PROPORCIONAL)
-      // =========================================================================
-      function desenharFundoCanvas(context, width, height) {
+      function desenharFundoCanvas(c, width, height) {
         validarCameraSegura();
-        context.save();
+        c.save();
         if (currentBg === 'bg-pauta') {
-          context.fillStyle = '#fffef7';
-          context.fillRect(0, 0, width, height);
+          c.fillStyle = '#fffef7';
+          c.fillRect(0, 0, width, height);
           const step = Math.max(8, 32 * camera.zoom);
           const offsetY = ((camera.y % step) + step) % step;
-          context.strokeStyle = '#93c5fd';
-          context.lineWidth = 1;
-          context.beginPath();
+          c.strokeStyle = '#93c5fd';
+          c.lineWidth = 1;
+          c.beginPath();
           for (let y = offsetY; y < height; y += step) {
-            context.moveTo(0, y);
-            context.lineTo(width, y);
+            c.moveTo(0, y);
+            c.lineTo(width, y);
           }
-          context.stroke();
+          c.stroke();
           const margemX = 64 * camera.zoom + camera.x;
           if (margemX > 0 && margemX < width) {
-            context.strokeStyle = '#fca5a5';
-            context.beginPath();
-            context.moveTo(margemX, 0);
-            context.lineTo(margemX, height);
-            context.stroke();
+            c.strokeStyle = '#fca5a5';
+            c.beginPath();
+            c.moveTo(margemX, 0);
+            c.lineTo(margemX, height);
+            c.stroke();
           }
         } else if (currentBg === 'bg-grade') {
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, width, height);
+          c.fillStyle = '#ffffff';
+          c.fillRect(0, 0, width, height);
           const step = Math.max(8, 28 * camera.zoom);
           const offsetX = ((camera.x % step) + step) % step;
           const offsetY = ((camera.y % step) + step) % step;
-          context.strokeStyle = '#e2e8f0';
-          context.lineWidth = 1;
-          context.beginPath();
+          c.strokeStyle = '#e2e8f0';
+          c.lineWidth = 1;
+          c.beginPath();
           for (let x = offsetX; x < width; x += step) {
-            context.moveTo(x, 0);
-            context.lineTo(x, height);
+            c.moveTo(x, 0);
+            c.lineTo(x, height);
           }
           for (let y = offsetY; y < height; y += step) {
-            context.moveTo(0, y);
-            context.lineTo(width, y);
+            c.moveTo(0, y);
+            c.lineTo(width, y);
           }
-          context.stroke();
+          c.stroke();
         } else if (currentBg === 'bg-pontos') {
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, width, height);
+          c.fillStyle = '#ffffff';
+          c.fillRect(0, 0, width, height);
           const step = Math.max(8, 24 * camera.zoom);
           const offsetX = ((camera.x % step) + step) % step;
           const offsetY = ((camera.y % step) + step) % step;
-          context.fillStyle = '#cbd5e1';
+          c.fillStyle = '#cbd5e1';
           for (let x = offsetX; x < width; x += step) {
             for (let y = offsetY; y < height; y += step) {
-              context.fillRect(x - 1, y - 1, 2.2, 2.2);
+              c.fillRect(x - 1, y - 1, 2.2, 2.2);
             }
           }
         } else {
-          context.fillStyle = '#ffffff';
-          context.fillRect(0, 0, width, height);
+          c.fillStyle = '#ffffff';
+          c.fillRect(0, 0, width, height);
         }
 
-        context.fillStyle = 'rgba(100, 116, 139, 0.65)';
-        context.font = '800 12px "Segoe UI", sans-serif';
-        context.textAlign = 'left';
-        context.textBaseline = 'bottom';
-        context.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 14, height - 10);
-        context.restore();
+        c.fillStyle = 'rgba(100, 116, 139, 0.65)';
+        c.font = '800 12px "Segoe UI", sans-serif';
+        c.textAlign = 'left';
+        c.textBaseline = 'bottom';
+        c.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 14, height - 10);
+        c.restore();
       }
 
-      function roundRect(context, x, y, w, h, r) {
+      function roundRect(c, x, y, w, h, r) {
         const radius = Math.max(0, Math.min(r, w / 2, h / 2));
-        context.beginPath();
-        context.moveTo(x + radius, y);
-        context.arcTo(x + w, y, x + w, y + h, radius);
-        context.arcTo(x + w, y + h, x, y + h, radius);
-        context.arcTo(x, y + h, x, y, radius);
-        context.arcTo(x, y, x + w, y, radius);
-        context.closePath();
+        c.beginPath();
+        c.moveTo(x + radius, y);
+        c.arcTo(x + w, y, x + w, y + h, radius);
+        c.arcTo(x + w, y + h, x, y + h, radius);
+        c.arcTo(x, y + h, x, y, radius);
+        c.arcTo(x, y, x + w, y, radius);
+        c.closePath();
       }
 
-      // =========================================================================
-      // 📐 3. MOTOR DE AUTO-AJUSTE E QUEBRA DE LINHA DE TEXTO (NUNCA VAZA DA CAIXA)
-      // =========================================================================
-      function quebrarLinhas(context, texto, maxWidth) {
+      function quebrarLinhas(c, texto, maxWidth) {
         const palavrasBrutas = String(texto || '').split(/\s+/);
         const palavras = [];
         palavrasBrutas.forEach(p => {
-          if (context.measureText(p).width <= maxWidth) {
+          if (c.measureText(p).width <= maxWidth) {
             palavras.push(p);
           } else {
             let pedaco = '';
             for (const ch of p) {
-              if (context.measureText(pedaco + ch).width > maxWidth && pedaco.length > 0) {
+              if (c.measureText(pedaco + ch).width > maxWidth && pedaco.length > 0) {
                 palavras.push(pedaco);
                 pedaco = ch;
               } else {
@@ -809,7 +800,7 @@
         let linhaAtual = '';
         for (let i = 0; i < palavras.length; i++) {
           const teste = linhaAtual ? (linhaAtual + ' ' + palavras[i]) : palavras[i];
-          if (context.measureText(teste).width > maxWidth && linhaAtual !== '') {
+          if (c.measureText(teste).width > maxWidth && linhaAtual !== '') {
             linhas.push(linhaAtual);
             linhaAtual = palavras[i];
           } else {
@@ -820,7 +811,7 @@
         return linhas.length > 0 ? linhas : [''];
       }
 
-      function desenharTextoAjustado(context, texto, x, y, maxW, maxH, opts = {}) {
+      function desenharTextoAjustado(c, texto, x, y, maxW, maxH, opts = {}) {
         const weight = opts.weight || '700';
         const align = opts.align || 'left';
         const color = opts.color || '#1e293b';
@@ -831,9 +822,9 @@
         let lineHeight = fontSize * 1.22;
 
         while (fontSize >= minFont) {
-          context.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
+          c.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
           lineHeight = fontSize * 1.22;
-          linhas = quebrarLinhas(context, texto, Math.max(24, maxW));
+          linhas = quebrarLinhas(c, texto, Math.max(24, maxW));
           if (linhas.length * lineHeight <= maxH || fontSize === minFont) break;
           fontSize -= 0.8;
         }
@@ -843,11 +834,11 @@
           linhas = linhas.slice(0, maxLinhasPossiveis);
         }
 
-        context.save();
-        context.fillStyle = color;
-        context.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
-        context.textAlign = align;
-        context.textBaseline = 'top';
+        c.save();
+        c.fillStyle = color;
+        c.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
+        c.textAlign = align;
+        c.textBaseline = 'top';
 
         const totalH = linhas.length * lineHeight;
         let startY = y;
@@ -857,14 +848,11 @@
 
         const drawX = align === 'center' ? (x + maxW / 2) : (align === 'right' ? (x + maxW) : x);
         linhas.forEach((l, i) => {
-          context.fillText(l, drawX, startY + i * lineHeight);
+          c.fillText(l, drawX, startY + i * lineHeight);
         });
-        context.restore();
+        c.restore();
       }
 
-      // =========================================================================
-      // 📊 4. RENDERIZADOR DOS 8 INFOGRÁFICOS (EDITÁVEIS, EXPANSÍVEIS E COM ZOOM)
-      // =========================================================================
       function calcularDimensoesInfografico(item) {
         const d = item.infoData || {};
         let baseW = 540;
@@ -905,7 +893,7 @@
         return { w: baseW, h: baseH, scale: item.scale || 1 };
       }
 
-      function desenharInfografico(context, item) {
+      function desenharInfografico(c, item) {
         const x = item.x || 80;
         const y = item.y || 80;
         const { w, h, scale } = calcularDimensoesInfografico(item);
@@ -913,53 +901,53 @@
         const d = item.infoData || {};
         const titulo = item.title || 'Infográfico';
 
-        context.save();
-        context.translate(x, y);
-        context.scale(scale, scale);
+        c.save();
+        c.translate(x, y);
+        c.scale(scale, scale);
 
-        context.shadowColor = 'rgba(15, 23, 42, 0.14)';
-        context.shadowBlur = 18;
-        context.shadowOffsetY = 6;
-        context.fillStyle = '#ffffff';
-        roundRect(context, 0, 0, w, h, 14);
-        context.fill();
+        c.shadowColor = 'rgba(15, 23, 42, 0.14)';
+        c.shadowBlur = 18;
+        c.shadowOffsetY = 6;
+        c.fillStyle = '#ffffff';
+        roundRect(c, 0, 0, w, h, 14);
+        c.fill();
 
-        context.shadowColor = 'transparent';
-        context.lineWidth = 2;
-        context.strokeStyle = cor;
-        context.stroke();
+        c.shadowColor = 'transparent';
+        c.lineWidth = 2;
+        c.strokeStyle = cor;
+        c.stroke();
 
-        context.fillStyle = cor;
-        roundRect(context, 0, 0, w, 44, 12);
-        context.fill();
-        context.fillRect(0, 28, w, 16);
+        c.fillStyle = cor;
+        roundRect(c, 0, 0, w, 44, 12);
+        c.fill();
+        c.fillRect(0, 28, w, 16);
 
-        desenharTextoAjustado(context, titulo, 16, 4, w - 165, 36, {
+        desenharTextoAjustado(c, titulo, 16, 4, w - 165, 36, {
           weight: '800', maxFont: 15, minFont: 10, color: '#ffffff', align: 'left', vAlign: 'middle'
         });
 
         if (!(role === 'aluno' && isReadonly)) {
-          context.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(context, w - 142, 8, 38, 28, 7);
-          context.fill();
-          context.fillStyle = '#ffffff';
-          context.font = '800 13px "Segoe UI", sans-serif';
-          context.textAlign = 'center';
-          context.textBaseline = 'middle';
-          context.fillText('➕', w - 123, 22);
+          c.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(c, w - 142, 8, 38, 28, 7);
+          c.fill();
+          c.fillStyle = '#ffffff';
+          c.font = '800 13px "Segoe UI", sans-serif';
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText('➕', w - 123, 22);
 
-          context.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(context, w - 98, 8, 42, 28, 7);
-          context.fill();
-          context.fillStyle = '#ffffff';
-          context.fillText('✏️', w - 77, 22);
+          c.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(c, w - 98, 8, 42, 28, 7);
+          c.fill();
+          c.fillStyle = '#ffffff';
+          c.fillText('✏️', w - 77, 22);
 
-          context.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(context, w - 50, 8, 42, 28, 7);
-          context.fill();
-          context.font = '800 10px "Segoe UI", sans-serif';
-          context.fillText(`${Math.round(scale * 100)}%`, w - 29, 22);
-          context.textAlign = 'left';
+          c.fillStyle = 'rgba(255,255,255,0.22)';
+          roundRect(c, w - 50, 8, 42, 28, 7);
+          c.fill();
+          c.font = '800 10px "Segoe UI", sans-serif';
+          c.fillText(`${Math.round(scale * 100)}%`, w - 29, 22);
+          c.textAlign = 'left';
         }
 
         const bodyY = 54;
@@ -972,7 +960,7 @@
             const ry = bodyY + idx * rowH;
             const pct = Math.max(0, Math.min(100, Number(it.val) || 0));
 
-            desenharTextoAjustado(context, it.label, 16, ry + 4, 145, rowH - 8, {
+            desenharTextoAjustado(c, it.label, 16, ry + 4, 145, rowH - 8, {
               weight: '700', maxFont: 13, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
 
@@ -980,16 +968,16 @@
             const barMaxW = w - 235;
             const barY = ry + (rowH - 22) / 2;
 
-            context.fillStyle = '#e2e8f0';
-            roundRect(context, barX, barY, barMaxW, 22, 11);
-            context.fill();
+            c.fillStyle = '#e2e8f0';
+            roundRect(c, barX, barY, barMaxW, 22, 11);
+            c.fill();
 
             const barW = Math.max(14, (barMaxW * pct) / 100);
-            context.fillStyle = cor;
-            roundRect(context, barX, barY, barW, 22, 11);
-            context.fill();
+            c.fillStyle = cor;
+            roundRect(c, barX, barY, barW, 22, 11);
+            c.fill();
 
-            desenharTextoAjustado(context, `${pct}%`, w - 58, ry + 4, 44, rowH - 8, {
+            desenharTextoAjustado(c, `${pct}%`, w - 58, ry + 4, 44, rowH - 8, {
               weight: '800', maxFont: 12.5, minFont: 10, color: '#0f172a', align: 'right', vAlign: 'middle'
             });
           });
@@ -1001,25 +989,25 @@
           topicos.forEach((t, idx) => {
             const ry = bodyY + idx * rowH;
             const boxH = rowH - 8;
-            context.fillStyle = '#f8fafc';
-            roundRect(context, 16, ry, w - 32, boxH, 10);
-            context.fill();
-            context.strokeStyle = '#cbd5e1';
-            context.lineWidth = 1;
-            context.stroke();
+            c.fillStyle = '#f8fafc';
+            roundRect(c, 16, ry, w - 32, boxH, 10);
+            c.fill();
+            c.strokeStyle = '#cbd5e1';
+            c.lineWidth = 1;
+            c.stroke();
 
-            context.fillStyle = cor;
-            context.beginPath();
-            context.arc(38, ry + boxH / 2, 13, 0, Math.PI * 2);
-            context.fill();
+            c.fillStyle = cor;
+            c.beginPath();
+            c.arc(38, ry + boxH / 2, 13, 0, Math.PI * 2);
+            c.fill();
 
-            context.fillStyle = '#ffffff';
-            context.font = '800 12px "Segoe UI", sans-serif';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.fillText(String(idx + 1), 38, ry + boxH / 2);
+            c.fillStyle = '#ffffff';
+            c.font = '800 12px "Segoe UI", sans-serif';
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            c.fillText(String(idx + 1), 38, ry + boxH / 2);
 
-            desenharTextoAjustado(context, String(t), 60, ry + 4, w - 86, boxH - 8, {
+            desenharTextoAjustado(c, String(t), 60, ry + 4, w - 86, boxH - 8, {
               weight: '600', maxFont: 13.5, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
@@ -1032,27 +1020,27 @@
           const maxRows = Math.max(itemsA.length, itemsB.length, 1);
           const itemH = (bodyH - 42) / maxRows;
 
-          context.fillStyle = '#eff6ff';
-          roundRect(context, 16, bodyY, colW, bodyH, 10);
-          context.fill();
-          desenharTextoAjustado(context, d.colA || 'Lado A', 26, bodyY + 6, colW - 20, 28, {
+          c.fillStyle = '#eff6ff';
+          roundRect(c, 16, bodyY, colW, bodyH, 10);
+          c.fill();
+          desenharTextoAjustado(c, d.colA || 'Lado A', 26, bodyY + 6, colW - 20, 28, {
             weight: '800', maxFont: 14, minFont: 10, color: '#1d4ed8', align: 'center', vAlign: 'middle'
           });
           itemsA.forEach((txt, i) => {
-            desenharTextoAjustado(context, `• ${txt}`, 24, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+            desenharTextoAjustado(c, `• ${txt}`, 24, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
               weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
 
           const colBX = 28 + colW;
-          context.fillStyle = '#fef2f2';
-          roundRect(context, colBX, bodyY, colW, bodyH, 10);
-          context.fill();
-          desenharTextoAjustado(context, d.colB || 'Lado B', colBX + 10, bodyY + 6, colW - 20, 28, {
+          c.fillStyle = '#fef2f2';
+          roundRect(c, colBX, bodyY, colW, bodyH, 10);
+          c.fill();
+          desenharTextoAjustado(c, d.colB || 'Lado B', colBX + 10, bodyY + 6, colW - 20, 28, {
             weight: '800', maxFont: 14, minFont: 10, color: '#dc2626', align: 'center', vAlign: 'middle'
           });
           itemsB.forEach((txt, i) => {
-            desenharTextoAjustado(context, `• ${txt}`, colBX + 10, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+            desenharTextoAjustado(c, `• ${txt}`, colBX + 10, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
               weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
@@ -1067,39 +1055,39 @@
 
           steps.forEach((st, idx) => {
             const r = Math.floor(idx / cols);
-            const c = idx % cols;
-            const sx = 16 + c * stepW;
+            const col = idx % cols;
+            const sx = 16 + col * stepW;
             const sy = bodyY + r * rowH + 6;
             const boxW = stepW - 14;
             const boxH = rowH - 14;
 
-            context.fillStyle = '#f8fafc';
-            roundRect(context, sx + 4, sy, boxW, boxH, 10);
-            context.fill();
-            context.strokeStyle = cor;
-            context.lineWidth = 1.5;
-            context.stroke();
+            c.fillStyle = '#f8fafc';
+            roundRect(c, sx + 4, sy, boxW, boxH, 10);
+            c.fill();
+            c.strokeStyle = cor;
+            c.lineWidth = 1.5;
+            c.stroke();
 
-            context.fillStyle = cor;
-            context.beginPath();
-            context.arc(sx + 4 + boxW / 2, sy + 20, 12, 0, Math.PI * 2);
-            context.fill();
+            c.fillStyle = cor;
+            c.beginPath();
+            c.arc(sx + 4 + boxW / 2, sy + 20, 12, 0, Math.PI * 2);
+            c.fill();
 
-            context.fillStyle = '#fff';
-            context.font = '800 11.5px "Segoe UI", sans-serif';
-            context.textAlign = 'center';
-            context.textBaseline = 'middle';
-            context.fillText(String(idx + 1), sx + 4 + boxW / 2, sy + 20);
+            c.fillStyle = '#fff';
+            c.font = '800 11.5px "Segoe UI", sans-serif';
+            c.textAlign = 'center';
+            c.textBaseline = 'middle';
+            c.fillText(String(idx + 1), sx + 4 + boxW / 2, sy + 20);
 
-            desenharTextoAjustado(context, String(st), sx + 10, sy + 36, boxW - 12, boxH - 42, {
+            desenharTextoAjustado(c, String(st), sx + 10, sy + 36, boxW - 12, boxH - 42, {
               weight: '700', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'center', vAlign: 'middle'
             });
 
-            if (c < cols - 1 && idx < steps.length - 1) {
-              context.fillStyle = cor;
-              context.font = '900 14px "Segoe UI", sans-serif';
-              context.textAlign = 'center';
-              context.fillText('➔', sx + stepW - 3, sy + boxH / 2);
+            if (col < cols - 1 && idx < steps.length - 1) {
+              c.fillStyle = cor;
+              c.font = '900 14px "Segoe UI", sans-serif';
+              c.textAlign = 'center';
+              c.fillText('➔', sx + stepW - 3, sy + boxH / 2);
             }
           });
         }
@@ -1107,40 +1095,40 @@
         else if (item.infoType === 'linha_tempo') {
           const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
-          context.strokeStyle = cor;
-          context.lineWidth = 3;
-          context.beginPath();
-          context.moveTo(26, midY);
-          context.lineTo(w - 26, midY);
-          context.stroke();
+          c.strokeStyle = cor;
+          c.lineWidth = 3;
+          c.beginPath();
+          c.moveTo(26, midY);
+          c.lineTo(w - 26, midY);
+          c.stroke();
 
           const slotW = (w - 52) / events.length;
           events.forEach((ev, idx) => {
             const cx = 26 + slotW * idx + slotW / 2;
             const acima = (idx % 2 === 0);
 
-            context.fillStyle = '#ffffff';
-            context.strokeStyle = cor;
-            context.lineWidth = 3;
-            context.beginPath();
-            context.arc(cx, midY, 8, 0, Math.PI * 2);
-            context.fill();
-            context.stroke();
+            c.fillStyle = '#ffffff';
+            c.strokeStyle = cor;
+            c.lineWidth = 3;
+            c.beginPath();
+            c.arc(cx, midY, 8, 0, Math.PI * 2);
+            c.fill();
+            c.stroke();
 
             const boxX = cx - slotW / 2 + 4;
             const boxW = slotW - 8;
             if (acima) {
-              desenharTextoAjustado(context, ev.time, boxX, bodyY + 4, boxW, 24, {
+              desenharTextoAjustado(c, ev.time, boxX, bodyY + 4, boxW, 24, {
                 weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
               });
-              desenharTextoAjustado(context, ev.label, boxX, bodyY + 30, boxW, midY - bodyY - 42, {
+              desenharTextoAjustado(c, ev.label, boxX, bodyY + 30, boxW, midY - bodyY - 42, {
                 weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
               });
             } else {
-              desenharTextoAjustado(context, ev.time, boxX, midY + 14, boxW, 24, {
+              desenharTextoAjustado(c, ev.time, boxX, midY + 14, boxW, 24, {
                 weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
               });
-              desenharTextoAjustado(context, ev.label, boxX, midY + 40, boxW, bodyH / 2 - 46, {
+              desenharTextoAjustado(c, ev.label, boxX, midY + 40, boxW, bodyH / 2 - 46, {
                 weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
               });
             }
@@ -1156,23 +1144,23 @@
 
           stages.forEach((st, idx) => {
             const r = Math.floor(idx / cols);
-            const c = idx % cols;
-            const sx = 18 + c * colW;
+            const col = idx % cols;
+            const sx = 18 + col * colW;
             const sy = bodyY + r * rowH + 8;
             const boxW = colW - 10;
             const boxH = rowH - 16;
 
-            context.fillStyle = idx % 3 === 1 ? '#fef3c7' : (idx % 3 === 2 ? '#ecfdf5' : '#eff6ff');
-            roundRect(context, sx + 4, sy, boxW, boxH, 12);
-            context.fill();
-            context.strokeStyle = cor;
-            context.lineWidth = 1.5;
-            context.stroke();
+            c.fillStyle = idx % 3 === 1 ? '#fef3c7' : (idx % 3 === 2 ? '#ecfdf5' : '#eff6ff');
+            roundRect(c, sx + 4, sy, boxW, boxH, 12);
+            c.fill();
+            c.strokeStyle = cor;
+            c.lineWidth = 1.5;
+            c.stroke();
 
-            desenharTextoAjustado(context, st.place, sx + 12, sy + 8, boxW - 16, 30, {
+            desenharTextoAjustado(c, st.place, sx + 12, sy + 8, boxW - 16, 30, {
               weight: '800', maxFont: 12.5, minFont: 9.5, color: '#0f172a', align: 'left', vAlign: 'middle'
             });
-            desenharTextoAjustado(context, st.desc, sx + 12, sy + 42, boxW - 16, boxH - 48, {
+            desenharTextoAjustado(c, st.desc, sx + 12, sy + 42, boxW - 16, boxH - 48, {
               weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'left', vAlign: 'middle'
             });
           });
@@ -1192,31 +1180,31 @@
             const nx = cx + rx * Math.cos(ang);
             const ny = cy + ry * Math.sin(ang);
 
-            context.strokeStyle = cor;
-            context.lineWidth = 2;
-            context.beginPath();
-            context.moveTo(cx, cy);
-            context.lineTo(nx, ny);
-            context.stroke();
+            c.strokeStyle = cor;
+            c.lineWidth = 2;
+            c.beginPath();
+            c.moveTo(cx, cy);
+            c.lineTo(nx, ny);
+            c.stroke();
 
             const nw = 132;
             const nh = 44;
-            context.fillStyle = '#f8fafc';
-            roundRect(context, nx - nw / 2, ny - nh / 2, nw, nh, 10);
-            context.fill();
-            context.stroke();
+            c.fillStyle = '#f8fafc';
+            roundRect(c, nx - nw / 2, ny - nh / 2, nw, nh, 10);
+            c.fill();
+            c.stroke();
 
-            desenharTextoAjustado(context, nd, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
+            desenharTextoAjustado(c, nd, nx - nw / 2 + 6, ny - nh / 2 + 4, nw - 12, nh - 8, {
               weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
             });
           });
 
           const cw = 154;
           const ch = 50;
-          context.fillStyle = cor;
-          roundRect(context, cx - cw / 2, cy - ch / 2, cw, ch, 25);
-          context.fill();
-          desenharTextoAjustado(context, centerText, cx - cw / 2 + 10, cy - ch / 2 + 6, cw - 20, ch - 12, {
+          c.fillStyle = cor;
+          roundRect(c, cx - cw / 2, cy - ch / 2, cw, ch, 25);
+          c.fill();
+          desenharTextoAjustado(c, centerText, cx - cw / 2 + 10, cy - ch / 2 + 6, cw - 20, ch - 12, {
             weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
           });
         }
@@ -1228,72 +1216,69 @@
           const cardW = (w - 36) / cols;
           const rowH = bodyH / rows;
 
-          cards.forEach((c, idx) => {
+          cards.forEach((card, idx) => {
             const r = Math.floor(idx / cols);
             const col = idx % cols;
             const cx = 18 + col * cardW;
             const cy = bodyY + r * rowH + 6;
             const boxW = cardW - 8;
             const boxH = rowH - 14;
-            const aberto = !!c.revealed;
+            const aberto = !!card.revealed;
 
-            context.fillStyle = aberto ? '#ecfdf5' : '#eff6ff';
-            roundRect(context, cx, cy, boxW, boxH, 12);
-            context.fill();
-            context.strokeStyle = aberto ? '#10b981' : '#3b82f6';
-            context.lineWidth = 2;
-            context.stroke();
+            c.fillStyle = aberto ? '#ecfdf5' : '#eff6ff';
+            roundRect(c, cx, cy, boxW, boxH, 12);
+            c.fill();
+            c.strokeStyle = aberto ? '#10b981' : '#3b82f6';
+            c.lineWidth = 2;
+            c.stroke();
 
-            context.textAlign = 'center';
-            context.fillStyle = aberto ? '#047857' : '#1d4ed8';
-            context.font = '800 10px "Segoe UI", sans-serif';
-            context.textBaseline = 'top';
-            context.fillText(aberto ? '🔓 REVELADO (Clique)' : '👆 CLIQUE P/ REVELAR', cx + boxW / 2, cy + 8);
+            c.textAlign = 'center';
+            c.fillStyle = aberto ? '#047857' : '#1d4ed8';
+            c.font = '800 10px "Segoe UI", sans-serif';
+            c.textBaseline = 'top';
+            c.fillText(aberto ? '🔓 REVELADO (Clique)' : '👆 CLIQUE P/ REVELAR', cx + boxW / 2, cy + 8);
 
-            desenharTextoAjustado(context, aberto ? c.back : c.front, cx + 8, cy + 26, boxW - 16, boxH - 32, {
+            desenharTextoAjustado(c, aberto ? card.back : card.front, cx + 8, cy + 26, boxW - 16, boxH - 32, {
               weight: '800', maxFont: 13.5, minFont: 9.5, color: '#0f172a', align: 'center', vAlign: 'middle'
             });
           });
         }
 
         if (!(role === 'aluno' && isReadonly)) {
-          context.fillStyle = cor;
-          roundRect(context, w - 26, h - 26, 24, 24, 6);
-          context.fill();
-          context.fillStyle = '#ffffff';
-          context.font = '900 13px "Segoe UI", sans-serif';
-          context.textAlign = 'center';
-          context.textBaseline = 'middle';
-          context.fillText('⤡', w - 14, h - 14);
+          c.fillStyle = cor;
+          roundRect(c, w - 26, h - 26, 24, 24, 6);
+          c.fill();
+          c.fillStyle = '#ffffff';
+          c.font = '900 13px "Segoe UI", sans-serif';
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText('⤡', w - 14, h - 14);
         }
 
-        context.restore();
+        c.restore();
       }
 
-      // =========================================================================
-      // 🏹 5. RENDERIZADOR DO LASER SETA NEON E ELEMENTOS DO QUADRO
-      // =========================================================================
-      function desenharLaserSeta(context, pts) {
+      function desenharLaserSeta(c, pts) {
         if (!Array.isArray(pts) || pts.length === 0) return;
-        context.save();
-        context.shadowColor = '#ef4444';
-        context.shadowBlur = 14;
-        context.strokeStyle = '#ef4444';
-        context.fillStyle = '#ef4444';
-        context.lineWidth = 5;
-        context.lineCap = 'round';
-        context.lineJoin = 'round';
+        c.save();
+        c.shadowColor = '#ef4444';
+        c.shadowBlur = 14;
+        c.strokeStyle = '#ef4444';
+        c.fillStyle = '#ef4444';
+        c.lineWidth = 5;
+        c.lineCap = 'round';
+        c.lineJoin = 'round';
 
-        context.beginPath();
-        context.moveTo(pts[0].x, pts[0].y);
+        c.beginPath();
+        c.moveTo(pts[0].x, pts[0].y);
         for (let i = 1; i < pts.length; i++) {
-          context.lineTo(pts[i].x, pts[i].y);
+          c.lineTo(pts[i].x, pts[i].y);
         }
-        context.stroke();
+        c.stroke();
 
-        context.strokeStyle = '#fecaca';
-        context.lineWidth = 2;
-        context.stroke();
+        c.strokeStyle = '#fecaca';
+        c.lineWidth = 2;
+        c.stroke();
 
         const tip = pts[pts.length - 1];
         const refIdx = Math.max(0, pts.length - 4);
@@ -1303,147 +1288,147 @@
           : -Math.PI / 4;
 
         const headLen = 20;
-        context.fillStyle = '#ef4444';
-        context.beginPath();
-        context.moveTo(tip.x, tip.y);
-        context.lineTo(tip.x - headLen * Math.cos(angle - Math.PI / 6), tip.y - headLen * Math.sin(angle - Math.PI / 6));
-        context.lineTo(tip.x - headLen * 0.72 * Math.cos(angle), tip.y - headLen * 0.72 * Math.sin(angle));
-        context.lineTo(tip.x - headLen * Math.cos(angle + Math.PI / 6), tip.y - headLen * Math.sin(angle + Math.PI / 6));
-        context.closePath();
-        context.fill();
+        c.fillStyle = '#ef4444';
+        c.beginPath();
+        c.moveTo(tip.x, tip.y);
+        c.lineTo(tip.x - headLen * Math.cos(angle - Math.PI / 6), tip.y - headLen * Math.sin(angle - Math.PI / 6));
+        c.lineTo(tip.x - headLen * 0.72 * Math.cos(angle), tip.y - headLen * 0.72 * Math.sin(angle));
+        c.lineTo(tip.x - headLen * Math.cos(angle + Math.PI / 6), tip.y - headLen * Math.sin(angle + Math.PI / 6));
+        c.closePath();
+        c.fill();
 
-        context.restore();
+        c.restore();
       }
 
-      function desenharElemento(context, item) {
+      function desenharElemento(c, item) {
         if (!item || item.tool === 'meta_bg') return;
         if (item.tool === 'infographic') {
-          desenharInfografico(context, item);
+          desenharInfografico(c, item);
           return;
         }
 
-        context.save();
-        context.lineCap = 'round';
-        context.lineJoin = 'round';
-        context.strokeStyle = item.color || '#0f172a';
-        context.fillStyle = item.color || '#0f172a';
-        context.lineWidth = item.size || 4;
+        c.save();
+        c.lineCap = 'round';
+        c.lineJoin = 'round';
+        c.strokeStyle = item.color || '#0f172a';
+        c.fillStyle = item.color || '#0f172a';
+        c.lineWidth = item.size || 4;
 
         if (item.tool === 'highlighter') {
-          context.globalAlpha = 0.35;
-          context.lineWidth = (item.size || 6) * 3.2;
+          c.globalAlpha = 0.35;
+          c.lineWidth = (item.size || 6) * 3.2;
         }
 
         if ((item.tool === 'pen' || item.tool === 'highlighter') && Array.isArray(item.points) && item.points.length > 0) {
           const pts = item.points;
-          context.beginPath();
-          context.moveTo(pts[0].x, pts[0].y);
+          c.beginPath();
+          c.moveTo(pts[0].x, pts[0].y);
           if (pts.length === 1) {
-            context.arc(pts[0].x, pts[0].y, (context.lineWidth / 2), 0, Math.PI * 2);
-            context.fill();
+            c.arc(pts[0].x, pts[0].y, (c.lineWidth / 2), 0, Math.PI * 2);
+            c.fill();
           } else {
             for (let i = 1; i < pts.length - 1; i++) {
               const midX = (pts[i].x + pts[i + 1].x) / 2;
               const midY = (pts[i].y + pts[i + 1].y) / 2;
-              context.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
+              c.quadraticCurveTo(pts[i].x, pts[i].y, midX, midY);
             }
             const last = pts[pts.length - 1];
-            context.lineTo(last.x, last.y);
-            context.stroke();
+            c.lineTo(last.x, last.y);
+            c.stroke();
           }
         } else if (item.tool === 'line') {
-          context.beginPath();
-          context.moveTo(item.x1, item.y1);
-          context.lineTo(item.x2, item.y2);
-          context.stroke();
+          c.beginPath();
+          c.moveTo(item.x1, item.y1);
+          c.lineTo(item.x2, item.y2);
+          c.stroke();
         } else if (item.tool === 'arrow') {
           const headlen = Math.max(12, (item.size || 4) * 3);
           const angle = Math.atan2(item.y2 - item.y1, item.x2 - item.x1);
-          context.beginPath();
-          context.moveTo(item.x1, item.y1);
-          context.lineTo(item.x2, item.y2);
-          context.stroke();
+          c.beginPath();
+          c.moveTo(item.x1, item.y1);
+          c.lineTo(item.x2, item.y2);
+          c.stroke();
 
-          context.beginPath();
-          context.moveTo(item.x2, item.y2);
-          context.lineTo(item.x2 - headlen * Math.cos(angle - Math.PI / 6), item.y2 - headlen * Math.sin(angle - Math.PI / 6));
-          context.lineTo(item.x2 - headlen * Math.cos(angle + Math.PI / 6), item.y2 - headlen * Math.sin(angle + Math.PI / 6));
-          context.closePath();
-          context.fill();
+          c.beginPath();
+          c.moveTo(item.x2, item.y2);
+          c.lineTo(item.x2 - headlen * Math.cos(angle - Math.PI / 6), item.y2 - headlen * Math.sin(angle - Math.PI / 6));
+          c.lineTo(item.x2 - headlen * Math.cos(angle + Math.PI / 6), item.y2 - headlen * Math.sin(angle + Math.PI / 6));
+          c.closePath();
+          c.fill();
         } else if (item.tool === 'rect') {
           const rx = Math.min(item.x1, item.x2);
           const ry = Math.min(item.y1, item.y2);
           const rw = Math.abs(item.x2 - item.x1);
           const rh = Math.abs(item.y2 - item.y1);
-          context.strokeRect(rx, ry, rw, rh);
+          c.strokeRect(rx, ry, rw, rh);
         } else if (item.tool === 'circle') {
           const cx = (item.x1 + item.x2) / 2;
           const cy = (item.y1 + item.y2) / 2;
           const rx = Math.abs(item.x2 - item.x1) / 2;
           const ry = Math.abs(item.y2 - item.y1) / 2;
-          context.beginPath();
-          context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
-          context.stroke();
+          c.beginPath();
+          c.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
+          c.stroke();
         } else if (item.tool === 'triangle') {
           const topX = (item.x1 + item.x2) / 2;
           const topY = item.y1;
-          context.beginPath();
-          context.moveTo(topX, topY);
-          context.lineTo(item.x2, item.y2);
-          context.lineTo(item.x1, item.y2);
-          context.closePath();
-          context.stroke();
+          c.beginPath();
+          c.moveTo(topX, topY);
+          c.lineTo(item.x2, item.y2);
+          c.lineTo(item.x1, item.y2);
+          c.closePath();
+          c.stroke();
         } else if (item.tool === 'hexagon') {
           const cx = (item.x1 + item.x2) / 2;
           const cy = (item.y1 + item.y2) / 2;
           const rx = Math.abs(item.x2 - item.x1) / 2;
           const ry = Math.abs(item.y2 - item.y1) / 2;
-          context.beginPath();
+          c.beginPath();
           for (let k = 0; k < 6; k++) {
             const ang = (Math.PI / 3) * k - Math.PI / 6;
             const vx = cx + rx * Math.cos(ang);
             const vy = cy + ry * Math.sin(ang);
-            if (k === 0) context.moveTo(vx, vy);
-            else context.lineTo(vx, vy);
+            if (k === 0) c.moveTo(vx, vy);
+            else c.lineTo(vx, vy);
           }
-          context.closePath();
-          context.stroke();
+          c.closePath();
+          c.stroke();
         } else if (item.tool === 'text' && item.text) {
           const scale = item.scale || 1;
           const fontSize = Math.max(18, (item.size || 6) * 4) * scale;
           const styleItalic = item.italic ? 'italic ' : '';
           const styleBold = item.bold !== false ? '700 ' : '400 ';
           const family = item.fontFamily || "'Segoe UI', sans-serif";
-          context.font = `${styleItalic}${styleBold}${fontSize}px ${family}`;
-          context.textBaseline = 'top';
+          c.font = `${styleItalic}${styleBold}${fontSize}px ${family}`;
+          c.textBaseline = 'top';
 
           const linhas = String(item.text).split('\n');
           linhas.forEach((linha, idx) => {
             const ly = item.y + idx * (fontSize * 1.25);
-            context.fillText(linha, item.x, ly);
-            const larguraLinha = context.measureText(linha).width;
+            c.fillText(linha, item.x, ly);
+            const larguraLinha = c.measureText(linha).width;
 
             if (item.underline) {
-              context.save();
-              context.lineWidth = Math.max(1.5, fontSize * 0.07);
-              context.beginPath();
-              context.moveTo(item.x, ly + fontSize * 1.05);
-              context.lineTo(item.x + larguraLinha, ly + fontSize * 1.05);
-              context.stroke();
-              context.restore();
+              c.save();
+              c.lineWidth = Math.max(1.5, fontSize * 0.07);
+              c.beginPath();
+              c.moveTo(item.x, ly + fontSize * 1.05);
+              c.lineTo(item.x + larguraLinha, ly + fontSize * 1.05);
+              c.stroke();
+              c.restore();
             }
             if (item.strike) {
-              context.save();
-              context.lineWidth = Math.max(1.5, fontSize * 0.07);
-              context.beginPath();
-              context.moveTo(item.x, ly + fontSize * 0.55);
-              context.lineTo(item.x + larguraLinha, ly + fontSize * 0.55);
-              context.stroke();
-              context.restore();
+              c.save();
+              c.lineWidth = Math.max(1.5, fontSize * 0.07);
+              c.beginPath();
+              c.moveTo(item.x, ly + fontSize * 0.55);
+              c.lineTo(item.x + larguraLinha, ly + fontSize * 0.55);
+              c.stroke();
+              c.restore();
             }
           });
         }
-        context.restore();
+        c.restore();
       }
 
       function desenharQuadro() {
@@ -1474,13 +1459,10 @@
           desenharLaserSeta(ctx, laserTrail);
         }
 
-        context.restore();
+        ctx.restore();
         atualizarBarraRolagemVisual();
       }
 
-      // =========================================================================
-      // 🎯 6. INTERAÇÕES NOS INFOGRÁFICOS (EDITAR ✏️, EXPANDIR ➕, ZOOM ⤡ E CARTÕES)
-      // =========================================================================
       function verificarAcoesInfografico(pt) {
         for (let i = shapes.length - 1; i >= 0; i--) {
           const sh = shapes[i];
@@ -1581,7 +1563,6 @@
         }
       }
 
-      // Disparo contínuo em tempo real durante o movimento da caneta/objeto/laser (a cada 90ms)
       function transmitirMovimentoAoVivo() {
         const agora = Date.now();
         if (agora - lastLiveStreamTime > 90) {
@@ -1824,7 +1805,6 @@
           agendarSalvamentoNuvem(10);
         }
 
-        // Se chegou atualização remota enquanto o dedo estava pressionado, aplica imediatamente!
         if (pendingRemoteRecords) {
           const rec = pendingRemoteRecords;
           pendingRemoteRecords = null;
@@ -1860,9 +1840,6 @@
         if (role !== 'aluno') agendarSalvamentoNuvem(20);
       }
 
-      // =========================================================================
-      // 🔤 7. CAIXA DE TEXTO RICO (CRIAÇÃO E EDIÇÃO AO VIVO)
-      // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
       const fontSelect = document.getElementById('text-font-select');
@@ -1972,9 +1949,6 @@
         textEditorBox.style.display = 'none';
       };
 
-      // =========================================================================
-      // 📊 8. CONSTRUTOR E EDITOR DINÂMICO DOS 8 INFOGRÁFICOS (COM BOTÃO +)
-      // =========================================================================
       const infoModal = document.getElementById('infographic-modal');
       const infoFieldsBox = document.getElementById('info-dynamic-fields');
       const infoExtraHeaders = document.getElementById('info-extra-headers');
@@ -2094,10 +2068,10 @@
           draftInfoData.center = document.getElementById('inf-rel-center')?.value ?? draftInfoData.center;
           draftInfoData.nodes = draftInfoData.nodes.map((n, idx) => document.getElementById(`inf-rel-n-${idx}`)?.value ?? n);
         } else if (tipo === 'interativo' && draftInfoData.cards) {
-          draftInfoData.cards = draftInfoData.cards.map((c, idx) => ({
-            front: document.getElementById(`inf-int-f-${idx}`)?.value ?? c.front,
-            back: document.getElementById(`inf-int-b-${idx}`)?.value ?? c.back,
-            revealed: !!c.revealed
+          draftInfoData.cards = draftInfoData.cards.map((card, idx) => ({
+            front: document.getElementById(`inf-int-f-${idx}`)?.value ?? card.front,
+            back: document.getElementById(`inf-int-b-${idx}`)?.value ?? card.back,
+            revealed: !!card.revealed
           }));
         }
       }
@@ -2185,10 +2159,10 @@
               ${btnDel(idx)}
             </div>`).join('');
         } else if (t === 'interativo') {
-          infoFieldsBox.innerHTML = (draftInfoData.cards || []).map((c, idx) => `
+          infoFieldsBox.innerHTML = (draftInfoData.cards || []).map((card, idx) => `
             <div style="display:flex; gap:6px;">
-              <input class="info-input" id="inf-int-f-${idx}" value="${c.front}" placeholder="Frente (Pergunta)" style="flex:1;">
-              <input class="info-input" id="inf-int-b-${idx}" value="${c.back}" placeholder="Verso (Resposta ao clicar)" style="flex:1;">
+              <input class="info-input" id="inf-int-f-${idx}" value="${card.front}" placeholder="Frente (Pergunta)" style="flex:1;">
+              <input class="info-input" id="inf-int-b-${idx}" value="${card.back}" placeholder="Verso (Resposta ao clicar)" style="flex:1;">
               ${btnDel(idx)}
             </div>`).join('');
         }
@@ -2299,9 +2273,6 @@
         agendarSalvamentoNuvem(10);
       };
 
-      // =========================================================================
-      // 📑 9. EVENTOS DA BARRA DE NUMERAÇÃO DE TELAS (TELA 1, TELA 2, COPIAR/COLAR)
-      // =========================================================================
       document.getElementById('btn-prev-screen').onclick = () => {
         if (activeScreenIndex > 0) carregarTelaPorIndice(activeScreenIndex - 1, true);
       };
@@ -2386,9 +2357,6 @@
         agendarSalvamentoNuvem(10);
       };
 
-      // =========================================================================
-      // ⚡ 10. MOTOR DE TEMPO REAL NA VELOCIDADE DA LUZ (PROFESSOR ⇄ ALUNO)
-      // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
           document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
@@ -2485,11 +2453,9 @@
         link.click();
       };
 
-      // Aplica os registos recebidos diretamente pelo túnel SSE (0ms de atraso!)
       function aplicarRegistrosRecebidos(listaRecords, ehCarregamentoInicial = false) {
         if (!Array.isArray(listaRecords)) return;
 
-        // Se este utilizador estiver no meio de um risco com o dedo no ecrã, guarda na fila para aplicar assim que soltar
         if (isPointerDown && !ehCarregamentoInicial) {
           pendingRemoteRecords = listaRecords;
           return;
@@ -2606,7 +2572,6 @@
         }
       });
 
-      // Radar de Permissões do Aluno
       if (role === 'aluno') {
         const verificarStatusAluno = async () => {
           try {
@@ -2641,7 +2606,6 @@
         setInterval(verificarStatusAluno, 2000);
       }
 
-      // Escutador SSE Direto (Recebe os traços dentro do evento em 0ms!)
       try {
         let escolaId = 'DEFAULT';
         try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
@@ -2651,7 +2615,6 @@
             const data = JSON.parse(event.data);
             if (data.type === 'LOUSA_DADOS_CHANGED') {
               if (data.senderId && data.senderId === CLIENT_ID) return;
-              // Se o pacote SSE já trouxer os records, desenha na mesma fração de segundo!
               if (Array.isArray(data.records)) {
                 aplicarRegistrosRecebidos(data.records, false);
               } else {
