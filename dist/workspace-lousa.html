@@ -74,6 +74,31 @@
     }
     .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
 
+    /* 📑 NOVO: Barra Central de Numeração de Telas (Quadros Numerados) */
+    .screens-dock {
+      position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(8px);
+      border: 1px solid #334155; border-radius: 14px;
+      padding: 6px 10px; display: flex; align-items: center; gap: 6px;
+      z-index: 21; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.18);
+      color: #ffffff;
+    }
+    .screen-nav-btn {
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.15);
+      color: #f8fafc; padding: 5px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 800;
+      cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
+    }
+    .screen-nav-btn:hover { background: #2563eb; border-color: #60a5fa; }
+    .screen-nav-btn.add { background: #10b981; border-color: #34d399; color: #ffffff; }
+    .screen-nav-btn.add:hover { background: #059669; }
+    .screen-nav-btn.del { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #fca5a5; }
+    .screen-nav-btn.del:hover { background: #dc2626; color: #ffffff; }
+    #select-screen-number {
+      background: #1e293b; color: #f8fafc; border: 1px solid #475569;
+      border-radius: 8px; padding: 5px 8px; font-size: 12px; font-weight: 800;
+      cursor: pointer; outline: none;
+    }
+
     /* Barra de Ações e Zoom (Superior Direita) */
     .actions-dock {
       position: fixed; top: 12px; right: 12px;
@@ -194,9 +219,13 @@
       white-space: nowrap;
     }
 
+    @media (max-width: 1100px) {
+      .screens-dock { top: 58px; left: 12px; transform: none; }
+    }
     @media (max-width: 768px) {
       .style-dock { top: 8px; left: 8px; padding: 6px 8px; gap: 5px; }
-      .actions-dock { top: 58px; right: 8px; padding: 5px 8px; }
+      .screens-dock { top: 54px; left: 8px; padding: 5px 8px; gap: 4px; max-width: calc(100vw - 16px); overflow-x: auto; }
+      .actions-dock { top: 100px; right: 8px; padding: 5px 8px; }
       .toolbar-dock { bottom: 12px; padding: 6px 8px; }
       .pan-nav-dock { bottom: 68px; right: 8px; }
       .tool-btn { width: 34px; height: 34px; font-size: 15px; }
@@ -226,12 +255,25 @@
 
       <div style="width:1px; height:18px; background:#cbd5e1; margin:0 2px;"></div>
 
-      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11.5px; font-weight:700; color:#1e293b; background:#f8fafc; cursor:pointer; outline:none;" title="Escolher Fundo da Lousa">
+      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11.5px; font-weight:700; color:#1e293b; background:#f8fafc; cursor:pointer; outline:none;" title="Escolher Fundo desta Tela">
         <option value="bg-grade">📐 Quadriculado</option>
         <option value="bg-pauta">📝 Caderno Pautado</option>
         <option value="bg-pontos">⠿ Pontilhado</option>
         <option value="bg-branco">⬜ Quadro Branco</option>
       </select>
+    </div>
+
+    <!-- 📑 NOVO: Barra Central de Numeração de Telas (Quadros Numerados + Copiar/Colar entre Turmas) -->
+    <div id="ui-screens-dock" class="screens-dock">
+      <button class="screen-nav-btn" id="btn-prev-screen" title="Ir para a Tela Anterior">◀</button>
+      <select id="select-screen-number" title="Selecionar Tela Numerada">
+        <option value="0">🖥️ Tela 1 de 1</option>
+      </select>
+      <button class="screen-nav-btn" id="btn-next-screen" title="Ir para a Próxima Tela">▶</button>
+      <button class="screen-nav-btn add" id="btn-new-screen" title="Criar uma Nova Tela em Branco (Tela 2, Tela 3...)">➕ Nova Tela</button>
+      <button class="screen-nav-btn" id="btn-copy-screen" title="Copiar esta Tela para colar noutra Turma ou noutra Tela">📋 Copiar</button>
+      <button class="screen-nav-btn" id="btn-paste-screen" title="Colar a Tela copiada aqui" style="display:none;">📥 Colar</button>
+      <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
     </div>
 
     <!-- Barra Superior Direita: Zoom, Desfazer, Refazer, PNG e Limpar -->
@@ -243,13 +285,13 @@
       <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
       <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
       <button class="action-pill" id="btn-download" title="Guardar imagem da aula (PNG)">📥 PNG</button>
-      <button class="action-pill danger" id="btn-clear" title="Apagar todo o quadro">🗑️</button>
+      <button class="action-pill danger" id="btn-clear" title="Limpar apenas os desenhos desta Tela">🧹 Limpar</button>
     </div>
 
     <!-- Controlador Rápido de Expansão da Tela (Direita / Esquerda / Baixo) -->
     <div id="ui-pan-dock" class="pan-nav-dock" title="Expandir e navegar pelo quadro infinito">
       <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
-      <button class="pan-btn" id="btn-pan-right" title="Expandir / Avançar tela para a direita">➡️ +Tela</button>
+      <button class="pan-btn" id="btn-pan-right" title="Expandir / Avançar tela para a direita">➡️ +Espaço</button>
       <button class="pan-btn" id="btn-pan-down" title="Expandir / Descer tela">⬇️</button>
     </div>
 
@@ -376,7 +418,7 @@
       </div>
     </div>
 
-    <div id="badge-somente-leitura">📡 Sincronizado em tempo real com a tela do Professor</div>
+    <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
 
     <div id="tela-espera-aluno">
       <div style="font-size:60px; animation:pulse 2s infinite;">⏳</div>
@@ -397,13 +439,22 @@
       const params = new URLSearchParams(window.location.search);
       let role = params.get('role') || 'professor';
       let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
+      let userIdParam = params.get('userId') || '';
+      let alunoRefIdParam = params.get('alunoRefId') || '';
       let roomIdAtivo = roomIdOriginal;
+      let nomeTurmaAtiva = roomIdOriginal === 'global' ? 'Público Geral' : roomIdOriginal;
 
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
       let initialLoadDone = false;
 
-      // Estado Vetorial e Fundo da Lousa
+      // 📑 SISTEMA DE MULTI-TELAS NUMERADAS (Tela 1, Tela 2, Tela 3...)
+      let screens = [
+        { id: 'tela_1', bgType: 'bg-grade', shapes: [], cam: { x: 0, y: 0, zoom: 1 } }
+      ];
+      let activeScreenIndex = 0;
+
+      // Variáveis da Tela Ativa Atual
       let shapes = [];
       let redoStack = [];
       let currentBg = 'bg-grade';
@@ -450,10 +501,65 @@
       const badgeLeitura = document.getElementById('badge-somente-leitura');
       const uiToolbar = document.getElementById('ui-toolbar-dock');
       const uiStyle = document.getElementById('ui-style-dock');
+      const uiScreens = document.getElementById('ui-screens-dock');
       const uiActions = document.getElementById('ui-actions-dock');
       const uiPanDock = document.getElementById('ui-pan-dock');
       const selectFundo = document.getElementById('select-fundo');
+      const selectScreenNumber = document.getElementById('select-screen-number');
+      const btnPasteScreen = document.getElementById('btn-paste-screen');
       const hScrollThumb = document.getElementById('board-hscroll-thumb');
+
+      function verificarClipboardTela() {
+        if (!btnPasteScreen) return;
+        const temCopia = !!localStorage.getItem('ws_lousa_clipboard_screen');
+        btnPasteScreen.style.display = temCopia ? 'inline-flex' : 'none';
+      }
+
+      // 📑 Sincroniza os dados da tela ativa com o array de Telas Numeradas
+      function guardarEstadoNaTelaAtual() {
+        if (!screens[activeScreenIndex]) {
+          screens[activeScreenIndex] = { id: 'tela_' + (activeScreenIndex + 1), bgType: currentBg, shapes: [], cam: { x: 0, y: 0, zoom: 1 } };
+        }
+        screens[activeScreenIndex].bgType = currentBg;
+        screens[activeScreenIndex].shapes = shapes;
+        if (role !== 'aluno') {
+          screens[activeScreenIndex].cam = { x: camera.x, y: camera.y, zoom: camera.zoom };
+        }
+      }
+
+      function atualizarBarraNumeracaoTelas() {
+        if (selectScreenNumber) {
+          selectScreenNumber.innerHTML = screens.map((sc, idx) => {
+            const qtdItens = Array.isArray(sc.shapes) ? sc.shapes.length : 0;
+            return `<option value="${idx}" ${idx === activeScreenIndex ? 'selected' : ''}>🖥️ Tela ${idx + 1} de ${screens.length}${qtdItens > 0 ? ` (${qtdItens})` : ''}</option>`;
+          }).join('');
+        }
+        if (badgeLeitura) {
+          badgeLeitura.innerHTML = `📡 Ao Vivo (${nomeTurmaAtiva}) • <b>🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}</b>`;
+        }
+        verificarClipboardTela();
+      }
+
+      function carregarTelaPorIndice(novoIndice, dispararSave = true) {
+        if (novoIndice < 0 || novoIndice >= screens.length) return;
+        guardarEstadoNaTelaAtual();
+        activeScreenIndex = novoIndice;
+        const sc = screens[activeScreenIndex];
+        shapes = Array.isArray(sc.shapes) ? sc.shapes : [];
+        currentBg = sc.bgType || 'bg-grade';
+        if (selectFundo) selectFundo.value = currentBg;
+
+        if (role !== 'aluno' && sc.cam) {
+          camera = { x: sc.cam.x || 0, y: sc.cam.y || 0, zoom: sc.cam.zoom || 1 };
+        }
+        redoStack = [];
+        atualizarBarraNumeracaoTelas();
+        desenharQuadro();
+        if (dispararSave) {
+          lastLocalEditTime = Date.now();
+          agendarSalvamentoNuvem(80);
+        }
+      }
 
       function obterDimensoesTelaSeguras() {
         const rect = appEl.getBoundingClientRect();
@@ -480,10 +586,12 @@
         const bloquearFerramentas = (role === 'aluno' && isReadonly);
         uiToolbar.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiStyle.style.display = bloquearFerramentas ? 'none' : 'flex';
+        uiScreens.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiActions.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiPanDock.style.display = bloquearFerramentas ? 'none' : 'flex';
         badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
         canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
+        atualizarBarraNumeracaoTelas();
       }
 
       // =========================================================================
@@ -514,7 +622,6 @@
         const { w: alunoW, h: alunoH } = obterDimensoesTelaSeguras();
         const profZoom = (Number.isFinite(profView.zoom) && profView.zoom > 0.1) ? profView.zoom : 1;
 
-        // Calcula a escala proporcional exata entre a tela do aluno e a tela do professor
         const escalaAdaptativa = Math.min(alunoW / profView.w, alunoH / profView.h);
         const zoomFinal = Math.max(0.2, Math.min(3.5, profZoom * escalaAdaptativa));
 
@@ -582,7 +689,6 @@
       }
       window.addEventListener('resize', ajustarTamanhoCanvas);
 
-      // Observador automático de tamanho para quando o modal do aluno ou professor abre em tela cheia
       if (window.ResizeObserver) {
         const ro = new ResizeObserver(() => ajustarTamanhoCanvas());
         ro.observe(appEl);
@@ -678,6 +784,13 @@
           context.fillStyle = '#ffffff';
           context.fillRect(0, 0, width, height);
         }
+
+        // Marca d'água discreta da Numeração da Tela no canto inferior esquerdo do quadro
+        context.fillStyle = 'rgba(100, 116, 139, 0.55)';
+        context.font = '800 12px "Segoe UI", sans-serif';
+        context.textAlign = 'left';
+        context.textBaseline = 'bottom';
+        context.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 16, height - 14);
         context.restore();
       }
 
@@ -1561,6 +1674,7 @@
           const antes = shapes.length;
           shapes = shapes.filter(s => !pontoPertoDoElemento(pt, s, 18));
           if (shapes.length !== antes) {
+            atualizarBarraNumeracaoTelas();
             desenharQuadro();
             agendarSalvamentoNuvem();
           }
@@ -1650,6 +1764,7 @@
           const antes = shapes.length;
           shapes = shapes.filter(s => !pontoPertoDoElemento(pt, s, 18));
           if (shapes.length !== antes) {
+            atualizarBarraNumeracaoTelas();
             desenharQuadro();
             agendarSalvamentoNuvem();
           }
@@ -1723,6 +1838,7 @@
         if (activeShape) {
           shapes.push(activeShape);
           activeShape = null;
+          atualizarBarraNumeracaoTelas();
           desenharQuadro();
           agendarSalvamentoNuvem();
         }
@@ -1857,6 +1973,7 @@
         }
         redoStack = [];
         lastLocalEditTime = Date.now();
+        atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem();
       }
@@ -2191,12 +2308,103 @@
         canvas.style.cursor = 'grab';
 
         lastLocalEditTime = Date.now();
+        atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem();
       };
 
       // =========================================================================
-      // 🛠️ 9. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO BLINDADA
+      // 📑 9. EVENTOS DA BARRA DE NUMERAÇÃO DE TELAS (TELA 1, TELA 2, COPIAR/COLAR)
+      // =========================================================================
+      document.getElementById('btn-prev-screen').onclick = () => {
+        if (activeScreenIndex > 0) carregarTelaPorIndice(activeScreenIndex - 1, true);
+      };
+      document.getElementById('btn-next-screen').onclick = () => {
+        if (activeScreenIndex < screens.length - 1) carregarTelaPorIndice(activeScreenIndex + 1, true);
+      };
+      selectScreenNumber.onchange = function() {
+        const idx = parseInt(this.value, 10);
+        if (!isNaN(idx)) carregarTelaPorIndice(idx, true);
+      };
+
+      document.getElementById('btn-new-screen').onclick = () => {
+        guardarEstadoNaTelaAtual();
+        const novoIdx = screens.length;
+        screens.push({
+          id: 'tela_' + Date.now(),
+          bgType: currentBg,
+          shapes: [],
+          cam: { x: 0, y: 0, zoom: 1 }
+        });
+        carregarTelaPorIndice(novoIdx, true);
+      };
+
+      document.getElementById('btn-copy-screen').onclick = () => {
+        guardarEstadoNaTelaAtual();
+        const copia = JSON.stringify({
+          bgType: currentBg,
+          shapes: shapes
+        });
+        localStorage.setItem('ws_lousa_clipboard_screen', copia);
+        verificarClipboardTela();
+        const btnC = document.getElementById('btn-copy-screen');
+        const txtOrig = btnC.innerHTML;
+        btnC.innerHTML = '✅ Copiada!';
+        setTimeout(() => { btnC.innerHTML = txtOrig; }, 1500);
+      };
+
+      document.getElementById('btn-paste-screen').onclick = () => {
+        const raw = localStorage.getItem('ws_lousa_clipboard_screen');
+        if (!raw) return;
+        try {
+          const dadosCopia = JSON.parse(raw);
+          if (dadosCopia.bgType) {
+            currentBg = dadosCopia.bgType;
+            if (selectFundo) selectFundo.value = currentBg;
+          }
+          if (Array.isArray(dadosCopia.shapes)) {
+            const novasFormas = dadosCopia.shapes.map(s => ({
+              ...s,
+              id: s.id + '_cp_' + Math.random().toString(36).substring(2, 5)
+            }));
+            shapes = [...shapes, ...novasFormas];
+          }
+          guardarEstadoNaTelaAtual();
+          atualizarBarraNumeracaoTelas();
+          lastLocalEditTime = Date.now();
+          desenharQuadro();
+          agendarSalvamentoNuvem(60);
+        } catch (e) {}
+      };
+
+      document.getElementById('btn-delete-screen').onclick = () => {
+        if (screens.length <= 1) {
+          if (!confirm('Esta é a Tela 1. Deseja limpar todo o conteúdo dela?')) return;
+          shapes = [];
+          redoStack = [];
+          guardarEstadoNaTelaAtual();
+          atualizarBarraNumeracaoTelas();
+          lastLocalEditTime = Date.now();
+          desenharQuadro();
+          agendarSalvamentoNuvem(80);
+          return;
+        }
+        if (!confirm(`Deseja apagar a Tela ${activeScreenIndex + 1} de ${screens.length}?`)) return;
+        screens.splice(activeScreenIndex, 1);
+        const novoIdx = Math.max(0, activeScreenIndex - 1);
+        activeScreenIndex = novoIdx;
+        const sc = screens[activeScreenIndex];
+        shapes = Array.isArray(sc.shapes) ? sc.shapes : [];
+        currentBg = sc.bgType || 'bg-grade';
+        if (selectFundo) selectFundo.value = currentBg;
+        atualizarBarraNumeracaoTelas();
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem(80);
+      };
+
+      // =========================================================================
+      // 🛠️ 10. CONTROLES GERAIS E SINCRONIZAÇÃO EM TEMPO REAL
       // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
@@ -2226,6 +2434,7 @@
 
       selectFundo.onchange = function() {
         currentBg = this.value;
+        guardarEstadoNaTelaAtual();
         lastLocalEditTime = Date.now();
         desenharQuadro();
         agendarSalvamentoNuvem();
@@ -2261,6 +2470,8 @@
       document.getElementById('btn-undo').onclick = () => {
         if (shapes.length === 0) return;
         redoStack.push(shapes.pop());
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         lastLocalEditTime = Date.now();
         desenharQuadro();
         agendarSalvamentoNuvem();
@@ -2269,6 +2480,8 @@
       document.getElementById('btn-redo').onclick = () => {
         if (redoStack.length === 0) return;
         shapes.push(redoStack.pop());
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         lastLocalEditTime = Date.now();
         desenharQuadro();
         agendarSalvamentoNuvem();
@@ -2276,9 +2489,11 @@
 
       document.getElementById('btn-clear').onclick = () => {
         if (shapes.length === 0) return;
-        if (!confirm('Deseja limpar todo o quadro desta turma?')) return;
+        if (!confirm(`Deseja limpar os desenhos da Tela ${activeScreenIndex + 1}?`)) return;
         shapes = [];
         redoStack = [];
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         lastLocalEditTime = Date.now();
         desenharQuadro();
         agendarSalvamentoNuvem();
@@ -2286,19 +2501,19 @@
 
       document.getElementById('btn-download').onclick = () => {
         const link = document.createElement('a');
-        link.download = `Lousa_Aula_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
+        link.download = `Lousa_Tela_${activeScreenIndex + 1}_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
         link.href = canvas.toDataURL('image/png');
         link.click();
       };
 
-      // 🛡️ Só permite salvar depois que o carregamento inicial terminou (nunca apaga desenhos existentes ao abrir!)
-      function agendarSalvamentoNuvem(delayMs = 200) {
+      function agendarSalvamentoNuvem(delayMs = 180) {
         if (!initialLoadDone) return;
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
         saveTimer = setTimeout(async () => {
           isSaving = true;
           try {
+            guardarEstadoNaTelaAtual();
             const estadoProf = role !== 'aluno' ? obterEstadoCameraProfessor() : profViewportRemoto;
             const metaBg = {
               id: 'meta_bg',
@@ -2306,6 +2521,8 @@
               pttV2: true,
               tool: 'meta_bg',
               bgType: currentBg,
+              activeScreenIndex: activeScreenIndex,
+              screens: screens,
               profView: estadoProf,
               laserTrail: role !== 'aluno' ? laserTrail : [],
               updatedAt: Date.now()
@@ -2322,7 +2539,6 @@
         }, delayMs);
       }
 
-      // 🔍 Sintonizador Inteligente: No Aluno, verifica tanto a sala da turma quanto a sala 'global'
       async function carregarDadosDaNuvem(forcar = false) {
         if (role === 'aluno' && !isAllowed) return;
         if (!forcar) {
@@ -2335,57 +2551,51 @@
             cache: 'no-store',
             credentials: 'include'
           });
-          let data = await res.json();
-
-          // Se for Aluno e a sala da turma estiver vazia, consulta também a sala 'global' onde o Professor pode estar a desenhar!
-          if (role === 'aluno' && roomIdAtivo !== 'global') {
-            const listaTurma = Array.isArray(data?.records) ? data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg') : [];
-            try {
-              const resGlobal = await fetch(`/api/workspace/sala/workspace-lousa/dados/global?_t=${Date.now()}`, {
-                cache: 'no-store',
-                credentials: 'include'
-              });
-              const dataGlobal = await resGlobal.json();
-              const listaGlobal = Array.isArray(dataGlobal?.records) ? dataGlobal.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg') : [];
-
-              if (listaTurma.length === 0 && listaGlobal.length > 0) {
-                data = dataGlobal;
-              } else if (listaTurma.length > 0 && listaGlobal.length > 0) {
-                const metaT = (data.records || []).find(r => r && r.tool === 'meta_bg');
-                const metaG = (dataGlobal.records || []).find(r => r && r.tool === 'meta_bg');
-                if ((metaG?.updatedAt || 0) > (metaT?.updatedAt || 0)) {
-                  data = dataGlobal;
-                }
-              }
-            } catch (errG) {}
-          }
+          const data = await res.json();
 
           if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2200))) return;
 
           if (data && data.success && Array.isArray(data.records)) {
-            shapes = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
-
+            if (data.nomeTurma) {
+              nomeTurmaAtiva = data.nomeTurma === 'global' ? 'Público Geral' : data.nomeTurma;
+            }
             const metaBg = data.records.find(r => r && r.tool === 'meta_bg');
-            if (metaBg) {
-              if (metaBg.bgType) {
-                currentBg = metaBg.bgType;
-                if (selectFundo) selectFundo.value = currentBg;
-              }
-              if (role === 'aluno') {
-                laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
-                if (metaBg.profView) {
-                  aplicarCameraDoProfessorNoAluno(metaBg.profView, !forcar);
-                }
+            const formasAvulsas = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
+
+            if (metaBg && Array.isArray(metaBg.screens) && metaBg.screens.length > 0) {
+              screens = metaBg.screens;
+              activeScreenIndex = Math.max(0, Math.min(screens.length - 1, parseInt(metaBg.activeScreenIndex, 10) || 0));
+              const telaAtiva = screens[activeScreenIndex] || screens[0];
+              shapes = Array.isArray(telaAtiva.shapes) ? telaAtiva.shapes : formasAvulsas;
+              currentBg = telaAtiva.bgType || metaBg.bgType || 'bg-grade';
+            } else {
+              // Migra automaticamente desenhos antigos para a Tela 1
+              currentBg = (metaBg && metaBg.bgType) ? metaBg.bgType : 'bg-grade';
+              shapes = formasAvulsas;
+              screens = [{ id: 'tela_1', bgType: currentBg, shapes: shapes, cam: { x: 0, y: 0, zoom: 1 } }];
+              activeScreenIndex = 0;
+            }
+
+            if (selectFundo) selectFundo.value = currentBg;
+
+            if (role === 'aluno' && metaBg) {
+              laserTrail = Array.isArray(metaBg.laserTrail) ? metaBg.laserTrail : [];
+              if (metaBg.profView) {
+                aplicarCameraDoProfessorNoAluno(metaBg.profView, !forcar);
               }
             }
+
             initialLoadDone = true;
+            atualizarBarraNumeracaoTelas();
             desenharQuadro();
           } else {
             initialLoadDone = true;
+            atualizarBarraNumeracaoTelas();
             desenharQuadro();
           }
         } catch (e) {
           initialLoadDone = true;
+          atualizarBarraNumeracaoTelas();
           desenharQuadro();
         }
       }
@@ -2401,35 +2611,29 @@
         if (d.type === 'RELOAD_DADOS') {
           carregarDadosDaNuvem(true);
         }
+        // Quando o professor clica em "Ativar Visualização", grava e transmite a tela atual imediatamente!
+        if (d.type === 'FORCE_SAVE_DADOS') {
+          initialLoadDone = true;
+          agendarSalvamentoNuvem(20);
+        }
       });
 
-      // Radar Contínuo do Aluno (Verifica Permissão + Sincroniza Desenhos e Câmara a cada 2s)
+      // Radar Contínuo do Aluno (Conecta automaticamente à sala ativa do Professor)
       if (role === 'aluno') {
         const verificarStatusAluno = async () => {
           try {
-            const res = await fetch(`/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdOriginal)}?_t=${Date.now()}`, {
+            const urlStatus = `/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdOriginal)}?userId=${encodeURIComponent(userIdParam)}&alunoRefId=${encodeURIComponent(alunoRefIdParam)}&_t=${Date.now()}`;
+            const res = await fetch(urlStatus, {
               cache: 'no-store',
               credentials: 'include'
             });
-            let data = await res.json();
-
-            // Se a turma específica não estiver ativa, verifica também se o Professor ativou o 'Público Geral' ('global')
-            if ((!data || !data.ativa) && roomIdOriginal !== 'global') {
-              try {
-                const resG = await fetch(`/api/workspace/sala/workspace-lousa/status/global?_t=${Date.now()}`, {
-                  cache: 'no-store',
-                  credentials: 'include'
-                });
-                const dataG = await resG.json();
-                if (dataG && dataG.success && dataG.ativa) {
-                  data = dataG;
-                  data.salaAtivaId = 'global';
-                }
-              } catch (eG) {}
-            }
+            const data = await res.json();
 
             if (data && data.success && data.ativa) {
               const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
+              if (data.nomeTurma) {
+                nomeTurmaAtiva = data.nomeTurma === 'global' ? 'Público Geral' : data.nomeTurma;
+              }
               const mudouSala = (roomIdAtivo !== salaAlvo);
               const acabouDeLiberar = !isAllowed;
 
@@ -2438,7 +2642,6 @@
               isReadonly = !data.recursos;
               atualizarPermissoesUI();
 
-              // Carrega na abertura e mantém sincronizado a cada ciclo
               await carregarDadosDaNuvem(mudouSala || acabouDeLiberar);
             } else {
               isAllowed = false;
@@ -2447,7 +2650,7 @@
           } catch (e) {}
         };
         verificarStatusAluno();
-        setInterval(verificarStatusAluno, 2000);
+        setInterval(verificarStatusAluno, 1800);
       }
 
       try {
@@ -2468,17 +2671,9 @@
               if (mesmaSala) carregarDadosDaNuvem(false);
             }
             if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
-              const mesmaTurma =
-                data.turmaId === roomIdOriginal ||
-                data.turmaNome === roomIdOriginal ||
-                data.turmaId === 'global';
-              if (mesmaTurma) {
-                isAllowed = !!data.ativa;
-                isReadonly = !data.recursos;
-                if (data.ativa && data.turmaId) roomIdAtivo = data.turmaId;
-                atualizarPermissoesUI();
-                if (data.ativa) carregarDadosDaNuvem(true);
-              }
+              setTimeout(() => {
+                if (window._loadCloud) window._loadCloud();
+              }, 100);
             }
           } catch (e) {}
         };

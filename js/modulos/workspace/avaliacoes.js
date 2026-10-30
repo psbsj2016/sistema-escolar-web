@@ -3471,37 +3471,38 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, ativa, !recursos);
     },
 
-    enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
-    const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-    try {
-        await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
-        Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
-        Workspace.Avaliacoes.renderizarBotoesLousaProf();
-        
-        // FIX: Professor SEMPRE com ferramentas, só aluno é travado
-        // Então para o iframe do PROFESSOR, mande locked = false sempre
-        const iframeProf = document.getElementById('iframeLousaProf');
-        if(iframeProf && iframeProf.contentWindow){
-            try{ 
-                iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: false }, '*'); 
-                // força recalcular tamanho depois de ativar (resolve toolbar sumindo)
-                setTimeout(() => {
-                    iframeProf.contentWindow.dispatchEvent(new Event('resize'));
-                }, 200);
-            }catch{}
+   enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
+        const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
+        try {
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
+            Workspace.Avaliacoes._lousaProfState = { turmaId, ativa, recursos };
+            Workspace.Avaliacoes.renderizarBotoesLousaProf();
+            
+            const iframeProf = document.getElementById('iframeLousaProf');
+            if (iframeProf && iframeProf.contentWindow) {
+                try { 
+                    iframeProf.contentWindow.postMessage({ type: 'LOCK_STATE', locked: false }, '*');
+                    // 🚀 Quando o professor ativa a visualização, força a lousa a salvar e transmitir a tela atual imediatamente para os alunos!
+                    if (ativa) {
+                        iframeProf.contentWindow.postMessage({ type: 'FORCE_SAVE_DADOS' }, '*');
+                    }
+                    setTimeout(() => {
+                        iframeProf.contentWindow.dispatchEvent(new Event('resize'));
+                    }, 200);
+                } catch (err) {}
+            }
+        } catch(e) {
+            Workspace.mostrarAviso('Erro ao comunicar com a Lousa.', 'error');
         }
-    } catch(e) { Workspace.mostrarAviso('Erro ao comunicar com a Lousa.', 'error'); }
-},
+    },
 
     fecharLousaProfessor: async () => {
-    const modal = document.getElementById('ws-modal-lousa-prof');
-    const iframe = document.getElementById('iframeLousaProf');
-    // NÃO desativa mais automaticamente - a lousa continua ativa pro aluno mesmo com modal fechado
-    // Só limpa o iframe
-    if(modal) modal.style.display = 'none';
-    if(iframe) iframe.src = '';
-    document.body.style.overflow = '';
-},
+        const modal = document.getElementById('ws-modal-lousa-prof');
+        const iframe = document.getElementById('iframeLousaProf');
+        if (modal) modal.style.display = 'none';
+        if (iframe) iframe.src = '';
+        document.body.style.overflow = '';
+    },
 
     abrirLousaFullscreen: () => {
         const modal = document.getElementById('ws-modal-lousa-aluno-fullscreen');
@@ -3524,17 +3525,21 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         if (!ligar) return; 
 
         let turmaId = 'global';
+        let userId = '';
+        let alunoRefId = '';
         try {
             if (Workspace.usuario) {
                 let t = Workspace.usuario.turma || Workspace.usuario.turmaId || Workspace.usuario.turmas?.[0] || 'global';
-                turmaId = String(t.id || t._id || t).trim();
+                if (typeof t === 'object') t = t.id || t._id || t.nome || 'global';
+                turmaId = String(t).trim() || 'global';
+                userId = String(Workspace.usuario.id || '').trim();
+                alunoRefId = String(Workspace.usuario.alunoRefId || Workspace.usuario.id || '').trim();
             }
         } catch(e) {}
 
-        // Injeta a Lousa. A tela preta de espera agora é renderizada 100% pelo React!
         const iframe = document.getElementById('iframeLousaAluno');
-        const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}`;
-        if (iframe && iframe.getAttribute('src') !== urlMagica) {
+        const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&userId=${encodeURIComponent(userId)}&alunoRefId=${encodeURIComponent(alunoRefId)}&_t=${Date.now()}`;
+        if (iframe) {
             iframe.setAttribute('src', urlMagica);
         }
     }
