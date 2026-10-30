@@ -17,27 +17,6 @@
     #lousa-app {
       position: relative; width: 100vw; height: 100vh; height: 100dvh;
       overflow: hidden; display: flex; flex-direction: column;
-      background: #ffffff;
-    }
-
-    /* Padrões de Fundo do Quadro */
-    .bg-branco { background-color: #ffffff; background-image: none; }
-    .bg-pontos {
-      background-color: #ffffff;
-      background-image: radial-gradient(#cbd5e1 1.5px, transparent 1.5px);
-      background-size: 24px 24px;
-    }
-    .bg-grade {
-      background-color: #ffffff;
-      background-image:
-        linear-gradient(to right, #e2e8f0 1px, transparent 1px),
-        linear-gradient(to bottom, #e2e8f0 1px, transparent 1px);
-      background-size: 28px 28px;
-    }
-    .bg-pauta {
-      background-color: #fffef9;
-      background-image: linear-gradient(to bottom, transparent 31px, #93c5fd 31px, #93c5fd 32px);
-      background-size: 100% 32px;
     }
 
     #lousa-canvas {
@@ -48,18 +27,18 @@
 
     /* Barra de Ferramentas Principal (Inferior Central) */
     .toolbar-dock {
-      position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(10px);
+      position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
+      background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(10px);
       border: 1px solid #334155; border-radius: 18px;
-      padding: 8px 12px; display: flex; align-items: center; gap: 6px;
-      z-index: 20; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.28);
+      padding: 7px 10px; display: flex; align-items: center; gap: 5px;
+      z-index: 20; box-shadow: 0 12px 35px rgba(0, 0, 0, 0.3);
       max-width: 96vw; overflow-x: auto; scrollbar-width: none;
     }
     .toolbar-dock::-webkit-scrollbar { display: none; }
 
     .tool-btn {
       background: transparent; border: 1px solid transparent; color: #cbd5e1;
-      width: 40px; height: 40px; border-radius: 12px; font-size: 18px;
+      width: 38px; height: 38px; border-radius: 11px; font-size: 17px;
       display: flex; align-items: center; justify-content: center;
       cursor: pointer; transition: all 0.15s ease; flex-shrink: 0;
     }
@@ -68,37 +47,35 @@
       background: #2563eb; color: #ffffff; border-color: #60a5fa;
       box-shadow: 0 4px 12px rgba(37, 99, 235, 0.45); transform: translateY(-2px);
     }
-    .tool-divider { width: 1px; height: 26px; background: #334155; margin: 0 4px; flex-shrink: 0; }
+    .tool-divider { width: 1px; height: 24px; background: #334155; margin: 0 3px; flex-shrink: 0; }
 
-    /* Barra de Cores e Espessura (Superior Esquerda) */
+    /* Barra de Cores, Espessura e Fundo (Superior Esquerda) */
     .style-dock {
-      position: fixed; top: 14px; left: 14px;
+      position: fixed; top: 12px; left: 12px;
       background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
-      border: 1px solid #cbd5e1; border-radius: 16px;
-      padding: 8px 12px; display: flex; align-items: center; gap: 8px;
+      border: 1px solid #cbd5e1; border-radius: 14px;
+      padding: 7px 11px; display: flex; align-items: center; gap: 7px;
       z-index: 20; box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
-      flex-wrap: wrap; max-width: calc(100vw - 28px);
+      flex-wrap: wrap; max-width: calc(100vw - 24px);
     }
 
     .color-dot {
-      width: 24px; height: 24px; border-radius: 50%; cursor: pointer;
+      width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
       border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
       transition: transform 0.15s ease; flex-shrink: 0;
     }
-    .color-dot.active {
-      transform: scale(1.25); box-shadow: 0 0 0 2.5px #0f172a;
-    }
+    .color-dot.active { transform: scale(1.25); box-shadow: 0 0 0 2.5px #0f172a; }
 
     .size-btn {
       background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
-      padding: 5px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+      padding: 4px 9px; border-radius: 8px; font-size: 11px; font-weight: 700;
       cursor: pointer; transition: 0.15s;
     }
     .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
 
     /* Barra de Ações Rápidas (Superior Direita) */
     .actions-dock {
-      position: fixed; top: 14px; right: 14px;
+      position: fixed; top: 12px; right: 12px;
       background: rgba(255, 255, 255, 0.96); backdrop-filter: blur(8px);
       border: 1px solid #cbd5e1; border-radius: 14px;
       padding: 6px 10px; display: flex; align-items: center; gap: 6px;
@@ -106,26 +83,74 @@
     }
     .action-pill {
       background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
-      padding: 6px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
+      padding: 5px 9px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; gap: 4px; transition: 0.15s;
     }
     .action-pill:hover { background: #e2e8f0; }
     .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
     .action-pill.danger:hover { background: #fee2e2; }
 
-    /* Caixa Flutuante para Digitar Texto no Quadro */
+    /* Caixa Flutuante de Texto Rico (Negrito, Itálico, Sublinhar, Riscar + 10 Fontes) */
     #text-editor-box {
-      display: none; position: fixed; z-index: 30;
-      background: rgba(255, 255, 255, 0.98); border: 2px solid #2563eb;
-      border-radius: 12px; padding: 8px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-      flex-direction: column; gap: 6px; min-width: 220px;
+      display: none; position: fixed; z-index: 35;
+      background: rgba(255, 255, 255, 0.99); border: 2px solid #2563eb;
+      border-radius: 14px; padding: 10px; box-shadow: 0 15px 40px rgba(0, 0, 0, 0.25);
+      flex-direction: column; gap: 8px; width: 320px; max-width: 92vw;
+    }
+    .fmt-toolbar {
+      display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+      background: #f8fafc; padding: 5px; border-radius: 8px; border: 1px solid #e2e8f0;
+    }
+    .fmt-btn {
+      background: #ffffff; border: 1px solid #cbd5e1; color: #1e293b;
+      width: 28px; height: 28px; border-radius: 6px; font-size: 13px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+    }
+    .fmt-btn.active { background: #2563eb; color: #ffffff; border-color: #1d4ed8; }
+    #text-font-select {
+      flex: 1; min-width: 120px; padding: 4px 6px; border-radius: 6px;
+      border: 1px solid #cbd5e1; font-size: 12px; font-weight: 600; color: #1e293b;
+      outline: none; background: #fff; cursor: pointer;
     }
     #text-editor-input {
-      border: 1px solid #e2e8f0; border-radius: 8px; padding: 8px 10px;
-      font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700;
-      outline: none; resize: both; min-width: 200px; min-height: 46px;
+      border: 1px solid #cbd5e1; border-radius: 8px; padding: 8px 10px;
+      font-family: 'Segoe UI', sans-serif; font-size: 16px;
+      outline: none; resize: both; width: 100%; min-height: 62px;
       user-select: text !important; -webkit-user-select: text !important;
     }
+
+    /* Modal do Construtor de Infográficos */
+    #infographic-modal {
+      display: none; position: fixed; inset: 0; background: rgba(15, 23, 42, 0.72);
+      backdrop-filter: blur(4px); z-index: 45; align-items: center; justify-content: center;
+      padding: 16px;
+    }
+    .info-modal-card {
+      background: #ffffff; width: 100%; max-width: 680px; max-height: 88vh;
+      border-radius: 18px; border: 1px solid #cbd5e1;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+      display: flex; flex-direction: column; overflow: hidden;
+    }
+    .info-type-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(145px, 1fr));
+      gap: 8px; margin-bottom: 14px;
+    }
+    .info-type-btn {
+      background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 10px;
+      padding: 8px 10px; text-align: left; cursor: pointer; transition: 0.15s;
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .info-type-btn:hover { border-color: #93c5fd; background: #eff6ff; }
+    .info-type-btn.active {
+      border-color: #2563eb; background: #eff6ff;
+      box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.15);
+    }
+    .info-input {
+      width: 100%; padding: 8px 10px; border: 1px solid #cbd5e1; border-radius: 8px;
+      font-size: 13px; font-family: inherit; outline: none;
+      user-select: text !important; -webkit-user-select: text !important;
+    }
+    .info-input:focus { border-color: #2563eb; }
 
     /* Ecrã de Espera do Aluno */
     #tela-espera-aluno {
@@ -135,7 +160,6 @@
     }
     @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.45; } }
 
-    /* Selo de Apenas Leitura para o Aluno */
     #badge-somente-leitura {
       display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
       background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 8px 18px;
@@ -144,17 +168,16 @@
     }
 
     @media (max-width: 768px) {
-      .style-dock { top: 10px; left: 10px; padding: 6px 8px; gap: 6px; }
-      .actions-dock { top: 62px; right: 10px; padding: 5px 8px; }
-      .toolbar-dock { bottom: 12px; padding: 6px 8px; }
-      .tool-btn { width: 36px; height: 36px; font-size: 16px; }
+      .style-dock { top: 8px; left: 8px; padding: 6px 8px; gap: 5px; }
+      .actions-dock { top: 58px; right: 8px; padding: 5px 8px; }
+      .toolbar-dock { bottom: 10px; padding: 6px 8px; }
+      .tool-btn { width: 34px; height: 34px; font-size: 15px; }
     }
   </style>
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
-  <div id="lousa-app" class="bg-grade">
-    <!-- Quadro Vetorial em HTML5 Canvas -->
+  <div id="lousa-app">
     <canvas id="lousa-canvas"></canvas>
 
     <!-- Barra Superior Esquerda: Cores, Espessura e Fundo -->
@@ -167,15 +190,15 @@
       <div class="color-dot" data-color="#9333ea" style="background:#9333ea;" title="Roxo"></div>
       <div class="color-dot" data-color="#db2777" style="background:#db2777;" title="Rosa"></div>
 
-      <div style="width:1px; height:20px; background:#cbd5e1; margin:0 2px;"></div>
+      <div style="width:1px; height:18px; background:#cbd5e1; margin:0 2px;"></div>
 
       <button class="size-btn" data-size="3" title="Traço Fino">Fino</button>
       <button class="size-btn active" data-size="6" title="Traço Médio">Médio</button>
-      <button class="size-btn" data-size="12" title="Traço Grosso">Grosso</button>
+      <button class="size-btn" data-size="11" title="Traço Grosso">Grosso</button>
 
-      <div style="width:1px; height:20px; background:#cbd5e1; margin:0 2px;"></div>
+      <div style="width:1px; height:18px; background:#cbd5e1; margin:0 2px;"></div>
 
-      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11px; font-weight:700; color:#334155; background:#f8fafc; cursor:pointer; outline:none;" title="Estilo da Folha">
+      <select id="select-fundo" style="border:1px solid #cbd5e1; border-radius:8px; padding:4px 8px; font-size:11.5px; font-weight:700; color:#1e293b; background:#f8fafc; cursor:pointer; outline:none;" title="Escolher Fundo da Lousa">
         <option value="bg-grade">📐 Quadriculado</option>
         <option value="bg-pauta">📝 Caderno Pautado</option>
         <option value="bg-pontos">⠿ Pontilhado</option>
@@ -185,43 +208,130 @@
 
     <!-- Barra Superior Direita: Desfazer, Refazer, Salvar PNG e Limpar -->
     <div id="ui-actions-dock" class="actions-dock">
-      <button class="action-pill" id="btn-undo" title="Desfazer último traço (Ctrl+Z)">↩️ Desfazer</button>
+      <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️ Desfazer</button>
       <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
       <button class="action-pill" id="btn-center" title="Centralizar Quadro (100%)">🎯 100%</button>
       <button class="action-pill" id="btn-download" title="Guardar imagem da aula (PNG)">📥 PNG</button>
       <button class="action-pill danger" id="btn-clear" title="Apagar todo o quadro">🗑️ Limpar</button>
     </div>
 
-    <!-- Barra Inferior: Ferramentas de Desenho e Escrita -->
+    <!-- Barra Inferior: Ferramentas de Desenho, Formas e Infográficos -->
     <div id="ui-toolbar-dock" class="toolbar-dock">
       <button class="tool-btn active" data-tool="pen" title="Caneta (Desenho Livre)">✏️</button>
       <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️</button>
-      <button class="tool-btn" data-tool="text" title="Inserir Texto (Clique no quadro para digitar)">🔤</button>
-      <button class="tool-btn" data-tool="eraser" title="Borracha (Toque ou arraste sobre o que deseja apagar)">🧽</button>
+      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (10 Fontes, Negrito, Itálico, Sublinhado, Riscado)">🔤</button>
+      <button class="tool-btn" data-tool="eraser" title="Borracha">🧽</button>
       <div class="tool-divider"></div>
       <button class="tool-btn" data-tool="line" title="Linha Reta">📏</button>
       <button class="tool-btn" data-tool="arrow" title="Seta Indicativa">↗️</button>
-      <button class="tool-btn" data-tool="rect" title="Retângulo / Caixa">▭</button>
-      <button class="tool-btn" data-tool="circle" title="Círculo / Destaque">⭕</button>
+      <button class="tool-btn" data-tool="rect" title="Retângulo">▭</button>
+      <button class="tool-btn" data-tool="circle" title="Círculo">⭕</button>
+      <button class="tool-btn" data-tool="triangle" title="Triângulo">△</button>
+      <button class="tool-btn" data-tool="hexagon" title="Hexágono">⬡</button>
       <div class="tool-divider"></div>
-      <button class="tool-btn" data-tool="move" title="Mover Objetos (Arraste qualquer texto ou desenho)">🖐️</button>
+      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos Pedagógicos)" style="background:rgba(16,185,129,0.2); border-color:#10b981; color:#6ee7b7;">📊</button>
+      <div class="tool-divider"></div>
+      <button class="tool-btn" data-tool="move" title="Mover Objetos ou Clicar em Infográficos Interativos">🖐️</button>
       <button class="tool-btn" data-tool="pan" title="Arrastar a Folha pelo Ecrã">🧭</button>
-      <button class="tool-btn" data-tool="laser" title="Apontador Laser (Some após 1 segundo)">🔴</button>
+      <button class="tool-btn" data-tool="laser" title="Apontador Laser">🔴</button>
     </div>
 
-    <!-- Caixa Flutuante de Digitação de Texto -->
+    <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
     <div id="text-editor-box">
+      <div class="fmt-toolbar">
+        <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
+        <button type="button" class="fmt-btn" id="fmt-italic" title="Itálico"><i>I</i></button>
+        <button type="button" class="fmt-btn" id="fmt-underline" title="Sublinhar"><u>U</u></button>
+        <button type="button" class="fmt-btn" id="fmt-strike" title="Riscar"><s>S</s></button>
+        <select id="text-font-select" title="Escolher Tipo de Letra (10 Opções)">
+          <option value="'Segoe UI', sans-serif">1. Segoe UI (Moderna)</option>
+          <option value="Arial, Helvetica, sans-serif">2. Arial (Clássica)</option>
+          <option value="Georgia, serif">3. Georgia (Editorial)</option>
+          <option value="'Times New Roman', Times, serif">4. Times New Roman</option>
+          <option value="'Courier New', Courier, monospace">5. Courier (Máquina)</option>
+          <option value="'Comic Sans MS', cursive, sans-serif">6. Comic Sans (Didática)</option>
+          <option value="Impact, Charcoal, sans-serif">7. Impact (Destaque)</option>
+          <option value="'Trebuchet MS', sans-serif">8. Trebuchet (Humanista)</option>
+          <option value="'Palatino Linotype', 'Book Antiqua', serif">9. Palatino (Literária)</option>
+          <option value="'Lucida Console', Monaco, monospace">10. Lucida Console</option>
+        </select>
+      </div>
       <textarea id="text-editor-input" rows="2" placeholder="Digite o texto aqui..."></textarea>
       <div style="display:flex; justify-content:flex-end; gap:6px;">
-        <button id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:5px 10px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
-        <button id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:5px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Inserir no Quadro</button>
+        <button type="button" id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
+        <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Inserir Texto</button>
       </div>
     </div>
 
-    <!-- Selo de Visualização para Alunos com Recursos Bloqueados -->
+    <!-- Modal Construtor dos 8 Tipos de Infográficos -->
+    <div id="infographic-modal">
+      <div class="info-modal-card">
+        <div style="padding:14px 20px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:20px;">📊</span>
+            <h3 style="margin:0; font-size:16px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
+          </div>
+          <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:30px; height:30px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
+        </div>
+
+        <div style="padding:16px 20px; overflow-y:auto; flex:1;">
+          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha a Categoria de Infográfico:</label>
+          <div class="info-type-grid" id="info-type-grid">
+            <button type="button" class="info-type-btn active" data-info-type="estatistico">
+              <strong style="font-size:12px; color:#0f172a;">📊 1. Estatístico</strong>
+              <span style="font-size:10.5px; color:#64748b;">Gráfico de barras e métricas</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="informativo">
+              <strong style="font-size:12px; color:#0f172a;">📌 2. Informativo</strong>
+              <span style="font-size:10.5px; color:#64748b;">Tópicos e resumo visual</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="comparativo">
+              <strong style="font-size:12px; color:#0f172a;">⚖️ 3. Comparativo</strong>
+              <span style="font-size:10.5px; color:#64748b;">Lado A vs Lado B</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="processos">
+              <strong style="font-size:12px; color:#0f172a;">⚙️ 4. Processos</strong>
+              <span style="font-size:10.5px; color:#64748b;">Passo a passo 1 ➔ 2 ➔ 3 ➔ 4</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="linha_tempo">
+              <strong style="font-size:12px; color:#0f172a;">⏳ 5. Linha do Tempo</strong>
+              <span style="font-size:10.5px; color:#64748b;">Marcos cronológicos</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="espaco_tempo">
+              <strong style="font-size:12px; color:#0f172a;">🌍 6. Espaço-Tempo</strong>
+              <span style="font-size:10.5px; color:#64748b;">Narrativa Lugar + Época</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="relacional">
+              <strong style="font-size:12px; color:#0f172a;">🕸️ 7. Relacional</strong>
+              <span style="font-size:10.5px; color:#64748b;">Mapa central e conexões</span>
+            </button>
+            <button type="button" class="info-type-btn" data-info-type="interativo">
+              <strong style="font-size:12px; color:#0f172a;">👆 8. Interativo</strong>
+              <span style="font-size:10.5px; color:#64748b;">Cartões clicáveis ao vivo</span>
+            </button>
+          </div>
+
+          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:14px;">
+            <div style="margin-bottom:10px;">
+              <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título Principal do Infográfico:</label>
+              <input type="text" id="info-title-input" class="info-input" value="Simple Past vs Present Perfect">
+            </div>
+            <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:8px;"></div>
+          </div>
+        </div>
+
+        <div style="padding:12px 20px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center;">
+          <span style="font-size:11.5px; color:#64748b;">💡 Dica: Use a mãozinha (🖐️) para arrastar o infográfico na lousa!</span>
+          <div style="display:flex; gap:8px;">
+            <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:700; cursor:pointer;">Cancelar</button>
+            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:8px 18px; border-radius:8px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Inserir na Lousa</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div id="badge-somente-leitura">👁️ Modo Visualização Ao Vivo (Acompanhe a explicação do professor)</div>
 
-    <!-- Ecrã de Espera do Aluno quando a Lousa está Desativada -->
     <div id="tela-espera-aluno">
       <div style="font-size:60px; animation:pulse 2s infinite;">⏳</div>
       <h2 style="font-size:22px; margin:0;">Aguardando Liberação...</h2>
@@ -238,7 +348,6 @@
     (function() {
       const CLIENT_ID = 'lousa_ptt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
 
-      // 1. Leitura dos Parâmetros da URL (role e room)
       const params = new URLSearchParams(window.location.search);
       let role = params.get('role') || 'professor';
       let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
@@ -247,12 +356,22 @@
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
 
-      // 2. Estado Vetorial da Lousa
+      // Estado Vetorial e Fundo da Lousa
       let shapes = [];
       let redoStack = [];
+      let currentBg = 'bg-grade';
       let currentTool = 'pen';
       let currentColor = '#0f172a';
       let currentSize = 6;
+
+      // Estado da Formatação de Texto Rico
+      let textStyle = {
+        bold: true,
+        italic: false,
+        underline: false,
+        strike: false,
+        fontFamily: "'Segoe UI', sans-serif"
+      };
 
       let isPointerDown = false;
       let activeShape = null;
@@ -274,8 +393,8 @@
       const uiToolbar = document.getElementById('ui-toolbar-dock');
       const uiStyle = document.getElementById('ui-style-dock');
       const uiActions = document.getElementById('ui-actions-dock');
+      const selectFundo = document.getElementById('select-fundo');
 
-      // 3. Atualização Visual de Permissões (Professor vs Aluno)
       function atualizarPermissoesUI() {
         if (!isAllowed) {
           telaEspera.style.display = 'flex';
@@ -291,7 +410,6 @@
         canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
       }
 
-      // 4. Redimensionamento Automático de Alta Nitidez (Retina / DPI)
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const rect = appEl.getBoundingClientRect();
@@ -302,7 +420,6 @@
       }
       window.addEventListener('resize', ajustarTamanhoCanvas);
 
-      // Converte coordenadas do ecrã para coordenadas do quadro
       function telaParaQuadro(clientX, clientY) {
         const rect = canvas.getBoundingClientRect();
         return {
@@ -311,9 +428,426 @@
         };
       }
 
-      // 5. Renderizador Gráfico Vetorial a 60 FPS
+      // =========================================================================
+      // 🎨 1. DESENHO DO FUNDO DIRETAMENTE NO CANVAS (SEMPRE VISÍVEL E SINCRONIZADO)
+      // =========================================================================
+      function desenharFundoCanvas(context, width, height) {
+        context.save();
+        if (currentBg === 'bg-pauta') {
+          context.fillStyle = '#fffef7';
+          context.fillRect(0, 0, width, height);
+          const step = 32 * camera.zoom;
+          const offsetY = ((camera.y % step) + step) % step;
+          context.strokeStyle = '#93c5fd';
+          context.lineWidth = 1;
+          context.beginPath();
+          for (let y = offsetY; y < height; y += step) {
+            context.moveTo(0, y);
+            context.lineTo(width, y);
+          }
+          context.stroke();
+          // Margem vertical vermelha de caderno
+          const margemX = 64 * camera.zoom + camera.x;
+          if (margemX > 0 && margemX < width) {
+            context.strokeStyle = '#fca5a5';
+            context.beginPath();
+            context.moveTo(margemX, 0);
+            context.lineTo(margemX, height);
+            context.stroke();
+          }
+        } else if (currentBg === 'bg-grade') {
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, width, height);
+          const step = 28 * camera.zoom;
+          const offsetX = ((camera.x % step) + step) % step;
+          const offsetY = ((camera.y % step) + step) % step;
+          context.strokeStyle = '#e2e8f0';
+          context.lineWidth = 1;
+          context.beginPath();
+          for (let x = offsetX; x < width; x += step) {
+            context.moveTo(x, 0);
+            context.lineTo(x, height);
+          }
+          for (let y = offsetY; y < height; y += step) {
+            context.moveTo(0, y);
+            context.lineTo(width, y);
+          }
+          context.stroke();
+        } else if (currentBg === 'bg-pontos') {
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, width, height);
+          const step = 24 * camera.zoom;
+          const offsetX = ((camera.x % step) + step) % step;
+          const offsetY = ((camera.y % step) + step) % step;
+          context.fillStyle = '#cbd5e1';
+          for (let x = offsetX; x < width; x += step) {
+            for (let y = offsetY; y < height; y += step) {
+              context.fillRect(x - 1, y - 1, 2.2, 2.2);
+            }
+          }
+        } else {
+          context.fillStyle = '#ffffff';
+          context.fillRect(0, 0, width, height);
+        }
+        context.restore();
+      }
+
+      // Auxiliar de Retângulo com Cantos Arredondados no Canvas
+      function roundRect(context, x, y, w, h, r) {
+        const radius = Math.min(r, w / 2, h / 2);
+        context.beginPath();
+        context.moveTo(x + radius, y);
+        context.arcTo(x + w, y, x + w, y + h, radius);
+        context.arcTo(x + w, y + h, x, y + h, radius);
+        context.arcTo(x, y + h, x, y, radius);
+        context.arcTo(x, y, x + w, y, radius);
+        context.closePath();
+      }
+
+      // =========================================================================
+      // 📊 2. RENDERIZADOR DOS 8 TIPOS DE INFOGRÁFICOS NO CANVAS
+      // =========================================================================
+      function desenharInfografico(context, item) {
+        const x = item.x || 80;
+        const y = item.y || 80;
+        const w = item.w || 520;
+        const h = item.h || 300;
+        const cor = item.color || '#2563eb';
+        const d = item.infoData || {};
+        const titulo = item.title || 'Infográfico';
+
+        context.save();
+        // Sombra e Cartão Base
+        context.shadowColor = 'rgba(15, 23, 42, 0.12)';
+        context.shadowBlur = 18;
+        context.shadowOffsetY = 6;
+        context.fillStyle = '#ffffff';
+        roundRect(context, x, y, w, h, 14);
+        context.fill();
+
+        context.shadowColor = 'transparent';
+        context.lineWidth = 2;
+        context.strokeStyle = cor;
+        context.stroke();
+
+        // Faixa de Cabeçalho
+        context.fillStyle = cor;
+        roundRect(context, x, y, w, 42, 12);
+        context.fill();
+        context.fillRect(x, y + 28, w, 14);
+
+        context.fillStyle = '#ffffff';
+        context.font = '800 15px "Segoe UI", sans-serif';
+        context.textBaseline = 'middle';
+        context.fillText(titulo, x + 16, y + 21);
+
+        const bodyY = y + 54;
+        const bodyH = h - 66;
+
+        // 1. ESTATÍSTICO
+        if (item.infoType === 'estatistico') {
+          const itens = d.items || [
+            { label: 'Speaking', val: 85 },
+            { label: 'Listening', val: 70 },
+            { label: 'Grammar', val: 92 },
+            { label: 'Reading', val: 65 }
+          ];
+          const rowH = bodyH / itens.length;
+          itens.forEach((it, idx) => {
+            const ry = bodyY + idx * rowH;
+            const pct = Math.max(0, Math.min(100, Number(it.val) || 0));
+            context.fillStyle = '#1e293b';
+            context.font = '700 13px "Segoe UI", sans-serif';
+            context.fillText(`${it.label}`, x + 18, ry + 14);
+
+            context.fillStyle = '#e2e8f0';
+            roundRect(context, x + 140, ry + 4, w - 210, 20, 10);
+            context.fill();
+
+            const barW = Math.max(14, ((w - 210) * pct) / 100);
+            context.fillStyle = cor;
+            roundRect(context, x + 140, ry + 4, barW, 20, 10);
+            context.fill();
+
+            context.fillStyle = '#0f172a';
+            context.font = '800 12px "Segoe UI", sans-serif';
+            context.fillText(`${pct}%`, x + w - 55, ry + 14);
+          });
+        }
+
+        // 2. INFORMATIVO
+        else if (item.infoType === 'informativo') {
+          const topicos = d.topics || ['Tópico 1', 'Tópico 2', 'Tópico 3'];
+          const rowH = bodyH / topicos.length;
+          topicos.forEach((t, idx) => {
+            const ry = bodyY + idx * rowH;
+            context.fillStyle = '#f8fafc';
+            roundRect(context, x + 16, ry, w - 32, rowH - 8, 10);
+            context.fill();
+            context.strokeStyle = '#cbd5e1';
+            context.lineWidth = 1;
+            context.stroke();
+
+            context.fillStyle = cor;
+            context.beginPath();
+            context.arc(x + 38, ry + (rowH - 8) / 2, 13, 0, Math.PI * 2);
+            context.fill();
+
+            context.fillStyle = '#ffffff';
+            context.font = '800 12px "Segoe UI", sans-serif';
+            context.textAlign = 'center';
+            context.fillText(String(idx + 1), x + 38, ry + (rowH - 8) / 2);
+
+            context.textAlign = 'left';
+            context.fillStyle = '#1e293b';
+            context.font = '600 13.5px "Segoe UI", sans-serif';
+            context.fillText(String(t), x + 62, ry + (rowH - 8) / 2);
+          });
+        }
+
+        // 3. COMPARATIVO
+        else if (item.infoType === 'comparativo') {
+          const colW = (w - 44) / 2;
+          // Coluna A
+          context.fillStyle = '#eff6ff';
+          roundRect(context, x + 16, bodyY, colW, bodyH, 10);
+          context.fill();
+          context.fillStyle = '#1d4ed8';
+          context.font = '800 14px "Segoe UI", sans-serif';
+          context.fillText(d.colA || 'Opção A', x + 28, bodyY + 20);
+
+          (d.itemsA || []).forEach((txt, i) => {
+            context.fillStyle = '#334155';
+            context.font = '600 12.5px "Segoe UI", sans-serif';
+            context.fillText(`• ${txt}`, x + 26, bodyY + 50 + i * 28);
+          });
+
+          // Coluna B
+          const colBX = x + 28 + colW;
+          context.fillStyle = '#fef2f2';
+          roundRect(context, colBX, bodyY, colW, bodyH, 10);
+          context.fill();
+          context.fillStyle = '#dc2626';
+          context.font = '800 14px "Segoe UI", sans-serif';
+          context.fillText(d.colB || 'Opção B', colBX + 12, bodyY + 20);
+
+          (d.itemsB || []).forEach((txt, i) => {
+            context.fillStyle = '#334155';
+            context.font = '600 12.5px "Segoe UI", sans-serif';
+            context.fillText(`• ${txt}`, colBX + 12, bodyY + 50 + i * 28);
+          });
+        }
+
+        // 4. PROCESSOS
+        else if (item.infoType === 'processos') {
+          const steps = d.steps || ['Passo 1', 'Passo 2', 'Passo 3', 'Passo 4'];
+          const stepW = (w - 36) / steps.length;
+          steps.forEach((st, idx) => {
+            const sx = x + 18 + idx * stepW;
+            const sy = bodyY + 20;
+            context.fillStyle = '#f8fafc';
+            roundRect(context, sx + 4, sy, stepW - 14, bodyH - 35, 10);
+            context.fill();
+            context.strokeStyle = cor;
+            context.lineWidth = 1.5;
+            context.stroke();
+
+            context.fillStyle = cor;
+            context.beginPath();
+            context.arc(sx + (stepW - 6) / 2, sy + 24, 14, 0, Math.PI * 2);
+            context.fill();
+
+            context.fillStyle = '#fff';
+            context.font = '800 12px "Segoe UI", sans-serif';
+            context.textAlign = 'center';
+            context.fillText(String(idx + 1), sx + (stepW - 6) / 2, sy + 24);
+
+            context.fillStyle = '#1e293b';
+            context.font = '700 12px "Segoe UI", sans-serif';
+            const palavras = String(st).split(' ');
+            let l1 = palavras.slice(0, 2).join(' ');
+            let l2 = palavras.slice(2).join(' ');
+            context.fillText(l1, sx + (stepW - 6) / 2, sy + 64);
+            if (l2) context.fillText(l2, sx + (stepW - 6) / 2, sy + 82);
+
+            if (idx < steps.length - 1) {
+              context.fillStyle = cor;
+              context.font = '900 16px "Segoe UI", sans-serif';
+              context.fillText('➔', sx + stepW - 4, sy + (bodyH - 35) / 2);
+            }
+          });
+          context.textAlign = 'left';
+        }
+
+        // 5. LINHA DO TEMPO
+        else if (item.infoType === 'linha_tempo') {
+          const events = d.events || [
+            { time: '1990', label: 'Início' },
+            { time: '2005', label: 'Expansão' },
+            { time: '2015', label: 'Digital' },
+            { time: 'Hoje', label: 'Futuro IA' }
+          ];
+          const midY = bodyY + bodyH / 2;
+          context.strokeStyle = cor;
+          context.lineWidth = 3;
+          context.beginPath();
+          context.moveTo(x + 30, midY);
+          context.lineTo(x + w - 30, midY);
+          context.stroke();
+
+          const slotW = (w - 60) / events.length;
+          events.forEach((ev, idx) => {
+            const cx = x + 30 + slotW * idx + slotW / 2;
+            const acima = (idx % 2 === 0);
+
+            context.fillStyle = '#ffffff';
+            context.strokeStyle = cor;
+            context.lineWidth = 3;
+            context.beginPath();
+            context.arc(cx, midY, 9, 0, Math.PI * 2);
+            context.fill();
+            context.stroke();
+
+            context.textAlign = 'center';
+            context.fillStyle = cor;
+            context.font = '800 12.5px "Segoe UI", sans-serif';
+            context.fillText(ev.time, cx, acima ? midY - 38 : midY + 24);
+
+            context.fillStyle = '#334155';
+            context.font = '600 12px "Segoe UI", sans-serif';
+            context.fillText(ev.label, cx, acima ? midY - 20 : midY + 42);
+          });
+          context.textAlign = 'left';
+        }
+
+        // 6. NARRATIVO DE ESPAÇO-TEMPO
+        else if (item.infoType === 'espaco_tempo') {
+          const stages = d.stages || [
+            { place: '📍 Londres (Passado)', desc: 'I lived there in 2018' },
+            { place: '📍 Aeroporto (Transição)', desc: 'Flying to New York' },
+            { place: '📍 Nova Iorque (Presente)', desc: 'I work here now' }
+          ];
+          const colW = (w - 40) / stages.length;
+          // Curva de conexão espaço-tempo
+          context.strokeStyle = '#94a3b8';
+          context.setLineDash([5, 4]);
+          context.lineWidth = 2;
+          context.beginPath();
+          context.moveTo(x + 40, bodyY + bodyH / 2);
+          context.lineTo(x + w - 40, bodyY + bodyH / 2);
+          context.stroke();
+          context.setLineDash([]);
+
+          stages.forEach((st, idx) => {
+            const sx = x + 20 + idx * colW;
+            const sy = bodyY + 18;
+            context.fillStyle = idx === 1 ? '#fef3c7' : (idx === 2 ? '#ecfdf5' : '#eff6ff');
+            roundRect(context, sx + 4, sy, colW - 10, bodyH - 36, 12);
+            context.fill();
+            context.strokeStyle = cor;
+            context.lineWidth = 1.5;
+            context.stroke();
+
+            context.fillStyle = '#0f172a';
+            context.font = '800 12px "Segoe UI", sans-serif';
+            context.fillText(st.place, sx + 12, sy + 24);
+
+            context.fillStyle = '#475569';
+            context.font = '600 12px "Segoe UI", sans-serif';
+            context.fillText(st.desc, sx + 12, sy + 56);
+          });
+        }
+
+        // 7. RELACIONAL
+        else if (item.infoType === 'relacional') {
+          const cx = x + w / 2;
+          const cy = bodyY + bodyH / 2;
+          const centerText = d.center || 'Tema Central';
+          const nodes = d.nodes || ['Causa 1', 'Causa 2', 'Efeito 1', 'Efeito 2'];
+          const offsets = [
+            { dx: -w * 0.3, dy: -bodyH * 0.28 },
+            { dx: w * 0.3, dy: -bodyH * 0.28 },
+            { dx: -w * 0.3, dy: bodyH * 0.28 },
+            { dx: w * 0.3, dy: bodyH * 0.28 }
+          ];
+
+          offsets.forEach((off, idx) => {
+            const nx = cx + off.dx;
+            const ny = cy + off.dy;
+            context.strokeStyle = cor;
+            context.lineWidth = 2;
+            context.beginPath();
+            context.moveTo(cx, cy);
+            context.lineTo(nx, ny);
+            context.stroke();
+
+            context.fillStyle = '#f8fafc';
+            roundRect(context, nx - 68, ny - 20, 136, 40, 10);
+            context.fill();
+            context.stroke();
+
+            context.fillStyle = '#1e293b';
+            context.font = '700 12px "Segoe UI", sans-serif';
+            context.textAlign = 'center';
+            context.fillText(nodes[idx] || '', nx, ny);
+          });
+
+          context.fillStyle = cor;
+          roundRect(context, cx - 78, cy - 24, 156, 48, 24);
+          context.fill();
+          context.fillStyle = '#ffffff';
+          context.font = '800 13px "Segoe UI", sans-serif';
+          context.textAlign = 'center';
+          context.fillText(centerText, cx, cy);
+          context.textAlign = 'left';
+        }
+
+        // 8. INTERATIVO (CARTÕES CLICÁVEIS AO VIVO NA LOUSA!)
+        else if (item.infoType === 'interativo') {
+          const cards = d.cards || [
+            { front: '1. Past of GO?', back: '✅ WENT', revealed: false },
+            { front: '2. Past of BUY?', back: '✅ BOUGHT', revealed: false },
+            { front: '3. Past of SEE?', back: '✅ SAW', revealed: false }
+          ];
+          const cardW = (w - 40) / cards.length;
+          cards.forEach((c, idx) => {
+            const cx = x + 16 + idx * (cardW + 4);
+            const cy = bodyY + 12;
+            const ch = bodyH - 24;
+            const aberto = !!c.revealed;
+
+            context.fillStyle = aberto ? '#ecfdf5' : '#eff6ff';
+            roundRect(context, cx, cy, cardW - 6, ch, 12);
+            context.fill();
+            context.strokeStyle = aberto ? '#10b981' : '#3b82f6';
+            context.lineWidth = 2;
+            context.stroke();
+
+            context.textAlign = 'center';
+            context.fillStyle = aberto ? '#047857' : '#1d4ed8';
+            context.font = '800 11px "Segoe UI", sans-serif';
+            context.fillText(aberto ? '🔓 REVELADO (Clique p/ ocultar)' : '👆 CLIQUE PARA REVELAR', cx + (cardW - 6) / 2, cy + 22);
+
+            context.fillStyle = '#0f172a';
+            context.font = '800 14px "Segoe UI", sans-serif';
+            context.fillText(aberto ? c.back : c.front, cx + (cardW - 6) / 2, cy + ch / 2 + 6);
+          });
+          context.textAlign = 'left';
+        }
+
+        context.restore();
+      }
+
+      // =========================================================================
+      // ✏️ 3. RENDERIZADOR DE FORMAS, TRIÂNGULO, HEXÁGONO E TEXTO RICO
+      // =========================================================================
       function desenharElemento(context, item) {
-        if (!item) return;
+        if (!item || item.tool === 'meta_bg') return;
+        if (item.tool === 'infographic') {
+          desenharInfografico(context, item);
+          return;
+        }
+
         context.save();
         context.lineCap = 'round';
         context.lineJoin = 'round';
@@ -376,13 +910,66 @@
           context.beginPath();
           context.ellipse(cx, cy, rx, ry, 0, 0, Math.PI * 2);
           context.stroke();
+        } else if (item.tool === 'triangle') {
+          // △ Triângulo
+          const topX = (item.x1 + item.x2) / 2;
+          const topY = item.y1;
+          context.beginPath();
+          context.moveTo(topX, topY);
+          context.lineTo(item.x2, item.y2);
+          context.lineTo(item.x1, item.y2);
+          context.closePath();
+          context.stroke();
+        } else if (item.tool === 'hexagon') {
+          // ⬡ Hexágono Regular Proporcional
+          const cx = (item.x1 + item.x2) / 2;
+          const cy = (item.y1 + item.y2) / 2;
+          const rx = Math.abs(item.x2 - item.x1) / 2;
+          const ry = Math.abs(item.y2 - item.y1) / 2;
+          context.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const ang = (Math.PI / 3) * k - Math.PI / 6;
+            const vx = cx + rx * Math.cos(ang);
+            const vy = cy + ry * Math.sin(ang);
+            if (k === 0) context.moveTo(vx, vy);
+            else context.lineTo(vx, vy);
+          }
+          context.closePath();
+          context.stroke();
         } else if (item.tool === 'text' && item.text) {
           const fontSize = Math.max(18, (item.size || 6) * 4);
-          context.font = `700 ${fontSize}px "Segoe UI", sans-serif`;
+          const styleItalic = item.italic ? 'italic ' : '';
+          const styleBold = item.bold !== false ? '700 ' : '400 ';
+          const family = item.fontFamily || "'Segoe UI', sans-serif";
+          context.font = `${styleItalic}${styleBold}${fontSize}px ${family}`;
           context.textBaseline = 'top';
+
           const linhas = String(item.text).split('\n');
           linhas.forEach((linha, idx) => {
-            context.fillText(linha, item.x, item.y + idx * (fontSize * 1.25));
+            const ly = item.y + idx * (fontSize * 1.25);
+            context.fillText(linha, item.x, ly);
+            const larguraLinha = context.measureText(linha).width;
+
+            // Sublinhado
+            if (item.underline) {
+              context.save();
+              context.lineWidth = Math.max(1.5, fontSize * 0.07);
+              context.beginPath();
+              context.moveTo(item.x, ly + fontSize * 1.05);
+              context.lineTo(item.x + larguraLinha, ly + fontSize * 1.05);
+              context.stroke();
+              context.restore();
+            }
+            // Riscado (Strikethrough)
+            if (item.strike) {
+              context.save();
+              context.lineWidth = Math.max(1.5, fontSize * 0.07);
+              context.beginPath();
+              context.moveTo(item.x, ly + fontSize * 0.55);
+              context.lineTo(item.x + larguraLinha, ly + fontSize * 0.55);
+              context.stroke();
+              context.restore();
+            }
           });
         }
         context.restore();
@@ -390,7 +977,7 @@
 
       function desenharQuadro() {
         const rect = appEl.getBoundingClientRect();
-        ctx.clearRect(0, 0, rect.width, rect.height);
+        desenharFundoCanvas(ctx, rect.width, rect.height);
 
         ctx.save();
         ctx.translate(camera.x, camera.y);
@@ -403,7 +990,6 @@
           desenharElemento(ctx, activeShape);
         }
 
-        // Desenha o rastro do apontador Laser
         if (laserTrail.length > 1) {
           ctx.save();
           ctx.strokeStyle = '#ef4444';
@@ -414,25 +1000,27 @@
           ctx.beginPath();
           ctx.moveTo(laserTrail[0].x, laserTrail[0].y);
           for (let i = 1; i < laserTrail.length; i++) {
-            ctx.lineTo(laserTrail[i].x, laserTrail[i].y);
+            context.lineTo(laserTrail[i].x, laserTrail[i].y);
           }
-          ctx.stroke();
-          ctx.restore();
+          context.stroke();
+          context.restore();
         }
 
         ctx.restore();
       }
 
-      // 6. Detetor de Colisão para Borracha e Ferramenta Mover
       function pontoPertoDoElemento(pt, item, raio = 16) {
-        if (!item) return false;
+        if (!item || item.tool === 'meta_bg') return false;
+        if (item.tool === 'infographic') {
+          return pt.x >= item.x && pt.x <= item.x + (item.w || 520) && pt.y >= item.y && pt.y <= item.y + (item.h || 300);
+        }
         if (item.tool === 'pen' || item.tool === 'highlighter') {
           return (item.points || []).some(p => Math.hypot(p.x - pt.x, p.y - pt.y) <= raio);
         }
         if (item.tool === 'text') {
           const fontSize = Math.max(18, (item.size || 6) * 4);
           const linhas = String(item.text || '').split('\n');
-          const larg = Math.max(...linhas.map(l => l.length), 3) * (fontSize * 0.6);
+          const larg = Math.max(...linhas.map(l => l.length), 3) * (fontSize * 0.62);
           const alt = linhas.length * (fontSize * 1.25);
           return pt.x >= item.x - 10 && pt.x <= item.x + larg + 10 && pt.y >= item.y - 10 && pt.y <= item.y + alt + 10;
         }
@@ -446,7 +1034,7 @@
       function deslocarElemento(item, dx, dy) {
         if (item.tool === 'pen' || item.tool === 'highlighter') {
           item.points = (item.points || []).map(p => ({ x: p.x + dx, y: p.y + dy }));
-        } else if (item.tool === 'text') {
+        } else if (item.tool === 'text' || item.tool === 'infographic') {
           item.x += dx;
           item.y += dy;
         } else {
@@ -455,18 +1043,53 @@
         }
       }
 
-      // 7. Eventos de Desenho (Rato, Toque e Caneta Stylus)
+      // Verifica se o clique foi num cartão de Infográfico Interativo para virar a carta ao vivo
+      function verificarCliqueInfograficoInterativo(pt) {
+        for (let i = shapes.length - 1; i >= 0; i--) {
+          const sh = shapes[i];
+          if (sh.tool === 'infographic' && sh.infoType === 'interativo' && sh.infoData && Array.isArray(sh.infoData.cards)) {
+            const bodyY = sh.y + 54;
+            const bodyH = (sh.h || 300) - 66;
+            const cards = sh.infoData.cards;
+            const cardW = ((sh.w || 520) - 40) / cards.length;
+            for (let cIdx = 0; cIdx < cards.length; cIdx++) {
+              const cx = sh.x + 16 + cIdx * (cardW + 4);
+              const cy = bodyY + 12;
+              const ch = bodyH - 24;
+              if (pt.x >= cx && pt.x <= cx + cardW - 6 && pt.y >= cy && pt.y <= cy + ch) {
+                cards[cIdx].revealed = !cards[cIdx].revealed;
+                lastLocalEditTime = Date.now();
+                desenharQuadro();
+                agendarSalvamentoNuvem();
+                return true;
+              }
+            }
+          }
+        }
+        return false;
+      }
+
+      // Eventos do Quadro
       canvas.addEventListener('pointerdown', (e) => {
         if (role === 'aluno' && isReadonly) return;
         if (e.button !== undefined && e.button !== 0 && currentTool !== 'pan') return;
 
-        // Fecha a caixa de texto se estiver aberta
         if (textEditorBox.style.display === 'flex') {
           confirmarTextoFlutuante();
           return;
         }
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
+
+        // Se clicou num cartão de Infográfico Interativo com a ferramenta Mover, vira o cartão
+        if (currentTool === 'move' && pt.y > 0) {
+          for (let i = shapes.length - 1; i >= 0; i--) {
+            const sh = shapes[i];
+            if (sh.tool === 'infographic' && sh.infoType === 'interativo' && pt.y > sh.y + 54) {
+              if (verificarCliqueInfograficoInterativo(pt)) return;
+            }
+          }
+        }
 
         if (currentTool === 'text') {
           abrirCaixaTexto(e.clientX, e.clientY, pt.x, pt.y);
@@ -592,7 +1215,7 @@
         desenharQuadro();
       });
 
-      function finalizarToque(e) {
+      function finalizarToque() {
         if (!isPointerDown) return;
         isPointerDown = false;
         lastLocalEditTime = Date.now();
@@ -632,19 +1255,48 @@
       canvas.addEventListener('pointerup', finalizarToque);
       canvas.addEventListener('pointercancel', finalizarToque);
 
-      // 8. Ferramenta de Texto Flutuante
+      // =========================================================================
+      // 🔤 4. CAIXA DE TEXTO RICO (NEGRITO, ITÁLICO, SUBLINHAR, RISCAR + 10 FONTES)
+      // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
+      const fontSelect = document.getElementById('text-font-select');
+      const btnBold = document.getElementById('fmt-bold');
+      const btnItalic = document.getElementById('fmt-italic');
+      const btnUnderline = document.getElementById('fmt-underline');
+      const btnStrike = document.getElementById('fmt-strike');
       let textTargetCoords = { x: 100, y: 100 };
+
+      function sincronizarEstiloInputTexto() {
+        btnBold.classList.toggle('active', textStyle.bold);
+        btnItalic.classList.toggle('active', textStyle.italic);
+        btnUnderline.classList.toggle('active', textStyle.underline);
+        btnStrike.classList.toggle('active', textStyle.strike);
+
+        textEditorInput.style.fontFamily = textStyle.fontFamily;
+        textEditorInput.style.fontWeight = textStyle.bold ? '700' : '400';
+        textEditorInput.style.fontStyle = textStyle.italic ? 'italic' : 'normal';
+        const dec = [];
+        if (textStyle.underline) dec.push('underline');
+        if (textStyle.strike) dec.push('line-through');
+        textEditorInput.style.textDecoration = dec.length > 0 ? dec.join(' ') : 'none';
+        textEditorInput.style.color = currentColor;
+      }
+
+      btnBold.onclick = () => { textStyle.bold = !textStyle.bold; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
+      btnItalic.onclick = () => { textStyle.italic = !textStyle.italic; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
+      btnUnderline.onclick = () => { textStyle.underline = !textStyle.underline; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
+      btnStrike.onclick = () => { textStyle.strike = !textStyle.strike; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
+      fontSelect.onchange = function() { textStyle.fontFamily = this.value; sincronizarEstiloInputTexto(); textEditorInput.focus(); };
 
       function abrirCaixaTexto(screenX, screenY, boardX, boardY) {
         textTargetCoords = { x: boardX, y: boardY };
-        const left = Math.min(screenX, window.innerWidth - 250);
-        const top = Math.min(screenY, window.innerHeight - 130);
+        const left = Math.min(screenX, window.innerWidth - 335);
+        const top = Math.min(screenY, window.innerHeight - 175);
         textEditorBox.style.left = Math.max(10, left) + 'px';
         textEditorBox.style.top = Math.max(10, top) + 'px';
-        textEditorInput.style.color = currentColor;
         textEditorInput.value = '';
+        sincronizarEstiloInputTexto();
         textEditorBox.style.display = 'flex';
         setTimeout(() => textEditorInput.focus(), 50);
       }
@@ -663,7 +1315,12 @@
           size: currentSize,
           x: textTargetCoords.x,
           y: textTargetCoords.y,
-          text: val
+          text: val,
+          bold: textStyle.bold,
+          italic: textStyle.italic,
+          underline: textStyle.underline,
+          strike: textStyle.strike,
+          fontFamily: textStyle.fontFamily
         });
         redoStack = [];
         lastLocalEditTime = Date.now();
@@ -676,21 +1333,201 @@
         textEditorInput.value = '';
         textEditorBox.style.display = 'none';
       };
-      textEditorInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          confirmarTextoFlutuante();
+
+      // =========================================================================
+      // 📊 5. ESTÚDIO DOS 8 MODELOS DE INFOGRÁFICOS
+      // =========================================================================
+      const infoModal = document.getElementById('infographic-modal');
+      const infoFieldsBox = document.getElementById('info-dynamic-fields');
+      const infoTitleInput = document.getElementById('info-title-input');
+      let selectedInfoType = 'estatistico';
+
+      function renderizarCamposInfografico(tipo) {
+        selectedInfoType = tipo;
+        if (tipo === 'estatistico') {
+          infoTitleInput.value = 'Indicadores de Domínio na Turma';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:2fr 1fr; gap:8px;">
+              <input class="info-input" id="inf-est-l1" value="Speaking (Conversação)">
+              <input class="info-input" id="inf-est-v1" type="number" value="85" placeholder="%">
+              <input class="info-input" id="inf-est-l2" value="Listening (Compreensão)">
+              <input class="info-input" id="inf-est-v2" type="number" value="75" placeholder="%">
+              <input class="info-input" id="inf-est-l3" value="Grammar (Estrutura)">
+              <input class="info-input" id="inf-est-v3" type="number" value="90" placeholder="%">
+              <input class="info-input" id="inf-est-l4" value="Vocabulary (Vocabulário)">
+              <input class="info-input" id="inf-est-v4" type="number" value="80" placeholder="%">
+            </div>`;
+        } else if (tipo === 'informativo') {
+          infoTitleInput.value = 'Regras Essenciais do Present Perfect';
+          infoFieldsBox.innerHTML = `
+            <input class="info-input" id="inf-info-1" value="Usa-se Have / Has + Participio Passado (V3)">
+            <input class="info-input" id="inf-info-2" value="Ações no passado com reflexo no presente">
+            <input class="info-input" id="inf-info-3" value="Palavras-chave: already, yet, ever, never, just">`;
+        } else if (tipo === 'comparativo') {
+          infoTitleInput.value = 'Comparativo: Simple Past vs Present Perfect';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <div>
+                <input class="info-input" id="inf-cmp-ta" value="Simple Past" style="font-weight:bold; margin-bottom:6px;">
+                <input class="info-input" id="inf-cmp-a1" value="Tempo definido (yesterday)" style="margin-bottom:4px;">
+                <input class="info-input" id="inf-cmp-a2" value="Ação 100% encerrada" style="margin-bottom:4px;">
+                <input class="info-input" id="inf-cmp-a3" value="Ex: I visited London in 2022">
+              </div>
+              <div>
+                <input class="info-input" id="inf-cmp-tb" value="Present Perfect" style="font-weight:bold; margin-bottom:6px;">
+                <input class="info-input" id="inf-cmp-b1" value="Tempo indefinido" style="margin-bottom:4px;">
+                <input class="info-input" id="inf-cmp-b2" value="Experiência de vida" style="margin-bottom:4px;">
+                <input class="info-input" id="inf-cmp-b3" value="Ex: I have visited London">
+              </div>
+            </div>`;
+        } else if (tipo === 'processos') {
+          infoTitleInput.value = 'Processo de Construção da Fluência';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
+              <input class="info-input" id="inf-prc-1" value="Palavras-Chave">
+              <input class="info-input" id="inf-prc-2" value="Frases Curtas">
+              <input class="info-input" id="inf-prc-3" value="Diálogos Reais">
+              <input class="info-input" id="inf-prc-4" value="Fluência Natural">
+            </div>`;
+        } else if (tipo === 'linha_tempo') {
+          infoTitleInput.value = 'Linha do Tempo (Tempos Verbais)';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 2fr; gap:6px;">
+              <input class="info-input" id="inf-tl-t1" value="Past">
+              <input class="info-input" id="inf-tl-l1" value="I studied English">
+              <input class="info-input" id="inf-tl-t2" value="Continuous">
+              <input class="info-input" id="inf-tl-l2" value="I was studying">
+              <input class="info-input" id="inf-tl-t3" value="Present">
+              <input class="info-input" id="inf-tl-l3" value="I study every day">
+              <input class="info-input" id="inf-tl-t4" value="Future">
+              <input class="info-input" id="inf-tl-l4" value="I will speak fluently">
+            </div>`;
+        } else if (tipo === 'espaco_tempo') {
+          infoTitleInput.value = 'Narrativa de Espaço-Tempo (Viagem)';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1.4fr; gap:6px;">
+              <input class="info-input" id="inf-et-p1" value="📍 Brasil (Ontem)">
+              <input class="info-input" id="inf-et-d1" value="I packed my bags">
+              <input class="info-input" id="inf-et-p2" value="✈️ Voo (Hoje)">
+              <input class="info-input" id="inf-et-d2" value="I am flying now">
+              <input class="info-input" id="inf-et-p3" value="🗽 NY (Amanhã)">
+              <input class="info-input" id="inf-et-d3" value="I will visit Central Park">
+            </div>`;
+        } else if (tipo === 'relacional') {
+          infoTitleInput.value = 'Mapa Relacional de Phrasal Verbs (GET)';
+          infoFieldsBox.innerHTML = `
+            <input class="info-input" id="inf-rel-c" value="GET (Verbo Base)" style="font-weight:bold; margin-bottom:6px;">
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <input class="info-input" id="inf-rel-1" value="Get up (Acordar)">
+              <input class="info-input" id="inf-rel-2" value="Get in (Entrar)">
+              <input class="info-input" id="inf-rel-3" value="Get out (Sair)">
+              <input class="info-input" id="inf-rel-4" value="Get over (Superar)">
+            </div>`;
+        } else if (tipo === 'interativo') {
+          infoTitleInput.value = 'Desafio Interativo (Clique nos Cartões na Lousa!)';
+          infoFieldsBox.innerHTML = `
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:6px;">
+              <input class="info-input" id="inf-int-f1" value="1. Past of GO?">
+              <input class="info-input" id="inf-int-b1" value="✅ WENT">
+              <input class="info-input" id="inf-int-f2" value="2. Past of BUY?">
+              <input class="info-input" id="inf-int-b2" value="✅ BOUGHT">
+              <input class="info-input" id="inf-int-f3" value="3. Past of SEE?">
+              <input class="info-input" id="inf-int-b3" value="✅ SAW">
+            </div>`;
         }
-        if (e.key === 'Escape') {
-          textEditorInput.value = '';
-          textEditorBox.style.display = 'none';
-        }
+      }
+
+      document.getElementById('btn-open-infographic').onclick = () => {
+        renderizarCamposInfografico(selectedInfoType);
+        infoModal.style.display = 'flex';
+      };
+      document.getElementById('btn-close-info-modal').onclick = () => { infoModal.style.display = 'none'; };
+      document.getElementById('btn-cancel-info').onclick = () => { infoModal.style.display = 'none'; };
+
+      document.querySelectorAll('.info-type-btn').forEach(btn => {
+        btn.onclick = () => {
+          document.querySelectorAll('.info-type-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          renderizarCamposInfografico(btn.dataset.infoType);
+        };
       });
 
-      // 9. Controles das Barras de Ferramentas
-      document.querySelectorAll('.tool-btn').forEach(btn => {
+      document.getElementById('btn-insert-info').onclick = () => {
+        const titulo = infoTitleInput.value.trim() || 'Infográfico';
+        let infoData = {};
+
+        if (selectedInfoType === 'estatistico') {
+          infoData.items = [1, 2, 3, 4].map(i => ({
+            label: document.getElementById(`inf-est-l${i}`)?.value || `Item ${i}`,
+            val: Number(document.getElementById(`inf-est-v${i}`)?.value || 50)
+          }));
+        } else if (selectedInfoType === 'informativo') {
+          infoData.topics = [1, 2, 3].map(i => document.getElementById(`inf-info-${i}`)?.value || '').filter(Boolean);
+        } else if (selectedInfoType === 'comparativo') {
+          infoData.colA = document.getElementById('inf-cmp-ta')?.value || 'Lado A';
+          infoData.colB = document.getElementById('inf-cmp-tb')?.value || 'Lado B';
+          infoData.itemsA = [1, 2, 3].map(i => document.getElementById(`inf-cmp-a${i}`)?.value || '').filter(Boolean);
+          infoData.itemsB = [1, 2, 3].map(i => document.getElementById(`inf-cmp-b${i}`)?.value || '').filter(Boolean);
+        } else if (selectedInfoType === 'processos') {
+          infoData.steps = [1, 2, 3, 4].map(i => document.getElementById(`inf-prc-${i}`)?.value || '').filter(Boolean);
+        } else if (selectedInfoType === 'linha_tempo') {
+          infoData.events = [1, 2, 3, 4].map(i => ({
+            time: document.getElementById(`inf-tl-t${i}`)?.value || '',
+            label: document.getElementById(`inf-tl-l${i}`)?.value || ''
+          }));
+        } else if (selectedInfoType === 'espaco_tempo') {
+          infoData.stages = [1, 2, 3].map(i => ({
+            place: document.getElementById(`inf-et-p${i}`)?.value || '',
+            desc: document.getElementById(`inf-et-d${i}`)?.value || ''
+          }));
+        } else if (selectedInfoType === 'relacional') {
+          infoData.center = document.getElementById('inf-rel-c')?.value || 'Centro';
+          infoData.nodes = [1, 2, 3, 4].map(i => document.getElementById(`inf-rel-${i}`)?.value || '');
+        } else if (selectedInfoType === 'interativo') {
+          infoData.cards = [1, 2, 3].map(i => ({
+            front: document.getElementById(`inf-int-f${i}`)?.value || `Pergunta ${i}`,
+            back: document.getElementById(`inf-int-b${i}`)?.value || `Resposta ${i}`,
+            revealed: false
+          }));
+        }
+
+        const rect = appEl.getBoundingClientRect();
+        const pos = telaParaQuadro(Math.max(60, (rect.width - 540) / 2), Math.max(80, (rect.height - 300) / 2));
+
+        shapes.push({
+          id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+          typeName: 'shape',
+          pttV2: true,
+          tool: 'infographic',
+          infoType: selectedInfoType,
+          title: titulo,
+          color: currentColor,
+          x: pos.x,
+          y: pos.y,
+          w: 540,
+          h: 290,
+          infoData: infoData
+        });
+
+        infoModal.style.display = 'none';
+        // Muda automaticamente para a mãozinha (Mover) para o professor posicionar ou clicar no infográfico
+        document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+        const moveBtn = document.querySelector('.tool-btn[data-tool="move"]');
+        if (moveBtn) moveBtn.classList.add('active');
+        currentTool = 'move';
+        canvas.style.cursor = 'grab';
+
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
+      };
+
+      // =========================================================================
+      // 🛠️ 6. CONTROLES GERAIS E SINCRONIZAÇÃO COM A NUVEM
+      // =========================================================================
+      document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
-          document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+          document.querySelectorAll('.tool-btn[data-tool]').forEach(b => b.classList.remove('active'));
           btn.classList.add('active');
           currentTool = btn.dataset.tool;
           canvas.style.cursor = (currentTool === 'pan' || currentTool === 'move') ? 'grab' : 'crosshair';
@@ -702,6 +1539,7 @@
           document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
           dot.classList.add('active');
           currentColor = dot.dataset.color;
+          sincronizarEstiloInputTexto();
         };
       });
 
@@ -713,8 +1551,11 @@
         };
       });
 
-      document.getElementById('select-fundo').onchange = function() {
-        appEl.className = this.value;
+      selectFundo.onchange = function() {
+        currentBg = this.value;
+        lastLocalEditTime = Date.now();
+        desenharQuadro();
+        agendarSalvamentoNuvem();
       };
 
       document.getElementById('btn-undo').onclick = () => {
@@ -749,44 +1590,25 @@
       };
 
       document.getElementById('btn-download').onclick = () => {
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = canvas.width;
-        tempCanvas.height = canvas.height;
-        const tCtx = tempCanvas.getContext('2d');
-        tCtx.fillStyle = '#ffffff';
-        tCtx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
-        tCtx.drawImage(canvas, 0, 0);
-
         const link = document.createElement('a');
         link.download = `Lousa_Aula_${new Date().toLocaleDateString('pt-BR').replace(/\//g, '-')}.png`;
-        link.href = tempCanvas.toDataURL('image/png');
+        link.href = canvas.toDataURL('image/png');
         link.click();
       };
 
-      // Atalhos de Teclado (Ctrl+Z / Ctrl+Y)
-      window.addEventListener('keydown', (e) => {
-        if (textEditorBox.style.display === 'flex') return;
-        if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z') {
-          e.preventDefault();
-          document.getElementById('btn-undo').click();
-        } else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'y') {
-          e.preventDefault();
-          document.getElementById('btn-redo').click();
-        }
-      });
-
-      // 10. Sincronização com a Nuvem (MongoDB + SSE)
       function agendarSalvamentoNuvem() {
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
         saveTimer = setTimeout(async () => {
           isSaving = true;
           try {
+            const metaBg = { id: 'meta_bg', typeName: 'shape', pttV2: true, tool: 'meta_bg', bgType: currentBg };
+            const payloadRecords = [metaBg, ...shapes];
             await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
               method: 'PUT',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ records: shapes, senderId: CLIENT_ID })
+              body: JSON.stringify({ records: payloadRecords, senderId: CLIENT_ID })
             });
           } catch (e) {}
           finally { isSaving = false; }
@@ -809,7 +1631,12 @@
           if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2500))) return;
 
           if (data && data.success && Array.isArray(data.records)) {
-            shapes = data.records.filter(r => r && r.pttV2 === true);
+            const metaBg = data.records.find(r => r && r.tool === 'meta_bg');
+            if (metaBg && metaBg.bgType) {
+              currentBg = metaBg.bgType;
+              if (selectFundo) selectFundo.value = currentBg;
+            }
+            shapes = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
             desenharQuadro();
           }
         } catch (e) {}
@@ -817,7 +1644,6 @@
 
       window._loadCloud = () => carregarDadosDaNuvem(true);
 
-      // 11. Comunicação com o Painel Principal (postMessage)
       window.addEventListener('message', (e) => {
         const d = e.data || {};
         if (d.type === 'LOCK_STATE') {
@@ -829,7 +1655,6 @@
         }
       });
 
-      // 12. Radar de Permissões para o Aluno
       if (role === 'aluno') {
         const verificarStatusAluno = async () => {
           try {
@@ -861,7 +1686,6 @@
         setInterval(verificarStatusAluno, 2500);
       }
 
-      // 13. Escuta em Tempo Real via SSE
       try {
         let escolaId = 'DEFAULT';
         try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
@@ -896,7 +1720,6 @@
         };
       } catch (e) {}
 
-      // Inicialização Imediata
       atualizarPermissoesUI();
       ajustarTamanhoCanvas();
       carregarDadosDaNuvem(true);
