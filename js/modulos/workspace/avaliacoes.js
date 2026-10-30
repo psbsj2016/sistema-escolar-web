@@ -3471,7 +3471,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, ativa, !recursos);
     },
 
-   enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
+ enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
         const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
         try {
             await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', { turmaId, ativa, recursos, escolaId });
@@ -3543,6 +3543,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             iframe.setAttribute('src', urlMagica);
         }
     }
+
 }); // <--- 🚀 ESTA LINHA FECHA O Object.assign E É MUITO IMPORTANTE!
 
 document.addEventListener('DOMContentLoaded', () => {
