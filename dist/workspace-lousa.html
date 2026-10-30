@@ -187,9 +187,10 @@
 
     #badge-somente-leitura {
       display: none; position: fixed; bottom: 16px; left: 50%; transform: translateX(-50%);
-      background: rgba(15, 23, 42, 0.9); color: #f8fafc; padding: 8px 18px;
-      border-radius: 30px; font-size: 12.5px; font-weight: 700; z-index: 25;
+      background: rgba(15, 23, 42, 0.92); color: #f8fafc; padding: 8px 18px;
+      border-radius: 30px; font-size: 12px; font-weight: 700; z-index: 25;
       border: 1px solid #334155; box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+      white-space: nowrap;
     }
 
     @media (max-width: 768px) {
@@ -358,7 +359,6 @@
             <div id="info-extra-headers" style="margin-bottom:8px;"></div>
             <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:8px;"></div>
 
-            <!-- Botão + para expandir e adicionar mais opções ao infográfico -->
             <button type="button" id="btn-add-info-option" style="margin-top:12px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:9px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:6px; transition:0.15s;">
               ➕ Adicionar Mais Opção / Item ao Infográfico
             </button>
@@ -375,7 +375,7 @@
       </div>
     </div>
 
-    <div id="badge-somente-leitura">👁️ Modo Visualização Ao Vivo (Acompanhe a explicação do professor)</div>
+    <div id="badge-somente-leitura">📡 Sincronizado em tempo real com a tela do Professor</div>
 
     <div id="tela-espera-aluno">
       <div style="font-size:60px; animation:pulse 2s infinite;">⏳</div>
@@ -409,7 +409,12 @@
       let currentColor = '#0f172a';
       let currentSize = 6;
 
-      // Estado de Edição de Texto ou Infográfico Existente
+      // Estado da Câmara do Professor para Sincronização Proporcional no Aluno
+      let camera = { x: 0, y: 0, zoom: 1 };
+      let targetStudentCamera = null;
+      let animFrameCamera = null;
+      let profViewportRemoto = { w: 1280, h: 720, centerX: 640, centerY: 360, zoom: 1 };
+
       let editingShapeId = null;
 
       let textStyle = {
@@ -428,9 +433,9 @@
       let resizeStartScale = 1;
       let moveLastPt = null;
       let panStartPt = null;
-      let camera = { x: 0, y: 0, zoom: 1 };
       let laserTrail = [];
       let laserFadeTimer = null;
+      let lastLaserSyncTime = 0;
 
       let lastLocalEditTime = 0;
       let isSaving = false;
@@ -464,13 +469,92 @@
         canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
       }
 
+      // =========================================================================
+      // 📐 1. MOTOR DE ENQUADRAMENTO PROPORCIONAL (ALUNO ACOMPANHA O PROFESSOR)
+      // =========================================================================
+      function obterEstadoCameraProfessor() {
+        const rect = appEl.getBoundingClientRect();
+        const w = Math.max(320, rect.width || window.innerWidth);
+        const h = Math.max(240, rect.height || window.innerHeight);
+        // Centro exato da tela do professor em coordenadas do quadro
+        const centerX = (w / 2 - camera.x) / camera.zoom;
+        const centerY = (h / 2 - camera.y) / camera.zoom;
+        return {
+          w: Math.round(w),
+          h: Math.round(h),
+          centerX: Math.round(centerX * 10) / 10,
+          centerY: Math.round(centerY * 10) / 10,
+          zoom: Math.round(camera.zoom * 1000) / 1000
+        };
+      }
+
+      function aplicarCameraDoProfessorNoAluno(profView, animar = true) {
+        if (!profView || !profView.w || !profView.h) return;
+        profViewportRemoto = profView;
+
+        const rect = appEl.getBoundingClientRect();
+        const alunoW = Math.max(280, rect.width || window.innerWidth);
+        const alunoH = Math.max(200, rect.height || window.innerHeight);
+
+        // Calcula a proporção exata entre a tela do aluno e a tela do professor
+        // garantindo que 100% do espaço de trabalho do professor caiba na tela do aluno sem cortar nada!
+        const escalaAdaptativa = Math.min(alunoW / profView.w, alunoH / profView.h);
+        const zoomFinal = (profView.zoom || 1) * escalaAdaptativa;
+
+        const novoX = (alunoW / 2) - (profView.centerX * zoomFinal);
+        const novoY = (alunoH / 2) - (profView.centerY * zoomFinal);
+
+        if (!animar) {
+          camera.zoom = zoomFinal;
+          camera.x = novoX;
+          camera.y = novoY;
+          desenharQuadro();
+          return;
+        }
+
+        targetStudentCamera = { x: novoX, y: novoY, zoom: zoomFinal };
+        if (!animFrameCamera) {
+          const animarPasso = () => {
+            if (!targetStudentCamera) {
+              animFrameCamera = null;
+              return;
+            }
+            const dx = targetStudentCamera.x - camera.x;
+            const dy = targetStudentCamera.y - camera.y;
+            const dz = targetStudentCamera.zoom - camera.zoom;
+
+            if (Math.abs(dx) < 0.5 && Math.abs(dy) < 0.5 && Math.abs(dz) < 0.002) {
+              camera.x = targetStudentCamera.x;
+              camera.y = targetStudentCamera.y;
+              camera.zoom = targetStudentCamera.zoom;
+              targetStudentCamera = null;
+              animFrameCamera = null;
+              desenharQuadro();
+              return;
+            }
+
+            camera.x += dx * 0.28;
+            camera.y += dy * 0.28;
+            camera.zoom += dz * 0.28;
+            desenharQuadro();
+            animFrameCamera = requestAnimationFrame(animarPasso);
+          };
+          animFrameCamera = requestAnimationFrame(animarPasso);
+        }
+      }
+
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
         const rect = appEl.getBoundingClientRect();
         canvas.width = Math.max(1, Math.floor(rect.width * dpr));
         canvas.height = Math.max(1, Math.floor(rect.height * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-        desenharQuadro();
+
+        if (role === 'aluno' && profViewportRemoto) {
+          aplicarCameraDoProfessorNoAluno(profViewportRemoto, false);
+        } else {
+          desenharQuadro();
+        }
       }
       window.addEventListener('resize', ajustarTamanhoCanvas);
 
@@ -501,7 +585,7 @@
       }
 
       // =========================================================================
-      // 🎨 1. FUNDO NATIVO NO CANVAS (INFINITO E SINCRONIZADO)
+      // 🎨 2. FUNDO NATIVO NO CANVAS (INFINITO E PROPORCIONAL)
       // =========================================================================
       function desenharFundoCanvas(context, width, height) {
         context.save();
@@ -575,12 +659,11 @@
       }
 
       // =========================================================================
-      // 📐 2. MOTOR DE AUTO-AJUSTE E QUEBRA DE LINHA DE TEXTO (NUNCA VAZA DA CAIXA)
+      // 📐 3. MOTOR DE AUTO-AJUSTE E QUEBRA DE LINHA DE TEXTO (NUNCA VAZA DA CAIXA)
       // =========================================================================
       function quebrarLinhas(context, texto, maxWidth) {
         const palavrasBrutas = String(texto || '').split(/\s+/);
         const palavras = [];
-        // Se uma única palavra for maior que a largura da caixa, divide-a com segurança
         palavrasBrutas.forEach(p => {
           if (context.measureText(p).width <= maxWidth) {
             palavras.push(p);
@@ -623,7 +706,6 @@
         let linhas = [];
         let lineHeight = fontSize * 1.22;
 
-        // Reduz automaticamente a fonte até caber na largura e na altura máxima da caixa!
         while (fontSize >= minFont) {
           context.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
           lineHeight = fontSize * 1.22;
@@ -649,7 +731,7 @@
           startY = y + Math.max(0, (maxH - totalH) / 2);
         }
 
-        const drawX = align === 'center' ? (x + maxW / 2) : x;
+        const drawX = align === 'center' ? (x + maxW / 2) : (align === 'right' ? (x + maxW) : x);
         linhas.forEach((l, i) => {
           context.fillText(l, drawX, startY + i * lineHeight);
         });
@@ -657,7 +739,7 @@
       }
 
       // =========================================================================
-      // 📊 3. RENDERIZADOR DOS 8 INFOGRÁFICOS (EDITÁVEIS, EXPANSÍVEIS E COM ZOOM)
+      // 📊 4. RENDERIZADOR DOS 8 INFOGRÁFICOS (EDITÁVEIS, EXPANSÍVEIS E COM ZOOM)
       // =========================================================================
       function calcularDimensoesInfografico(item) {
         const d = item.infoData || {};
@@ -711,7 +793,6 @@
         context.translate(x, y);
         context.scale(scale, scale);
 
-        // Cartão Principal
         context.shadowColor = 'rgba(15, 23, 42, 0.14)';
         context.shadowBlur = 18;
         context.shadowOffsetY = 6;
@@ -724,20 +805,16 @@
         context.strokeStyle = cor;
         context.stroke();
 
-        // Cabeçalho
         context.fillStyle = cor;
         roundRect(context, 0, 0, w, 44, 12);
         context.fill();
         context.fillRect(0, 28, w, 16);
 
-        // Título auto-ajustado no cabeçalho (deixa espaço à direita para os botões ➕, ✏️ e 100%)
         desenharTextoAjustado(context, titulo, 16, 4, w - 165, 36, {
           weight: '800', maxFont: 15, minFont: 10, color: '#ffffff', align: 'left', vAlign: 'middle'
         });
 
-        // Botões Interativos no Cabeçalho do Infográfico (para quem tem permissão de edição)
         if (!(role === 'aluno' && isReadonly)) {
-          // Botão [➕] Adicionar Opção
           context.fillStyle = 'rgba(255,255,255,0.22)';
           roundRect(context, w - 142, 8, 38, 28, 7);
           context.fill();
@@ -747,14 +824,12 @@
           context.textBaseline = 'middle';
           context.fillText('➕', w - 123, 22);
 
-          // Botão [✏️] Editar Infográfico
           context.fillStyle = 'rgba(255,255,255,0.22)';
           roundRect(context, w - 98, 8, 42, 28, 7);
           context.fill();
           context.fillStyle = '#ffffff';
           context.fillText('✏️', w - 77, 22);
 
-          // Botão [100%] Resetar Zoom do Infográfico
           context.fillStyle = 'rgba(255,255,255,0.22)';
           roundRect(context, w - 50, 8, 42, 28, 7);
           context.fill();
@@ -766,7 +841,6 @@
         const bodyY = 54;
         const bodyH = h - 66;
 
-        // 1. ESTATÍSTICO
         if (item.infoType === 'estatistico') {
           const itens = d.items || [{ label: 'Speaking', val: 85 }];
           const rowH = bodyH / itens.length;
@@ -791,13 +865,12 @@
             roundRect(context, barX, barY, barW, 22, 11);
             context.fill();
 
-            desenharTextoAjustado(context, `${pct}%`, w - 58, ry + 4, 48, rowH - 8, {
+            desenharTextoAjustado(context, `${pct}%`, w - 58, ry + 4, 44, rowH - 8, {
               weight: '800', maxFont: 12.5, minFont: 10, color: '#0f172a', align: 'right', vAlign: 'middle'
             });
           });
         }
 
-        // 2. INFORMATIVO
         else if (item.infoType === 'informativo') {
           const topicos = d.topics || ['Tópico 1'];
           const rowH = bodyH / topicos.length;
@@ -828,7 +901,6 @@
           });
         }
 
-        // 3. COMPARATIVO
         else if (item.infoType === 'comparativo') {
           const colW = (w - 44) / 2;
           const itemsA = d.itemsA || [];
@@ -836,7 +908,6 @@
           const maxRows = Math.max(itemsA.length, itemsB.length, 1);
           const itemH = (bodyH - 42) / maxRows;
 
-          // Coluna A
           context.fillStyle = '#eff6ff';
           roundRect(context, 16, bodyY, colW, bodyH, 10);
           context.fill();
@@ -849,7 +920,6 @@
             });
           });
 
-          // Coluna B
           const colBX = 28 + colW;
           context.fillStyle = '#fef2f2';
           roundRect(context, colBX, bodyY, colW, bodyH, 10);
@@ -864,7 +934,6 @@
           });
         }
 
-        // 4. PROCESSOS (Suporta múltiplas linhas se adicionar + de 4 passos!)
         else if (item.infoType === 'processos') {
           const steps = d.steps || ['Passo 1'];
           const cols = Math.min(4, steps.length);
@@ -911,7 +980,6 @@
           });
         }
 
-        // 5. LINHA DO TEMPO
         else if (item.infoType === 'linha_tempo') {
           const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
@@ -955,7 +1023,6 @@
           });
         }
 
-        // 6. NARRATIVO DE ESPAÇO-TEMPO
         else if (item.infoType === 'espaco_tempo') {
           const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
           const cols = Math.min(3, stages.length);
@@ -987,7 +1054,6 @@
           });
         }
 
-        // 7. RELACIONAL (Distribui qualquer número de nós em círculo ao redor do centro!)
         else if (item.infoType === 'relacional') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
@@ -1031,7 +1097,6 @@
           });
         }
 
-        // 8. INTERATIVO (CARTÕES CLICÁVEIS AO VIVO)
         else if (item.infoType === 'interativo') {
           const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta', revealed: false }];
           const cols = Math.min(3, cards.length);
@@ -1067,7 +1132,6 @@
           });
         }
 
-        // Alça de Puxar para Dar Zoom / Redimensionar no Canto Inferior Direito (⤡)
         if (!(role === 'aluno' && isReadonly)) {
           context.fillStyle = cor;
           roundRect(context, w - 26, h - 26, 24, 24, 6);
@@ -1083,7 +1147,7 @@
       }
 
       // =========================================================================
-      // 🏹 4. RENDERIZADOR DO LASER SETA NEON E ELEMENTOS DO QUADRO
+      // 🏹 5. RENDERIZADOR DO LASER SETA NEON E ELEMENTOS DO QUADRO
       // =========================================================================
       function desenharLaserSeta(context, pts) {
         if (!Array.isArray(pts) || pts.length === 0) return;
@@ -1103,12 +1167,10 @@
         }
         context.stroke();
 
-        // Núcleo branco luminoso
         context.strokeStyle = '#fecaca';
         context.lineWidth = 2;
         context.stroke();
 
-        // Ponta de Seta Laser Dinâmica na extremidade do feixe!
         const tip = pts[pts.length - 1];
         const refIdx = Math.max(0, pts.length - 4);
         const prev = pts[refIdx];
@@ -1278,12 +1340,12 @@
           desenharLaserSeta(ctx, laserTrail);
         }
 
-        ctx.restore();
+        context.restore();
         atualizarBarraRolagemVisual();
       }
 
       // =========================================================================
-      // 🎯 5. INTERAÇÕES NOS INFOGRÁFICOS (EDITAR ✏️, EXPANDIR ➕, ZOOM ⤡ E CARTÕES)
+      // 🎯 6. INTERAÇÕES NOS INFOGRÁFICOS (EDITAR ✏️, EXPANDIR ➕, ZOOM ⤡ E CARTÕES)
       // =========================================================================
       function verificarAcoesInfografico(pt) {
         for (let i = shapes.length - 1; i >= 0; i--) {
@@ -1297,7 +1359,6 @@
           if (lx < 0 || lx > w || ly < 0 || ly > h) continue;
 
           if (!(role === 'aluno' && isReadonly)) {
-            // 1. Clique na Alça de Puxar para Dar Zoom no Canto Inferior Direito [⤡]
             if (lx >= w - 32 && ly >= h - 32) {
               resizingShape = sh;
               resizeStartScale = sh.scale || 1;
@@ -1305,19 +1366,15 @@
               return 'resize';
             }
 
-            // 2. Clique nos Botões do Cabeçalho (ly entre 0 e 44)
             if (ly <= 44) {
-              // Botão [➕] Expandir e Adicionar Nova Opção
               if (lx >= w - 145 && lx <= w - 102) {
                 abrirEdicaoInfograficoExistente(sh, true);
                 return 'action';
               }
-              // Botão [✏️] Editar Infográfico
               if (lx >= w - 100 && lx <= w - 54) {
                 abrirEdicaoInfograficoExistente(sh, false);
                 return 'action';
               }
-              // Botão [100%] Voltar Zoom ao Normal
               if (lx >= w - 52 && lx <= w - 4) {
                 sh.scale = 1;
                 lastLocalEditTime = Date.now();
@@ -1328,7 +1385,6 @@
             }
           }
 
-          // 3. Clique nos Cartões do Infográfico Interativo
           if (sh.infoType === 'interativo' && ly > 54 && sh.infoData && Array.isArray(sh.infoData.cards)) {
             const cards = sh.infoData.cards;
             const cols = Math.min(3, cards.length);
@@ -1393,7 +1449,6 @@
         }
       }
 
-      // Duplo Clique em qualquer Infográfico ou Texto na Lousa abre a Edição!
       canvas.addEventListener('dblclick', (e) => {
         if (role === 'aluno' && isReadonly) return;
         const pt = telaParaQuadro(e.clientX, e.clientY);
@@ -1422,7 +1477,6 @@
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        // Verifica sempre se clicou nos botões ➕, ✏️, 100%, alça ⤡ ou cartão interativo de um Infográfico!
         const acaoInfo = verificarAcoesInfografico(pt);
         if (acaoInfo === 'action') return;
         if (acaoInfo === 'resize') {
@@ -1473,6 +1527,7 @@
           clearTimeout(laserFadeTimer);
           laserTrail = [pt];
           desenharQuadro();
+          agendarSalvamentoNuvem(80);
           return;
         }
 
@@ -1509,7 +1564,6 @@
         lastLocalEditTime = Date.now();
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        // Redimensionamento / Zoom do Infográfico puxando a alça ⤡
         if (resizingShape) {
           const distAtual = Math.max(40, Math.hypot(pt.x - resizingShape.x, pt.y - resizingShape.y));
           const novaEscala = Math.max(0.45, Math.min(2.8, resizeStartScale * (distAtual / resizeStartDist)));
@@ -1530,7 +1584,6 @@
           const dy = pt.y - moveLastPt.y;
           deslocarElemento(movingShape, dx, dy);
 
-          // 🚀 EXPANSÃO AUTOMÁTICA DA TELA: Quando move o objeto perto da borda direita/inferior, expande a tela acompanhando!
           const margemBorda = 55;
           if (e.clientX > window.innerWidth - margemBorda) {
             camera.x -= 14;
@@ -1560,9 +1613,13 @@
         }
 
         if (currentTool === 'laser') {
-          laserTrail.push(pt);
-          if (laserTrail.length > 32) laserTrail.shift();
+          laserTrail.push({ x: Math.round(pt.x), y: Math.round(pt.y) });
+          if (laserTrail.length > 28) laserTrail.shift();
           desenharQuadro();
+          if (Date.now() - lastLaserSyncTime > 120) {
+            lastLaserSyncTime = Date.now();
+            agendarSalvamentoNuvem(60);
+          }
           return;
         }
 
@@ -1595,6 +1652,8 @@
         if (currentTool === 'pan') {
           panStartPt = null;
           canvas.style.cursor = 'grab';
+          // Sincroniza a nova posição da câmara do professor com os alunos!
+          if (role !== 'aluno') agendarSalvamentoNuvem(100);
           return;
         }
 
@@ -1613,6 +1672,7 @@
           laserFadeTimer = setTimeout(() => {
             laserTrail = [];
             desenharQuadro();
+            if (role !== 'aluno') agendarSalvamentoNuvem(80);
           }, 1400);
           return;
         }
@@ -1628,8 +1688,9 @@
       canvas.addEventListener('pointerup', finalizarToque);
       canvas.addEventListener('pointercancel', finalizarToque);
 
-      // Zoom com Roda do Rato (Mouse Wheel) e Deslizamento Horizontal
+      // Zoom com Roda do Rato e Deslizamento Horizontal (Sincroniza com o Aluno!)
       canvas.addEventListener('wheel', (e) => {
+        if (role === 'aluno' && isReadonly) return;
         e.preventDefault();
         if (e.ctrlKey || e.metaKey) {
           const fator = e.deltaY < 0 ? 1.12 : 0.89;
@@ -1638,6 +1699,7 @@
           camera.x -= e.deltaX;
           camera.y -= e.deltaY;
           desenharQuadro();
+          if (role !== 'aluno') agendarSalvamentoNuvem(150);
         }
       }, { passive: false });
 
@@ -1648,10 +1710,11 @@
         camera.y = centerY - ((centerY - camera.y) / antigoZoom) * novoZoom;
         camera.zoom = Math.round(novoZoom * 100) / 100;
         desenharQuadro();
+        if (role !== 'aluno') agendarSalvamentoNuvem(120);
       }
 
       // =========================================================================
-      // 🔤 6. CAIXA DE TEXTO RICO (CRIAÇÃO E EDIÇÃO AO VIVO)
+      // 🔤 7. CAIXA DE TEXTO RICO (CRIAÇÃO E EDIÇÃO AO VIVO)
       // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
@@ -1763,7 +1826,7 @@
       };
 
       // =========================================================================
-      // 📊 7. CONSTRUTOR E EDITOR DINÂMICO DOS 8 INFOGRÁFICOS (COM BOTÃO +)
+      // 📊 8. CONSTRUTOR E EDITOR DINÂMICO DOS 8 INFOGRÁFICOS (COM BOTÃO +)
       // =========================================================================
       const infoModal = document.getElementById('infographic-modal');
       const infoFieldsBox = document.getElementById('info-dynamic-fields');
@@ -2003,7 +2066,6 @@
 
       document.getElementById('btn-add-info-option').onclick = adicionarOpcaoNoDraft;
 
-      // Abre o modal para criar um novo infográfico
       document.getElementById('btn-open-infographic').onclick = () => {
         editingShapeId = null;
         infoModalHeaderTitle.innerText = 'Criar Novo Infográfico Pedagógico';
@@ -2014,7 +2076,6 @@
         infoModal.style.display = 'flex';
       };
 
-      // Abre o modal para editar ou expandir (+) um infográfico que já está na lousa!
       function abrirEdicaoInfograficoExistente(shapeAlvo, adicionarMaisUm = false) {
         editingShapeId = shapeAlvo.id;
         selectedInfoType = shapeAlvo.infoType || 'estatistico';
@@ -2092,7 +2153,7 @@
       };
 
       // =========================================================================
-      // 🛠️ 8. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO
+      // 🛠️ 9. CONTROLES GERAIS, EXPANSÃO DE TELA E SINCRONIZAÇÃO EM TEMPO REAL
       // =========================================================================
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
         btn.onclick = () => {
@@ -2132,20 +2193,24 @@
       document.getElementById('btn-center').onclick = () => {
         camera = { x: 0, y: 0, zoom: 1 };
         desenharQuadro();
+        if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
 
-      // Botões de Expansão Rápida da Lousa para a Direita, Esquerda e Baixo
+      // Botões de Expansão Rápida da Lousa (Sincronizam a Câmara com os Alunos!)
       document.getElementById('btn-pan-right').onclick = () => {
         camera.x -= Math.round(window.innerWidth * 0.55);
         desenharQuadro();
+        if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
       document.getElementById('btn-pan-left').onclick = () => {
         camera.x = Math.min(200, camera.x + Math.round(window.innerWidth * 0.55));
         desenharQuadro();
+        if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
       document.getElementById('btn-pan-down').onclick = () => {
         camera.y -= Math.round(window.innerHeight * 0.45);
         desenharQuadro();
+        if (role !== 'aluno') agendarSalvamentoNuvem(100);
       };
 
       document.getElementById('btn-undo').onclick = () => {
@@ -2181,13 +2246,23 @@
         link.click();
       };
 
-      function agendarSalvamentoNuvem() {
+      // Salva os desenhos, o fundo, a câmara do professor e o laser na nuvem
+      function agendarSalvamentoNuvem(delayMs = 200) {
         if (role === 'aluno' && isReadonly) return;
         clearTimeout(saveTimer);
         saveTimer = setTimeout(async () => {
           isSaving = true;
           try {
-            const metaBg = { id: 'meta_bg', typeName: 'shape', pttV2: true, tool: 'meta_bg', bgType: currentBg };
+            const estadoProf = role !== 'aluno' ? obterEstadoCameraProfessor() : profViewportRemoto;
+            const metaBg = {
+              id: 'meta_bg',
+              typeName: 'shape',
+              pttV2: true,
+              tool: 'meta_bg',
+              bgType: currentBg,
+              profView: estadoProf,
+              laserTrail: role !== 'aluno' ? laserTrail : []
+            };
             const payloadRecords = [metaBg, ...shapes];
             await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
               method: 'PUT',
@@ -2197,14 +2272,14 @@
             });
           } catch (e) {}
           finally { isSaving = false; }
-        }, 220);
+        }, delayMs);
       }
 
       async function carregarDadosDaNuvem(forcar = false) {
         if (role === 'aluno' && !isAllowed) return;
         if (!forcar) {
           if (isPointerDown || isSaving) return;
-          if (Date.now() - lastLocalEditTime < 2500) return;
+          if (Date.now() - lastLocalEditTime < 2200) return;
         }
 
         try {
@@ -2213,13 +2288,24 @@
             credentials: 'include'
           });
           const data = await res.json();
-          if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2500))) return;
+          if (!forcar && (isPointerDown || isSaving || (Date.now() - lastLocalEditTime < 2200))) return;
 
           if (data && data.success && Array.isArray(data.records)) {
             const metaBg = data.records.find(r => r && r.tool === 'meta_bg');
-            if (metaBg && metaBg.bgType) {
-              currentBg = metaBg.bgType;
-              if (selectFundo) selectFundo.value = currentBg;
+            if (metaBg) {
+              if (metaBg.bgType) {
+                currentBg = metaBg.bgType;
+                if (selectFundo) selectFundo.value = currentBg;
+              }
+              // Se for Aluno, sincroniza o Laser Seta e faz a câmara acompanhar a tela do Professor!
+              if (role === 'aluno') {
+                if (Array.isArray(metaBg.laserTrail)) {
+                  laserTrail = metaBg.laserTrail;
+                }
+                if (metaBg.profView) {
+                  aplicarCameraDoProfessorNoAluno(metaBg.profView, !forcar);
+                }
+              }
             }
             shapes = data.records.filter(r => r && r.pttV2 === true && r.tool !== 'meta_bg');
             desenharQuadro();
@@ -2308,6 +2394,10 @@
       atualizarPermissoesUI();
       ajustarTamanhoCanvas();
       carregarDadosDaNuvem(true);
+      // Garante que logo ao abrir a lousa como professor, o tamanho da janela seja registado para os alunos
+      if (role !== 'aluno') {
+        setTimeout(() => agendarSalvamentoNuvem(300), 500);
+      }
     })();
   </script>
 </body>
