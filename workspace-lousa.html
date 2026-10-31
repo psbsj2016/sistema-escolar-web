@@ -82,25 +82,21 @@
     .action-pill.danger { color: #dc2626; background: #fef2f2; border-color: #fecaca; }
     .action-pill.danger:hover { background: #fee2f2; }
 
-    /* Popovers Flutuantes (Seletor de Cores e Seletor de Formas Geométricas) */
+    /* Popovers Flutuantes (Cores e Formas) */
     .floating-popover {
       display: none; position: fixed; z-index: 50;
       background: #ffffff; border: 1.5px solid #cbd5e1; border-radius: 14px;
       padding: 12px; box-shadow: 0 18px 45px rgba(15, 23, 42, 0.25);
       flex-direction: column; gap: 10px; min-width: 220px;
     }
-    .color-grid {
-      display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px;
-    }
+    .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
     .color-swatch {
       width: 28px; height: 28px; border-radius: 50%; cursor: pointer;
       border: 2px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1; transition: transform 0.15s;
     }
     .color-swatch:hover, .color-swatch.active { transform: scale(1.2); box-shadow: 0 0 0 2px #0f172a; }
 
-    .shape-grid {
-      display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px;
-    }
+    .shape-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
     .shape-option-btn {
       background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;
       padding: 8px 10px; border-radius: 8px; font-size: 12px; font-weight: 700;
@@ -110,26 +106,23 @@
       background: #eff6ff; border-color: #2563eb; color: #1d4ed8;
     }
 
-    /* 2. PALCO CENTRAL DO CANVAS (Proporção 1:1 Garantida, Nunca Espicha!) */
+    /* 2. PALCO CENTRAL DO CANVAS (Fixo e Centralizado em 1280x720) */
     #canvas-stage {
       position: relative; flex: 1; width: 100%; min-height: 0;
       overflow: hidden; background: #ffffff;
+      display: flex; align-items: center; justify-content: center;
     }
 
     #lousa-canvas {
-      position: absolute; top: 0; left: 0;
-      display: block; z-index: 2; cursor: crosshair;
-      touch-action: none;
+      position: absolute; display: block; z-index: 2;
+      touch-action: none; background: #ffffff;
+      box-shadow: 0 4px 25px rgba(15, 23, 42, 0.12);
     }
 
     #board-hscroll-track {
       position: absolute; bottom: 3px; left: 12px; right: 12px; height: 5px;
       background: rgba(148, 163, 184, 0.25); border-radius: 5px; z-index: 15;
-      pointer-events: none;
-    }
-    #board-hscroll-thumb {
-      position: absolute; top: 0; height: 100%; width: 20%; left: 0;
-      background: rgba(37, 99, 235, 0.55); border-radius: 5px; transition: left 0.08s, width 0.08s;
+      pointer-events: none; display: none;
     }
 
     /* 3. BARRA INFERIOR UNIFICADA */
@@ -153,13 +146,6 @@
       box-shadow: 0 3px 10px rgba(37, 99, 235, 0.45);
     }
     .tool-divider { width: 1px; height: 22px; background: #334155; margin: 0 2px; flex-shrink: 0; }
-
-    .pan-btn {
-      background: #1e293b; border: 1px solid #475569; color: #e2e8f0;
-      padding: 6px 9px; border-radius: 8px; font-size: 11px; font-weight: 800;
-      cursor: pointer; transition: 0.15s; flex-shrink: 0; white-space: nowrap;
-    }
-    .pan-btn:hover { background: #2563eb; color: #fff; border-color: #60a5fa; }
 
     /* Caixa Flutuante de Texto Rico */
     #text-editor-box {
@@ -248,7 +234,6 @@
   <div id="lousa-app">
     <!-- 1. BARRA SUPERIOR UNIFICADA -->
     <div id="ui-top-bar" class="lousa-top-bar">
-      <!-- Telas Numeradas -->
       <div id="ui-screens-dock" class="screens-group">
         <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀</button>
         <select id="select-screen-number" title="Escolher Tela Numerada">
@@ -261,7 +246,6 @@
         <button class="screen-nav-btn del" id="btn-delete-screen" title="Apagar esta Tela">🗑️</button>
       </div>
 
-      <!-- Seletor Compacto de Cores + Espessura + Fundo -->
       <div id="ui-style-dock" class="top-group">
         <button type="button" class="picker-trigger-btn" id="btn-open-color-popover" title="Escolher ou Personalizar Cor">
           <span id="current-color-circle" class="color-preview-circle" style="background:#0f172a;"></span>
@@ -284,11 +268,10 @@
         </select>
       </div>
 
-      <!-- Zoom no Lugar + Desfazer/Refazer + PNG + Limpar -->
       <div id="ui-actions-dock" class="top-group">
-        <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom na Posição Atual">🔍-</button>
+        <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom no Lugar">🔍-</button>
         <button class="action-pill" id="btn-center" title="Voltar Zoom ao Normal (100%)">🎯 100%</button>
-        <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom na Posição Atual">🔍+</button>
+        <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom no Lugar">🔍+</button>
         <div class="top-divider"></div>
         <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️</button>
         <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️</button>
@@ -297,7 +280,7 @@
       </div>
     </div>
 
-    <!-- Popover Flutuante do Seletor de Cores Personalizável -->
+    <!-- Popover Flutuante do Seletor de Cores -->
     <div id="color-popover" class="floating-popover">
       <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">🎨 Paleta de Cores</div>
       <div class="color-grid">
@@ -320,7 +303,7 @@
       </div>
     </div>
 
-    <!-- Popover Flutuante do Seletor de Figuras Geométricas -->
+    <!-- Popover Flutuante de Formas Geométricas -->
     <div id="shapes-popover" class="floating-popover">
       <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">📐 Figuras Geométricas</div>
       <div class="shape-grid">
@@ -334,41 +317,35 @@
       </div>
     </div>
 
-    <!-- 2. PALCO CENTRAL DO QUADRO -->
+    <!-- 2. PALCO CENTRAL DO QUADRO (Fixo e Centralizado em 1280x720) -->
     <div id="canvas-stage">
-      <canvas id="lousa-canvas"></canvas>
+      <canvas id="lousa-canvas" width="1280" height="720"></canvas>
       <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
       <div id="board-hscroll-track"><div id="board-hscroll-thumb"></div></div>
     </div>
 
-    <!-- 3. BARRA INFERIOR UNIFICADA E COMPACTA -->
+    <!-- 3. BARRA INFERIOR UNIFICADA -->
     <div id="ui-bottom-bar" class="lousa-bottom-bar">
-      <button class="tool-btn active" data-tool="pen" title="Caneta">✏️ Caneta</button>
+      <button class="tool-btn active" data-tool="pen" title="Caneta (Lápis)">✏️ Caneta</button>
       <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️ Marca</button>
-      <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (Duplo clique para editar)">🔤 Texto</button>
+      <button class="tool-btn" data-tool="text" title="Texto Rico (Duplo clique para editar)">🔤 Texto</button>
       <button class="tool-btn" data-tool="eraser" title="Borracha">🧽 Borracha</button>
       <div class="tool-divider"></div>
 
-      <!-- Seletor Compacto de Figuras Geométricas -->
       <button class="tool-btn" id="btn-open-shapes-popover" title="Escolher Figura Geométrica">
         <span id="shapes-btn-label">📐 Formas ▾</span>
       </button>
 
       <div class="tool-divider"></div>
-      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos)" style="background:rgba(16,185,129,0.22); border-color:#10b981; color:#6ee7b7;">📊 Infográficos</button>
+      <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos)" style="background:rgba(16,185,129,0.25); border-color:#10b981; color:#6ee7b7;">📊 Infográficos</button>
       <button class="tool-btn" id="btn-open-mindmap" title="Criar Mapa Mental (8 Modelos)" style="background:rgba(139,92,246,0.25); border-color:#8b5cf6; color:#c4b5fd;">🧠 Mapas Mentais</button>
       <div class="tool-divider"></div>
 
       <button class="tool-btn" data-tool="move" title="Mover Objetos, Redimensionar (⤡) ou Clicar em Cartões">🖐️ Mover</button>
-      <button class="tool-btn" data-tool="pan" title="Arrastar a Folha">🧭 Folha</button>
-      <button class="tool-btn" data-tool="laser" title="Seta Laser (Fica acesa ao escolher; segure o clique para fazer rastro)">🏹 Laser Seta</button>
-      <div class="tool-divider"></div>
-      <button class="pan-btn" id="btn-pan-left" title="Voltar para a esquerda">⬅️</button>
-      <button class="pan-btn" id="btn-pan-right" title="Expandir espaço para a direita">➡️ +Espaço</button>
-      <button class="pan-btn" id="btn-pan-down" title="Expandir espaço para baixo">⬇️</button>
+      <button class="tool-btn" data-tool="laser" title="Seta Laser (Sempre acesa; rastro ao pressionar)">🏹 Laser Seta</button>
     </div>
 
-    <!-- Caixa Flutuante de Texto Rico (10 Fontes + B, I, U, S) -->
+    <!-- Caixa Flutuante de Texto Rico -->
     <div id="text-editor-box">
       <div class="fmt-toolbar">
         <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
@@ -395,10 +372,10 @@
       </div>
     </div>
 
-    <!-- Modal Construtor e Editor de Infográficos (8 Modelos) e Mapas Mentais (8 Modelos) -->
+    <!-- Modal Construtor de Infográficos e Mapas Mentais -->
     <div id="infographic-modal" class="studio-modal">
       <div class="info-modal-card">
-        <div id="studio-modal-header" style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
+        <div style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
           <div style="display:flex; align-items:center; gap:8px;">
             <span id="studio-modal-icon" style="font-size:18px;">📊</span>
             <h3 id="info-modal-header-title" style="margin:0; font-size:15px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
@@ -439,7 +416,7 @@
       <div style="font-size:56px; animation:pulse 2s infinite;">⏳</div>
       <h2 style="font-size:21px; margin:0;">Aguardando Liberação...</h2>
       <p style="color:#94a3b8; font-size:14px; max-width:360px; margin:0; line-height:1.5;">
-        O professor está a preparar a lousa. Ela aparecerá aqui automaticamente assim que for ativada na aula.
+        O professor ainda não ativou a lousa para esta turma. Ela aparecerá aqui assim que for liberada.
       </p>
       <div style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;">
         🔄 Conectado em tempo real
@@ -453,9 +430,10 @@
 
       const params = new URLSearchParams(window.location.search);
       let role = params.get('role') || 'professor';
-      let roomIdOriginal = params.get('room') || params.get('turma') || 'global';
+      let roomIdOriginal = params.get('room') || params.get('turma') || 'nenhuma';
       let userIdParam = params.get('userId') || '';
       let alunoRefIdParam = params.get('alunoRefId') || '';
+      let roomIdAtivo = roomIdOriginal;
 
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
@@ -498,9 +476,7 @@
       let resizeStartScale = 1;
       let resizeCenterPt = null;
       let moveLastPt = null;
-      let panStartPt = null;
 
-      // 🏹 Estado da Seta Laser (Fica acesa imediatamente ao escolher a ferramenta!)
       let laserHead = null;
       let laserTrail = [];
       let laserFadeTimer = null;
@@ -524,14 +500,26 @@
       const selectFundo = document.getElementById('select-fundo');
       const selectScreenNumber = document.getElementById('select-screen-number');
       const btnPasteScreen = document.getElementById('btn-paste-screen');
-      const hScrollThumb = document.getElementById('board-hscroll-thumb');
 
-      function notificarCronometroParent(ativa, ativadaEm) {
-        try {
-          if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'LOUSA_TIMER_SYNC', ativa: !!ativa, ativadaEm: ativadaEm || null }, '*');
-          }
-        } catch (e) {}
+      // ✏️ Cursor de Lápis Real (SVG)
+      const svgLapisUri = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+        </svg>
+      `);
+
+      function atualizarCursorCanvas() {
+        if (role === 'aluno' && isReadonly) {
+          canvas.style.cursor = 'default';
+        } else if (currentTool === 'pen' || currentTool === 'highlighter') {
+          canvas.style.cursor = `url("${svgLapisUri}") 2 24, crosshair`;
+        } else if (currentTool === 'move') {
+          canvas.style.cursor = 'grab';
+        } else if (currentTool === 'laser') {
+          canvas.style.cursor = 'none';
+        } else {
+          canvas.style.cursor = 'crosshair';
+        }
       }
 
       function verificarClipboardTela() {
@@ -547,9 +535,6 @@
         const listaDeFormas = activeShape ? [...shapes, activeShape] : [...shapes];
         screens[activeScreenIndex].bgType = currentBg;
         screens[activeScreenIndex].shapes = listaDeFormas;
-        if (role !== 'aluno') {
-          screens[activeScreenIndex].cam = { x: camera.x, y: camera.y, zoom: camera.zoom };
-        }
       }
 
       function atualizarBarraNumeracaoTelas() {
@@ -574,9 +559,6 @@
         currentBg = sc.bgType || 'bg-grade';
         if (selectFundo) selectFundo.value = currentBg;
 
-        if (role !== 'aluno' && sc.cam) {
-          camera = { x: sc.cam.x || 0, y: sc.cam.y || 0, zoom: sc.cam.zoom || 1 };
-        }
         redoStack = [];
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
@@ -586,10 +568,7 @@
       }
 
       function obterDimensoesTelaSeguras() {
-        const rect = stageEl.getBoundingClientRect();
-        const w = (rect && rect.width > 50) ? rect.width : (window.innerWidth || 1024);
-        const h = (rect && rect.height > 50) ? rect.height : (window.innerHeight || 600);
-        return { w: Math.max(260, w), h: Math.max(180, h) };
+        return { w: 1280, h: 720 };
       }
 
       function validarCameraSegura() {
@@ -601,7 +580,7 @@
       }
 
       function atualizarPermissoesUI() {
-        if (!isAllowed) {
+        if (!isAllowed || !roomIdAtivo || roomIdAtivo === 'nenhuma') {
           telaEspera.style.display = 'flex';
           return;
         }
@@ -611,53 +590,26 @@
         uiTopBar.style.display = bloquearFerramentas ? 'none' : 'flex';
         uiBottomBar.style.display = bloquearFerramentas ? 'none' : 'flex';
         badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
-        canvas.style.cursor = bloquearFerramentas ? 'default' : (currentTool === 'pan' || currentTool === 'move' ? 'grab' : 'crosshair');
+        atualizarCursorCanvas();
         atualizarBarraNumeracaoTelas();
         setTimeout(ajustarTamanhoCanvas, 20);
       }
 
-      // =========================================================================
-      // 📐 1. CÂMARA INTELIGENTE E LEGÍVEL NO TELEMÓVEL (SEM LETRAS MINÚSCULAS!)
-      // =========================================================================
       function calcularCentroConteudoAtivo() {
         if (lastFocusPoint && Number.isFinite(lastFocusPoint.x) && Number.isFinite(lastFocusPoint.y)) {
           return lastFocusPoint;
         }
-        if (shapes.length > 0) {
-          const ult = shapes[shapes.length - 1];
-          if (ult.tool === 'infographic') {
-            const { w, h, scale } = calcularDimensoesInfografico(ult);
-            return { x: (ult.x || 0) + (w * scale) / 2, y: (ult.y || 0) + (h * scale) / 2 };
-          }
-          if (ult.tool === 'text') {
-            return { x: (ult.x || 0) + 80, y: (ult.y || 0) + 20 };
-          }
-          if (Array.isArray(ult.points) && ult.points.length > 0) {
-            const p = ult.points[ult.points.length - 1];
-            return { x: p.x, y: p.y };
-          }
-          if (ult.x1 !== undefined && ult.x2 !== undefined) {
-            return { x: (ult.x1 + ult.x2) / 2, y: (ult.y1 + ult.y2) / 2 };
-          }
-        }
-        const { w, h } = obterDimensoesTelaSeguras();
-        return {
-          x: (w / 2 - camera.x) / camera.zoom,
-          y: (h / 2 - camera.y) / camera.zoom
-        };
+        return { x: 640, y: 360 };
       }
 
       function obterEstadoCameraProfessor() {
         validarCameraSegura();
-        const { w, h } = obterDimensoesTelaSeguras();
-        const centerX = (w / 2 - camera.x) / camera.zoom;
-        const centerY = (h / 2 - camera.y) / camera.zoom;
         const foco = calcularCentroConteudoAtivo();
         return {
-          w: Math.round(w),
-          h: Math.round(h),
-          centerX: Math.round(centerX * 10) / 10,
-          centerY: Math.round(centerY * 10) / 10,
+          w: 1280,
+          h: 720,
+          centerX: 640,
+          centerY: 360,
           focusX: Math.round(foco.x * 10) / 10,
           focusY: Math.round(foco.y * 10) / 10,
           zoom: Math.round(camera.zoom * 1000) / 1000
@@ -665,30 +617,15 @@
       }
 
       function aplicarCameraDoProfessorNoAluno(profView, animar = true) {
-        if (!profView || !Number.isFinite(profView.w) || !Number.isFinite(profView.h)) {
-          return;
-        }
+        if (!profView || !Number.isFinite(profView.w) || !Number.isFinite(profView.h)) return;
         profViewportRemoto = profView;
 
         const { w: alunoW, h: alunoH } = obterDimensoesTelaSeguras();
         const profZoom = (Number.isFinite(profView.zoom) && profView.zoom > 0.1) ? profView.zoom : 1;
 
-        // 📱 ESCALA DE LEITURA CONFORTÁVEL: No telemóvel, nunca encolhe abaixo de 72% para que o texto e desenhos fiquem grandes e legíveis!
-        const ratioW = alunoW / Math.max(360, profView.w);
-        const escalaLeitura = Math.max(0.72, Math.min(1.08, ratioW * 1.35));
-        const zoomFinal = Math.max(0.55, Math.min(3.0, profZoom * escalaLeitura));
-
-        // Foca no ponto exato onde o professor está a escrever/apontar (ou no centro da visão se a tela couber inteira)
-        const usarFocoAtivo = (alunoW < profView.w * 0.8) && Number.isFinite(profView.focusX) && Number.isFinite(profView.focusY);
-        const alvoX = usarFocoAtivo ? profView.focusX : (Number.isFinite(profView.centerX) ? profView.centerX : profView.w / 2);
-        const alvoY = usarFocoAtivo ? profView.focusY : (Number.isFinite(profView.centerY) ? profView.centerY : profView.h / 2);
-
-        const novoX = (alunoW / 2) - (alvoX * zoomFinal);
-        const novoY = (alunoH / 2) - (alvoY * zoomFinal);
-
-        if (!Number.isFinite(novoX) || !Number.isFinite(novoY) || !Number.isFinite(zoomFinal)) {
-          return;
-        }
+        const zoomFinal = Math.max(0.5, Math.min(3.0, profZoom));
+        const novoX = 0;
+        const novoY = 0;
 
         if (!animar) {
           camera.zoom = zoomFinal;
@@ -719,9 +656,9 @@
               return;
             }
 
-            camera.x += dx * 0.32;
-            camera.y += dy * 0.32;
-            camera.zoom += dz * 0.32;
+            camera.x += dx * 0.35;
+            camera.y += dy * 0.35;
+            camera.zoom += dz * 0.35;
             desenharQuadro();
             animFrameCamera = requestAnimationFrame(animarPasso);
           };
@@ -729,21 +666,25 @@
         }
       }
 
-      // Garante Proporção 1:1 Exata entre Píxeis Reais e CSS (Nunca espicha!)
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const { w, h } = obterDimensoesTelaSeguras();
-        canvas.style.width = w + 'px';
-        canvas.style.height = h + 'px';
-        canvas.width = Math.max(1, Math.floor(w * dpr));
-        canvas.height = Math.max(1, Math.floor(h * dpr));
+        const stageW = stageEl.clientWidth || window.innerWidth;
+        const stageH = stageEl.clientHeight || window.innerHeight;
+        
+        const escalaFit = Math.min(stageW / 1280, stageH / 720);
+        const cssW = 1280 * escalaFit;
+        const cssH = 720 * escalaFit;
+
+        canvas.style.width = cssW + 'px';
+        canvas.style.height = cssH + 'px';
+        canvas.style.left = ((stageW - cssW) / 2) + 'px';
+        canvas.style.top = ((stageH - cssH) / 2) + 'px';
+
+        canvas.width = Math.max(1, Math.floor(1280 * dpr));
+        canvas.height = Math.max(1, Math.floor(720 * dpr));
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        if (role === 'aluno' && profViewportRemoto) {
-          aplicarCameraDoProfessorNoAluno(profViewportRemoto, false);
-        } else {
-          desenharQuadro();
-        }
+        desenharQuadro();
       }
       window.addEventListener('resize', ajustarTamanhoCanvas);
 
@@ -756,69 +697,44 @@
         validarCameraSegura();
         const rect = canvas.getBoundingClientRect();
         return {
-          x: (clientX - rect.left - camera.x) / camera.zoom,
-          y: (clientY - rect.top - camera.y) / camera.zoom
+          x: (clientX - rect.left) / (rect.width / 1280),
+          y: (clientY - rect.top) / (rect.height / 720)
         };
       }
 
-      function atualizarBarraRolagemVisual() {
-        if (!hScrollThumb) return;
-        validarCameraSegura();
-        const { w } = obterDimensoesTelaSeguras();
-        const viewW = w / camera.zoom;
-        let maxRight = viewW;
-        shapes.forEach(s => {
-          const r = (s.x || s.x2 || 0) + ((s.w || 300) * (s.scale || 1));
-          if (r > maxRight) maxRight = r;
-        });
-        const totalMundo = Math.max(viewW * 2, maxRight + 600);
-        const posX = Math.max(0, -camera.x / camera.zoom);
-        const thumbPct = Math.max(10, Math.min(90, (viewW / totalMundo) * 100));
-        const leftPct = Math.max(0, Math.min(100 - thumbPct, (posX / totalMundo) * 100));
-        hScrollThumb.style.width = thumbPct + '%';
-        hScrollThumb.style.left = leftPct + '%';
-        const btnCenter = document.getElementById('btn-center');
-        if (btnCenter) btnCenter.innerText = `🎯 ${Math.round(camera.zoom * 100)}%`;
-      }
+      function atualizarBarraRolagemVisual() {}
 
       function desenharFundoCanvas(c, width, height) {
-        validarCameraSegura();
         c.save();
         if (currentBg === 'bg-pauta') {
           c.fillStyle = '#fffef7';
           c.fillRect(0, 0, width, height);
-          const step = Math.max(8, 32 * camera.zoom);
-          const offsetY = ((camera.y % step) + step) % step;
+          const step = 32;
           c.strokeStyle = '#93c5fd';
           c.lineWidth = 1;
           c.beginPath();
-          for (let y = offsetY; y < height; y += step) {
+          for (let y = 0; y < height; y += step) {
             c.moveTo(0, y);
             c.lineTo(width, y);
           }
           c.stroke();
-          const margemX = 64 * camera.zoom + camera.x;
-          if (margemX > 0 && margemX < width) {
-            c.strokeStyle = '#fca5a5';
-            c.beginPath();
-            c.moveTo(margemX, 0);
-            c.lineTo(margemX, height);
-            c.stroke();
-          }
+          c.strokeStyle = '#fca5a5';
+          c.beginPath();
+          c.moveTo(64, 0);
+          c.lineTo(64, height);
+          c.stroke();
         } else if (currentBg === 'bg-grade') {
           c.fillStyle = '#ffffff';
           c.fillRect(0, 0, width, height);
-          const step = Math.max(8, 28 * camera.zoom);
-          const offsetX = ((camera.x % step) + step) % step;
-          const offsetY = ((camera.y % step) + step) % step;
+          const step = 32;
           c.strokeStyle = '#e2e8f0';
           c.lineWidth = 1;
           c.beginPath();
-          for (let x = offsetX; x < width; x += step) {
+          for (let x = 0; x < width; x += step) {
             c.moveTo(x, 0);
             c.lineTo(x, height);
           }
-          for (let y = offsetY; y < height; y += step) {
+          for (let y = 0; y < height; y += step) {
             c.moveTo(0, y);
             c.lineTo(width, y);
           }
@@ -826,12 +742,10 @@
         } else if (currentBg === 'bg-pontos') {
           c.fillStyle = '#ffffff';
           c.fillRect(0, 0, width, height);
-          const step = Math.max(8, 24 * camera.zoom);
-          const offsetX = ((camera.x % step) + step) % step;
-          const offsetY = ((camera.y % step) + step) % step;
+          const step = 32;
           c.fillStyle = '#cbd5e1';
-          for (let x = offsetX; x < width; x += step) {
-            for (let y = offsetY; y < height; y += step) {
+          for (let x = 0; x < width; x += step) {
+            for (let y = 0; y < height; y += step) {
               c.fillRect(x - 1, y - 1, 2.2, 2.2);
             }
           }
@@ -840,11 +754,11 @@
           c.fillRect(0, 0, width, height);
         }
 
-        c.fillStyle = 'rgba(100, 116, 139, 0.65)';
-        c.font = '800 12px "Segoe UI", sans-serif';
+        c.fillStyle = 'rgba(100, 116, 139, 0.75)';
+        c.font = '800 13px "Segoe UI", sans-serif';
         c.textAlign = 'left';
         c.textBaseline = 'bottom';
-        c.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 14, height - 10);
+        c.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length}`, 16, height - 12);
         c.restore();
       }
 
@@ -936,9 +850,6 @@
         c.restore();
       }
 
-      // =========================================================================
-      // 📊🧠 4. RENDERIZADOR DOS 8 INFOGRÁFICOS E DOS 8 MAPAS MENTAIS
-      // =========================================================================
       function calcularDimensoesInfografico(item) {
         const d = item.infoData || {};
         let baseW = 540;
@@ -1045,7 +956,6 @@
         const bodyY = 54;
         const bodyH = h - 66;
 
-        // 1. ESTATÍSTICO
         if (t === 'estatistico') {
           const itens = d.items || [{ label: 'Speaking', val: 85 }];
           const rowH = bodyH / itens.length;
@@ -1075,8 +985,6 @@
             });
           });
         }
-
-        // 2. INFORMATIVO OU MAPA DE TEXTO
         else if (t === 'informativo' || t === 'mm_texto') {
           const topicos = d.topics || ['Tópico 1'];
           const rowH = bodyH / topicos.length;
@@ -1105,8 +1013,6 @@
             });
           });
         }
-
-        // 3. COMPARATIVO
         else if (t === 'comparativo') {
           const colW = (w - 44) / 2;
           const itemsA = d.itemsA || [];
@@ -1139,8 +1045,6 @@
             });
           });
         }
-
-        // 4. PROCESSOS OU MAPA DE FLUXO
         else if (t === 'processos' || t === 'mm_fluxo') {
           const steps = d.steps || ['Passo 1'];
           const cols = Math.min(4, steps.length);
@@ -1186,8 +1090,6 @@
             }
           });
         }
-
-        // 5. LINHA DO TEMPO (INFOGRÁFICO OU MAPA DE LINHA DO TEMPO)
         else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
           const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
@@ -1230,8 +1132,6 @@
             }
           });
         }
-
-        // 6. ESPAÇO-TEMPO
         else if (t === 'espaco_tempo') {
           const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
           const cols = Math.min(3, stages.length);
@@ -1262,8 +1162,6 @@
             });
           });
         }
-
-        // 7. RELACIONAL, MAPA DA ARANHA OU MAPA DE CONCEITOS
         else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
@@ -1289,7 +1187,6 @@
             }
             c.stroke();
 
-            // Se for Mapa de Conceitos, desenha etiqueta conectora no meio da linha
             const textoBruto = String(nd || '');
             let conector = '';
             let conceito = textoBruto;
@@ -1334,8 +1231,6 @@
             weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
           });
         }
-
-        // 8. MAPA DE CICLO (ANEL CIRCULAR CONTÍNUO)
         else if (t === 'mm_ciclo') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
@@ -1344,7 +1239,6 @@
           const rx = w * 0.31;
           const ry = bodyH * 0.33;
 
-          // Anel tracejado central do ciclo
           c.save();
           c.strokeStyle = cor;
           c.lineWidth = 2.5;
@@ -1377,8 +1271,6 @@
             weight: '900', maxFont: 13, minFont: 10, color: cor, align: 'center', vAlign: 'middle'
           });
         }
-
-        // 9. MAPA DE ÁRVORE OU MAPA DE ORGANOGRAMA
         else if (t === 'mm_arvore' || t === 'mm_organograma') {
           const rootText = d.center || 'Raiz / Direção';
           const nodes = d.nodes || ['Ramo 1', 'Ramo 2', 'Ramo 3', 'Ramo 4'];
@@ -1409,13 +1301,11 @@
             c.lineWidth = 2;
             c.beginPath();
             if (t === 'mm_organograma') {
-              // Linhas ortogonais clássicas de organograma
               c.moveTo(w / 2, rootY + rootH);
               c.lineTo(w / 2, midLineY);
               c.lineTo(childCenterX, midLineY);
               c.lineTo(childCenterX, childY);
             } else {
-              // Ramos curvos orgânicos de árvore
               c.moveTo(w / 2, rootY + rootH);
               c.bezierCurveTo(w / 2, midLineY, childCenterX, midLineY, childCenterX, childY);
             }
@@ -1431,8 +1321,6 @@
             });
           });
         }
-
-        // 10. INTERATIVO
         else if (t === 'interativo') {
           const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta', revealed: false }];
           const cols = Math.min(3, cards.length);
@@ -1482,9 +1370,6 @@
         c.restore();
       }
 
-      // =========================================================================
-      // 🏹 5. SETA LASER SEMPRE ACESA + RASTRO AO PRESSIONAR
-      // =========================================================================
       function desenharLaserSeta(c, pts, headPos) {
         c.save();
         c.shadowColor = '#ef4444';
@@ -1494,7 +1379,6 @@
         c.lineCap = 'round';
         c.lineJoin = 'round';
 
-        // Desenha o rastro luminoso (somente quando pressionado)
         if (Array.isArray(pts) && pts.length > 1) {
           c.lineWidth = 5;
           c.beginPath();
@@ -1509,7 +1393,6 @@
           c.stroke();
         }
 
-        // Desenha a Seta Laser Acesa (sempre visível enquanto a ferramenta Laser estiver ativa!)
         const ponta = headPos || (Array.isArray(pts) && pts.length > 0 ? pts[pts.length - 1] : null);
         if (ponta && Number.isFinite(ponta.x) && Number.isFinite(ponta.y)) {
           let angle = Number.isFinite(ponta.angle) ? ponta.angle : -Math.PI / 4;
@@ -1520,13 +1403,11 @@
             }
           }
 
-          // Halo externo pulsante
           c.fillStyle = 'rgba(239, 68, 68, 0.28)';
           c.beginPath();
           c.arc(ponta.x, ponta.y, 16, 0, Math.PI * 2);
           c.fill();
 
-          // Seta Laser Neon Direcional
           const headLen = 22;
           c.fillStyle = '#ef4444';
           c.beginPath();
@@ -1537,7 +1418,6 @@
           c.closePath();
           c.fill();
 
-          // Ponto branco incandescente na ponta da seta
           c.fillStyle = '#ffffff';
           c.beginPath();
           c.arc(ponta.x, ponta.y, 3.2, 0, Math.PI * 2);
@@ -1691,18 +1571,15 @@
       function desenharQuadro() {
         validarCameraSegura();
         const dpr = window.devicePixelRatio || 1;
-        const { w, h } = obterDimensoesTelaSeguras();
-        const targetW = Math.max(1, Math.floor(w * dpr));
-        const targetH = Math.max(1, Math.floor(h * dpr));
+        const targetW = Math.max(1, Math.floor(1280 * dpr));
+        const targetH = Math.max(1, Math.floor(720 * dpr));
         if (canvas.width !== targetW || canvas.height !== targetH) {
-          canvas.style.width = w + 'px';
-          canvas.style.height = h + 'px';
           canvas.width = targetW;
           canvas.height = targetH;
         }
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
 
-        desenharFundoCanvas(ctx, w, h);
+        desenharFundoCanvas(ctx, 1280, 720);
 
         ctx.save();
         ctx.translate(camera.x, camera.y);
@@ -1734,7 +1611,6 @@
           if (lx < 0 || lx > w || ly < 0 || ly > h) continue;
 
           if (!(role === 'aluno' && isReadonly)) {
-            // Alça de Zoom no Lugar [⤡] (Expande/Diminui mantendo o centro fixo no lugar!)
             if (lx >= w - 32 && ly >= h - 32) {
               resizingShape = sh;
               resizeStartScale = sh.scale || 1;
@@ -1886,12 +1762,6 @@
         isPointerDown = true;
         try { canvas.setPointerCapture(e.pointerId); } catch(err){}
 
-        if (currentTool === 'pan') {
-          panStartPt = { x: e.clientX - camera.x, y: e.clientY - camera.y };
-          canvas.style.cursor = 'grabbing';
-          return;
-        }
-
         if (currentTool === 'move') {
           for (let i = shapes.length - 1; i >= 0; i--) {
             if (pontoPertoDoElemento(pt, shapes[i], 20)) {
@@ -1956,7 +1826,6 @@
         if (role === 'aluno' && isReadonly) return;
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        // 🏹 Seta Laser SEMPRE ACESA ao mover pela tela (mesmo sem clicar!)
         if (currentTool === 'laser' && !isPointerDown) {
           let ang = laserHead?.angle ?? (-Math.PI / 4);
           if (laserHead && Math.hypot(pt.x - laserHead.x, pt.y - laserHead.y) > 2) {
@@ -1972,7 +1841,6 @@
         if (!isPointerDown) return;
         lastFocusPoint = { x: pt.x, y: pt.y };
 
-        // Zoom no Lugar do Infográfico / Mapa Mental (Mantém o centro fixo sem deslizar!)
         if (resizingShape && resizeCenterPt) {
           const { w, h } = calcularDimensoesInfografico(resizingShape);
           const distAtual = Math.max(30, Math.hypot(pt.x - resizeCenterPt.cx, pt.y - resizeCenterPt.cy));
@@ -1985,32 +1853,10 @@
           return;
         }
 
-        if (currentTool === 'pan' && panStartPt) {
-          camera.x = e.clientX - panStartPt.x;
-          camera.y = e.clientY - panStartPt.y;
-          desenharQuadro();
-          if (role !== 'aluno') transmitirMovimentoAoVivo();
-          return;
-        }
-
         if (currentTool === 'move' && movingShape && moveLastPt) {
           const dx = pt.x - moveLastPt.x;
           const dy = pt.y - moveLastPt.y;
           deslocarElemento(movingShape, dx, dy);
-
-          const margemBorda = 50;
-          if (e.clientX > window.innerWidth - margemBorda) {
-            camera.x -= 14;
-            deslocarElemento(movingShape, 14 / camera.zoom, 0);
-          } else if (e.clientX < margemBorda && camera.x < 0) {
-            camera.x += 14;
-            deslocarElemento(movingShape, -14 / camera.zoom, 0);
-          }
-          if (e.clientY > window.innerHeight - margemBorda) {
-            camera.y -= 12;
-            deslocarElemento(movingShape, 0, 12 / camera.zoom);
-          }
-
           moveLastPt = telaParaQuadro(e.clientX, e.clientY);
           desenharQuadro();
           transmitirMovimentoAoVivo();
@@ -2028,7 +1874,6 @@
           return;
         }
 
-        // 🏹 Laser Pressionado = Seta Acesa + Rastro Luminoso
         if (currentTool === 'laser') {
           let ang = laserHead?.angle ?? (-Math.PI / 4);
           if (laserHead && Math.hypot(pt.x - laserHead.x, pt.y - laserHead.y) > 2) {
@@ -2069,20 +1914,13 @@
           return;
         }
 
-        if (currentTool === 'pan') {
-          panStartPt = null;
-          canvas.style.cursor = 'grab';
-          if (role !== 'aluno') agendarSalvamentoNuvem(10);
-          return;
-        }
-
         if (currentTool === 'move') {
           if (movingShape) {
             movingShape = null;
             moveLastPt = null;
             agendarSalvamentoNuvem(10);
           }
-          canvas.style.cursor = 'grab';
+          atualizarCursorCanvas();
           return;
         }
 
@@ -2117,24 +1955,16 @@
       canvas.addEventListener('wheel', (e) => {
         if (role === 'aluno' && isReadonly) return;
         e.preventDefault();
-        if (e.ctrlKey || e.metaKey) {
-          const fator = e.deltaY < 0 ? 1.12 : 0.89;
-          const rect = canvas.getBoundingClientRect();
-          aplicarZoomTela(fator, e.clientX - rect.left, e.clientY - rect.top);
-        } else {
-          camera.x -= e.deltaX;
-          camera.y -= e.deltaY;
-          desenharQuadro();
-          if (role !== 'aluno') agendarSalvamentoNuvem(40);
-        }
+        const fator = e.deltaY < 0 ? 1.12 : 0.89;
+        const rect = canvas.getBoundingClientRect();
+        aplicarZoomTela(fator, e.clientX - rect.left, e.clientY - rect.top);
       }, { passive: false });
 
-      // 🔍 Zoom da Tela Firme no Lugar (Ancorado no centro exato do Palco)
       function aplicarZoomTela(fator, stagePivotX = null, stagePivotY = null) {
         validarCameraSegura();
-        const { w, h } = obterDimensoesTelaSeguras();
-        const px = stagePivotX !== null ? stagePivotX : (w / 2);
-        const py = stagePivotY !== null ? stagePivotY : (h / 2);
+        const rect = canvas.getBoundingClientRect();
+        const px = stagePivotX !== null ? stagePivotX : (rect.width / 2);
+        const py = stagePivotY !== null ? stagePivotY : (rect.height / 2);
 
         const antigoZoom = camera.zoom;
         const novoZoom = Math.max(0.4, Math.min(2.8, Math.round(antigoZoom * fator * 100) / 100));
@@ -2150,9 +1980,6 @@
         if (role !== 'aluno') agendarSalvamentoNuvem(20);
       }
 
-      // =========================================================================
-      // 🎨📐 6. SELETORES FLUTUANTES DE CORES E DE FIGURAS GEOMÉTRICAS
-      // =========================================================================
       const colorPopover = document.getElementById('color-popover');
       const shapesPopover = document.getElementById('shapes-popover');
       const btnOpenColor = document.getElementById('btn-open-color-popover');
@@ -2219,10 +2046,8 @@
         const ehForma = ['line', 'arrow', 'rect', 'circle', 'triangle', 'hexagon', 'diamond'].includes(toolName);
         btnOpenShapes.classList.toggle('active', ehForma);
 
-        // 🏹 Se escolheu a Seta Laser, acende imediatamente no centro da vista!
         if (toolName === 'laser') {
-          const { w, h } = obterDimensoesTelaSeguras();
-          const centro = telaParaQuadro(w / 2, h / 2);
+          const centro = { x: 640, y: 360 };
           if (!laserHead) {
             laserHead = { x: Math.round(centro.x), y: Math.round(centro.y), angle: -Math.PI / 4 };
           }
@@ -2235,7 +2060,7 @@
           if (role !== 'aluno') agendarSalvamentoNuvem(10);
         }
 
-        canvas.style.cursor = (currentTool === 'pan' || currentTool === 'move') ? 'grab' : 'crosshair';
+        atualizarCursorCanvas();
       }
 
       document.querySelectorAll('.shape-option-btn').forEach(btn => {
@@ -2248,9 +2073,6 @@
         };
       });
 
-      // =========================================================================
-      // 🔤 7. CAIXA DE TEXTO RICO
-      // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
       const fontSelect = document.getElementById('text-font-select');
@@ -2361,9 +2183,6 @@
         textEditorBox.style.display = 'none';
       };
 
-      // =========================================================================
-      // 📊🧠 8. ESTÚDIO DE INFOGRÁFICOS (8) E MAPAS MENTAIS (8)
-      // =========================================================================
       const infoModal = document.getElementById('infographic-modal');
       const infoTypeGrid = document.getElementById('info-type-grid');
       const infoFieldsBox = document.getElementById('info-dynamic-fields');
@@ -2683,7 +2502,6 @@
 
       document.getElementById('btn-add-info-option').onclick = adicionarOpcaoNoDraft;
 
-      // Abre o Construtor de Infográficos (8 Modelos)
       document.getElementById('btn-open-infographic').onclick = () => {
         fecharPopoversFlutuantes();
         editingShapeId = null;
@@ -2698,7 +2516,6 @@
         infoModal.style.display = 'flex';
       };
 
-      // 🧠 Abre o Construtor de Mapas Mentais (8 Modelos)
       document.getElementById('btn-open-mindmap').onclick = () => {
         fecharPopoversFlutuantes();
         editingShapeId = null;
@@ -2748,8 +2565,7 @@
           }
           editingShapeId = null;
         } else {
-          const { w, h } = obterDimensoesTelaSeguras();
-          const pos = telaParaQuadro(Math.max(40, (w - 540) / 2), Math.max(40, (h - 300) / 2));
+          const pos = { x: 370, y: 210 };
           const novo = {
             id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
             typeName: 'shape',
@@ -2776,9 +2592,6 @@
         agendarSalvamentoNuvem(10);
       };
 
-      // =========================================================================
-      // 📑 9. BARRA DE NUMERAÇÃO DE TELAS E SINCRONIZAÇÃO EM TEMPO REAL
-      // =========================================================================
       document.getElementById('btn-prev-screen').onclick = () => {
         if (activeScreenIndex > 0) carregarTelaPorIndice(activeScreenIndex - 1, true);
       };
@@ -2893,25 +2706,6 @@
         if (role !== 'aluno') agendarSalvamentoNuvem(10);
       };
 
-      document.getElementById('btn-pan-right').onclick = () => {
-        const { w } = obterDimensoesTelaSeguras();
-        camera.x -= Math.round(w * 0.55);
-        desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(10);
-      };
-      document.getElementById('btn-pan-left').onclick = () => {
-        const { w } = obterDimensoesTelaSeguras();
-        camera.x = Math.min(200, camera.x + Math.round(w * 0.55));
-        desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(10);
-      };
-      document.getElementById('btn-pan-down').onclick = () => {
-        const { h } = obterDimensoesTelaSeguras();
-        camera.y -= Math.round(h * 0.45);
-        desenharQuadro();
-        if (role !== 'aluno') agendarSalvamentoNuvem(10);
-      };
-
       document.getElementById('btn-undo').onclick = () => {
         if (shapes.length === 0) return;
         redoStack.push(shapes.pop());
@@ -2993,6 +2787,8 @@
       function agendarSalvamentoNuvem(delayMs = 20) {
         if (!initialLoadDone) return;
         if (role === 'aluno' && isReadonly) return;
+        if (!roomIdAtivo || roomIdAtivo === 'nenhuma') return;
+
         clearTimeout(saveTimer);
         saveTimer = setTimeout(async () => {
           isSaving = true;
@@ -3014,7 +2810,7 @@
               updatedAt: Date.now()
             };
             const payloadRecords = [metaBg, ...formasAtuais];
-            await fetch(`/api/workspace/sala/workspace-lousa/dados/LOUSA_MESTRA_UNIFICADA`, {
+            await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}`, {
               method: 'PUT',
               credentials: 'include',
               headers: { 'Content-Type': 'application/json' },
@@ -3027,10 +2823,11 @@
 
       async function carregarDadosDaNuvem(forcar = false) {
         if (role === 'aluno' && !isAllowed) return;
+        if (!roomIdAtivo || roomIdAtivo === 'nenhuma') return;
         if (!forcar && isPointerDown) return;
 
         try {
-          const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/LOUSA_MESTRA_UNIFICADA?_t=${Date.now()}`, {
+          const res = await fetch(`/api/workspace/sala/workspace-lousa/dados/${encodeURIComponent(roomIdAtivo)}?_t=${Date.now()}`, {
             cache: 'no-store',
             credentials: 'include'
           });
@@ -3058,7 +2855,20 @@
           atualizarPermissoesUI();
         }
         if (d.type === 'STATUS_LOUSA_PROF') {
-          if (d.turmaId) roomIdOriginal = d.turmaId;
+          if (d.turmaId) {
+            roomIdAtivo = d.turmaId;
+            roomIdOriginal = d.turmaId;
+            if (roomIdAtivo === 'nenhuma') {
+              isAllowed = false;
+              shapes = [];
+              screens = [{ id: 'tela_1', bgType: 'bg-grade', shapes: [], cam: { x: 0, y: 0, zoom: 1 } }];
+              activeScreenIndex = 0;
+            } else {
+              isAllowed = true;
+              carregarDadosDaNuvem(true);
+            }
+            atualizarPermissoesUI();
+          }
         }
         if (d.type === 'RELOAD_DADOS') {
           carregarDadosDaNuvem(true);
@@ -3080,22 +2890,25 @@
             const data = await res.json();
 
             if (data && data.success && data.ativa) {
+              const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
+              const mudouSala = (roomIdAtivo !== salaAlvo);
               const acabouDeLiberar = !isAllowed;
-              const mudouPermissao = (isReadonly !== !data.recursos);
 
+              roomIdAtivo = salaAlvo;
               isAllowed = true;
               isReadonly = !data.recursos;
               notificarCronometroParent(true, data.ativadaEm);
 
-              if (acabouDeLiberar || mudouPermissao) {
+              if (acabouDeLiberar || mudouSala || isReadonly !== !data.recursos) {
                 atualizarPermissoesUI();
               }
-              if (acabouDeLiberar) {
+              if (acabouDeLiberar || mudouSala) {
                 await carregarDadosDaNuvem(true);
               }
             } else {
               isAllowed = false;
               isReadonly = true;
+              roomIdAtivo = 'nenhuma';
               notificarCronometroParent(false, null);
               atualizarPermissoesUI();
             }
@@ -3103,6 +2916,14 @@
         };
         verificarStatusAluno();
         setInterval(verificarStatusAluno, 2000);
+      } else {
+        // Professor inicia em "nenhuma" (bloqueado até selecionar turma e ativar)
+        roomIdAtivo = roomIdOriginal;
+        if (!roomIdAtivo || roomIdAtivo === 'nenhuma') {
+          isAllowed = false;
+        } else {
+          isAllowed = true;
+        }
       }
 
       try {
@@ -3114,6 +2935,7 @@
             const data = JSON.parse(event.data);
             if (data.type === 'LOUSA_DADOS_CHANGED') {
               if (data.senderId && data.senderId === CLIENT_ID) return;
+              if (data.turmaId && roomIdAtivo && data.turmaId !== roomIdAtivo && data.turmaId !== 'global') return;
               if (Array.isArray(data.records)) {
                 aplicarRegistrosRecebidos(data.records, false);
               } else {
@@ -3123,6 +2945,8 @@
             if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
               isAllowed = !!data.ativa;
               isReadonly = data.ativa ? !data.recursos : true;
+              if (data.ativa && data.turmaId) roomIdAtivo = data.turmaId;
+              else roomIdAtivo = 'nenhuma';
               notificarCronometroParent(!!data.ativa, data.ativadaEm);
               atualizarPermissoesUI();
               if (data.ativa) carregarDadosDaNuvem(true);
@@ -3133,7 +2957,9 @@
 
       atualizarPermissoesUI();
       ajustarTamanhoCanvas();
-      carregarDadosDaNuvem(true);
+      if (roomIdAtivo && roomIdAtivo !== 'nenhuma') {
+        carregarDadosDaNuvem(true);
+      }
     })();
   </script>
 </body>

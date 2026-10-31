@@ -3456,40 +3456,47 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
-            const optionsHtml = '<option value="global">🌍 Público Geral</option>' + 
+            const optionsHtml =
+                '<option value="nenhuma">🚫 Ninguém (Selecionar Turma)</option>' +
+                '<option value="global">🌍 Público Geral (Todas as Turmas)</option>' + 
                 (turmas || []).map(t => `<option value="${t.id || t._id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
             if (selModal) selModal.innerHTML = optionsHtml;
-        } catch(e) {}
+        } catch(e) {
+            if (selModal) {
+                selModal.innerHTML = '<option value="nenhuma">🚫 Ninguém (Selecionar Turma)</option><option value="global">🌍 Público Geral</option>';
+            }
+        }
     },
 
-    abrirLousaProfessor: async (turmaId = 'global') => {
-        const tid = String(turmaId || 'global').trim();
+    abrirLousaProfessor: async () => {
+        // 🔒 MODO PADRÃO OBRIGATÓRIO: Inicia SEMPRE em "Ninguém" com Visualização Desativada e Recursos Desativados!
+        const tid = 'nenhuma';
         Workspace.Avaliacoes.garantirElementoCronometroLousa();
         await Workspace.Avaliacoes.carregarTurmasLousaProf();
 
         try {
-            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
-            if (res && res.success) {
-                const isAtiva = !!res.ativa;
-                Workspace.Avaliacoes._lousaProfState = {
-                    turmaId: tid,
-                    ativa: isAtiva,
-                    recursos: isAtiva ? !!res.recursos : false,
-                    ativadaEm: isAtiva ? (res.ativadaEm || Date.now()) : null
-                };
-            } else {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
-            }
-        } catch (e) {
-            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
-        }
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
+                turmaId: 'nenhuma',
+                ativa: false,
+                recursos: false,
+                desativarTodas: true,
+                escolaId: Workspace.usuario?.escolaId || 'DEFAULT'
+            });
+        } catch (e) {}
+
+        Workspace.Avaliacoes._lousaProfState = {
+            turmaId: 'nenhuma',
+            ativa: false,
+            recursos: false,
+            ativadaEm: null
+        };
         
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
         const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         
-        if (selModal) selModal.value = tid;
-        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`);
+        if (selModal) selModal.value = 'nenhuma';
+        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=nenhuma&_t=${Date.now()}`);
         
         if (modal) {
             modal.style.display = 'flex';
@@ -3499,22 +3506,30 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     },
 
     mudarTurmaLousaIframe: async (turmaId) => {
-        const tid = String(turmaId || 'global').trim();
+        const tid = String(turmaId || 'nenhuma').trim();
+
+        // 🛑 PARADA INSTANTÂNEA: Ao trocar de turma no seletor, desativa imediatamente a visualização e os recursos da turma anterior!
         try {
-            const res = await Workspace.api(`/workspace/sala/workspace-lousa/status/${encodeURIComponent(tid)}?estrito=true&_t=${Date.now()}`, 'GET');
-            if (res?.success) {
-                const isAtiva = !!res.ativa;
-                Workspace.Avaliacoes._lousaProfState = {
-                    turmaId: tid,
-                    ativa: isAtiva,
-                    recursos: isAtiva ? !!res.recursos : false,
-                    ativadaEm: isAtiva ? (res.ativadaEm || Date.now()) : null
-                };
-            } else {
-                Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
-            }
-        } catch (e) {
-            Workspace.Avaliacoes._lousaProfState = { turmaId: tid, ativa: false, recursos: false, ativadaEm: null };
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
+                turmaId: tid,
+                ativa: false,
+                recursos: false,
+                desativarTodas: true,
+                escolaId: Workspace.usuario?.escolaId || 'DEFAULT'
+            });
+        } catch (e) {}
+
+        Workspace.Avaliacoes._lousaProfState = {
+            turmaId: tid,
+            ativa: false,
+            recursos: false,
+            ativadaEm: null
+        };
+
+        // Carrega as telas numeradas exclusivas da turma selecionada
+        const iframe = document.getElementById('iframeLousaProf');
+        if (iframe) {
+            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`);
         }
         Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
@@ -3523,14 +3538,26 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         const btnView = document.getElementById('btn-toggle-view');
         const btnRecursos = document.getElementById('btn-toggle-resources');
         const statusText = document.getElementById('ws-prof-lousa-status-modal');
-        const { ativa, recursos, ativadaEm } = Workspace.Avaliacoes._lousaProfState;
+        const { turmaId, ativa, recursos, ativadaEm } = Workspace.Avaliacoes._lousaProfState;
+        const semTurma = (!turmaId || turmaId === 'nenhuma');
 
         if (btnView) {
-            btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa para Turma';
-            btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
+            if (semTurma) {
+                btnView.disabled = true;
+                btnView.style.opacity = '0.45';
+                btnView.style.cursor = 'not-allowed';
+                btnView.style.background = '#475569';
+                btnView.innerHTML = '🚫 Selecione uma Turma';
+            } else {
+                btnView.disabled = false;
+                btnView.style.opacity = '1';
+                btnView.style.cursor = 'pointer';
+                btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa para Turma';
+                btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
+            }
         }
         if (btnRecursos) {
-            if (!ativa) {
+            if (semTurma || !ativa) {
                 btnRecursos.style.display = 'inline-flex';
                 btnRecursos.disabled = true;
                 btnRecursos.style.opacity = '0.45';
@@ -3547,23 +3574,31 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             }
         }
         if (statusText) {
-            statusText.innerHTML = ativa ? (recursos ? '🟢 Ativa + Recursos Liberados' : '🟡 Ativa (Apenas Visualização)') : '⚪ Lousa Inativa';
-            statusText.style.color = ativa ? (recursos ? '#10B981' : '#F59E0B') : '#94a3b8';
+            if (semTurma) {
+                statusText.innerHTML = '⚪ Ninguém (Desativada)';
+                statusText.style.color = '#94a3b8';
+            } else {
+                statusText.innerHTML = ativa ? (recursos ? '🟢 Ativa + Recursos Liberados' : '🟡 Ativa (Apenas Visualização)') : '⚪ Inativa para a Turma';
+                statusText.style.color = ativa ? (recursos ? '#10B981' : '#F59E0B') : '#94a3b8';
+            }
         }
 
-        Workspace.Avaliacoes.gerirRelogioUsoLousa(ativa, ativadaEm);
+        Workspace.Avaliacoes.gerirRelogioUsoLousa(ativa && !semTurma, ativadaEm);
     },
 
     toggleVisualizacao: async () => {
         const { turmaId, ativa } = Workspace.Avaliacoes._lousaProfState;
+        if (!turmaId || turmaId === 'nenhuma') {
+            Workspace.mostrarAviso('Selecione primeiro uma turma no topo antes de ativar a lousa!', 'warning');
+            return;
+        }
         const novoEstadoAtiva = !ativa;
-        const novosRecursos = false;
-        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstadoAtiva, novosRecursos);
+        await Workspace.Avaliacoes.enviarComandoLousaStatus(turmaId, novoEstadoAtiva, false);
     },
 
     toggleRecursos: async () => {
         const { turmaId, ativa, recursos } = Workspace.Avaliacoes._lousaProfState;
-        if (!ativa) {
+        if (!turmaId || turmaId === 'nenhuma' || !ativa) {
             Workspace.mostrarAviso('Ative primeiro a Lousa para a turma antes de liberar os recursos!', 'warning');
             return;
         }
@@ -3572,7 +3607,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
 
     enviarComandoLousaStatus: async (turmaId, ativa, recursos) => {
         const escolaId = Workspace.usuario?.escolaId || 'DEFAULT';
-        const lousaAtiva = !!ativa;
+        const lousaAtiva = (turmaId && turmaId !== 'nenhuma') ? !!ativa : false;
         const recursosAtivos = lousaAtiva ? !!recursos : false;
         try {
             const res = await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
@@ -3610,6 +3645,16 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
     },
 
     fecharLousaProfessor: async () => {
+        try {
+            await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
+                turmaId: 'nenhuma',
+                ativa: false,
+                recursos: false,
+                desativarTodas: true,
+                escolaId: Workspace.usuario?.escolaId || 'DEFAULT'
+            });
+        } catch (e) {}
+        Workspace.Avaliacoes.gerirRelogioUsoLousa(false, null);
         const modal = document.getElementById('ws-modal-lousa-prof');
         const iframe = document.getElementById('iframeLousaProf');
         if (modal) modal.style.display = 'none';
