@@ -200,27 +200,254 @@
       #btn-open-infographic:hover{ background: #ecfdf5 !important; border-color: #6ee7b7 !important; color: #065f46 !important; }
       #btn-open-mindmap:hover{ background: #f5f3ff !important; border-color: #c4b5fd !important; color: #5b21b6 !important; }
     }
+    
     @media (max-width: 900px) {
+      /* Layout mobile em 3 áreas: topo / lousa / base */
+      #lousa-app{
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        grid-template-areas:
+          "top"
+          "main"
+          "bottom";
+        height: 100dvh;
+        overflow: hidden;
+        background: #f1f5f9;
+      }
       .sidebar-left{ display: contents; }
       .sidebar-brand{ display: none !important; }
       .sidebar-scroll{ display: contents; }
-      .sidebar-section{ background: transparent !important; border: 0 !important; padding: 0 !important; gap: 6px !important; }
-      .sidebar-section.tools{ background: transparent !important; border: 0 !important; padding: 0 !important; }
-      .lousa-top-bar { width: calc(100% - 12px); margin: 6px auto 0 auto; padding: 6px 8px; gap: 6px; border-radius: 14px; flex-wrap: wrap; justify-content: center; overflow-x: visible; }
-      .top-group { flex-wrap: wrap; justify-content: center; gap: 5px; }
-      .top-divider, .tool-divider { display: none; }
-      #canvas-stage { padding: 6px 6px 8px 6px; }
-      #lousa-canvas { border-radius: 12px; }
-      .lousa-bottom-bar { width: calc(100% - 12px); margin: 0 auto max(22px, calc(env(safe-area-inset-bottom, 12px) + 18px)) auto; padding: 8px; gap: 6px; border-radius: 16px; flex-wrap: wrap; justify-content: center; overflow-x: visible; }
-      .tool-btn { height: 36px; padding: 0 9px; font-size: 12px; border-radius: 10px; flex: 1 1 auto; min-width: calc(20% - 6px); }
-      .screens-group { padding: 4px; }
-      .screen-nav-btn { height: 28px; min-width: 28px; padding: 0 7px; font-size: 11px; }
-      #select-screen-number { min-width: 120px; height: 28px; font-size: 11px; }
-      .picker-trigger-btn, #select-fundo, .action-pill, .size-btn { height: 28px; padding: 0 8px; font-size: 11px; }
+      /* TOPO MOBILE - compacto, branco, com scroll vertical limitado */
+      #ui-top-bar{
+        grid-area: top;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 0;
+        background: #ffffff;
+        border: 0;
+        border-bottom: 1px solid #e2e8f0;
+        box-shadow: 0 2px 12px rgba(15,23,42,0.06);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        padding: 10px 10px 8px 10px;
+        gap: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        max-height: 44vh;
+        overflow-y: auto;
+        overflow-x: hidden;
+        -webkit-overflow-scrolling: touch;
+      }
+      #ui-top-bar::-webkit-scrollbar{ width: 4px; }
+      #ui-top-bar::-webkit-scrollbar-thumb{ background: #cbd5e1; border-radius: 999px; }
+      .sidebar-section{
+        background: #f8fafc;
+        border: 1px solid #e2e8f0;
+        border-radius: 12px;
+        padding: 8px;
+        gap: 8px;
+        display: flex;
+        flex-direction: column;
+        width: 100%;
+      }
+      .sidebar-section.tools{ background: #ffffff; }
+      .sidebar-section-title{
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: #64748b;
+        margin: 0 0 2px 2px;
+      }
+      /* Telas - horizontal scroll */
+      .screens-group{
+        background: #0f172a;
+        border: 1px solid #1e293b;
+        border-radius: 12px;
+        padding: 6px;
+        gap: 6px;
+        width: 100%;
+        overflow-x: auto;
+        flex-wrap: nowrap;
+        -webkit-overflow-scrolling: touch;
+      }
+      .screens-group::-webkit-scrollbar{ display: none; }
+      .screen-nav-btn{
+        height: 34px;
+        min-width: 34px;
+        padding: 0 10px;
+        font-size: 12px;
+        border-radius: 10px;
+        flex-shrink: 0;
+      }
+      #select-screen-number{
+        min-width: 110px;
+        flex: 1;
+        height: 34px;
+        font-size: 12px;
+        background: #1e293b;
+        color: #f1f5f9;
+        border-color: #334155;
+      }
+      .top-group{ width: 100%; flex-direction: column; align-items: stretch; gap: 8px; }
+      .top-divider{ display: none; }
+      .picker-trigger-btn{
+        width: 100%;
+        height: 40px;
+        border-radius: 12px;
+        background: #ffffff;
+        border: 1.5px solid #e2e8f0;
+        justify-content: space-between;
+      }
+      #select-fundo{
+        width: 100%;
+        height: 40px;
+        border-radius: 12px;
+        border: 1.5px solid #e2e8f0;
+        background: #ffffff;
+      }
+      .size-btn{ flex: 1; height: 38px; border-radius: 10px; font-size: 12px; border-width: 1.5px; }
+      .action-pill{ flex: 1; height: 38px; border-radius: 10px; font-size: 12px; justify-content: center; border-width: 1.5px; background: #ffffff; }
+      /* CANVAS - ocupa o meio, sem padding exagerado */
+      #canvas-stage{
+        grid-area: main;
+        width: 100%;
+        height: auto;
+        min-height: 0;
+        padding: 8px;
+        background: radial-gradient(rgba(148,163,184,0.18) 1.2px, transparent 1.2px) 0 0 / 20px 20px, linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
+        overflow: hidden;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      #lousa-canvas{
+        border-radius: 12px;
+        width: 100% !important;
+        height: auto !important;
+        max-width: 100%;
+        max-height: 100%;
+        box-shadow: 0 4px 16px rgba(15,23,42,0.10);
+      }
+      /* BOTTOM BAR MOBILE - sheet branco, fácil de tocar */
+      #ui-bottom-bar{
+        grid-area: bottom;
+        width: 100%;
+        max-width: 100%;
+        margin: 0;
+        border-radius: 16px 16px 0 0;
+        background: #ffffff;
+        border: 0;
+        border-top: 1px solid #e2e8f0;
+        box-shadow: 0 -8px 24px rgba(15,23,42,0.08);
+        backdrop-filter: none;
+        -webkit-backdrop-filter: none;
+        padding: 10px 10px calc(10px + env(safe-area-inset-bottom, 0px)) 10px;
+        gap: 8px;
+        display: flex;
+        flex-direction: column;
+        align-items: stretch;
+        overflow-y: auto;
+        max-height: 38vh;
+        -webkit-overflow-scrolling: touch;
+      }
+      #ui-bottom-bar .sidebar-section-title{
+        font-size: 10px;
+        margin-bottom: 4px;
+        color: #64748b;
+      }
+      #ui-bottom-bar .sidebar-section.tools{
+        background: transparent;
+        border: 0;
+        padding: 0;
+        gap: 8px;
+        box-shadow: none;
+      }
+      /* Grid de ferramentas 2 colunas no celular */
+      #ui-bottom-bar .tool-btn{
+        background: #f8fafc;
+        border: 1.5px solid #e2e8f0;
+        color: #0f172a;
+        height: 48px;
+        border-radius: 12px;
+        font-size: 13px;
+        font-weight: 700;
+        flex: 0 0 calc(50% - 4px);
+        width: calc(50% - 4px);
+        justify-content: flex-start;
+        padding: 0 12px;
+        gap: 8px;
+        box-shadow: 0 1px 2px rgba(15,23,42,0.04);
+      }
+      #ui-bottom-bar .tool-btn.active{
+        background: #0f172a;
+        color: #ffffff;
+        border-color: #0f172a;
+        box-shadow: 0 4px 12px rgba(15,23,42,0.18);
+      }
+      /* Container flex wrap para os botões */
+      #ui-bottom-bar .sidebar-section.tools{
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+      }
+      #ui-bottom-bar .sidebar-section.tools .sidebar-section-title{
+        flex: 0 0 100%;
+        width: 100%;
+      }
+      #ui-bottom-bar #btn-open-shapes-popover,
+      #ui-bottom-bar #btn-open-infographic,
+      #ui-bottom-bar #btn-open-mindmap{
+        background: #ffffff !important;
+        border: 1.5px solid #e2e8f0 !important;
+        color: #334155 !important;
+        flex: 0 0 100% !important;
+        width: 100% !important;
+      }
+      #ui-bottom-bar #btn-open-shapes-popover{ order: 1; }
+      #ui-bottom-bar #btn-open-infographic{ order: 2; }
+      #ui-bottom-bar #btn-open-mindmap{ order: 3; }
+      .tool-divider{ display: none; }
+      /* Popovers viram bottom sheet no mobile */
+      .floating-popover{
+        position: fixed;
+        left: 8px;
+        right: 8px;
+        bottom: 8px;
+        top: auto;
+        min-width: 0;
+        width: auto;
+        max-height: 70vh;
+        overflow-y: auto;
+        border-radius: 20px;
+        box-shadow: 0 24px 64px rgba(15,23,42,0.24);
+        z-index: 80;
+      }
+      #text-editor-box{
+        left: 8px;
+        right: 8px;
+        width: auto;
+        max-width: none;
+        bottom: 8px;
+        top: auto;
+        border-radius: 16px;
+      }
+      #badge-somente-leitura{
+        bottom: 12px;
+        font-size: 11px;
+        padding: 6px 12px;
+      }
+    }
+    /* Melhorias extras touch */
+    @media (max-width: 900px) and (pointer: coarse){
+      .tool-btn, .screen-nav-btn, .size-btn, .action-pill, .picker-trigger-btn, #select-fundo{
+        min-height: 44px;
+      }
     }
   </style>
 <link rel="manifest" href="/manifest.webmanifest"></head>
-<body>
   <div id="lousa-app">
     <!-- SIDEBAR ESQUERDA - contém tudo -->
     <div class="sidebar-left" id="sidebar-left">
@@ -412,6 +639,7 @@
       <div style="background:rgba(255,255,255,0.1); padding:8px 16px; border-radius:20px; font-size:12px; font-weight:700;">🔄 Conectado em tempo real</div>
     </div>
   </div>
+  
   <script>
     (function() {
       const CLIENT_ID = 'lousa_ptt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
@@ -2734,6 +2962,7 @@
         carregarDadosDaNuvem(true);
       }
     })();
+  
   
   </script>
 </body>
