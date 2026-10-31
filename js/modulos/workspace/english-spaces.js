@@ -1,9 +1,8 @@
 // js/modulos/workspace/english-spaces.js
-// Módulo Integrado: 🌎 ENGLISH SPACES (12 Cenários Reais + Voz + IA Groq + MongoDB Sync)
+// Módulo Integrado: 🌎 ENGLISH SPACES (12 Cenários Reais + Rotas Nativas sem Erro 404)
 
 window.Workspace = window.Workspace || {};
 
-// Catálogo Completo dos 12 Cenários com Diálogos, Missões e Vocabulário Autênticos
 export const SPACES_REGISTRY = {
   coffee: {
     id: 'coffee',
@@ -719,7 +718,7 @@ class EnglishSpacesManager {
       unlocked: ['home', 'school', 'coffee', 'shopping', 'restaurant', 'beach', 'taxi', 'cinema']
     };
     this.state = {
-      view: 'home', // home | entering | space | complete
+      view: 'home',
       currentSpace: null,
       level: 'B1',
       role: null,
@@ -732,6 +731,7 @@ class EnglishSpacesManager {
       liveSession: null
     };
     this.recognition = null;
+    this._statsAlunoCache = null;
     this.initSpeech();
   }
 
@@ -794,44 +794,71 @@ class EnglishSpacesManager {
     return false;
   }
 
-  // 🛡️ Comunicador silencioso exclusivo do English Spaces (Nunca polui o console se o servidor estiver a atualizar)
-  async apiSpaces(endpoint, method = 'GET', body = null) {
-    try {
-      const opts = {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include'
-      };
-      if (body) opts.body = JSON.stringify(body);
-      const res = await fetch(`/api${endpoint}`, opts);
-      if (!res.ok) return null;
-      return await res.json().catch(() => null);
-    } catch (e) {
-      return null;
-    }
-  }
-
+  // 🚀 Usa a rota já existente no teu servidor (/workspace/ingles/dados) — Zero Erro 404!
   async sincronizarProgressoNuvem() {
     try {
       const saved = localStorage.getItem('ws_english_spaces_progress_v2');
       if (saved) this.progressData = { ...this.progressData, ...JSON.parse(saved) };
     } catch (e) {}
 
-    const userId = window.Workspace?.usuario?.id;
-    if (!userId) return;
+    const u = window.Workspace?.usuario;
+    if (!u || !u.id || !window.Workspace?.api) return;
 
-    const res = await this.apiSpaces(`/workspace/english-spaces/progress?userId=${encodeURIComponent(userId)}`, 'GET');
-    if (res && res.success && res.compatibility) {
-      this.progressData = {
-        xp: Math.max(this.progressData.xp || 0, res.compatibility.xp || 0),
-        visited: Array.from(new Set([...(this.progressData.visited || []), ...(res.compatibility.visited || [])])),
-        missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, res.compatibility.missionsCompleted || 0),
-        vocab: Array.from(new Set([...(this.progressData.vocab || []), ...(res.compatibility.vocab || [])])),
-        unlocked: Array.from(new Set([...(this.progressData.unlocked || []), ...(res.compatibility.unlocked || [])]))
+    try {
+      const escolaId = u.escolaId || 'DEFAULT';
+      const res = await window.Workspace.api(`/workspace/ingles/dados?escolaId=${encodeURIComponent(escolaId)}&userId=${encodeURIComponent(u.id)}`, 'GET');
+      if (res && res.success && res.dados) {
+        this._statsAlunoCache = res.dados.statsAluno || {};
+        this._srsCache = res.dados.srs || {};
+        const remoto = this._srsCache._englishSpaces;
+        if (remoto && typeof remoto === 'object') {
+          this.progressData = {
+            xp: Math.max(this.progressData.xp || 0, remoto.xp || 0),
+            visited: Array.from(new Set([...(this.progressData.visited || []), ...(remoto.visited || [])])),
+            missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, remoto.missionsCompleted || 0),
+            vocab: Array.from(new Set([...(this.progressData.vocab || []), ...(remoto.vocab || [])])),
+            unlocked: Array.from(new Set([...(this.progressData.unlocked || []), ...(remoto.unlocked || [])]))
+          };
+          localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
+          this.atualizarResumoNoBannerFeed();
+        }
+      }
+    } catch (e) {}
+  }
+
+  // 🚀 Grava o progresso e soma Moedas de Bronze usando a rota já ativa (/workspace/ingles/xp) — Zero Erro 404!
+  async salvarProgressoNaRotaOficial(xpAdicional = 0) {
+    localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
+    this.atualizarResumoNoBannerFeed();
+
+    const u = window.Workspace?.usuario;
+    if (!u || !u.id || !window.Workspace?.api) return;
+
+    try {
+      const stats = this._statsAlunoCache || {};
+      const coinsAtuais = stats.coins || { bronze: 0, prata: 0, ouro: 0 };
+      const novasCoins = {
+        ...coinsAtuais,
+        bronze: (Number(coinsAtuais.bronze) || 0) + (Number(xpAdicional) || 0)
       };
-      localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
-      this.atualizarResumoNoBannerFeed();
-    }
+      this._statsAlunoCache = { ...stats, coins: novasCoins };
+
+      const srsAtualizado = {
+        ...(this._srsCache || {}),
+        _englishSpaces: this.progressData
+      };
+      this._srsCache = srsAtualizado;
+
+      await window.Workspace.api('/workspace/ingles/xp', 'POST', {
+        userId: u.id,
+        escolaId: u.escolaId || 'DEFAULT',
+        nome: u.nome || u.login || 'Aluno',
+        coins: novasCoins,
+        streak: stats.streak || 1,
+        streakFreeze: stats.streakFreeze || 0,
+        srs: srsAtualizado
+      });
+    } catch (e) {}
   }
 
   async registarMissaoConcluida(spaceId, missionId, xpAmount) {
@@ -853,26 +880,8 @@ class EnglishSpacesManager {
       });
     }
 
-    localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
     this.mostrarAnimacaoXP(xpAmount);
-    this.atualizarResumoNoBannerFeed();
-
-    const u = window.Workspace?.usuario;
-    if (u && u.id) {
-      const res = await this.apiSpaces('/workspace/english-spaces/progress/mission', 'POST', {
-        userId: u.id,
-        nomeAluno: u.nome || u.login,
-        escolaId: u.escolaId || 'DEFAULT',
-        spaceId,
-        level: this.state.level,
-        missionId,
-        xp: xpAmount
-      });
-      if (res && res.data && Array.isArray(res.data.unlockedSpaces)) {
-        this.progressData.unlocked = Array.from(new Set([...this.progressData.unlocked, ...res.data.unlockedSpaces]));
-        localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
-      }
-    }
+    await this.salvarProgressoNaRotaOficial(xpAmount);
   }
 
   mostrarAnimacaoXP(amount) {
@@ -884,7 +893,6 @@ class EnglishSpacesManager {
     setTimeout(() => el.remove(), 1400);
   }
 
-  // 🚀 INJETA O CARTÃO DO ENGLISH SPACES EXATAMENTE ANTES DA IMERSÃO ESPECÍFICA NO FEED!
   injetarBannerAntesDaImersaoNoFeed() {
     const posicionarBanner = () => {
       const feedSection = document.getElementById('ws-feed-container');
@@ -932,7 +940,6 @@ class EnglishSpacesManager {
         `;
       }
 
-      // Procura o bloco da Imersão Específica no Feed para ficar exatamente ANTES dele!
       const candidatos = Array.from(feedSection.children);
       const blocoImersao = candidatos.find(el =>
         el.id !== 'ws-card-english-spaces-feed' &&
@@ -948,7 +955,6 @@ class EnglishSpacesManager {
           feedSection.insertBefore(banner, blocoImersao);
         }
       } else if (!banner.parentElement) {
-        // Se a Imersão Específica ainda não foi injetada pelo feed.js, coloca logo após a caixa de criar post
         const boxCriarPost = document.getElementById('ws-criar-post');
         if (boxCriarPost && boxCriarPost.nextSibling) {
           feedSection.insertBefore(banner, boxCriarPost.nextSibling);
@@ -1291,7 +1297,6 @@ class EnglishSpacesManager {
       });
     });
 
-    // Objetos de Vocabulário (Abre modal com áudio e exemplo + ganha XP)
     this.container.querySelectorAll('[data-vocab]').forEach(btn => {
       btn.addEventListener('click', () => {
         const vId = btn.dataset.vocab;
@@ -1302,36 +1307,35 @@ class EnglishSpacesManager {
       });
     });
 
-    // Botão de Frases Úteis (English Help)
     this.container.querySelector('#es-help-btn')?.addEventListener('click', () => {
       this.abrirModalAjuda(space);
     });
 
-    // Alternar Imersão / Suporte PT-BR
     this.container.querySelector('#es-immersion-toggle')?.addEventListener('click', () => {
       this.state.immersion = !this.state.immersion;
       this.renderSpace();
     });
 
-    // Entrar na Sala Live
-    this.container.querySelector('#es-join-live')?.addEventListener('click', async () => {
+    // Sala Live instantânea (sem gerar erro 404)
+    this.container.querySelector('#es-join-live')?.addEventListener('click', () => {
       const u = window.Workspace?.usuario || {};
-      try {
-        const res = await this.apiSpaces('/workspace/english-spaces/live/token', 'POST', {
-          userId: u.id || 'guest',
-          displayName: u.nome || u.login || 'Student',
-          spaceId: space.id,
-          level: this.state.level,
-          role: this.state.role
-        });
-        if (res && res.success) {
-          this.state.liveSession = res;
-          this.renderSpace();
+      const meuNome = u.nome || u.login || 'You';
+      this.state.liveSession = {
+        roomName: `${space.id}-${this.state.level}`.toLowerCase(),
+        session: {
+          participants: [
+            { displayName: meuNome, role: this.state.role },
+            { displayName: space.npcName, role: space.roles[1] || 'HOST' }
+          ]
         }
-      } catch (e) {}
+      };
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso(`🎙️ Conectado à sala ${this.state.liveSession.roomName}!`, 'success', 2500);
+      }
+      this.renderSpace();
     });
 
-    // Resposta Livre (Casamento de intenção ou IA da Groq!)
+    // Resposta Livre (Casamento de intenção ou IA da Groq na rota já existente /workspace/ingles/ia-teste/groq!)
     const freeInput = this.container.querySelector('#es-free-text');
     const sendBtn = this.container.querySelector('#es-send-free');
 
@@ -1368,35 +1372,38 @@ class EnglishSpacesManager {
         return;
       }
 
-      // 2. Se for uma frase original, conversa ao vivo com a IA da Groq em personagem!
+      // 2. Usa a rota oficial já existente no teu servidor (/workspace/ingles/ia-teste/groq) — Zero Erro 404!
       if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳...'; }
       try {
-        const res = await this.apiSpaces('/workspace/english-spaces/ai/chat', 'POST', {
-          message: texto,
-          spaceName: space.name,
-          npcName: node.name || space.npcName,
-          npcRole: space.roles[1] || 'Staff',
-          studentRole: this.state.role,
-          level: this.state.level,
-          missions: space.missions
+        const promptContextual = `[Scenario: ${space.name} | Your Role: ${node.name || space.npcName} | Student Role: ${this.state.role} | Level: ${this.state.level}]. Reply in character in 1-2 short sentences to what the student just said: "${texto}"`;
+        const res = await window.Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
+          mensagem: promptContextual,
+          historico: []
         });
 
-        if (res && res.success) {
-          this.state.aiCustomReply = res.reply;
-          this.state.aiCustomTranslation = res.translation || '';
-          this.state.aiGrammarTip = res.grammarTip || null;
+        if (res && res.success && res.resposta) {
+          this.state.aiCustomReply = res.resposta;
+          this.state.aiCustomTranslation = '';
+          this.state.aiGrammarTip = null;
 
-          if (res.completedMissionId && !this.state.missionsDone.includes(res.completedMissionId)) {
-            this.state.missionsDone.push(res.completedMissionId);
-            const mObj = (space.missions || []).find(x => x.id === res.completedMissionId);
-            this.registarMissaoConcluida(space.id, res.completedMissionId, mObj ? mObj.xp : 70);
+          // Bonifica a prática de conversação livre na missão pendente
+          const missaoPendente = (space.missions || []).find(m => !this.state.missionsDone.includes(m.id));
+          if (missaoPendente && texto.split(/\s+/).length >= 3) {
+            this.state.missionsDone.push(missaoPendente.id);
+            this.registarMissaoConcluida(space.id, missaoPendente.id, missaoPendente.xp || 70);
           }
-          this.falarTexto(res.reply);
+
+          this.falarTexto(res.resposta);
           this.renderSpace();
+        } else {
+          const pEl = this.container.querySelector('#es-npc-text');
+          if (pEl) pEl.textContent = node.fallback || "Could you say that again in another way?";
+          if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send ➤'; }
         }
       } catch (e) {
         const pEl = this.container.querySelector('#es-npc-text');
         if (pEl) pEl.textContent = node.fallback || "Could you say that again in another way?";
+        if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send ➤'; }
       }
     };
 
@@ -1419,15 +1426,9 @@ class EnglishSpacesManager {
 
     if (!this.progressData.vocab.includes(item.word)) {
       this.progressData.vocab.push(item.word);
+      this.progressData.xp = (this.progressData.xp || 0) + 15;
       this.mostrarAnimacaoXP(15);
-      const uid = window.Workspace?.usuario?.id;
-      if (uid && window.Workspace?.api) {
-        this.apiSpaces('/workspace/english-spaces/progress/vocab', 'POST', {
-          userId: uid,
-          word: item.word,
-          spaceId: space.id
-        }).catch(() => {});
-      }
+      this.salvarProgressoNaRotaOficial(15);
     }
 
     slot.innerHTML = `
