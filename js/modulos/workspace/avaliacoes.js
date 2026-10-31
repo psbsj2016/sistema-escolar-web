@@ -3452,27 +3452,47 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         Workspace.Avaliacoes._lousaTimerInterval = setInterval(atualizarVisores, 1000);
     },
 
-    carregarTurmasLousaProf: async () => {
+   carregarTurmasLousaProf: async () => {
         const selModal = document.getElementById('ws-prof-turma-lousa-modal');
         try {
-            const turmas = await Workspace.api('/turmas', 'GET');
+            const resTurmas = await Workspace.api('/turmas', 'GET');
+            const listaTurmas = Array.isArray(resTurmas) ? resTurmas : (Array.isArray(resTurmas?.turmas) ? resTurmas.turmas : []);
             const optionsHtml =
                 '<option value="nenhuma">🚫 Ninguém</option>' +
                 '<option value="global">🌍 Público Geral</option>' + 
-                (turmas || []).map(t => `<option value="${t.id || t._id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
+                listaTurmas.map(t => `<option value="${t.id || t._id || t.nome}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
             if (selModal) selModal.innerHTML = optionsHtml;
         } catch(e) {
             if (selModal) {
-                selModal.innerHTML = '<option value="nenhuma">🚫 Ninguém (Selecionar Turma)</option><option value="global">🌍 Público Geral</option>';
+                selModal.innerHTML = '<option value="nenhuma">🚫 Ninguém</option><option value="global">🌍 Público Geral</option>';
             }
         }
     },
 
     abrirLousaProfessor: async () => {
         // 🔒 MODO PADRÃO OBRIGATÓRIO: Inicia SEMPRE em "Ninguém" com Visualização Desativada e Recursos Desativados!
-        const tid = 'nenhuma';
         Workspace.Avaliacoes.garantirElementoCronometroLousa();
+        Workspace.Avaliacoes._lousaProfState = {
+            turmaId: 'nenhuma',
+            ativa: false,
+            recursos: false,
+            ativadaEm: null
+        };
+
+        const modal = document.getElementById('ws-modal-lousa-prof');
+        const iframe = document.getElementById('iframeLousaProf');
+        if (modal) {
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+        if (iframe) {
+            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=nenhuma&_t=${Date.now()}`);
+        }
+
         await Workspace.Avaliacoes.carregarTurmasLousaProf();
+        const selModal = document.getElementById('ws-prof-turma-lousa-modal');
+        if (selModal) selModal.value = 'nenhuma';
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
 
         try {
             await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
@@ -3483,32 +3503,34 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 escolaId: Workspace.usuario?.escolaId || 'DEFAULT'
             });
         } catch (e) {}
-
-        Workspace.Avaliacoes._lousaProfState = {
-            turmaId: 'nenhuma',
-            ativa: false,
-            recursos: false,
-            ativadaEm: null
-        };
-        
-        const modal = document.getElementById('ws-modal-lousa-prof');
-        const iframe = document.getElementById('iframeLousaProf');
-        const selModal = document.getElementById('ws-prof-turma-lousa-modal');
-        
-        if (selModal) selModal.value = 'nenhuma';
-        if (iframe) iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=nenhuma&_t=${Date.now()}`);
-        
-        if (modal) {
-            modal.style.display = 'flex';
-            document.body.style.overflow = 'hidden';
-        }
-        Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
     mudarTurmaLousaIframe: async (turmaId) => {
         const tid = String(turmaId || 'nenhuma').trim();
 
-        // 🛑 PARADA INSTANTÂNEA: Ao trocar de turma no seletor, desativa imediatamente a visualização e os recursos da turma anterior!
+        // 1. Atualiza o estado local e destrava os botões na mesma fração de segundo!
+        Workspace.Avaliacoes._lousaProfState = {
+            turmaId: tid,
+            ativa: false,
+            recursos: false,
+            ativadaEm: null
+        };
+        Workspace.Avaliacoes.renderizarBotoesLousaProf();
+
+        // 2. Avisa o iframe da lousa para carregar as telas numeradas da turma escolhida sem recarregar a página!
+        const iframe = document.getElementById('iframeLousaProf');
+        if (iframe && iframe.contentWindow) {
+            try {
+                iframe.contentWindow.postMessage({
+                    type: 'STATUS_LOUSA_PROF',
+                    turmaId: tid,
+                    ativa: false,
+                    recursos: false
+                }, '*');
+            } catch (e) {}
+        }
+
+        // 3. Desativa imediatamente no servidor a visualização de qualquer turma anterior!
         try {
             await Workspace.api('/workspace/sala/workspace-lousa/status', 'PUT', {
                 turmaId: tid,
@@ -3518,20 +3540,6 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 escolaId: Workspace.usuario?.escolaId || 'DEFAULT'
             });
         } catch (e) {}
-
-        Workspace.Avaliacoes._lousaProfState = {
-            turmaId: tid,
-            ativa: false,
-            recursos: false,
-            ativadaEm: null
-        };
-
-        // Carrega as telas numeradas exclusivas da turma selecionada
-        const iframe = document.getElementById('iframeLousaProf');
-        if (iframe) {
-            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=${encodeURIComponent(tid)}&_t=${Date.now()}`);
-        }
-        Workspace.Avaliacoes.renderizarBotoesLousaProf();
     },
 
     renderizarBotoesLousaProf: () => {

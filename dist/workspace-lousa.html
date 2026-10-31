@@ -367,13 +367,32 @@
     /* Scrollbar hide + custom */
     * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
     @media (max-width: 900px) {
-      .lousa-top-bar { width: calc(100% - 12px); margin: 6px auto 0 auto; padding: 8px 10px; gap: 8px; border-radius: 16px; }
-      .lousa-bottom-bar { width: calc(100% - 12px); margin: 0 auto 8px auto; padding: 6px 8px; justify-content: flex-start; border-radius: 16px; }
-      #canvas-stage { padding: 10px 8px 12px 8px; }
-      #lousa-canvas { border-radius: 14px; }
+      .lousa-top-bar {
+        width: calc(100% - 12px); margin: 6px auto 0 auto; padding: 6px 8px;
+        gap: 6px; border-radius: 14px; flex-wrap: wrap; justify-content: center;
+        overflow-x: visible;
+      }
+      .top-group { flex-wrap: wrap; justify-content: center; gap: 5px; }
+      .top-divider, .tool-divider { display: none; }
+
+      #canvas-stage { padding: 6px 6px 8px 6px; }
+      #lousa-canvas { border-radius: 12px; }
+
+      /* Barra inferior desencostada do fundo e distribuída em grade sem precisar correr para o lado */
+      .lousa-bottom-bar {
+        width: calc(100% - 12px);
+        margin: 0 auto max(22px, calc(env(safe-area-inset-bottom, 12px) + 18px)) auto;
+        padding: 8px; gap: 6px; border-radius: 16px;
+        flex-wrap: wrap; justify-content: center; overflow-x: visible;
+      }
+      .tool-btn {
+        height: 36px; padding: 0 9px; font-size: 12px; border-radius: 10px;
+        flex: 1 1 auto; min-width: calc(20% - 6px);
+      }
       .screens-group { padding: 4px; }
-      .screen-nav-btn { height: 30px; min-width: 30px; padding: 0 8px; font-size: 11.5px; }
-      #select-screen-number { min-width: 132px; height: 30px; font-size: 11.5px; }
+      .screen-nav-btn { height: 28px; min-width: 28px; padding: 0 7px; font-size: 11px; }
+      #select-screen-number { min-width: 120px; height: 28px; font-size: 11px; }
+      .picker-trigger-btn, #select-fundo, .action-pill, .size-btn { height: 28px; padding: 0 8px; font-size: 11px; }
     }
     /* Micro details */
     .top-group select, .top-group button { font-family: 'Inter', sans-serif; }
@@ -2731,7 +2750,16 @@
           desenharQuadro();
         }
       }
+      function notificarCronometroParent(ativa, ativadaEm) {
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'LOUSA_TIMER_SYNC', ativa: !!ativa, ativadaEm: ativadaEm || null }, '*');
+          }
+        } catch (e) {}
+      }
+
       window._loadCloud = () => carregarDadosDaNuvem(true);
+
       window.addEventListener('message', (e) => {
         const d = e.data || {};
         if (d.type === 'LOCK_STATE') {
@@ -2740,18 +2768,29 @@
         }
         if (d.type === 'STATUS_LOUSA_PROF') {
           if (d.turmaId) {
+            const mudouTurma = (roomIdAtivo !== d.turmaId);
             roomIdAtivo = d.turmaId;
             roomIdOriginal = d.turmaId;
+            isAllowed = true;
             if (roomIdAtivo === 'nenhuma') {
-              isAllowed = false;
               shapes = [];
               screens = [{ id: 'tela_1', bgType: 'bg-grade', shapes: [], cam: { x: 0, y: 0, zoom: 1 } }];
               activeScreenIndex = 0;
+              initialLoadDone = true;
+              atualizarPermissoesUI();
+              desenharQuadro();
             } else {
-              isAllowed = true;
-              carregarDadosDaNuvem(true);
+              if (mudouTurma) {
+                shapes = [];
+                screens = [{ id: 'tela_1', bgType: 'bg-grade', shapes: [], cam: { x: 0, y: 0, zoom: 1 } }];
+                activeScreenIndex = 0;
+                desenharQuadro();
+              }
+              atualizarPermissoesUI();
+              carregarDadosDaNuvem(true).then(() => {
+                if (d.ativa) agendarSalvamentoNuvem(10);
+              });
             }
-            atualizarPermissoesUI();
           }
         }
         if (d.type === 'RELOAD_DADOS') {
@@ -2759,11 +2798,14 @@
         }
         if (d.type === 'FORCE_SAVE_DADOS') {
           initialLoadDone = true;
-          agendarSalvamentoNuvem(5);
+          agendarSalvamentoNuvem(10);
         }
       });
+
+      let verificarStatusAlunoFn = null;
+
       if (role === 'aluno') {
-        const verificarStatusAluno = async () => {
+        verificarStatusAlunoFn = async () => {
           try {
             const urlStatus = `/api/workspace/sala/workspace-lousa/status/${encodeURIComponent(roomIdOriginal)}?userId=${encodeURIComponent(userIdParam)}&alunoRefId=${encodeURIComponent(alunoRefIdParam)}&_t=${Date.now()}`;
             const res = await fetch(urlStatus, {
@@ -2775,11 +2817,14 @@
               const salaAlvo = data.salaAtivaId || data.idCanonico || roomIdOriginal;
               const mudouSala = (roomIdAtivo !== salaAlvo);
               const acabouDeLiberar = !isAllowed;
+              const mudouPermissao = (isReadonly !== !data.recursos);
+
               roomIdAtivo = salaAlvo;
               isAllowed = true;
               isReadonly = !data.recursos;
               notificarCronometroParent(true, data.ativadaEm);
-              if (acabouDeLiberar || mudouSala || isReadonly !== !data.recursos) {
+
+              if (acabouDeLiberar || mudouSala || mudouPermissao) {
                 atualizarPermissoesUI();
               }
               if (acabouDeLiberar || mudouSala) {
@@ -2794,17 +2839,21 @@
             }
           } catch (e) {}
         };
-        verificarStatusAluno();
-        setInterval(verificarStatusAluno, 2000);
+        verificarStatusAlunoFn();
+        setInterval(verificarStatusAlunoFn, 2000);
       } else {
-        // Professor inicia em "nenhuma" (bloqueado até selecionar turma e ativar)
-        roomIdAtivo = roomIdOriginal;
+        // No modo Professor, o quadro está sempre liberado para preparar a aula; se iniciar em 'nenhuma', usa rascunho local até escolher a turma
+        isAllowed = true;
+        isReadonly = false;
         if (!roomIdAtivo || roomIdAtivo === 'nenhuma') {
-          isAllowed = false;
-        } else {
-          isAllowed = true;
+          roomIdAtivo = 'nenhuma';
+          telaEspera.style.display = 'none';
+          uiTopBar.style.display = 'flex';
+          uiBottomBar.style.display = 'flex';
+          initialLoadDone = true;
         }
       }
+
       try {
         let escolaId = 'DEFAULT';
         try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado')).escolaId || 'DEFAULT'; } catch(e){}
@@ -2814,7 +2863,14 @@
             const data = JSON.parse(event.data);
             if (data.type === 'LOUSA_DADOS_CHANGED') {
               if (data.senderId && data.senderId === CLIENT_ID) return;
-              if (data.turmaId && roomIdAtivo && data.turmaId !== roomIdAtivo && data.turmaId !== 'global') return;
+              const mesmaSala =
+                !roomIdAtivo ||
+                data.turmaId === roomIdAtivo ||
+                data.turmaNome === roomIdAtivo ||
+                data.turmaId === roomIdOriginal ||
+                data.turmaNome === roomIdOriginal ||
+                data.turmaId === 'global';
+              if (!mesmaSala) return;
               if (Array.isArray(data.records)) {
                 aplicarRegistrosRecebidos(data.records, false);
               } else {
@@ -2822,18 +2878,23 @@
               }
             }
             if (data.type === 'LOUSA_STATUS_CHANGED' && role === 'aluno') {
-              isAllowed = !!data.ativa;
-              isReadonly = data.ativa ? !data.recursos : true;
-              if (data.ativa && data.turmaId) roomIdAtivo = data.turmaId;
-              else roomIdAtivo = 'nenhuma';
-              notificarCronometroParent(!!data.ativa, data.ativadaEm);
-              atualizarPermissoesUI();
-              if (data.ativa) carregarDadosDaNuvem(true);
+              if (typeof verificarStatusAlunoFn === 'function') {
+                verificarStatusAlunoFn();
+              }
             }
           } catch (e) {}
         };
       } catch (e) {}
-      atualizarPermissoesUI();
+
+      if (role === 'aluno') {
+        atualizarPermissoesUI();
+      } else {
+        telaEspera.style.display = 'none';
+        uiTopBar.style.display = 'flex';
+        uiBottomBar.style.display = 'flex';
+        atualizarCursorCanvas();
+        atualizarBarraNumeracaoTelas();
+      }
       ajustarTamanhoCanvas();
       if (roomIdAtivo && roomIdAtivo !== 'nenhuma') {
         carregarDadosDaNuvem(true);
