@@ -794,6 +794,23 @@ class EnglishSpacesManager {
     return false;
   }
 
+  // 🛡️ Comunicador silencioso exclusivo do English Spaces (Nunca polui o console se o servidor estiver a atualizar)
+  async apiSpaces(endpoint, method = 'GET', body = null) {
+    try {
+      const opts = {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include'
+      };
+      if (body) opts.body = JSON.stringify(body);
+      const res = await fetch(`/api${endpoint}`, opts);
+      if (!res.ok) return null;
+      return await res.json().catch(() => null);
+    } catch (e) {
+      return null;
+    }
+  }
+
   async sincronizarProgressoNuvem() {
     try {
       const saved = localStorage.getItem('ws_english_spaces_progress_v2');
@@ -801,22 +818,20 @@ class EnglishSpacesManager {
     } catch (e) {}
 
     const userId = window.Workspace?.usuario?.id;
-    if (!userId || !window.Workspace?.api) return;
+    if (!userId) return;
 
-    try {
-      const res = await window.Workspace.api(`/workspace/english-spaces/progress?userId=${encodeURIComponent(userId)}`, 'GET');
-      if (res && res.success && res.compatibility) {
-        this.progressData = {
-          xp: res.compatibility.xp || 0,
-          visited: res.compatibility.visited || [],
-          missionsCompleted: res.compatibility.missionsCompleted || 0,
-          vocab: res.compatibility.vocab || [],
-          unlocked: res.compatibility.unlocked || this.progressData.unlocked
-        };
-        localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
-        this.atualizarResumoNoBannerFeed();
-      }
-    } catch (e) {}
+    const res = await this.apiSpaces(`/workspace/english-spaces/progress?userId=${encodeURIComponent(userId)}`, 'GET');
+    if (res && res.success && res.compatibility) {
+      this.progressData = {
+        xp: Math.max(this.progressData.xp || 0, res.compatibility.xp || 0),
+        visited: Array.from(new Set([...(this.progressData.visited || []), ...(res.compatibility.visited || [])])),
+        missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, res.compatibility.missionsCompleted || 0),
+        vocab: Array.from(new Set([...(this.progressData.vocab || []), ...(res.compatibility.vocab || [])])),
+        unlocked: Array.from(new Set([...(this.progressData.unlocked || []), ...(res.compatibility.unlocked || [])]))
+      };
+      localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
+      this.atualizarResumoNoBannerFeed();
+    }
   }
 
   async registarMissaoConcluida(spaceId, missionId, xpAmount) {
@@ -827,13 +842,24 @@ class EnglishSpacesManager {
     if (!this.progressData.visited.includes(spaceId)) {
       this.progressData.visited.push(spaceId);
     }
+    if (this.progressData.xp >= 500) {
+      ['airport', 'hotel'].forEach(id => {
+        if (!this.progressData.unlocked.includes(id)) this.progressData.unlocked.push(id);
+      });
+    }
+    if (this.progressData.xp >= 1500) {
+      ['job', 'hospital'].forEach(id => {
+        if (!this.progressData.unlocked.includes(id)) this.progressData.unlocked.push(id);
+      });
+    }
+
     localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
     this.mostrarAnimacaoXP(xpAmount);
     this.atualizarResumoNoBannerFeed();
 
     const u = window.Workspace?.usuario;
-    if (u && u.id && window.Workspace?.api) {
-      window.Workspace.api('/workspace/english-spaces/progress/mission', 'POST', {
+    if (u && u.id) {
+      const res = await this.apiSpaces('/workspace/english-spaces/progress/mission', 'POST', {
         userId: u.id,
         nomeAluno: u.nome || u.login,
         escolaId: u.escolaId || 'DEFAULT',
@@ -841,12 +867,11 @@ class EnglishSpacesManager {
         level: this.state.level,
         missionId,
         xp: xpAmount
-      }).then(res => {
-        if (res && res.data && Array.isArray(res.data.unlockedSpaces)) {
-          this.progressData.unlocked = res.data.unlockedSpaces;
-          localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
-        }
-      }).catch(() => {});
+      });
+      if (res && res.data && Array.isArray(res.data.unlockedSpaces)) {
+        this.progressData.unlocked = Array.from(new Set([...this.progressData.unlocked, ...res.data.unlockedSpaces]));
+        localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
+      }
     }
   }
 
@@ -1292,7 +1317,7 @@ class EnglishSpacesManager {
     this.container.querySelector('#es-join-live')?.addEventListener('click', async () => {
       const u = window.Workspace?.usuario || {};
       try {
-        const res = await window.Workspace.api('/workspace/english-spaces/live/token', 'POST', {
+        const res = await this.apiSpaces('/workspace/english-spaces/live/token', 'POST', {
           userId: u.id || 'guest',
           displayName: u.nome || u.login || 'Student',
           spaceId: space.id,
@@ -1346,7 +1371,7 @@ class EnglishSpacesManager {
       // 2. Se for uma frase original, conversa ao vivo com a IA da Groq em personagem!
       if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳...'; }
       try {
-        const res = await window.Workspace.api('/workspace/english-spaces/ai/chat', 'POST', {
+        const res = await this.apiSpaces('/workspace/english-spaces/ai/chat', 'POST', {
           message: texto,
           spaceName: space.name,
           npcName: node.name || space.npcName,
@@ -1397,7 +1422,7 @@ class EnglishSpacesManager {
       this.mostrarAnimacaoXP(15);
       const uid = window.Workspace?.usuario?.id;
       if (uid && window.Workspace?.api) {
-        window.Workspace.api('/workspace/english-spaces/progress/vocab', 'POST', {
+        this.apiSpaces('/workspace/english-spaces/progress/vocab', 'POST', {
           userId: uid,
           word: item.word,
           spaceId: space.id
