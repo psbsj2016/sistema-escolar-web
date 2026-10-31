@@ -10,6 +10,7 @@ import './modulos/workspace/materiais.js';
 import './modulos/workspace/ingles.js'; 
 import './modulos/workspace/inglesprofessor.js';
 import './modulos/workspace/arena.js';
+import './modulos/workspace/english-spaces.js';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
@@ -437,6 +438,7 @@ Object.assign(Workspace, {
 
         // 🚀 PASSO 1: PREPARA OS MÓDULOS
         if (Workspace.Ingles) Workspace.Ingles.init(); 
+        if (Workspace.EnglishSpaces) Workspace.EnglishSpaces.init();
         if (Workspace.Materiais) Workspace.Materiais.init();
         if (Workspace.Avaliacoes) Workspace.Avaliacoes.init();
         if (Workspace.ComandoMágico) Workspace.ComandoMágico.init();
@@ -593,7 +595,8 @@ Object.assign(Workspace, {
             'perfil': 'ws-perfil-modal', 'avaliacoes_aluno': 'ws-avaliacoes-container', 'avaliacoes_prof': 'ws-avaliacoes-prof-container', 
             'avaliacoes_escrita': 'ws-avaliacoes-escrita-container', 'avaliacoes_oral': 'ws-avaliacoes-oral-container',
             'avaliacoes_online': 'ws-avaliacoes-online-container', 'encontros_prof': 'ws-avaliacoes-prof-container', 
-            'materiais': 'ws-materiais-container', 'ingles': 'ws-ingles-container'
+            'materiais': 'ws-materiais-container', 'ingles': 'ws-ingles-container',
+            'english_spaces': 'ws-english-spaces-container'
         };
 
         if (tela === 'tarefas') tela = Workspace.usuario.tipo === 'Aluno' ? 'tarefas_aluno' : 'tarefas_prof';
