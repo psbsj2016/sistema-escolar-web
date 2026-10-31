@@ -3457,8 +3457,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         try {
             const turmas = await Workspace.api('/turmas', 'GET');
             const optionsHtml =
-                '<option value="nenhuma">🚫 Ninguém (Selecionar Turma)</option>' +
-                '<option value="global">🌍 Público Geral (Todas as Turmas)</option>' + 
+                '<option value="nenhuma">🚫 Ninguém</option>' +
+                '<option value="global">🌍 Público Geral</option>' + 
                 (turmas || []).map(t => `<option value="${t.id || t._id}">📚 ${Workspace.escapeHTML ? Workspace.escapeHTML(t.nome || t.name) : (t.nome || t.name)}</option>`).join('');
             if (selModal) selModal.innerHTML = optionsHtml;
         } catch(e) {
@@ -3552,7 +3552,7 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 btnView.disabled = false;
                 btnView.style.opacity = '1';
                 btnView.style.cursor = 'pointer';
-                btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa para Turma';
+                btnView.innerHTML = ativa ? '🚫 Desativar Lousa' : '👁️ Ativar Lousa';
                 btnView.style.background = ativa ? '#e74c3c' : '#3b82f6';
             }
         }
@@ -3563,13 +3563,13 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
                 btnRecursos.style.opacity = '0.45';
                 btnRecursos.style.cursor = 'not-allowed';
                 btnRecursos.style.background = '#475569';
-                btnRecursos.innerHTML = '🔒 Recursos (Ative a Lousa)';
+                btnRecursos.innerHTML = '🔒 Ferramentas (Ative a Lousa)';
             } else {
                 btnRecursos.style.display = 'inline-flex';
                 btnRecursos.disabled = false;
                 btnRecursos.style.opacity = '1';
                 btnRecursos.style.cursor = 'pointer';
-                btnRecursos.innerHTML = recursos ? '🔒 Bloquear Recursos dos Alunos' : '🔓 Liberar Recursos p/ Alunos';
+                btnRecursos.innerHTML = recursos ? '🔒 Bloquear Ferramentas' : '🔓 Liberar Ferramentas';
                 btnRecursos.style.background = recursos ? '#e74c3c' : '#f59e0b';
             }
         }
