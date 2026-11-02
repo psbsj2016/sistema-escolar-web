@@ -1,3 +1,5 @@
+import './english-spaces-3d.js';
+
 // js/modulos/workspace/english-spaces.js
 // Módulo Integrado: 🌎 ENGLISH SPACES (12 Cenários Reais + Rotas Nativas sem Erro 404)
 
@@ -733,6 +735,10 @@ class EnglishSpacesManager {
     this.recognition = null;
     this._statsAlunoCache = null;
     this.initSpeech();
+  }
+
+  getSpacesRegistry() {
+    return SPACES_REGISTRY;
   }
 
   init() {
