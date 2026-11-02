@@ -1322,44 +1322,13 @@ class EnglishSpacesManager {
       this.renderSpace();
     });
 
-    // 🟢 ENTRAR NO PALCO 3D INTERATIVO (LIVE PRACTICE ROOM 3D)
-    this.container.querySelector('#es-join-live')?.addEventListener('click', async () => {
-      const u = window.Workspace?.usuario || {};
-      const meuNome = u.nome || u.login || 'You';
-      const meuId = u.id || 'user_local';
-
-      // Tenta sincronizar com a rota /live/token de forma silenciosa (e nunca falha mesmo se offline)
-      let dadosSala = null;
-      try {
-        const resp = await fetch('/api/workspace/english-spaces/live/token', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          credentials: 'include',
-          body: JSON.stringify({
-            userId: meuId,
-            displayName: meuNome,
-            spaceId: space.id,
-            level: this.state.level,
-            role: this.state.role
-          })
-        });
-        if (resp.ok) dadosSala = await resp.json().catch(() => null);
-      } catch (e) {}
-
-      if (!dadosSala || !dadosSala.success) {
-        dadosSala = {
-          roomName: `space-${space.id}-${this.state.level}`.toLowerCase(),
-          session: {
-            participants: [
-              { userId: meuId, displayName: meuNome, role: this.state.role },
-              { userId: 'npc_host', displayName: space.npcName, role: space.roles[1] || 'HOST' }
-            ]
-          }
-        };
+    // 🏙️ ENTRAR NA CIDADE 3D MULTIPLAYER COM AVATARES HUMANOS E PROXIMIDADE
+    this.container.querySelector('#es-join-live')?.addEventListener('click', () => {
+      if (window.Workspace?.EnglishSpaces3D) {
+        window.Workspace.EnglishSpaces3D.abrirCidade3D(this, space.id);
+      } else {
+        this.abrirSala3DInterativa(space, node);
       }
-
-      this.state.liveSession = dadosSala;
-      this.abrirSala3DInterativa(space, node);
     });
 
     // Resposta Livre (Casamento de intenção ou IA da Groq)
