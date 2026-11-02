@@ -11,6 +11,7 @@ import './modulos/workspace/ingles.js';
 import './modulos/workspace/inglesprofessor.js';
 import './modulos/workspace/arena.js';
 import './modulos/workspace/english-spaces.js';
+import './modulos/workspace/english-spaces-3d';
 
 window.Workspace = window.Workspace || {};
 const Workspace = window.Workspace;
