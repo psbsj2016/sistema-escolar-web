@@ -1316,26 +1316,47 @@ class EnglishSpacesManager {
       this.renderSpace();
     });
 
-    // Sala Live instantânea (sem gerar erro 404)
-    this.container.querySelector('#es-join-live')?.addEventListener('click', () => {
+    // 🟢 ENTRAR NO PALCO 3D INTERATIVO (LIVE PRACTICE ROOM 3D)
+    this.container.querySelector('#es-join-live')?.addEventListener('click', async () => {
       const u = window.Workspace?.usuario || {};
       const meuNome = u.nome || u.login || 'You';
-      this.state.liveSession = {
-        roomName: `${space.id}-${this.state.level}`.toLowerCase(),
-        session: {
-          participants: [
-            { displayName: meuNome, role: this.state.role },
-            { displayName: space.npcName, role: space.roles[1] || 'HOST' }
-          ]
-        }
-      };
-      if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso(`🎙️ Conectado à sala ${this.state.liveSession.roomName}!`, 'success', 2500);
+      const meuId = u.id || 'user_local';
+
+      // Tenta sincronizar com a rota /live/token de forma silenciosa (e nunca falha mesmo se offline)
+      let dadosSala = null;
+      try {
+        const resp = await fetch('/api/workspace/english-spaces/live/token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: meuId,
+            displayName: meuNome,
+            spaceId: space.id,
+            level: this.state.level,
+            role: this.state.role
+          })
+        });
+        if (resp.ok) dadosSala = await resp.json().catch(() => null);
+      } catch (e) {}
+
+      if (!dadosSala || !dadosSala.success) {
+        dadosSala = {
+          roomName: `space-${space.id}-${this.state.level}`.toLowerCase(),
+          session: {
+            participants: [
+              { userId: meuId, displayName: meuNome, role: this.state.role },
+              { userId: 'npc_host', displayName: space.npcName, role: space.roles[1] || 'HOST' }
+            ]
+          }
+        };
       }
-      this.renderSpace();
+
+      this.state.liveSession = dadosSala;
+      this.abrirSala3DInterativa(space, node);
     });
 
-    // Resposta Livre (Casamento de intenção ou IA da Groq na rota já existente /workspace/ingles/ia-teste/groq!)
+    // Resposta Livre (Casamento de intenção ou IA da Groq)
     const freeInput = this.container.querySelector('#es-free-text');
     const sendBtn = this.container.querySelector('#es-send-free');
 
@@ -1344,7 +1365,6 @@ class EnglishSpacesManager {
       if (!texto) return;
       const lower = texto.toLowerCase();
 
-      // 1. Verifica se bate com palavras-chave das opções do diálogo
       let matchedOpt = null;
       for (const opt of (node.options || [])) {
         if (opt.keywords && opt.keywords.some(kw => lower.includes(kw.toLowerCase()))) {
@@ -1372,7 +1392,6 @@ class EnglishSpacesManager {
         return;
       }
 
-      // 2. Usa a rota oficial já existente no teu servidor (/workspace/ingles/ia-teste/groq) — Zero Erro 404!
       if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳...'; }
       try {
         const promptContextual = `[Scenario: ${space.name} | Your Role: ${node.name || space.npcName} | Student Role: ${this.state.role} | Level: ${this.state.level}]. Reply in character in 1-2 short sentences to what the student just said: "${texto}"`;
@@ -1386,7 +1405,6 @@ class EnglishSpacesManager {
           this.state.aiCustomTranslation = '';
           this.state.aiGrammarTip = null;
 
-          // Bonifica a prática de conversação livre na missão pendente
           const missaoPendente = (space.missions || []).find(m => !this.state.missionsDone.includes(m.id));
           if (missaoPendente && texto.split(/\s+/).length >= 3) {
             this.state.missionsDone.push(missaoPendente.id);
@@ -1417,6 +1435,358 @@ class EnglishSpacesManager {
         if (freeInput) freeInput.value = falado;
         processarRespostaLivre();
       });
+    });
+  }
+
+  // =========================================================================
+  // 🌐 MOTOR 3D INTERATIVO DO LIVE PRACTICE ROOM (ISOMÉTRICO / 3D CANVAS PRO)
+  // =========================================================================
+  abrirSala3DInterativa(space, node) {
+    const slot = this.container.querySelector('#es-modal-slot');
+    if (!slot) return;
+
+    const u = window.Workspace?.usuario || {};
+    const meuNome = u.nome || u.login || 'You';
+
+    slot.innerHTML = `
+      <div class="es-modal-backdrop" style="padding:10px; background:rgba(3,4,12,0.92);">
+        <div style="width:100%; max-width:980px; height:86vh; background:#090a14; border:1.5px solid rgba(139,92,246,0.5); border-radius:24px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 70px rgba(0,0,0,0.75); position:relative;">
+          
+          <!-- Topo da Sala 3D -->
+          <div style="padding:12px 18px; background:rgba(15,15,28,0.95); border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; z-index:5;">
+            <div style="display:flex; align-items:center; gap:10px;">
+              <span style="font-size:24px;">${space.emoji}</span>
+              <div>
+                <div style="font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
+                  ${space.name} • 3D Live Room
+                  <span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-size:10.5px; padding:2px 8px; border-radius:999px;">🟢 LIVE 3D</span>
+                </div>
+                <div style="font-size:11.5px; color:#a1a1aa;">Clique no chão 3D ou use as setas / WASD para caminhar até ao balcão e falar em Inglês!</div>
+              </div>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span class="es-chip" style="color:#c4b5fd; border-color:#8b5cf6;">🎭 Role: ${this.state.role}</span>
+              <button type="button" id="es-3d-close-btn" style="background:#ef4444; color:#fff; border:none; padding:7px 14px; border-radius:999px; font-weight:800; font-size:12px; cursor:pointer;">✕ Leave 3D Room</button>
+            </div>
+          </div>
+
+          <!-- Palco 3D Interativo -->
+          <div id="es-3d-stage-wrap" style="flex:1; position:relative; overflow:hidden; background:#05060d;">
+            <canvas id="es-3d-canvas" style="width:100%; height:100%; display:block; cursor:pointer;"></canvas>
+
+            <!-- HUD Flutuante de Fala do NPC em 3D -->
+            <div id="es-3d-Dialogue-hud" style="position:absolute; top:14px; left:50%; transform:translateX(-50%); background:rgba(15,17,30,0.88); backdrop-filter:blur(10px); border:1px solid rgba(139,92,246,0.45); border-radius:16px; padding:12px 18px; width:92%; max-width:640px; pointer-events:auto; box-shadow:0 12px 30px rgba(0,0,0,0.45);">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+                <strong style="font-size:12.5px; color:#c4b5fd;">${space.emoji} ${space.npcName}</strong>
+                <button type="button" id="es-3d-listen-btn" style="background:rgba(139,92,246,0.25); color:#e9d5ff; border:none; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;">🔊 Listen</button>
+              </div>
+              <div id="es-3d-npc-speech" style="font-size:14.5px; color:#fff; font-weight:600; line-height:1.4;">"${this.state.aiCustomReply || node.text}"</div>
+            </div>
+          </div>
+
+          <!-- Barra Inferior de Voz e Chat 3D -->
+          <div style="padding:12px 16px; background:rgba(15,15,28,0.98); border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; align-items:center; flex-wrap:wrap; z-index:5;">
+            <input type="text" id="es-3d-input" placeholder="Say something to ${space.npcName} in the 3D room..." autocomplete="off" style="flex:1; min-width:200px; background:#141626; border:1px solid rgba(255,255,255,0.14); color:#fff; padding:10px 14px; border-radius:12px; font-size:13.5px; outline:none;" />
+            <button type="button" id="es-3d-send-btn" style="background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">💬 Send</button>
+            <button type="button" id="es-3d-mic-btn" style="background:#10b981; color:#fff; border:none; padding:10px 16px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">🎤 Speak in 3D</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    const canvas = slot.querySelector('#es-3d-canvas');
+    const wrap = slot.querySelector('#es-3d-stage-wrap');
+    const ctx = canvas.getContext('2d');
+
+    // Estado do Mundo 3D Isométrico / Perspetiva
+    let animId = null;
+    let tick = 0;
+    const player = {
+      x: 0,
+      z: 2.3,
+      targetX: 0,
+      targetZ: 2.3,
+      name: meuNome,
+      role: this.state.role || 'STUDENT',
+      color: '#8b5cf6',
+      bubble: 'Hello! 👋',
+      bubbleTimer: 180
+    };
+    const npc = {
+      x: 0,
+      z: -1.8,
+      name: space.npcName || 'Host',
+      role: space.roles[1] || 'HOST',
+      color: '#10b981',
+      bubble: this.state.aiCustomReply || node.text
+    };
+    const peer = {
+      x: -2.2,
+      z: 0.8,
+      name: 'Alex (Classmate)',
+      role: space.roles[0] || 'PARTICIPANT',
+      color: '#3b82f6',
+      bubble: `Practicing ${this.state.level} English!`
+    };
+
+    const redimensionar3D = () => {
+      const dpr = window.devicePixelRatio || 1;
+      const w = wrap.clientWidth || 800;
+      const h = wrap.clientHeight || 500;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    };
+    redimensionar3D();
+    window.addEventListener('resize', redimensionar3D);
+
+    // Projeção 3D -> 2D com perspetiva real
+    const projetar3D = (wx, wy, wz, w, h) => {
+      const fov = 420;
+      const camY = 3.2;
+      const camZ = 6.5;
+      const dz = camZ - wz;
+      const escala = fov / Math.max(1.2, dz);
+      return {
+        sx: w / 2 + wx * escala * 1.15,
+        sy: h * 0.62 + (wy - camY * 0.45 + wz * 0.55) * escala * 0.65,
+        scale: escala / 65
+      };
+    };
+
+    const desenharBoneco3D = (ch, w, h, isNpc = false) => {
+      const bob = Math.sin(tick * 0.08 + (isNpc ? 1.5 : 0)) * 0.06;
+      const base = projetar3D(ch.x, 0, ch.z, w, h);
+      const s = Math.max(0.55, base.scale);
+
+      ctx.save();
+      // Sombra projetada no piso 3D
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.beginPath();
+      ctx.ellipse(base.sx, base.sy, 22 * s, 9 * s, 0, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Corpo Cilíndrico 3D com gradiente
+      const bodyH = 44 * s;
+      const bodyW = 28 * s;
+      const bodyY = base.sy - bodyH - bob * 35;
+      const grad = ctx.createLinearGradient(base.sx - bodyW / 2, bodyY, base.sx + bodyW / 2, base.sy);
+      grad.addColorStop(0, ch.color);
+      grad.addColorStop(1, '#1e1b4b');
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.roundRect(base.sx - bodyW / 2, bodyY, bodyW, bodyH, 12 * s);
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+
+      // Cabeça Esférica 3D
+      const headR = 15 * s;
+      const headY = bodyY - headR + 2 * s;
+      ctx.fillStyle = '#fde68a';
+      ctx.beginPath();
+      ctx.arc(base.sx, headY, headR, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      // Olhos
+      ctx.fillStyle = '#0f172a';
+      ctx.beginPath();
+      ctx.arc(base.sx - 5 * s, headY - 1 * s, 2.2 * s, 0, Math.PI * 2);
+      ctx.arc(base.sx + 5 * s, headY - 1 * s, 2.2 * s, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Etiqueta de Nome e Papel (Role)
+      ctx.font = `800 ${Math.round(11 * s)}px Inter, sans-serif`;
+      const labelTxt = `${ch.name} [${ch.role}]`;
+      const tw = ctx.measureText(labelTxt).width + 14;
+      ctx.fillStyle = 'rgba(9, 10, 20, 0.85)';
+      ctx.beginPath();
+      ctx.roundRect(base.sx - tw / 2, headY - headR - 24 * s, tw, 18 * s, 9);
+      ctx.fill();
+      ctx.fillStyle = '#ffffff';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(labelTxt, base.sx, headY - headR - 15 * s);
+
+      // Balão de fala 3D acima do personagem
+      if (ch.bubble && (!ch.bubbleTimer || ch.bubbleTimer > 0)) {
+        const msg = ch.bubble.length > 48 ? ch.bubble.slice(0, 48) + '...' : ch.bubble;
+        ctx.font = `700 ${Math.round(11.5 * s)}px Inter, sans-serif`;
+        const bw = Math.min(260, ctx.measureText(msg).width + 20);
+        const by = headY - headR - 52 * s;
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.roundRect(base.sx - bw / 2, by, bw, 24 * s, 10);
+        ctx.fill();
+        ctx.fillStyle = '#0f172a';
+        ctx.fillText(msg, base.sx, by + 12 * s);
+      }
+
+      ctx.restore();
+    };
+
+    const renderizarCena3D = () => {
+      tick++;
+      const w = wrap.clientWidth || 800;
+      const h = wrap.clientHeight || 500;
+
+      // Interpolação suave do movimento do aluno no piso 3D
+      player.x += (player.targetX - player.x) * 0.12;
+      player.z += (player.targetZ - player.z) * 0.12;
+      if (player.bubbleTimer > 0) player.bubbleTimer--;
+
+      // Fundo atmosférico 3D
+      const bgGrad = ctx.createRadialGradient(w / 2, h * 0.35, 30, w / 2, h / 2, w * 0.8);
+      bgGrad.addColorStop(0, '#1e1b4b');
+      bgGrad.addColorStop(1, '#05060d');
+      ctx.fillStyle = bgGrad;
+      ctx.fillRect(0, 0, w, h);
+
+      // Malha de Piso 3D em Perspetiva
+      ctx.strokeStyle = 'rgba(139, 92, 246, 0.22)';
+      ctx.lineWidth = 1;
+      for (let gx = -4; gx <= 4; gx += 1) {
+        const p1 = projetar3D(gx, 0, -3.5, w, h);
+        const p2 = projetar3D(gx, 0, 3.8, w, h);
+        ctx.beginPath();
+        ctx.moveTo(p1.sx, p1.sy);
+        ctx.lineTo(p2.sx, p2.sy);
+        ctx.stroke();
+      }
+      for (let gz = -3.5; gz <= 3.8; gz += 0.9) {
+        const p1 = projetar3D(-4, 0, gz, w, h);
+        const p2 = projetar3D(4, 0, gz, w, h);
+        ctx.beginPath();
+        ctx.moveTo(p1.sx, p1.sy);
+        ctx.lineTo(p2.sx, p2.sy);
+        ctx.stroke();
+      }
+
+      // Balcão / Estação Central 3D do Cenário
+      const cEsq = projetar3D(-1.6, 0, -1.2, w, h);
+      const cDir = projetar3D(1.6, 0, -1.2, w, h);
+      const balcaoW = cDir.sx - cEsq.sx;
+      const balcaoH = 38 * cEsq.scale;
+      ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
+      ctx.strokeStyle = '#a78bfa';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(cEsq.sx, cEsq.sy - balcaoH, balcaoW, balcaoH, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = '#e9d5ff';
+      ctx.font = '800 12px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(`${space.emoji} ${space.name} STATION`, (cEsq.sx + cDir.sx) / 2, cEsq.sy - balcaoH / 2 + 4);
+
+      // Marcador luminoso no chão onde o aluno clicou para andar
+      const dest = projetar3D(player.targetX, 0, player.targetZ, w, h);
+      ctx.strokeStyle = 'rgba(16, 185, 129, 0.55)';
+      ctx.beginPath();
+      ctx.ellipse(dest.sx, dest.sy, 16, 7, 0, 0, Math.PI * 2);
+      ctx.stroke();
+
+      // Ordena por profundidade Z (quem está mais atrás é desenhado primeiro)
+      const entidades = [
+        { obj: npc, isNpc: true },
+        { obj: peer, isNpc: false },
+        { obj: player, isNpc: false }
+      ].sort((a, b) => a.obj.z - b.obj.z);
+
+      entidades.forEach(e => desenharBoneco3D(e.obj, w, h, e.isNpc));
+
+      animId = requestAnimationFrame(renderizarCena3D);
+    };
+    animId = requestAnimationFrame(renderizarCena3D);
+
+    // Clique/Toque no chão 3D para caminhar
+    canvas.addEventListener('pointerdown', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      const cx = e.clientX - rect.left;
+      const cy = e.clientY - rect.top;
+      const nx = ((cx - rect.width / 2) / (rect.width * 0.42)) * 3.5;
+      const nz = ((cy - rect.height * 0.55) / (rect.height * 0.35)) * 3.2;
+      player.targetX = Math.max(-3.4, Math.min(3.4, nx));
+      player.targetZ = Math.max(-0.5, Math.min(3.3, nz));
+    });
+
+    // Teclas WASD / Setas para andar na Sala 3D
+    const onKeyDown3D = (e) => {
+      if (document.activeElement === slot.querySelector('#es-3d-input')) return;
+      const step = 0.35;
+      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') player.targetZ = Math.max(-0.5, player.targetZ - step);
+      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') player.targetZ = Math.min(3.3, player.targetZ + step);
+      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') player.targetX = Math.max(-3.4, player.targetX - step);
+      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') player.targetX = Math.min(3.4, player.targetX + step);
+    };
+    window.addEventListener('keydown', onKeyDown3D);
+
+    // Enviar mensagem ou falar dentro da Sala 3D
+    const input3D = slot.querySelector('#es-3d-input');
+    const btnSend3D = slot.querySelector('#es-3d-send-btn');
+    const npcSpeechEl = slot.querySelector('#es-3d-npc-speech');
+
+    const enviarFalaNaSala3D = async () => {
+      const texto = (input3D?.value || '').trim();
+      if (!texto) return;
+      input3D.value = '';
+      player.bubble = texto;
+      player.bubbleTimer = 320;
+
+      // Caminha automaticamente um pouco em direção ao balcão do NPC ao falar
+      player.targetX = 0;
+      player.targetZ = 0.5;
+
+      if (btnSend3D) { btnSend3D.disabled = true; btnSend3D.textContent = '⏳...'; }
+      try {
+        const prompt3D = `[3D Live Room Scenario: ${space.name} | Your Role: ${space.npcName} | Student Role: ${this.state.role} | Level: ${this.state.level}]. Reply naturally in 1-2 short sentences to the student: "${texto}"`;
+        const res = await window.Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
+          mensagem: prompt3D,
+          historico: []
+        });
+        if (res && res.success && res.resposta) {
+          npc.bubble = res.resposta;
+          this.state.aiCustomReply = res.resposta;
+          if (npcSpeechEl) npcSpeechEl.textContent = `"${res.resposta}"`;
+          this.falarTexto(res.resposta);
+
+          const missaoPendente = (space.missions || []).find(m => !this.state.missionsDone.includes(m.id));
+          if (missaoPendente) {
+            this.state.missionsDone.push(missaoPendente.id);
+            this.registarMissaoConcluida(space.id, missaoPendente.id, missaoPendente.xp || 75);
+          }
+        }
+      } catch (err) {}
+      finally {
+        if (btnSend3D) { btnSend3D.disabled = false; btnSend3D.textContent = '💬 Send'; }
+      }
+    };
+
+    btnSend3D?.addEventListener('click', enviarFalaNaSala3D);
+    input3D?.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') enviarFalaNaSala3D();
+    });
+
+    slot.querySelector('#es-3d-mic-btn')?.addEventListener('click', () => {
+      this.ouvirMicrofone((falado) => {
+        if (input3D) input3D.value = falado;
+        enviarFalaNaSala3D();
+      });
+    });
+
+    slot.querySelector('#es-3d-listen-btn')?.addEventListener('click', () => {
+      this.falarTexto(npc.bubble);
+    });
+
+    slot.querySelector('#es-3d-close-btn')?.addEventListener('click', () => {
+      if (animId) cancelAnimationFrame(animId);
+      window.removeEventListener('resize', redimensionar3D);
+      window.removeEventListener('keydown', onKeyDown3D);
+      slot.innerHTML = '';
+      this.renderSpace();
     });
   }
 
