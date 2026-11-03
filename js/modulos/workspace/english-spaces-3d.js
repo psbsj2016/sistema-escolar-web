@@ -1,5 +1,5 @@
 // js/modulos/workspace/english-spaces-3d.js
-// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + AVATARES HUMANOS + PROXIMIDADE + TELA CHEIA 100%)
+// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + 12 CENÁRIOS MOBILIADOS + PROXIMIDADE + TELA CHEIA)
 
 window.Workspace = window.Workspace || {};
 
@@ -7,18 +7,18 @@ const PROXIMITY_RADIUS = 6.0; // Distância máxima em metros 3D para ouvir e fa
 
 // Coordenadas e cores dos 12 Edifícios da Cidade 3D (6 à esquerda da avenida, 6 à direita)
 const CITY_BUILDINGS_LAYOUT = [
-  { id: 'coffee',     col: -1, row: 0, color: 0xd97706, roof: 0x78350f, npcColor: 0xf59e0b },
-  { id: 'restaurant', col:  1, row: 0, color: 0xe11d48, roof: 0x881337, npcColor: 0xfb7185 },
-  { id: 'school',     col: -1, row: 1, color: 0x16a34a, roof: 0x14532d, npcColor: 0x4ade80 },
-  { id: 'shopping',   col:  1, row: 1, color: 0xca8a04, roof: 0x713f12, npcColor: 0xfacc15 },
+  { id: 'coffee',     col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b },
+  { id: 'restaurant', col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185 },
+  { id: 'school',     col: -1, row: 1, color: 0x16a34a, roof: 0x052e16, npcColor: 0x4ade80 },
+  { id: 'shopping',   col:  1, row: 1, color: 0xca8a04, roof: 0x422006, npcColor: 0xfacc15 },
   { id: 'home',       col: -1, row: 2, color: 0x475569, roof: 0x1e293b, npcColor: 0x94a3b8 },
-  { id: 'cinema',     col:  1, row: 2, color: 0xdb2777, roof: 0x831843, npcColor: 0xf472b6 },
-  { id: 'taxi',       col: -1, row: 3, color: 0xeab308, roof: 0x713f12, npcColor: 0xfde047 },
-  { id: 'beach',      col:  1, row: 3, color: 0x0d9488, roof: 0x134e4a, npcColor: 0x2dd4bf },
-  { id: 'hotel',      col: -1, row: 4, color: 0x9333ea, roof: 0x581c87, npcColor: 0xc084fc },
-  { id: 'airport',    col:  1, row: 4, color: 0x0284c7, roof: 0x0c4a6e, npcColor: 0x38bdf8 },
-  { id: 'job',        col: -1, row: 5, color: 0x4f46e5, roof: 0x312e81, npcColor: 0x818cf8 },
-  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x064e3b, npcColor: 0x34d399 }
+  { id: 'cinema',     col:  1, row: 2, color: 0xdb2777, roof: 0x500724, npcColor: 0xf472b6 },
+  { id: 'taxi',       col: -1, row: 3, color: 0xeab308, roof: 0x422006, npcColor: 0xfde047 },
+  { id: 'beach',      col:  1, row: 3, color: 0x0d9488, roof: 0x042f2e, npcColor: 0x2dd4bf },
+  { id: 'hotel',      col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc },
+  { id: 'airport',    col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8 },
+  { id: 'job',        col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8 },
+  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399 }
 ];
 
 class EnglishSpaces3DWorld {
@@ -122,7 +122,7 @@ class EnglishSpaces3DWorld {
           overflow: hidden;
         }
 
-        /* TOPO FLUTUANTE SOBRE O MUNDO 3D (SEM BARRA AZUL) */
+        /* TOPO FLUTUANTE SOBRE O MUNDO 3D */
         .es-ref-top-area {
           position: absolute;
           top: 0;
@@ -442,7 +442,7 @@ class EnglishSpaces3DWorld {
       </style>
 
       <div id="es-city-wrapper">
-        <!-- TOPO FLUTUANTE LIMPO (SEM A BARRA AZUL WORKSPACE) -->
+        <!-- TOPO FLUTUANTE LIMPO -->
         <div class="es-ref-top-area">
           <div class="es-ref-subbar">
             <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
@@ -497,7 +497,7 @@ class EnglishSpaces3DWorld {
     this.iniciarMultiplayerRealtime();
   }
 
-  // 👤 CONSTRUTOR DE BONECO HUMANO 3D ARTICULADO (Cabeça, Olhos, Cabelo, Tronco, Braços e Pernas)
+  // 👤 CONSTRUTOR DE BONECO HUMANO 3D ARTICULADO
   criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a) {
     const THREE = window.THREE;
     const group = new THREE.Group();
@@ -573,6 +573,313 @@ class EnglishSpaces3DWorld {
     }
   }
 
+  // 🛋️ CONSTRUTOR DE MOBILIÁRIO E OBJETOS 3D ESPECÍFICOS DE CADA UM DOS 12 PRÉDIOS
+  decorarInteriorEdificio3D(id, centerX, centerZ, col, bCfg) {
+    const THREE = window.THREE;
+    const props = new THREE.Group();
+    const cX = centerX + (col * 1.8); // Posição base do balcão principal
+
+    // Função auxiliar rápida para criar uma mesa com 2 cadeiras em coordenadas locais
+    const criarConjuntoMesa = (mx, mz, corTampo = 0x78350f, corCadeira = 0x1e293b, comVela = false) => {
+      const g = new THREE.Group();
+      const pe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.75, 10), new THREE.MeshLambertMaterial({ color: 0x334155 }));
+      pe.position.y = 0.375;
+      const tampo = new THREE.Mesh(new THREE.CylinderGeometry(0.68, 0.68, 0.08, 16), new THREE.MeshLambertMaterial({ color: corTampo }));
+      tampo.position.y = 0.76;
+      g.add(pe, tampo);
+
+      if (comVela) {
+        const vela = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.18, 8), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        vela.position.y = 0.86;
+        g.add(vela);
+      }
+
+      [-0.85, 0.85].forEach(offsetZ => {
+        const assento = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), new THREE.MeshLambertMaterial({ color: corCadeira }));
+        assento.position.set(0, 0.225, offsetZ);
+        const encosto = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.08), new THREE.MeshLambertMaterial({ color: corCadeira }));
+        encosto.position.set(0, 0.6, offsetZ + (offsetZ > 0 ? 0.17 : -0.17));
+        g.add(assento, encosto);
+      });
+
+      g.position.set(mx, 0, mz);
+      return g;
+    };
+
+    switch (id) {
+      case 'coffee': {
+        // Balcão rústico de cafetaria (estilo Brew & Study da referência)
+        const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 4.4), new THREE.MeshLambertMaterial({ color: 0x451a03 }));
+        counter.position.set(cX, 0.55, centerZ);
+        const counterTop = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.1, 4.55), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+        counterTop.position.set(cX, 1.12, centerZ);
+        // Máquina de Expresso 3D + Moedor + Chávenas
+        const espresso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 0.9), new THREE.MeshLambertMaterial({ color: 0x18181b }));
+        espresso.position.set(cX, 1.45, centerZ - 1.1);
+        const grinder = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.55, 12), new THREE.MeshLambertMaterial({ color: 0x27272a }));
+        grinder.position.set(cX, 1.42, centerZ + 0.3);
+        const pastryCase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 1.1), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+        pastryCase.position.set(cX, 1.38, centerZ + 1.3);
+        // Toldo azul-escuro na fachada da loja
+        const awning = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 9.6), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
+        awning.position.set(centerX - (col * 4.6), 3.7, centerZ);
+        awning.rotation.z = col * 0.25;
+        props.add(counter, counterTop, espresso, grinder, pastryCase, awning);
+        props.add(criarConjuntoMesa(centerX - (col * 1.8), centerZ - 2.6, 0x92400e, 0x27272a));
+        props.add(criarConjuntoMesa(centerX - (col * 1.8), centerZ + 2.6, 0x92400e, 0x27272a));
+        break;
+      }
+
+      case 'restaurant': {
+        // Balcão de receção e chef + 3 mesas com toalha vermelha e vela
+        const counter = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.8), new THREE.MeshLambertMaterial({ color: 0x881337 }));
+        counter.position.set(cX, 0.55, centerZ);
+        const passTop = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.1, 3.95), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        passTop.position.set(cX, 1.12, centerZ);
+        props.add(counter, passTop);
+        props.add(criarConjuntoMesa(centerX - (col * 1.2), centerZ - 2.7, 0xbe123c, 0x1e293b, true));
+        props.add(criarConjuntoMesa(centerX - (col * 1.2), centerZ + 2.7, 0xbe123c, 0x1e293b, true));
+        props.add(criarConjuntoMesa(centerX - (col * 2.8), centerZ, 0xbe123c, 0x1e293b, true));
+        break;
+      }
+
+      case 'school': {
+        // Quadro verde na parede de fundo + mesa do professor + 4 carteiras de alunos
+        const board = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.9, 5.4), new THREE.MeshLambertMaterial({ color: 0x064e3b }));
+        board.position.set(centerX + (col * 4.75), 2.3, centerZ);
+        const teacherDesk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.85, 2.6), new THREE.MeshLambertMaterial({ color: 0x78350f }));
+        teacherDesk.position.set(cX, 0.425, centerZ);
+        props.add(board, teacherDesk);
+
+        [-2.2, 2.2].forEach(dz => {
+          [-0.8, -2.5].forEach(dxMult => {
+            const sx = centerX + (col * dxMult);
+            const sz = centerZ + dz;
+            const desk = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.72, 1.1), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+            desk.position.set(sx, 0.36, sz);
+            const chair = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
+            chair.position.set(sx - (col * 0.55), 0.225, sz);
+            props.add(desk, chair);
+          });
+        });
+        break;
+      }
+
+      case 'shopping': {
+        // Balcão de caixa + 2 araras de roupas coloridas + espelho de provador
+        const cashier = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.05, 3.2), new THREE.MeshLambertMaterial({ color: 0xfef08a }));
+        cashier.position.set(cX, 0.525, centerZ);
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.2, 1.4), new THREE.MeshLambertMaterial({ color: 0xbae6fd }));
+        mirror.position.set(centerX + (col * 4.7), 1.2, centerZ - 2.8);
+        props.add(cashier, mirror);
+
+        [-2.6, 2.6].forEach((dz, idx) => {
+          const rx = centerX - (col * 1.4);
+          const rz = centerZ + dz;
+          const rackBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 8), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+          rackBar.rotation.x = Math.PI / 2;
+          rackBar.position.set(rx, 1.45, rz);
+          const garment1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.85, 0.65), new THREE.MeshLambertMaterial({ color: idx === 0 ? 0xec4899 : 0x3b82f6 }));
+          garment1.position.set(rx, 1.0, rz - 0.5);
+          const garment2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.85, 0.65), new THREE.MeshLambertMaterial({ color: idx === 0 ? 0x8b5cf6 : 0x10b981 }));
+          garment2.position.set(rx, 1.0, rz + 0.5);
+          props.add(rackBar, garment1, garment2);
+        });
+        break;
+      }
+
+      case 'home': {
+        // Bancada americana + sofá de sala + tapete + mesa de centro + TV
+        const island = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.05, 3.4), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+        island.position.set(cX, 0.525, centerZ - 1.6);
+        const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 2.8), new THREE.MeshLambertMaterial({ color: 0x4f46e5 }));
+        sofaBase.position.set(centerX - (col * 1.5), 0.25, centerZ + 1.8);
+        const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.95, 2.8), new THREE.MeshLambertMaterial({ color: 0x3730a3 }));
+        sofaBack.position.set(centerX - (col * 0.95), 0.5, centerZ + 1.8);
+        const rug = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+        rug.rotation.x = -Math.PI / 2;
+        rug.position.set(centerX - (col * 2.4), 0.03, centerZ + 1.8);
+        const tvScreen = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.2, 2.2), new THREE.MeshBasicMaterial({ color: 0x0ea5e9 }));
+        tvScreen.position.set(centerX + (col * 4.7), 1.8, centerZ + 1.8);
+        props.add(island, sofaBase, sofaBack, rug, tvScreen);
+        break;
+      }
+
+      case 'cinema': {
+        // Grande ecrã de projeção + poltronas vermelhas de cinema + máquina de pipocas
+        const screen = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.6, 6.8), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+        screen.position.set(centerX + (col * 4.75), 2.2, centerZ);
+        const popcornBox = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 1.4), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        popcornBox.position.set(cX, 0.75, centerZ + 2.8);
+        const ticketCounter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.05, 2.6), new THREE.MeshLambertMaterial({ color: 0x9d174d }));
+        ticketCounter.position.set(cX, 0.525, centerZ - 1.2);
+        props.add(screen, popcornBox, ticketCounter);
+
+        [-2.2, -0.6, 1.0].forEach(zPos => {
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.75, 1.1), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+          seat.position.set(centerX - (col * 1.8), 0.375, centerZ + zPos);
+          props.add(seat);
+        });
+        break;
+      }
+
+      case 'taxi': {
+        // Cabine de despacho + Carro de Táxi Amarelo 3D estacionado!
+        const booth = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, 2.6), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        booth.position.set(cX, 0.55, centerZ - 1.8);
+
+        const carGroup = new THREE.Group();
+        const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.75, 4.0), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        carBody.position.y = 0.6;
+        const carCabin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.65, 2.1), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        carCabin.position.set(0, 1.25, -0.1);
+        const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.24, 0.3), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        taxiSign.position.set(0, 1.68, -0.1);
+        carGroup.add(carBody, carCabin, taxiSign);
+
+        [[-1.05, -1.2], [1.05, -1.2], [-1.05, 1.2], [1.05, 1.2]].forEach(([wx, wz]) => {
+          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12), new THREE.MeshLambertMaterial({ color: 0x09090b }));
+          wheel.rotation.z = Math.PI / 2;
+          wheel.position.set(wx, 0.35, wz);
+          carGroup.add(wheel);
+        });
+
+        carGroup.position.set(centerX - (col * 1.6), 0, centerZ + 1.4);
+        props.add(booth, carGroup);
+        break;
+      }
+
+      case 'beach': {
+        // Quiosque de madeira + faixa de mar turquesa + guarda-sol colorido + espreguiçadeiras
+        const tikiBar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.6), new THREE.MeshLambertMaterial({ color: 0x92400e }));
+        tikiBar.position.set(cX, 0.55, centerZ);
+        const waterStrip = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 9.6), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+        waterStrip.rotation.x = -Math.PI / 2;
+        waterStrip.position.set(centerX + (col * 3.3), 0.03, centerZ);
+
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        pole.position.set(centerX - (col * 1.8), 1.25, centerZ - 1.8);
+        const umbrellaTop = new THREE.Mesh(new THREE.ConeGeometry(1.6, 0.7, 12), new THREE.MeshLambertMaterial({ color: 0xf43f5e }));
+        umbrellaTop.position.set(centerX - (col * 1.8), 2.5, centerZ - 1.8);
+
+        const lounge1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 0.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        lounge1.position.set(centerX - (col * 1.8), 0.14, centerZ - 0.5);
+        const lounge2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 0.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        lounge2.position.set(centerX - (col * 1.8), 0.14, centerZ + 1.8);
+
+        props.add(tikiBar, waterStrip, pole, umbrellaTop, lounge1, lounge2);
+        break;
+      }
+
+      case 'hotel': {
+        // Passadeira vermelha real + balcão de receção de mármore e ouro + carrinho de malas
+        const redCarpet = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 2.2), new THREE.MeshLambertMaterial({ color: 0xbe123c }));
+        redCarpet.rotation.x = -Math.PI / 2;
+        redCarpet.position.set(centerX - (col * 1.6), 0.03, centerZ);
+
+        const reception = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.15, 4.4), new THREE.MeshLambertMaterial({ color: 0x3b0764 }));
+        reception.position.set(cX, 0.575, centerZ);
+        const goldTrim = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 4.5), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        goldTrim.position.set(cX, 1.16, centerZ);
+
+        const luggageCart = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 1.6), new THREE.MeshLambertMaterial({ color: 0xeab308 }));
+        luggageCart.position.set(centerX - (col * 1.8), 0.2, centerZ + 2.8);
+        const suitcase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.65, 0.9), new THREE.MeshLambertMaterial({ color: 0x7c2d12 }));
+        suitcase.position.set(centerX - (col * 1.8), 0.62, centerZ + 2.8);
+
+        props.add(redCarpet, reception, goldTrim, luggageCart, suitcase);
+        break;
+      }
+
+      case 'airport': {
+        // Balcão de Check-in Azul + Tapete Rolante de Bagagem com Mala + Pórtico Detetor de Metais
+        const desk = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.6), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+        desk.position.set(cX, 0.55, centerZ - 1.0);
+        const conveyor = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.35, 1.4), new THREE.MeshLambertMaterial({ color: 0x18181b }));
+        conveyor.position.set(cX, 0.175, centerZ + 2.0);
+        const bag = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.5), new THREE.MeshLambertMaterial({ color: 0xef4444 }));
+        bag.position.set(cX, 0.72, centerZ + 2.0);
+
+        // Pórtico de segurança (Scanner)
+        const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.4, 0.25), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+        archLeft.position.set(centerX - (col * 2.2), 1.2, centerZ - 3.2);
+        const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.4, 0.25), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+        archRight.position.set(centerX - (col * 2.2), 1.2, centerZ - 1.6);
+        const archTop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 1.85), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
+        archTop.position.set(centerX - (col * 2.2), 2.45, centerZ - 2.4);
+
+        props.add(desk, conveyor, bag, archLeft, archRight, archTop);
+        break;
+      }
+
+      case 'job': {
+        // Mesa executiva de entrevista + computador portátil 3D + cadeiras de candidato + estante
+        const execDesk = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 3.6), new THREE.MeshLambertMaterial({ color: 0x1e1b4b }));
+        execDesk.position.set(cX, 0.425, centerZ);
+        const laptopBase = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 0.6), new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
+        laptopBase.position.set(cX, 0.88, centerZ);
+        const laptopScreen = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.38, 0.6), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        laptopScreen.position.set(cX - (col * 0.2), 1.08, centerZ);
+
+        const chair1 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.65), new THREE.MeshLambertMaterial({ color: 0x312e81 }));
+        chair1.position.set(centerX + (col * 0.2), 0.375, centerZ - 0.8);
+        const chair2 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.65), new THREE.MeshLambertMaterial({ color: 0x312e81 }));
+        chair2.position.set(centerX + (col * 0.2), 0.375, centerZ + 0.8);
+
+        const bookshelf = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.5, 2.4), new THREE.MeshLambertMaterial({ color: 0x451a03 }));
+        bookshelf.position.set(centerX + (col * 4.5), 1.25, centerZ - 2.6);
+
+        props.add(execDesk, laptopBase, laptopScreen, chair1, chair2, bookshelf);
+        break;
+      }
+
+      case 'hospital': {
+        // Mesa médica + Maca clínica branca com almofada + Biombo azul + Cruz Médica na parede
+        const docDesk = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.95, 2.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        docDesk.position.set(cX, 0.475, centerZ - 1.2);
+
+        const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.65, 1.2), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+        bedFrame.position.set(centerX - (col * 1.4), 0.325, centerZ + 2.2);
+        const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.9), new THREE.MeshLambertMaterial({ color: 0xbae6fd }));
+        pillow.position.set(centerX - (col * 0.6), 0.72, centerZ + 2.2);
+
+        const screenDivider = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.85, 2.0), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+        screenDivider.position.set(centerX - (col * 1.4), 0.925, centerZ + 0.8);
+
+        const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.2, 0.38), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        crossV.position.set(centerX + (col * 4.7), 2.6, centerZ);
+        const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.38, 1.2), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        crossH.position.set(centerX + (col * 4.7), 2.6, centerZ);
+
+        props.add(docDesk, bedFrame, pillow, screenDivider, crossV, crossH);
+        break;
+      }
+
+      default: {
+        const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 4.2), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        counter.position.set(cX, 0.55, centerZ);
+        props.add(counter);
+      }
+    }
+
+    this.scene.add(props);
+  }
+
+  // 💡 POSTES DE ILUMINAÇÃO PÚBLICA AO LONGO DA AVENIDA (IGUAL À REFERÊNCIA)
+  criarPostesAvenida3D() {
+    const THREE = window.THREE;
+    for (let row = 0; row < 6; row++) {
+      const zPos = -row * 16 + 6;
+      [-5.8, 5.8].forEach(xPos => {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.2, 8), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        pole.position.set(xPos, 2.1, zPos);
+        const lampHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        lampHead.position.set(xPos, 4.3, zPos);
+        this.scene.add(pole, lampHead);
+      });
+    }
+  }
+
   inicializarCenaThreeJS(initialSpaceId) {
     const THREE = window.THREE;
     const viewport = document.getElementById('es-city-viewport');
@@ -581,7 +888,7 @@ class EnglishSpaces3DWorld {
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x070b19);
-    this.scene.fog = new THREE.FogExp2(0x070b19, 0.012);
+    this.scene.fog = new THREE.FogExp2(0x070b19, 0.011);
 
     this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 220);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -611,6 +918,9 @@ class EnglishSpaces3DWorld {
     road.position.set(0, 0.01, -35);
     this.scene.add(road);
 
+    // Adiciona postes de luz ao longo da avenida central
+    this.criarPostesAvenida3D();
+
     this.buildingsMeta = [];
     this.npcs3D.clear();
     const selectTeleport = document.getElementById('es-city-teleport');
@@ -635,22 +945,24 @@ class EnglishSpaces3DWorld {
       floorMesh.receiveShadow = true;
       this.scene.add(floorMesh);
 
-      const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.2, 14);
+      const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.25, 15);
       shopLight.position.set(centerX, 3.2, centerZ);
       this.scene.add(shopLight);
 
-      const plantPot = new THREE.Mesh(
-        new THREE.BoxGeometry(0.6, 0.5, 0.6),
-        new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
-      );
-      plantPot.position.set(centerX - bCfg.col * 4.2, 0.25, centerZ + 2.8);
-      this.scene.add(plantPot);
-      const plantLeaves = new THREE.Mesh(
-        new THREE.BoxGeometry(0.8, 0.8, 0.8),
-        new THREE.MeshLambertMaterial({ color: 0x16a34a })
-      );
-      plantLeaves.position.set(centerX - bCfg.col * 4.2, 0.9, centerZ + 2.8);
-      this.scene.add(plantLeaves);
+      // Vasos de plantas decorativos nos dois lados da entrada do prédio
+      [-3.8, 3.8].forEach(zSide => {
+        const plantPot = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.5, 0.6),
+          new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
+        );
+        plantPot.position.set(centerX - bCfg.col * 4.5, 0.25, centerZ + zSide);
+        const plantLeaves = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 0.8, 0.8),
+          new THREE.MeshLambertMaterial({ color: 0x16a34a })
+        );
+        plantLeaves.position.set(centerX - bCfg.col * 4.5, 0.9, centerZ + zSide);
+        this.scene.add(plantPot, plantLeaves);
+      });
 
       const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
       const backWall = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
@@ -666,12 +978,8 @@ class EnglishSpaces3DWorld {
       sideWall2.position.set(centerX, bh / 2, centerZ + bd / 2);
       this.scene.add(sideWall2);
 
-      const counter = new THREE.Mesh(
-        new THREE.BoxGeometry(1.4, 1.1, 4.2),
-        new THREE.MeshLambertMaterial({ color: 0xf8fafc })
-      );
-      counter.position.set(centerX + (bCfg.col * 1.8), 0.55, centerZ);
-      this.scene.add(counter);
+      // 🛋️ Constrói os objetos 3D, mesas, cadeiras e balcões exclusivos deste prédio!
+      this.decorarInteriorEdificio3D(bCfg.id, centerX, centerZ, bCfg.col, bCfg);
 
       const npcX = centerX + (bCfg.col * 3.1);
       const npcZ = centerZ;
