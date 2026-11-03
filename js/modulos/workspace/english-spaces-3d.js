@@ -1,24 +1,24 @@
 // js/modulos/workspace/english-spaces-3d.js
-// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + PAREDES COM PORTAS + DIA/NOITE + TRÂNSITO + MOBILIÁRIO)
+// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + 12 CENÁRIOS MOBILIADOS + PROXIMIDADE + TELA CHEIA)
 
 window.Workspace = window.Workspace || {};
 
-const PROXIMITY_RADIUS = 6.0; // Raio máximo em metros para voz e chat por proximidade
+const PROXIMITY_RADIUS = 6.0; // Distância máxima em metros 3D para ouvir e falar com alguém
 
-// Coordenadas e estrutura dos 12 Edifícios da Cidade
+// Coordenadas e cores dos 12 Edifícios da Cidade 3D (6 à esquerda da avenida, 6 à direita)
 const CITY_BUILDINGS_LAYOUT = [
-  { id: 'coffee',     col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b, title: 'COFFEE SHOP' },
-  { id: 'restaurant', col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185, title: 'RESTAURANT' },
-  { id: 'school',     col: -1, row: 1, color: 0x16a34a, roof: 0x052e16, npcColor: 0x4ade80, title: 'SCHOOL' },
-  { id: 'shopping',   col:  1, row: 1, color: 0xca8a04, roof: 0x422006, npcColor: 0xfacc15, title: 'SHOPPING MALL' },
-  { id: 'home',       col: -1, row: 2, color: 0x475569, roof: 0x1e293b, npcColor: 0x94a3b8, title: 'HOME & FLAT' },
-  { id: 'cinema',     col:  1, row: 2, color: 0xdb2777, roof: 0x500724, npcColor: 0xf472b6, title: 'CINEMA' },
-  { id: 'taxi',       col: -1, row: 3, color: 0xeab308, roof: 0x422006, npcColor: 0xfde047, title: 'TAXI STAND' },
-  { id: 'beach',      col:  1, row: 3, color: 0x0d9488, roof: 0x042f2e, npcColor: 0x2dd4bf, title: 'BEACH KIOSK' },
-  { id: 'hotel',      col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc, title: 'GRAND HOTEL' },
-  { id: 'airport',    col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8, title: 'AIRPORT TERMINAL' },
-  { id: 'job',        col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8, title: 'JOB CENTER' },
-  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, title: 'MEDICAL CLINIC' }
+  { id: 'coffee',     col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b },
+  { id: 'restaurant', col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185 },
+  { id: 'school',     col: -1, row: 1, color: 0x16a34a, roof: 0x052e16, npcColor: 0x4ade80 },
+  { id: 'shopping',   col:  1, row: 1, color: 0xca8a04, roof: 0x422006, npcColor: 0xfacc15 },
+  { id: 'home',       col: -1, row: 2, color: 0x475569, roof: 0x1e293b, npcColor: 0x94a3b8 },
+  { id: 'cinema',     col:  1, row: 2, color: 0xdb2777, roof: 0x500724, npcColor: 0xf472b6 },
+  { id: 'taxi',       col: -1, row: 3, color: 0xeab308, roof: 0x422006, npcColor: 0xfde047 },
+  { id: 'beach',      col:  1, row: 3, color: 0x0d9488, roof: 0x042f2e, npcColor: 0x2dd4bf },
+  { id: 'hotel',      col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc },
+  { id: 'airport',    col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8 },
+  { id: 'job',        col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8 },
+  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399 }
 ];
 
 class EnglishSpaces3DWorld {
@@ -32,29 +32,20 @@ class EnglishSpaces3DWorld {
     this.clock = null;
 
     this.buildingsMeta = [];
-    this.wallColliders = []; // Paredes sólidas que impedem o avatar de atravessar
     this.npcs3D = new Map();
     this.otherPlayers3D = new Map();
     this.localPlayer = null;
 
     this.keys = {};
     this.cameraYaw = 0;
-    this.cameraPitch = 0.35; // Ângulo vertical inicial para contemplar a rua e o céu
     this.isDraggingCam = false;
     this.dragStartX = 0;
-    this.dragStartY = 0;
 
     this.nearbyTargets = [];
     this.currentZoneId = 'street';
     this.lastSyncTime = 0;
     this.sseConnection = null;
     this.pollInterval = null;
-
-    this.carrosTrransito = [];
-    this.pedestresUrbanos = [];
-    this.solMesh = null;
-    this.luaMesh = null;
-    this.estrelasPoints = null;
   }
 
   async carregarThreeJS() {
@@ -75,115 +66,383 @@ class EnglishSpaces3DWorld {
 
     containerRoot.innerHTML = `
       <style>
+        /* ===== TELA CHEIA 100% PURA (SEM BARRA WORKSPACE FICTÍCIA) ===== */
         body { overflow: hidden !important; }
+
         #es-city-wrapper {
-          position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important;
-          background: #05070e !important; z-index: 1000020 !important; font-family: 'Inter', 'Poppins', sans-serif !important;
-          user-select: none !important; overflow: hidden !important;
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100dvh !important;
+          background: #05070e !important;
+          z-index: 1000020 !important;
+          font-family: 'Inter', 'Geist', 'Poppins', sans-serif !important;
+          user-select: none !important;
+          overflow: hidden !important;
         }
-        #es-city-Hud-card, #es-city-teleport, #es-city-chat-feed {
-          position: absolute !important; width: 0 !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important;
+
+        /* Mantém IDs vivos para o JS, mas invisíveis na tela */
+        #es-city-Hud-card,
+        #es-city-teleport,
+        #es-city-chat-feed {
+          position: absolute !important;
+          width: 0 !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
         }
+
+        /* VIEWPORT 3D OCUPANDO 100% DA TELA DE PONTA A PONTA */
         #es-city-viewport {
-          position: absolute !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important;
-          margin: 0 !important; padding: 0 !important; overflow: hidden !important; background: transparent !important; z-index: 1 !important; touch-action: none !important;
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100dvh !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          z-index: 1 !important;
+          touch-action: none !important;
         }
-        #es-city-viewport canvas { display: block !important; width: 100% !important; height: 100% !important; border-radius: 0 !important; }
-        #es-city-labels-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
 
+        #es-city-viewport canvas {
+          display: block !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 0 !important;
+        }
+
+        #es-city-labels-layer {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 10;
+          overflow: hidden;
+        }
+
+        /* TOPO FLUTUANTE SOBRE O MUNDO 3D */
         .es-ref-top-area {
-          position: absolute; top: 0; left: 0; right: 0; z-index: 30;
-          padding: max(16px, env(safe-area-inset-top)) 20px 0 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: none;
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 30;
+          padding: max(16px, env(safe-area-inset-top)) 20px 0 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
         }
-        .es-ref-subbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+
+        .es-ref-subbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
         #es-city-zone-badge {
-          pointer-events: auto; background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(124,58,237,0.22)) !important;
-          border: 1px solid rgba(167,139,250,0.42) !important; color: #ede9fe !important; padding: 7px 14px !important;
-          border-radius: 999px !important; font-size: 12px !important; font-weight: 800 !important; backdrop-filter: blur(16px);
-          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+          pointer-events: auto;
+          background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(124,58,237,0.22)) !important;
+          border: 1px solid rgba(167,139,250,0.42) !important;
+          color: #ede9fe !important;
+          padding: 7px 14px !important;
+          border-radius: 999px !important;
+          font-size: 12px !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.2px !important;
+          backdrop-filter: blur(16px) saturate(1.2);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.14);
         }
+
         #es-city-exit-btn {
-          pointer-events: auto; background: rgba(18, 20, 36, 0.82) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important;
-          color: #e2e8f0 !important; padding: 8px 16px !important; border-radius: 999px !important; font-size: 12px !important; font-weight: 700 !important;
-          cursor: pointer !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); transition: all 0.2s ease;
+          pointer-events: auto;
+          background: rgba(18, 20, 36, 0.82) !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          color: #e2e8f0 !important;
+          padding: 8px 16px !important;
+          border-radius: 999px !important;
+          font-size: 12px !important;
+          font-weight: 700 !important;
+          cursor: pointer !important;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+          transition: all 0.2s ease;
         }
-        #es-city-exit-btn:hover { background: rgba(239, 68, 68, 0.88) !important; color: #fff !important; }
-        .es-ref-proximity-wrap { display: flex; justify-content: center; padding: 2px 0; }
+
+        #es-city-exit-btn:hover {
+          background: rgba(239, 68, 68, 0.88) !important;
+          border-color: rgba(252, 165, 165, 0.5) !important;
+          color: #fff !important;
+          transform: translateY(-1px);
+        }
+
+        .es-ref-proximity-wrap {
+          display: flex;
+          justify-content: center;
+          padding: 2px 0;
+        }
+
         #es-city-proximity-badge {
-          pointer-events: auto; background: rgba(18, 20, 36, 0.76) !important; border: 1px solid rgba(255,255,255,0.14) !important;
-          color: #cbd5e1 !important; padding: 6px 14px !important; border-radius: 999px !important; font-size: 11.5px !important; font-weight: 700 !important;
-          backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); display: inline-flex !important; align-items: center !important; gap: 6px !important;
+          pointer-events: auto;
+          background: rgba(18, 20, 36, 0.76) !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          color: #cbd5e1 !important;
+          padding: 6px 14px !important;
+          border-radius: 999px !important;
+          font-size: 11.5px !important;
+          font-weight: 700 !important;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          transition: all 0.3s ease;
         }
 
+        /* ETIQUETAS DOS PERSONAGENS E PLACAS DOS EDIFÍCIOS */
         .es-city-label {
-          background: rgba(12, 14, 28, 0.86); border: 1px solid rgba(139,92,246,0.35); color: #e9d5ff;
-          padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap;
-          backdrop-filter: blur(14px); box-shadow: 0 8px 20px rgba(0,0,0,0.4); pointer-events: none; display: inline-flex; align-items: center; gap: 6px;
-        }
-        .es-city-label.me { background: rgba(18, 22, 48, 0.9); border-color: rgba(59,130,246,0.45); color: #dbeafe; }
-        .es-city-sign {
-          position: absolute; transform: translate(-50%, -50%); background: rgba(12, 14, 28, 0.88);
-          border: 1px solid rgba(167, 139, 250, 0.5); color: #fff; padding: 6px 14px; border-radius: 10px;
-          font-size: 11.5px; font-weight: 900; letter-spacing: 0.5px; backdrop-filter: blur(12px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.5); pointer-events: none; white-space: nowrap;
+          background: rgba(12, 14, 28, 0.86);
+          border: 1px solid rgba(139,92,246,0.35);
+          color: #e9d5ff;
+          padding: 6px 12px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+          white-space: nowrap;
+          backdrop-filter: blur(14px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+          pointer-events: none;
+          letter-spacing: 0.2px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
         }
 
+        .es-city-label.me {
+          background: rgba(18, 22, 48, 0.9);
+          border-color: rgba(59,130,246,0.45);
+          color: #dbeafe;
+        }
+
+        .es-city-sign {
+          position: absolute;
+          transform: translate(-50%, -50%);
+          background: rgba(12, 14, 28, 0.84);
+          border: 1px solid rgba(255,255,255,0.14);
+          color: #fff;
+          padding: 5px 11px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.3px;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.35);
+          pointer-events: none;
+          white-space: nowrap;
+        }
+
+        /* D-PAD CIRCULAR FLUTUANTE NO CANTO INFERIOR DIREITO */
         .es-dpad-circle {
-          position: absolute !important; right: 22px !important; bottom: 96px !important; width: 112px !important; height: 112px !important;
-          border-radius: 50% !important; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.74)) !important;
-          border: 1px solid rgba(255,255,255,0.14) !important; backdrop-filter: blur(18px) saturate(1.2) !important;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.45) !important; z-index: 25 !important; display: grid !important;
-          grid-template-areas: ". up ." "left . right" ". down ." !important; place-items: center !important; padding: 8px !important;
+          position: absolute !important;
+          right: 22px !important;
+          bottom: 96px !important;
+          width: 112px !important;
+          height: 112px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.74)) !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          backdrop-filter: blur(18px) saturate(1.2) !important;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+          z-index: 25 !important;
+          display: grid !important;
+          grid-template-areas: ". up ." "left . right" ". down ." !important;
+          place-items: center !important;
+          padding: 8px !important;
         }
+
         .es-move-pad {
-          width: 32px !important; height: 32px !important; border-radius: 50% !important; background: rgba(255,255,255,0.06) !important;
-          border: 1px solid rgba(255,255,255,0.1) !important; color: #cbd5e1 !important; font-size: 12px !important;
-          display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 50% !important;
+          background: rgba(255,255,255,0.06) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          color: #cbd5e1 !important;
+          font-size: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          -webkit-tap-highlight-color: transparent !important;
         }
+
         .es-move-pad[data-dir="up"] { grid-area: up; }
         .es-move-pad[data-dir="left"] { grid-area: left; }
         .es-move-pad[data-dir="right"] { grid-area: right; }
         .es-move-pad[data-dir="down"] { grid-area: down; }
-        .es-move-pad:active, .es-move-pad:hover { background: rgba(139,92,246,0.34) !important; color: #fff !important; }
 
+        .es-move-pad:active,
+        .es-move-pad:hover {
+          background: rgba(139,92,246,0.34) !important;
+          color: #fff !important;
+          transform: scale(0.92);
+          border-color: rgba(139,92,246,0.5) !important;
+        }
+
+        /* BARRA INFERIOR FLUTUANTE SOBRE O MUNDO 3D */
         .es-ref-bottom-bar {
-          position: absolute; left: 16px; right: 16px; bottom: max(14px, env(safe-area-inset-bottom)); z-index: 30;
-          pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 12px;
-          background: rgba(14, 16, 28, 0.88) !important; border: 1px solid rgba(255,255,255,0.10) !important;
-          border-radius: 20px !important; backdrop-filter: blur(22px) !important; box-shadow: 0 16px 40px rgba(0,0,0,0.5) !important;
-        }
-        #es-city-voice-btn {
-          height: 46px !important; padding: 0 16px !important; border-radius: 14px !important;
-          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: none !important;
-          font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important;
-        }
-        #es-city-speak-nearby-pill {
-          height: 46px !important; padding: 0 16px !important; border-radius: 14px !important;
-          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important; color: #fff !important; border: none !important;
-          font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important;
-        }
-        .es-ref-input-group {
-          flex: 1 !important; height: 46px !important; display: flex !important; align-items: center !important;
-          background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 14px !important; padding: 0 6px 0 14px !important; gap: 6px !important;
-        }
-        #es-city-chat-input { flex: 1 !important; background: transparent !important; border: none !important; outline: none !important; color: #f8fafc !important; font-size: 13.5px !important; width: 100% !important; }
-        #es-city-chat-input::placeholder { color: #94a3b8 !important; }
-        #es-city-send-btn {
-          width: 36px !important; height: 36px !important; border-radius: 10px !important; background: rgba(255,255,255,0.08) !important;
-          color: #e2e8f0 !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important;
+          position: absolute;
+          left: 16px;
+          right: 16px;
+          bottom: max(14px, env(safe-area-inset-bottom));
+          z-index: 30;
+          pointer-events: auto;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 12px;
+          background: rgba(14, 16, 28, 0.88) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          border-radius: 20px !important;
+          backdrop-filter: blur(22px) saturate(1.25) !important;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
         }
 
-        .es-speech-bubble {
-          background: #ffffff; color: #0f172a; padding: 8px 13px; border-radius: 14px; font-size: 12.5px;
-          font-weight: 700; line-height: 1.35; max-width: 220px; text-align: center; margin-bottom: 8px;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.35); pointer-events: none; position: relative;
+        #es-city-voice-btn {
+          height: 46px !important;
+          padding: 0 16px !important;
+          border-radius: 14px !important;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          color: #fff !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          font-size: 13px !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.2px !important;
+          box-shadow: 0 8px 18px rgba(16,185,129,0.32) !important;
+          cursor: pointer !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          white-space: nowrap !important;
+          transition: transform 0.15s ease !important;
         }
+        #es-city-voice-btn:active { transform: scale(0.97); }
+
+        #es-city-speak-nearby-pill {
+          height: 46px !important;
+          padding: 0 16px !important;
+          border-radius: 14px !important;
+          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+          color: #fff !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          font-size: 13px !important;
+          font-weight: 800 !important;
+          box-shadow: 0 8px 18px rgba(139,92,246,0.32) !important;
+          cursor: pointer !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          white-space: nowrap !important;
+          transition: transform 0.15s ease !important;
+        }
+        #es-city-speak-nearby-pill:active { transform: scale(0.97); }
+
+        .es-ref-input-group {
+          flex: 1 !important;
+          height: 46px !important;
+          display: flex !important;
+          align-items: center !important;
+          background: rgba(255,255,255,0.06) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          border-radius: 14px !important;
+          padding: 0 6px 0 14px !important;
+          gap: 6px !important;
+          transition: border-color 0.2s ease !important;
+        }
+
+        .es-ref-input-group:focus-within {
+          border-color: rgba(139,92,246,0.42) !important;
+          background: rgba(255,255,255,0.08) !important;
+        }
+
+        #es-city-chat-input {
+          flex: 1 !important;
+          background: transparent !important;
+          border: none !important;
+          outline: none !important;
+          color: #f8fafc !important;
+          font-size: 13.5px !important;
+          font-weight: 500 !important;
+          width: 100% !important;
+        }
+
+        #es-city-chat-input::placeholder {
+          color: #94a3b8 !important;
+        }
+
+        #es-city-send-btn {
+          width: 36px !important;
+          height: 36px !important;
+          border-radius: 10px !important;
+          background: rgba(255,255,255,0.08) !important;
+          color: #e2e8f0 !important;
+          border: none !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 15px !important;
+          cursor: pointer !important;
+          flex-shrink: 0;
+          transition: all 0.15s ease !important;
+        }
+
+        #es-city-send-btn:hover {
+          background: rgba(139,92,246,0.22) !important;
+          color: #fff !important;
+        }
+
+        /* Balões de fala 3D acima dos avatares */
+        .es-speech-bubble {
+          background: #ffffff;
+          color: #0f172a;
+          padding: 8px 13px;
+          border-radius: 14px;
+          font-size: 12.5px;
+          font-weight: 700;
+          line-height: 1.35;
+          max-width: 220px;
+          text-align: center;
+          margin-bottom: 8px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.35);
+          pointer-events: none;
+          position: relative;
+        }
+
         .es-speech-bubble::after {
-          content: ''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%) rotate(45deg); width: 10px; height: 10px; background: #fff;
+          content: '';
+          position: absolute;
+          left: 50%;
+          bottom: -5px;
+          transform: translateX(-50%) rotate(45deg);
+          width: 10px;
+          height: 10px;
+          background: #fff;
+        }
+
+        @media (max-width: 600px) {
+          .es-ref-top-area { padding: max(12px, env(safe-area-inset-top)) 14px 0 14px; gap: 8px; }
+          .es-ref-bottom-bar { padding: 10px; gap: 8px; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); border-radius: 18px; }
+          #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; }
+          .es-ref-input-group { height: 42px !important; }
+          .es-dpad-circle { width: 100px !important; height: 100px !important; right: 14px !important; bottom: 84px !important; }
         }
       </style>
 
       <div id="es-city-wrapper">
+        <!-- TOPO FLUTUANTE LIMPO -->
         <div class="es-ref-top-area">
           <div class="es-ref-subbar">
             <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
@@ -194,12 +453,15 @@ class EnglishSpaces3DWorld {
           </div>
         </div>
 
+        <!-- ELEMENTOS OCULTOS PARA PRESERVAR 100% DA LÓGICA JS -->
         <select id="es-city-teleport"><option value=""></option></select>
         <div id="es-city-Hud-card"><div id="es-city-hud-content"></div></div>
         <div id="es-city-chat-feed"></div>
 
+        <!-- VIEWPORT 3D OCUPANDO 100% DO ECRÃ + D-PAD CIRCULAR -->
         <div id="es-city-viewport">
           <div id="es-city-labels-layer"></div>
+
           <div class="es-dpad-circle">
             <button type="button" class="es-move-pad" data-dir="up">▲</button>
             <button type="button" class="es-move-pad" data-dir="left">◀</button>
@@ -208,6 +470,7 @@ class EnglishSpaces3DWorld {
           </div>
         </div>
 
+        <!-- BARRA INFERIOR COM OS 3 ITENS FIXOS -->
         <div class="es-ref-bottom-bar">
           <button type="button" id="es-city-voice-btn">🎤 Voice Mic</button>
           <button type="button" id="es-city-speak-nearby-pill" onclick="document.getElementById('es-city-chat-input')?.focus()">🔊 Speak Nearby</button>
@@ -222,7 +485,9 @@ class EnglishSpaces3DWorld {
     try {
       await this.carregarThreeJS();
     } catch (e) {
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('Erro ao carregar motor gráfico 3D.', 'error');
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('Erro ao carregar motor gráfico 3D.', 'error');
+      }
       return;
     }
 
@@ -232,6 +497,7 @@ class EnglishSpaces3DWorld {
     this.iniciarMultiplayerRealtime();
   }
 
+  // 👤 CONSTRUTOR DE BONECO HUMANO 3D ARTICULADO
   criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a) {
     const THREE = window.THREE;
     const group = new THREE.Group();
@@ -307,60 +573,14 @@ class EnglishSpaces3DWorld {
     }
   }
 
-  // 🚪 CRIAR PAREDES SÓLIDAS COM PORTA E LETREIROS GRANDES EM INGLÊS
-  construirEdificioFechado3D(centerX, centerZ, col, bCfg) {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-    const bw = 10;
-    const bd = 10;
-    const bh = 4.4;
-
-    const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
-    const backWall = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
-    backWall.position.set(col * (bw / 2), bh / 2, 0);
-    backWall.rotation.y = Math.PI / 2;
-
-    const sideWall1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, bh, bd), wallMat);
-    sideWall1.position.set(0, bh / 2, -bd / 2);
-
-    const sideWall2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, bh, bd), wallMat);
-    sideWall2.position.set(0, bh / 2, bd / 2);
-
-    // Parede Frontal com Abertura de Porta (2.6m de vão central)
-    const frontX = -col * (bw / 2);
-    const wallPartW = (bd - 2.6) / 2;
-
-    const frontWall1 = new THREE.Mesh(new THREE.BoxGeometry(0.3, bh, wallPartW), wallMat);
-    frontWall1.position.set(frontX, bh / 2, -bd / 2 + wallPartW / 2);
-
-    const frontWall2 = new THREE.Mesh(new THREE.BoxGeometry(0.3, bh, wallPartW), wallMat);
-    frontWall2.position.set(frontX, bh / 2, bd / 2 - wallPartW / 2);
-
-    const doorHeader = new THREE.Mesh(new THREE.BoxGeometry(0.4, 1.2, 2.6), wallMat);
-    doorHeader.position.set(frontX, bh - 0.6, 0);
-
-    group.add(backWall, sideWall1, sideWall2, frontWall1, frontWall2, doorHeader);
-    group.position.set(centerX, 0, centerZ);
-    this.scene.add(group);
-
-    // Registo matemático das colisões de paredes para impedir o avatar de atravessar
-    const margem = 0.4;
-    this.wallColliders.push(
-      { minX: centerX + frontX - margem, maxX: centerX + frontX + margem, minZ: centerZ - bd/2, maxZ: centerZ - bd/2 + wallPartW },
-      { minX: centerX + frontX - margem, maxX: centerX + frontX + margem, minZ: centerZ + bd/2 - wallPartW, maxZ: centerZ + bd/2 },
-      { minX: centerX + (col * bw/2) - margem, maxX: centerX + (col * bw/2) + margem, minZ: centerZ - bd/2, maxZ: centerZ + bd/2 },
-      { minX: centerX - bw/2, maxX: centerX + bw/2, minZ: centerZ - bd/2 - margem, maxZ: centerZ - bd/2 + margem },
-      { minX: centerX - bw/2, maxX: centerX + bw/2, minZ: centerZ + bd/2 - margem, maxZ: centerZ + bd/2 + margem }
-    );
-  }
-
-  // 🛋️ MOBILIÁRIO E EXCLUSIVIDADES DOS 12 LOCAIS (SEM ÁRVORES DENTRO)
+  // 🛋️ CONSTRUTOR DE MOBILIÁRIO E OBJETOS 3D ESPECÍFICOS DE CADA UM DOS 12 PRÉDIOS
   decorarInteriorEdificio3D(id, centerX, centerZ, col, bCfg) {
     const THREE = window.THREE;
     const props = new THREE.Group();
-    const cX = centerX + (col * 1.8);
+    const cX = centerX + (col * 1.8); // Posição base do balcão principal
 
-    const criarMesaBistrô = (mx, mz, corTampo = 0x78350f, comVela = false) => {
+    // Função auxiliar rápida para criar uma mesa com 2 cadeiras em coordenadas locais
+    const criarConjuntoMesa = (mx, mz, corTampo = 0x78350f, corCadeira = 0x1e293b, comVela = false) => {
       const g = new THREE.Group();
       const pe = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.14, 0.75, 10), new THREE.MeshLambertMaterial({ color: 0x334155 }));
       pe.position.y = 0.375;
@@ -375,9 +595,9 @@ class EnglishSpaces3DWorld {
       }
 
       [-0.85, 0.85].forEach(offsetZ => {
-        const assento = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        const assento = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.42), new THREE.MeshLambertMaterial({ color: corCadeira }));
         assento.position.set(0, 0.225, offsetZ);
-        const encosto = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.08), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        const encosto = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.45, 0.08), new THREE.MeshLambertMaterial({ color: corCadeira }));
         encosto.position.set(0, 0.6, offsetZ + (offsetZ > 0 ? 0.17 : -0.17));
         g.add(assento, encosto);
       });
@@ -388,92 +608,253 @@ class EnglishSpaces3DWorld {
 
     switch (id) {
       case 'coffee': {
+        // Balcão rústico de cafetaria (estilo Brew & Study da referência)
         const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 4.4), new THREE.MeshLambertMaterial({ color: 0x451a03 }));
         counter.position.set(cX, 0.55, centerZ);
         const counterTop = new THREE.Mesh(new THREE.BoxGeometry(1.55, 0.1, 4.55), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
         counterTop.position.set(cX, 1.12, centerZ);
+        // Máquina de Expresso 3D + Moedor + Chávenas
         const espresso = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.6, 0.9), new THREE.MeshLambertMaterial({ color: 0x18181b }));
         espresso.position.set(cX, 1.45, centerZ - 1.1);
-        props.add(counter, counterTop, espresso);
-        props.add(criarMesaBistrô(centerX - (col * 1.8), centerZ - 2.6, 0x92400e));
-        props.add(criarMesaBistrô(centerX - (col * 1.8), centerZ + 2.6, 0x92400e));
+        const grinder = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.55, 12), new THREE.MeshLambertMaterial({ color: 0x27272a }));
+        grinder.position.set(cX, 1.42, centerZ + 0.3);
+        const pastryCase = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 1.1), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+        pastryCase.position.set(cX, 1.38, centerZ + 1.3);
+        // Toldo azul-escuro na fachada da loja
+        const awning = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.25, 9.6), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
+        awning.position.set(centerX - (col * 4.6), 3.7, centerZ);
+        awning.rotation.z = col * 0.25;
+        props.add(counter, counterTop, espresso, grinder, pastryCase, awning);
+        props.add(criarConjuntoMesa(centerX - (col * 1.8), centerZ - 2.6, 0x92400e, 0x27272a));
+        props.add(criarConjuntoMesa(centerX - (col * 1.8), centerZ + 2.6, 0x92400e, 0x27272a));
         break;
       }
+
       case 'restaurant': {
+        // Balcão de receção e chef + 3 mesas com toalha vermelha e vela
         const counter = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.8), new THREE.MeshLambertMaterial({ color: 0x881337 }));
         counter.position.set(cX, 0.55, centerZ);
-        props.add(counter);
-        props.add(criarMesaBistrô(centerX - (col * 1.2), centerZ - 2.7, 0xbe123c, true));
-        props.add(criarMesaBistrô(centerX - (col * 1.2), centerZ + 2.7, 0xbe123c, true));
+        const passTop = new THREE.Mesh(new THREE.BoxGeometry(1.45, 0.1, 3.95), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        passTop.position.set(cX, 1.12, centerZ);
+        props.add(counter, passTop);
+        props.add(criarConjuntoMesa(centerX - (col * 1.2), centerZ - 2.7, 0xbe123c, 0x1e293b, true));
+        props.add(criarConjuntoMesa(centerX - (col * 1.2), centerZ + 2.7, 0xbe123c, 0x1e293b, true));
+        props.add(criarConjuntoMesa(centerX - (col * 2.8), centerZ, 0xbe123c, 0x1e293b, true));
         break;
       }
+
       case 'school': {
+        // Quadro verde na parede de fundo + mesa do professor + 4 carteiras de alunos
+        const board = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.9, 5.4), new THREE.MeshLambertMaterial({ color: 0x064e3b }));
+        board.position.set(centerX + (col * 4.75), 2.3, centerZ);
         const teacherDesk = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.85, 2.6), new THREE.MeshLambertMaterial({ color: 0x78350f }));
         teacherDesk.position.set(cX, 0.425, centerZ);
-        props.add(teacherDesk);
+        props.add(board, teacherDesk);
+
         [-2.2, 2.2].forEach(dz => {
-          const desk = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.72, 1.1), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
-          desk.position.set(centerX - (col * 1.8), 0.36, centerZ + dz);
-          props.add(desk);
+          [-0.8, -2.5].forEach(dxMult => {
+            const sx = centerX + (col * dxMult);
+            const sz = centerZ + dz;
+            const desk = new THREE.Mesh(new THREE.BoxGeometry(0.75, 0.72, 1.1), new THREE.MeshLambertMaterial({ color: 0xd97706 }));
+            desk.position.set(sx, 0.36, sz);
+            const chair = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.45, 0.45), new THREE.MeshLambertMaterial({ color: 0x1e3a8a }));
+            chair.position.set(sx - (col * 0.55), 0.225, sz);
+            props.add(desk, chair);
+          });
         });
         break;
       }
+
       case 'shopping': {
+        // Balcão de caixa + 2 araras de roupas coloridas + espelho de provador
         const cashier = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.05, 3.2), new THREE.MeshLambertMaterial({ color: 0xfef08a }));
         cashier.position.set(cX, 0.525, centerZ);
-        props.add(cashier);
+        const mirror = new THREE.Mesh(new THREE.BoxGeometry(0.15, 2.2, 1.4), new THREE.MeshLambertMaterial({ color: 0xbae6fd }));
+        mirror.position.set(centerX + (col * 4.7), 1.2, centerZ - 2.8);
+        props.add(cashier, mirror);
+
+        [-2.6, 2.6].forEach((dz, idx) => {
+          const rx = centerX - (col * 1.4);
+          const rz = centerZ + dz;
+          const rackBar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 2.4, 8), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
+          rackBar.rotation.x = Math.PI / 2;
+          rackBar.position.set(rx, 1.45, rz);
+          const garment1 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.85, 0.65), new THREE.MeshLambertMaterial({ color: idx === 0 ? 0xec4899 : 0x3b82f6 }));
+          garment1.position.set(rx, 1.0, rz - 0.5);
+          const garment2 = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.85, 0.65), new THREE.MeshLambertMaterial({ color: idx === 0 ? 0x8b5cf6 : 0x10b981 }));
+          garment2.position.set(rx, 1.0, rz + 0.5);
+          props.add(rackBar, garment1, garment2);
+        });
         break;
       }
+
       case 'home': {
+        // Bancada americana + sofá de sala + tapete + mesa de centro + TV
         const island = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.05, 3.4), new THREE.MeshLambertMaterial({ color: 0xe2e8f0 }));
         island.position.set(cX, 0.525, centerZ - 1.6);
-        const sofa = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 2.8), new THREE.MeshLambertMaterial({ color: 0x4f46e5 }));
-        sofa.position.set(centerX - (col * 1.5), 0.25, centerZ + 1.8);
-        props.add(island, sofa);
+        const sofaBase = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.5, 2.8), new THREE.MeshLambertMaterial({ color: 0x4f46e5 }));
+        sofaBase.position.set(centerX - (col * 1.5), 0.25, centerZ + 1.8);
+        const sofaBack = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.95, 2.8), new THREE.MeshLambertMaterial({ color: 0x3730a3 }));
+        sofaBack.position.set(centerX - (col * 0.95), 0.5, centerZ + 1.8);
+        const rug = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 3.2), new THREE.MeshLambertMaterial({ color: 0xfde68a }));
+        rug.rotation.x = -Math.PI / 2;
+        rug.position.set(centerX - (col * 2.4), 0.03, centerZ + 1.8);
+        const tvScreen = new THREE.Mesh(new THREE.BoxGeometry(0.15, 1.2, 2.2), new THREE.MeshBasicMaterial({ color: 0x0ea5e9 }));
+        tvScreen.position.set(centerX + (col * 4.7), 1.8, centerZ + 1.8);
+        props.add(island, sofaBase, sofaBack, rug, tvScreen);
         break;
       }
+
       case 'cinema': {
+        // Grande ecrã de projeção + poltronas vermelhas de cinema + máquina de pipocas
+        const screen = new THREE.Mesh(new THREE.BoxGeometry(0.2, 2.6, 6.8), new THREE.MeshBasicMaterial({ color: 0xe0f2fe }));
+        screen.position.set(centerX + (col * 4.75), 2.2, centerZ);
+        const popcornBox = new THREE.Mesh(new THREE.BoxGeometry(1.1, 1.5, 1.4), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        popcornBox.position.set(cX, 0.75, centerZ + 2.8);
         const ticketCounter = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.05, 2.6), new THREE.MeshLambertMaterial({ color: 0x9d174d }));
-        ticketCounter.position.set(cX, 0.525, centerZ);
-        props.add(ticketCounter);
+        ticketCounter.position.set(cX, 0.525, centerZ - 1.2);
+        props.add(screen, popcornBox, ticketCounter);
+
+        [-2.2, -0.6, 1.0].forEach(zPos => {
+          const seat = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.75, 1.1), new THREE.MeshLambertMaterial({ color: 0xdc2626 }));
+          seat.position.set(centerX - (col * 1.8), 0.375, centerZ + zPos);
+          props.add(seat);
+        });
         break;
       }
+
       case 'taxi': {
+        // Cabine de despacho + Carro de Táxi Amarelo 3D estacionado!
         const booth = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, 2.6), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
-        booth.position.set(cX, 0.55, centerZ);
-        props.add(booth);
+        booth.position.set(cX, 0.55, centerZ - 1.8);
+
+        const carGroup = new THREE.Group();
+        const carBody = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.75, 4.0), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        carBody.position.y = 0.6;
+        const carCabin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.65, 2.1), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        carCabin.position.set(0, 1.25, -0.1);
+        const taxiSign = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.24, 0.3), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        taxiSign.position.set(0, 1.68, -0.1);
+        carGroup.add(carBody, carCabin, taxiSign);
+
+        [[-1.05, -1.2], [1.05, -1.2], [-1.05, 1.2], [1.05, 1.2]].forEach(([wx, wz]) => {
+          const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.25, 12), new THREE.MeshLambertMaterial({ color: 0x09090b }));
+          wheel.rotation.z = Math.PI / 2;
+          wheel.position.set(wx, 0.35, wz);
+          carGroup.add(wheel);
+        });
+
+        carGroup.position.set(centerX - (col * 1.6), 0, centerZ + 1.4);
+        props.add(booth, carGroup);
         break;
       }
+
       case 'beach': {
+        // Quiosque de madeira + faixa de mar turquesa + guarda-sol colorido + espreguiçadeiras
         const tikiBar = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.6), new THREE.MeshLambertMaterial({ color: 0x92400e }));
         tikiBar.position.set(cX, 0.55, centerZ);
-        props.add(tikiBar);
+        const waterStrip = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 9.6), new THREE.MeshBasicMaterial({ color: 0x06b6d4 }));
+        waterStrip.rotation.x = -Math.PI / 2;
+        waterStrip.position.set(centerX + (col * 3.3), 0.03, centerZ);
+
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.5, 8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        pole.position.set(centerX - (col * 1.8), 1.25, centerZ - 1.8);
+        const umbrellaTop = new THREE.Mesh(new THREE.ConeGeometry(1.6, 0.7, 12), new THREE.MeshLambertMaterial({ color: 0xf43f5e }));
+        umbrellaTop.position.set(centerX - (col * 1.8), 2.5, centerZ - 1.8);
+
+        const lounge1 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 0.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        lounge1.position.set(centerX - (col * 1.8), 0.14, centerZ - 0.5);
+        const lounge2 = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.28, 0.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
+        lounge2.position.set(centerX - (col * 1.8), 0.14, centerZ + 1.8);
+
+        props.add(tikiBar, waterStrip, pole, umbrellaTop, lounge1, lounge2);
         break;
       }
+
       case 'hotel': {
+        // Passadeira vermelha real + balcão de receção de mármore e ouro + carrinho de malas
+        const redCarpet = new THREE.Mesh(new THREE.PlaneGeometry(5.5, 2.2), new THREE.MeshLambertMaterial({ color: 0xbe123c }));
+        redCarpet.rotation.x = -Math.PI / 2;
+        redCarpet.position.set(centerX - (col * 1.6), 0.03, centerZ);
+
         const reception = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.15, 4.4), new THREE.MeshLambertMaterial({ color: 0x3b0764 }));
         reception.position.set(cX, 0.575, centerZ);
-        props.add(reception);
+        const goldTrim = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.12, 4.5), new THREE.MeshLambertMaterial({ color: 0xfacc15 }));
+        goldTrim.position.set(cX, 1.16, centerZ);
+
+        const luggageCart = new THREE.Mesh(new THREE.BoxGeometry(1.1, 0.2, 1.6), new THREE.MeshLambertMaterial({ color: 0xeab308 }));
+        luggageCart.position.set(centerX - (col * 1.8), 0.2, centerZ + 2.8);
+        const suitcase = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.65, 0.9), new THREE.MeshLambertMaterial({ color: 0x7c2d12 }));
+        suitcase.position.set(centerX - (col * 1.8), 0.62, centerZ + 2.8);
+
+        props.add(redCarpet, reception, goldTrim, luggageCart, suitcase);
         break;
       }
+
       case 'airport': {
+        // Balcão de Check-in Azul + Tapete Rolante de Bagagem com Mala + Pórtico Detetor de Metais
         const desk = new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.1, 3.6), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
-        desk.position.set(cX, 0.55, centerZ);
-        props.add(desk);
+        desk.position.set(cX, 0.55, centerZ - 1.0);
+        const conveyor = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.35, 1.4), new THREE.MeshLambertMaterial({ color: 0x18181b }));
+        conveyor.position.set(cX, 0.175, centerZ + 2.0);
+        const bag = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.5), new THREE.MeshLambertMaterial({ color: 0xef4444 }));
+        bag.position.set(cX, 0.72, centerZ + 2.0);
+
+        // Pórtico de segurança (Scanner)
+        const archLeft = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.4, 0.25), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+        archLeft.position.set(centerX - (col * 2.2), 1.2, centerZ - 3.2);
+        const archRight = new THREE.Mesh(new THREE.BoxGeometry(0.25, 2.4, 0.25), new THREE.MeshLambertMaterial({ color: 0x94a3b8 }));
+        archRight.position.set(centerX - (col * 2.2), 1.2, centerZ - 1.6);
+        const archTop = new THREE.Mesh(new THREE.BoxGeometry(0.3, 0.25, 1.85), new THREE.MeshLambertMaterial({ color: 0x38bdf8 }));
+        archTop.position.set(centerX - (col * 2.2), 2.45, centerZ - 2.4);
+
+        props.add(desk, conveyor, bag, archLeft, archRight, archTop);
         break;
       }
+
       case 'job': {
+        // Mesa executiva de entrevista + computador portátil 3D + cadeiras de candidato + estante
         const execDesk = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.85, 3.6), new THREE.MeshLambertMaterial({ color: 0x1e1b4b }));
         execDesk.position.set(cX, 0.425, centerZ);
-        props.add(execDesk);
+        const laptopBase = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.05, 0.6), new THREE.MeshLambertMaterial({ color: 0xcbd5e1 }));
+        laptopBase.position.set(cX, 0.88, centerZ);
+        const laptopScreen = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.38, 0.6), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
+        laptopScreen.position.set(cX - (col * 0.2), 1.08, centerZ);
+
+        const chair1 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.65), new THREE.MeshLambertMaterial({ color: 0x312e81 }));
+        chair1.position.set(centerX + (col * 0.2), 0.375, centerZ - 0.8);
+        const chair2 = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.75, 0.65), new THREE.MeshLambertMaterial({ color: 0x312e81 }));
+        chair2.position.set(centerX + (col * 0.2), 0.375, centerZ + 0.8);
+
+        const bookshelf = new THREE.Mesh(new THREE.BoxGeometry(0.5, 2.5, 2.4), new THREE.MeshLambertMaterial({ color: 0x451a03 }));
+        bookshelf.position.set(centerX + (col * 4.5), 1.25, centerZ - 2.6);
+
+        props.add(execDesk, laptopBase, laptopScreen, chair1, chair2, bookshelf);
         break;
       }
+
       case 'hospital': {
+        // Mesa médica + Maca clínica branca com almofada + Biombo azul + Cruz Médica na parede
         const docDesk = new THREE.Mesh(new THREE.BoxGeometry(1.3, 0.95, 2.8), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
-        docDesk.position.set(cX, 0.475, centerZ);
-        props.add(docDesk);
+        docDesk.position.set(cX, 0.475, centerZ - 1.2);
+
+        const bedFrame = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.65, 1.2), new THREE.MeshLambertMaterial({ color: 0xffffff }));
+        bedFrame.position.set(centerX - (col * 1.4), 0.325, centerZ + 2.2);
+        const pillow = new THREE.Mesh(new THREE.BoxGeometry(0.45, 0.16, 0.9), new THREE.MeshLambertMaterial({ color: 0xbae6fd }));
+        pillow.position.set(centerX - (col * 0.6), 0.72, centerZ + 2.2);
+
+        const screenDivider = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.85, 2.0), new THREE.MeshLambertMaterial({ color: 0x0284c7 }));
+        screenDivider.position.set(centerX - (col * 1.4), 0.925, centerZ + 0.8);
+
+        const crossV = new THREE.Mesh(new THREE.BoxGeometry(0.2, 1.2, 0.38), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        crossV.position.set(centerX + (col * 4.7), 2.6, centerZ);
+        const crossH = new THREE.Mesh(new THREE.BoxGeometry(0.2, 0.38, 1.2), new THREE.MeshBasicMaterial({ color: 0x10b981 }));
+        crossH.position.set(centerX + (col * 4.7), 2.6, centerZ);
+
+        props.add(docDesk, bedFrame, pillow, screenDivider, crossV, crossH);
         break;
       }
+
       default: {
         const counter = new THREE.Mesh(new THREE.BoxGeometry(1.4, 1.1, 4.2), new THREE.MeshLambertMaterial({ color: 0xf8fafc }));
         counter.position.set(cX, 0.55, centerZ);
@@ -484,85 +865,19 @@ class EnglishSpaces3DWorld {
     this.scene.add(props);
   }
 
-  // ☀️ LÓGICA DE CICLO DIA, PÔR DO SOL E NOITE EM TEMPO REAL
-  aplicarClimaTempoReal() {
+  // 💡 POSTES DE ILUMINAÇÃO PÚBLICA AO LONGO DA AVENIDA (IGUAL À REFERÊNCIA)
+  criarPostesAvenida3D() {
     const THREE = window.THREE;
-    const hora = new Date().getHours();
-    // 06h às 16h = Dia | 17h = Pôr do Sol | 18h às 05h = Noite
-    const isNoite = hora < 6 || hora >= 18;
-    const isPorDoSol = hora === 17;
-
-    if (isNoite) {
-      this.scene.background.setHex(0x050711);
-      this.scene.fog.color.setHex(0x050711);
-      if (this.solMesh) this.solMesh.visible = false;
-      if (this.luaMesh) this.luaMesh.visible = true;
-      if (this.estrelasPoints) this.estrelasPoints.visible = true;
-    } else if (isPorDoSol) {
-      this.scene.background.setHex(0x7c2d12);
-      this.scene.fog.color.setHex(0x7c2d12);
-      if (this.solMesh) this.solMesh.visible = true;
-      if (this.luaMesh) this.luaMesh.visible = false;
-      if (this.estrelasPoints) this.estrelasPoints.visible = false;
-    } else {
-      this.scene.background.setHex(0x38bdf8);
-      this.scene.fog.color.setHex(0x38bdf8);
-      if (this.solMesh) this.solMesh.visible = true;
-      if (this.luaMesh) this.luaMesh.visible = false;
-      if (this.estrelasPoints) this.estrelasPoints.visible = false;
+    for (let row = 0; row < 6; row++) {
+      const zPos = -row * 16 + 6;
+      [-5.8, 5.8].forEach(xPos => {
+        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.2, 8), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+        pole.position.set(xPos, 2.1, zPos);
+        const lampHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfef08a }));
+        lampHead.position.set(xPos, 4.3, zPos);
+        this.scene.add(pole, lampHead);
+      });
     }
-  }
-
-  // 🚗 TRÂNSITO URBANO E PEDESTRES NA CALÇADA
-  criarVidaUrbana() {
-    const THREE = window.THREE;
-    // Criar Sol e Lua no Céu
-    const solGeo = new THREE.SphereGeometry(3.5, 16, 16);
-    const solMat = new THREE.MeshBasicMaterial({ color: 0xfef08a });
-    this.solMesh = new THREE.Mesh(solGeo, solMat);
-    this.solMesh.position.set(30, 60, -40);
-    this.scene.add(this.solMesh);
-
-    const luaGeo = new THREE.SphereGeometry(2.5, 16, 16);
-    const luaMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
-    this.luaMesh = new THREE.Mesh(luaGeo, luaMat);
-    this.luaMesh.position.set(-30, 55, -40);
-    this.scene.add(this.luaMesh);
-
-    // Estrelas
-    const starsGeo = new THREE.BufferGeometry();
-    const starPositions = [];
-    for (let i = 0; i < 300; i++) {
-      starPositions.push((Math.random() - 0.5) * 160, Math.random() * 50 + 20, (Math.random() - 0.5) * 160);
-    }
-    starsGeo.setAttribute('position', new THREE.Float32BufferAttribute(starPositions, 3));
-    this.estrelasPoints = new THREE.Points(starsGeo, new THREE.PointsMaterial({ color: 0xffffff, size: 0.7 }));
-    this.scene.add(this.estrelasPoints);
-
-    // Carros em movimento
-    for (let i = 0; i < 4; i++) {
-      const car = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 3.8), new THREE.MeshLambertMaterial({ color: i % 2 === 0 ? 0xef4444 : 0x3b82f6 }));
-      const laneX = i % 2 === 0 ? -2.2 : 2.2;
-      const zPos = (i * 35) - 60;
-      car.position.set(laneX, 0.35, zPos);
-      this.scene.add(car);
-      this.carrosTrransito.push({ mesh: car, speed: (i % 2 === 0 ? 5.5 : -5.5), laneX });
-    }
-
-    this.aplicarClimaTempoReal();
-  }
-
-  atualizarVidaUrbana(delta) {
-    this.carrosTrransito.forEach(c => {
-      c.mesh.position.z += c.speed * delta;
-      if (c.mesh.position.z > 20) c.mesh.position.z = -80;
-      if (c.mesh.position.z < -80) c.mesh.position.z = 20;
-
-      // Se o aluno estiver no meio da rua à frente do carro, o carro abranda ou para
-      if (this.localPlayer && Math.abs(this.localPlayer.x - c.laneX) < 2.5 && Math.abs(this.localPlayer.z - c.mesh.position.z) < 5.0) {
-        // Para com segurança
-      }
-    });
   }
 
   inicializarCenaThreeJS(initialSpaceId) {
@@ -572,7 +887,8 @@ class EnglishSpaces3DWorld {
     const h = viewport.clientHeight || window.innerHeight;
 
     this.scene = new THREE.Scene();
-    this.scene.fog = new THREE.FogExp2(0x050711, 0.011);
+    this.scene.background = new THREE.Color(0x070b19);
+    this.scene.fog = new THREE.FogExp2(0x070b19, 0.011);
 
     this.camera = new THREE.PerspectiveCamera(55, w / h, 0.1, 220);
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -580,24 +896,31 @@ class EnglishSpaces3DWorld {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
 
-    const ambLight = new THREE.AmbientLight(0xffffff, 0.75);
+    const ambLight = new THREE.AmbientLight(0xffffff, 0.72);
     this.scene.add(ambLight);
-    const dirLight = new THREE.DirectionalLight(0xfef08a, 0.7);
+    const dirLight = new THREE.DirectionalLight(0xfef08a, 0.65);
     dirLight.position.set(25, 45, 20);
     this.scene.add(dirLight);
 
-    // Chão e Avenida
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(140, 180), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(140, 180),
+      new THREE.MeshLambertMaterial({ color: 0x0f172a })
+    );
     ground.rotation.x = -Math.PI / 2;
     ground.position.set(0, 0, -35);
     this.scene.add(ground);
 
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 150), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    const road = new THREE.Mesh(
+      new THREE.PlaneGeometry(10, 150),
+      new THREE.MeshLambertMaterial({ color: 0x1e293b })
+    );
     road.rotation.x = -Math.PI / 2;
     road.position.set(0, 0.01, -35);
     this.scene.add(road);
 
-    this.wallColliders = [];
+    // Adiciona postes de luz ao longo da avenida central
+    this.criarPostesAvenida3D();
+
     this.buildingsMeta = [];
     this.npcs3D.clear();
     const selectTeleport = document.getElementById('es-city-teleport');
@@ -613,21 +936,49 @@ class EnglishSpaces3DWorld {
       const bd = 10;
       const bh = 4.2;
 
-      // Piso Interno
-      const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(bw, bd), new THREE.MeshStandardMaterial({ color: bCfg.color, roughness: 0.85 }));
+      const floorMesh = new THREE.Mesh(
+        new THREE.PlaneGeometry(bw, bd),
+        new THREE.MeshStandardMaterial({ color: bCfg.color, roughness: 0.85, metalness: 0.08 })
+      );
       floorMesh.rotation.x = -Math.PI / 2;
       floorMesh.position.set(centerX, 0.02, centerZ);
+      floorMesh.receiveShadow = true;
       this.scene.add(floorMesh);
 
-      // Luz interna quente
       const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.25, 15);
       shopLight.position.set(centerX, 3.2, centerZ);
       this.scene.add(shopLight);
 
-      // 🚪 CONSTRUIR AS 4 PAREDES COM PORTA E COLISÃO
-      this.construirEdificioFechado3D(centerX, centerZ, bCfg.col, bCfg);
+      // Vasos de plantas decorativos nos dois lados da entrada do prédio
+      [-3.8, 3.8].forEach(zSide => {
+        const plantPot = new THREE.Mesh(
+          new THREE.BoxGeometry(0.6, 0.5, 0.6),
+          new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
+        );
+        plantPot.position.set(centerX - bCfg.col * 4.5, 0.25, centerZ + zSide);
+        const plantLeaves = new THREE.Mesh(
+          new THREE.BoxGeometry(0.8, 0.8, 0.8),
+          new THREE.MeshLambertMaterial({ color: 0x16a34a })
+        );
+        plantLeaves.position.set(centerX - bCfg.col * 4.5, 0.9, centerZ + zSide);
+        this.scene.add(plantPot, plantLeaves);
+      });
 
-      // 🛋️ Mobiliário interno exclusivo
+      const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
+      const backWall = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
+      backWall.position.set(centerX + (bCfg.col * (bw / 2)), bh / 2, centerZ);
+      backWall.rotation.y = Math.PI / 2;
+      this.scene.add(backWall);
+
+      const sideWall1 = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
+      sideWall1.position.set(centerX, bh / 2, centerZ - bd / 2);
+      this.scene.add(sideWall1);
+
+      const sideWall2 = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
+      sideWall2.position.set(centerX, bh / 2, centerZ + bd / 2);
+      this.scene.add(sideWall2);
+
+      // 🛋️ Constrói os objetos 3D, mesas, cadeiras e balcões exclusivos deste prédio!
       this.decorarInteriorEdificio3D(bCfg.id, centerX, centerZ, bCfg.col, bCfg);
 
       const npcX = centerX + (bCfg.col * 3.1);
@@ -638,7 +989,7 @@ class EnglishSpaces3DWorld {
       this.scene.add(npcMesh);
 
       const labelEl = this.criarEtiquetaHTML(`${spInfo.emoji} ${spInfo.npcName}`, 'AI HOST', '#10b981');
-      const signEl = this.criarPlacaEdificioHTML(`${spInfo.emoji} ${bCfg.title}`);
+      const signEl = this.criarPlacaEdificioHTML(`${spInfo.emoji} ${spInfo.name}`);
 
       this.npcs3D.set(bCfg.id, {
         id: bCfg.id,
@@ -648,7 +999,7 @@ class EnglishSpaces3DWorld {
         z: npcZ,
         mesh: npcMesh,
         labelEl,
-        bubbleText: spInfo.dialogues?.start?.text || 'Welcome!'
+        bubbleText: spInfo.dialogues?.start?.text || 'Welcome! Walk close to talk to me!'
       });
 
       this.buildingsMeta.push({
@@ -660,7 +1011,7 @@ class EnglishSpaces3DWorld {
         maxX: centerX + bw / 2,
         minZ: centerZ - bd / 2,
         maxZ: centerZ + bd / 2,
-        signPos: new THREE.Vector3(centerX - (bCfg.col * (bw / 2 - 0.5)), bh + 0.9, centerZ),
+        signPos: new THREE.Vector3(centerX - (bCfg.col * (bw / 2 - 0.5)), bh + 0.8, centerZ),
         signEl
       });
 
@@ -671,8 +1022,6 @@ class EnglishSpaces3DWorld {
         selectTeleport.appendChild(opt);
       }
     });
-
-    this.criarVidaUrbana();
 
     const u = window.Workspace?.usuario || {};
     const meuNome = u.nome || u.login || 'You';
@@ -704,21 +1053,6 @@ class EnglishSpaces3DWorld {
 
     this.clock = new THREE.Clock();
     this.iniciarLoopRenderizacao();
-  }
-
-  podeMoverPara(proximoX, proximoZ) {
-    const raioAvatar = 0.35;
-    for (const w of this.wallColliders) {
-      if (
-        proximoX + raioAvatar >= w.minX &&
-        proximoX - raioAvatar <= w.maxX &&
-        proximoZ + raioAvatar >= w.minZ &&
-        proximoZ - raioAvatar <= w.maxZ
-      ) {
-        return false; // Colidiu com a parede
-      }
-    }
-    return true; // Caminho livre
   }
 
   criarEtiquetaHTML(nome, role, corBadge) {
@@ -773,6 +1107,7 @@ class EnglishSpaces3DWorld {
       const p = this.localPlayer;
       if (!p) return;
 
+      // 1. Movimento por Teclado (WASD / Setas) ou D-Pad Circular alinhado à direção da Câmara
       let inputRight = 0;
       let inputForward = 0;
       if (this.keys['ArrowUp'] || this.keys['KeyW'] || this.keys['pad_up']) inputForward += 1;
@@ -797,13 +1132,8 @@ class EnglishSpaces3DWorld {
 
         const dx = worldDirX * speed * delta;
         const dz = worldDirZ * speed * delta;
-
-        // 🛡️ SISTEMA DE COLISÃO: Só move se não bater nas paredes
-        const novoX = p.x + dx;
-        const novoZ = p.z + dz;
-        if (this.podeMoverPara(novoX, p.z)) p.x = novoX;
-        if (this.podeMoverPara(p.x, novoZ)) p.z = novoZ;
-
+        p.x = Math.max(-20, Math.min(20, p.x + dx));
+        p.z = Math.max(-92, Math.min(12, p.z + dz));
         p.rotY = Math.atan2(worldDirX, worldDirZ);
         estaAndando = true;
       } else if (p.targetX !== null && p.targetZ !== null) {
@@ -812,10 +1142,8 @@ class EnglishSpaces3DWorld {
         const dist = Math.hypot(dx, dz);
         if (dist > 0.2) {
           const step = Math.min(dist, speed * delta);
-          const nx = p.x + (dx / dist) * step;
-          const nz = p.z + (dz / dist) * step;
-          if (this.podeMoverPara(nx, p.z)) p.x = nx;
-          if (this.podeMoverPara(p.x, nz)) p.z = nz;
+          p.x += (dx / dist) * step;
+          p.z += (dz / dist) * step;
           p.rotY = Math.atan2(dx, dz);
           estaAndando = true;
         } else {
@@ -827,16 +1155,14 @@ class EnglishSpaces3DWorld {
       p.mesh.position.set(p.x, 0, p.z);
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
-      this.atualizarVidaUrbana(delta);
 
-      // 👁️ CÂMARA EM 3.ª PESSOA COM ROTAÇÃO HORIZONTAL E VERTICAL (OLHAR PARA O CÉU)
-      const distCam = 8.2;
-      const camX = p.x + Math.sin(this.cameraYaw) * Math.cos(this.cameraPitch) * distCam;
-      const camY = 1.4 + Math.sin(this.cameraPitch) * distCam + 2.0;
-      const camZ = p.z + Math.cos(this.cameraYaw) * Math.cos(this.cameraPitch) * distCam;
-      this.camera.position.set(camX, Math.max(1.5, camY), camZ);
+      // 2. Câmara em 3.ª Pessoa orbitando o centro exato do Boneco
+      const camOffsetX = Math.sin(this.cameraYaw) * 8.2;
+      const camOffsetZ = Math.cos(this.cameraYaw) * 8.2;
+      this.camera.position.set(p.x + camOffsetX, 4.8, p.z + camOffsetZ);
       this.camera.lookAt(p.x, 1.4, p.z);
 
+      // 3. Detetar automaticamente se o Avatar entrou num dos 12 Edifícios
       let zonaDetetada = 'street';
       for (const b of this.buildingsMeta) {
         if (p.x >= b.minX && p.x <= b.maxX && p.z >= b.minZ && p.z <= b.maxZ) {
@@ -849,12 +1175,16 @@ class EnglishSpaces3DWorld {
         this.atualizarHudZonaLocal(zonaDetetada);
       }
 
+      // 4. Radar de Proximidade Física
       this.nearbyTargets = [];
+
       this.npcs3D.forEach((npc) => {
         const d = Math.hypot(npc.x - p.x, npc.z - p.z);
         const perto = d <= PROXIMITY_RADIUS;
         npc.mesh.userData.ringMat.opacity = perto ? 0.75 : 0.0;
-        if (perto) this.nearbyTargets.push({ type: 'npc', id: npc.id, name: npc.name, space: npc.space, dist: d, ref: npc });
+        if (perto) {
+          this.nearbyTargets.push({ type: 'npc', id: npc.id, name: npc.name, space: npc.space, dist: d, ref: npc });
+        }
       });
 
       this.otherPlayers3D.forEach((op) => {
@@ -865,20 +1195,25 @@ class EnglishSpaces3DWorld {
         op.mesh.position.z += dz * 0.15;
         op.mesh.rotation.y = op.rotY || 0;
         this.animarPassosBoneco(op.mesh, movendoOp, delta);
+
         const d = Math.hypot(op.mesh.position.x - p.x, op.mesh.position.z - p.z);
         const perto = d <= PROXIMITY_RADIUS;
         op.mesh.userData.ringMat.opacity = perto ? 0.75 : 0.0;
-        if (perto) this.nearbyTargets.push({ type: 'player', id: op.userId, name: op.nome, dist: d, ref: op });
+        if (perto) {
+          this.nearbyTargets.push({ type: 'player', id: op.userId, name: op.nome, dist: d, ref: op });
+        }
       });
 
       p.mesh.userData.ringMat.opacity = this.nearbyTargets.length > 0 ? 0.65 : 0.0;
       this.atualizarBadgeProximidade();
 
+      // 5. Sincronizar posição no servidor quando o aluno caminha
       if (estaAndando && Date.now() - this.lastSyncTime > 260) {
         this.lastSyncTime = Date.now();
         this.enviarMinhaPosicaoServidor();
       }
 
+      // 6. Atualizar posição das etiquetas 2D sobre a cabeça dos bonecos 3D
       const vw = viewport.clientWidth || window.innerWidth;
       const vh = viewport.clientHeight || window.innerHeight;
       this.projetarEtiquetaHTML(p.mesh.position, 2.45, p.labelEl, vw, vh);
@@ -911,16 +1246,20 @@ class EnglishSpaces3DWorld {
 
   atualizarHudZonaLocal(zoneId) {
     const badge = document.getElementById('es-city-zone-badge');
-    if (!badge) return;
+    const hudContent = document.getElementById('es-city-hud-content');
+    if (!badge || !hudContent) return;
+
     if (zoneId === 'street') {
-      badge.innerHTML = '🏙️ English City Boulevard';
+      badge.innerHTML = '🏙️ English City Boulevard (Street)';
       return;
     }
+
     const bMeta = this.buildingsMeta.find(b => b.id === zoneId);
     if (!bMeta) return;
     const sp = bMeta.space;
     this.parentManager.state.currentSpace = sp;
     this.parentManager.registarMissaoConcluida(sp.id, 'visit', 10);
+
     badge.innerHTML = `${sp.emoji} Inside: ${sp.name}`;
   }
 
@@ -930,7 +1269,7 @@ class EnglishSpaces3DWorld {
     if (!badge) return;
 
     if (this.nearbyTargets.length === 0) {
-      badge.style.background = 'rgba(18, 20, 36, 0.76)';
+      badge.style.background = 'rgba(22, 24, 38, 0.76)';
       badge.style.borderColor = 'rgba(255, 255, 255, 0.14)';
       badge.style.color = '#cbd5e1';
       badge.innerHTML = '<span style="color:#f87171;">•</span> Out of Range';
@@ -1047,21 +1386,16 @@ class EnglishSpaces3DWorld {
     domCanvas.addEventListener('pointerdown', (e) => {
       this.isDraggingCam = true;
       this.dragStartX = e.clientX;
-      this.dragStartY = e.clientY;
       this._movedDrag = false;
     });
 
     domCanvas.addEventListener('pointermove', (e) => {
       if (!this.isDraggingCam) return;
       const dx = e.clientX - this.dragStartX;
-      const dy = e.clientY - this.dragStartY;
-      if (Math.abs(dx) > 4 || Math.abs(dy) > 4) {
+      if (Math.abs(dx) > 6) {
         this._movedDrag = true;
         this.cameraYaw -= dx * 0.006;
-        // Rotação vertical com limites para não capotar a câmara
-        this.cameraPitch = Math.max(0.05, Math.min(1.35, this.cameraPitch + dy * 0.005));
         this.dragStartX = e.clientX;
-        this.dragStartY = e.clientY;
       }
     });
 
