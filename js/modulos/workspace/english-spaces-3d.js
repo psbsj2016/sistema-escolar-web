@@ -66,317 +66,403 @@ class EnglishSpaces3DWorld {
 
     containerRoot.innerHTML = `
       <style>
-        /* Oculta o scroll da página de fundo enquanto o Mundo 3D está aberto */
+        /* ===== DESIGN ELEVADO - APENAS VISUAL, LÓGICA 100% INTACTA ===== */
         body { overflow: hidden !important; }
 
-        /* Contentor Fullscreen que cobre 100% do computador, tablet e telemóvel (incluindo a barra do WorkSpace) */
         #es-city-wrapper {
           position: fixed !important;
           inset: 0 !important;
           width: 100vw !important;
           height: 100dvh !important;
-          background: radial-gradient(circle at 50% 35%, #15162c 0%, #090a14 70%, #05060b 100%) !important;
+          background: radial-gradient(ellipse at 50% -10%, #1c2050 0%, #13162f 35%, #0a0c1a 70%, #05070e 100%) !important;
           z-index: 1000020 !important;
           display: flex !important;
           flex-direction: column !important;
           justify-content: space-between !important;
-          font-family: 'Inter', 'Poppins', sans-serif !important;
+          font-family: 'Inter', 'Geist', 'Poppins', sans-serif !important;
           user-select: none !important;
           overflow: hidden !important;
         }
 
-        /* 1. Remoção da poluição visual (mantendo os IDs vivos para o JS não quebrar) */
+        /* Mantém IDs vivos pro JS, mas visualmente limpos */
         #es-city-Hud-card,
         #es-city-teleport,
         #es-city-chat-feed {
-          display: none !important;
+          position: absolute !important;
+          width: 0 !important;
+          height: 0 !important;
+          overflow: hidden !important;
+          opacity: 0 !important;
+          pointer-events: none !important;
         }
 
-        /* 2. Topo Limpo estilo Referência */
+        /* TOPO ELEVADO */
         .es-ref-top-area {
           position: relative;
           z-index: 30;
-          padding: max(12px, env(safe-area-inset-top)) 16px 0 16px;
+          padding: max(14px, env(safe-area-inset-top)) 18px 0 18px;
           display: flex;
           flex-direction: column;
-          gap: 10px;
+          gap: 12px;
           pointer-events: none;
         }
 
         .es-ref-ws-header {
           pointer-events: auto;
-          background: linear-gradient(135deg, #3b66f5 0%, #254EDB 100%);
-          border-radius: 20px;
-          padding: 16px 22px;
+          background: linear-gradient(135deg, #5b7cf9 0%, #3b5bdb 45%, #254EDB 100%);
+          border-radius: 22px;
+          padding: 18px 24px;
           display: flex;
           align-items: center;
           justify-content: space-between;
-          box-shadow: 0 10px 28px rgba(37, 78, 219, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+          box-shadow: 0 14px 36px rgba(37, 78, 219, 0.38), 0 2px 0 rgba(255,255,255,0.15) inset;
+          border: 1px solid rgba(255,255,255,0.12);
         }
 
         .es-ref-ws-title {
           color: #ffffff;
           font-size: 22px;
-          font-weight: 800;
-          letter-spacing: -0.4px;
+          font-weight: 900;
+          letter-spacing: -0.6px;
           margin: 0;
+          text-shadow: 0 1px 2px rgba(0,0,0,0.25);
         }
 
         .es-ref-ws-dots {
-          width: 34px;
-          height: 34px;
+          width: 36px;
+          height: 36px;
           border-radius: 50%;
           background: rgba(255, 255, 255, 0.18);
+          backdrop-filter: blur(8px);
           color: #ffffff;
           display: flex;
           align-items: center;
           justify-content: center;
           font-weight: 900;
-          letter-spacing: 1px;
           font-size: 14px;
+          border: 1px solid rgba(255,255,255,0.14);
         }
 
         .es-ref-subbar {
           display: flex;
           align-items: center;
           justify-content: space-between;
-          padding: 0 4px;
+          padding: 0 6px;
+          gap: 10px;
         }
 
-        /* Pílula roxa pequena de localização */
         #es-city-zone-badge {
           pointer-events: auto;
-          background: rgba(124, 58, 237, 0.28) !important;
-          border: 1px solid rgba(167, 139, 250, 0.45) !important;
-          color: #e9d5ff !important;
-          padding: 5px 12px !important;
+          background: linear-gradient(135deg, rgba(139,92,246,0.24), rgba(124,58,237,0.18)) !important;
+          border: 1px solid rgba(167,139,250,0.38) !important;
+          color: #ede9fe !important;
+          padding: 7px 14px !important;
           border-radius: 999px !important;
-          font-size: 11.5px !important;
-          font-weight: 700 !important;
-          backdrop-filter: blur(10px);
-          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+          font-size: 12px !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.2px !important;
+          backdrop-filter: blur(16px) saturate(1.2);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
         }
 
-        /* Botão discreto Exit 3D World no canto superior direito */
         #es-city-exit-btn {
           pointer-events: auto;
-          background: rgba(24, 26, 42, 0.82) !important;
+          background: rgba(18, 20, 36, 0.78) !important;
           border: 1px solid rgba(255, 255, 255, 0.14) !important;
           color: #e2e8f0 !important;
-          padding: 6px 14px !important;
+          padding: 8px 16px !important;
           border-radius: 999px !important;
           font-size: 12px !important;
           font-weight: 700 !important;
-          cursor: pointer;
-          backdrop-filter: blur(10px);
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.25);
           transition: all 0.2s ease;
-          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
         }
         #es-city-exit-btn:hover {
-          background: rgba(239, 68, 68, 0.85) !important;
-          color: #ffffff !important;
-          border-color: rgba(252, 165, 165, 0.5) !important;
+          background: rgba(28, 30, 52, 0.9) !important;
+          color: #fff !important;
+          transform: translateY(-1px);
         }
 
-        /* Pílula minúscula, centralizada e translúcida de Proximidade */
         .es-ref-proximity-wrap {
           display: flex;
           justify-content: center;
-          margin-top: 2px;
+          padding: 2px 0;
         }
+
         #es-city-proximity-badge {
           pointer-events: auto;
-          background: rgba(22, 24, 38, 0.72) !important;
-          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          background: rgba(18, 20, 36, 0.72) !important;
+          border: 1px solid rgba(255,255,255,0.12) !important;
           color: #cbd5e1 !important;
-          padding: 4px 14px !important;
+          padding: 6px 14px !important;
           border-radius: 999px !important;
-          font-size: 11px !important;
-          font-weight: 600 !important;
-          backdrop-filter: blur(12px);
-          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
-          letter-spacing: 0.2px;
+          font-size: 11.5px !important;
+          font-weight: 700 !important;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.28);
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          transition: all 0.3s ease;
         }
 
-        /* 3. Viewport 3D ocupando o ecrã limpo */
+        /* VIEWPORT 3D - ESTRELA DO SHOW */
         #es-city-viewport {
-          position: absolute !important;
-          inset: 0 !important;
+          position: relative !important;
+          flex: 1 !important;
+          width: 100% !important;
+          overflow: hidden !important;
+          background: transparent !important;
+          margin: 12px 0 !important;
+        }
+        #es-city-viewport canvas {
+          display: block !important;
           width: 100% !important;
           height: 100% !important;
-          z-index: 1 !important;
-          overflow: hidden !important;
-          touch-action: none !important;
+          border-radius: 0 !important;
         }
 
-        /* Nameplates flutuantes iguais à referência */
-        .es-ref-nameplate {
-          background: rgba(15, 17, 30, 0.82);
-          backdrop-filter: blur(10px);
-          border: 1px solid rgba(255, 255, 255, 0.14);
-          color: #f8fafc;
-          padding: 5px 12px;
+        #es-city-labels-layer {
+          position: absolute;
+          inset: 0;
+          pointer-events: none;
+          z-index: 10;
+          overflow: hidden;
+        }
+
+        /* Labels elevados - igual referência Brew & Study */
+        .es-city-label {
+          position: absolute;
+          transform: translate(-50%, -100%);
+          background: rgba(12, 14, 28, 0.86);
+          border: 1px solid rgba(139,92,246,0.32);
+          color: #e9d5ff;
+          padding: 6px 12px;
           border-radius: 999px;
           font-size: 11.5px;
           font-weight: 700;
           white-space: nowrap;
-          display: inline-flex;
-          align-items: center;
-          gap: 6px;
-          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+          backdrop-filter: blur(14px);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+          pointer-events: none;
+          letter-spacing: 0.2px;
         }
-
-        /* 4. D-Pad Circular Único e Translúcido no Canto Inferior Direito */
-        .es-dpad-circle {
+        .es-city-label.me {
+          background: rgba(18, 22, 48, 0.9);
+          border-color: rgba(59,130,246,0.4);
+          color: #dbeafe;
+        }
+        .es-city-sign {
           position: absolute;
-          bottom: 96px;
-          right: 22px;
-          width: 108px;
-          height: 108px;
-          border-radius: 50%;
-          background: rgba(20, 22, 36, 0.62);
+          transform: translate(-50%, -50%);
+          background: rgba(12, 14, 28, 0.82);
+          border: 1px solid rgba(255,255,255,0.12);
+          color: #fff;
+          padding: 5px 10px;
+          border-radius: 10px;
+          font-size: 11px;
+          font-weight: 800;
+          letter-spacing: 0.3px;
           backdrop-filter: blur(12px);
-          border: 1.5px solid rgba(255, 255, 255, 0.12);
-          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.08);
-          z-index: 25;
-          display: flex;
-          align-items: center;
-          justify-content: center;
+          box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+          pointer-events: none;
         }
-        .es-dpad-circle .es-move-pad {
-          position: absolute;
-          width: 34px;
-          height: 34px;
-          border: none !important;
-          background: transparent !important;
-          color: rgba(226, 232, 240, 0.75) !important;
-          font-size: 13px !important;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          cursor: pointer;
-          border-radius: 50%;
-          transition: background 0.15s, color 0.15s, transform 0.1s;
-        }
-        .es-dpad-circle .es-move-pad:active,
-        .es-dpad-circle .es-move-pad:hover {
-          background: rgba(255, 255, 255, 0.12) !important;
-          color: #ffffff !important;
-        }
-        .es-dpad-circle .es-move-pad[data-dir="up"]    { top: 4px; left: 50%; transform: translateX(-50%); }
-        .es-dpad-circle .es-move-pad[data-dir="down"]  { bottom: 4px; left: 50%; transform: translateX(-50%); }
-        .es-dpad-circle .es-move-pad[data-dir="left"]  { left: 4px; top: 50%; transform: translateY(-50%); }
-        .es-dpad-circle .es-move-pad[data-dir="right"] { right: 4px; top: 50%; transform: translateY(-50%); }
 
-        /* 5. Bottom Bar com 3 Itens Fixos Iguais à Referência */
+        /* D-PAD CIRCULAR ELEVADO */
+        .es-dpad-circle {
+          position: absolute !important;
+          right: 22px !important;
+          bottom: 108px !important;
+          width: 112px !important;
+          height: 112px !important;
+          border-radius: 50% !important;
+          background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.72)) !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          backdrop-filter: blur(18px) saturate(1.2) !important;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+          z-index: 20 !important;
+          display: grid !important;
+          grid-template-areas: ". up ." "left . right" ". down ." !important;
+          place-items: center !important;
+          padding: 8px !important;
+        }
+
+        .es-move-pad {
+          width: 32px !important;
+          height: 32px !important;
+          border-radius: 50% !important;
+          background: rgba(255,255,255,0.06) !important;
+          border: 1px solid rgba(255,255,255,0.1) !important;
+          color: #cbd5e1 !important;
+          font-size: 12px !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        .es-move-pad[data-dir="up"] { grid-area: up; }
+        .es-move-pad[data-dir="left"] { grid-area: left; }
+        .es-move-pad[data-dir="right"] { grid-area: right; }
+        .es-move-pad[data-dir="down"] { grid-area: down; }
+        .es-move-pad:active {
+          background: rgba(139,92,246,0.32) !important;
+          color: #fff !important;
+          transform: scale(0.92);
+          border-color: rgba(139,92,246,0.5) !important;
+        }
+
+        /* BOTTOM BAR ELEVADA - IGUAL REFERÊNCIA */
         .es-ref-bottom-bar {
           position: relative;
           z-index: 30;
-          margin: 0 14px max(14px, env(safe-area-inset-bottom)) 14px;
-          padding: 10px 12px;
-          background: rgba(16, 18, 30, 0.88);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.09);
-          border-radius: 20px;
+          pointer-events: auto;
           display: flex;
           align-items: center;
           gap: 10px;
-          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+          padding: 12px;
+          margin: 0 16px max(14px, env(safe-area-inset-bottom)) 16px;
+          background: rgba(14, 16, 28, 0.88) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          border-radius: 20px !important;
+          backdrop-filter: blur(22px) saturate(1.25) !important;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08) !important;
         }
 
         #es-city-voice-btn {
-          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
-          color: #ffffff !important;
-          border: none !important;
+          height: 46px !important;
           padding: 0 16px !important;
-          height: 44px !important;
           border-radius: 14px !important;
-          font-weight: 700 !important;
+          background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important;
+          color: #fff !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
           font-size: 13px !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.2px !important;
+          box-shadow: 0 8px 18px rgba(16,185,129,0.32) !important;
+          cursor: pointer !important;
           display: inline-flex !important;
           align-items: center !important;
-          gap: 7px !important;
-          cursor: pointer !important;
+          gap: 6px !important;
           white-space: nowrap !important;
-          box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
-          flex-shrink: 0;
+          transition: transform 0.15s ease !important;
         }
+        #es-city-voice-btn:active { transform: scale(0.97); }
 
         #es-city-speak-nearby-pill {
-          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
-          color: #ffffff !important;
-          border: none !important;
+          height: 46px !important;
           padding: 0 16px !important;
-          height: 44px !important;
           border-radius: 14px !important;
-          font-weight: 700 !important;
+          background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important;
+          color: #fff !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
           font-size: 13px !important;
+          font-weight: 800 !important;
+          box-shadow: 0 8px 18px rgba(139,92,246,0.32) !important;
+          cursor: pointer !important;
           display: inline-flex !important;
           align-items: center !important;
-          gap: 7px !important;
-          cursor: pointer !important;
+          gap: 6px !important;
           white-space: nowrap !important;
-          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35) !important;
-          flex-shrink: 0;
+          transition: transform 0.15s ease !important;
         }
+        #es-city-speak-nearby-pill:active { transform: scale(0.97); }
 
         .es-ref-input-group {
-          flex: 1;
-          min-width: 140px;
-          height: 44px;
-          background: rgba(30, 33, 52, 0.9);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 14px;
-          display: flex;
-          align-items: center;
-          padding: 0 6px 0 14px;
+          flex: 1 !important;
+          height: 46px !important;
+          display: flex !important;
+          align-items: center !important;
+          background: rgba(255,255,255,0.06) !important;
+          border: 1px solid rgba(255,255,255,0.10) !important;
+          border-radius: 14px !important;
+          padding: 0 6px 0 14px !important;
+          gap: 6px !important;
+          transition: border-color 0.2s ease !important;
+        }
+        .es-ref-input-group:focus-within {
+          border-color: rgba(139,92,246,0.42) !important;
+          background: rgba(255,255,255,0.08) !important;
         }
 
         #es-city-chat-input {
           flex: 1 !important;
-          width: 100% !important;
           background: transparent !important;
           border: none !important;
+          outline: none !important;
           color: #f8fafc !important;
           font-size: 13.5px !important;
-          outline: none !important;
-          padding: 0 !important;
+          font-weight: 500 !important;
+          width: 100% !important;
         }
         #es-city-chat-input::placeholder {
-          color: #64748b !important;
+          color: #94a3b8 !important;
         }
 
         #es-city-send-btn {
-          width: 34px !important;
-          height: 34px !important;
+          width: 36px !important;
+          height: 36px !important;
           border-radius: 10px !important;
-          background: transparent !important;
-          color: #94a3b8 !important;
+          background: rgba(255,255,255,0.08) !important;
+          color: #e2e8f0 !important;
           border: none !important;
-          padding: 0 !important;
           display: flex !important;
           align-items: center !important;
           justify-content: center !important;
-          font-size: 16px !important;
+          font-size: 15px !important;
           cursor: pointer !important;
           flex-shrink: 0;
+          transition: all 0.15s ease !important;
         }
         #es-city-send-btn:hover {
-          color: #ffffff !important;
-          background: rgba(255, 255, 255, 0.08) !important;
+          background: rgba(139,92,246,0.22) !important;
+          color: #fff !important;
+        }
+
+        /* Balões de fala 3D elevados */
+        .es-speech-bubble {
+          position: absolute;
+          transform: translate(-50%, -120%);
+          background: #ffffff;
+          color: #0f172a;
+          padding: 10px 14px;
+          border-radius: 16px;
+          font-size: 13px;
+          font-weight: 600;
+          line-height: 1.35;
+          max-width: 220px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+          pointer-events: none;
+          z-index: 15;
+          animation: esBubbleIn 0.22s ease;
+        }
+        .es-speech-bubble::after {
+          content: '';
+          position: absolute;
+          left: 50%;
+          bottom: -6px;
+          transform: translateX(-50%) rotate(45deg);
+          width: 12px;
+          height: 12px;
+          background: #fff;
+        }
+        @keyframes esBubbleIn {
+          from { opacity: 0; transform: translate(-50%, -100%) scale(0.9); }
+          to { opacity: 1; transform: translate(-50%, -120%) scale(1); }
         }
 
         @media (max-width: 600px) {
-          .es-ref-ws-header { padding: 12px 16px; border-radius: 16px; }
-          .es-ref-ws-title { font-size: 19px; }
-          .es-ref-bottom-bar { padding: 8px; gap: 6px; margin: 0 10px max(10px, env(safe-area-inset-bottom)) 10px; }
-          #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 11px !important; height: 40px !important; font-size: 12px !important; }
-          .es-ref-input-group { height: 40px; }
-          .es-dpad-circle { width: 96px; height: 96px; bottom: 82px; right: 14px; }
+          .es-ref-top-area { padding: max(10px, env(safe-area-inset-top)) 14px 0 14px; gap: 10px; }
+          .es-ref-ws-header { padding: 14px 18px; border-radius: 18px; }
+          .es-ref-ws-title { font-size: 20px; }
+          .es-ref-bottom-bar { padding: 10px; gap: 8px; margin: 0 12px max(12px, env(safe-area-inset-bottom)) 12px; border-radius: 18px; }
+          #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; }
+          .es-ref-input-group { height: 42px !important; }
+          .es-dpad-circle { width: 102px !important; height: 102px !important; right: 14px !important; bottom: 92px !important; }
         }
+
       </style>
 
       <div id="es-city-wrapper">
@@ -579,14 +665,34 @@ class EnglishSpaces3DWorld {
       const bd = 10;
       const bh = 4.2;
 
-      // Piso Interno do Edifício (Entrar aqui muda automaticamente de Espaço!)
+      // Piso Interno elevado com material mais bonito
       const floorMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(bw, bd),
-        new THREE.MeshLambertMaterial({ color: bCfg.color })
+        new THREE.MeshStandardMaterial({ color: bCfg.color, roughness: 0.85, metalness: 0.08 })
       );
       floorMesh.rotation.x = -Math.PI / 2;
       floorMesh.position.set(centerX, 0.02, centerZ);
+      floorMesh.receiveShadow = true;
       this.scene.add(floorMesh);
+
+      // Luz quente interna de cada loja (efeito Brew & Study da referência)
+      const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.2, 14);
+      shopLight.position.set(centerX, 3.2, centerZ);
+      this.scene.add(shopLight);
+
+      // Vaso de planta decorativo na entrada (detalhe elevado)
+      const plantPot = new THREE.Mesh(
+        new THREE.BoxGeometry(0.6, 0.5, 0.6),
+        new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
+      );
+      plantPot.position.set(centerX - bCfg.col * 4.2, 0.25, centerZ + 2.8);
+      this.scene.add(plantPot);
+      const plantLeaves = new THREE.Mesh(
+        new THREE.BoxGeometry(0.8, 0.8, 0.8),
+        new THREE.MeshLambertMaterial({ color: 0x16a34a })
+      );
+      plantLeaves.position.set(centerX - bCfg.col * 4.2, 0.9, centerZ + 2.8);
+      this.scene.add(plantLeaves);
 
       // Paredes do Edifício (deixando a frente virada para a avenida aberta como porta!)
       const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
