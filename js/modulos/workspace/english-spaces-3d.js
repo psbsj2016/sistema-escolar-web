@@ -269,11 +269,11 @@ class EnglishSpaces3DWorld {
           pointer-events: none;
         }
 
-        /* D-PAD CIRCULAR ELEVADO */
+        /* D-PAD CIRCULAR ELEVADO (Posicionado logo acima da barra inferior) */
         .es-dpad-circle {
           position: absolute !important;
           right: 22px !important;
-          bottom: 108px !important;
+          bottom: 18px !important;
           width: 112px !important;
           height: 112px !important;
           border-radius: 50% !important;
@@ -460,7 +460,7 @@ class EnglishSpaces3DWorld {
           .es-ref-bottom-bar { padding: 10px; gap: 8px; margin: 0 12px max(12px, env(safe-area-inset-bottom)) 12px; border-radius: 18px; }
           #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; }
           .es-ref-input-group { height: 42px !important; }
-          .es-dpad-circle { width: 102px !important; height: 102px !important; right: 14px !important; bottom: 92px !important; }
+          .es-dpad-circle { width: 102px !important; height: 102px !important; right: 14px !important; bottom: 14px !important; }
         }
 
       </style>
@@ -804,8 +804,8 @@ class EnglishSpaces3DWorld {
     const sufixoRole = isYou ? '' : ` <span style="color:#a1a1aa; font-weight:600;">[${role}]</span>`;
 
     div.innerHTML = `
-      <div class="es-3d-bubble" style="display:none; background:#ffffff; color:#0f172a; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:700; max-width:220px; text-align:center; margin-bottom:6px; box-shadow:0 6px 18px rgba(0,0,0,0.45);"></div>
-      <div class="es-ref-nameplate">
+      <div class="es-speech-bubble" style="display:none; position:relative; transform:none; margin-bottom:8px;"></div>
+      <div class="es-city-label ${isYou ? 'me' : ''}" style="position:relative; transform:none;">
         ${icone} <span>${textoLimpo}${sufixoRole}</span>
       </div>
     `;
@@ -816,7 +816,7 @@ class EnglishSpaces3DWorld {
   criarPlacaEdificioHTML(titulo) {
     const layer = document.getElementById('es-city-labels-layer');
     const div = document.createElement('div');
-    div.style.cssText = 'position:absolute; transform:translate(-50%, -50%); background:rgba(15,23,42,0.92); border:1.5px solid rgba(167,139,250,0.6); color:#fff; padding:4px 12px; border-radius:10px; font-size:12px; font-weight:900; white-space:nowrap; box-shadow:0 4px 12px rgba(0,0,0,0.5);';
+    div.className = 'es-city-sign';
     div.textContent = titulo;
     if (layer) layer.appendChild(div);
     return div;
@@ -824,7 +824,7 @@ class EnglishSpaces3DWorld {
 
   mostrarBalaoNoBoneco(entidade, texto, duracaoMs = 6000) {
     if (!entidade || !entidade.labelEl) return;
-    const bubble = entidade.labelEl.querySelector('.es-3d-bubble');
+    const bubble = entidade.labelEl.querySelector('.es-speech-bubble');
     if (!bubble) return;
     bubble.textContent = texto;
     bubble.style.display = 'block';
@@ -897,11 +897,11 @@ class EnglishSpaces3DWorld {
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
 
-      // 2. Câmara em 3.ª Pessoa suave seguindo o Boneco do Aluno
-      const camOffsetX = Math.sin(this.cameraYaw) * 8.5;
-      const camOffsetZ = Math.cos(this.cameraYaw) * 8.5;
-      this.camera.position.set(p.x + camOffsetX, 5.2, p.z + camOffsetZ);
-      this.camera.lookAt(p.x, 1.5, p.z - 1.5);
+      // 2. Câmara em 3.ª Pessoa suave orbitando exatamente o centro do Boneco do Aluno
+      const camOffsetX = Math.sin(this.cameraYaw) * 8.2;
+      const camOffsetZ = Math.cos(this.cameraYaw) * 8.2;
+      this.camera.position.set(p.x + camOffsetX, 4.8, p.z + camOffsetZ);
+      this.camera.lookAt(p.x, 1.4, p.z);
 
       // 3. Detetar automaticamente se o Avatar entrou num dos 12 Edifícios da Cidade!
       let zonaDetetada = 'street';
@@ -1109,6 +1109,17 @@ class EnglishSpaces3DWorld {
   }
 
   configurarEventosControles() {
+    this._onResize = () => {
+      const vp = document.getElementById('es-city-viewport');
+      if (!vp || !this.renderer || !this.camera) return;
+      const w = vp.clientWidth || window.innerWidth;
+      const h = vp.clientHeight || window.innerHeight;
+      this.camera.aspect = w / h;
+      this.camera.updateProjectionMatrix();
+      this.renderer.setSize(w, h);
+    };
+    window.addEventListener('resize', this._onResize);
+
     this._onKeyDown = (e) => {
       if (document.activeElement?.id === 'es-city-chat-input') return;
       this.keys[e.code] = true;
@@ -1310,6 +1321,7 @@ class EnglishSpaces3DWorld {
     }
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup', this._onKeyUp);
+    window.removeEventListener('resize', this._onResize);
 
     if (this.localPlayer) {
       fetch('/api/workspace/english-spaces/world/leave', {
