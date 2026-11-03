@@ -1,5 +1,5 @@
 // js/modulos/workspace/english-spaces-3d.js
-// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + AVATARES HUMANOS + PROXIMIDADE)
+// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (THREE.JS + AVATARES HUMANOS + PROXIMIDADE + TELA CHEIA 100%)
 
 window.Workspace = window.Workspace || {};
 
@@ -66,7 +66,7 @@ class EnglishSpaces3DWorld {
 
     containerRoot.innerHTML = `
       <style>
-        /* ===== DESIGN ELEVADO - APENAS VISUAL, LÓGICA 100% INTACTA ===== */
+        /* ===== TELA CHEIA 100% PURA (SEM BARRA WORKSPACE FICTÍCIA) ===== */
         body { overflow: hidden !important; }
 
         #es-city-wrapper {
@@ -74,17 +74,14 @@ class EnglishSpaces3DWorld {
           inset: 0 !important;
           width: 100vw !important;
           height: 100dvh !important;
-          background: radial-gradient(ellipse at 50% -10%, #1c2050 0%, #13162f 35%, #0a0c1a 70%, #05070e 100%) !important;
+          background: #05070e !important;
           z-index: 1000020 !important;
-          display: flex !important;
-          flex-direction: column !important;
-          justify-content: space-between !important;
           font-family: 'Inter', 'Geist', 'Poppins', sans-serif !important;
           user-select: none !important;
           overflow: hidden !important;
         }
 
-        /* Mantém IDs vivos pro JS, mas visualmente limpos */
+        /* Mantém IDs vivos para o JS, mas invisíveis na tela */
         #es-city-Hud-card,
         #es-city-teleport,
         #es-city-chat-feed {
@@ -96,126 +93,20 @@ class EnglishSpaces3DWorld {
           pointer-events: none !important;
         }
 
-        /* TOPO ELEVADO */
-        .es-ref-top-area {
-          position: relative;
-          z-index: 30;
-          padding: max(14px, env(safe-area-inset-top)) 18px 0 18px;
-          display: flex;
-          flex-direction: column;
-          gap: 12px;
-          pointer-events: none;
-        }
-
-        .es-ref-ws-header {
-          pointer-events: auto;
-          background: linear-gradient(135deg, #5b7cf9 0%, #3b5bdb 45%, #254EDB 100%);
-          border-radius: 22px;
-          padding: 18px 24px;
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          box-shadow: 0 14px 36px rgba(37, 78, 219, 0.38), 0 2px 0 rgba(255,255,255,0.15) inset;
-          border: 1px solid rgba(255,255,255,0.12);
-        }
-
-        .es-ref-ws-title {
-          color: #ffffff;
-          font-size: 22px;
-          font-weight: 900;
-          letter-spacing: -0.6px;
-          margin: 0;
-          text-shadow: 0 1px 2px rgba(0,0,0,0.25);
-        }
-
-        .es-ref-ws-dots {
-          width: 36px;
-          height: 36px;
-          border-radius: 50%;
-          background: rgba(255, 255, 255, 0.18);
-          backdrop-filter: blur(8px);
-          color: #ffffff;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-weight: 900;
-          font-size: 14px;
-          border: 1px solid rgba(255,255,255,0.14);
-        }
-
-        .es-ref-subbar {
-          display: flex;
-          align-items: center;
-          justify-content: space-between;
-          padding: 0 6px;
-          gap: 10px;
-        }
-
-        #es-city-zone-badge {
-          pointer-events: auto;
-          background: linear-gradient(135deg, rgba(139,92,246,0.24), rgba(124,58,237,0.18)) !important;
-          border: 1px solid rgba(167,139,250,0.38) !important;
-          color: #ede9fe !important;
-          padding: 7px 14px !important;
-          border-radius: 999px !important;
-          font-size: 12px !important;
-          font-weight: 800 !important;
-          letter-spacing: 0.2px !important;
-          backdrop-filter: blur(16px) saturate(1.2);
-          box-shadow: 0 6px 18px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.14);
-        }
-
-        #es-city-exit-btn {
-          pointer-events: auto;
-          background: rgba(18, 20, 36, 0.78) !important;
-          border: 1px solid rgba(255, 255, 255, 0.14) !important;
-          color: #e2e8f0 !important;
-          padding: 8px 16px !important;
-          border-radius: 999px !important;
-          font-size: 12px !important;
-          font-weight: 700 !important;
-          backdrop-filter: blur(16px);
-          box-shadow: 0 6px 18px rgba(0,0,0,0.25);
-          transition: all 0.2s ease;
-        }
-        #es-city-exit-btn:hover {
-          background: rgba(28, 30, 52, 0.9) !important;
-          color: #fff !important;
-          transform: translateY(-1px);
-        }
-
-        .es-ref-proximity-wrap {
-          display: flex;
-          justify-content: center;
-          padding: 2px 0;
-        }
-
-        #es-city-proximity-badge {
-          pointer-events: auto;
-          background: rgba(18, 20, 36, 0.72) !important;
-          border: 1px solid rgba(255,255,255,0.12) !important;
-          color: #cbd5e1 !important;
-          padding: 6px 14px !important;
-          border-radius: 999px !important;
-          font-size: 11.5px !important;
-          font-weight: 700 !important;
-          backdrop-filter: blur(16px);
-          box-shadow: 0 6px 18px rgba(0,0,0,0.28);
-          display: inline-flex !important;
-          align-items: center !important;
-          gap: 6px !important;
-          transition: all 0.3s ease;
-        }
-
-        /* VIEWPORT 3D - ESTRELA DO SHOW */
+        /* VIEWPORT 3D OCUPANDO 100% DA TELA DE PONTA A PONTA */
         #es-city-viewport {
-          position: relative !important;
-          flex: 1 !important;
-          width: 100% !important;
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100dvh !important;
+          margin: 0 !important;
+          padding: 0 !important;
           overflow: hidden !important;
           background: transparent !important;
-          margin: 12px 0 !important;
+          z-index: 1 !important;
+          touch-action: none !important;
         }
+
         #es-city-viewport canvas {
           display: block !important;
           width: 100% !important;
@@ -231,12 +122,90 @@ class EnglishSpaces3DWorld {
           overflow: hidden;
         }
 
-        /* Labels elevados - igual referência Brew & Study */
-        .es-city-label {
+        /* TOPO FLUTUANTE SOBRE O MUNDO 3D (SEM BARRA AZUL) */
+        .es-ref-top-area {
           position: absolute;
-          transform: translate(-50%, -100%);
+          top: 0;
+          left: 0;
+          right: 0;
+          z-index: 30;
+          padding: max(16px, env(safe-area-inset-top)) 20px 0 20px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
+        }
+
+        .es-ref-subbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+        }
+
+        #es-city-zone-badge {
+          pointer-events: auto;
+          background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(124,58,237,0.22)) !important;
+          border: 1px solid rgba(167,139,250,0.42) !important;
+          color: #ede9fe !important;
+          padding: 7px 14px !important;
+          border-radius: 999px !important;
+          font-size: 12px !important;
+          font-weight: 800 !important;
+          letter-spacing: 0.2px !important;
+          backdrop-filter: blur(16px) saturate(1.2);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.14);
+        }
+
+        #es-city-exit-btn {
+          pointer-events: auto;
+          background: rgba(18, 20, 36, 0.82) !important;
+          border: 1px solid rgba(255, 255, 255, 0.16) !important;
+          color: #e2e8f0 !important;
+          padding: 8px 16px !important;
+          border-radius: 999px !important;
+          font-size: 12px !important;
+          font-weight: 700 !important;
+          cursor: pointer !important;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+          transition: all 0.2s ease;
+        }
+
+        #es-city-exit-btn:hover {
+          background: rgba(239, 68, 68, 0.88) !important;
+          border-color: rgba(252, 165, 165, 0.5) !important;
+          color: #fff !important;
+          transform: translateY(-1px);
+        }
+
+        .es-ref-proximity-wrap {
+          display: flex;
+          justify-content: center;
+          padding: 2px 0;
+        }
+
+        #es-city-proximity-badge {
+          pointer-events: auto;
+          background: rgba(18, 20, 36, 0.76) !important;
+          border: 1px solid rgba(255,255,255,0.14) !important;
+          color: #cbd5e1 !important;
+          padding: 6px 14px !important;
+          border-radius: 999px !important;
+          font-size: 11.5px !important;
+          font-weight: 700 !important;
+          backdrop-filter: blur(16px);
+          box-shadow: 0 6px 18px rgba(0,0,0,0.35);
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 6px !important;
+          transition: all 0.3s ease;
+        }
+
+        /* ETIQUETAS DOS PERSONAGENS E PLACAS DOS EDIFÍCIOS */
+        .es-city-label {
           background: rgba(12, 14, 28, 0.86);
-          border: 1px solid rgba(139,92,246,0.32);
+          border: 1px solid rgba(139,92,246,0.35);
           color: #e9d5ff;
           padding: 6px 12px;
           border-radius: 999px;
@@ -244,44 +213,50 @@ class EnglishSpaces3DWorld {
           font-weight: 700;
           white-space: nowrap;
           backdrop-filter: blur(14px);
-          box-shadow: 0 8px 20px rgba(0,0,0,0.35), inset 0 1px 0 rgba(255,255,255,0.08);
+          box-shadow: 0 8px 20px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
           pointer-events: none;
           letter-spacing: 0.2px;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
         }
+
         .es-city-label.me {
           background: rgba(18, 22, 48, 0.9);
-          border-color: rgba(59,130,246,0.4);
+          border-color: rgba(59,130,246,0.45);
           color: #dbeafe;
         }
+
         .es-city-sign {
           position: absolute;
           transform: translate(-50%, -50%);
-          background: rgba(12, 14, 28, 0.82);
-          border: 1px solid rgba(255,255,255,0.12);
+          background: rgba(12, 14, 28, 0.84);
+          border: 1px solid rgba(255,255,255,0.14);
           color: #fff;
-          padding: 5px 10px;
+          padding: 5px 11px;
           border-radius: 10px;
           font-size: 11px;
           font-weight: 800;
           letter-spacing: 0.3px;
           backdrop-filter: blur(12px);
-          box-shadow: 0 6px 16px rgba(0,0,0,0.3);
+          box-shadow: 0 6px 16px rgba(0,0,0,0.35);
           pointer-events: none;
+          white-space: nowrap;
         }
 
-        /* D-PAD CIRCULAR ELEVADO (Posicionado logo acima da barra inferior) */
+        /* D-PAD CIRCULAR FLUTUANTE NO CANTO INFERIOR DIREITO */
         .es-dpad-circle {
           position: absolute !important;
           right: 22px !important;
-          bottom: 18px !important;
+          bottom: 96px !important;
           width: 112px !important;
           height: 112px !important;
           border-radius: 50% !important;
-          background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.72)) !important;
+          background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.74)) !important;
           border: 1px solid rgba(255,255,255,0.14) !important;
           backdrop-filter: blur(18px) saturate(1.2) !important;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.12) !important;
-          z-index: 20 !important;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.12) !important;
+          z-index: 25 !important;
           display: grid !important;
           grid-template-areas: ". up ." "left . right" ". down ." !important;
           place-items: center !important;
@@ -303,32 +278,37 @@ class EnglishSpaces3DWorld {
           transition: all 0.15s ease !important;
           -webkit-tap-highlight-color: transparent !important;
         }
+
         .es-move-pad[data-dir="up"] { grid-area: up; }
         .es-move-pad[data-dir="left"] { grid-area: left; }
         .es-move-pad[data-dir="right"] { grid-area: right; }
         .es-move-pad[data-dir="down"] { grid-area: down; }
-        .es-move-pad:active {
-          background: rgba(139,92,246,0.32) !important;
+
+        .es-move-pad:active,
+        .es-move-pad:hover {
+          background: rgba(139,92,246,0.34) !important;
           color: #fff !important;
           transform: scale(0.92);
           border-color: rgba(139,92,246,0.5) !important;
         }
 
-        /* BOTTOM BAR ELEVADA - IGUAL REFERÊNCIA */
+        /* BARRA INFERIOR FLUTUANTE SOBRE O MUNDO 3D */
         .es-ref-bottom-bar {
-          position: relative;
+          position: absolute;
+          left: 16px;
+          right: 16px;
+          bottom: max(14px, env(safe-area-inset-bottom));
           z-index: 30;
           pointer-events: auto;
           display: flex;
           align-items: center;
           gap: 10px;
           padding: 12px;
-          margin: 0 16px max(14px, env(safe-area-inset-bottom)) 16px;
           background: rgba(14, 16, 28, 0.88) !important;
           border: 1px solid rgba(255,255,255,0.10) !important;
           border-radius: 20px !important;
           backdrop-filter: blur(22px) saturate(1.25) !important;
-          box-shadow: 0 16px 40px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+          box-shadow: 0 16px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08) !important;
         }
 
         #es-city-voice-btn {
@@ -382,6 +362,7 @@ class EnglishSpaces3DWorld {
           gap: 6px !important;
           transition: border-color 0.2s ease !important;
         }
+
         .es-ref-input-group:focus-within {
           border-color: rgba(139,92,246,0.42) !important;
           background: rgba(255,255,255,0.08) !important;
@@ -397,6 +378,7 @@ class EnglishSpaces3DWorld {
           font-weight: 500 !important;
           width: 100% !important;
         }
+
         #es-city-chat-input::placeholder {
           color: #94a3b8 !important;
         }
@@ -416,68 +398,56 @@ class EnglishSpaces3DWorld {
           flex-shrink: 0;
           transition: all 0.15s ease !important;
         }
+
         #es-city-send-btn:hover {
           background: rgba(139,92,246,0.22) !important;
           color: #fff !important;
         }
 
-        /* Balões de fala 3D elevados */
+        /* Balões de fala 3D acima dos avatares */
         .es-speech-bubble {
-          position: absolute;
-          transform: translate(-50%, -120%);
           background: #ffffff;
           color: #0f172a;
-          padding: 10px 14px;
-          border-radius: 16px;
-          font-size: 13px;
-          font-weight: 600;
+          padding: 8px 13px;
+          border-radius: 14px;
+          font-size: 12.5px;
+          font-weight: 700;
           line-height: 1.35;
           max-width: 220px;
-          box-shadow: 0 12px 28px rgba(0,0,0,0.28);
+          text-align: center;
+          margin-bottom: 8px;
+          box-shadow: 0 12px 28px rgba(0,0,0,0.35);
           pointer-events: none;
-          z-index: 15;
-          animation: esBubbleIn 0.22s ease;
+          position: relative;
         }
+
         .es-speech-bubble::after {
           content: '';
           position: absolute;
           left: 50%;
-          bottom: -6px;
+          bottom: -5px;
           transform: translateX(-50%) rotate(45deg);
-          width: 12px;
-          height: 12px;
+          width: 10px;
+          height: 10px;
           background: #fff;
-        }
-        @keyframes esBubbleIn {
-          from { opacity: 0; transform: translate(-50%, -100%) scale(0.9); }
-          to { opacity: 1; transform: translate(-50%, -120%) scale(1); }
         }
 
         @media (max-width: 600px) {
-          .es-ref-top-area { padding: max(10px, env(safe-area-inset-top)) 14px 0 14px; gap: 10px; }
-          .es-ref-ws-header { padding: 14px 18px; border-radius: 18px; }
-          .es-ref-ws-title { font-size: 20px; }
-          .es-ref-bottom-bar { padding: 10px; gap: 8px; margin: 0 12px max(12px, env(safe-area-inset-bottom)) 12px; border-radius: 18px; }
+          .es-ref-top-area { padding: max(12px, env(safe-area-inset-top)) 14px 0 14px; gap: 8px; }
+          .es-ref-bottom-bar { padding: 10px; gap: 8px; left: 12px; right: 12px; bottom: max(12px, env(safe-area-inset-bottom)); border-radius: 18px; }
           #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; }
           .es-ref-input-group { height: 42px !important; }
-          .es-dpad-circle { width: 102px !important; height: 102px !important; right: 14px !important; bottom: 14px !important; }
+          .es-dpad-circle { width: 100px !important; height: 100px !important; right: 14px !important; bottom: 84px !important; }
         }
-
       </style>
 
       <div id="es-city-wrapper">
-        <!-- TOPO LIMPO IGUAL À REFERÊNCIA -->
+        <!-- TOPO FLUTUANTE LIMPO (SEM A BARRA AZUL WORKSPACE) -->
         <div class="es-ref-top-area">
-          <div class="es-ref-ws-header">
-            <h2 class="es-ref-ws-title">WorkSpace</h2>
-            <div class="es-ref-ws-dots">•••</div>
-          </div>
-
           <div class="es-ref-subbar">
             <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
             <button type="button" id="es-city-exit-btn">⇄ Exit 3D World</button>
           </div>
-
           <div class="es-ref-proximity-wrap">
             <span id="es-city-proximity-badge">• Out of Range</span>
           </div>
@@ -488,9 +458,9 @@ class EnglishSpaces3DWorld {
         <div id="es-city-Hud-card"><div id="es-city-hud-content"></div></div>
         <div id="es-city-chat-feed"></div>
 
-        <!-- VIEWPORT 3D LIMPO + D-PAD CIRCULAR ÚNICO -->
+        <!-- VIEWPORT 3D OCUPANDO 100% DO ECRÃ + D-PAD CIRCULAR -->
         <div id="es-city-viewport">
-          <div id="es-city-labels-layer" style="position:absolute; inset:0; pointer-events:none; z-index:10; overflow:hidden;"></div>
+          <div id="es-city-labels-layer"></div>
 
           <div class="es-dpad-circle">
             <button type="button" class="es-move-pad" data-dir="up">▲</button>
@@ -500,7 +470,7 @@ class EnglishSpaces3DWorld {
           </div>
         </div>
 
-        <!-- BARRA INFERIOR COM OS 3 ITENS FIXOS DA REFERÊNCIA -->
+        <!-- BARRA INFERIOR COM OS 3 ITENS FIXOS -->
         <div class="es-ref-bottom-bar">
           <button type="button" id="es-city-voice-btn">🎤 Voice Mic</button>
           <button type="button" id="es-city-speak-nearby-pill" onclick="document.getElementById('es-city-chat-input')?.focus()">🔊 Speak Nearby</button>
@@ -538,7 +508,6 @@ class EnglishSpaces3DWorld {
     const matCabelo = new THREE.MeshLambertMaterial({ color: 0x27272a });
     const matOlho = new THREE.MeshBasicMaterial({ color: 0x09090b });
 
-    // Pernas com ponto de articulação na anca (para caminhar)
     const legGeo = new THREE.BoxGeometry(0.24, 0.75, 0.24);
     legGeo.translate(0, -0.375, 0);
     const leftLeg = new THREE.Mesh(legGeo, matCalca);
@@ -547,13 +516,11 @@ class EnglishSpaces3DWorld {
     rightLeg.position.set(0.16, 0.75, 0);
     group.add(leftLeg, rightLeg);
 
-    // Tronco / Camisa
     const torsoGeo = new THREE.BoxGeometry(0.62, 0.85, 0.34);
     const torso = new THREE.Mesh(torsoGeo, matCamisa);
     torso.position.set(0, 1.18, 0);
     group.add(torso);
 
-    // Braços com ponto de articulação no ombro
     const armGeo = new THREE.BoxGeometry(0.2, 0.72, 0.2);
     armGeo.translate(0, -0.32, 0);
     const leftArm = new THREE.Mesh(armGeo, matCamisa);
@@ -562,7 +529,6 @@ class EnglishSpaces3DWorld {
     rightArm.position.set(0.43, 1.52, 0);
     group.add(leftArm, rightArm);
 
-    // Cabeça humana + Cabelo + Olhos
     const headGroup = new THREE.Group();
     headGroup.position.set(0, 1.88, 0);
     const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), matPele);
@@ -578,7 +544,6 @@ class EnglishSpaces3DWorld {
     headGroup.add(headMesh, hairMesh, leftEye, rightEye);
     group.add(headGroup);
 
-    // Anel luminoso de Proximidade no chão (acende quando alguém se aproxima)
     const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24);
     ringGeo.rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
@@ -611,8 +576,8 @@ class EnglishSpaces3DWorld {
   inicializarCenaThreeJS(initialSpaceId) {
     const THREE = window.THREE;
     const viewport = document.getElementById('es-city-viewport');
-    const w = viewport.clientWidth || 900;
-    const h = viewport.clientHeight || 520;
+    const w = viewport.clientWidth || window.innerWidth;
+    const h = viewport.clientHeight || window.innerHeight;
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(0x070b19);
@@ -624,14 +589,12 @@ class EnglishSpaces3DWorld {
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
 
-    // Iluminação da Cidade
     const ambLight = new THREE.AmbientLight(0xffffff, 0.72);
     this.scene.add(ambLight);
     const dirLight = new THREE.DirectionalLight(0xfef08a, 0.65);
     dirLight.position.set(25, 45, 20);
     this.scene.add(dirLight);
 
-    // Relvado/Piso da Cidade e Avenida Central
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(140, 180),
       new THREE.MeshLambertMaterial({ color: 0x0f172a })
@@ -640,7 +603,6 @@ class EnglishSpaces3DWorld {
     ground.position.set(0, 0, -35);
     this.scene.add(ground);
 
-    // Estrada / Avenida Principal onde os alunos caminham entre os locais
     const road = new THREE.Mesh(
       new THREE.PlaneGeometry(10, 150),
       new THREE.MeshLambertMaterial({ color: 0x1e293b })
@@ -649,23 +611,21 @@ class EnglishSpaces3DWorld {
     road.position.set(0, 0.01, -35);
     this.scene.add(road);
 
-    // Construir os 12 Edifícios com Portas Abertas e NPCs lá dentro!
     this.buildingsMeta = [];
     this.npcs3D.clear();
     const selectTeleport = document.getElementById('es-city-teleport');
-    const registry = this.parentManager. getSpacesRegistry ? this.parentManager.getSpacesRegistry() : window.Workspace.EnglishSpaces.getSpacesRegistry();
+    const registry = this.parentManager.getSpacesRegistry ? this.parentManager.getSpacesRegistry() : window.Workspace.EnglishSpaces.getSpacesRegistry();
 
     CITY_BUILDINGS_LAYOUT.forEach((bCfg) => {
       const spInfo = registry[bCfg.id];
       if (!spInfo) return;
 
-      const centerX = bCfg.col * 13; // -13 (esquerda) ou +13 (direita)
-      const centerZ = -bCfg.row * 16; // Ao longo da avenida
+      const centerX = bCfg.col * 13;
+      const centerZ = -bCfg.row * 16;
       const bw = 10;
       const bd = 10;
       const bh = 4.2;
 
-      // Piso Interno elevado com material mais bonito
       const floorMesh = new THREE.Mesh(
         new THREE.PlaneGeometry(bw, bd),
         new THREE.MeshStandardMaterial({ color: bCfg.color, roughness: 0.85, metalness: 0.08 })
@@ -675,12 +635,10 @@ class EnglishSpaces3DWorld {
       floorMesh.receiveShadow = true;
       this.scene.add(floorMesh);
 
-      // Luz quente interna de cada loja (efeito Brew & Study da referência)
       const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.2, 14);
       shopLight.position.set(centerX, 3.2, centerZ);
       this.scene.add(shopLight);
 
-      // Vaso de planta decorativo na entrada (detalhe elevado)
       const plantPot = new THREE.Mesh(
         new THREE.BoxGeometry(0.6, 0.5, 0.6),
         new THREE.MeshLambertMaterial({ color: 0x3f3f46 })
@@ -694,7 +652,6 @@ class EnglishSpaces3DWorld {
       plantLeaves.position.set(centerX - bCfg.col * 4.2, 0.9, centerZ + 2.8);
       this.scene.add(plantLeaves);
 
-      // Paredes do Edifício (deixando a frente virada para a avenida aberta como porta!)
       const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
       const backWall = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.3), wallMat);
       backWall.position.set(centerX + (bCfg.col * (bw / 2)), bh / 2, centerZ);
@@ -709,7 +666,6 @@ class EnglishSpaces3DWorld {
       sideWall2.position.set(centerX, bh / 2, centerZ + bd / 2);
       this.scene.add(sideWall2);
 
-      // Balcão de Atendimento 3D dentro do Edifício
       const counter = new THREE.Mesh(
         new THREE.BoxGeometry(1.4, 1.1, 4.2),
         new THREE.MeshLambertMaterial({ color: 0xf8fafc })
@@ -717,7 +673,6 @@ class EnglishSpaces3DWorld {
       counter.position.set(centerX + (bCfg.col * 1.8), 0.55, centerZ);
       this.scene.add(counter);
 
-      // Criar o Boneco 3D do NPC (IA) atrás do balcão deste local
       const npcX = centerX + (bCfg.col * 3.1);
       const npcZ = centerZ;
       const npcMesh = this.criarBonecoHumano3D(bCfg.npcColor, 0x0f172a, 0xfde68a);
@@ -760,7 +715,6 @@ class EnglishSpaces3DWorld {
       }
     });
 
-    // Criar o Boneco Humano 3D do Próprio Utilizador Logado
     const u = window.Workspace?.usuario || {};
     const meuNome = u.nome || u.login || 'You';
     const meuId = String(u.id || 'local_' + Date.now());
@@ -793,7 +747,7 @@ class EnglishSpaces3DWorld {
     this.iniciarLoopRenderizacao();
   }
 
- criarEtiquetaHTML(nome, role, corBadge) {
+  criarEtiquetaHTML(nome, role, corBadge) {
     const layer = document.getElementById('es-city-labels-layer');
     const div = document.createElement('div');
     div.style.cssText = 'position:absolute; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; pointer-events:none; transition:opacity 0.15s;';
@@ -804,8 +758,8 @@ class EnglishSpaces3DWorld {
     const sufixoRole = isYou ? '' : ` <span style="color:#a1a1aa; font-weight:600;">[${role}]</span>`;
 
     div.innerHTML = `
-      <div class="es-speech-bubble" style="display:none; position:relative; transform:none; margin-bottom:8px;"></div>
-      <div class="es-city-label ${isYou ? 'me' : ''}" style="position:relative; transform:none;">
+      <div class="es-speech-bubble" style="display:none;"></div>
+      <div class="es-city-label ${isYou ? 'me' : ''}">
         ${icone} <span>${textoLimpo}${sufixoRole}</span>
       </div>
     `;
@@ -835,7 +789,6 @@ class EnglishSpaces3DWorld {
   }
 
   iniciarLoopRenderizacao() {
-    const THREE = window.THREE;
     const viewport = document.getElementById('es-city-viewport');
 
     const animar = () => {
@@ -846,7 +799,7 @@ class EnglishSpaces3DWorld {
       const p = this.localPlayer;
       if (!p) return;
 
-      // 1. Movimento por Teclado (WASD / Setas) ou D-Pad Circular alinhado à direção da Câmara!
+      // 1. Movimento por Teclado (WASD / Setas) ou D-Pad Circular alinhado à direção da Câmara
       let inputRight = 0;
       let inputForward = 0;
       if (this.keys['ArrowUp'] || this.keys['KeyW'] || this.keys['pad_up']) inputForward += 1;
@@ -864,7 +817,6 @@ class EnglishSpaces3DWorld {
         const normR = inputRight / len;
         const normF = inputForward / len;
 
-        // Projeta os botões na direção exata para onde a câmara está virada (cameraYaw)
         const sinY = Math.sin(this.cameraYaw);
         const cosY = Math.cos(this.cameraYaw);
         const worldDirX = normR * cosY - normF * sinY;
@@ -876,8 +828,7 @@ class EnglishSpaces3DWorld {
         p.z = Math.max(-92, Math.min(12, p.z + dz));
         p.rotY = Math.atan2(worldDirX, worldDirZ);
         estaAndando = true;
-      }
-        else if (p.targetX !== null && p.targetZ !== null) {
+      } else if (p.targetX !== null && p.targetZ !== null) {
         const dx = p.targetX - p.x;
         const dz = p.targetZ - p.z;
         const dist = Math.hypot(dx, dz);
@@ -897,13 +848,13 @@ class EnglishSpaces3DWorld {
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
 
-      // 2. Câmara em 3.ª Pessoa suave orbitando exatamente o centro do Boneco do Aluno
+      // 2. Câmara em 3.ª Pessoa orbitando o centro exato do Boneco
       const camOffsetX = Math.sin(this.cameraYaw) * 8.2;
       const camOffsetZ = Math.cos(this.cameraYaw) * 8.2;
       this.camera.position.set(p.x + camOffsetX, 4.8, p.z + camOffsetZ);
       this.camera.lookAt(p.x, 1.4, p.z);
 
-      // 3. Detetar automaticamente se o Avatar entrou num dos 12 Edifícios da Cidade!
+      // 3. Detetar automaticamente se o Avatar entrou num dos 12 Edifícios
       let zonaDetetada = 'street';
       for (const b of this.buildingsMeta) {
         if (p.x >= b.minX && p.x <= b.maxX && p.z >= b.minZ && p.z <= b.maxZ) {
@@ -916,7 +867,7 @@ class EnglishSpaces3DWorld {
         this.atualizarHudZonaLocal(zonaDetetada);
       }
 
-      // 4. RADAR DE PROXIMIDADE FÍSICA (Verifica que NPCs e Alunos estão a <= 6.0m)
+      // 4. Radar de Proximidade Física
       this.nearbyTargets = [];
 
       this.npcs3D.forEach((npc) => {
@@ -955,8 +906,8 @@ class EnglishSpaces3DWorld {
       }
 
       // 6. Atualizar posição das etiquetas 2D sobre a cabeça dos bonecos 3D
-      const vw = viewport.clientWidth || 900;
-      const vh = viewport.clientHeight || 520;
+      const vw = viewport.clientWidth || window.innerWidth;
+      const vh = viewport.clientHeight || window.innerHeight;
       this.projetarEtiquetaHTML(p.mesh.position, 2.45, p.labelEl, vw, vh);
       this.npcs3D.forEach(npc => this.projetarEtiquetaHTML(npc.mesh.position, 2.45, npc.labelEl, vw, vh));
       this.otherPlayers3D.forEach(op => this.projetarEtiquetaHTML(op.mesh.position, 2.45, op.labelEl, vw, vh));
@@ -992,12 +943,6 @@ class EnglishSpaces3DWorld {
 
     if (zoneId === 'street') {
       badge.innerHTML = '🏙️ English City Boulevard (Street)';
-      hudContent.innerHTML = `
-        <strong style="color:#fff; font-size:13px;">🚶 Explore the City!</strong>
-        <p style="margin:6px 0 0 0; line-height:1.4; color:#94a3b8;">
-          Walk through the open doors of any of the <strong>12 buildings</strong> along the avenue, or walk up to another student on the street to chat in English!
-        </p>
-      `;
       return;
     }
 
@@ -1008,32 +953,22 @@ class EnglishSpaces3DWorld {
     this.parentManager.registarMissaoConcluida(sp.id, 'visit', 10);
 
     badge.innerHTML = `${sp.emoji} Inside: ${sp.name}`;
-    hudContent.innerHTML = `
-      <div style="font-weight:800; color:#fff; font-size:13.5px; margin-bottom:6px;">${sp.emoji} ${sp.name}</div>
-      <div style="font-size:11px; color:#a78bfa; font-weight:700; margin-bottom:6px;">🎯 LOCAL MISSIONS:</div>
-      ${(sp.missions || []).map(m => {
-        const done = this.parentManager.state.missionsDone.includes(m.id);
-        return `<div style="margin-bottom:4px; color:${done ? '#6ee7b7' : '#e2e8f0'};">${done ? '✅' : '⬜'} ${m.title} (+${m.xp} XP)</div>`;
-      }).join('')}
-      <div style="font-size:11px; color:#fde047; font-weight:700; margin:8px 0 4px 0;">💡 TRY SAYING TO ${sp.npcName.toUpperCase()}:</div>
-      <div style="font-style:italic; color:#cbd5e1;">"${(sp.expressions && sp.expressions[0]) || 'Hello! Can you help me?'}"</div>
-    `;
   }
 
- atualizarBadgeProximidade() {
+  atualizarBadgeProximidade() {
     const badge = document.getElementById('es-city-proximity-badge');
     const input = document.getElementById('es-city-chat-input');
     if (!badge) return;
 
     if (this.nearbyTargets.length === 0) {
-      badge.style.background = 'rgba(22, 24, 38, 0.72)';
-      badge.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+      badge.style.background = 'rgba(22, 24, 38, 0.76)';
+      badge.style.borderColor = 'rgba(255, 255, 255, 0.14)';
       badge.style.color = '#cbd5e1';
       badge.innerHTML = '<span style="color:#f87171;">•</span> Out of Range';
       if (input) input.placeholder = 'Type message...';
     } else {
       const nomes = this.nearbyTargets.map(t => t.name).join(', ');
-      badge.style.background = 'rgba(16, 185, 129, 0.22)';
+      badge.style.background = 'rgba(16, 185, 129, 0.24)';
       badge.style.borderColor = '#10b981';
       badge.style.color = '#6ee7b7';
       badge.innerHTML = `<span style="color:#34d399;">•</span> Near: ${nomes}`;
@@ -1045,17 +980,14 @@ class EnglishSpaces3DWorld {
     const feed = document.getElementById('es-city-chat-feed');
     if (!feed) return;
     const item = document.createElement('div');
-    item.style.cssText = 'padding:4px 8px; background:rgba(255,255,255,0.05); border-radius:8px; line-height:1.35;';
-    item.innerHTML = `<strong style="color:${cor};">${autor}:</strong> <span style="color:#fff;">${texto}</span>`;
+    item.innerHTML = `<strong style="color:${cor};">${autor}:</strong> <span>${texto}</span>`;
     feed.appendChild(item);
-    feed.scrollTop = feed.scrollHeight;
   }
 
   async processarFalaPorProximidade(textoCru) {
     const texto = String(textoCru || '').trim();
     if (!texto || !this.localPlayer) return;
 
-    // 🔒 Regra de Ouro: Só consegue falar se estiver próximo de outro utilizador ou de um NPC!
     if (this.nearbyTargets.length === 0) {
       if (window.Workspace?.mostrarAviso) {
         window.Workspace.mostrarAviso('🚶 Aproxime-se de outro aluno ou de um personagem (até acender o círculo verde no chão) para conversar!', 'warning');
@@ -1066,7 +998,6 @@ class EnglishSpaces3DWorld {
     this.mostrarBalaoNoBoneco(this.localPlayer, texto);
     this.adicionarMensagemFeedProximidade(`${this.localPlayer.nome} (You)`, texto, '#c084fc');
 
-    // 1. Transmite a fala para outros alunos reais que estejam próximos no Mundo 3D
     fetch('/api/workspace/english-spaces/world/speak', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -1082,7 +1013,6 @@ class EnglishSpaces3DWorld {
       })
     }).catch(() => {});
 
-    // 2. Se houver um NPC da IA dentro do raio de proximidade, a IA responde em personagem!
     const npcAlvo = this.nearbyTargets.find(t => t.type === 'npc');
     if (npcAlvo) {
       const sp = npcAlvo.space;
@@ -1132,7 +1062,6 @@ class EnglishSpaces3DWorld {
     window.addEventListener('keydown', this._onKeyDown);
     window.addEventListener('keyup', this._onKeyUp);
 
-    // Botões de toque na tela (Telemóvel / Rato)
     document.querySelectorAll('.es-move-pad').forEach(btn => {
       const dir = 'pad_' + btn.dataset.dir;
       btn.addEventListener('pointerdown', (e) => { e.preventDefault(); this.keys[dir] = true; });
@@ -1140,7 +1069,6 @@ class EnglishSpaces3DWorld {
       btn.addEventListener('pointerleave', () => { this.keys[dir] = false; });
     });
 
-    // Arrastar com rato/dedo para rodar o ângulo da câmara ou clicar no chão para andar
     const domCanvas = this.renderer.domElement;
     const THREE = window.THREE;
     const raycaster = new THREE.Raycaster();
@@ -1178,22 +1106,6 @@ class EnglishSpaces3DWorld {
       }
     });
 
-    // Menu rápido para caminhar/saltar até um edifício
-    document.getElementById('es-city-teleport')?.addEventListener('change', (e) => {
-      const targetId = e.target.value;
-      if (!targetId || !this.localPlayer) return;
-      const b = this.buildingsMeta.find(x => x.id === targetId);
-      if (b) {
-        this.localPlayer.x = b.centerX;
-        this.localPlayer.z = b.centerZ;
-        this.localPlayer.targetX = null;
-        this.localPlayer.targetZ = null;
-        this.enviarMinhaPosicaoServidor();
-      }
-      e.target.value = '';
-    });
-
-    // Enviar Fala e Microfone
     const inputEl = document.getElementById('es-city-chat-input');
     const sendBtn = document.getElementById('es-city-send-btn');
     const dispararEnvio = () => {
@@ -1242,11 +1154,9 @@ class EnglishSpaces3DWorld {
 
   sincronizarListaJogadoresRemotos(lista) {
     if (!this.active || !this.scene || !this.localPlayer) return;
-    const idsVivos = new Set();
 
     lista.forEach(pData => {
       if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
-      idsVivos.add(pData.userId);
 
       let op = this.otherPlayers3D.get(pData.userId);
       if (!op) {
@@ -1297,7 +1207,6 @@ class EnglishSpaces3DWorld {
             }
           }
           if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
-            // Verifica se o colega que falou está dentro do nosso Raio de Proximidade (<= 6.0m)!
             const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
             if (dist <= PROXIMITY_RADIUS) {
               const op = this.otherPlayers3D.get(data.speakerId);
@@ -1313,15 +1222,16 @@ class EnglishSpaces3DWorld {
 
   fecharCidade3D() {
     this.active = false;
+    document.body.style.overflow = '';
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.sseConnection) {
       try { this.sseConnection.close(); } catch (e) {}
       this.sseConnection = null;
     }
+    window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup', this._onKeyUp);
-    window.removeEventListener('resize', this._onResize);
 
     if (this.localPlayer) {
       fetch('/api/workspace/english-spaces/world/leave', {
