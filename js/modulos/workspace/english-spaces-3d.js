@@ -65,59 +65,363 @@ class EnglishSpaces3DWorld {
     if (!containerRoot) return;
 
     containerRoot.innerHTML = `
-      <div id="es-city-wrapper" style="position:relative; width:100%; height:84vh; min-height:580px; background:#050711; border-radius:20px; overflow:hidden; border:1.5px solid rgba(139,92,246,0.45); display:flex; flex-direction:column;">
-        
-        <!-- BARRA SUPERIOR DA CIDADE 3D -->
-        <div style="padding:10px 16px; background:rgba(10,12,24,0.92); border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20;">
-          <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <span id="es-city-zone-badge" style="background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff; padding:5px 14px; border-radius:999px; font-weight:800; font-size:12.5px;">
-              🏙️ English City Boulevard
-            </span>
-            <span id="es-city-proximity-badge" style="background:rgba(239,68,68,0.18); border:1px solid rgba(239,68,68,0.4); color:#fca5a5; padding:5px 12px; border-radius:999px; font-size:11.5px; font-weight:700;">
-              🔴 Walk closer to a person or NPC to talk
-            </span>
+      <style>
+        /* Oculta o scroll da página de fundo enquanto o Mundo 3D está aberto */
+        body { overflow: hidden !important; }
+
+        /* Contentor Fullscreen que cobre 100% do computador, tablet e telemóvel (incluindo a barra do WorkSpace) */
+        #es-city-wrapper {
+          position: fixed !important;
+          inset: 0 !important;
+          width: 100vw !important;
+          height: 100dvh !important;
+          background: radial-gradient(circle at 50% 35%, #15162c 0%, #090a14 70%, #05060b 100%) !important;
+          z-index: 1000020 !important;
+          display: flex !important;
+          flex-direction: column !important;
+          justify-content: space-between !important;
+          font-family: 'Inter', 'Poppins', sans-serif !important;
+          user-select: none !important;
+          overflow: hidden !important;
+        }
+
+        /* 1. Remoção da poluição visual (mantendo os IDs vivos para o JS não quebrar) */
+        #es-city-Hud-card,
+        #es-city-teleport,
+        #es-city-chat-feed {
+          display: none !important;
+        }
+
+        /* 2. Topo Limpo estilo Referência */
+        .es-ref-top-area {
+          position: relative;
+          z-index: 30;
+          padding: max(12px, env(safe-area-inset-top)) 16px 0 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          pointer-events: none;
+        }
+
+        .es-ref-ws-header {
+          pointer-events: auto;
+          background: linear-gradient(135deg, #3b66f5 0%, #254EDB 100%);
+          border-radius: 20px;
+          padding: 16px 22px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          box-shadow: 0 10px 28px rgba(37, 78, 219, 0.35), inset 0 1px 1px rgba(255, 255, 255, 0.25);
+        }
+
+        .es-ref-ws-title {
+          color: #ffffff;
+          font-size: 22px;
+          font-weight: 800;
+          letter-spacing: -0.4px;
+          margin: 0;
+        }
+
+        .es-ref-ws-dots {
+          width: 34px;
+          height: 34px;
+          border-radius: 50%;
+          background: rgba(255, 255, 255, 0.18);
+          color: #ffffff;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-weight: 900;
+          letter-spacing: 1px;
+          font-size: 14px;
+        }
+
+        .es-ref-subbar {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 0 4px;
+        }
+
+        /* Pílula roxa pequena de localização */
+        #es-city-zone-badge {
+          pointer-events: auto;
+          background: rgba(124, 58, 237, 0.28) !important;
+          border: 1px solid rgba(167, 139, 250, 0.45) !important;
+          color: #e9d5ff !important;
+          padding: 5px 12px !important;
+          border-radius: 999px !important;
+          font-size: 11.5px !important;
+          font-weight: 700 !important;
+          backdrop-filter: blur(10px);
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+        }
+
+        /* Botão discreto Exit 3D World no canto superior direito */
+        #es-city-exit-btn {
+          pointer-events: auto;
+          background: rgba(24, 26, 42, 0.82) !important;
+          border: 1px solid rgba(255, 255, 255, 0.14) !important;
+          color: #e2e8f0 !important;
+          padding: 6px 14px !important;
+          border-radius: 999px !important;
+          font-size: 12px !important;
+          font-weight: 700 !important;
+          cursor: pointer;
+          backdrop-filter: blur(10px);
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          transition: all 0.2s ease;
+          box-shadow: 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+        #es-city-exit-btn:hover {
+          background: rgba(239, 68, 68, 0.85) !important;
+          color: #ffffff !important;
+          border-color: rgba(252, 165, 165, 0.5) !important;
+        }
+
+        /* Pílula minúscula, centralizada e translúcida de Proximidade */
+        .es-ref-proximity-wrap {
+          display: flex;
+          justify-content: center;
+          margin-top: 2px;
+        }
+        #es-city-proximity-badge {
+          pointer-events: auto;
+          background: rgba(22, 24, 38, 0.72) !important;
+          border: 1px solid rgba(255, 255, 255, 0.12) !important;
+          color: #cbd5e1 !important;
+          padding: 4px 14px !important;
+          border-radius: 999px !important;
+          font-size: 11px !important;
+          font-weight: 600 !important;
+          backdrop-filter: blur(12px);
+          box-shadow: 0 4px 15px rgba(0, 0, 0, 0.35);
+          letter-spacing: 0.2px;
+        }
+
+        /* 3. Viewport 3D ocupando o ecrã limpo */
+        #es-city-viewport {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          z-index: 1 !important;
+          overflow: hidden !important;
+          touch-action: none !important;
+        }
+
+        /* Nameplates flutuantes iguais à referência */
+        .es-ref-nameplate {
+          background: rgba(15, 17, 30, 0.82);
+          backdrop-filter: blur(10px);
+          border: 1px solid rgba(255, 255, 255, 0.14);
+          color: #f8fafc;
+          padding: 5px 12px;
+          border-radius: 999px;
+          font-size: 11.5px;
+          font-weight: 700;
+          white-space: nowrap;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          box-shadow: 0 6px 20px rgba(0, 0, 0, 0.45);
+        }
+
+        /* 4. D-Pad Circular Único e Translúcido no Canto Inferior Direito */
+        .es-dpad-circle {
+          position: absolute;
+          bottom: 96px;
+          right: 22px;
+          width: 108px;
+          height: 108px;
+          border-radius: 50%;
+          background: rgba(20, 22, 36, 0.62);
+          backdrop-filter: blur(12px);
+          border: 1.5px solid rgba(255, 255, 255, 0.12);
+          box-shadow: 0 12px 32px rgba(0, 0, 0, 0.55), inset 0 1px 1px rgba(255, 255, 255, 0.08);
+          z-index: 25;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+        }
+        .es-dpad-circle .es-move-pad {
+          position: absolute;
+          width: 34px;
+          height: 34px;
+          border: none !important;
+          background: transparent !important;
+          color: rgba(226, 232, 240, 0.75) !important;
+          font-size: 13px !important;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          border-radius: 50%;
+          transition: background 0.15s, color 0.15s, transform 0.1s;
+        }
+        .es-dpad-circle .es-move-pad:active,
+        .es-dpad-circle .es-move-pad:hover {
+          background: rgba(255, 255, 255, 0.12) !important;
+          color: #ffffff !important;
+        }
+        .es-dpad-circle .es-move-pad[data-dir="up"]    { top: 4px; left: 50%; transform: translateX(-50%); }
+        .es-dpad-circle .es-move-pad[data-dir="down"]  { bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .es-dpad-circle .es-move-pad[data-dir="left"]  { left: 4px; top: 50%; transform: translateY(-50%); }
+        .es-dpad-circle .es-move-pad[data-dir="right"] { right: 4px; top: 50%; transform: translateY(-50%); }
+
+        /* 5. Bottom Bar com 3 Itens Fixos Iguais à Referência */
+        .es-ref-bottom-bar {
+          position: relative;
+          z-index: 30;
+          margin: 0 14px max(14px, env(safe-area-inset-bottom)) 14px;
+          padding: 10px 12px;
+          background: rgba(16, 18, 30, 0.88);
+          backdrop-filter: blur(16px);
+          border: 1px solid rgba(255, 255, 255, 0.09);
+          border-radius: 20px;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          box-shadow: 0 16px 40px rgba(0, 0, 0, 0.6);
+        }
+
+        #es-city-voice-btn {
+          background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%) !important;
+          color: #ffffff !important;
+          border: none !important;
+          padding: 0 16px !important;
+          height: 44px !important;
+          border-radius: 14px !important;
+          font-weight: 700 !important;
+          font-size: 13px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 7px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3) !important;
+          flex-shrink: 0;
+        }
+
+        #es-city-speak-nearby-pill {
+          background: linear-gradient(135deg, #7c3aed 0%, #6d28d9 100%) !important;
+          color: #ffffff !important;
+          border: none !important;
+          padding: 0 16px !important;
+          height: 44px !important;
+          border-radius: 14px !important;
+          font-weight: 700 !important;
+          font-size: 13px !important;
+          display: inline-flex !important;
+          align-items: center !important;
+          gap: 7px !important;
+          cursor: pointer !important;
+          white-space: nowrap !important;
+          box-shadow: 0 4px 15px rgba(124, 58, 237, 0.35) !important;
+          flex-shrink: 0;
+        }
+
+        .es-ref-input-group {
+          flex: 1;
+          min-width: 140px;
+          height: 44px;
+          background: rgba(30, 33, 52, 0.9);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 14px;
+          display: flex;
+          align-items: center;
+          padding: 0 6px 0 14px;
+        }
+
+        #es-city-chat-input {
+          flex: 1 !important;
+          width: 100% !important;
+          background: transparent !important;
+          border: none !important;
+          color: #f8fafc !important;
+          font-size: 13.5px !important;
+          outline: none !important;
+          padding: 0 !important;
+        }
+        #es-city-chat-input::placeholder {
+          color: #64748b !important;
+        }
+
+        #es-city-send-btn {
+          width: 34px !important;
+          height: 34px !important;
+          border-radius: 10px !important;
+          background: transparent !important;
+          color: #94a3b8 !important;
+          border: none !important;
+          padding: 0 !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          font-size: 16px !important;
+          cursor: pointer !important;
+          flex-shrink: 0;
+        }
+        #es-city-send-btn:hover {
+          color: #ffffff !important;
+          background: rgba(255, 255, 255, 0.08) !important;
+        }
+
+        @media (max-width: 600px) {
+          .es-ref-ws-header { padding: 12px 16px; border-radius: 16px; }
+          .es-ref-ws-title { font-size: 19px; }
+          .es-ref-bottom-bar { padding: 8px; gap: 6px; margin: 0 10px max(10px, env(safe-area-inset-bottom)) 10px; }
+          #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 11px !important; height: 40px !important; font-size: 12px !important; }
+          .es-ref-input-group { height: 40px; }
+          .es-dpad-circle { width: 96px; height: 96px; bottom: 82px; right: 14px; }
+        }
+      </style>
+
+      <div id="es-city-wrapper">
+        <!-- TOPO LIMPO IGUAL À REFERÊNCIA -->
+        <div class="es-ref-top-area">
+          <div class="es-ref-ws-header">
+            <h2 class="es-ref-ws-title">WorkSpace</h2>
+            <div class="es-ref-ws-dots">•••</div>
           </div>
 
-          <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-            <select id="es-city-teleport" style="background:#141829; color:#e2e8f0; border:1px solid #334155; padding:6px 10px; border-radius:10px; font-size:12px; font-weight:700; cursor:pointer; outline:none;">
-              <option value="">🚶 Walk or Quick-Jump to Building...</option>
-            </select>
-            <button type="button" id="es-city-exit-btn" style="background:#ef4444; color:#fff; border:none; padding:7px 14px; border-radius:999px; font-weight:800; font-size:12px; cursor:pointer;">
-              ← Exit 3D World
-            </button>
+          <div class="es-ref-subbar">
+            <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
+            <button type="button" id="es-city-exit-btn">⇄ Exit 3D World</button>
+          </div>
+
+          <div class="es-ref-proximity-wrap">
+            <span id="es-city-proximity-badge">• Out of Range</span>
           </div>
         </div>
 
-        <!-- PALCO WEBGL 3D + ETIQUETAS HTML DOS BONECOS -->
-        <div id="es-city-viewport" style="flex:1; position:relative; overflow:hidden; touch-action:none;">
+        <!-- ELEMENTOS OCULTOS PARA PRESERVAR 100% DA LÓGICA JS -->
+        <select id="es-city-teleport"><option value=""></option></select>
+        <div id="es-city-Hud-card"><div id="es-city-hud-content"></div></div>
+        <div id="es-city-chat-feed"></div>
+
+        <!-- VIEWPORT 3D LIMPO + D-PAD CIRCULAR ÚNICO -->
+        <div id="es-city-viewport">
           <div id="es-city-labels-layer" style="position:absolute; inset:0; pointer-events:none; z-index:10; overflow:hidden;"></div>
 
-          <!-- Painel Lateral Compacto do Local Atual (Missões e Expressões) -->
-          <div id="es-city-Hud-card" style="position:absolute; top:12px; left:12px; width:270px; max-width:46vw; background:rgba(12,14,26,0.86); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.12); border-radius:16px; padding:12px; z-index:15; pointer-events:auto;">
-            <div id="es-city-hud-content" style="font-size:12px; color:#cbd5e1;"></div>
-          </div>
-
-          <!-- Registo de Conversas por Proximidade -->
-          <div id="es-city-chat-feed" style="position:absolute; bottom:12px; left:12px; width:320px; max-width:88vw; max-height:150px; overflow-y:auto; background:rgba(10,12,24,0.82); backdrop-filter:blur(8px); border:1px solid rgba(255,255,255,0.1); border-radius:14px; padding:10px; z-index:15; font-size:12px; display:flex; flex-direction:column; gap:6px;">
-            <div style="color:#a78bfa; font-weight:700;">📡 Proximity Voice & Chat Radar (Max 5.5m):</div>
-          </div>
-
-          <!-- Joystick / Botões de Movimento para Telemóvel e Rato -->
-          <div style="position:absolute; bottom:12px; right:12px; display:grid; grid-template-columns:repeat(3, 38px); gap:4px; z-index:16;">
-            <div></div>
-            <button type="button" class="es-move-pad" data-dir="up" style="height:38px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.85); color:#fff; font-weight:900; cursor:pointer;">▲</button>
-            <div></div>
-            <button type="button" class="es-move-pad" data-dir="left" style="height:38px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.85); color:#fff; font-weight:900; cursor:pointer;">◀</button>
-            <button type="button" class="es-move-pad" data-dir="down" style="height:38px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.85); color:#fff; font-weight:900; cursor:pointer;">▼</button>
-            <button type="button" class="es-move-pad" data-dir="right" style="height:38px; border-radius:10px; border:1px solid rgba(255,255,255,0.2); background:rgba(15,23,42,0.85); color:#fff; font-weight:900; cursor:pointer;">▶</button>
+          <div class="es-dpad-circle">
+            <button type="button" class="es-move-pad" data-dir="up">▲</button>
+            <button type="button" class="es-move-pad" data-dir="left">◀</button>
+            <button type="button" class="es-move-pad" data-dir="right">▶</button>
+            <button type="button" class="es-move-pad" data-dir="down">▼</button>
           </div>
         </div>
 
-        <!-- BARRA INFERIOR DE CONVERSAÇÃO POR PROXIMIDADE -->
-        <div style="padding:10px 16px; background:rgba(10,12,24,0.96); border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; align-items:center; flex-wrap:wrap; z-index:20;">
-          <input type="text" id="es-city-chat-input" placeholder="Walk close to a student or NPC to speak in English..." autocomplete="off" style="flex:1; min-width:180px; background:#141829; border:1px solid rgba(255,255,255,0.16); color:#fff; padding:10px 14px; border-radius:12px; font-size:13.5px; outline:none;" />
-          <button type="button" id="es-city-send-btn" style="background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">💬 Speak Nearby</button>
-          <button type="button" id="es-city-voice-btn" style="background:#10b981; color:#fff; border:none; padding:10px 16px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">🎤 Voice Mic</button>
+        <!-- BARRA INFERIOR COM OS 3 ITENS FIXOS DA REFERÊNCIA -->
+        <div class="es-ref-bottom-bar">
+          <button type="button" id="es-city-voice-btn">🎤 Voice Mic</button>
+          <button type="button" id="es-city-speak-nearby-pill" onclick="document.getElementById('es-city-chat-input')?.focus()">🔊 Speak Nearby</button>
+          <div class="es-ref-input-group">
+            <input type="text" id="es-city-chat-input" placeholder="Type message..." autocomplete="off" />
+            <button type="button" id="es-city-send-btn" title="Send">➤</button>
+          </div>
         </div>
       </div>
     `;
@@ -383,14 +687,20 @@ class EnglishSpaces3DWorld {
     this.iniciarLoopRenderizacao();
   }
 
-  criarEtiquetaHTML(nome, role, corBadge) {
+ criarEtiquetaHTML(nome, role, corBadge) {
     const layer = document.getElementById('es-city-labels-layer');
     const div = document.createElement('div');
     div.style.cssText = 'position:absolute; transform:translate(-50%, -100%); display:flex; flex-direction:column; align-items:center; pointer-events:none; transition:opacity 0.15s;';
+
+    const textoLimpo = String(nome || '').replace(/^[^\w\s]+/, '').trim();
+    const isYou = textoLimpo.includes('(You)');
+    const icone = isYou ? '<span style="color:#38bdf8;">📍</span>' : '<span style="color:#c084fc;">✨</span>';
+    const sufixoRole = isYou ? '' : ` <span style="color:#a1a1aa; font-weight:600;">[${role}]</span>`;
+
     div.innerHTML = `
-      <div class="es-3d-bubble" style="display:none; background:#ffffff; color:#0f172a; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:700; max-width:220px; text-align:center; margin-bottom:5px; box-shadow:0 6px 18px rgba(0,0,0,0.35);"></div>
-      <div style="background:rgba(9,11,24,0.88); border:1px solid ${corBadge}; color:#fff; padding:3px 9px; border-radius:999px; font-size:11px; font-weight:800; white-space:nowrap;">
-        ${nome} <span style="color:${corBadge}; font-size:10px;">[${role}]</span>
+      <div class="es-3d-bubble" style="display:none; background:#ffffff; color:#0f172a; padding:6px 12px; border-radius:12px; font-size:12px; font-weight:700; max-width:220px; text-align:center; margin-bottom:6px; box-shadow:0 6px 18px rgba(0,0,0,0.45);"></div>
+      <div class="es-ref-nameplate">
+        ${icone} <span>${textoLimpo}${sufixoRole}</span>
       </div>
     `;
     if (layer) layer.appendChild(div);
@@ -430,28 +740,38 @@ class EnglishSpaces3DWorld {
       const p = this.localPlayer;
       if (!p) return;
 
-      // 1. Movimento por Teclado (WASD / Setas) ou Botões Direcionais
-      let moveX = 0;
-      let moveZ = 0;
-      if (this.keys['ArrowUp'] || this.keys['KeyW'] || this.keys['pad_up']) moveZ -= 1;
-      if (this.keys['ArrowDown'] || this.keys['KeyS'] || this.keys['pad_down']) moveZ += 1;
-      if (this.keys['ArrowLeft'] || this.keys['KeyA'] || this.keys['pad_left']) moveX -= 1;
-      if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.keys['pad_right']) moveX += 1;
+      // 1. Movimento por Teclado (WASD / Setas) ou D-Pad Circular alinhado à direção da Câmara!
+      let inputRight = 0;
+      let inputForward = 0;
+      if (this.keys['ArrowUp'] || this.keys['KeyW'] || this.keys['pad_up']) inputForward += 1;
+      if (this.keys['ArrowDown'] || this.keys['KeyS'] || this.keys['pad_down']) inputForward -= 1;
+      if (this.keys['ArrowLeft'] || this.keys['KeyA'] || this.keys['pad_left']) inputRight -= 1;
+      if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.keys['pad_right']) inputRight += 1;
 
       let estaAndando = false;
       const speed = 7.2;
 
-      if (moveX !== 0 || moveZ !== 0) {
+      if (inputRight !== 0 || inputForward !== 0) {
         p.targetX = null;
         p.targetZ = null;
-        const len = Math.hypot(moveX, moveZ);
-        const dx = (moveX / len) * speed * delta;
-        const dz = (moveZ / len) * speed * delta;
+        const len = Math.hypot(inputRight, inputForward);
+        const normR = inputRight / len;
+        const normF = inputForward / len;
+
+        // Projeta os botões na direção exata para onde a câmara está virada (cameraYaw)
+        const sinY = Math.sin(this.cameraYaw);
+        const cosY = Math.cos(this.cameraYaw);
+        const worldDirX = normR * cosY - normF * sinY;
+        const worldDirZ = -normR * sinY - normF * cosY;
+
+        const dx = worldDirX * speed * delta;
+        const dz = worldDirZ * speed * delta;
         p.x = Math.max(-20, Math.min(20, p.x + dx));
         p.z = Math.max(-92, Math.min(12, p.z + dz));
-        p.rotY = Math.atan2(dx, dz);
+        p.rotY = Math.atan2(worldDirX, worldDirZ);
         estaAndando = true;
-      } else if (p.targetX !== null && p.targetZ !== null) {
+      }
+        else if (p.targetX !== null && p.targetZ !== null) {
         const dx = p.targetX - p.x;
         const dz = p.targetZ - p.z;
         const dist = Math.hypot(dx, dz);
@@ -594,24 +914,24 @@ class EnglishSpaces3DWorld {
     `;
   }
 
-  atualizarBadgeProximidade() {
+ atualizarBadgeProximidade() {
     const badge = document.getElementById('es-city-proximity-badge');
     const input = document.getElementById('es-city-chat-input');
     if (!badge) return;
 
     if (this.nearbyTargets.length === 0) {
-      badge.style.background = 'rgba(239,68,68,0.18)';
-      badge.style.borderColor = 'rgba(239,68,68,0.4)';
-      badge.style.color = '#fca5a5';
-      badge.innerHTML = '🔴 Out of Range — Walk closer to someone to speak';
-      if (input) input.placeholder = 'Walk closer to a student or NPC (green ring) to talk...';
+      badge.style.background = 'rgba(22, 24, 38, 0.72)';
+      badge.style.borderColor = 'rgba(255, 255, 255, 0.12)';
+      badge.style.color = '#cbd5e1';
+      badge.innerHTML = '<span style="color:#f87171;">•</span> Out of Range';
+      if (input) input.placeholder = 'Type message...';
     } else {
       const nomes = this.nearbyTargets.map(t => t.name).join(', ');
-      badge.style.background = 'rgba(16,185,129,0.22)';
+      badge.style.background = 'rgba(16, 185, 129, 0.22)';
       badge.style.borderColor = '#10b981';
       badge.style.color = '#6ee7b7';
-      badge.innerHTML = `🟢 In Voice Range: ${nomes}`;
-      if (input) input.placeholder = `Speaking to ${nomes} in English...`;
+      badge.innerHTML = `<span style="color:#34d399;">•</span> Near: ${nomes}`;
+      if (input) input.placeholder = `Message ${nomes}...`;
     }
   }
 
