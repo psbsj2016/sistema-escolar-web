@@ -1414,7 +1414,7 @@ class EnglishSpaces3DWorld {
       const labelEl = this.criarEtiquetaHTML(`${spInfo.emoji} ${spInfo.npcName}`, 'AI HOST', '#10b981');
       this.npcs3D.set(bCfg.id, { id: bCfg.id, space: spInfo, name: spInfo.npcName, x: npcX, z: npcZ, mesh: npcMesh, labelEl, col: bCfg.col });
 
-      this.buildingsMeta.push({
+   this.buildingsMeta.push({
         id: bCfg.id,
         space: spInfo,
         col: bCfg.col,
@@ -1437,9 +1437,13 @@ class EnglishSpaces3DWorld {
         opt.textContent = `${spInfo.emoji} ${spInfo.name}`;
         selectTeleport.appendChild(opt);
       }
-    });
+    }); // Fim do forEach dos edifícios
 
-    // ✅ Inicializa as 14 Maravilhas APENAS 1 VEZ (fora do forEach dos prédios!)
+    // 🎯 CORREÇÃO DO ERRO: Calculamos o startBuilding aqui, com segurança, 
+    // sabendo que this.buildingsMeta já está totalmente preenchido!
+    const startBuilding = this.buildingsMeta.find(b => b.id === initialSpaceId) || this.buildingsMeta[0];
+
+    // Inicializa as 14 Maravilhas interativas
     this.criarAudioZones3D();
     this.criarSistemaChuvaNeblina();
     this.criarNightMarket();
@@ -1453,20 +1457,21 @@ class EnglishSpaces3DWorld {
     this.criarFotoPolaroid();
     this.ativarSombrasReais();
 
-   const u = window.Workspace?.usuario || {};
-    const nomeCompletoBruto = u.nome || u.login || 'You';
-    const meuNomeFormatado = this.formatarNomeCompleto(nomeCompletoBruto);
+    // Dados do utilizador logado e criação do avatar local
+    const u = window.Workspace?.usuario || {};
+    const meuNome = u.nome || u.login || 'You';
     const meuId = String(u.id || 'local_' + Date.now());
-    const isFemaleUser = String(u.genero || u.sexo || '').toLowerCase().startsWith('f');
 
-    const playerMesh = this.criarBonecoHumano3D(0x8b5cf6, 0x1e1b4b, 0xfde68a, isFemaleUser);
+    const playerMesh = this.criarBonecoHumano3D(0x8b5cf6, 0x1e1b4b, 0xfde68a);
     const initialX = startBuilding ? (startBuilding.centerX * 0.45) : 0;
     const initialZ = startBuilding ? startBuilding.centerZ : 0;
+    
     playerMesh.position.set(initialX, 0, initialZ);
     this.scene.add(playerMesh);
 
     const roleInicial = this.parentManager.state.role || 'STUDENT';
-    const myLabel = this.criarEtiquetaHTML(`${meuNomeFormatado} (You)`, null, '#8b5cf6');
+    const myLabel = this.criarEtiquetaHTML(`${meuNome} (You)`, roleInicial, '#8b5cf6');
+    
     this.localPlayer = {
       userId: meuId,
       nome: meuNome,
