@@ -172,43 +172,91 @@ class EnglishSpaces3DWorld {
   }
 
   // ===== BONECO HUMANO ARTICULADO (mantido + suporte a emotes) =====
+
+  // ===== BONECO HUMANO REALISTA V2 - MANTÉM MESMA INTERFACE PARA NÃO QUEBRAR =====
+  // Mantém userData {leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase, emotePhase, isEmoting}
+  // Só que agora com proporções humanas reais, MeshStandardMaterial e detalhes faciais
   criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a) {
     const THREE = window.THREE;
     const group = new THREE.Group();
-    const matPele = new THREE.MeshLambertMaterial({ color: corPele });
-    const matCamisa = new THREE.MeshLambertMaterial({ color: corCamisa });
-    const matCalca = new THREE.MeshLambertMaterial({ color: corCalca });
-    const matCabelo = new THREE.MeshLambertMaterial({ color: 0x27272a });
-    const matOlho = new THREE.MeshBasicMaterial({ color: 0x09090b });
 
-    const legGeo = new THREE.BoxGeometry(0.24, 0.75, 0.24); legGeo.translate(0, -0.375, 0);
-    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.16, 0.75, 0);
-    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.16, 0.75, 0);
+    const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
+    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
+    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
+    const matCabelo = new THREE.MeshStandardMaterial({ color: 0x1e1e22, roughness: 0.9 });
+    const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a, roughness: 0.2 });
+    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe, roughness: 0.3 });
+    const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+
+    // Pés / Sapatos - mais realista
+    const footGeo = new THREE.BoxGeometry(0.22, 0.14, 0.32);
+    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.14, 0.07, 0.05);
+    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.14, 0.07, 0.05);
+    group.add(leftFoot, rightFoot);
+
+    // Pernas cilíndricas - proporção real
+    const legGeo = new THREE.CylinderGeometry(0.11, 0.095, 0.82, 12); legGeo.translate(0, -0.41, 0);
+    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.14, 0.88, 0);
+    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.14, 0.88, 0);
     group.add(leftLeg, rightLeg);
 
-    const torsoGeo = new THREE.BoxGeometry(0.62, 0.85, 0.34);
-    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.18, 0); group.add(torso);
+    // Quadril
+    const hipGeo = new THREE.BoxGeometry(0.52, 0.16, 0.26);
+    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
 
-    const armGeo = new THREE.BoxGeometry(0.2, 0.72, 0.2); armGeo.translate(0, -0.32, 0);
-    const leftArm = new THREE.Mesh(armGeo, matCamisa); leftArm.position.set(-0.43, 1.52, 0);
-    const rightArm = new THREE.Mesh(armGeo, matCamisa); rightArm.position.set(0.43, 1.52, 0);
-    group.add(leftArm, rightArm);
+    // Torso mais humano - peito levemente maior
+    const torsoGeo = new THREE.BoxGeometry(0.52, 0.68, 0.26);
+    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.32, 0); group.add(torso);
 
-    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.88, 0);
-    const headMesh = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.46, 0.46), matPele);
-    const hairMesh = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.16, 0.5), matCabelo); hairMesh.position.set(0, 0.2, 0);
-    const eyeGeo = new THREE.BoxGeometry(0.06, 0.06, 0.05);
-    const leftEye = new THREE.Mesh(eyeGeo, matOlho); leftEye.position.set(-0.1, 0.04, 0.23);
-    const rightEye = new THREE.Mesh(eyeGeo, matOlho); rightEye.position.set(0.1, 0.04, 0.23);
-    headGroup.add(headMesh, hairMesh, leftEye, rightEye); group.add(headGroup);
+    // Ombros
+    const shoulderGeo = new THREE.SphereGeometry(0.11, 10, 10);
+    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-0.31, 1.6, 0);
+    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(0.31, 1.6, 0);
+    group.add(leftShoulder, rightShoulder);
 
+    // Braços cilíndricos articulados
+    const armGeo = new THREE.CylinderGeometry(0.075, 0.065, 0.62, 10); armGeo.translate(0, -0.31, 0);
+    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-0.31, 1.6, 0);
+    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(0.31, 1.6, 0);
+    // Mangas
+    const sleeveGeo = new THREE.CylinderGeometry(0.09, 0.085, 0.22, 10); sleeveGeo.translate(0, -0.11, 0);
+    const leftSleeve = new THREE.Mesh(sleeveGeo, matCamisa); leftSleeve.position.set(-0.31, 1.6, 0);
+    const rightSleeve = new THREE.Mesh(sleeveGeo, matCamisa); rightSleeve.position.set(0.31, 1.6, 0);
+    group.add(leftArm, rightArm, leftSleeve, rightSleeve);
+
+    // Pescoço
+    const neckGeo = new THREE.CylinderGeometry(0.09, 0.1, 0.14, 10);
+    const neck = new THREE.Mesh(neckGeo, matPele); neck.position.set(0, 1.72, 0); group.add(neck);
+
+    // Cabeça esférica realista
+    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.92, 0);
+    const headGeo = new THREE.SphereGeometry(0.27, 18, 18);
+    const headMesh = new THREE.Mesh(headGeo, matPele);
+
+    // Cabelo - meia esfera
+    const hairGeo = new THREE.SphereGeometry(0.29, 16, 16, 0, Math.PI*2, 0, Math.PI*0.62);
+    const hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.rotation.x = 0; hairMesh.position.set(0, 0.06, 0);
+
+    // Olhos com branco + pupila
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.055, 10, 10);
+    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
+    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.05, 0.22);
+    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.05, 0.26);
+    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.05, 0.22);
+    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.05, 0.26);
+
+    headGroup.add(headMesh, hairMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil);
+    group.add(headGroup);
+
+    // Anel de proximidade - mesmo de antes
     const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; group.add(ringMesh);
 
-    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false };
+    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false, leftFoot, rightFoot };
     return group;
   }
+
 
   animarPassosBoneco(meshGroup, estaAndando, delta) {
     const ud = meshGroup?.userData; if (!ud) return;
@@ -715,13 +763,18 @@ class EnglishSpaces3DWorld {
 
       const shopLight = new THREE.PointLight(bCfg.npcColor || 0xf59e0b, 1.25, 15); shopLight.position.set(centerX, 3.2, centerZ); this.scene.add(shopLight);
 
-      // PAREDES FECHADAS COM PORTA CENTRAL
-      const wallMat = new THREE.MeshLambertMaterial({ color: bCfg.roof });
-      const wallMatsTransp = []; // para efeito The Sims
+
+      // PAREDES FECHADAS COM PORTA CENTRAL - VERSÃO REALISTA COM JANELAS
+      const wallMat = new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.85, metalness: 0.1 });
+      const wallMatsTransp = [];
 
       const backWall = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.32), wallMat.clone());
       backWall.position.set(centerX + (bCfg.col * (bw / 2)), bh / 2, centerZ); backWall.rotation.y = Math.PI / 2;
       this.scene.add(backWall); wallMatsTransp.push(backWall);
+      // Janela traseira
+      const backWindow = new THREE.Mesh(new THREE.PlaneGeometry(2.2, 1.2), new THREE.MeshStandardMaterial({ color: 0x7dd3fc, transparent:true, opacity:0.45, roughness:0.2 }));
+      backWindow.position.set(centerX + (bCfg.col * (bw/2 + 0.17)), bh/2 + 0.3, centerZ); backWindow.rotation.y = bCfg.col === -1 ? -Math.PI/2 : Math.PI/2;
+      this.scene.add(backWindow);
 
       const sideWall1 = new THREE.Mesh(new THREE.BoxGeometry(bw, bh, 0.32), wallMat.clone());
       sideWall1.position.set(centerX, bh / 2, centerZ - bd / 2); this.scene.add(sideWall1); wallMatsTransp.push(sideWall1);
@@ -740,16 +793,21 @@ class EnglishSpaces3DWorld {
       const topDoor = new THREE.Mesh(new THREE.BoxGeometry(0.32, bh - 2.8, doorHalfW*2), wallMat.clone());
       topDoor.position.set(frontX, (2.8 + bh)/2, centerZ); this.scene.add(topDoor); wallMatsTransp.push(topDoor);
 
-      // Teto
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(bw+0.3, 0.28, bd+0.3), new THREE.MeshLambertMaterial({ color: bCfg.roof }));
-      roof.position.set(centerX, bh + 0.14, centerZ); this.scene.add(roof); wallMatsTransp.push(roof);
+      // Teto com beiral
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(bw+0.6, 0.32, bd+0.6), new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.9 }));
+      roof.position.set(centerX, bh + 0.16, centerZ); this.scene.add(roof); wallMatsTransp.push(roof);
+
+      // Porta de vidro
+      const doorGlass = new THREE.Mesh(new THREE.PlaneGeometry(1.9, 2.6), new THREE.MeshStandardMaterial({ color: 0xbae6fd, transparent:true, opacity:0.32, roughness:0.1, metalness:0.2 }));
+      doorGlass.position.set(frontX + (bCfg.col*0.05), 1.3, centerZ); doorGlass.rotation.y = bCfg.col === -1 ? Math.PI/2 : -Math.PI/2;
+      this.scene.add(doorGlass);
 
       // Letreiro grande em inglês 3D
       const signPos = new THREE.Vector3(frontX + (bCfg.col * 0.6), bh + 0.85, centerZ);
       this.criarLetreiro3D(spInfo.name, signPos);
 
       // Decoração frontal temática (sem plantas!)
-      const decoMat = new THREE.MeshLambertMaterial({ color: bCfg.npcColor });
+      const decoMat = new THREE.MeshStandardMaterial({ color: bCfg.npcColor, roughness:0.6 });
       const deco = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), decoMat);
       deco.position.set(frontX + (bCfg.col * 0.2), 0.2, centerZ + 2.2);
       this.scene.add(deco);
