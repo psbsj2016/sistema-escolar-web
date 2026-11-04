@@ -32,31 +32,82 @@ const CITY_BUILDINGS_LAYOUT = [
 
 // Fallback para novos espaços que ainda não estão no backend registry
 
-// 💰 SISTEMA DOVRYX (DRX) - Moeda única
+// 💰 SISTEMA DOVRYX (DRX) - Moeda única CONECTADO AO BACKEND MONGODB
 const DOVRYX = {
-  getBalance() {
+  _balance: 1250,
+  _userId: null,
+  _escolaId: 'DEFAULT',
+  getBalance() { return this._balance; },
+  setBalance(v) { 
+    this._balance = Math.max(0, v); 
+    localStorage.setItem('dovryx_balance', String(this._balance));
+    const el=document.getElementById('es-dovryx-hud'); if(el) el.textContent=`${this._balance} DRX 💎`;
+  },
+  async syncFromBackend(userId) {
+    try {
+      this._userId = userId;
+      const res = await fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(userId)}`);
+      const json = await res.json();
+      if (json.success && json.data) {
+        const drx = typeof json.data.totalXP === 'number' ? json.data.totalXP : 1250;
+        this._balance = drx;
+        this.setBalance(drx);
+        console.log(`✅ DRX sincronizado do backend: ${drx} DRX`);
+        // Sincroniza veículos e casa
+        if (json.data.avatarConfig) {
+          const cfg = json.data.avatarConfig;
+          if (window.Workspace && window.Workspace.EnglishSpaces3DWorld) {
+            const world = window.Workspace.EnglishSpaces3DWorld;
+            // Veículos
+            if (Array.isArray(cfg.ownedVehicles)) {
+              localStorage.setItem('ownedVehicles', JSON.stringify(cfg.ownedVehicles.map(v=>({ type:v, name:v, speed: v==='bicycle'?6.5: v==='moto'?10.5:14.5 }))));
+            }
+            // Casa
+            if (typeof cfg.houseStage === 'number') {
+              localStorage.setItem('houseStage', String(cfg.houseStage));
+            }
+          }
+        }
+        return drx;
+      }
+    } catch(e) { console.warn('DRX backend sync falhou, usando localStorage', e); }
+    // Fallback localStorage
     try {
       const raw = localStorage.getItem('dovryx_balance');
-      if (raw !== null) return parseInt(raw);
-      const oldXP = parseInt(localStorage.getItem('xp_mock')||'1250');
-      localStorage.setItem('dovryx_balance', String(oldXP));
-      return oldXP;
-    } catch { return 1250; }
+      if (raw !== null) { this._balance = parseInt(raw); return this._balance; }
+    } catch {}
+    return this._balance;
   },
-  setBalance(v) { localStorage.setItem('dovryx_balance', String(Math.max(0, v))); },
-  add(amount, reason='') {
-    const bal = this.getBalance() + amount;
-    this.setBalance(bal);
+  async add(amount, reason='') {
+    const novo = this._balance + amount;
+    this.setBalance(novo);
     if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`+${amount} DRX ${reason} 💎`, 'success');
-    const el=document.getElementById('es-dovryx-hud'); if(el) el.textContent=`${bal} DRX 💎`;
-    return bal;
+    // Salva no backend
+    try {
+      if (this._userId) {
+        await fetch('/api/workspace/english-spaces/progress/customization', {
+          method:'PUT',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ userId:this._userId, bonusXP:amount, costXP:0, escolaId:this._escolaId })
+        });
+      }
+    } catch(e) {}
+    return novo;
   },
-  spend(amount, reason='') {
-    const bal = this.getBalance();
-    if (bal < amount) { if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`Need ${amount} DRX, have ${bal}`, 'error'); return false; }
-    this.setBalance(bal-amount);
+  async spend(amount, reason='') {
+    if (this._balance < amount) { if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`Need ${amount} DRX, have ${this._balance}`, 'error'); return false; }
+    const novo = this._balance - amount;
+    this.setBalance(novo);
     if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`-${amount} DRX ${reason} 💸`, 'info');
-    const el=document.getElementById('es-dovryx-hud'); if(el) el.textContent=`${bal-amount} DRX 💎`;
+    try {
+      if (this._userId) {
+        await fetch('/api/workspace/english-spaces/progress/customization', {
+          method:'PUT',
+          headers:{ 'Content-Type':'application/json' },
+          body: JSON.stringify({ userId:this._userId, costXP:amount, bonusXP:0, escolaId:this._escolaId })
+        });
+      }
+    } catch(e) {}
     return true;
   }
 };
@@ -91,6 +142,12 @@ class EnglishSpaces3DWorld {
     this.clock = null;
 
     this.buildingsMeta = [];
+    // Sincroniza DRX do backend
+    try {
+      const u = window.Workspace?.usuario || {};
+      const uid = String(u.id || u.login || 'demo_user');
+      DOVRYX.syncFromBackend(uid);
+    } catch(e) {}
     this.buildingMeshes = new Map();
     this.npcs3D = new Map();
     this.otherPlayers3D = new Map();
@@ -2080,6 +2137,12 @@ tentarCarregarGLTFsTodos() {
     // GLTF Coffee será carregado após buildingsMeta existir
 
     this.buildingsMeta = [];
+    // Sincroniza DRX do backend
+    try {
+      const u = window.Workspace?.usuario || {};
+      const uid = String(u.id || u.login || 'demo_user');
+      DOVRYX.syncFromBackend(uid);
+    } catch(e) {}
     this.buildingMeshes.clear();
     this.npcs3D.clear();
     this.clickableObjects = [];
