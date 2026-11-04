@@ -18,7 +18,16 @@ const CITY_BUILDINGS_LAYOUT = [
   { id: 'hotel',      col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.12 },
   { id: 'airport',    col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8, voiceLang: 'en-GB', voicePitch: 0.94 },
   { id: 'job',        col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8, voiceLang: 'en-US', voicePitch: 1.10 },
-  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-GB', voicePitch: 0.90 }
+  { id: 'hospital',   col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-GB', voicePitch: 0.90 },
+  // NOVA AVENIDA - 8 LOJAS COMPRÁVEIS COM XP
+  { id: 'bank',       col: -3, row: 0, color: 0x0f766e, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 0.88 },
+  { id: 'clothing',   col:  3, row: 0, color: 0xec4899, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.16 },
+  { id: 'shoes',      col: -3, row: 1, color: 0x7c3aed, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.08 },
+  { id: 'tools',      col:  3, row: 1, color: 0xf59e0b, roof: 0x422006, npcColor: 0xfde047, voiceLang: 'en-US', voicePitch: 0.92 },
+  { id: 'petshop',    col: -3, row: 2, color: 0x10b981, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-US', voicePitch: 1.14 },
+  { id: 'supermarket',col:  3, row: 2, color: 0x3b82f6, roof: 0x1e3a8a, npcColor: 0x60a5fa, voiceLang: 'en-US', voicePitch: 1.0 },
+  { id: 'pharmacy',   col: -3, row: 3, color: 0x06b6d4, roof: 0x083344, npcColor: 0x22d3ee, voiceLang: 'en-GB', voicePitch: 1.1 },
+  { id: 'bookstore',  col:  3, row: 3, color: 0xa16207, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-GB', voicePitch: 0.96 }
 ];
 
 class EnglishSpaces3DWorld {
@@ -434,7 +443,7 @@ class EnglishSpaces3DWorld {
       }
       return false;
     }
-    if (newX < -24 || newX > 24 || newZ < -98 || newZ > 18) return false;
+    if (newX < -62 || newX > 62 || newZ < -128 || newZ > 22) return false;
     return true;
   }
 
@@ -690,6 +699,30 @@ class EnglishSpaces3DWorld {
     }
   }
 
+  gerarTexturaPisoPremium(tipo) {
+    const THREE = window.THREE;
+    const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=512;
+    const ctx = canvas.getContext('2d');
+    if (tipo==='wood') {
+      ctx.fillStyle='#7c4a2d'; ctx.fillRect(0,0,512,512);
+      for(let i=0;i<512;i+=64){ ctx.fillStyle=i%128===0?'#6b3f24':'#8b5e3c'; ctx.fillRect(0,i,512,12); ctx.fillStyle='rgba(0,0,0,0.08)'; ctx.fillRect(0,i+32,512,2); }
+    } else if (tipo==='tile-check') {
+      ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,512,512);
+      for(let y=0;y<512;y+=64) for(let x=0;x<512;x+=64){ ctx.fillStyle=( (x+y)%128===0)?'#111827':'#f3f4f6'; ctx.fillRect(x+2,y+2,60,60); }
+    } else if (tipo==='marble') {
+      ctx.fillStyle='#e5e7eb'; ctx.fillRect(0,0,512,512);
+      ctx.strokeStyle='rgba(139,92,246,0.18)'; ctx.lineWidth=2;
+      for(let i=0;i<20;i++){ ctx.beginPath(); ctx.moveTo(512*Math.random(),0); ctx.bezierCurveTo(512*Math.random(),170,512*Math.random(),340,512*Math.random(),512); ctx.stroke(); }
+    } else if (tipo==='carpet') {
+      ctx.fillStyle='#dc2626'; ctx.fillRect(0,0,512,512);
+      ctx.fillStyle='rgba(0,0,0,0.15)'; for(let i=0;i<512;i+=16) ctx.fillRect(0,i,512,2);
+    } else if (tipo==='sand') {
+      ctx.fillStyle='#fde68a'; ctx.fillRect(0,0,512,512);
+      ctx.fillStyle='rgba(180,120,60,0.18)'; for(let i=0;i<300;i++) ctx.fillRect(512*Math.random(),512*Math.random(),3,3);
+    } else { ctx.fillStyle='#334155'; ctx.fillRect(0,0,512,512); }
+    const tex = new THREE.CanvasTexture(canvas); tex.wrapS=THREE.RepeatWrapping; tex.wrapT=THREE.RepeatWrapping; tex.repeat.set(3,3); return tex;
+  }
+
   gerarTexturaParalelepipedo() {
     const THREE = window.THREE;
     const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
@@ -783,6 +816,135 @@ class EnglishSpaces3DWorld {
     }
     this.exteriorGroup.add(fundoGroup);
   }
+
+  criarSegundaAvenida() {
+    const THREE = window.THREE;
+    const road2Left = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 160), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    road2Left.rotation.x=-Math.PI/2; road2Left.position.set(-48,0.01,-36); this.exteriorGroup.add(road2Left);
+    const road2Right = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 160), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    road2Right.rotation.x=-Math.PI/2; road2Right.position.set(48,0.01,-36); this.exteriorGroup.add(road2Right);
+    const laneMat = new THREE.MeshBasicMaterial({ color:0xf8fafc });
+    for(let z=-85; z<20; z+=6){ 
+      const d1=new THREE.Mesh(new THREE.PlaneGeometry(0.22,1.6),laneMat); d1.rotation.x=-Math.PI/2; d1.position.set(-48,0.06,z); this.exteriorGroup.add(d1);
+      const d2=new THREE.Mesh(new THREE.PlaneGeometry(0.22,1.6),laneMat); d2.rotation.x=-Math.PI/2; d2.position.set(48,0.06,z); this.exteriorGroup.add(d2);
+    }
+    const tex = this.gerarTexturaParalelepipedo();
+    const matSide = new THREE.MeshStandardMaterial({ map: tex, roughness:0.92 });
+    const sw1 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw1.rotation.x=-Math.PI/2; sw1.position.set(-41.5,0.08,-36); this.exteriorGroup.add(sw1);
+    const sw2 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw2.rotation.x=-Math.PI/2; sw2.position.set(-54.5,0.08,-36); this.exteriorGroup.add(sw2);
+    const sw3 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw3.rotation.x=-Math.PI/2; sw3.position.set(41.5,0.08,-36); this.exteriorGroup.add(sw3);
+    const sw4 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw4.rotation.x=-Math.PI/2; sw4.position.set(54.5,0.08,-36); this.exteriorGroup.add(sw4);
+  }
+
+  criarPistaAeroporto() {
+    const THREE = window.THREE;
+    const bAirport = this.buildingsMeta.find(b=>b.id==='airport');
+    if (!bAirport) return;
+    const pista = new THREE.Mesh(new THREE.PlaneGeometry(12, 90), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness:0.8 }));
+    pista.rotation.x=-Math.PI/2; pista.position.set(32,0.02,-78); this.exteriorGroup.add(pista);
+    const whiteMat = new THREE.MeshBasicMaterial({ color:0xf8fafc });
+    for(let z=-115; z<-40; z+=7){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.2,3.5),whiteMat); m.rotation.x=-Math.PI/2; m.position.set(32,0.04,z); this.exteriorGroup.add(m); }
+    const yellowMat = new THREE.MeshBasicMaterial({ color:0xfacc15 });
+    const edgeL=new THREE.Mesh(new THREE.PlaneGeometry(0.25,90),yellowMat); edgeL.rotation.x=-Math.PI/2; edgeL.position.set(26.2,0.03,-78); this.exteriorGroup.add(edgeL);
+    const edgeR=new THREE.Mesh(new THREE.PlaneGeometry(0.25,90),yellowMat); edgeR.rotation.x=-Math.PI/2; edgeR.position.set(37.8,0.03,-78); this.exteriorGroup.add(edgeR);
+    this.avioes = [];
+    for(let i=0;i<3;i++){
+      const aviaoGroup = new THREE.Group();
+      const fuselagem = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,3.2,8), new THREE.MeshStandardMaterial({ color:0xf8fafc })); fuselagem.rotation.z=Math.PI/2;
+      const asa = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.08,0.6), new THREE.MeshStandardMaterial({ color:0x38bdf8 })); asa.position.set(0,0,0);
+      const cauda = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.05), new THREE.MeshStandardMaterial({ color:0xef4444 })); cauda.position.set(-1.6,0.25,0);
+      aviaoGroup.add(fuselagem,asa,cauda);
+      aviaoGroup.position.set(32 + (Math.random()-0.5)*2, 0.6 + i*12, -108 - i*28);
+      aviaoGroup.userData = { speed: 4.5 + Math.random()*2.5, state: 'taxi', alt:0, t: Math.random()*10 };
+      this.exteriorGroup.add(aviaoGroup);
+      this.avioes.push(aviaoGroup);
+    }
+  }
+
+  atualizarAvioes(delta) {
+    if (this.modoInterior || !this.avioes) return;
+    this.avioes.forEach(av=>{
+      av.userData.t += delta;
+      if (av.userData.state==='taxi') {
+        av.position.z += av.userData.speed * delta;
+        if (av.position.z > -45) { av.userData.state='takeoff'; }
+      } else if (av.userData.state==='takeoff') {
+        av.position.z += av.userData.speed * delta * 0.9;
+        av.position.y += delta * 3.5;
+        av.rotation.x = -0.25;
+        if (av.position.y > 18) { av.userData.state='voando'; }
+      } else {
+        av.position.z += av.userData.speed * delta * 1.2;
+        av.position.x += Math.sin(av.userData.t*0.3)*delta*0.8;
+        if (av.position.z > 28) { av.position.set(32 + (Math.random()-0.5)*3, 0.6, -118); av.position.y=0.6; av.rotation.set(0,0,0); av.userData.state='taxi'; }
+      }
+    });
+  }
+
+  criarLojaComprável(id) {
+    const itensPorLoja = {
+      clothing: [{ nome:'Cool T-Shirt', emoji:'👕', preco:120, cor:0xec4899 }, { nome:'Jeans Jacket', emoji:'🧥', preco:220, cor:0x3b82f6 }, { nome:'Sneakers', emoji:'👟', preco:180, cor:0xf59e0b }],
+      shoes: [{ nome:'Running Shoes', emoji:'👟', preco:150, cor:0x7c3aed }, { nome:'Boots', emoji:'🥾', preco:200, cor:0x422006 }, { nome:'Sandals', emoji:'🩴', preco:90, cor:0xf59e0b }],
+      tools: [{ nome:'Hammer', emoji:'🔨', preco:80, cor:0xf59e0b }, { nome:'Wrench', emoji:'🔧', preco:70, cor:0x6b7280 }, { nome:'Drill', emoji:'🪛', preco:180, cor:0xef4444 }],
+      petshop: [{ nome:'Dog Food', emoji:'🦴', preco:60, cor:0x10b981 }, { nome:'Cat Toy', emoji:'🐾', preco:50, cor:0xf472b6 }, { nome:'Pet House', emoji:'🏠', preco:250, cor:0x8b5cf6 }],
+      supermarket: [{ nome:'Apple', emoji:'🍎', preco:20, cor:0xef4444 }, { nome:'Milk', emoji:'🥛', preco:25, cor:0xf8fafc }, { nome:'Bread', emoji:'🍞', preco:30, cor:0xf59e0b }],
+      bookstore: [{ nome:'English Book', emoji:'📚', preco:100, cor:0xa16207 }, { nome:'Dictionary', emoji:'📖', preco:120, cor:0x0f766e }, { nome:'Notebook', emoji:'📓', preco:40, cor:0xf59e0b }],
+      bank: [{ nome:'Save Money', emoji:'🏦', preco:0, cor:0x0f766e }],
+      pharmacy: [{ nome:'Vitamins', emoji:'💊', preco:70, cor:0x06b6d4 }]
+    };
+    const lista = itensPorLoja[id];
+    if (!lista) return;
+    const THREE = window.THREE;
+    const bMeta = this.buildingsMeta.find(b=>b.id===id);
+    const grp = this.interiorGroups.get(id);
+    if (!bMeta || !grp) return;
+    lista.forEach((item,i)=>{
+      const stand = new THREE.Group();
+      const base = new THREE.Mesh(new THREE.BoxGeometry(0.9,0.9,0.9), new THREE.MeshStandardMaterial({ color:item.cor, roughness:0.7 }));
+      base.position.y=0.45;
+      const canvas = document.createElement('canvas'); canvas.width=256; canvas.height=128;
+      const ctx=canvas.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,256,128); ctx.fillStyle='#f8fafc'; ctx.font='bold 32px sans-serif'; ctx.textAlign='center'; ctx.fillText(`${item.emoji} ${item.preco}XP`,128,72);
+      const tex=new THREE.CanvasTexture(canvas);
+      const label = new THREE.Mesh(new THREE.PlaneGeometry(0.85,0.42), new THREE.MeshBasicMaterial({ map:tex })); label.position.set(0,1.2,0.46);
+      base.userData = { clickable:true, englishName:item.nome, isShopItem:true, shopId:id, item:item };
+      stand.add(base,label);
+      stand.position.set(bMeta.centerX + (i-1)*1.6, 0, bMeta.centerZ + (id==='bank'?-1.5:0));
+      grp.add(stand);
+      this.clickableObjects.push(base);
+    });
+  }
+
+  abrirLojaXPModal(buildingId, item) {
+    const xpAtual = this.parentManager?.progressData?.coins?.bronze || parseInt(localStorage.getItem('xp_mock')||'1250');
+    const podeComprar = xpAtual >= item.preco;
+    const html = `
+      <div id="shop-modal" style="position:fixed; inset:0; z-index:1000100; background:rgba(0,0,0,0.65); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif;">
+        <div style="background:#0f172a; border:2px solid #8b5cf6; border-radius:16px; padding:24px; width:360px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.5);">
+          <div style="font-size:48px;">${item.emoji}</div>
+          <h2 style="color:#f8fafc; margin:12px 0 6px;">${item.nome}</h2>
+          <p style="color:#94a3b8; font-size:14px;">Price: <b style="color:#facc15;">${item.preco} XP</b> | Your XP: ${xpAtual}</p>
+          <p style="color:#cbd5e1; font-size:13px; margin:10px 0;">Say in English: <i>"I want to buy ${item.nome}"</i></p>
+          <div style="display:flex; gap:10px; margin-top:18px;">
+            <button id="shop-cancel" style="flex:1; padding:10px; background:#1e293b; color:#f8fafc; border:none; border-radius:10px; cursor:pointer;">Cancel</button>
+            <button id="shop-buy" style="flex:1; padding:10px; background:${podeComprar?'#8b5cf6':'#334155'}; color:white; border:none; border-radius:10px; cursor:${podeComprar?'pointer':'not-allowed'};" ${podeComprar?'':'disabled'}>${podeComprar?'Buy ✅':'No XP'}</button>
+          </div>
+          <p style="color:#64748b; font-size:11px; margin-top:12px;">Frontend mock - backend será ligado pelo Gemini depois</p>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('shop-cancel')?.addEventListener('click', ()=>{ document.getElementById('shop-modal')?.remove(); });
+    document.getElementById('shop-buy')?.addEventListener('click', ()=>{
+      const novoXP = xpAtual - item.preco;
+      localStorage.setItem('xp_mock', String(novoXP));
+      const compras = JSON.parse(localStorage.getItem('compras_xp')||'[]'); compras.push({ ...item, buildingId, data:Date.now() }); localStorage.setItem('compras_xp', JSON.stringify(compras));
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`🛍️ You bought ${item.nome} for ${item.preco} XP! (Frontend mock)`, 'success');
+      document.getElementById('shop-modal')?.remove();
+      this.parentManager?.registarMissaoConcluida(buildingId, `buy_${item.nome}`, 30);
+    });
+  }
+
+
 
   criarTransitoInteligente() {
     const THREE = window.THREE;
@@ -1513,8 +1675,8 @@ tentarCarregarGLTFsTodos() {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
 
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 200), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
-    ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -35); ground.receiveShadow = true;
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(240, 300), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+    ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -45); ground.receiveShadow = true;
     this.exteriorGroup.add(ground);
 
     const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 150), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
@@ -1530,6 +1692,7 @@ tentarCarregarGLTFsTodos() {
     this.atualizarCicloDiaNoite();
     this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
     this.criarCenarioFundoMontanhasArvores();
+    this.criarSegundaAvenida();
     // GLTF Coffee será carregado após buildingsMeta existir
 
     this.buildingsMeta = [];
@@ -1553,7 +1716,9 @@ tentarCarregarGLTFsTodos() {
       const frontX = centerX - bCfg.col * (bw / 2);
       const doorHalfW = 1.05;
 
-      const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(bw, bd), new THREE.MeshStandardMaterial({ color: bCfg.color, roughness: 0.85, metalness: 0.08 }));
+      const tipoPiso = { coffee:'wood', restaurant:'tile-check', school:'tile-check', shopping:'marble', home:'carpet', cinema:'carpet', taxi:'tile-check', beach:'sand', hotel:'wood', airport:'marble', job:'carpet', hospital:'tile-check', bank:'marble', clothing:'wood', shoes:'carpet', tools:'tile-check', petshop:'sand', supermarket:'tile-check', pharmacy:'tile-check', bookstore:'wood' }[bCfg.id] || 'tile-check';
+      const texPiso = this.gerarTexturaPisoPremium(tipoPiso);
+      const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(bw, bd), new THREE.MeshStandardMaterial({ map: texPiso, color: 0xffffff, roughness: 0.85, metalness: 0.08 }));
       floorMesh.rotation.x = -Math.PI / 2; floorMesh.position.set(centerX, 0.02, centerZ); floorMesh.receiveShadow = true;
       this.scene.add(floorMesh);
 
@@ -1659,6 +1824,8 @@ tentarCarregarGLTFsTodos() {
 
     // Inicializa as 14 Maravilhas interativas
     this.criarAnimaisRua();
+    this.criarPistaAeroporto();
+    ['bank','clothing','shoes','tools','petshop','supermarket','pharmacy','bookstore'].forEach(id=>{ this.criarLojaComprável(id); });
     this.criarAudioZones3D();
     this.criarSistemaChuvaNeblina();
     this.criarNightMarket();
@@ -1885,6 +2052,7 @@ tentarCarregarGLTFsTodos() {
 
       this.atualizarPortas();
       this.atualizarAnimais(delta);
+      this.atualizarAvioes(delta);
       this.atualizarAudioZones();
       this.atualizarChuvaNeblina(delta);
       this.atualizarNightMarket();
