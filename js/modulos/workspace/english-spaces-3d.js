@@ -30,6 +30,19 @@ const CITY_BUILDINGS_LAYOUT = [
   { id: 'bookstore',  col:  3, row: 3, color: 0xa16207, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-GB', voicePitch: 0.96 }
 ];
 
+// Fallback para novos espaços que ainda não estão no backend registry
+const FALLBACK_NEW_SPACES = {
+  bank: { id:'bank', name:'Bank', emoji:'🏦', npcName:'Bank Manager', roles:['CUSTOMER','ACTING BANKER'], description:'Bank' },
+  clothing: { id:'clothing', name:'Clothing Store', emoji:'👗', npcName:'Stylist', roles:['SHOPPER','ACTING STYLIST'], description:'Clothing' },
+  shoes: { id:'shoes', name:'Shoe Store', emoji:'👟', npcName:'Shoe Expert', roles:['SHOPPER','ACTING SELLER'], description:'Shoes' },
+  tools: { id:'tools', name:'Hardware Store', emoji:'🔨', npcName:'Handyman', roles:['BUILDER','ACTING HANDYMAN'], description:'Tools' },
+  petshop: { id:'petshop', name:'Pet Shop', emoji:'🐾', npcName:'Pet Lover', roles:['OWNER','ACTING VET'], description:'Pet Shop' },
+  supermarket: { id:'supermarket', name:'Supermarket', emoji:'🛒', npcName:'Cashier', roles:['CUSTOMER','ACTING CASHIER'], description:'Supermarket' },
+  pharmacy: { id:'pharmacy', name:'Pharmacy', emoji:'💊', npcName:'Pharmacist', roles:['PATIENT','ACTING PHARMACIST'], description:'Pharmacy' },
+  bookstore: { id:'bookstore', name:'Bookstore', emoji:'📚', npcName:'Librarian', roles:['READER','ACTING LIBRARIAN'], description:'Bookstore' }
+};
+
+
 class EnglishSpaces3DWorld {
   formatarNomeCompleto(nomeBruto) {
     const limpo = String(nomeBruto || 'User').trim();
@@ -840,22 +853,47 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     const bAirport = this.buildingsMeta.find(b=>b.id==='airport');
     if (!bAirport) return;
-    const pista = new THREE.Mesh(new THREE.PlaneGeometry(12, 90), new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness:0.8 }));
-    pista.rotation.x=-Math.PI/2; pista.position.set(32,0.02,-78); this.exteriorGroup.add(pista);
-    const whiteMat = new THREE.MeshBasicMaterial({ color:0xf8fafc });
-    for(let z=-115; z<-40; z+=7){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.2,3.5),whiteMat); m.rotation.x=-Math.PI/2; m.position.set(32,0.04,z); this.exteriorGroup.add(m); }
-    const yellowMat = new THREE.MeshBasicMaterial({ color:0xfacc15 });
-    const edgeL=new THREE.Mesh(new THREE.PlaneGeometry(0.25,90),yellowMat); edgeL.rotation.x=-Math.PI/2; edgeL.position.set(26.2,0.03,-78); this.exteriorGroup.add(edgeL);
-    const edgeR=new THREE.Mesh(new THREE.PlaneGeometry(0.25,90),yellowMat); edgeR.rotation.x=-Math.PI/2; edgeR.position.set(37.8,0.03,-78); this.exteriorGroup.add(edgeR);
+    const pista = new THREE.Mesh(new THREE.PlaneGeometry(14, 110), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness:0.85, metalness:0.1 }));
+    pista.rotation.x=-Math.PI/2; pista.position.set(38,0.02,-78); pista.receiveShadow=true; this.exteriorGroup.add(pista);
+    const whiteMat = new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.3 });
+    for(let z=-125; z<-25; z+=7){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4,3.8),whiteMat); m.rotation.x=-Math.PI/2; m.position.set(38,0.04,z); this.exteriorGroup.add(m); }
+    const canvasNum = document.createElement('canvas'); canvasNum.width=256; canvasNum.height=128;
+    const ctxN=canvasNum.getContext('2d'); ctxN.fillStyle='#1e293b'; ctxN.fillRect(0,0,256,128); ctxN.fillStyle='#f8fafc'; ctxN.font='bold 64px Inter'; ctxN.textAlign='center'; ctxN.fillText('27L',128,84);
+    const texNum=new THREE.CanvasTexture(canvasNum);
+    const numMesh=new THREE.Mesh(new THREE.PlaneGeometry(5,2.5), new THREE.MeshBasicMaterial({ map:texNum })); numMesh.rotation.x=-Math.PI/2; numMesh.position.set(38,0.05,-118); this.exteriorGroup.add(numMesh);
+    const yellowMat = new THREE.MeshStandardMaterial({ color:0xfacc15, emissive:0xfacc15, emissiveIntensity:0.2 });
+    const edgeL=new THREE.Mesh(new THREE.PlaneGeometry(0.35,110),yellowMat); edgeL.rotation.x=-Math.PI/2; edgeL.position.set(31.2,0.03,-78); this.exteriorGroup.add(edgeL);
+    const edgeR=new THREE.Mesh(new THREE.PlaneGeometry(0.35,110),yellowMat); edgeR.rotation.x=-Math.PI/2; edgeR.position.set(44.8,0.03,-78); this.exteriorGroup.add(edgeR);
+    const blueLightMat = new THREE.MeshStandardMaterial({ color:0x38bdf8, emissive:0x38bdf8, emissiveIntensity:1.2 });
+    for(let z=-120; z<-30; z+=9){
+      const l1=new THREE.Mesh(new THREE.SphereGeometry(0.12,6,6), blueLightMat); l1.position.set(31.2,0.18,z); this.exteriorGroup.add(l1);
+      const l2=new THREE.Mesh(new THREE.SphereGeometry(0.12,6,6), blueLightMat); l2.position.set(44.8,0.18,z); this.exteriorGroup.add(l2);
+    }
+    const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.1,5.5,8), new THREE.MeshStandardMaterial({ color:0xcbd5e1 })); towerBase.position.set(46,2.75,-38); towerBase.castShadow=true; this.exteriorGroup.add(towerBase);
+    const towerTop = new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,0.9,8), new THREE.MeshStandardMaterial({ color:0x0ea5e9, transparent:true, opacity:0.7 })); towerTop.position.set(46,5.8,-38); this.exteriorGroup.add(towerTop);
     this.avioes = [];
-    for(let i=0;i<3;i++){
+    for(let i=0;i<4;i++){
       const aviaoGroup = new THREE.Group();
-      const fuselagem = new THREE.Mesh(new THREE.CylinderGeometry(0.35,0.35,3.2,8), new THREE.MeshStandardMaterial({ color:0xf8fafc })); fuselagem.rotation.z=Math.PI/2;
-      const asa = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.08,0.6), new THREE.MeshStandardMaterial({ color:0x38bdf8 })); asa.position.set(0,0,0);
-      const cauda = new THREE.Mesh(new THREE.BoxGeometry(0.6,0.5,0.05), new THREE.MeshStandardMaterial({ color:0xef4444 })); cauda.position.set(-1.6,0.25,0);
-      aviaoGroup.add(fuselagem,asa,cauda);
-      aviaoGroup.position.set(32 + (Math.random()-0.5)*2, 0.6 + i*12, -108 - i*28);
-      aviaoGroup.userData = { speed: 4.5 + Math.random()*2.5, state: 'taxi', alt:0, t: Math.random()*10 };
+      const fuselagemFront = new THREE.Mesh(new THREE.SphereGeometry(0.42,12,12), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.2, metalness:0.15 }));
+      fuselagemFront.position.set(1.7,0,0); fuselagemFront.scale.set(1.3,1,1);
+      const fuselagemMid = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,2.8,16), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.25, metalness:0.2 })); fuselagemMid.rotation.z=Math.PI/2; fuselagemMid.position.set(0.2,0,0); fuselagemMid.castShadow=true;
+      const fuselagemRear = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.18,1.2,12), new THREE.MeshStandardMaterial({ color:0xf8fafc })); fuselagemRear.rotation.z=Math.PI/2; fuselagemRear.position.set(-1.5,0,0);
+      const cockpitMat = new THREE.MeshStandardMaterial({ color:0x0f172a, roughness:0.05, metalness:0.9 });
+      const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,8), cockpitMat); cockpit.position.set(1.95,0.12,0); cockpit.scale.set(1.2,0.6,1.1);
+      const wingMat = new THREE.MeshStandardMaterial({ color:0xe2e8f0, roughness:0.3, metalness:0.2 });
+      const asaL = new THREE.Mesh(new THREE.BoxGeometry(1.1,0.09,1.7), wingMat); asaL.position.set(-0.2, -0.08, 0.95); asaL.rotation.y=0.28; asaL.castShadow=true;
+      const asaR = new THREE.Mesh(new THREE.BoxGeometry(1.1,0.09,1.7), wingMat); asaR.position.set(-0.2, -0.08, -0.95); asaR.rotation.y=-0.28; asaR.castShadow=true;
+      const engineGeo = new THREE.CylinderGeometry(0.18,0.18,0.55,12); engineGeo.rotateZ(Math.PI/2);
+      const engineMat = new THREE.MeshStandardMaterial({ color:0x334155, roughness:0.4, metalness:0.6 });
+      const engL = new THREE.Mesh(engineGeo, engineMat); engL.position.set(-0.3, -0.18, 0.65);
+      const engR = new THREE.Mesh(engineGeo, engineMat); engR.position.set(-0.3, -0.18, -0.65);
+      const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.85,0.08), new THREE.MeshStandardMaterial({ color:0x0284c7 })); tailV.position.set(-2.1,0.45,0);
+      const tailH = new THREE.Mesh(new THREE.BoxGeometry(0.85,0.08,0.85), new THREE.MeshStandardMaterial({ color:0xe2e8f0 })); tailH.position.set(-2.0,0.1,0);
+      const logoMat = new THREE.MeshBasicMaterial({ color:0xef4444 });
+      const logo = new THREE.Mesh(new THREE.CircleGeometry(0.18,12), logoMat); logo.position.set(-2.12,0.55,0.05); logo.rotation.y=Math.PI/2;
+      aviaoGroup.add(fuselagemFront,fuselagemMid,fuselagemRear,cockpit,asaL,asaR,engL,engR,tailV,tailH,logo);
+      aviaoGroup.position.set(38 + (Math.random()-0.5)*1.5, 0.65 + i*10, -118 - i*32);
+      aviaoGroup.userData = { speed: 5.2 + Math.random()*2.8, state: 'taxi', alt:0, t: Math.random()*10, type: i%2===0?'landing':'takeoff' };
       this.exteriorGroup.add(aviaoGroup);
       this.avioes.push(aviaoGroup);
     }
@@ -949,20 +987,64 @@ class EnglishSpaces3DWorld {
   criarTransitoInteligente() {
     const THREE = window.THREE;
     this.cars = [];
-    const carColors = [0xef4444, 0x3b82f6, 0xf8fafc, 0x1f2937];
-    for (let i = 0; i < 6; i++) {
+    const carModels = [
+      { body:0xef4444, type:'sedan' },
+      { body:0x3b82f6, type:'suv' },
+      { body:0xfacc15, type:'taxi' },
+      { body:0xf8fafc, type:'van' },
+      { body:0x1f2937, type:'sport' },
+      { body:0x10b981, type:'sedan' }
+    ];
+    for (let i = 0; i < 10; i++) {
+      const cfg = carModels[i % carModels.length];
       const carGroup = new THREE.Group();
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.7, 3.6), new THREE.MeshLambertMaterial({ color: carColors[i % carColors.length] }));
-      body.position.y = 0.55;
-      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.55, 1.8), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
-      cabin.position.set(0, 1.05, -0.1);
-      carGroup.add(body, cabin);
-
+      const bodyGeo = new THREE.BoxGeometry(cfg.type==='van'?1.9:1.75, 0.62, cfg.type==='van'?4.2:3.8);
+      const bodyMat = new THREE.MeshStandardMaterial({ color: cfg.body, roughness:0.35, metalness:0.25 });
+      const body = new THREE.Mesh(bodyGeo, bodyMat);
+      body.position.y = 0.58; body.castShadow=true;
+      const cabinH = cfg.type==='van'?0.75:0.52;
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.45, cabinH, cfg.type==='suv'?2.0:1.7), new THREE.MeshStandardMaterial({ color:0x0f172a, roughness:0.15, metalness:0.6 }));
+      cabin.position.set(0, 0.58 + 0.31 + cabinH/2, cfg.type==='van'?0.1:-0.15); cabin.castShadow=true;
+      const glassMat = new THREE.MeshStandardMaterial({ color:0x38bdf8, transparent:true, opacity:0.35, roughness:0.05, metalness:0.9 });
+      const windshield = new THREE.Mesh(new THREE.PlaneGeometry(1.4,0.5), glassMat);
+      windshield.position.set(0, 1.05, 0.55); windshield.rotation.x = -Math.PI/3;
+      const sideWindowL = new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.38), glassMat); sideWindowL.position.set(0.73,1.05, -0.15); sideWindowL.rotation.y=Math.PI/2;
+      const sideWindowR = new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.38), glassMat); sideWindowR.position.set(-0.73,1.05, -0.15); sideWindowR.rotation.y=-Math.PI/2;
+      const wheelGeo = new THREE.CylinderGeometry(0.28,0.28,0.18,14); wheelGeo.rotateZ(Math.PI/2);
+      const wheelMat = new THREE.MeshStandardMaterial({ color:0x111111, roughness:0.8 });
+      const wheelPositions = [[0.85,0.28,1.1],[ -0.85,0.28,1.1],[0.85,0.28,-1.1],[-0.85,0.28,-1.1]];
+      wheelPositions.forEach(pos=>{
+        const w = new THREE.Mesh(wheelGeo, wheelMat); w.position.set(pos[0],pos[1],pos[2]); w.castShadow=true; carGroup.add(w);
+      });
+      const headLightGeo = new THREE.SphereGeometry(0.12,8,8);
+      const headMat = new THREE.MeshStandardMaterial({ color:0xfef08a, emissive:0xfacc15, emissiveIntensity:0.6 });
+      const hl1 = new THREE.Mesh(headLightGeo, headMat); hl1.position.set(0.55,0.55,1.9);
+      const hl2 = new THREE.Mesh(headLightGeo, headMat); hl2.position.set(-0.55,0.55,1.9);
+      const tailMat = new THREE.MeshStandardMaterial({ color:0xef4444, emissive:0xef4444, emissiveIntensity:0.8 });
+      const tl1 = new THREE.Mesh(new THREE.SphereGeometry(0.09,6,6), tailMat); tl1.position.set(0.6,0.6,-1.9);
+      const tl2 = new THREE.Mesh(new THREE.SphereGeometry(0.09,6,6), tailMat); tl2.position.set(-0.6,0.6,-1.9);
+      if (cfg.type==='taxi') {
+        const sign = new THREE.Mesh(new THREE.BoxGeometry(0.5,0.18,0.22), new THREE.MeshStandardMaterial({ color:0xf8fafc })); sign.position.set(0,1.55, -0.1); carGroup.add(sign);
+      }
+      carGroup.add(body, cabin, windshield, sideWindowL, sideWindowR, hl1, hl2, tl1, tl2);
       const lane = i % 2 === 0 ? 1.6 : -1.6;
       const dir = i % 2 === 0 ? -1 : 1;
-      carGroup.position.set(lane, 0, -80 + i * 18);
+      carGroup.position.set(lane, 0, -80 + i * 16);
       carGroup.rotation.y = dir === 1 ? 0 : Math.PI;
-      carGroup.userData = { lane, dir, speed: 3.5 + Math.random() * 1.5, stopped: false };
+      carGroup.userData = { lane, dir, speed: 4.2 + Math.random() * 2.2, stopped: false, type:cfg.type };
+      this.exteriorGroup.add(carGroup);
+      this.cars.push(carGroup);
+    }
+    for(let i=0;i<6;i++){
+      const carGroup = new THREE.Group();
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.7,0.6,3.6), new THREE.MeshStandardMaterial({ color:0x94a3b8, roughness:0.4 }));
+      body.position.y=0.55;
+      const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.4,0.5,1.6), new THREE.MeshStandardMaterial({ color:0x1e293b })); cabin.position.set(0,1.0,0);
+      carGroup.add(body,cabin);
+      const laneX = i%2===0 ? -48 : 48;
+      carGroup.position.set(laneX + (Math.random()-0.5)*1.2, 0, -75 + i*22);
+      carGroup.rotation.y = (i%2===0?0:Math.PI) + (Math.random()-0.5)*0.2;
+      carGroup.userData = { lane:laneX, dir:i%2===0?-1:1, speed:3.8+Math.random()*1.5, stopped:false };
       this.exteriorGroup.add(carGroup);
       this.cars.push(carGroup);
     }
@@ -1707,8 +1789,10 @@ tentarCarregarGLTFsTodos() {
     const visitados = this.parentManager?.progressData?.visited || [];
 
     CITY_BUILDINGS_LAYOUT.forEach((bCfg) => {
-      const spInfo = registry[bCfg.id];
-      if (!spInfo) return;
+      let spInfo = registry[bCfg.id] || FALLBACK_NEW_SPACES[bCfg.id];
+      if (!spInfo) {
+        spInfo = { id:bCfg.id, name:bCfg.id.charAt(0).toUpperCase()+bCfg.id.slice(1), emoji:'🏪', npcName:'Shopkeeper', roles:['CUSTOMER','HOST'], description:bCfg.id };
+      }
 
       const centerX = bCfg.col * 16;
       const centerZ = -bCfg.row * 16;
