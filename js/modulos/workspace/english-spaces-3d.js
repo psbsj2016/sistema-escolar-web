@@ -22,6 +22,13 @@ const CITY_BUILDINGS_LAYOUT = [
 ];
 
 class EnglishSpaces3DWorld {
+  formatarNomeCompleto(nomeBruto) {
+    const limpo = String(nomeBruto || 'User').trim();
+    const partes = limpo.split(/\s+/);
+    if (partes.length <= 1) return limpo;
+    return `${partes[0]} ${partes[partes.length - 1]}`;
+  }
+
   constructor() {
     this.active = false;
     this.parentManager = null;
@@ -216,63 +223,59 @@ class EnglishSpaces3DWorld {
   }
 
   // 👤 CONSTRUTOR DE BONECO HUMANO 3D ARTICULADO E CONSISTENTE
-  criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a) {
+ criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
     const THREE = window.THREE;
     const group = new THREE.Group();
 
     const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
     const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
     const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
-    const matCabelo = new THREE.MeshStandardMaterial({ color: 0x1e1e22, roughness: 0.9 });
+    const matCabelo = new THREE.MeshStandardMaterial({ color: isFemale ? 0x78350f : 0x1e1e22, roughness: 0.9 });
     const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
     const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe });
     const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
 
-    const footGeo = new THREE.BoxGeometry(0.22, 0.14, 0.32);
-    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.14, 0.07, 0.05);
-    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.14, 0.07, 0.05);
+    // Ajuste morfológico subtil: ombros ligeiramente mais estreitos e ancas proporcionadas para feminino
+    const torsoW = isFemale ? 0.46 : 0.52;
+    const shoulderW = isFemale ? 0.26 : 0.31;
+
+    const footGeo = new THREE.BoxGeometry(0.2, 0.14, 0.3);
+    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
+    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.13, 0.07, 0.05);
     group.add(leftFoot, rightFoot);
 
-    const legGeo = new THREE.CylinderGeometry(0.11, 0.095, 0.82, 12); legGeo.translate(0, -0.41, 0);
-    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.14, 0.88, 0);
-    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.14, 0.88, 0);
+    const legGeo = new THREE.CylinderGeometry(0.1, 0.085, 0.82, 12); legGeo.translate(0, -0.41, 0);
+    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.13, 0.88, 0);
+    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
     group.add(leftLeg, rightLeg);
 
-    const hipGeo = new THREE.BoxGeometry(0.52, 0.16, 0.26);
-    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
+    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.68, 0.26);
+    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.32, 0);
+    group.add(torso);
 
-    const torsoGeo = new THREE.BoxGeometry(0.52, 0.68, 0.26);
-    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.32, 0); group.add(torso);
-
-    const shoulderGeo = new THREE.SphereGeometry(0.11, 10, 10);
-    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-0.31, 1.6, 0);
-    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(0.31, 1.6, 0);
+    const shoulderGeo = new THREE.SphereGeometry(0.1, 10, 10);
+    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.6, 0);
+    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.6, 0);
     group.add(leftShoulder, rightShoulder);
 
-    const armGeo = new THREE.CylinderGeometry(0.075, 0.065, 0.62, 10); armGeo.translate(0, -0.31, 0);
-    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-0.31, 1.6, 0);
-    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(0.31, 1.6, 0);
-
-    const sleeveGeo = new THREE.CylinderGeometry(0.09, 0.085, 0.22, 10); sleeveGeo.translate(0, -0.11, 0);
-    const leftSleeve = new THREE.Mesh(sleeveGeo, matCamisa); leftSleeve.position.set(-0.31, 1.6, 0);
-    const rightSleeve = new THREE.Mesh(sleeveGeo, matCamisa); rightSleeve.position.set(0.31, 1.6, 0);
-    group.add(leftArm, rightArm, leftSleeve, rightSleeve);
-
-    const neckGeo = new THREE.CylinderGeometry(0.09, 0.1, 0.14, 10);
-    const neck = new THREE.Mesh(neckGeo, matPele); neck.position.set(0, 1.72, 0); group.add(neck);
+    const armGeo = new THREE.CylinderGeometry(0.07, 0.06, 0.62, 10); armGeo.translate(0, -0.31, 0);
+    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.6, 0);
+    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.6, 0);
+    group.add(leftArm, rightArm);
 
     const headGroup = new THREE.Group(); headGroup.position.set(0, 1.92, 0);
-    const headGeo = new THREE.SphereGeometry(0.27, 18, 18);
-    const headMesh = new THREE.Mesh(headGeo, matPele);
-    const hairGeo = new THREE.SphereGeometry(0.29, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
-    const hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.06, 0);
+    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.26, 18, 18), matPele);
+    
+    // Cabelo diferenciado para feminino (mais longo) vs masculino
+    const hairGeo = isFemale ? new THREE.SphereGeometry(0.31, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.85) : new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
+    const hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, isFemale ? -0.04 : 0.06, isFemale ? -0.04 : 0);
 
-    const eyeWhiteGeo = new THREE.SphereGeometry(0.055, 10, 10);
-    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
-    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.05, 0.22);
-    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.05, 0.26);
-    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.05, 0.22);
-    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.05, 0.26);
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.05, 10, 10);
+    const eyePupilGeo = new THREE.SphereGeometry(0.02, 8, 8);
+    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.08, 0.04, 0.21);
+    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.08, 0.04, 0.24);
+    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.08, 0.04, 0.21);
+    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.08, 0.04, 0.24);
 
     headGroup.add(headMesh, hairMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil);
     group.add(headGroup);
@@ -281,7 +284,7 @@ class EnglishSpaces3DWorld {
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; group.add(ringMesh);
 
-    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false, leftFoot, rightFoot };
+    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false };
     return group;
   }
 
@@ -838,10 +841,11 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  soltarPegada() {
+ soltarPegada() {
     const THREE = window.THREE;
     if (Date.now() - this.lastFootprint < 380) return;
     this.lastFootprint = Date.now();
+    
     const peg = new THREE.Mesh(
       new THREE.PlaneGeometry(0.22, 0.42),
       new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent: true, opacity: 0.28 })
@@ -851,6 +855,22 @@ class EnglishSpaces3DWorld {
     peg.rotation.z = this.localPlayer.rotY;
     this.scene.add(peg);
     this.footprints.push({ mesh: peg, born: Date.now() });
+
+    // 🔊 Som de passo procedural ativado!
+    try {
+      if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const ctx = this.audioCtx;
+      const osc = ctx.createOscillator(); 
+      const g = ctx.createGain();
+      osc.frequency.value = this.currentZoneId === 'street' ? 170 : 240; 
+      osc.type = 'triangle';
+      g.gain.setValueAtTime(0.14, ctx.currentTime); 
+      g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.09);
+      osc.connect(g); 
+      g.connect(ctx.destination); 
+      osc.start(); 
+      osc.stop(ctx.currentTime + 0.09);
+    } catch (e) {}
   }
 
   criarVitrinesVivas() {
@@ -1433,19 +1453,20 @@ class EnglishSpaces3DWorld {
     this.criarFotoPolaroid();
     this.ativarSombrasReais();
 
-    const u = window.Workspace?.usuario || {};
-    const meuNome = u.nome || u.login || 'You';
+   const u = window.Workspace?.usuario || {};
+    const nomeCompletoBruto = u.nome || u.login || 'You';
+    const meuNomeFormatado = this.formatarNomeCompleto(nomeCompletoBruto);
     const meuId = String(u.id || 'local_' + Date.now());
-    const startBuilding = this.buildingsMeta.find(b => b.id === initialSpaceId) || this.buildingsMeta[0];
+    const isFemaleUser = String(u.genero || u.sexo || '').toLowerCase().startsWith('f');
 
-    const playerMesh = this.criarBonecoHumano3D(0x8b5cf6, 0x1e1b4b, 0xfde68a);
+    const playerMesh = this.criarBonecoHumano3D(0x8b5cf6, 0x1e1b4b, 0xfde68a, isFemaleUser);
     const initialX = startBuilding ? (startBuilding.centerX * 0.45) : 0;
     const initialZ = startBuilding ? startBuilding.centerZ : 0;
     playerMesh.position.set(initialX, 0, initialZ);
     this.scene.add(playerMesh);
 
     const roleInicial = this.parentManager.state.role || 'STUDENT';
-    const myLabel = this.criarEtiquetaHTML(`${meuNome} (You)`, roleInicial, '#8b5cf6');
+    const myLabel = this.criarEtiquetaHTML(`${meuNomeFormatado} (You)`, null, '#8b5cf6');
     this.localPlayer = {
       userId: meuId,
       nome: meuNome,
