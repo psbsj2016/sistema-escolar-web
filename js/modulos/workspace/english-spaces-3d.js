@@ -31,6 +31,36 @@ const CITY_BUILDINGS_LAYOUT = [
 ];
 
 // Fallback para novos espaços que ainda não estão no backend registry
+
+// 💰 SISTEMA DOVRYX (DRX) - Moeda única
+const DOVRYX = {
+  getBalance() {
+    try {
+      const raw = localStorage.getItem('dovryx_balance');
+      if (raw !== null) return parseInt(raw);
+      const oldXP = parseInt(localStorage.getItem('xp_mock')||'1250');
+      localStorage.setItem('dovryx_balance', String(oldXP));
+      return oldXP;
+    } catch { return 1250; }
+  },
+  setBalance(v) { localStorage.setItem('dovryx_balance', String(Math.max(0, v))); },
+  add(amount, reason='') {
+    const bal = this.getBalance() + amount;
+    this.setBalance(bal);
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`+${amount} DRX ${reason} 💎`, 'success');
+    const el=document.getElementById('es-dovryx-hud'); if(el) el.textContent=`${bal} DRX 💎`;
+    return bal;
+  },
+  spend(amount, reason='') {
+    const bal = this.getBalance();
+    if (bal < amount) { if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`Need ${amount} DRX, have ${bal}`, 'error'); return false; }
+    this.setBalance(bal-amount);
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`-${amount} DRX ${reason} 💸`, 'info');
+    const el=document.getElementById('es-dovryx-hud'); if(el) el.textContent=`${bal-amount} DRX 💎`;
+    return true;
+  }
+};
+
 const FALLBACK_NEW_SPACES = {
   bank: { id:'bank', name:'Bank', emoji:'🏦', npcName:'Bank Manager', roles:['CUSTOMER','ACTING BANKER'], description:'Bank' },
   clothing: { id:'clothing', name:'Clothing Store', emoji:'👗', npcName:'Stylist', roles:['SHOPPER','ACTING STYLIST'], description:'Clothing' },
