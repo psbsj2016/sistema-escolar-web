@@ -407,16 +407,96 @@ class EnglishSpaces3DWorld {
     else { this.scene.background=new THREE.Color(0x070b1a); this.scene.fog=new THREE.FogExp2(0x070b1a,0.012); if(this.ambientLight){this.ambientLight.color.setHex(0x8b9dc3); this.ambientLight.intensity=0.38;} if(this.dirLight){this.dirLight.color.setHex(0x8b9dc3); this.dirLight.intensity=0.22; this.dirLight.position.set(-20,35,15);} if(this.sunMesh) this.sunMesh.visible=false; if(this.moonMesh){this.moonMesh.visible=true; this.moonMesh.position.set(-18,32,-35);} if(this.starsGroup){this.starsGroup.visible=true; this.starsGroup.children.forEach(s=>{s.userData.twinkle+=0.04; s.material.opacity=0.6+Math.sin(s.userData.twinkle)*0.4; s.material.transparent=true;});} if(this.cloudsGroup) this.cloudsGroup.visible=true; this.posteLights.forEach(p=>{p.light.intensity=1.4; p.lampHead.material.color.setHex(0xfef08a);}); }
   }
 
+  gerarTexturaParalelepipedo() {
+    const THREE = window.THREE;
+    const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=512;
+    const ctx = canvas.getContext('2d');
+    // rejunte
+    ctx.fillStyle = '#2a2f3a'; ctx.fillRect(0,0,512,512);
+    const cores = ['#94a3b8','#9aa8bd','#a1b0c5','#b0becf','#c2d0e2','#cbd5e1'];
+    const blockW = 64, blockH = 32;
+    for(let y=0; y<512; y+=blockH){
+      const offset = (Math.floor(y/blockH)%2===0)?0:blockW/2;
+      for(let x=-blockW; x<512+blockW; x+=blockW){
+        const c = cores[Math.floor(Math.random()*cores.length)];
+        ctx.fillStyle = c;
+        const px = x+offset+2; const py = y+2;
+        ctx.fillRect(px,py,blockW-4,blockH-4);
+        // sombra interna leve
+        ctx.fillStyle = 'rgba(0,0,0,0.08)'; ctx.fillRect(px,py+blockH-8,blockW-4,4);
+      }
+    }
+    const tex = new THREE.CanvasTexture(canvas);
+    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(1, 18); tex.anisotropy = 4;
+    return tex;
+  }
+
   criarAvenidaRealista() {
     const THREE = window.THREE;
-    const sidewalkMat = new THREE.MeshLambertMaterial({ color: 0x334155 });
-    const leftSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 160), sidewalkMat); leftSidewalk.rotation.x=-Math.PI/2; leftSidewalk.position.set(-8.5,0.04,-35);
-    const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 160), sidewalkMat); rightSidewalk.rotation.x=-Math.PI/2; rightSidewalk.position.set(8.5,0.04,-35);
+    const paralelepipedoTex = this.gerarTexturaParalelepipedo();
+    const sidewalkMat = new THREE.MeshStandardMaterial({ map: paralelepipedoTex, roughness: 0.92, metalness: 0.04 });
+    const leftSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 170), sidewalkMat); leftSidewalk.rotation.x=-Math.PI/2; leftSidewalk.position.set(-9.1,0.08,-36); leftSidewalk.receiveShadow=true;
+    const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 170), sidewalkMat); rightSidewalk.rotation.x=-Math.PI/2; rightSidewalk.position.set(9.1,0.08,-36); rightSidewalk.receiveShadow=true;
     this.exteriorGroup.add(leftSidewalk, rightSidewalk);
+    // Meio-fio (curb) diferenciado
+    const curbMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7 });
+    const curbMatYellow = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.6 });
+    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28,0.22,170), curbMat); leftCurb.position.set(-6.45,0.11,-36); leftCurb.receiveShadow=true;
+    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28,0.22,170), curbMat); rightCurb.position.set(6.45,0.11,-36); rightCurb.receiveShadow=true;
+    const leftCurbOut = new THREE.Mesh(new THREE.BoxGeometry(0.28,0.22,170), curbMatYellow); leftCurbOut.position.set(-11.65,0.11,-36);
+    const rightCurbOut = new THREE.Mesh(new THREE.BoxGeometry(0.28,0.22,170), curbMatYellow); rightCurbOut.position.set(11.65,0.11,-36);
+    this.exteriorGroup.add(leftCurb, rightCurb, leftCurbOut, rightCurbOut);
+    // Faixas da avenida
     const laneMat = new THREE.MeshBasicMaterial({ color:0xf8fafc });
-    for(let z=-75; z<15; z+=6){ const dash=new THREE.Mesh(new THREE.PlaneGeometry(0.25,1.8),laneMat); dash.rotation.x=-Math.PI/2; dash.position.set(0,0.06,z); this.exteriorGroup.add(dash); }
-    for(let row=0; row<6; row++){ const zPos=-row*16; for(let i=-4;i<5;i++){ const stripe=new THREE.Mesh(new THREE.PlaneGeometry(0.35,2.6),laneMat); stripe.rotation.x=-Math.PI/2; stripe.position.set(i*0.9,0.07,zPos); this.exteriorGroup.add(stripe); } }
+    for(let z=-85; z<20; z+=6){ const dash=new THREE.Mesh(new THREE.PlaneGeometry(0.25,1.8),laneMat); dash.rotation.x=-Math.PI/2; dash.position.set(0,0.06,z); this.exteriorGroup.add(dash); }
+    for(let row=0; row<6; row++){ const zPos=-row*16; for(let i=-4;i<5;i++){ const stripe=new THREE.Mesh(new THREE.PlaneGeometry(0.38,2.8),laneMat); stripe.rotation.x=-Math.PI/2; stripe.position.set(i*0.95,0.07,zPos); this.exteriorGroup.add(stripe); } }
   }
+
+  criarCenarioFundoMontanhasArvores() {
+    const THREE = window.THREE;
+    const fundoGroup = new THREE.Group();
+    // Montanhas no final
+    const montanhaCores = [0x334155,0x475569,0x1e293b,0x3f4a5a];
+    for(let i=-4;i<=4;i++){
+      const h = 18 + Math.random()*14 + Math.abs(i)*1.5;
+      const geo = new THREE.ConeGeometry(10+Math.random()*6, h, 7);
+      const mat = new THREE.MeshStandardMaterial({ color: montanhaCores[Math.abs(i)%montanhaCores.length], roughness: 0.95, flatShading:true });
+      const mont = new THREE.Mesh(geo, mat);
+      mont.position.set(i*22 + (Math.random()-0.5)*6, h/2 -2, -118 - Math.random()*12);
+      mont.rotation.y = (Math.random()-0.5)*0.4;
+      fundoGroup.add(mont);
+      // neve no topo
+      const neveGeo = new THREE.ConeGeometry(3.2, 4.5, 6);
+      const neveMat = new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 });
+      const neve = new THREE.Mesh(neveGeo, neveMat);
+      neve.position.set(0, h/2 -1.2, 0);
+      mont.add(neve);
+    }
+    // Árvores no fundo e laterais
+    const criarArvore = (x,z,scale=1) => {
+      const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.12*scale,0.18*scale,1.2*scale,6), new THREE.MeshStandardMaterial({ color:0x422006, roughness:0.9 }));
+      tronco.position.set(x,0.6*scale,z);
+      const copa = new THREE.Mesh(new THREE.ConeGeometry(0.85*scale,2.2*scale,7), new THREE.MeshStandardMaterial({ color:0x14532d, roughness:0.8, flatShading:true }));
+      copa.position.set(x,1.8*scale,z);
+      const copa2 = new THREE.Mesh(new THREE.ConeGeometry(0.65*scale,1.6*scale,6), new THREE.MeshStandardMaterial({ color:0x166534, roughness:0.85, flatShading:true }));
+      copa2.position.set(x,2.6*scale,z);
+      fundoGroup.add(tronco,copa,copa2);
+    };
+    for(let i=0;i<28;i++){
+      const x = (Math.random()-0.5)*90;
+      const z = -88 - Math.random()*38;
+      if(Math.abs(x)<13) continue;
+      criarArvore(x,z,0.9+Math.random()*0.7);
+    }
+    // Fileira de árvores nas laterais da avenida
+    for(let z=-80; z<10; z+=8){
+      criarArvore(-18.5 + (Math.random()-0.5)*0.8, z, 1.1);
+      criarArvore(18.5 + (Math.random()-0.5)*0.8, z, 1.1);
+    }
+    this.exteriorGroup.add(fundoGroup);
+  }
+
 
   criarTransitoInteligente() {
     const THREE = window.THREE; this.cars=[];
@@ -750,9 +830,34 @@ class EnglishSpaces3DWorld {
 
   criarLetreiro3D(texto, pos) {
     const THREE = window.THREE;
-    const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=128;
-    const ctx=canvas.getContext('2d'); ctx.fillStyle='#0f0f1a'; ctx.fillRect(0,0,512,128); ctx.strokeStyle='#8b5cf6'; ctx.lineWidth=4; ctx.strokeRect(2,2,508,124); ctx.fillStyle='#ffffff'; ctx.font='900 38px Inter'; ctx.textAlign='center'; ctx.fillText(texto.toUpperCase(),256,78);
-    const tex=new THREE.CanvasTexture(canvas); const mesh=new THREE.Mesh(new THREE.PlaneGeometry(3.8,0.95), new THREE.MeshBasicMaterial({ map:tex })); mesh.position.copy(pos); this.scene.add(mesh); return mesh;
+    // Placa superior 3D fixa - sem flutuar
+    const canvas = document.createElement('canvas'); canvas.width=1024; canvas.height=256;
+    const ctx=canvas.getContext('2d');
+    // Fundo placa premium
+    const grad = ctx.createLinearGradient(0,0,0,256);
+    grad.addColorStop(0,'#1e293b'); grad.addColorStop(1,'#0f172a');
+    ctx.fillStyle=grad; ctx.fillRect(0,0,1024,256);
+    ctx.strokeStyle='#8b5cf6'; ctx.lineWidth=8; ctx.strokeRect(4,4,1016,248);
+    ctx.fillStyle='rgba(139,92,246,0.18)'; ctx.fillRect(0,0,1024,36);
+    ctx.fillStyle='#f8fafc'; ctx.font='900 78px Inter, sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(texto.toUpperCase(),512,144);
+    // brilho inferior
+    ctx.fillStyle='rgba(255,255,255,0.06)'; ctx.fillRect(0,220,1024,12);
+    const tex=new THREE.CanvasTexture(canvas); tex.anisotropy=4;
+    // Caixa 3D da placa
+    const placaGroup = new THREE.Group();
+    const baseGeo = new THREE.BoxGeometry(4.8,1.15,0.22);
+    const baseMat = new THREE.MeshStandardMaterial({ color:0x0f172a, roughness:0.6, metalness:0.2 });
+    const baseMesh = new THREE.Mesh(baseGeo, baseMat); baseMesh.castShadow=true;
+    const frontGeo = new THREE.PlaneGeometry(4.7,1.08);
+    const frontMat = new THREE.MeshBasicMaterial({ map:tex });
+    const frontMesh = new THREE.Mesh(frontGeo, frontMat); frontMesh.position.set(0,0,0.12);
+    placaGroup.add(baseMesh, frontMesh);
+    placaGroup.position.copy(pos);
+    // Leve emissive pra ser visto de longe à noite
+    const luzPlaca = new THREE.PointLight(0x8b5cf6,0.35,6); luzPlaca.position.set(0,0,0.8); placaGroup.add(luzPlaca);
+    this.scene.add(placaGroup);
+    return placaGroup;
   }
 
   inicializarCenaThreeJS(initialSpaceId) {
@@ -770,6 +875,7 @@ class EnglishSpaces3DWorld {
     const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 150), new THREE.MeshLambertMaterial({ color:0x1e293b })); road.rotation.x=-Math.PI/2; road.position.set(0,0.01,-35); this.exteriorGroup.add(road);
     this.criarCeuRealista(); this.criarAvenidaRealista(); this.criarPostesAvenida3D(); this.criarTransitoInteligente(); this.criarPedestres(); this.criarOutdoorsInteligentes(); this.atualizarCicloDiaNoite(); setInterval(()=>this.atualizarCicloDiaNoite(),60000);
     // 14 MARAVILHAS - inicializa com sons
+    this.criarCenarioFundoMontanhasArvores();
     this.criarAudioZones3D();
     this.criarSistemaChuvaNeblina();
     this.criarNightMarket();
@@ -805,15 +911,15 @@ class EnglishSpaces3DWorld {
       if(bCfg.id==='shopping' || bCfg.id==='home' || bCfg.id==='coffee'){
         const vitrineGlass=new THREE.Mesh(new THREE.PlaneGeometry(2.4,2.2), new THREE.MeshStandardMaterial({ color:0xffffff, transparent:true, opacity:0.18, roughness:0.05, metalness:0.1 })); vitrineGlass.position.set(frontX + (bCfg.col*0.08),1.4,centerZ+2.6); vitrineGlass.rotation.y=bCfg.col===-1?Math.PI/2:-Math.PI/2; this.scene.add(vitrineGlass);
       }
-      const signPos=new THREE.Vector3(frontX + (bCfg.col*0.6), bh+0.85, centerZ); this.criarLetreiro3D(spInfo.name, signPos);
-      this.buildingMeshes.set(bCfg.id, { walls: wallMatsTransp, roof, frontX, doorZ:centerZ, centerX, centerZ, bw, bd, bh, floor: floorMesh, doorGroup });
+      const signPos=new THREE.Vector3(frontX + (bCfg.col*0.62), bh+1.05, centerZ); const placa3D=this.criarLetreiro3D(spInfo.name, signPos);
+      this.buildingMeshes.set(bCfg.id, { walls: wallMatsTransp, roof, frontX, doorZ:centerZ, centerX, centerZ, bw, bd, bh, floor: floorMesh, doorGroup, placa3D, signPos });
       this.decorarInteriorEdificio3D(bCfg.id, centerX, centerZ, bCfg.col, bCfg);
       const npcX=centerX + (bCfg.col*3.1); const npcZ=centerZ;
       const npcMesh=this.criarBonecoHumano3D(bCfg.npcColor,0x0f172a,0xfde68a); npcMesh.position.set(npcX,0,npcZ); npcMesh.rotation.y=bCfg.col===-1?(Math.PI/2):(-Math.PI/2); this.scene.add(npcMesh);
       const labelEl=this.criarEtiquetaHTML(`${spInfo.emoji} ${spInfo.npcName}`,'AI HOST','#10b981');
-      const signEl=this.criarPlacaEdificioHTML(`${spInfo.emoji} ${spInfo.name}`);
+      const signEl=null; // PLACA AGORA É 3D FIXA NO TOPO, SEM HTML FLUTUANTE
       this.npcs3D.set(bCfg.id, { id:bCfg.id, space:spInfo, name:spInfo.npcName, x:npcX, z:npcZ, mesh:npcMesh, labelEl, bubbleText: spInfo.dialogues?.start?.text || 'Welcome!' });
-      this.buildingsMeta.push({ id:bCfg.id, space:spInfo, centerX, centerZ, bw, bd, bh, minX:centerX-bw/2, maxX:centerX+bw/2, minZ:centerZ-bd/2, maxZ:centerZ+bd/2, frontX, doorZ:centerZ, signPos:new THREE.Vector3(frontX - (bCfg.col*0.5), bh+0.8, centerZ), signEl });
+      this.buildingsMeta.push({ id:bCfg.id, space:spInfo, centerX, centerZ, bw, bd, bh, minX:centerX-bw/2, maxX:centerX+bw/2, minZ:centerZ-bd/2, maxZ:centerZ+bd/2, frontX, doorZ:centerZ, signPos, signEl: null });
     // 14 MARAVILHAS - vitrines, quadros e paineis depois dos predios
     this.criarVitrinesVivas();
     this.criarQuadroNegroVivo();
@@ -882,9 +988,9 @@ class EnglishSpaces3DWorld {
     this.buildingsMeta.forEach(b=>{
       if(b.id!==id){
         const meshes=this.buildingMeshes.get(b.id);
-        if(meshes){ meshes.walls.forEach(w=>w.visible=false); if(meshes.roof) meshes.roof.visible=false; if(meshes.floor) meshes.floor.visible=false; }
+        if(meshes){ meshes.walls.forEach(w=>w.visible=false); if(meshes.roof) meshes.roof.visible=false; if(meshes.floor) meshes.floor.visible=false; if(meshes.placa3D) meshes.placa3D.visible=false; }
         const door=this.doors.get(b.id); if(door) door.visible=false;
-        const npc=this.npcs3D.get(b.id); if(npc){ npc.mesh.visible=false; if(npc.labelEl) npc.labelEl.style.display='none'; if(b.signEl) b.signEl.style.display='none'; }
+        const npc=this.npcs3D.get(b.id); if(npc){ npc.mesh.visible=false; if(npc.labelEl) npc.labelEl.style.display='none'; }
       }
     });
     this.currentZoneId=id; this.atualizarHudZonaLocal(id);
@@ -898,9 +1004,9 @@ class EnglishSpaces3DWorld {
     this.pedestrians.forEach(p=>{p.mesh.visible=true; if(p.labelEl) p.labelEl.style.display='flex';});
     this.buildingsMeta.forEach(b=>{
       const meshes=this.buildingMeshes.get(b.id);
-      if(meshes){ meshes.walls.forEach(w=>w.visible=true); if(meshes.roof) meshes.roof.visible=true; if(meshes.floor) meshes.floor.visible=true; }
+      if(meshes){ meshes.walls.forEach(w=>w.visible=true); if(meshes.roof) meshes.roof.visible=true; if(meshes.floor) meshes.floor.visible=true; if(meshes.placa3D) meshes.placa3D.visible=true; }
       const door=this.doors.get(b.id); if(door) door.visible=true;
-      const npc=this.npcs3D.get(b.id); if(npc){ npc.mesh.visible=true; if(npc.labelEl) npc.labelEl.style.display='flex'; if(b.signEl) b.signEl.style.display='block'; }
+      const npc=this.npcs3D.get(b.id); if(npc){ npc.mesh.visible=true; if(npc.labelEl) npc.labelEl.style.display='flex'; }
     });
     this.currentZoneId='street'; this.atualizarHudZonaLocal('street');
   }
@@ -966,7 +1072,8 @@ class EnglishSpaces3DWorld {
       this.pedestrians.forEach(ped=>{ if(!this.modoInterior) this.projetarEtiquetaHTML(ped.mesh.position,2.2,ped.labelEl,vw,vh); });
       if(this.musician && !this.modoInterior) this.projetarEtiquetaHTML(this.musician.mesh.position,2.2,this.musician.labelEl,vw,vh);
       if(this.ghost && !this.modoInterior) this.projetarEtiquetaHTML(this.ghost.mesh.position,2.4,this.ghost.labelEl,vw,vh);
-      this.buildingsMeta.forEach(b=>{ if(!this.modoInterior || this.predioAtual===b.id) this.projetarEtiquetaHTML(b.signPos,0,b.signEl,vw,vh); });
+      // Placas agora são 3D fixas, sem HTML flutuante - não projetar signEl
+      // this.buildingsMeta.forEach removido para limpar visual
       this.renderer.render(this.scene,this.camera);
     };
     this.atualizarHudZonaLocal('street'); animar();
