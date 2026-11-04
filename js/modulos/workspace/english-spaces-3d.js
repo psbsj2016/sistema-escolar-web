@@ -123,13 +123,68 @@ class EnglishSpaces3DWorld {
     return `${partes[0]} ${partes[partes.length - 1]}`;
   }
 
-  detetarGeneroPadrao(u) {
-    const salvo = localStorage.getItem('es_avatar_gender_' + (u?.id || 'default'));
-    if (salvo) return salvo === 'F';
+ detetarGeneroPadrao(u) {
+    if (this.cloudAvatarConfig && typeof this.cloudAvatarConfig.isFemale === 'boolean') {
+      return this.cloudAvatarConfig.isFemale;
+    }
     const gen = String(u?.genero || u?.sexo || '').toLowerCase();
     if (gen.startsWith('f') || gen.startsWith('m')) return gen.startsWith('f');
     const primeiroNome = String(u?.nome || u?.login || '').trim().split(/\s+/)[0].toLowerCase();
     return primeiroNome.endsWith('a') && !['luca', 'joshua', 'nikola'].includes(primeiroNome);
+  }
+
+  // ☁️ Carrega Customização do Avatar, Saldo de XP e Post-its diretamente do MongoDB
+  async carregarEstadoInicialNuvem() {
+    const u = window.Workspace?.usuario || {};
+    const uid = String(u.id || 'demo_user');
+    const escolaId = String(u.escolaId || 'DEFAULT');
+    try {
+      const [resProg, resStickies] = await Promise.all([
+        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(uid)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
+        fetch(`/api/workspace/english-spaces/world/stickies?escolaId=${encodeURIComponent(escolaId)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null)
+      ]);
+
+      if (resProg && resProg.success) {
+        const cfg = resProg.data?.avatarConfig || resProg.compatibility?.avatarConfig || {};
+        this.cloudAvatarConfig = cfg;
+        if (this.parentManager && typeof resProg.compatibility?.xp === 'number') {
+          this.parentManager.progressData.xp = Math.max(this.parentManager.progressData.xp || 0, resProg.compatibility.xp);
+        }
+        // Aplica visual salvo na nuvem ao nosso avatar 3D
+        if (this.localPlayer) {
+          const femSalvo = typeof cfg.isFemale === 'boolean' ? cfg.isFemale : this.localPlayer.isFemale;
+          const corCamisaSalva = typeof cfg.shirtColor === 'number' ? cfg.shirtColor : (femSalvo ? 0xec4899 : 0x8b5cf6);
+          const corSapatoSalvo = typeof cfg.shoeColor === 'number' ? cfg.shoeColor : 0x111111;
+
+          this.localPlayer.isFemale = femSalvo;
+          this.localPlayer.shirtColor = corCamisaSalva;
+          this.localPlayer.shoeColor = corSapatoSalvo;
+          this.localPlayer.petType = cfg.petType || null;
+
+          const btn = document.getElementById('es-city-gender-btn');
+          if (btn) btn.innerHTML = femSalvo ? '👩 Female' : '🧑 Male';
+
+          const oldMesh = this.localPlayer.mesh;
+          const newMesh = this.criarBonecoHumano3D(corCamisaSalva, 0x1e1b4b, 0xfde68a, femSalvo);
+          if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoSalvo);
+          newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
+          newMesh.rotation.y = this.localPlayer.rotY;
+          this.scene.remove(oldMesh);
+          this.scene.add(newMesh);
+          this.localPlayer.mesh = newMesh;
+
+          if (cfg.petType === 'pet_dog' || cfg.petType === 'pet_cat') {
+            this.aplicarItemCompradoNoAvatar({ tipo: cfg.petType });
+          }
+          this.enviarMinhaPosicaoServidor();
+        }
+      }
+
+      if (resStickies && resStickies.success && Array.isArray(resStickies.notes)) {
+        this.cloudStickyNotes = resStickies.notes;
+        this.renderizarStickyNotesNoCoffee();
+      }
+    } catch (e) {}
   }
 
   async carregarThreeJS() {
@@ -238,6 +293,7 @@ class EnglishSpaces3DWorld {
     this.modoInterior = false;
     this.predioAtual = null;
     this.carregarLiderRankingReal();
+    this.carregarEstadoInicialNuvem();
     this.inicializarCenaThreeJS(initialSpaceId);
     this.configurarEventosControles();
     this.iniciarMultiplayerRealtime();
@@ -364,24 +420,132 @@ class EnglishSpaces3DWorld {
     return group;
   }
 
-  alternarGeneroMeuAvatar() {
+ async alternarGeneroMeuAvatar() {
     if (!this.localPlayer || !this.scene) return;
-    const u = window.Workspace?.usuario || {};
     const novoFem = !this.localPlayer.isFemale;
     this.localPlayer.isFemale = novoFem;
-    localStorage.setItem('es_avatar_gender_' + (u?.id || 'default'), novoFem ? 'F' : 'M');
 
     const btn = document.getElementById('es-city-gender-btn');
     if (btn) btn.innerHTML = novoFem ? '👩 Female' : '🧑 Male';
 
     const oldMesh = this.localPlayer.mesh;
-    const corCamisaAtual = oldMesh.userData?.matCamisa?.color?.getHex() || (novoFem ? 0xec4899 : 0x8b5cf6);
+    const corCamisaAtual = this.localPlayer.shirtColor || (novoFem ? 0xec4899 : 0x8b5cf6);
+    const corSapatoAtual = this.localPlayer.shoeColor || 0x111111;
     const newMesh = this.criarBonecoHumano3D(corCamisaAtual, 0x1e1b4b, 0xfde68a, novoFem);
+    if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoAtual);
     newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
     newMesh.rotation.y = this.localPlayer.rotY;
     this.scene.remove(oldMesh);
     this.scene.add(newMesh);
     this.localPlayer.mesh = newMesh;
+
+    // Salva permanentemente no MongoDB e transmite para todos os colegas online!
+    await fetch('/api/workspace/english-spaces/progress/customization', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        userId: this.localPlayer.userId,
+        isFemale: novoFem,
+        shirtColor: corCamisaAtual,
+        shoeColor: corSapatoAtual,
+        petType: this.localPlayer.petType || null
+      })
+    }).catch(() => {});
+    this.enviarMinhaPosicaoServidor();
+  }
+
+  aplicarItemCompradoNoAvatar(item) {
+    if (!this.localPlayer?.mesh?.userData) return;
+    const ud = this.localPlayer.mesh.userData;
+    if (item.tipo === 'shirt' && ud.matCamisa) {
+      ud.matCamisa.color.setHex(item.cor);
+      this.localPlayer.shirtColor = item.cor;
+    } else if (item.tipo === 'shoes' && ud.matSapato) {
+      ud.matSapato.color.setHex(item.cor);
+      this.localPlayer.shoeColor = item.cor;
+    } else if (item.tipo === 'pet_dog' || item.tipo === 'pet_cat') {
+      if (this.adoptedPet) this.scene.remove(this.adoptedPet);
+      const petMesh = item.tipo === 'pet_dog' ? this.criarCachorro3D() : this.criarGato3D();
+      petMesh.position.set(this.localPlayer.x - 0.9, 0, this.localPlayer.z + 0.9);
+      this.scene.add(petMesh);
+      this.adoptedPet = petMesh;
+      this.localPlayer.petType = item.tipo;
+    }
+  }
+
+  abrirLojaXPModal(buildingId, item) {
+    document.getElementById('shop-modal')?.remove();
+    const xpAtual = Number(this.parentManager?.progressData?.xp) || Number(this.parentManager?._statsAlunoCache?.coins?.bronze) || 500;
+    const precoVoz = Math.max(10, Math.round(item.preco * 0.8));
+
+    const html = `
+      <div id="shop-modal" style="position:fixed; inset:0; z-index:1000100; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#0f172a; border:2px solid #8b5cf6; border-radius:20px; padding:24px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.65);">
+          <div style="font-size:52px;">${item.emoji}</div>
+          <h2 style="color:#f8fafc; margin:10px 0 6px; font-size:20px;">${item.nome}</h2>
+          <p style="color:#94a3b8; font-size:13.5px; margin:0 0 12px;">Price: <b style="color:#facc15;">${item.preco} XP</b> • Your Balance: <b style="color:#34d399;">${xpAtual} XP</b></p>
+          <div style="background:rgba(139,92,246,0.15); border:1px solid rgba(167,139,250,0.35); border-radius:12px; padding:10px; margin-bottom:16px; color:#e9d5ff; font-size:13px;">
+            🎙️ <b>Voice Discount (-20%):</b> Say:<br><i>"I would like to buy ${item.nome}"</i>
+          </div>
+          <div style="display:flex; flex-direction:column; gap:8px;">
+            <button id="shop-voice-buy" style="padding:12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13.5px;">🎤 Speak in English (${precoVoz} XP)</button>
+            <div style="display:flex; gap:8px;">
+              <button id="shop-cancel" style="flex:1; padding:11px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Cancel</button>
+              <button id="shop-buy" style="flex:1.3; padding:11px; background:#8b5cf6; color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer;">💳 Buy (${item.preco} XP)</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    const finalizarCompra = async (custo, viaVoz = false) => {
+      if (xpAtual < custo) {
+        if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🔒 Practice more in the shops to earn enough XP!', 'warning');
+        return;
+      }
+      document.getElementById('shop-modal')?.remove();
+      this.aplicarItemCompradoNoAvatar(item);
+      this.falarTextoNPC(`Thank you! Enjoy your new ${item.nome}!`, buildingId);
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso(`🛍️ Purchased ${item.nome}${viaVoz ? ' with 20% Voice Discount' : ''}!`, 'success');
+      }
+
+      // Grava a compra, a nova cor/pet e o saldo de XP diretamente no MongoDB!
+      const res = await fetch('/api/workspace/english-spaces/progress/customization', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: this.localPlayer.userId,
+          isFemale: this.localPlayer.isFemale,
+          shirtColor: this.localPlayer.shirtColor,
+          shoeColor: this.localPlayer.shoeColor,
+          petType: this.localPlayer.petType,
+          purchasedItem: item,
+          costXP: custo,
+          bonusXP: 25
+        })
+      }).then(r => r.json()).catch(() => null);
+
+      if (res && res.success && this.parentManager) {
+        this.parentManager.progressData.xp = res.totalXP;
+        this.parentManager.atualizarResumoNoBannerFeed?.();
+      }
+      this.enviarMinhaPosicaoServidor();
+    };
+
+    document.getElementById('shop-cancel')?.addEventListener('click', () => document.getElementById('shop-modal')?.remove());
+    document.getElementById('shop-buy')?.addEventListener('click', () => finalizarCompra(item.preco, false));
+    document.getElementById('shop-voice-buy')?.addEventListener('click', () => {
+      this.parentManager?.ouvirMicrofone((falado) => {
+        if (falado && falado.trim().length > 2) {
+          this.mostrarBalaoNoBoneco(this.localPlayer, falado, 5000);
+          finalizarCompra(precoVoz, true);
+        }
+      });
+    });
   }
 
   animarPassosBoneco(meshGroup, estaAndando, delta) {
@@ -1503,7 +1667,7 @@ class EnglishSpaces3DWorld {
     if (grp) grp.add(addArea);
   }
 
-  renderizarStickyNotesNoCoffee() {
+ renderizarStickyNotesNoCoffee() {
     const THREE = window.THREE;
     const b = this.buildingsMeta.find(x => x.id === 'coffee');
     if (!b) return;
@@ -1511,7 +1675,10 @@ class EnglishSpaces3DWorld {
     this.stickyNotes.forEach(n => grp.remove(n));
     this.stickyNotes = [];
 
-    const saved = JSON.parse(localStorage.getItem('es_sticky_notes') || '["Hello from Bahia!","Coffee first, English second!"]');
+    const saved = Array.isArray(this.cloudStickyNotes) && this.cloudStickyNotes.length > 0
+      ? this.cloudStickyNotes
+      : ['Hello from Bahia!', 'Coffee first, English second!'];
+
     saved.slice(0, 8).forEach((txt, i) => {
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d');
@@ -1528,33 +1695,117 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  adicionarStickyNote(texto, emitirRede = true) {
+  async adicionarStickyNote(texto, emitirRede = true) {
     const limpo = String(texto || '').trim();
     if (!limpo) return;
-    const arr = JSON.parse(localStorage.getItem('es_sticky_notes') || '[]');
-    if (!arr.includes(limpo)) {
-      arr.unshift(limpo);
-      localStorage.setItem('es_sticky_notes', JSON.stringify(arr.slice(0, 16)));
+    if (!this.cloudStickyNotes) this.cloudStickyNotes = [];
+    if (!this.cloudStickyNotes.includes(limpo)) {
+      this.cloudStickyNotes.unshift(limpo);
     }
     this.renderizarStickyNotesNoCoffee();
+
     if (emitirRede && this.localPlayer) {
       this.parentManager?.registarMissaoConcluida('coffee', 'sticky_note', 20);
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Post-it colado na parede do Coffee Shop (+20 XP)!', 'success');
-      fetch('/api/workspace/english-spaces/world/speak', {
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Post-it gravado na nuvem do Coffee Shop (+20 XP)!', 'success');
+      const escolaId = window.Workspace?.usuario?.escolaId || 'DEFAULT';
+      await fetch('/api/workspace/english-spaces/world/stickies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         credentials: 'include',
         body: JSON.stringify({
-          userId: this.localPlayer.userId,
-          nome: this.localPlayer.nome,
-          role: this.localPlayer.role,
-          text: `[STICKY_NOTE] ${limpo}`,
-          x: this.localPlayer.x,
-          z: this.localPlayer.z,
-          spaceId: 'coffee'
+          escolaId,
+          author: this.localPlayer.nome,
+          text: limpo
         })
       }).catch(() => {});
     }
+  }
+
+  enviarMinhaPosicaoServidor() {
+    if (!this.localPlayer) return;
+    fetch('/api/workspace/english-spaces/world/move', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        userId: this.localPlayer.userId,
+        nome: this.localPlayer.nome,
+        avatar: this.localPlayer.avatar,
+        role: this.localPlayer.role,
+        isFemale: Boolean(this.localPlayer.isFemale),
+        shirtColor: this.localPlayer.shirtColor || null,
+        shoeColor: this.localPlayer.shoeColor || null,
+        petType: this.localPlayer.petType || null,
+        x: Math.round(this.localPlayer.x * 100) / 100,
+        z: Math.round(this.localPlayer.z * 100) / 100,
+        rotY: Math.round(this.localPlayer.rotY * 100) / 100,
+        spaceId: this.currentZoneId
+      })
+    }).then(r => r.json()).then(data => {
+      if (data && Array.isArray(data.players)) this.sincronizarListaJogadoresRemotos(data.players);
+    }).catch(() => {});
+  }
+
+  sincronizarListaJogadoresRemotos(lista) {
+    if (!this.active || !this.scene || !this.localPlayer) return;
+    lista.forEach(pData => {
+      if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
+      let op = this.otherPlayers3D.get(pData.userId);
+      const nomeCurto = this.formatarNomeCompleto(pData.nome || 'Student');
+      const isFem = typeof pData.isFemale === 'boolean'
+        ? pData.isFemale
+        : String(pData.nome || '').trim().split(/\s+/)[0].toLowerCase().endsWith('a');
+      const corCamisa = typeof pData.shirtColor === 'number' ? pData.shirtColor : (isFem ? 0xec4899 : 0x3b82f6);
+      const corSapato = typeof pData.shoeColor === 'number' ? pData.shoeColor : 0x111111;
+
+      if (!op) {
+        const mesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
+        if (mesh.userData?.matSapato) mesh.userData.matSapato.color.setHex(corSapato);
+        mesh.position.set(pData.x || 0, 0, pData.z || 0);
+        this.scene.add(mesh);
+        const labelEl = this.criarEtiquetaHTML(nomeCurto, null, '#38bdf8');
+        op = {
+          userId: pData.userId,
+          nome: nomeCurto,
+          role: pData.role || 'PEER',
+          isFemale: isFem,
+          shirtColor: corCamisa,
+          shoeColor: corSapato,
+          spaceId: pData.spaceId || 'street',
+          mesh,
+          labelEl,
+          targetX: pData.x || 0,
+          targetZ: pData.z || 0,
+          rotY: pData.rotY || 0
+        };
+        this.otherPlayers3D.set(pData.userId, op);
+      } else {
+        op.targetX = Number(pData.x) || 0;
+        op.targetZ = Number(pData.z) || 0;
+        op.rotY = Number(pData.rotY) || 0;
+        op.spaceId = pData.spaceId || 'street';
+
+        // Se o colega mudou de género ou comprou roupa/sapato novo, atualiza o boneco 3D dele ao vivo!
+        if (op.isFemale !== isFem) {
+          this.scene.remove(op.mesh);
+          const novoMesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
+          if (novoMesh.userData?.matSapato) novoMesh.userData.matSapato.color.setHex(corSapato);
+          novoMesh.position.copy(op.mesh.position);
+          this.scene.add(novoMesh);
+          op.mesh = novoMesh;
+          op.isFemale = isFem;
+        } else {
+          if (op.shirtColor !== corCamisa && op.mesh.userData?.matCamisa) {
+            op.mesh.userData.matCamisa.color.setHex(corCamisa);
+            op.shirtColor = corCamisa;
+          }
+          if (op.shoeColor !== corSapato && op.mesh.userData?.matSapato) {
+            op.mesh.userData.matSapato.color.setHex(corSapato);
+            op.shoeColor = corSapato;
+          }
+        }
+      }
+    });
   }
 
   criarFotoPolaroid() {
@@ -2579,6 +2830,10 @@ class EnglishSpaces3DWorld {
           if (data.type === 'ES_WORLD_MOVE' && data.player) {
             this.sincronizarListaJogadoresRemotos([data.player]);
           }
+          if (data.type === 'ES_STICKY_UPDATE' && Array.isArray(data.notes)) {
+                               this.cloudStickyNotes = data.notes;
+                               this.renderizarStickyNotesNoCoffee();
+                           }
           if (data.type === 'ES_WORLD_LEAVE' && data.userId) {
             const rem = this.otherPlayers3D.get(data.userId);
             if (rem) {
