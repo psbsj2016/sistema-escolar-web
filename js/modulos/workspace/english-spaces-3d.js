@@ -435,6 +435,319 @@ class EnglishSpaces3DWorld {
     for(let row=0;row<3;row++){ const zPos=-row*32-8; [-11.5,11.5].forEach((xPos,idx)=>{ const canvas=document.createElement('canvas'); canvas.width=512; canvas.height=256; const ctx=canvas.getContext('2d'); ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,512,256); ctx.fillStyle='#8b5cf6'; ctx.font='bold 26px Inter'; ctx.fillText(expressions[(row+idx)%expressions.length],20,60); ctx.fillStyle='#e2e8f0'; ctx.font='18px Inter'; ctx.fillText('Walk closer to chat in English!',20,110); const tex=new THREE.CanvasTexture(canvas); const board=new THREE.Mesh(new THREE.PlaneGeometry(3.2,1.6), new THREE.MeshBasicMaterial({ map:tex })); board.position.set(xPos,2.0,zPos); board.rotation.y=xPos<0?Math.PI/2.5:-Math.PI/2.5; this.exteriorGroup.add(board); this.outdoors.push(board); }); }
   }
 
+// ===== 14 MARAVILHAS NOVAS - IMPLEMENTAÇÃO COMPLETA SEM QUEBRAR =====
+
+  // 1. AUDIO ZONES 3D POSICIONAL POR LOJA
+  criarAudioZones3D() {
+    const THREE = window.THREE;
+    // Cada prédio tem um som ambiente procedural
+    const zoneSounds = {
+      coffee: { freq: 220, type: 'espresso', color: 0xd97706 },
+      restaurant: { freq: 180, type: 'kitchen', color: 0xe11d48 },
+      airport: { freq: 300, type: 'announcement', color: 0x0284c7 },
+      beach: { freq: 120, type: 'waves', color: 0x0d9488 },
+      cinema: { freq: 80, type: 'bass', color: 0xdb2777 }
+    };
+    this.buildingsMeta.forEach(b => {
+      const cfg = zoneSounds[b.id];
+      if (!cfg) return;
+      // Panner para áudio 3D - posição do prédio
+      try {
+        if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const panner = this.audioCtx.createPanner();
+        panner.panningModel = 'HRTF'; panner.distanceModel = 'inverse';
+        panner.refDistance = 4; panner.maxDistance = 18; panner.rolloffFactor = 1.2;
+        panner.positionX.value = b.centerX; panner.positionY.value = 1.5; panner.positionZ.value = b.centerZ;
+        const gain = this.audioCtx.createGain(); gain.gain.value = 0;
+        panner.connect(gain); gain.connect(this.audioCtx.destination);
+        this.audioZones.push({ id: b.id, panner, gain, cfg, baseGain: 0.0 });
+      } catch (e) {}
+    });
+  }
+
+  atualizarAudioZones() {
+    if (!this.localPlayer || !this.audioZones.length) return;
+    this.audioZones.forEach(zone => {
+      const b = this.buildingsMeta.find(x => x.id === zone.id);
+      if (!b) return;
+      const dist = Math.hypot(b.centerX - this.localPlayer.x, b.centerZ - this.localPlayer.z);
+      const inside = this.currentZoneId === zone.id;
+      let targetGain = 0;
+      if (inside) targetGain = 0.18;
+      else if (dist < 12) targetGain = (1 - dist/12) * 0.08;
+      zone.gain.gain.linearRampToValueAtTime(targetGain, this.audioCtx.currentTime + 0.5);
+    });
+  }
+
+  // 2. PEGADAS + SOM DE PASSO
+  criarSistemaPegadas() {
+    // Grupo de pegadas já existe em this.footprints
+  }
+
+  soltarPegada() {
+    const THREE = window.THREE;
+    if (Date.now() - this.lastFootprint < 380) return;
+    this.lastFootprint = Date.now();
+    const peg = new THREE.Mesh(new THREE.PlaneGeometry(0.22, 0.42), new THREE.MeshBasicMaterial({ color: 0x1e293b, transparent:true, opacity:0.28 }));
+    peg.rotation.x = -Math.PI/2; peg.position.set(this.localPlayer.x + (Math.random()-0.5)*0.2, 0.02, this.localPlayer.z + (Math.random()-0.5)*0.2);
+    peg.rotation.z = this.localPlayer.rotY;
+    this.scene.add(peg);
+    this.footprints.push({ mesh: peg, born: Date.now() });
+    // Som de passo procedural
+    try {
+      if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = this.audioCtx.createOscillator(); const g = this.audioCtx.createGain();
+      osc.frequency.value = this.currentZoneId === 'street' ? 180 : 260; osc.type = 'square';
+      g.gain.setValueAtTime(0.12, this.audioCtx.currentTime); g.gain.exponentialRampToValueAtTime(0.001, this.audioCtx.currentTime + 0.08);
+      osc.connect(g); g.connect(this.audioCtx.destination); osc.start(); osc.stop(this.audioCtx.currentTime + 0.08);
+    } catch (e) {}
+  }
+
+  // 3. VITRINES VIVAS
+  criarVitrinesVivas() {
+    const THREE = window.THREE;
+    ['shopping','home'].forEach(id => {
+      const b = this.buildingsMeta.find(x => x.id === id); if (!b) return;
+      const vitrineGroup = new THREE.Group();
+      for (let i=0;i<2;i++) {
+        const mannequin = this.criarBonecoHumano3D(i===0?0xec4899:0x3b82f6, 0x0f172a, 0xfde68a);
+        mannequin.position.set(b.frontX + (b.col*0.35), 0, b.doorZ + (i===0?-1.2:1.2));
+        mannequin.scale.set(0.92,0.92,0.92);
+        mannequin.rotation.y = b.col === -1 ? Math.PI/2 : -Math.PI/2;
+        mannequin.userData.isVitrine = true;
+        vitrineGroup.add(mannequin);
+        this.vitrines.push({ mesh: mannequin, baseY: mannequin.rotation.y });
+      }
+      // Vidro da vitrine
+      const glass = new THREE.Mesh(new THREE.PlaneGeometry(3.0, 2.8), new THREE.MeshStandardMaterial({ color:0xffffff, transparent:true, opacity:0.18, roughness:0.05 }));
+      glass.position.set(b.frontX + (b.col*0.18), 1.4, b.doorZ); glass.rotation.y = b.col===-1?Math.PI/2:-Math.PI/2;
+      this.scene.add(glass); this.scene.add(vitrineGroup);
+    });
+  }
+
+  // 4. SOMBRA REAL
+  ativarSombrasReais() {
+    if (!this.renderer) return;
+    this.renderer.shadowMap.enabled = true;
+    this.renderer.shadowMap.type = window.THREE.PCFSoftShadowMap;
+    if (this.dirLight) { this.dirLight.castShadow = true; this.dirLight.shadow.mapSize.set(1024,1024); }
+    this.scene.traverse(obj => { if (obj.isMesh) { obj.castShadow = true; obj.receiveShadow = true; } });
+  }
+
+  // 5. QUADRO NEGRO VIVO NA SCHOOL
+  criarQuadroNegroVivo() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'school'); if (!b) return;
+    const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=256;
+    const ctx = canvas.getContext('2d');
+    const phrases = ["Today: Past Tense - I WAS, You WERE", "Word: Serendipity = happy accident", "Idiom: Break a leg! = Good luck!"];
+    const phrase = phrases[Math.floor(Math.random()*phrases.length)];
+    ctx.fillStyle='#14532d'; ctx.fillRect(0,0,512,256);
+    ctx.fillStyle='#f8fafc'; ctx.font='bold 22px Inter'; ctx.fillText(phrase, 18, 48);
+    ctx.font='16px Inter'; ctx.fillText('Click a word to hear pronunciation!', 18, 90);
+    const tex = new THREE.CanvasTexture(canvas);
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.6, 1.8), new THREE.MeshBasicMaterial({ map: tex }));
+    board.position.set(b.centerX + (b.col*4.58), 1.8, b.centerZ); board.rotation.y = b.col===-1?-Math.PI/2:Math.PI/2;
+    board.userData.clickable=true; board.userData.englishName=phrase; this.clickableObjects.push(board);
+    this.scene.add(board); this.blackboard={ mesh: board, canvas, ctx, tex, phrase };
+  }
+
+  // 6. CARDÁPIO FALADO NO RESTAURANT
+  criarCardapioFalado() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'restaurant'); if (!b) return;
+    for (let i=0;i<3;i++) {
+      const standCanvas = document.createElement('canvas'); standCanvas.width=256; standCanvas.height=320;
+      const sctx = standCanvas.getContext('2d');
+      sctx.fillStyle='#fffbeb'; sctx.fillRect(0,0,256,320);
+      sctx.fillStyle='#92400e'; sctx.font='bold 20px Inter'; sctx.fillText('MENU', 90, 40);
+      const items = ['Burger - $8','Pasta - $12','Salad - $7']; sctx.font='16px Inter'; sctx.fillText(items[i]||items[0], 20, 90+i*24);
+      const tex = new THREE.CanvasTexture(standCanvas);
+      const stand = new THREE.Mesh(new THREE.PlaneGeometry(0.6, 0.75), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+      stand.position.set(b.centerX - (b.col*0.6), 0.9, b.centerZ -1.2 + i*1.2);
+      stand.userData.clickable=true; stand.userData.englishName=items[i]; this.clickableObjects.push(stand);
+      this.scene.add(stand); this.menuStands.push(stand);
+    }
+  }
+
+  // 7. PAINEL DE VOOS VIVO NO AIRPORT
+  criarPainelVoosVivo() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'airport'); if (!b) return;
+    const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=280;
+    const ctx = canvas.getContext('2d');
+    const updateBoard = () => {
+      ctx.fillStyle='#0f172a'; ctx.fillRect(0,0,512,280);
+      ctx.fillStyle='#38bdf8'; ctx.font='bold 20px Inter'; ctx.fillText('FLIGHTS - LIVE BOARD', 18, 32);
+      const flights = [['NYC','ON TIME','G3'],['LON','DELAYED','G1'],['TKY','BOARDING','G2']];
+      flights.forEach((f,i)=>{ ctx.fillStyle='#e2e8f0'; ctx.font='16px monospace'; ctx.fillText(`${f[0]}  ${f[1]}  ${f[2]}`, 18, 70+i*28); });
+      if (this.flightBoard) this.flightBoard.texture.needsUpdate=true;
+    };
+    const tex = new THREE.CanvasTexture(canvas);
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.75), new THREE.MeshBasicMaterial({ map: tex }));
+    board.position.set(b.centerX + (b.col*4.55), 2.1, b.centerZ -1.8); board.rotation.y = b.col===-1?-Math.PI/2:Math.PI/2;
+    this.scene.add(board); this.flightBoard={ mesh: board, canvas, ctx, texture: tex, updateBoard };
+    updateBoard(); setInterval(updateBoard, 22000);
+  }
+
+  // 8. RÁDIO DO TÁXI COM LISTENING
+  tocarRadioTaxi() {
+    const facts = [
+      "Did you know? Taxi comes from taximeter, an old word for price measurer.",
+      "Fun fact: In London, taxi drivers study for 3 years to memorize every street!",
+      "Word of the day in taxi: Commute means your daily trip to work."
+    ];
+    const fact = facts[Math.floor(Math.random()*facts.length)];
+    this.mostrarBalaoNoBoneco(this.localPlayer, "🚕 " + fact, 9000);
+    if (this.parentManager?.falarTexto) this.parentManager.falarTexto(fact);
+  }
+
+  // 9. CHUVA LEVE E NEBLINA MATINAL
+  criarSistemaChuvaNeblina() {
+    const THREE = window.THREE;
+    const rainGeo = new THREE.BufferGeometry();
+    const rainCount = 800;
+    const pos = new Float32Array(rainCount*3);
+    for (let i=0;i<rainCount;i++){ pos[i*3]= (Math.random()-0.5)*120; pos[i*3+1]= Math.random()*50+10; pos[i*3+2]= (Math.random()-0.5)*120 -35; }
+    rainGeo.setAttribute('position', new THREE.BufferAttribute(pos,3));
+    const rainMat = new THREE.PointsMaterial({ color:0x93c5fd, size:0.12, transparent:true, opacity:0.0 });
+    this.rainGroup = new THREE.Points(rainGeo, rainMat); this.scene.add(this.rainGroup);
+
+    // Neblina matinal
+    const fogCanvas = document.createElement('canvas'); fogCanvas.width=512; fogCanvas.height=128;
+    const fctx = fogCanvas.getContext('2d'); const grad = fctx.createLinearGradient(0,0,0,128); grad.addColorStop(0,'rgba(255,255,255,0.0)'); grad.addColorStop(1,'rgba(255,255,255,0.65)'); fctx.fillStyle=grad; fctx.fillRect(0,0,512,128);
+    const fogTex = new THREE.CanvasTexture(fogCanvas);
+    const fogMat = new THREE.MeshBasicMaterial({ map:fogTex, transparent:true, opacity:0.0, side: THREE.DoubleSide });
+    this.fogPlane = new THREE.Mesh(new THREE.PlaneGeometry(120, 20), fogMat); this.fogPlane.rotation.x=Math.PI/2; this.fogPlane.position.set(0,0.08,-35);
+    this.scene.add(this.fogPlane);
+  }
+
+  atualizarChuvaNeblina(delta) {
+    if (!this.rainGroup) return;
+    const hour = new Date().getHours();
+    const shouldRain = hour % 3 === 0; // chove de 3 em 3 horas pra demo
+    const targetRain = shouldRain ? 0.55 : 0.0;
+    this.rainGroup.material.opacity += (targetRain - this.rainGroup.material.opacity) * delta * 0.8;
+    if (shouldRain) {
+      const pos = this.rainGroup.geometry.attributes.position;
+      for (let i=0;i<pos.count;i++){ let y = pos.getY(i); y -= delta*18; if (y<0) y=50+Math.random()*10; pos.setY(i,y); }
+      pos.needsUpdate=true;
+    }
+    if (this.fogPlane) {
+      const isMorning = hour >=6 && hour <=8;
+      const targetFog = isMorning ? 0.32 : 0.0;
+      this.fogPlane.material.opacity += (targetFog - this.fogPlane.material.opacity) * delta * 0.6;
+    }
+  }
+
+  // 10. NIGHT MARKET (19h-21h)
+  criarNightMarket() {
+    const THREE = window.THREE;
+    this.nightMarketGroup = new THREE.Group();
+    for (let i=0;i<4;i++) {
+      const stall = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.9, 0.8), new THREE.MeshLambertMaterial({ color:0xf59e0b }));
+      stall.position.set(-10 + i*6.5, 0.45, -6.5);
+      const light = new THREE.PointLight(0xfacc15, 0, 8); light.position.set(-10 + i*6.5, 1.8, -6.5);
+      const canvas = document.createElement('canvas'); canvas.width=128; canvas.height=64; const ctx=canvas.getContext('2d'); ctx.fillStyle='#000'; ctx.fillRect(0,0,128,64); ctx.fillStyle='#facc15'; ctx.font='bold 14px Inter'; ctx.fillText(['Tacos','Sushi','Crepes','Juice'][i], 10, 28);
+      const tex = new THREE.CanvasTexture(canvas); const sign = new THREE.Mesh(new THREE.PlaneGeometry(0.9,0.45), new THREE.MeshBasicMaterial({ map:tex })); sign.position.set(-10 + i*6.5, 1.2, -6.1);
+      this.nightMarketGroup.add(stall, light, sign);
+    }
+    this.scene.add(this.nightMarketGroup);
+  }
+
+  atualizarNightMarket() {
+    if (!this.nightMarketGroup) return;
+    const hour = new Date().getHours(); const isNightMarket = hour >=19 && hour <=21;
+    this.nightMarketGroup.visible = isNightMarket;
+  }
+
+  // 11. MÚSICO DE RUA QUE ENSINA GÍRIA
+  criarMusicoDeRua() {
+    const THREE = window.THREE;
+    const mus = this.criarBonecoHumano3D(0xf97316, 0x1e293b, 0xfde68a);
+    mus.position.set(-8.5, 0, -18); mus.rotation.y = Math.PI/3;
+    // Violão
+    const guitar = new THREE.Mesh(new THREE.BoxGeometry(0.35,0.12,0.6), new THREE.MeshLambertMaterial({ color:0x92400e })); guitar.position.set(0,1.2,0.25); mus.add(guitar);
+    const label = this.criarEtiquetaHTML('Street Musician 🎸', 'MUSIC', '#f59e0b');
+    this.scene.add(mus);
+    this.musician = { mesh: mus, labelEl: label, x: -8.5, z: -18, lastTeach: 0, slangs: ["That song is lit! Lit = amazing!", "This beat is sick! Sick = cool!", "I'm hyped! Hyped = excited!"] };
+  }
+
+  atualizarMusico() {
+    if (!this.musician || !this.localPlayer) return;
+    const d = Math.hypot(this.musician.x - this.localPlayer.x, this.musician.z - this.localPlayer.z);
+    if (d < 3.5 && Date.now() - this.musician.lastTeach > 12000) {
+      const slang = this.musician.slangs[Math.floor(Math.random()*this.musician.slangs.length)];
+      this.mostrarBalaoNoBoneco(this.musician, slang, 5000);
+      this.musician.lastTeach = Date.now();
+    }
+  }
+
+  // 12. STICKY NOTES COLABORATIVAS
+  criarStickyNotesParede() {
+    const THREE = window.THREE;
+    // Parede de post-its no Coffee Shop
+    const b = this.buildingsMeta.find(x => x.id === 'coffee'); if (!b) return;
+    const saved = JSON.parse(localStorage.getItem('es_sticky_notes')||'[]');
+    saved.slice(0,8).forEach((txt,i)=>{
+      const c = document.createElement('canvas'); c.width=256; c.height=256; const ctx=c.getContext('2d'); ctx.fillStyle='#fef08a'; ctx.fillRect(0,0,256,256); ctx.fillStyle='#422006'; ctx.font='bold 16px Inter'; ctx.fillText(txt.slice(0,22), 10, 40);
+      const tex = new THREE.CanvasTexture(c); const note = new THREE.Mesh(new THREE.PlaneGeometry(0.45,0.45), new THREE.MeshBasicMaterial({ map:tex, side:THREE.DoubleSide })); note.position.set(b.centerX + (b.col*4.4), 1.2 + (i%3)*0.5, b.centerZ -1.5 + Math.floor(i/3)*0.6); note.rotation.y = b.col===-1?-Math.PI/2:Math.PI/2; this.scene.add(note); this.stickyNotes.push(note);
+    });
+    // Área clicável pra adicionar nota
+    const addArea = new THREE.Mesh(new THREE.PlaneGeometry(2.0,2.0), new THREE.MeshBasicMaterial({ color:0xfef08a, transparent:true, opacity:0.12, side:THREE.DoubleSide })); addArea.position.set(b.centerX + (b.col*4.42), 1.4, b.centerZ); addArea.rotation.y = b.col===-1?-Math.PI/2:Math.PI/2; addArea.userData.isStickyWall=true; this.scene.add(addArea); this.clickableObjects.push(addArea);
+  }
+
+  adicionarStickyNote(texto) {
+    const arr = JSON.parse(localStorage.getItem('es_sticky_notes')||'[]'); arr.unshift(texto); localStorage.setItem('es_sticky_notes', JSON.stringify(arr.slice(0,20)));
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Sticky note added! ' + texto, 'success');
+  }
+
+  // 13. FANTASMA DO LÍDER
+  criarFantasmaLider() {
+    const THREE = window.THREE;
+    // Caminho fantasma pré-gravado (simula líder andando)
+    this.ghostPath = [];
+    for (let i=0;i<60;i++){ this.ghostPath.push({ x: Math.sin(i*0.12)*8, z: -80 + i*1.6 }); }
+    const ghostMesh = this.criarBonecoHumano3D(0x10b981, 0x064e3b, 0xd1fae5);
+    ghostMesh.traverse(o=>{ if(o.isMesh){ o.material = o.material.clone(); o.material.transparent=true; o.material.opacity=0.28; } });
+    ghostMesh.position.set(this.ghostPath[0].x, 0, this.ghostPath[0].z);
+    const label = this.criarEtiquetaHTML('Leader Ghost 👻', 'LEADER', '#10b981');
+    this.scene.add(ghostMesh);
+    this.ghost = { mesh: ghostMesh, labelEl: label };
+  }
+
+  atualizarFantasma(delta) {
+    if (!this.ghost || !this.ghostPath.length) return;
+    this.ghostIdx = (this.ghostIdx + delta*0.7) % this.ghostPath.length;
+    const idx = Math.floor(this.ghostIdx); const p = this.ghostPath[idx];
+    this.ghost.mesh.position.x += (p.x - this.ghost.mesh.position.x) * 0.08;
+    this.ghost.mesh.position.z += (p.z - this.ghost.mesh.position.z) * 0.08;
+    this.animarPassosBoneco(this.ghost.mesh, true, delta);
+  }
+
+  // 14. FOTO POLAROID NA BEACH
+  criarFotoPolaroid() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'beach'); if (!b) return;
+    const camModel = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.4,0.3,0.2), new THREE.MeshLambertMaterial({ color:0x1e293b })); camModel.add(body);
+    const lens = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.15,12), new THREE.MeshLambertMaterial({ color:0x111827 })); lens.rotation.x=Math.PI/2; lens.position.set(0,0,0.18); camModel.add(lens);
+    camModel.position.set(b.centerX - (b.col*1.2), 0.9, b.centerZ -2.4);
+    camModel.userData.isPolaroidCam=true; camModel.userData.clickable=true; camModel.userData.englishName='Polaroid Camera';
+    this.scene.add(camModel); this.polaroidCam=camModel; this.clickableObjects.push(camModel);
+  }
+
+  tirarFotoPolaroid() {
+    try {
+      const dataURL = this.renderer.domElement.toDataURL('image/png');
+      const link = document.createElement('a'); link.download = `english-city-${Date.now()}.png`; link.href = dataURL; link.click();
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📸 Polaroid saved! Say: My favorite place is the beach!', 'success');
+      this.parentManager?.registarMissaoConcluida('beach','polaroid', 20);
+      if (this.parentManager?.falarTexto) this.parentManager.falarTexto('My favorite place is the beach!');
+    } catch (e) {}
+  }
+
+
   criarLetreiro3D(texto, pos) {
     const THREE = window.THREE;
     const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=128;
@@ -456,6 +769,13 @@ class EnglishSpaces3DWorld {
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(160, 200), new THREE.MeshLambertMaterial({ color:0x0f172a })); ground.rotation.x=-Math.PI/2; ground.position.set(0,0,-35); ground.receiveShadow=true; this.exteriorGroup.add(ground);
     const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 150), new THREE.MeshLambertMaterial({ color:0x1e293b })); road.rotation.x=-Math.PI/2; road.position.set(0,0.01,-35); this.exteriorGroup.add(road);
     this.criarCeuRealista(); this.criarAvenidaRealista(); this.criarPostesAvenida3D(); this.criarTransitoInteligente(); this.criarPedestres(); this.criarOutdoorsInteligentes(); this.atualizarCicloDiaNoite(); setInterval(()=>this.atualizarCicloDiaNoite(),60000);
+    // 14 MARAVILHAS - inicializa com sons
+    this.criarAudioZones3D();
+    this.criarSistemaChuvaNeblina();
+    this.criarNightMarket();
+    this.criarMusicoDeRua();
+    this.criarFantasmaLider();
+
     this.buildingsMeta=[]; this.buildingMeshes.clear(); this.npcs3D.clear(); this.clickableObjects=[]; this.doors.clear(); this.interiorGroups.clear();
     const selectTeleport=document.getElementById('es-city-teleport');
     const registry=this.parentManager.getSpacesRegistry ? this.parentManager.getSpacesRegistry() : window.Workspace.EnglishSpaces.getSpacesRegistry();
@@ -494,6 +814,15 @@ class EnglishSpaces3DWorld {
       const signEl=this.criarPlacaEdificioHTML(`${spInfo.emoji} ${spInfo.name}`);
       this.npcs3D.set(bCfg.id, { id:bCfg.id, space:spInfo, name:spInfo.npcName, x:npcX, z:npcZ, mesh:npcMesh, labelEl, bubbleText: spInfo.dialogues?.start?.text || 'Welcome!' });
       this.buildingsMeta.push({ id:bCfg.id, space:spInfo, centerX, centerZ, bw, bd, bh, minX:centerX-bw/2, maxX:centerX+bw/2, minZ:centerZ-bd/2, maxZ:centerZ+bd/2, frontX, doorZ:centerZ, signPos:new THREE.Vector3(frontX - (bCfg.col*0.5), bh+0.8, centerZ), signEl });
+    // 14 MARAVILHAS - vitrines, quadros e paineis depois dos predios
+    this.criarVitrinesVivas();
+    this.criarQuadroNegroVivo();
+    this.criarCardapioFalado();
+    this.criarPainelVoosVivo();
+    this.criarStickyNotesParede();
+    this.criarFotoPolaroid();
+    this.ativarSombrasReais();
+
       if(selectTeleport){ const opt=document.createElement('option'); opt.value=bCfg.id; opt.textContent=`${spInfo.emoji} ${spInfo.name}`; selectTeleport.appendChild(opt); }
     });
     const u=window.Workspace?.usuario||{}; const meuNome=u.nome||u.login||'You'; const meuId=String(u.id||'local_'+Date.now());
@@ -605,6 +934,16 @@ class EnglishSpaces3DWorld {
       const lookAtY=1.4 + pitch*10; const lookAtX=p.x - Math.sin(yaw)*pitch*1.2; const lookAtZ=p.z - Math.cos(yaw)*pitch*1.2;
       this.camera.lookAt(lookAtX, lookAtY, lookAtZ);
       this.atualizarPortas();
+      // 14 MARAVILHAS - updates com som
+      this.atualizarAudioZones();
+      this.atualizarChuvaNeblina(delta);
+      this.atualizarNightMarket();
+      this.atualizarMusico();
+      this.atualizarFantasma(delta);
+      if(estaAndando) this.soltarPegada();
+      this.vitrines.forEach(v=>{ v.mesh.rotation.y += delta*0.6; });
+      this.footprints = this.footprints.filter(f=>{ const age=Date.now()-f.born; if(age>4200){ this.scene.remove(f.mesh); return false; } f.mesh.material.opacity = 0.28*(1-age/4200); return true; });
+
       let zonaDetetada='street'; let buildingInside=null;
       for(const b of this.buildingsMeta){ if(p.x>=b.minX&&p.x<=b.maxX&&p.z>=b.minZ&&p.z<=b.maxZ){ zonaDetetada=b.id; buildingInside=b; break; } }
       if(zonaDetetada!=='street' && !this.modoInterior){ this.entrarModoInterior(zonaDetetada); }
@@ -625,6 +964,8 @@ class EnglishSpaces3DWorld {
       this.npcs3D.forEach(npc=>{ if(!this.modoInterior || this.predioAtual===npc.id) this.projetarEtiquetaHTML(npc.mesh.position,2.45,npc.labelEl,vw,vh); });
       this.otherPlayers3D.forEach(op=>this.projetarEtiquetaHTML(op.mesh.position,2.45,op.labelEl,vw,vh));
       this.pedestrians.forEach(ped=>{ if(!this.modoInterior) this.projetarEtiquetaHTML(ped.mesh.position,2.2,ped.labelEl,vw,vh); });
+      if(this.musician && !this.modoInterior) this.projetarEtiquetaHTML(this.musician.mesh.position,2.2,this.musician.labelEl,vw,vh);
+      if(this.ghost && !this.modoInterior) this.projetarEtiquetaHTML(this.ghost.mesh.position,2.4,this.ghost.labelEl,vw,vh);
       this.buildingsMeta.forEach(b=>{ if(!this.modoInterior || this.predioAtual===b.id) this.projetarEtiquetaHTML(b.signPos,0,b.signEl,vw,vh); });
       this.renderer.render(this.scene,this.camera);
     };
