@@ -832,21 +832,24 @@ class EnglishSpaces3DWorld {
 
   criarSegundaAvenida() {
     const THREE = window.THREE;
+    // FIX: estradas da segunda avenida em x=±32, prédios em ±48 para não sobrepor
     const road2Left = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 160), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    road2Left.rotation.x=-Math.PI/2; road2Left.position.set(-48,0.01,-36); this.exteriorGroup.add(road2Left);
+    road2Left.rotation.x=-Math.PI/2; road2Left.position.set(-32,0.01,-36); this.exteriorGroup.add(road2Left);
     const road2Right = new THREE.Mesh(new THREE.PlaneGeometry(9.5, 160), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
-    road2Right.rotation.x=-Math.PI/2; road2Right.position.set(48,0.01,-36); this.exteriorGroup.add(road2Right);
+    road2Right.rotation.x=-Math.PI/2; road2Right.position.set(32,0.01,-36); this.exteriorGroup.add(road2Right);
     const laneMat = new THREE.MeshBasicMaterial({ color:0xf8fafc });
     for(let z=-85; z<20; z+=6){ 
-      const d1=new THREE.Mesh(new THREE.PlaneGeometry(0.22,1.6),laneMat); d1.rotation.x=-Math.PI/2; d1.position.set(-48,0.06,z); this.exteriorGroup.add(d1);
-      const d2=new THREE.Mesh(new THREE.PlaneGeometry(0.22,1.6),laneMat); d2.rotation.x=-Math.PI/2; d2.position.set(48,0.06,z); this.exteriorGroup.add(d2);
+      const d1=new THREE.Mesh(new THREE.PlaneGeometry(0.35,2.2),laneMat); d1.rotation.x=-Math.PI/2; d1.position.set(-32,0.02,z); this.exteriorGroup.add(d1);
+      const d2=new THREE.Mesh(new THREE.PlaneGeometry(0.35,2.2),laneMat); d2.rotation.x=-Math.PI/2; d2.position.set(32,0.02,z); this.exteriorGroup.add(d2);
     }
-    const tex = this.gerarTexturaParalelepipedo();
-    const matSide = new THREE.MeshStandardMaterial({ map: tex, roughness:0.92 });
-    const sw1 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw1.rotation.x=-Math.PI/2; sw1.position.set(-41.5,0.08,-36); this.exteriorGroup.add(sw1);
-    const sw2 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw2.rotation.x=-Math.PI/2; sw2.position.set(-54.5,0.08,-36); this.exteriorGroup.add(sw2);
-    const sw3 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw3.rotation.x=-Math.PI/2; sw3.position.set(41.5,0.08,-36); this.exteriorGroup.add(sw3);
-    const sw4 = new THREE.Mesh(new THREE.PlaneGeometry(4.8,160), matSide); sw4.rotation.x=-Math.PI/2; sw4.position.set(54.5,0.08,-36); this.exteriorGroup.add(sw4);
+    // Calçadas entre avenida principal e segunda avenida
+    const sidewalkMat = new THREE.MeshStandardMaterial({ color: 0x334155 });
+    const sidewalk1 = new THREE.Mesh(new THREE.PlaneGeometry(4, 160), sidewalkMat); sidewalk1.rotation.x=-Math.PI/2; sidewalk1.position.set(-24,0.015,-36); this.exteriorGroup.add(sidewalk1);
+    const sidewalk2 = new THREE.Mesh(new THREE.PlaneGeometry(4, 160), sidewalkMat); sidewalk2.rotation.x=-Math.PI/2; sidewalk2.position.set(24,0.015,-36); this.exteriorGroup.add(sidewalk2);
+    // Ciclovias verdes nas segundas avenidas
+    const bikeLaneMat = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness:0.8 });
+    const bikeL = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 160), bikeLaneMat); bikeL.rotation.x=-Math.PI/2; bikeL.position.set(-38.5,0.02,-36); this.exteriorGroup.add(bikeL);
+    const bikeR = new THREE.Mesh(new THREE.PlaneGeometry(1.8, 160), bikeLaneMat); bikeR.rotation.x=-Math.PI/2; bikeR.position.set(38.5,0.02,-36); this.exteriorGroup.add(bikeR);
   }
 
   criarPistaAeroporto() {
@@ -930,7 +933,7 @@ class EnglishSpaces3DWorld {
         data.cruiseTime += delta;
         av.position.z += data.speed * delta * 1.15;
         av.position.y = 28 + Math.sin(data.cruiseTime*0.6)*2.5;
-        av.position.x = 38 + Math.sin(data.t*0.35)*4.5;
+        av.position.x = 38 + (Math.random()-0.5)*0.5; // FIX sem lado
         av.rotation.x = Math.sin(data.cruiseTime*0.6)*0.08;
         if (data.cruiseTime > 8 + Math.random()*4) { data.state='landing'; }
       } else if (data.state==='landing') {
@@ -1764,7 +1767,238 @@ tentarCarregarGLTFsTodos() {
     return placaGroup;
   }
 
+
+  // 🏘️ TERRENOS - Cada avatar recebe um lote para construir
+  criarLoteamentoResidencial() {
+    const THREE = window.THREE;
+    this.lotes = [];
+    const u = window.Workspace?.usuario || {};
+    const meuNome = u.nome || u.login || 'Player';
+    const meuId = String(u.id || 'local_' + Date.now());
+    // Zona de lotes: atrás da cidade z=40 a 70, x=-60 a 60
+    for(let i=0;i<10;i++){
+      const col = (i % 5) - 2; // -2 a 2
+      const row = Math.floor(i / 5);
+      const lotX = col * 18;
+      const lotZ = 48 + row * 16;
+      const lotGroup = new THREE.Group();
+      const terreno = new THREE.Mesh(new THREE.PlaneGeometry(12,12), new THREE.MeshStandardMaterial({ color:0x166534, roughness:0.9 }));
+      terreno.rotation.x=-Math.PI/2; terreno.position.set(0,0,0); lotGroup.add(terreno);
+      const fenceMat = new THREE.MeshStandardMaterial({ color:0x78350f });
+      [[-6,0,0],[6,0,0],[0,0,-6],[0,0,6]].forEach((p, idx)=>{
+        const isX = idx<2;
+        const fence = new THREE.Mesh(new THREE.BoxGeometry(isX?0.15:12,0.9, isX?12:0.15), fenceMat);
+        fence.position.set(p[0],0.45,p[2]); lotGroup.add(fence);
+      });
+      const canvas = document.createElement('canvas'); canvas.width=512; canvas.height=128;
+      const ctx=canvas.getContext('2d'); ctx.fillStyle='#1e293b'; ctx.fillRect(0,0,512,128); ctx.fillStyle='#f8fafc'; ctx.font='bold 18px Inter'; ctx.textAlign='center';
+      const isMeuLote = i===0;
+      const dono = isMeuLote ? meuNome : `For Sale`;
+      ctx.fillText(isMeuLote ? `House of ${dono} - Lot ${i+1}` : `Lot ${i+1} - ${1500+i*200} DRX`,256,72);
+      const tex=new THREE.CanvasTexture(canvas);
+      const placa=new THREE.Mesh(new THREE.PlaneGeometry(3.5,0.8), new THREE.MeshBasicMaterial({ map:tex })); placa.position.set(0,1.3,6.5); lotGroup.add(placa);
+      // Estágio da casa - fundação simples para meu lote
+      if (isMeuLote) {
+        const fund = new THREE.Mesh(new THREE.BoxGeometry(6,0.3,6), new THREE.MeshStandardMaterial({ color:0x57534e })); fund.position.set(0,0.15,0); lotGroup.add(fund);
+      }
+      lotGroup.position.set(lotX,0,lotZ);
+      lotGroup.userData = { isLot:true, lotIndex:i, lotX, lotZ, owner: isMeuLote ? meuId : null, price:1500+i*200 };
+      this.exteriorGroup.add(lotGroup);
+      this.lotes.push(lotGroup);
+    }
+    console.log(`🏘️ ${this.lotes.length} lotes criados - seu lote é o Lot 1`);
+  }
+
+  // 🚗🚲 VEÍCULOS UTILIZÁVEIS - Carros, motos, bicicletas em ciclovias
+  criarVeiculosUtilizaveis() {
+    const THREE = window.THREE;
+    this.ownedVehicles = JSON.parse(localStorage.getItem('ownedVehicles')||'[]');
+    if (this.ownedVehicles.length===0) {
+      this.ownedVehicles = [
+        { id:'bike_free', type:'bicycle', name:'Basic Bike', speed:6.5, price:0 },
+        { id:'moto_free', type:'moto', name:'City Moto', speed:10.5, price:800 }
+      ];
+      localStorage.setItem('ownedVehicles', JSON.stringify(this.ownedVehicles));
+    }
+    this.currentVehicle = null;
+    this.vehicleSpeed = 3.5;
+    this.vehicleMesh = null;
+    // Bicicletas paradas nas ciclovias como decoração
+    for(let i=0;i<6;i++){
+      const bikeDeco = new THREE.Group();
+      const frame=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.7,1.0), new THREE.MeshStandardMaterial({ color:0x3b82f6 })); frame.position.set(0,0.45,0); bikeDeco.add(frame);
+      const wheelGeo=new THREE.CylinderGeometry(0.32,0.32,0.05,12); wheelGeo.rotateX(Math.PI/2);
+      const wheelMat=new THREE.MeshStandardMaterial({ color:0x111827 });
+      const w1=new THREE.Mesh(wheelGeo,wheelMat); w1.position.set(0,0.32,0.45); bikeDeco.add(w1);
+      const w2=new THREE.Mesh(wheelGeo,wheelMat); w2.position.set(0,0.32,-0.45); bikeDeco.add(w2);
+      bikeDeco.position.set(38.5 + (Math.random()-0.5)*0.8, 0, -60 + i*18);
+      this.exteriorGroup.add(bikeDeco);
+    }
+  }
+
+  montarVeiculo(type) {
+    const v = this.ownedVehicles.find(x=>x.type===type) || this.ownedVehicles[0];
+    if (!v) return;
+    this.currentVehicle = v;
+    const speedMap = { bicycle:6.5, moto:10.5, car:14.5 };
+    this.vehicleSpeed = speedMap[v.type] || 6.5;
+    if (this.vehicleMesh) this.scene.remove(this.vehicleMesh);
+    const THREE = window.THREE;
+    const vm = new THREE.Group();
+    if (v.type==='bicycle') {
+      const frame=new THREE.Mesh(new THREE.BoxGeometry(0.08,0.8,1.0), new THREE.MeshStandardMaterial({ color:0x3b82f6 })); frame.position.set(0,0.4,0); vm.add(frame);
+      const wheelGeo=new THREE.CylinderGeometry(0.35,0.35,0.06,12); wheelGeo.rotateX(Math.PI/2);
+      const wheelMat=new THREE.MeshStandardMaterial({ color:0x111827 });
+      const w1=new THREE.Mesh(wheelGeo,wheelMat); w1.position.set(0,0.35,0.5); vm.add(w1);
+      const w2=new THREE.Mesh(wheelGeo,wheelMat); w2.position.set(0,0.35,-0.5); vm.add(w2);
+    } else if (v.type==='moto') {
+      const body=new THREE.Mesh(new THREE.BoxGeometry(0.5,0.45,1.4), new THREE.MeshStandardMaterial({ color:0xef4444 })); body.position.set(0,0.5,0); vm.add(body);
+      const wheelGeo=new THREE.CylinderGeometry(0.35,0.35,0.08,12); wheelGeo.rotateX(Math.PI/2);
+      const wheelMat=new THREE.MeshStandardMaterial({ color:0x111827 });
+      const w1=new THREE.Mesh(wheelGeo,wheelMat); w1.position.set(0,0.35,0.6); vm.add(w1);
+      const w2=new THREE.Mesh(wheelGeo,wheelMat); w2.position.set(0,0.35,-0.6); vm.add(w2);
+    } else {
+      const body=new THREE.Mesh(new THREE.BoxGeometry(0.9,0.55,1.6), new THREE.MeshStandardMaterial({ color:0x1e293b })); body.position.set(0,0.55,0); vm.add(body);
+      const wheelGeo=new THREE.CylinderGeometry(0.3,0.3,0.1,12); wheelGeo.rotateX(Math.PI/2);
+      const wheelMat=new THREE.MeshStandardMaterial({ color:0x111827 });
+      [[0.4,0.6],[0.4,-0.6],[-0.4,0.6],[-0.4,-0.6]].forEach(p=>{ const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(p[0],0.3,p[1]); vm.add(w); });
+    }
+    this.vehicleMesh = vm;
+    this.scene.add(vm);
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`Mounted ${v.name}! Speed x${(this.vehicleSpeed/3.5).toFixed(1)} 🚀`, 'success');
+  }
+
+  desmontarVeiculo() {
+    this.currentVehicle = null; this.vehicleSpeed = 3.5;
+    if (this.vehicleMesh) { this.scene.remove(this.vehicleMesh); this.vehicleMesh=null; }
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('Dismounted. Walking 🚶', 'info');
+  }
+
+  // 🚧 PLACAS E LOMBADAS bem organizadas
+  criarPlacasELombadas() {
+    const THREE = window.THREE;
+    this.speedBumps = [];
+    // Lombadas na avenida principal
+    [-60, -30, 0, 20].forEach(zPos=>{
+      const bumpGroup = new THREE.Group();
+      const bump = new THREE.Mesh(new THREE.BoxGeometry(10,0.35,1.2), new THREE.MeshStandardMaterial({ color:0xfacc15, roughness:0.7 }));
+      bump.position.set(0,0.18,0); bumpGroup.add(bump);
+      bumpGroup.position.set(0,0,zPos);
+      this.exteriorGroup.add(bumpGroup);
+      this.speedBumps.push({ mesh:bumpGroup, z:zPos, x:0 });
+    });
+    // Lombadas nas segundas avenidas
+    [-32,32].forEach(xAvenue=>{
+      [-50, -10, 10].forEach(zPos=>{
+        const bump = new THREE.Mesh(new THREE.BoxGeometry(9.5,0.3,1.0), new THREE.MeshStandardMaterial({ color:0xfacc15 }));
+        bump.position.set(xAvenue,0.15,zPos); this.exteriorGroup.add(bump);
+        this.speedBumps.push({ mesh:bump, z:zPos, x:xAvenue });
+      });
+    });
+    // Placas STOP, YIELD, BIKE LANE
+    const placas = [
+      { pos:[-9, -60], tipo:'STOP', texto:'STOP', cor:'#ef4444' },
+      { pos:[9, -30], tipo:'YIELD', texto:'YIELD', cor:'#facc15' },
+      { pos:[-40, -50], tipo:'BIKE', texto:'BIKE LANE', cor:'#10b981' },
+      { pos:[40, 10], tipo:'BIKE', texto:'BIKE LANE', cor:'#10b981' },
+      { pos:[0, 25], tipo:'SPEED', texto:'15 MPH', cor:'#f8fafc' }
+    ];
+    placas.forEach(p=>{
+      const signGroup = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06,0.06,2.8,6), new THREE.MeshStandardMaterial({ color:0x94a3b8 }));
+      pole.position.set(0,1.4,0); signGroup.add(pole);
+      const canvas = document.createElement('canvas'); canvas.width=256; canvas.height=256;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = p.cor;
+      if (p.tipo==='STOP') {
+        ctx.beginPath(); ctx.moveTo(80,20); ctx.lineTo(176,20); ctx.lineTo(236,80); ctx.lineTo(236,176); ctx.lineTo(176,236); ctx.lineTo(80,236); ctx.lineTo(20,176); ctx.lineTo(20,80); ctx.closePath(); ctx.fill();
+      } else { ctx.fillRect(20,20,216,216); }
+      ctx.fillStyle = p.tipo==='YIELD' || p.tipo==='SPEED' ? '#0f172a' : 'white';
+      ctx.font='bold 28px Inter'; ctx.textAlign='center'; ctx.fillText(p.texto,128,144);
+      const tex = new THREE.CanvasTexture(canvas);
+      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.2,1.2), new THREE.MeshBasicMaterial({ map:tex })); board.position.set(0,2.7,0);
+      signGroup.add(board);
+      signGroup.position.set(p.pos[0],0,p.pos[1]);
+      this.exteriorGroup.add(signGroup);
+    });
+  }
+
+  // 🦘 PULO do avatar
+  inicializarPulo() {
+    this.isJumping = false;
+    this.jumpVelocity = 0;
+    this.jumpHeight = 0;
+    this.gravity = 18;
+    this.jumpForce = 7.5;
+  }
+
+  tentarPular() {
+    if (this.isJumping) return;
+    this.isJumping = true;
+    this.jumpVelocity = this.jumpForce;
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('Jump! 🦘', 'info');
+  }
+
+  atualizarPulo(delta) {
+    if (!this.isJumping && this.jumpHeight===0) return;
+    this.jumpVelocity -= this.gravity * delta;
+    this.jumpHeight += this.jumpVelocity * delta;
+    if (this.jumpHeight <= 0) {
+      this.jumpHeight = 0;
+      this.isJumping = false;
+      this.jumpVelocity = 0;
+    }
+    if (this.localPlayer && this.localPlayer.mesh) {
+      this.localPlayer.mesh.position.y = this.jumpHeight;
+    }
+  }
+
+  // 🔍 ZOOM da câmera - scroll mouse + pinch touch
+  inicializarZoomCamera() {
+    this.cameraDistance = 8.2;
+    this.minZoom = 3.5;
+    this.maxZoom = 18;
+    this.targetDistance = 8.2;
+    
+    const viewport = document.getElementById('es-city-viewport');
+    if (!viewport) return;
+
+    // Scroll mouse
+    viewport.addEventListener('wheel', (e)=>{
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 0.8 : -0.8;
+      this.targetDistance = Math.max(this.minZoom, Math.min(this.maxZoom, this.targetDistance + delta));
+    }, { passive:false });
+
+    // Pinch touch
+    let lastPinchDist = 0;
+    viewport.addEventListener('touchstart', (e)=>{
+      if (e.touches.length===2) {
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        lastPinchDist = Math.hypot(dx,dy);
+      }
+    }, { passive:true });
+    viewport.addEventListener('touchmove', (e)=>{
+      if (e.touches.length===2) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - e.touches[1].clientX;
+        const dy = e.touches[0].clientY - e.touches[1].clientY;
+        const dist = Math.hypot(dx,dy);
+        const diff = lastPinchDist - dist;
+        this.targetDistance = Math.max(this.minZoom, Math.min(this.maxZoom, this.targetDistance + diff*0.05));
+        lastPinchDist = dist;
+      }
+    }, { passive:false });
+  }
+
+  // Chamado no loop para suavizar zoom
+  atualizarZoomCamera(delta) {
+    this.cameraDistance += (this.targetDistance - this.cameraDistance) * delta * 6;
+  }
+
   inicializarCenaThreeJS(initialSpaceId) {
+
     const THREE = window.THREE;
     const viewport = document.getElementById('es-city-viewport');
     const w = viewport.clientWidth || window.innerWidth;
@@ -1808,6 +2042,11 @@ tentarCarregarGLTFsTodos() {
     this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
     this.criarCenarioFundoMontanhasArvores();
     this.criarSegundaAvenida();
+    this.criarLoteamentoResidencial();
+    this.criarVeiculosUtilizaveis();
+    this.criarPlacasELombadas();
+    this.inicializarPulo();
+    this.inicializarZoomCamera();
     // GLTF Coffee será carregado após buildingsMeta existir
 
     this.buildingsMeta = [];
@@ -1830,7 +2069,7 @@ tentarCarregarGLTFsTodos() {
       const centerX = bCfg.col * 16;
       const centerZ = -bCfg.row * 16;
       const bw = 10; const bd = 10; const bh = 4.4;
-      const frontX = centerX - bCfg.col * (bw / 2);
+      const frontX = centerX - Math.sign(bCfg.col) * (bw / 2); // FIX front para segunda avenida
       const doorHalfW = 1.05;
 
       const tipoPiso = { coffee:'wood', restaurant:'tile-check', school:'tile-check', shopping:'marble', home:'carpet', cinema:'carpet', taxi:'tile-check', beach:'sand', hotel:'wood', airport:'marble', job:'carpet', hospital:'tile-check', bank:'marble', clothing:'wood', shoes:'carpet', tools:'tile-check', petshop:'sand', supermarket:'tile-check', pharmacy:'tile-check', bookstore:'wood' }[bCfg.id] || 'tile-check';
@@ -2118,7 +2357,7 @@ tentarCarregarGLTFsTodos() {
       if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.keys['pad_right']) inputRight += 1;
 
       let estaAndando = false;
-      const speed = 7.2;
+      const speed = this.vehicleSpeed || 7.2;
 
       if (inputRight !== 0 || inputForward !== 0) {
         p.targetX = null; p.targetZ = null;
@@ -2170,6 +2409,12 @@ tentarCarregarGLTFsTodos() {
       this.atualizarPortas();
       this.atualizarAnimais(delta);
       this.atualizarAvioes(delta);
+      this.atualizarPulo(delta);
+      this.atualizarZoomCamera(delta);
+      if (this.vehicleMesh && this.localPlayer) {
+        this.vehicleMesh.position.set(this.localPlayer.x, this.jumpHeight + 0.1, this.localPlayer.z);
+        this.vehicleMesh.rotation.y = this.localPlayer.rotY;
+      }
       this.atualizarAudioZones();
       this.atualizarChuvaNeblina(delta);
       this.atualizarNightMarket();
