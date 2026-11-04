@@ -1,1279 +1,615 @@
-// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
+// js/modulos/workspace/english-spaces-3d.js
+// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (20 EDIFÍCIOS + AEROPORTO REALISTA + LOJAS DE XP + PASSOS SONOROS + STICKY NOTES MONGODB)
 
 window.Workspace = window.Workspace || {};
 
 const PROXIMITY_RADIUS = 6.0;
 
-// Coordenadas e cores dos 24 Edifícios da Cidade 3D (Avenida Central: col -1 e 1 | Avenidas Laterais: col -3 e 3)
 const CITY_BUILDINGS_LAYOUT = [
-  { id: 'coffee',          col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b, voiceLang: 'en-US', voicePitch: 1.15 },
-  { id: 'restaurant',      col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185, voiceLang: 'en-US', voicePitch: 0.92 },
-  { id: 'school',          col: -1, row: 1, color: 0x16a34a, roof: 0x052e16, npcColor: 0x4ade80, voiceLang: 'en-GB', voicePitch: 0.95 },
-  { id: 'shopping',        col:  1, row: 1, color: 0xca8a04, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-US', voicePitch: 1.18 },
-  { id: 'home',            col: -1, row: 2, color: 0x475569, roof: 0x1e293b, npcColor: 0x94a3b8, voiceLang: 'en-US', voicePitch: 1.02 },
-  { id: 'cinema',          col:  1, row: 2, color: 0xdb2777, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.14 },
-  { id: 'taxi',            col: -1, row: 3, color: 0xeab308, roof: 0x422006, npcColor: 0xfde047, voiceLang: 'en-US', voicePitch: 0.88 },
-  { id: 'beach',           col:  1, row: 3, color: 0x0d9488, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 1.05 },
-  { id: 'hotel',           col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.12 },
-  { id: 'airport',         col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8, voiceLang: 'en-GB', voicePitch: 0.94 },
-  { id: 'job',             col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8, voiceLang: 'en-US', voicePitch: 1.10 },
-  { id: 'hospital',        col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-GB', voicePitch: 0.90 },
-  // SEGUNDA AVENIDA - 12 NOVOS ESTABELECIMENTOS E LIFE RPG
-  { id: 'bank',            col: -3, row: 0, color: 0x0f766e, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 0.88 },
-  { id: 'clothing',        col:  3, row: 0, color: 0xec4899, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.16 },
-  { id: 'shoes',           col: -3, row: 1, color: 0x7c3aed, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.08 },
-  { id: 'tools',           col:  3, row: 1, color: 0xf59e0b, roof: 0x422006, npcColor: 0xfde047, voiceLang: 'en-US', voicePitch: 0.92 },
-  { id: 'petshop',         col: -3, row: 2, color: 0x10b981, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-US', voicePitch: 1.14 },
-  { id: 'supermarket',     col:  3, row: 2, color: 0x3b82f6, roof: 0x1e3a8a, npcColor: 0x60a5fa, voiceLang: 'en-US', voicePitch: 1.00 },
-  { id: 'pharmacy',        col: -3, row: 3, color: 0x06b6d4, roof: 0x083344, npcColor: 0x22d3ee, voiceLang: 'en-GB', voicePitch: 1.10 },
-  { id: 'bookstore',       col:  3, row: 3, color: 0xa16207, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-GB', voicePitch: 0.96 },
-  { id: 'real_estate',     col: -3, row: 4, color: 0x7c3aed, roof: 0x2e1065, npcColor: 0xa78bfa, voiceLang: 'en-US', voicePitch: 0.94 },
-  { id: 'dealership',      col:  3, row: 4, color: 0xdc2626, roof: 0x450a0a, npcColor: 0xf87171, voiceLang: 'en-US', voicePitch: 0.90 },
-  { id: 'building_supply', col: -3, row: 5, color: 0xd97706, roof: 0x78350f, npcColor: 0xfbbf24, voiceLang: 'en-US', voicePitch: 0.92 },
-  { id: 'guild_bau',       col:  3, row: 5, color: 0x1e1b4b, roof: 0x312e81, npcColor: 0x818cf8, voiceLang: 'en-GB', voicePitch: 0.88 }
+  { id: 'coffee',      col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b, voiceLang: 'en-US', voicePitch: 1.15 },
+  { id: 'restaurant',  col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185, voiceLang: 'en-US', voicePitch: 0.92 },
+  { id: 'school',      col: -1, row: 1, color: 0x16a34a, roof: 0x052e16, npcColor: 0x4ade80, voiceLang: 'en-GB', voicePitch: 0.95 },
+  { id: 'shopping',    col:  1, row: 1, color: 0xca8a04, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-US', voicePitch: 1.18 },
+  { id: 'home',        col: -1, row: 2, color: 0x475569, roof: 0x1e293b, npcColor: 0x94a3b8, voiceLang: 'en-US', voicePitch: 1.02 },
+  { id: 'cinema',      col:  1, row: 2, color: 0xdb2777, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.14 },
+  { id: 'taxi',        col: -1, row: 3, color: 0xeab308, roof: 0x422006, npcColor: 0xfde047, voiceLang: 'en-US', voicePitch: 0.88 },
+  { id: 'beach',       col:  1, row: 3, color: 0x0d9488, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 1.05 },
+  { id: 'hotel',       col: -1, row: 4, color: 0x9333ea, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.12 },
+  { id: 'airport',     col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8, voiceLang: 'en-GB', voicePitch: 0.94 },
+  { id: 'job',         col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8, voiceLang: 'en-US', voicePitch: 1.10 },
+  { id: 'hospital',    col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-GB', voicePitch: 0.90 },
+  { id: 'bank',        col: -3, row: 0, color: 0x0f766e, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 0.88 },
+  { id: 'clothing',    col:  3, row: 0, color: 0xec4899, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.16 },
+  { id: 'shoes',       col: -3, row: 1, color: 0x7c3aed, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.08 },
+  { id: 'tools',       col:  3, row: 1, color: 0xf59e0b, roof: 0x422006, npcColor: 0xfde047, voiceLang: 'en-US', voicePitch: 0.92 },
+  { id: 'petshop',     col: -3, row: 2, color: 0x10b981, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-US', voicePitch: 1.14 },
+  { id: 'supermarket', col:  3, row: 2, color: 0x3b82f6, roof: 0x1e3a8a, npcColor: 0x60a5fa, voiceLang: 'en-US', voicePitch: 1.00 },
+  { id: 'pharmacy',    col: -3, row: 3, color: 0x06b6d4, roof: 0x083344, npcColor: 0x22d3ee, voiceLang: 'en-GB', voicePitch: 1.10 },
+  { id: 'bookstore',   col:  3, row: 3, color: 0xa16207, roof: 0x422006, npcColor: 0xfacc15, voiceLang: 'en-GB', voicePitch: 0.96 }
 ];
 
 const FALLBACK_NEW_SPACES = {
-  bank:            { id: 'bank',            name: 'CITY BANK',       emoji: '🏦', npcName: 'Oliver (Banker)',     roles: ['CUSTOMER', 'BANKER'],     missions: [{ id: 'm1', title: 'Open a DRX account', xp: 80 }] },
-  clothing:        { id: 'clothing',        name: 'FASHION STORE',   emoji: '👗', npcName: 'Bella (Stylist)',     roles: ['SHOPPER', 'STYLIST'],     missions: [{ id: 'm1', title: 'Buy a new outfit', xp: 80 }] },
-  shoes:           { id: 'shoes',           name: 'SNEAKER LAB',     emoji: '👟', npcName: 'Liam (Seller)',       roles: ['SHOPPER', 'SELLER'],      missions: [{ id: 'm1', title: 'Ask for your shoe size', xp: 80 }] },
-  tools:           { id: 'tools',           name: 'HARDWARE TOOLS',  emoji: '🔨', npcName: 'Hank (Builder)',      roles: ['CUSTOMER', 'HANDYMAN'],   missions: [{ id: 'm1', title: 'Find a tool for home', xp: 80 }] },
-  petshop:         { id: 'petshop',         name: 'PET SHOP',        emoji: '🐾', npcName: 'Daisy (Vet)',         roles: ['PET OWNER', 'VET'],       missions: [{ id: 'm1', title: 'Adopt or feed a pet', xp: 90 }] },
-  supermarket:     { id: 'supermarket',     name: 'SUPERMARKET',     emoji: '🛒', npcName: 'Noah (Cashier)',      roles: ['SHOPPER', 'CASHIER'],     missions: [{ id: 'm1', title: 'Buy fresh groceries', xp: 80 }] },
-  pharmacy:        { id: 'pharmacy',        name: 'PHARMACY',        emoji: '💊', npcName: 'Grace (Pharmacist)',  roles: ['PATIENT', 'PHARMACIST'],  missions: [{ id: 'm1', title: 'Ask for vitamins', xp: 85 }] },
-  bookstore:       { id: 'bookstore',       name: 'BOOKSTORE',       emoji: '📚', npcName: 'Arthur (Librarian)',  roles: ['READER', 'LIBRARIAN'],    missions: [{ id: 'm1', title: 'Choose an English book', xp: 85 }] },
-  real_estate:     { id: 'real_estate',     name: 'REAL ESTATE',     emoji: '🏡', npcName: 'Victoria (Broker)',   roles: ['BUYER', 'AGENT'],         missions: [{ id: 'm1', title: 'Upgrade your house lot', xp: 100 }] },
-  dealership:      { id: 'dealership',      name: 'AUTO DEALERSHIP', emoji: '🚗', npcName: 'Max (Dealer)',        roles: ['DRIVER', 'DEALER'],       missions: [{ id: 'm1', title: 'Buy a bike, moto or car', xp: 100 }] },
-  building_supply: { id: 'building_supply', name: 'BUILDING SUPPLY', emoji: '🧱', npcName: 'Bob (Foreman)',       roles: ['BUILDER', 'SUPPLIER'],    missions: [{ id: 'm1', title: 'Buy bricks and wood', xp: 90 }] },
-  guild_bau:       { id: 'guild_bau',       name: 'BAÚ DO INGLÊS',   emoji: '🧙‍♂️', npcName: 'Master Wizard',       roles: ['APPRENTICE', 'MASTER'],   missions: [{ id: 'm1', title: 'Enter the Game Portal', xp: 120 }] }
+  bank:        { id: 'bank',        name: 'CITY BANK',       emoji: '🏦', npcName: 'Oliver (Banker)',     roles: ['CUSTOMER', 'BANKER'],     missions: [{ id: 'm1', title: 'Open a bank account', xp: 80 }] },
+  clothing:    { id: 'clothing',    name: 'FASHION STORE',   emoji: '👗', npcName: 'Bella (Stylist)',     roles: ['SHOPPER', 'STYLIST'],     missions: [{ id: 'm1', title: 'Buy a new outfit', xp: 80 }] },
+  shoes:       { id: 'shoes',       name: 'SNEAKER LAB',     emoji: '👟', npcName: 'Liam (Seller)',       roles: ['SHOPPER', 'SELLER'],      missions: [{ id: 'm1', title: 'Ask for your shoe size', xp: 80 }] },
+  tools:       { id: 'tools',       name: 'HARDWARE TOOLS',  emoji: '🔨', npcName: 'Hank (Builder)',      roles: ['CUSTOMER', 'HANDYMAN'],   missions: [{ id: 'm1', title: 'Find a tool for home', xp: 80 }] },
+  petshop:     { id: 'petshop',     name: 'PET SHOP',        emoji: '🐾', npcName: 'Daisy (Vet)',         roles: ['PET OWNER', 'VET'],       missions: [{ id: 'm1', title: 'Adopt or feed a pet', xp: 90 }] },
+  supermarket: { id: 'supermarket', name: 'SUPERMARKET',     emoji: '🛒', npcName: 'Noah (Cashier)',      roles: ['SHOPPER', 'CASHIER'],     missions: [{ id: 'm1', title: 'Buy fresh groceries', xp: 80 }] },
+  pharmacy:    { id: 'pharmacy',    name: 'PHARMACY',        emoji: '💊', npcName: 'Grace (Pharmacist)',  roles: ['PATIENT', 'PHARMACIST'],  missions: [{ id: 'm1', title: 'Ask for vitamins', xp: 85 }] },
+  bookstore:   { id: 'bookstore',   name: 'BOOKSTORE',       emoji: '📚', npcName: 'Arthur (Librarian)',  roles: ['READER', 'LIBRARIAN'],    missions: [{ id: 'm1', title: 'Choose an English book', xp: 85 }] }
 };
-
-// 💎 SISTEMA UNIFICADO DOVRYX (DRX) - Sincronizado com MongoDB e Baú do Inglês
-const DOVRYX = {
-  _balance: 1250,
-  getBalance() {
-    const world = window.Workspace?.EnglishSpaces3D;
-    if (world?.parentManager?.progressData && typeof world.parentManager.progressData.xp === 'number') {
-      this._balance = world.parentManager.progressData.xp;
-    } else if (window.Workspace?.Ingles?.state?.coins && typeof window.Workspace.Ingles.state.coins.bronze === 'number') {
-      this._balance = window.Workspace.Ingles.state.coins.bronze;
-    }
-    return this._balance;
-  },
-  setBalance(v) {
-    const val = Math.max(0, Math.round(Number(v) || 0));
-    this._balance = val;
-    const world = window.Workspace?.EnglishSpaces3D;
-    if (world?.parentManager?.progressData) world.parentManager.progressData.xp = val;
-    if (window.Workspace?.Ingles?.state?.coins) window.Workspace.Ingles.state.coins.bronze = val;
-    this.atualizarHud();
-  },
-  async add(amount, reason = '') {
-    const qtd = Math.round(Number(amount) || 0);
-    const novo = this.getBalance() + qtd;
-    this.setBalance(novo);
-    if (window.Workspace?.mostrarAviso) {
-      window.Workspace.mostrarAviso(`💎 +${qtd} DRX ${reason}`, 'success');
-    }
-    const world = window.Workspace?.EnglishSpaces3D;
-    if (world?.localPlayer) {
-      await fetch('/api/workspace/english-spaces/progress/customization', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ userId: world.localPlayer.userId, bonusXP: qtd })
-      }).catch(() => {});
-    }
-    return novo;
-  },
-  async spend(amount, reason = '') {
-    const qtd = Math.round(Number(amount) || 0);
-    const atual = this.getBalance();
-    if (atual < qtd) {
-      if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso(`🔒 Insufficient DOVRYX! Need ${qtd} DRX, you have ${atual} DRX.`, 'warning');
-      }
-      return false;
-    }
-    this.setBalance(atual - qtd);
-    if (window.Workspace?.mostrarAviso && reason) {
-      window.Workspace.mostrarAviso(`💸 -${qtd} DRX (${reason})`, 'info');
-    }
-    const world = window.Workspace?.EnglishSpaces3D;
-    if (world?.localPlayer) {
-      await fetch('/api/workspace/english-spaces/progress/customization', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({ userId: world.localPlayer.userId, costXP: qtd })
-      }).catch(() => {});
-    }
-    return true;
-  },
-  atualizarHud() {
-    const el = document.getElementById('es-dovryx-hud');
-    if (el) el.innerHTML = `💎 ${this.getBalance().toLocaleString('pt-BR')} DRX`;
-  }
-};
-window.DOVRYX = DOVRYX;
 
 class EnglishSpaces3DWorld {
-  constructor() {
-    this.active = false;
-    this.parentManager = null;
-    this.scene = null;
-    this.camera = null;
-    this.renderer = null;
-    this.animFrame = null;
-    this.clock = null;
-
-    this.buildingsMeta = [];
-    this.buildingMeshes = new Map();
-    this.npcs3D = new Map();
-    this.otherPlayers3D = new Map();
-    this.localPlayer = null;
-
-    this.keys = {};
-    this.cameraYaw = 0;
-    this.cameraPitch = 0.15;
-    this.isDraggingCam = false;
-    this.dragStartX = 0;
-    this.dragStartY = 0;
-    this._startYaw = 0;
-    this._startPitch = 0;
-
-    this.nearbyTargets = [];
-    this.currentZoneId = 'street';
-    this.lastSyncTime = 0;
-    this.sseConnection = null;
-    this.pollInterval = null;
-    this.dayNightInterval = null;
-    this.flightBoardInterval = null;
-
-    this.sunMesh = null;
-    this.moonMesh = null;
-    this.starsGroup = null;
-    this.cloudsGroup = null;
-    this.ambientLight = null;
-    this.dirLight = null;
-
-    this.cars = [];
-    this.avioes = [];
-    this.pedestrians = [];
-    this.clickableObjects = [];
-    this.outdoors = [];
-    this.posteLights = [];
-    this.audioCtx = null;
-    this.lastDoorEnter = null;
-    this.footprints = [];
-    this.lastFootprint = 0;
-    this.vitrines = [];
-    this.musician = null;
-    this.stickyNotes = [];
-    this.cloudStickyNotes = [];
-    this.cloudAvatarConfig = null;
-    this.communityLots = [];
-    this.polaroidCam = null;
-    this.flightBoard = null;
-
-    this.exteriorGroup = null;
-    this.interiorGroups = new Map();
-    this.doors = new Map();
-    this.modoInterior = false;
-    this.predioAtual = null;
-    this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
-
-    this.gltfLoader = null;
-    this.gltfLoadedSet = new Set();
-    this.animais = { caes: [], gatos: [], passaros: [], passarosGroup: null };
-    this.adoptedPet = null;
-
-    // Life RPG: Lotes, Veículos, Trabalhos e Blitz
-    this.lotes = [];
-    this.houseStage = 1;
-    this.materialsCount = 0;
-    this.ownedVehicles = ['bicycle'];
-    this.currentVehicle = null;
-    this.vehicleSpeed = 7.5;
-    this.vehicleMesh = null;
-    this.speedBumps = [];
-    this.trafficSigns = [];
-    this.jobs = {};
-  }
-
-  formatarNomeCompleto(nomeBruto) {
-    const limpo = String(nomeBruto ? nomeBruto : 'Student').replace(/\(@.*\)/, '').trim();
-    const partes = limpo.split(/\s+/).filter(Boolean);
-    if (partes.length <= 2) return partes.join(' ');
-    return `${partes[0]} ${partes[partes.length - 1]}`;
-  }
-
-  detetarGeneroPadrao(u) {
-    if (this.cloudAvatarConfig && typeof this.cloudAvatarConfig.isFemale === 'boolean') {
-      return this.cloudAvatarConfig.isFemale;
-    }
-    const gen = String((u && (u.genero || u.sexo)) ? (u.genero || u.sexo) : '').toLowerCase();
-    if (gen.startsWith('f') || gen.startsWith('m')) return gen.startsWith('f');
-    const primeiroNome = String((u && (u.nome || u.login)) ? (u.nome || u.login) : '').trim().split(/\s+/)[0].toLowerCase();
-    return primeiroNome.endsWith('a') && !['luca', 'joshua', 'nikola'].includes(primeiroNome);
-  }
-
-  async carregarGLTFLoader() {
-    if (window.THREE && window.THREE.GLTFLoader) {
-      this.gltfLoader = new window.THREE.GLTFLoader();
-      return;
-    }
-    return new Promise((resolve) => {
-      const s = document.createElement('script');
-      s.src = 'https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-      s.onload = () => {
-        try { this.gltfLoader = new window.THREE.GLTFLoader(); } catch (e) {}
-        resolve();
-      };
-      s.onerror = () => resolve();
-      document.head.appendChild(s);
-    });
-  }
-
-  async carregarThreeJS() {
-    if (window.THREE) {
-      await this.carregarGLTFLoader();
-      return window.THREE;
-    }
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      script.onload = async () => {
-        await this.carregarGLTFLoader();
-        resolve(window.THREE);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
-  }
-
-  garantirAudioAtivo() {
-    try {
-      if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
-    } catch (e) {}
-    return this.audioCtx;
-  }
-
-  async carregarEstadoInicialNuvem() {
-    const u = window.Workspace?.usuario || {};
-    const uid = String(u.id ? u.id : 'demo_user');
-    const escolaId = String(u.escolaId ? u.escolaId : 'DEFAULT');
-    try {
-      const [resProg, resStickies] = await Promise.all([
-        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(uid)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
-        fetch(`/api/workspace/english-spaces/world/stickies?escolaId=${encodeURIComponent(escolaId)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null)
-      ]);
-
-      if (resProg && resProg.success) {
-        const cfg = (resProg.data && resProg.data.avatarConfig) ? resProg.data.avatarConfig : ((resProg.compatibility && resProg.compatibility.avatarConfig) ? resProg.compatibility.avatarConfig : {});
-        this.cloudAvatarConfig = cfg;
-
-        if (Array.isArray(resProg.communityLots)) {
-          this.communityLots = resProg.communityLots;
-        }
-
-        const drxNuvem = typeof resProg.compatibility?.dovryx === 'number'
-          ? resProg.compatibility.dovryx
-          : (typeof resProg.compatibility?.xp === 'number' ? resProg.compatibility.xp : 1250);
-        DOVRYX.setBalance(drxNuvem);
-
-        this.houseStage = typeof cfg.houseStage === 'number' ? cfg.houseStage : 1;
-        this.materialsCount = typeof cfg.materialsCount === 'number' ? cfg.materialsCount : 0;
-        if (Array.isArray(cfg.ownedVehicles) && cfg.ownedVehicles.length > 0) {
-          this.ownedVehicles = cfg.ownedVehicles;
-        }
-
-        this.criarLoteamentoResidencial();
-
-        if (this.localPlayer) {
-          const femSalvo = typeof cfg.isFemale === 'boolean' ? cfg.isFemale : this.localPlayer.isFemale;
-          const corCamisaSalva = typeof cfg.shirtColor === 'number' ? cfg.shirtColor : (femSalvo ? 0xec4899 : 0x8b5cf6);
-          const corSapatoSalvo = typeof cfg.shoeColor === 'number' ? cfg.shoeColor : 0x111111;
-
-          this.localPlayer.isFemale = femSalvo;
-          this.localPlayer.shirtColor = corCamisaSalva;
-          this.localPlayer.shoeColor = corSapatoSalvo;
-          this.localPlayer.petType = cfg.petType ? cfg.petType : null;
-
-          const btn = document.getElementById('es-city-gender-btn');
-          if (btn) btn.innerHTML = femSalvo ? '👩 Female' : '🧑 Male';
-
-          const oldMesh = this.localPlayer.mesh;
-          const newMesh = this.criarBonecoHumano3D(corCamisaSalva, 0x1e1b4b, 0xfde68a, femSalvo);
-          if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoSalvo);
-          newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
-          newMesh.rotation.y = this.localPlayer.rotY;
-          this.scene.remove(oldMesh);
-          this.scene.add(newMesh);
-          this.localPlayer.mesh = newMesh;
-
-          if (cfg.petType === 'pet_dog' || cfg.petType === 'pet_cat') {
-            this.aplicarItemCompradoNoAvatar({ tipo: cfg.petType });
-          }
-          this.enviarMinhaPosicaoServidor();
-        }
-      }
-
-      if (resStickies && resStickies.success && Array.isArray(resStickies.notes)) {
-        this.cloudStickyNotes = resStickies.notes;
-        this.renderizarStickyNotesNoCoffee();
-      }
-    } catch (e) {}
-  }
-
-  async abrirCidade3D(parentManager, initialSpaceId = 'coffee') {
-    this.parentManager = parentManager;
-    const containerRoot = document.getElementById('english-spaces-root');
-    if (!containerRoot) return;
-
-    const u = window.Workspace?.usuario || {};
-    const isFemInicial = this.detetarGeneroPadrao(u);
-
-    containerRoot.innerHTML = `
-      <style>
-        body { overflow: hidden !important; }
-        #es-city-wrapper { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; background: #05070e !important; z-index: 1000020 !important; font-family: 'Inter','Geist','Poppins',sans-serif !important; user-select: none !important; overflow: hidden !important; }
-        #es-city-Hud-card, #es-city-teleport, #es-city-chat-feed { position: absolute !important; width: 0 !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; }
-        #es-city-viewport { position: absolute !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; z-index: 1 !important; touch-action: none !important; }
-        #es-city-viewport canvas { display: block !important; width: 100% !important; height: 100% !important; }
-        #es-city-labels-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
-        .es-ref-top-area { position: absolute; top: 0; left: 0; right: 0; z-index: 30; padding: max(14px, env(safe-area-inset-top)) 18px 0 18px; display: flex; flex-direction: column; gap: 8px; pointer-events: none; }
-        .es-ref-subbar { display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
-        #es-city-zone-badge { pointer-events: auto; background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(124,58,237,0.22)) !important; border: 1px solid rgba(167,139,250,0.42) !important; color: #ede9fe !important; padding: 7px 14px !important; border-radius: 999px !important; font-size: 12px !important; font-weight: 800 !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
-        .es-top-right-btns { display: flex; align-items: center; gap: 6px; pointer-events: auto; flex-wrap: wrap; }
-        #es-dovryx-hud { background: linear-gradient(135deg, rgba(245,158,11,0.28), rgba(217,119,6,0.24)) !important; border: 1px solid rgba(251,191,36,0.5) !important; color: #fef08a !important; padding: 7px 13px !important; border-radius: 999px !important; font-size: 12px !important; font-weight: 900 !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
-        .es-top-btn { background: rgba(18, 20, 36, 0.84) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; color: #e2e8f0 !important; padding: 7px 13px !important; border-radius: 999px !important; font-size: 11.5px !important; font-weight: 700 !important; cursor: pointer !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); transition: 0.2s; }
-        .es-top-btn:hover { background: rgba(139, 92, 246, 0.45) !important; color: #fff !important; }
-        #es-city-exit-btn:hover { background: rgba(239, 68, 68, 0.88) !important; color: #fff !important; }
-        .es-ref-proximity-wrap { display: flex; justify-content: center; gap: 8px; align-items: center; padding: 2px 0; }
-        #es-city-proximity-badge { pointer-events: auto; background: rgba(18, 20, 36, 0.76) !important; border: 1px solid rgba(255,255,255,0.14) !important; color: #cbd5e1 !important; padding: 6px 14px !important; border-radius: 999px !important; font-size: 11.5px !important; font-weight: 700 !important; backdrop-filter: blur(16px); display: inline-flex !important; align-items: center !important; gap: 6px !important; }
-        #es-city-work-btn { pointer-events: auto; display: none; background: linear-gradient(135deg, #10b981, #059669) !important; color: #fff !important; border: none !important; padding: 6px 14px !important; border-radius: 999px !important; font-size: 11.5px !important; font-weight: 800 !important; cursor: pointer !important; box-shadow: 0 6px 16px rgba(16,185,129,0.35); }
-        .es-city-label { position: relative; background: rgba(12,14,28,0.86); border: 1px solid rgba(139,92,246,0.32); color: #e9d5ff; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; backdrop-filter: blur(14px); box-shadow: 0 8px 20px rgba(0,0,0,0.35); pointer-events: none; display: inline-flex; align-items: center; gap: 6px; }
-        .es-city-label.me { background: rgba(18,22,48,0.92); border-color: rgba(59,130,246,0.5); color: #dbeafe; }
-        .es-dpad-circle { position: absolute !important; right: 22px !important; bottom: 96px !important; width: 112px !important; height: 112px !important; border-radius: 50% !important; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.72)) !important; border: 1px solid rgba(255,255,255,0.14) !important; backdrop-filter: blur(18px) !important; box-shadow: 0 12px 28px rgba(0,0,0,0.4) !important; z-index: 20 !important; display: grid !important; grid-template-areas: ". up ." "left . right" ". down ." !important; place-items: center !important; padding: 8px !important; }
-        .es-move-pad { width: 32px !important; height: 32px !important; border-radius: 50% !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #cbd5e1 !important; font-size: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
-        .es-move-pad[data-dir="up"] { grid-area: up; } .es-move-pad[data-dir="left"] { grid-area: left; } .es-move-pad[data-dir="right"] { grid-area: right; } .es-move-pad[data-dir="down"] { grid-area: down; }
-        .es-move-pad:active, .es-move-pad:hover { background: rgba(139,92,246,0.34) !important; color: #fff !important; }
-        .es-ref-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 16px max(14px, env(safe-area-inset-bottom)) 16px; background: rgba(14, 16, 28, 0.88) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 20px !important; backdrop-filter: blur(22px) !important; box-shadow: 0 16px 40px rgba(0,0,0,0.45) !important; }
-        #es-city-voice-btn { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
-        #es-city-speak-nearby-pill { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
-        .es-ref-input-group { flex: 1 !important; height: 46px !important; display: flex !important; align-items: center !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 14px !important; padding: 0 6px 0 14px !important; gap: 6px !important; }
-        #es-city-chat-input { flex: 1 !important; background: transparent !important; border: none !important; outline: none !important; color: #f8fafc !important; font-size: 13.5px !important; font-weight: 500 !important; width: 100% !important; }
-        #es-city-send-btn { width: 36px !important; height: 36px !important; border-radius: 10px !important; background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 15px !important; cursor: pointer !important; flex-shrink: 0; }
-        .es-speech-bubble { position: relative; background: #ffffff; color: #0f172a; padding: 8px 13px; border-radius: 14px; font-size: 12.5px; font-weight: 700; line-height: 1.35; max-width: 220px; text-align: center; margin-bottom: 8px; box-shadow: 0 12px 28px rgba(0,0,0,0.35); pointer-events: none; z-index: 15; }
-        .es-speech-bubble::after { content: ''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%) rotate(45deg); width: 10px; height: 10px; background: #fff; }
-        @media (max-width: 600px) { .es-ref-bottom-bar { padding: 10px; gap: 8px; margin: 0 12px max(12px, env(safe-area-inset-bottom)) 12px; border-radius: 18px; } #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; } .es-dpad-circle { width: 100px !important; height: 100px !important; right: 14px !important; bottom: 84px !important; } }
-      </style>
-      <div id="es-city-wrapper">
-        <div class="es-ref-top-area">
-          <div class="es-ref-subbar">
-            <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
-            <div class="es-top-right-btns">
-              <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
-              <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
-              <button type="button" class="es-top-btn" id="es-city-home-btn" title="Teleport to My House Lot">🏡 My Lot</button>
-              <button type="button" class="es-top-btn" id="es-city-bau-btn" title="Teleport to Guild Baú do Inglês">🧙‍♂️ Guild</button>
-              <button type="button" class="es-top-btn" id="es-city-gender-btn">${isFemInicial ? '👩 Female' : '🧑 Male'}</button>
-              <button type="button" class="es-top-btn" id="es-city-exit-btn">⇄ Exit 3D</button>
-            </div>
-          </div>
-          <div class="es-ref-proximity-wrap">
-            <span id="es-city-proximity-badge">• Out of Range</span>
-            <button type="button" id="es-city-work-btn">💼 Work Shift (+DRX)</button>
-          </div>
-        </div>
-        <select id="es-city-teleport"><option value=""></option></select>
-        <div id="es-city-Hud-card"><div id="es-city-hud-content"></div></div>
-        <div id="es-city-chat-feed"></div>
-        <div id="es-city-viewport">
-          <div id="es-city-labels-layer"></div>
-          <div class="es-dpad-circle">
-            <button type="button" class="es-move-pad" data-dir="up">▲</button>
-            <button type="button" class="es-move-pad" data-dir="left">◀</button>
-            <button type="button" class="es-move-pad" data-dir="right">▶</button>
-            <button type="button" class="es-move-pad" data-dir="down">▼</button>
-          </div>
-        </div>
-        <div class="es-ref-bottom-bar">
-          <button type="button" id="es-city-voice-btn">🎤 Voice Mic</button>
-          <button type="button" id="es-city-speak-nearby-pill" onclick="document.getElementById('es-city-chat-input')?.focus()">🔊 Speak Nearby</button>
-          <div class="es-ref-input-group">
-            <input type="text" id="es-city-chat-input" placeholder="Type message..." autocomplete="off" />
-            <button type="button" id="es-city-send-btn">➤</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    try { await this.carregarThreeJS(); } catch (e) { return; }
-    this.active = true;
-    this.modoInterior = false;
-    this.predioAtual = null;
-    this.gltfLoadedSet.clear();
-    this.carregarLiderRankingReal();
-    this.inicializarCenaThreeJS(initialSpaceId);
-    this.carregarEstadoInicialNuvem();
-    this.configurarEventosControles();
-    this.iniciarMultiplayerRealtime();
-  }
-
-  async carregarLiderRankingReal() {
-    if (!window.Workspace?.api) return;
-    try {
-      const escolaId = window.Workspace?.usuario?.escolaId || 'DEFAULT';
-      const res = await window.Workspace.api(`/workspace/ingles/ranking?escolaId=${encodeURIComponent(escolaId)}`, 'GET');
-      if (res && res.success && Array.isArray(res.ranking) && res.ranking.length > 0) {
-        const top1 = res.ranking[0];
-        const drx = top1.coins?.bronze || 1250;
-        this.topLeaderText = `Leader: ${this.formatarNomeCompleto(top1.nome)} - ${drx} DRX`;
-      }
-    } catch (e) {}
-  }
-
-  falarTextoNPC(texto, spaceId = null) {
-    if (!('speechSynthesis' in window) || !texto) return;
-    window.speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(texto);
-    const cfg = CITY_BUILDINGS_LAYOUT.find(b => b.id === (spaceId || this.currentZoneId));
-    u.lang = cfg?.voiceLang || 'en-US';
-    u.pitch = cfg?.voicePitch || 1.0;
-    u.rate = 0.94;
-    window.speechSynthesis.speak(u);
-  }
-
-  // 📦 CARREGADOR INTELIGENTE DE MODELOS GLB DA PASTA /models/ (AUTO-AJUSTE DE ESCALA E POSIÇÃO)
-  tentarCarregarGLTFsTodos() {
-    if (!this.gltfLoader) return;
-    const THREE = window.THREE;
-    CITY_BUILDINGS_LAYOUT.forEach(bCfg => {
-      const id = bCfg.id;
-      if (this.gltfLoadedSet.has(id)) return;
-      const bMeta = this.buildingsMeta.find(b => b.id === id);
-      const interiorGrp = this.interiorGroups.get(id);
-      if (!bMeta || !interiorGrp) return;
-
-      this.gltfLoader.load(
-        `/models/${id}.glb`,
-        (gltf) => {
-          if (this.gltfLoadedSet.has(id)) return;
-          this.gltfLoadedSet.add(id);
-          const model = gltf.scene;
-
-          // Calcula o tamanho real do .glb para encaixar perfeitamente dentro da loja (máx 7.5m) sem quebrar paredes
-          const box = new THREE.Box3().setFromObject(model);
-          const size = new THREE.Vector3();
-          box.getSize(size);
-          const maxDim = Math.max(size.x, size.y, size.z);
-          if (maxDim > 7.8) {
-            const scaleFactor = 7.2 / maxDim;
-            model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-          } else if (maxDim < 1.2 && maxDim > 0) {
-            const scaleFactor = 3.2 / maxDim;
-            model.scale.set(scaleFactor, scaleFactor, scaleFactor);
-          }
-
-          const newBox = new THREE.Box3().setFromObject(model);
-          const center = new THREE.Vector3();
-          newBox.getCenter(center);
-
-          model.position.set(
-            bMeta.centerX - center.x,
-            Math.max(0.03, -newBox.min.y),
-            bMeta.centerZ - center.z
-          );
-
-          model.traverse(o => {
-            if (o.isMesh) {
-              o.castShadow = true;
-              o.receiveShadow = true;
-            }
-          });
-          interiorGrp.add(model);
-        },
-        undefined,
-        () => {}
-      );
-    });
-  }
-
-  // 🧙‍♂️ GUILDA BAÚ DO INGLÊS COM O MESTRE MAGO (/assets/mago_bau_ingles.png) E PORTAL INTERATIVO
-  criarGuildaMago() {
-    const THREE = window.THREE;
-    const bGuild = this.buildingsMeta.find(b => b.id === 'guild_bau');
-    const grp = this.interiorGroups.get('guild_bau');
-    if (!bGuild || !grp) return;
-
-    const loader = new THREE.TextureLoader();
-    const magoTex = loader.load('/assets/mago_bau_ingles.png', undefined, undefined, () => {});
-    magoTex.minFilter = THREE.LinearFilter;
-    const magoMat = new THREE.MeshBasicMaterial({ map: magoTex, transparent: true, side: THREE.DoubleSide });
-    const magoPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.1), magoMat);
-    magoPlane.position.set(bGuild.centerX + 1.2, 1.6, bGuild.centerZ - 1.2);
-    magoPlane.rotation.y = -Math.PI / 2;
-    magoPlane.userData = {
-      clickable: true,
-      isMage: true,
-      englishName: 'Master Wizard of the English Chest'
-    };
-    grp.add(magoPlane);
-    this.clickableObjects.push(magoPlane);
-
-    // Portal Mágico para a Sala de Jogos do Baú do Inglês
-    const portalGroup = new THREE.Group();
-    const ringOuter = new THREE.Mesh(
-      new THREE.TorusGeometry(1.25, 0.12, 16, 40),
-      new THREE.MeshBasicMaterial({ color: 0xa855f7 })
-    );
-    const portalCore = new THREE.Mesh(
-      new THREE.CircleGeometry(1.18, 32),
-      new THREE.MeshBasicMaterial({ color: 0x4c1d95, transparent: true, opacity: 0.78, side: THREE.DoubleSide })
-    );
-    const portalData = {
-      clickable: true,
-      isPortal: true,
-      englishName: 'Portal to Baú do Inglês Game Room'
-    };
-    ringOuter.userData = portalData;
-    portalCore.userData = portalData;
-    portalGroup.userData = portalData;
-    portalGroup.add(ringOuter, portalCore);
-    portalGroup.position.set(bGuild.centerX + 2.2, 1.55, bGuild.centerZ + 2.2);
-    portalGroup.rotation.y = -Math.PI / 2;
-    grp.add(portalGroup);
-    this.clickableObjects.push(portalGroup);
-
-    // Placa Dourada da Guilda
-    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 256;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#1e1b4b'; ctx.fillRect(0, 0, 512, 256);
-    ctx.strokeStyle = '#facc15'; ctx.lineWidth = 8; ctx.strokeRect(4, 4, 504, 248);
-    ctx.fillStyle = '#fde047'; ctx.font = 'bold 24px Inter, sans-serif';
-    ctx.fillText('🧙‍♂️ GUILD: BAÚ DO INGLÊS', 24, 52);
-    ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 17px Inter, sans-serif';
-    ctx.fillText('1. Click Master Wizard for instructions', 24, 110);
-    ctx.fillText('2. Click the Purple Portal to play games', 24, 150);
-    ctx.fillStyle = '#34d399'; ctx.font = 'bold 18px Inter, sans-serif';
-    ctx.fillText('💎 Earn DOVRYX (DRX) to build your house!', 24, 205);
-    const tex = new THREE.CanvasTexture(canvas);
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-    board.position.set(bGuild.centerX + 4.4, 2.2, bGuild.centerZ - 1.2);
-    board.rotation.y = -Math.PI / 2;
-    board.userData = portalData;
-    grp.add(board);
-    this.clickableObjects.push(board);
-  }
-
-  interagirComMestreMago() {
-    const msg = "Welcome, young apprentice! Play the English Chest games through the Purple Portal to earn DOVRYX (DRX). Use your DRX to build your house, buy vehicles, and master English!";
-    this.falarTextoNPC(msg, 'guild_bau');
-    this.mostrarBalaoNoBoneco(this.localPlayer, "🧙‍♂️ Let's earn DOVRYX (DRX)!", 4500);
-
-    document.getElementById('es-mage-dialog')?.remove();
-    const html = `
-      <div id="es-mage-dialog" style="position:fixed; inset:0; z-index:1000250; background:rgba(5,7,14,0.82); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
-        <div style="background:linear-gradient(145deg,#1e1b4b,#0f172a); border:2px solid #a855f7; border-radius:24px; padding:26px; max-width:440px; width:100%; text-align:center; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.75);">
-          <img src="/assets/mago_bau_ingles.png" alt="Master Wizard" style="width:110px; height:110px; object-fit:contain; margin:0 auto 10px; display:block; filter:drop-shadow(0 8px 16px rgba(168,85,247,0.5));" onerror="this.style.display='none'" />
-          <h2 style="margin:0 0 8px; color:#fde047; font-size:21px;">🧙‍♂️ Master of the Guild</h2>
-          <p style="color:#e2e8f0; font-size:14px; line-height:1.55; margin:0 0 18px;">
-            "${msg}"
-          </p>
-          <div style="background:rgba(168,85,247,0.18); border:1px solid rgba(192,132,252,0.4); border-radius:14px; padding:10px; margin-bottom:18px; font-size:13px; color:#e9d5ff;">
-            💎 Your Wallet: <b>${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</b>
-          </div>
-          <div style="display:flex; gap:10px;">
-            <button id="es-mage-close" style="flex:1; padding:12px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Stay Here</button>
-            <button id="es-mage-enter-portal" style="flex:1.5; padding:12px; background:linear-gradient(135deg,#8b5cf6,#d946ef); color:#fff; border:none; border-radius:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 20px rgba(139,92,246,0.4);">🌀 Enter Game Room →</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('es-mage-close')?.addEventListener('click', () => document.getElementById('es-mage-dialog')?.remove());
-    document.getElementById('es-mage-enter-portal')?.addEventListener('click', () => {
-      document.getElementById('es-mage-dialog')?.remove();
-      this.abrirPortalBauIngles();
-    });
-  }
-
-  // 🎮 ABRE OS 15 JOGOS REAIS DO BAÚ DO INGLÊS POR CIMA DA CIDADE 3D SEM SAIR DELA!
-  abrirPortalBauIngles() {
-    const bauContainer = document.getElementById('ws-ingles-container');
-    if (bauContainer && window.Workspace?.Ingles) {
-      bauContainer.style.cssText = 'display:block !important; position:fixed !important; inset:0 !important; width:100vw !important; height:100dvh !important; overflow-y:auto !important; z-index:1000300 !important; background:#f8fafc !important;';
-      window.Workspace.Ingles.abrirBau();
-
-      let topReturnBar = document.getElementById('es-bau-return-bar');
-      if (!topReturnBar) {
-        topReturnBar = document.createElement('div');
-        topReturnBar.id = 'es-bau-return-bar';
-        topReturnBar.style.cssText = 'position:sticky; top:0; left:0; right:0; z-index:1000350; background:linear-gradient(90deg,#1e1b4b,#312e81); color:#fff; padding:12px 24px; display:flex; justify-content:space-between; align-items:center; box-shadow:0 8px 25px rgba(0,0,0,0.35); font-family:Inter,sans-serif;';
-        topReturnBar.innerHTML = `
-          <div style="display:flex; align-items:center; gap:10px; font-weight:800; font-size:14px;">
-            <span style="font-size:22px;">🧙‍♂️</span>
-            <span>Guild Game Room • Earn DOVRYX (DRX) and return to the 3D City!</span>
-          </div>
-          <button type="button" id="es-btn-return-city" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:9px 18px; border-radius:999px; font-weight:900; font-size:13px; cursor:pointer; box-shadow:0 4px 14px rgba(16,185,129,0.4);">
-            🏙️ ↩ Back to 3D City
-          </button>
-        `;
-        bauContainer.prepend(topReturnBar);
-        topReturnBar.querySelector('#es-btn-return-city')?.addEventListener('click', () => {
-          window.Workspace.Ingles.fecharJogo?.();
-          bauContainer.style.display = 'none';
-          bauContainer.style.position = '';
-          bauContainer.style.zIndex = '';
-          topReturnBar.remove();
-          const novoSaldo = window.Workspace?.Ingles?.state?.coins?.bronze || DOVRYX.getBalance();
-          DOVRYX.setBalance(novoSaldo);
-          if (window.Workspace?.mostrarAviso) {
-            window.Workspace.mostrarAviso(`🏙️ Welcome back! Wallet synced: ${DOVRYX.getBalance()} DRX 💎`, 'success');
-          }
-        });
-      }
-      return;
-    }
-  }
-
-  // 🛣️ RUAS ALARGADAS COM CICLOVIAS, QUEBRA-MOLAS E PLACAS DE TRÂNSITO REAIS
-  criarRuasAlargadasComCiclovias() {
-    const THREE = window.THREE;
-    const bikeLaneMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 });
-    [-5.6, 5.6].forEach(xLane => {
-      const bikeLane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 170), bikeLaneMat);
-      bikeLane.rotation.x = -Math.PI / 2;
-      bikeLane.position.set(xLane, 0.03, -36);
-      this.exteriorGroup.add(bikeLane);
-    });
-
-    const canvasBike = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
-    const ctxB = canvasBike.getContext('2d');
-    ctxB.fillStyle = '#059669'; ctxB.fillRect(0, 0, 512, 128);
-    ctxB.fillStyle = '#ffffff'; ctxB.font = 'bold 34px Inter, sans-serif'; ctxB.textAlign = 'center';
-    ctxB.fillText('BIKE LANE 🚲', 256, 76);
-    const texBike = new THREE.CanvasTexture(canvasBike);
-    [-20, -50].forEach(zPos => {
-      const mL = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 3.6), new THREE.MeshBasicMaterial({ map: texBike }));
-      mL.rotation.x = -Math.PI / 2; mL.rotation.z = Math.PI / 2; mL.position.set(-5.6, 0.05, zPos);
-      const mR = mL.clone(); mR.position.set(5.6, 0.05, zPos);
-      this.exteriorGroup.add(mL, mR);
-    });
-  }
-
-  criarQuebraMolasESinalizacao() {
-    const THREE = window.THREE;
-    this.speedBumps = [];
-    this.trafficSigns = [];
-
-    [-72, -40, -8, 16].forEach(zPos => {
-      const bumpGroup = new THREE.Group();
-      const bump = new THREE.Mesh(new THREE.BoxGeometry(9.2, 0.22, 1.0), new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.7 }));
-      bump.position.set(0, 0.11, 0);
-      bumpGroup.add(bump);
-      const stripeMat = new THREE.MeshBasicMaterial({ color: 0x0f172a });
-      for (let x = -3.6; x <= 3.6; x += 1.2) {
-        const stripe = new THREE.Mesh(new THREE.PlaneGeometry(0.45, 0.95), stripeMat);
-        stripe.rotation.x = -Math.PI / 2; stripe.position.set(x, 0.23, 0);
-        bumpGroup.add(stripe);
-      }
-      bumpGroup.position.set(0, 0, zPos);
-      this.exteriorGroup.add(bumpGroup);
-      this.speedBumps.push({ mesh: bumpGroup, z: zPos, x: 0, triggered: 0 });
-    });
-
-    const placas = [
-      { pos: [-7.2, -72], tipo: 'STOP',  texto: 'STOP' },
-      { pos: [ 7.2, -40], tipo: 'YIELD', texto: 'YIELD' },
-      { pos: [-7.2,  -8], tipo: 'BIKE',  texto: 'BIKE LANE' },
-      { pos: [ 7.2,  16], tipo: 'SPEED', texto: 'SPEED BUMP' }
-    ];
-    placas.forEach(p => {
-      const signGroup = new THREE.Group();
-      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 2.6, 8), new THREE.MeshStandardMaterial({ color: 0x94a3b8 }));
-      pole.position.set(0, 1.3, 0);
-      signGroup.add(pole);
-
-      const canvas = document.createElement('canvas'); canvas.width = 256; canvas.height = 256;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = p.tipo === 'STOP' ? '#dc2626' : (p.tipo === 'YIELD' || p.tipo === 'SPEED' ? '#facc15' : '#059669');
-      ctx.fillRect(16, 16, 224, 224);
-      ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 10; ctx.strokeRect(20, 20, 216, 216);
-      ctx.fillStyle = (p.tipo === 'YIELD' || p.tipo === 'SPEED') ? '#0f172a' : '#ffffff';
-      ctx.font = 'bold 34px Inter, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(p.texto, 128, 140);
-      const tex = new THREE.CanvasTexture(canvas);
-      const board = new THREE.Mesh(new THREE.PlaneGeometry(1.05, 1.05), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-      board.position.set(0, 2.5, 0);
-      board.userData = { clickable: true, englishName: `Traffic Sign: ${p.texto}` };
-      this.clickableObjects.push(board);
-      signGroup.add(board);
-      signGroup.position.set(p.pos[0], 0, p.pos[1]);
-      this.exteriorGroup.add(signGroup);
-    });
-  }
-
-  triggerBlitzEducativa(reason) {
-    if (document.getElementById('blitz-modal')) return;
-    const questions = [
-      { q: 'What does a STOP sign require you to do?', a: ['Come to a complete stop', 'Drive faster'], correct: 0 },
-      { q: 'What does a YIELD sign mean in traffic?', a: ['Slow down and give way', 'Honk the horn'], correct: 0 },
-      { q: 'Who is allowed to ride in the green BIKE LANE?', a: ['Bicycles only', 'Heavy trucks'], correct: 0 },
-      { q: 'What should you do before a SPEED BUMP?', a: ['Reduce your speed', 'Accelerate'], correct: 0 }
-    ];
-    const quiz = questions[Math.floor(Math.random() * questions.length)];
-    const html = `
-      <div id="blitz-modal" style="position:fixed; inset:0; z-index:1000220; background:rgba(15,23,42,0.85); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
-        <div style="background:#0f172a; border:2px solid #ef4444; border-radius:20px; padding:24px; max-width:400px; width:100%; text-align:center; color:#fff;">
-          <div style="font-size:46px;">🚨👮‍♂️</div>
-          <h3 style="color:#f87171; margin:8px 0;">Traffic Safety Blitz!</h3>
-          <p style="color:#cbd5e1; font-size:13px; margin:0 0 12px;">You passed fast over a <b>${reason}</b>. Answer the officer's question in English to avoid a 20 DRX fine:</p>
-          <div style="background:#1e293b; padding:12px; border-radius:12px; font-weight:700; font-size:14.5px; margin-bottom:14px;">"${quiz.q}"</div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            ${quiz.a.map((opt, i) => `<button class="blitz-opt" data-i="${i}" style="padding:12px; background:#334155; color:#fff; border:1px solid #475569; border-radius:10px; font-weight:700; cursor:pointer;">${opt}</button>`).join('')}
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.querySelectorAll('.blitz-opt').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const idx = parseInt(e.currentTarget.dataset.i);
-        document.getElementById('blitz-modal')?.remove();
-        if (idx === quiz.correct) {
-          DOVRYX.add(15, 'Traffic Quiz Bonus');
-        } else {
-          DOVRYX.spend(20, 'Traffic Fine');
-        }
-      });
-    });
-  }
-
-  // 🏘️ LOTEAMENTO RESIDENCIAL DOS ALUNOS (CONSTRUÇÃO EM 5 ETAPAS SALVA NO MONGODB)
-  criarLoteamentoResidencial() {
-    const THREE = window.THREE;
-    if (this.lotes && this.lotes.length > 0) {
-      this.lotes.forEach(l => this.exteriorGroup.remove(l));
-    }
-    this.lotes = [];
-
-    const u = window.Workspace?.usuario || {};
-    const meuNome = this.formatarNomeCompleto(u.nome || u.login || 'You');
-
-    for (let i = 0; i < 8; i++) {
-      const col = (i % 4) - 1.5;
-      const row = Math.floor(i / 4);
-      const lotX = col * 18;
-      const lotZ = 34 + row * 18;
-      const lotGroup = new THREE.Group();
-
-      const isMeuLote = i === 0;
-      const commLot = this.communityLots && this.communityLots[i] ? this.communityLots[i] : null;
-      const donoNome = isMeuLote ? `${meuNome} (You)` : (commLot ? this.formatarNomeCompleto(commLot.ownerName) : `Residential Lot #${i + 1}`);
-      const stage = isMeuLote ? (this.houseStage || 1) : (commLot ? (commLot.stage || 1) : 1);
-
-      const terreno = new THREE.Mesh(new THREE.PlaneGeometry(12, 12), new THREE.MeshStandardMaterial({ color: 0x15803d, roughness: 0.9 }));
-      terreno.rotation.x = -Math.PI / 2;
-      lotGroup.add(terreno);
-
-      // Placa "House of [Nome]"
-      const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
-      const ctx = canvas.getContext('2d');
-      ctx.fillStyle = isMeuLote ? '#1e1b4b' : '#0f172a'; ctx.fillRect(0, 0, 512, 128);
-      ctx.strokeStyle = isMeuLote ? '#facc15' : '#8b5cf6'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 506, 122);
-      ctx.fillStyle = '#fde047'; ctx.font = 'bold 22px Inter, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(`🏡 House of ${donoNome}`, 256, 52);
-      ctx.fillStyle = '#a7f3d0'; ctx.font = 'bold 18px Inter, sans-serif';
-      ctx.fillText(`Stage ${stage}/5 • Click to Build/Inspect`, 256, 96);
-      const tex = new THREE.CanvasTexture(canvas);
-      const placa = new THREE.Mesh(new THREE.PlaneGeometry(3.8, 0.95), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-      placa.position.set(0, 1.2, -5.8);
-      lotGroup.add(placa);
-
-      // Etapa 1: Fundação de Pedra
-      if (stage >= 1) {
-        const fund = new THREE.Mesh(new THREE.BoxGeometry(7, 0.35, 7), new THREE.MeshStandardMaterial({ color: 0x64748b }));
-        fund.position.set(0, 0.175, 0);
-        lotGroup.add(fund);
-      }
-      // Etapa 2: Paredes de Alvenaria
-      if (stage >= 2) {
-        const wallMat = new THREE.MeshStandardMaterial({ color: 0xfef3c7 });
-        const wBack = new THREE.Mesh(new THREE.BoxGeometry(7, 2.8, 0.3), wallMat); wBack.position.set(0, 1.6, 3.35);
-        const wLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 7), wallMat); wLeft.position.set(-3.35, 1.6, 0);
-        const wRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 7), wallMat); wRight.position.set(3.35, 1.6, 0);
-        lotGroup.add(wBack, wLeft, wRight);
-      }
-      // Etapa 3: Telhado Colonial
-      if (stage >= 3) {
-        const roof = new THREE.Mesh(new THREE.ConeGeometry(5.6, 2.2, 4), new THREE.MeshStandardMaterial({ color: 0xb91c1c }));
-        roof.position.set(0, 4.1, 0); roof.rotation.y = Math.PI / 4;
-        lotGroup.add(roof);
-      }
-      // Etapa 4 e 5: Casa Mobiliada + Jardim Iluminado
-      if (stage >= 4) {
-        const sofa = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 0.9), new THREE.MeshStandardMaterial({ color: 0x8b5cf6 }));
-        sofa.position.set(0, 0.7, 1.2);
-        const table = new THREE.Mesh(new THREE.CylinderGeometry(0.8, 0.8, 0.6, 12), new THREE.MeshStandardMaterial({ color: 0x78350f }));
-        table.position.set(0, 0.65, -0.8);
-        lotGroup.add(sofa, table);
-      }
-
-      const lotData = { clickable: true, isLot: true, lotIndex: i, isMeuLote, ownerName: donoNome, stage };
-      placa.userData = lotData;
-      terreno.userData = lotData;
-      lotGroup.userData = lotData;
-      lotGroup.position.set(lotX, 0, lotZ);
-      this.clickableObjects.push(lotGroup);
-      this.exteriorGroup.add(lotGroup);
-      this.lotes.push(lotGroup);
-    }
-  }
-
-  abrirModalConstrucaoCasa() {
-    document.getElementById('es-house-modal')?.remove();
-    const nomesEtapas = [
-      'Empty Land',
-      'Stage 1: Stone Foundation',
-      'Stage 2: Brick Walls',
-      'Stage 3: Colonial Roof',
-      'Stage 4: Furnished Living Room',
-      'Stage 5: Luxury Smart Villa'
-    ];
-    const stageAtual = this.houseStage || 1;
-    const proxStage = Math.min(5, stageAtual + 1);
-    const custoDRX = proxStage * 180;
-
-    const html = `
-      <div id="es-house-modal" style="position:fixed; inset:0; z-index:1000220; background:rgba(5,7,14,0.82); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
-        <div style="background:#0f172a; border:2px solid #10b981; border-radius:22px; padding:24px; max-width:410px; width:100%; text-align:center; color:#fff; box-shadow:0 25px 60px rgba(0,0,0,0.7);">
-          <div style="font-size:48px;">🏡🧱</div>
-          <h2 style="margin:6px 0; color:#6ee7b7; font-size:20px;">My Residential Lot</h2>
-          <p style="color:#cbd5e1; font-size:13.5px; margin:0 0 12px;">Current Status: <b>${nomesEtapas[stageAtual]}</b></p>
-          <div style="background:#1e293b; border-radius:12px; padding:12px; margin-bottom:16px; font-size:13px; color:#e2e8f0;">
-            🧱 Building Materials Owned: <b style="color:#facc15;">${this.materialsCount || 0} units</b><br>
-            💎 Wallet Balance: <b style="color:#34d399;">${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</b>
-          </div>
-          ${stageAtual < 5 ? `
-            <button id="es-house-upgrade-btn" style="width:100%; padding:13px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; margin-bottom:8px;">
-              🔨 Upgrade to ${nomesEtapas[proxStage]} (${custoDRX} DRX)
-            </button>
-          ` : `<div style="color:#fde047; font-weight:800; margin-bottom:12px;">🌟 Maximum Luxury Villa Reached!</div>`}
-          <button id="es-house-close-btn" style="width:100%; padding:10px; background:#334155; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Close</button>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('es-house-close-btn')?.addEventListener('click', () => document.getElementById('es-house-modal')?.remove());
-    document.getElementById('es-house-upgrade-btn')?.addEventListener('click', async () => {
-      const pagou = await DOVRYX.spend(custoDRX, `House Upgrade Stage ${proxStage}`);
-      if (!pagou) return;
-      this.houseStage = proxStage;
-      document.getElementById('es-house-modal')?.remove();
-      this.criarLoteamentoResidencial();
-      this.falarTextoNPC(`Congratulations! Your house is now at stage ${proxStage}!`, 'real_estate');
-      await fetch('/api/workspace/english-spaces/progress/customization', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          userId: this.localPlayer.userId,
-          ownerName: this.localPlayer.nome,
-          houseStage: this.houseStage
-        })
-      }).catch(() => {});
-    });
-  }
-
-  // 🚲🏍️🚗 VEÍCULOS PILOTÁVEIS (BICICLETA, MOTO E CARRO)
-  alternarOuMontarVeiculo(tipoForcado = null) {
-    if (this.currentVehicle && !tipoForcado) {
-      this.desmontarVeiculo();
-      return;
-    }
-    const lista = Array.isArray(this.ownedVehicles) && this.ownedVehicles.length > 0 ? this.ownedVehicles : ['bicycle'];
-    const escolhido = tipoForcado || lista[lista.length - 1];
-    const velocidades = { bicycle: 11.5, moto: 15.5, car: 19.0 };
-    const nomes = { bicycle: 'City Bicycle 🚲', moto: 'Sport Motorcycle 🏍️', car: 'Electric Supercar 🚗' };
-
-    this.currentVehicle = escolhido;
-    this.vehicleSpeed = velocidades[escolhido] || 11.5;
-
-    const btn = document.getElementById('es-city-vehicle-btn');
-    if (btn) btn.innerHTML = '🚶 Dismount';
-
-    if (this.vehicleMesh) this.scene.remove(this.vehicleMesh);
-    const THREE = window.THREE;
-    const vm = new THREE.Group();
-    if (escolhido === 'bicycle') {
-      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.55, 1.35), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
-      frame.position.set(0, 0.35, 0); vm.add(frame);
-    } else if (escolhido === 'moto') {
-      const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 1.75), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
-      body.position.set(0, 0.4, 0); vm.add(body);
-    } else {
-      const body = new THREE.Mesh(new THREE.BoxGeometry(1.5, 0.65, 2.8), new THREE.MeshStandardMaterial({ color: 0x2563eb }));
-      body.position.set(0, 0.45, 0); vm.add(body);
-    }
-    this.vehicleMesh = vm;
-    this.scene.add(vm);
-    if (window.Workspace?.mostrarAviso) {
-      window.Workspace.mostrarAviso(`🚀 Riding ${nomes[escolhido] || 'Vehicle'}! Use Bike Lanes & watch out for Speed Bumps!`, 'success');
-    }
-  }
-
-  desmontarVeiculo() {
-    this.currentVehicle = null;
-    this.vehicleSpeed = 7.5;
-    if (this.vehicleMesh) {
-      this.scene.remove(this.vehicleMesh);
-      this.vehicleMesh = null;
-    }
-    const btn = document.getElementById('es-city-vehicle-btn');
-    if (btn) btn.innerHTML = '🚲 Ride';
-  }
-
-  // 💼 TRABALHOS REMUNERADOS NAS LOJAS (PART-TIME JOBS PARA GANHAR DRX)
-  iniciarTrabalhoPartTime(buildingId) {
-    const bMeta = this.buildingsMeta.find(b => b.id === buildingId);
-    const nomeLoja = bMeta?.space?.name || 'Shop';
-    const pagamento = 60;
-
-    document.getElementById('job-modal')?.remove();
-    const html = `
-      <div id="job-modal" style="position:fixed; inset:0; z-index:1000220; background:rgba(5,7,14,0.82); backdrop-filter:blur(6px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
-        <div style="background:#0f172a; border:2px solid #10b981; border-radius:20px; padding:24px; max-width:420px; width:100%; color:#fff;">
-          <h3 style="color:#34d399; margin:0 0 8px;">💼 Part-Time Shift at ${nomeLoja}</h3>
-          <p style="color:#cbd5e1; font-size:13.5px; margin:0 0 12px;">Greet a customer and offer help in English (at least 4 words) to earn <b>+${pagamento} DRX 💎</b>:</p>
-          <input id="job-answer" placeholder="Ex: Good morning! How can I help you today?" style="width:100%; padding:12px; border-radius:10px; border:1px solid #334155; background:#1e293b; color:#fff; font-size:14px; margin-bottom:14px; box-sizing:border-box;" />
-          <div style="display:flex; gap:8px;">
-            <button id="job-cancel" style="flex:1; padding:11px; background:#334155; color:#cbd5e1; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
-            <button id="job-complete" style="flex:1.4; padding:11px; background:#10b981; color:#fff; border:none; border-radius:10px; font-weight:900; cursor:pointer;">Complete Shift (+${pagamento} DRX)</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('job-cancel')?.addEventListener('click', () => document.getElementById('job-modal')?.remove());
-    document.getElementById('job-complete')?.addEventListener('click', async () => {
-      const ans = (document.getElementById('job-answer')?.value || '').trim();
-      if (ans.split(/\s+/).length < 3) {
-        if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('Write a complete greeting in English!', 'warning');
-        return;
-      }
-      document.getElementById('job-modal')?.remove();
-      this.mostrarBalaoNoBoneco(this.localPlayer, ans, 5000);
-      this.falarTextoNPC("Great job! Here is your payment in DOVRYX!", buildingId);
-      await DOVRYX.add(pagamento, `from ${nomeLoja} Shift`);
-    });
-  }
-
-  // 📌 MODAIS DE POST-IT (CRIAÇÃO, LEITURA AMPLIADA E EDIÇÃO/EXCLUSÃO EXCLUSIVA DO AUTOR NO MONGODB)
-  abrirModalCriarStickyNote(notaParaEditar = null) {
-    document.getElementById('es-sticky-modal')?.remove();
-    const textoInicial = notaParaEditar ? notaParaEditar.text : '';
-    const tituloModal = notaParaEditar ? '✏️ Edit Your Sticky Note' : '📌 New English Sticky Note';
-
-    const html = `
-      <div id="es-sticky-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
-        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:16px; padding:24px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.5); transform:rotate(-1deg);">
-          <h3 style="color:#422006; margin:0 0 10px; font-size:18px;">${tituloModal}</h3>
-          <p style="color:#78350f; font-size:12.5px; margin:0 0 12px;">Write a short message or tip for the Coffee Shop wall:</p>
-          <textarea id="es-sticky-text" maxlength="80" placeholder="Type here in English..." style="width:100%; height:95px; background:#fffdf0; border:1px solid #d97706; border-radius:10px; padding:10px; color:#422006; font-size:14.5px; font-weight:600; resize:none; outline:none; box-sizing:border-box;">${textoInicial}</textarea>
-          <div style="display:flex; gap:8px; margin-top:14px;">
-            <button id="es-sticky-cancel" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
-            <button id="es-sticky-save" style="flex:1.3; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">${notaParaEditar ? 'Save Changes ✅' : 'Pin to Wall 📌'}</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('es-sticky-text')?.focus();
-
-    document.getElementById('es-sticky-cancel')?.addEventListener('click', () => document.getElementById('es-sticky-modal')?.remove());
-    document.getElementById('es-sticky-save')?.addEventListener('click', () => {
-      const txt = document.getElementById('es-sticky-text')?.value;
-      if (txt && txt.trim()) {
-        if (notaParaEditar && notaParaEditar.id) {
-          this.editarStickyNote(notaParaEditar.id, txt.trim());
-        } else {
-          this.adicionarStickyNote(txt.trim(), true);
-        }
-      }
-      document.getElementById('es-sticky-modal')?.remove();
-    });
-  }
-
-  abrirModalLerStickyNote(notaObj) {
-    document.getElementById('es-sticky-view-modal')?.remove();
-    const meuId = String(this.localPlayer ? this.localPlayer.userId : '');
-    const isAutor = Boolean(notaObj.userId && String(notaObj.userId) === meuId);
-    const nomeAutor = notaObj.author ? notaObj.author : 'Student';
-
-    const botoesAutor = isAutor ? `
-      <button id="es-sticky-edit" style="flex:1; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Edit ✏️</button>
-      <button id="es-sticky-delete" style="flex:1; padding:10px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Delete 🗑️</button>
-    ` : '';
-
-    const html = `
-      <div id="es-sticky-view-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
-        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:18px; padding:24px; width:100%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6); transform:rotate(1deg);">
-          <div style="font-size:28px; margin-bottom:4px;">📌</div>
-          <p style="color:#78350f; font-size:11.5px; font-weight:800; margin:0 0 8px; text-transform:uppercase; letter-spacing:0.5px;">Note by ${nomeAutor}</p>
-          <div style="background:#fffdf0; border:1px solid #d97706; border-radius:12px; padding:16px; color:#422006; font-size:15.5px; font-weight:700; line-height:1.45; word-break:break-word; margin-bottom:16px; min-height:60px; display:flex; align-items:center; justify-content:center;">
-            "${notaObj.text}"
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button id="es-sticky-close" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Close</button>
-            ${botoesAutor}
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    document.getElementById('es-sticky-close')?.addEventListener('click', () => document.getElementById('es-sticky-view-modal')?.remove());
-    if (isAutor) {
-      document.getElementById('es-sticky-edit')?.addEventListener('click', () => {
-        document.getElementById('es-sticky-view-modal')?.remove();
-        this.abrirModalCriarStickyNote(notaObj);
-      });
-      document.getElementById('es-sticky-delete')?.addEventListener('click', () => {
-        document.getElementById('es-sticky-view-modal')?.remove();
-        this.removerStickyNote(notaObj.id);
-      });
-    }
-  }
-
-  criarStickyNotesParede() {
-    const b = this.buildingsMeta.find(x => x.id === 'coffee');
-    if (!b) return;
-    this.renderizarStickyNotesNoCoffee();
-
-    const THREE = window.THREE;
-    const addArea = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.6, 1.8),
-      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.16, side: THREE.DoubleSide })
-    );
-    addArea.position.set(b.centerX, 1.6, b.centerZ - 4.76);
-    addArea.userData = { clickable: true, isStickyWall: true, englishName: 'Sticky Note Wall' };
-    this.clickableObjects.push(addArea);
-    const grp = this.interiorGroups.get('coffee');
-    if (grp) grp.add(addArea);
-  }
-
-  renderizarStickyNotesNoCoffee() {
-    const THREE = window.THREE;
-    const b = this.buildingsMeta.find(x => x.id === 'coffee');
-    if (!b) return;
-    const grp = this.interiorGroups.get('coffee') ? this.interiorGroups.get('coffee') : this.scene;
-    this.stickyNotes.forEach(n => {
-      grp.remove(n);
-      const idx = this.clickableObjects.indexOf(n);
-      if (idx > -1) this.clickableObjects.splice(idx, 1);
-    });
-    this.stickyNotes = [];
-
-    const saved = (Array.isArray(this.cloudStickyNotes) && this.cloudStickyNotes.length > 0)
-      ? this.cloudStickyNotes
-      : [
-          { id: 'seed_1', author: 'Paulo', text: 'Hello from Bahia!', userId: 'seed' },
-          { id: 'seed_2', author: 'Teacher', text: 'Earn DRX and build your house!', userId: 'seed' }
-        ];
-
-    saved.slice(0, 8).forEach((item, i) => {
-      const txt = typeof item === 'string' ? item : (item.text ? item.text : '');
-      const author = typeof item === 'string' ? 'Student' : (item.author ? item.author : 'Student');
-      const noteId = typeof item === 'string' ? ('seed_' + i) : (item.id ? item.id : ('seed_' + i));
-      const uId = typeof item === 'string' ? '' : (item.userId ? item.userId : '');
-
-      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = i % 2 === 0 ? '#fef08a' : '#fed7aa';
-      ctx.fillRect(0, 0, 256, 256);
-      ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 250);
-      ctx.fillStyle = '#422006'; ctx.font = 'bold 18px Inter, sans-serif';
-      ctx.fillText(String(txt).slice(0, 18), 14, 65);
-      if (txt.length > 18) ctx.fillText(String(txt).slice(18, 36), 14, 98);
-      if (txt.length > 36) ctx.fillText(String(txt).slice(36, 54) + '...', 14, 131);
-      ctx.fillStyle = '#78350f'; ctx.font = 'bold 14px Inter, sans-serif';
-      ctx.fillText('- ' + author, 14, 222);
-
-      const tex = new THREE.CanvasTexture(c);
-      const note = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.52), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-      note.position.set(b.centerX - 0.9 + (i % 4) * 0.6, 1.9 - Math.floor(i / 4) * 0.65, b.centerZ - 4.68);
-      note.userData = {
-        clickable: true,
-        isIndividualSticky: true,
-        stickyData: { id: noteId, author, text: txt, userId: uId },
-        englishName: 'Sticky Note by ' + author
-      };
-      this.clickableObjects.push(note);
-      grp.add(note);
-      this.stickyNotes.push(note);
-    });
-  }
-
-  async adicionarStickyNote(texto, emitirRede = true) {
-    const limpo = String(texto ? texto : '').trim();
-    if (!limpo || !this.localPlayer) return;
-    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
-
-    const res = await fetch('/api/workspace/english-spaces/world/stickies', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        escolaId,
-        author: this.localPlayer.nome,
-        userId: this.localPlayer.userId,
-        text: limpo
-      })
-    }).then(r => r.json()).catch(() => null);
-
-    if (res && res.success && Array.isArray(res.notes)) {
-      this.cloudStickyNotes = res.notes;
-      this.renderizarStickyNotesNoCoffee();
-    }
-    if (emitirRede) {
-      await DOVRYX.add(20, 'Sticky Note');
-    }
-  }
-
-  async editarStickyNote(noteId, novoTexto) {
-    if (!noteId || !novoTexto || !this.localPlayer) return;
-    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
-    const res = await fetch(`/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        escolaId,
-        userId: this.localPlayer.userId,
-        text: novoTexto
-      })
-    }).then(r => r.json()).catch(() => null);
-
-    if (res && res.success && Array.isArray(res.notes)) {
-      this.cloudStickyNotes = res.notes;
-      this.renderizarStickyNotesNoCoffee();
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('✏️ Sticky note updated!', 'success');
-    }
-  }
-
-  async removerStickyNote(noteId) {
-    if (!noteId || !this.localPlayer) return;
-    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
-    const url = `/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}?userId=${encodeURIComponent(this.localPlayer.userId)}&escolaId=${encodeURIComponent(escolaId)}`;
-    const res = await fetch(url, { method: 'DELETE', credentials: 'include' }).then(r => r.json()).catch(() => null);
-
-    if (res && res.success && Array.isArray(res.notes)) {
-      this.cloudStickyNotes = res.notes;
-      this.renderizarStickyNotesNoCoffee();
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🗑️ Sticky note deleted!', 'info');
-    }
-  }
-
-  criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-
-    const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
-    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
-    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
-    const matCabelo = new THREE.MeshStandardMaterial({ color: isFemale ? 0x5c2b0e : 0x1e1e22, roughness: 0.85 });
-    const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
-    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe });
-    const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
-    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xe11d48 : 0x8b4a3e });
-    const matSobrancelha = new THREE.MeshStandardMaterial({ color: 0x2b2b2b });
-
-    const torsoW = isFemale ? 0.43 : 0.54;
-    const shoulderW = isFemale ? 0.24 : 0.34;
-    const hipW = isFemale ? 0.50 : 0.48;
-
-    const footGeo = new THREE.BoxGeometry(0.2, 0.14, 0.3);
-    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
-    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.13, 0.07, 0.05);
-    group.add(leftFoot, rightFoot);
-
-    const legGeo = new THREE.CylinderGeometry(0.1, 0.085, 0.82, 12); legGeo.translate(0, -0.41, 0);
-    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.13, 0.88, 0);
-    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
-    group.add(leftLeg, rightLeg);
-
-    const hipGeo = new THREE.BoxGeometry(hipW, 0.18, 0.28);
-    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
-
-    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.70, 0.28);
-    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.34, 0); group.add(torso);
-
-    if (isFemale) {
-      const skirtGeo = new THREE.CylinderGeometry(0.22, 0.31, 0.34, 14);
-      const skirt = new THREE.Mesh(skirtGeo, matCalca); skirt.position.set(0, 0.86, 0);
-      const chestGeo = new THREE.SphereGeometry(0.12, 10, 10);
-      const chestL = new THREE.Mesh(chestGeo, matCamisa); chestL.position.set(-0.11, 1.43, 0.15); chestL.scale.set(1, 0.85, 0.55);
-      const chestR = new THREE.Mesh(chestGeo, matCamisa); chestR.position.set(0.11, 1.43, 0.15); chestR.scale.set(1, 0.85, 0.55);
-      group.add(skirt, chestL, chestR);
-    }
-
-    const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
-    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
-    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);
-    group.add(leftShoulder, rightShoulder);
-
-    const armGeo = new THREE.CylinderGeometry(0.07, 0.06, 0.62, 10); armGeo.translate(0, -0.31, 0);
-    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.62, 0);
-    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.62, 0);
-    group.add(leftArm, rightArm);
-
-    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
-    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
-    const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1, 1.2, 1.5);
-    const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
-
-    let hairMesh;
-    if (isFemale) {
-      const hairTopGeo = new THREE.SphereGeometry(0.305, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.85);
-      hairMesh = new THREE.Mesh(hairTopGeo, matCabelo); hairMesh.position.set(0, 0.02, -0.02);
-      const ponytailGeo = new THREE.CylinderGeometry(0.08, 0.13, 0.42, 10); ponytailGeo.translate(0, -0.21, 0);
-      const ponytail = new THREE.Mesh(ponytailGeo, matCabelo); ponytail.position.set(0, -0.05, -0.27); ponytail.rotation.x = 0.28;
-      headGroup.add(ponytail);
-    } else {
-      const hairGeo = new THREE.SphereGeometry(0.285, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
-      hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.07, 0);
-    }
-
-    const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 10, 10);
-    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
-    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.06, 0.22);
-    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.06, 0.255);
-    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.06, 0.22);
-    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.06, 0.255);
-
-    const browGeo = new THREE.BoxGeometry(0.09, 0.015, 0.01);
-    const leftBrow = new THREE.Mesh(browGeo, matSobrancelha); leftBrow.position.set(-0.09, 0.12, 0.235);
-    const rightBrow = new THREE.Mesh(browGeo, matSobrancelha); rightBrow.position.set(0.09, 0.12, 0.235);
-    const mouthMesh = new THREE.Mesh(new THREE.BoxGeometry(isFemale ? 0.075 : 0.06, 0.02, 0.01), matBoca);
-    mouthMesh.position.set(0, -0.11, 0.25);
-
-    headGroup.add(headMesh, hairMesh, noseMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil, leftBrow, rightBrow, mouthMesh);
-    group.add(headGroup);
-
-    const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; ringMesh.userData.isRing = true;
-    group.add(ringMesh);
-
-    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, matCamisa, matCalca, matSapato, walkPhase: 0, emotePhase: 0, isEmoting: false, isFemale };
-    return group;
-  }
-
- async alternarGeneroMeuAvatar() {
+  constructor() {
+    this.active = false;
+    this.parentManager = null;
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.animFrame = null;
+    this.clock = null;
+
+    this.buildingsMeta = [];
+    this.buildingMeshes = new Map();
+    this.npcs3D = new Map();
+    this.otherPlayers3D = new Map();
+    this.localPlayer = null;
+
+    this.keys = {};
+    this.cameraYaw = 0;
+    this.cameraPitch = 0.15;
+    this.isDraggingCam = false;
+    this.dragStartX = 0;
+    this.dragStartY = 0;
+    this._startYaw = 0;
+    this._startPitch = 0;
+
+    this.nearbyTargets = [];
+    this.currentZoneId = 'street';
+    this.lastSyncTime = 0;
+    this.sseConnection = null;
+    this.pollInterval = null;
+    this.dayNightInterval = null;
+    this.flightBoardInterval = null;
+
+    this.sunMesh = null;
+    this.moonMesh = null;
+    this.starsGroup = null;
+    this.cloudsGroup = null;
+    this.ambientLight = null;
+    this.dirLight = null;
+
+    this.cars = [];
+    this.avioes = [];
+    this.pedestrians = [];
+    this.clickableObjects = [];
+    this.outdoors = [];
+    this.posteLights = [];
+    this.audioCtx = null;
+    this.lastDoorEnter = null;
+    this.footprints = [];
+    this.lastFootprint = 0;
+    this.vitrines = [];
+    this.musician = null;
+    this.stickyNotes = [];
+    this.cloudStickyNotes = [];
+    this.cloudAvatarConfig = null;
+    this.polaroidCam = null;
+    this.flightBoard = null;
+
+    this.exteriorGroup = null;
+    this.interiorGroups = new Map();
+    this.doors = new Map();
+    this.modoInterior = false;
+    this.predioAtual = null;
+    this.topLeaderText = 'Leader: Paulo - 1,250 XP';
+    this.animais = { caes: [], gatos: [], passaros: [], passarosGroup: null };
+    this.adoptedPet = null;
+  }
+
+  formatarNomeCompleto(nomeBruto) {
+    const limpo = String(nomeBruto ? nomeBruto : 'Student').replace(/\(@.*\)/, '').trim();
+    const partes = limpo.split(/\s+/).filter(Boolean);
+    if (partes.length <= 2) return partes.join(' ');
+    return `${partes[0]} ${partes[partes.length - 1]}`;
+  }
+
+  detetarGeneroPadrao(u) {
+    if (this.cloudAvatarConfig && typeof this.cloudAvatarConfig.isFemale === 'boolean') {
+      return this.cloudAvatarConfig.isFemale;
+    }
+    const gen = String((u && (u.genero || u.sexo)) ? (u.genero || u.sexo) : '').toLowerCase();
+    if (gen.startsWith('f') || gen.startsWith('m')) return gen.startsWith('f');
+    const primeiroNome = String((u && (u.nome || u.login)) ? (u.nome || u.login) : '').trim().split(/\s+/)[0].toLowerCase();
+    return primeiroNome.endsWith('a') && !['luca', 'joshua', 'nikola'].includes(primeiroNome);
+  }
+
+  async carregarEstadoInicialNuvem() {
+    const u = window.Workspace?.usuario || {};
+    const uid = String(u.id ? u.id : 'demo_user');
+    const escolaId = String(u.escolaId ? u.escolaId : 'DEFAULT');
+    try {
+      const [resProg, resStickies] = await Promise.all([
+        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(uid)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
+        fetch(`/api/workspace/english-spaces/world/stickies?escolaId=${encodeURIComponent(escolaId)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null)
+      ]);
+
+      if (resProg && resProg.success) {
+        const cfg = (resProg.data && resProg.data.avatarConfig) ? resProg.data.avatarConfig : ((resProg.compatibility && resProg.compatibility.avatarConfig) ? resProg.compatibility.avatarConfig : {});
+        this.cloudAvatarConfig = cfg;
+        if (this.parentManager && typeof resProg.compatibility?.xp === 'number') {
+          this.parentManager.progressData.xp = Math.max(this.parentManager.progressData.xp || 0, resProg.compatibility.xp);
+        }
+        if (this.localPlayer) {
+          const femSalvo = typeof cfg.isFemale === 'boolean' ? cfg.isFemale : this.localPlayer.isFemale;
+          const corCamisaSalva = typeof cfg.shirtColor === 'number' ? cfg.shirtColor : (femSalvo ? 0xec4899 : 0x8b5cf6);
+          const corSapatoSalvo = typeof cfg.shoeColor === 'number' ? cfg.shoeColor : 0x111111;
+
+          this.localPlayer.isFemale = femSalvo;
+          this.localPlayer.shirtColor = corCamisaSalva;
+          this.localPlayer.shoeColor = corSapatoSalvo;
+          this.localPlayer.petType = cfg.petType ? cfg.petType : null;
+
+          const btn = document.getElementById('es-city-gender-btn');
+          if (btn) btn.innerHTML = femSalvo ? '👩 Female' : '🧑 Male';
+
+          const oldMesh = this.localPlayer.mesh;
+          const newMesh = this.criarBonecoHumano3D(corCamisaSalva, 0x1e1b4b, 0xfde68a, femSalvo);
+          if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoSalvo);
+          newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
+          newMesh.rotation.y = this.localPlayer.rotY;
+          this.scene.remove(oldMesh);
+          this.scene.add(newMesh);
+          this.localPlayer.mesh = newMesh;
+
+          if (cfg.petType === 'pet_dog' || cfg.petType === 'pet_cat') {
+            this.aplicarItemCompradoNoAvatar({ tipo: cfg.petType });
+          }
+          this.enviarMinhaPosicaoServidor();
+        }
+      }
+
+      if (resStickies && resStickies.success && Array.isArray(resStickies.notes)) {
+        this.cloudStickyNotes = resStickies.notes;
+        this.renderizarStickyNotesNoCoffee();
+      }
+    } catch (e) {}
+  }
+
+  async carregarThreeJS() {
+    if (window.THREE) return window.THREE;
+    return new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
+      script.onload = () => resolve(window.THREE);
+      script.onerror = reject;
+      document.head.appendChild(script);
+    });
+  }
+
+  garantirAudioAtivo() {
+    try {
+      if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+    } catch (e) {}
+    return this.audioCtx;
+  }
+
+  async abrirCidade3D(parentManager, initialSpaceId = 'coffee') {
+    this.parentManager = parentManager;
+    const containerRoot = document.getElementById('english-spaces-root');
+    if (!containerRoot) return;
+
+    const u = window.Workspace?.usuario || {};
+    const isFemInicial = this.detetarGeneroPadrao(u);
+
+    containerRoot.innerHTML = `
+      <style>
+        body { overflow: hidden !important; }
+        #es-city-wrapper { position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; background: #05070e !important; z-index: 1000020 !important; font-family: 'Inter','Geist','Poppins',sans-serif !important; user-select: none !important; overflow: hidden !important; }
+        #es-city-Hud-card, #es-city-teleport, #es-city-chat-feed { position: absolute !important; width: 0 !important; height: 0 !important; overflow: hidden !important; opacity: 0 !important; pointer-events: none !important; }
+        #es-city-viewport { position: absolute !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; z-index: 1 !important; touch-action: none !important; }
+        #es-city-viewport canvas { display: block !important; width: 100% !important; height: 100% !important; }
+        #es-city-labels-layer { position: absolute; inset: 0; pointer-events: none; z-index: 10; overflow: hidden; }
+        .es-ref-top-area { position: absolute; top: 0; left: 0; right: 0; z-index: 30; padding: max(16px, env(safe-area-inset-top)) 20px 0 20px; display: flex; flex-direction: column; gap: 10px; pointer-events: none; }
+        .es-ref-subbar { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+        #es-city-zone-badge { pointer-events: auto; background: linear-gradient(135deg, rgba(139,92,246,0.28), rgba(124,58,237,0.22)) !important; border: 1px solid rgba(167,139,250,0.42) !important; color: #ede9fe !important; padding: 7px 14px !important; border-radius: 999px !important; font-size: 12px !important; font-weight: 800 !important; backdrop-filter: blur(16px) saturate(1.2); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+        .es-top-right-btns { display: flex; align-items: center; gap: 8px; pointer-events: auto; }
+        #es-city-gender-btn, #es-city-exit-btn { background: rgba(18, 20, 36, 0.82) !important; border: 1px solid rgba(255, 255, 255, 0.16) !important; color: #e2e8f0 !important; padding: 8px 14px !important; border-radius: 999px !important; font-size: 12px !important; font-weight: 700 !important; cursor: pointer !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); transition: 0.2s; }
+        #es-city-gender-btn:hover { background: rgba(139, 92, 246, 0.45) !important; color: #fff !important; }
+        #es-city-exit-btn:hover { background: rgba(239, 68, 68, 0.88) !important; color: #fff !important; }
+        .es-ref-proximity-wrap { display: flex; justify-content: center; padding: 2px 0; }
+        #es-city-proximity-badge { pointer-events: auto; background: rgba(18, 20, 36, 0.76) !important; border: 1px solid rgba(255,255,255,0.14) !important; color: #cbd5e1 !important; padding: 6px 14px !important; border-radius: 999px !important; font-size: 11.5px !important; font-weight: 700 !important; backdrop-filter: blur(16px); box-shadow: 0 6px 18px rgba(0,0,0,0.28); display: inline-flex !important; align-items: center !important; gap: 6px !important; }
+        .es-city-label { position: relative; background: rgba(12,14,28,0.86); border: 1px solid rgba(139,92,246,0.32); color: #e9d5ff; padding: 6px 12px; border-radius: 999px; font-size: 11.5px; font-weight: 700; white-space: nowrap; backdrop-filter: blur(14px); box-shadow: 0 8px 20px rgba(0,0,0,0.35); pointer-events: none; display: inline-flex; align-items: center; gap: 6px; }
+        .es-city-label.me { background: rgba(18,22,48,0.92); border-color: rgba(59,130,246,0.5); color: #dbeafe; }
+        .es-dpad-circle { position: absolute !important; right: 22px !important; bottom: 96px !important; width: 112px !important; height: 112px !important; border-radius: 50% !important; background: radial-gradient(circle at 35% 35%, rgba(255,255,255,0.08), rgba(18,20,36,0.72)) !important; border: 1px solid rgba(255,255,255,0.14) !important; backdrop-filter: blur(18px) saturate(1.2) !important; box-shadow: 0 12px 28px rgba(0,0,0,0.4) !important; z-index: 20 !important; display: grid !important; grid-template-areas: ". up ." "left . right" ". down ." !important; place-items: center !important; padding: 8px !important; }
+        .es-move-pad { width: 32px !important; height: 32px !important; border-radius: 50% !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #cbd5e1 !important; font-size: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
+        .es-move-pad[data-dir="up"] { grid-area: up; } .es-move-pad[data-dir="left"] { grid-area: left; } .es-move-pad[data-dir="right"] { grid-area: right; } .es-move-pad[data-dir="down"] { grid-area: down; }
+        .es-move-pad:active, .es-move-pad:hover { background: rgba(139,92,246,0.34) !important; color: #fff !important; }
+        .es-ref-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 16px max(14px, env(safe-area-inset-bottom)) 16px; background: rgba(14, 16, 28, 0.88) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 20px !important; backdrop-filter: blur(22px) saturate(1.25) !important; box-shadow: 0 16px 40px rgba(0,0,0,0.45) !important; }
+        #es-city-voice-btn { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; box-shadow: 0 8px 18px rgba(16,185,129,0.32) !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
+        #es-city-speak-nearby-pill { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; box-shadow: 0 8px 18px rgba(139,92,246,0.32) !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
+        .es-ref-input-group { flex: 1 !important; height: 46px !important; display: flex !important; align-items: center !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 14px !important; padding: 0 6px 0 14px !important; gap: 6px !important; }
+        #es-city-chat-input { flex: 1 !important; background: transparent !important; border: none !important; outline: none !important; color: #f8fafc !important; font-size: 13.5px !important; font-weight: 500 !important; width: 100% !important; }
+        #es-city-send-btn { width: 36px !important; height: 36px !important; border-radius: 10px !important; background: rgba(255,255,255,0.08) !important; color: #e2e8f0 !important; border: none !important; display: flex !important; align-items: center !important; justify-content: center !important; font-size: 15px !important; cursor: pointer !important; flex-shrink: 0; }
+        .es-speech-bubble { position: relative; background: #ffffff; color: #0f172a; padding: 8px 13px; border-radius: 14px; font-size: 12.5px; font-weight: 700; line-height: 1.35; max-width: 220px; text-align: center; margin-bottom: 8px; box-shadow: 0 12px 28px rgba(0,0,0,0.35); pointer-events: none; z-index: 15; }
+        .es-speech-bubble::after { content: ''; position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%) rotate(45deg); width: 10px; height: 10px; background: #fff; }
+        @media (max-width: 600px) { .es-ref-bottom-bar { padding: 10px; gap: 8px; margin: 0 12px max(12px, env(safe-area-inset-bottom)) 12px; border-radius: 18px; } #es-city-voice-btn, #es-city-speak-nearby-pill { padding: 0 12px !important; height: 42px !important; font-size: 12px !important; } .es-dpad-circle { width: 100px !important; height: 100px !important; right: 14px !important; bottom: 84px !important; } }
+      </style>
+      <div id="es-city-wrapper">
+        <div class="es-ref-top-area">
+          <div class="es-ref-subbar">
+            <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
+            <div class="es-top-right-btns">
+              <button type="button" id="es-city-gender-btn" title="Alternar Avatar Masculino / Feminino">${isFemInicial ? '👩 Female' : '🧑 Male'}</button>
+              <button type="button" id="es-city-exit-btn">⇄ Exit 3D World</button>
+            </div>
+          </div>
+          <div class="es-ref-proximity-wrap">
+            <span id="es-city-proximity-badge">• Out of Range</span>
+          </div>
+        </div>
+        <select id="es-city-teleport"><option value=""></option></select>
+        <div id="es-city-Hud-card"><div id="es-city-hud-content"></div></div>
+        <div id="es-city-chat-feed"></div>
+        <div id="es-city-viewport">
+          <div id="es-city-labels-layer"></div>
+          <div class="es-dpad-circle">
+            <button type="button" class="es-move-pad" data-dir="up">▲</button>
+            <button type="button" class="es-move-pad" data-dir="left">◀</button>
+            <button type="button" class="es-move-pad" data-dir="right">▶</button>
+            <button type="button" class="es-move-pad" data-dir="down">▼</button>
+          </div>
+        </div>
+        <div class="es-ref-bottom-bar">
+          <button type="button" id="es-city-voice-btn">🎤 Voice Mic</button>
+          <button type="button" id="es-city-speak-nearby-pill" onclick="document.getElementById('es-city-chat-input')?.focus()">🔊 Speak Nearby</button>
+          <div class="es-ref-input-group">
+            <input type="text" id="es-city-chat-input" placeholder="Type message..." autocomplete="off" />
+            <button type="button" id="es-city-send-btn">➤</button>
+          </div>
+        </div>
+      </div>
+    `;
+
+    try { await this.carregarThreeJS(); } catch (e) { return; }
+    this.active = true;
+    this.modoInterior = false;
+    this.predioAtual = null;
+    this.carregarLiderRankingReal();
+    this.carregarEstadoInicialNuvem();
+    this.inicializarCenaThreeJS(initialSpaceId);
+    this.configurarEventosControles();
+    this.iniciarMultiplayerRealtime();
+  }
+
+  async carregarLiderRankingReal() {
+    if (!window.Workspace?.api) return;
+    try {
+      const escolaId = window.Workspace?.usuario?.escolaId || 'DEFAULT';
+      const res = await window.Workspace.api(`/workspace/ingles/ranking?escolaId=${encodeURIComponent(escolaId)}`, 'GET');
+      if (res && res.success && Array.isArray(res.ranking) && res.ranking.length > 0) {
+        const top1 = res.ranking[0];
+        const xp = top1.coins?.bronze || 1250;
+        this.topLeaderText = `Leader: ${this.formatarNomeCompleto(top1.nome)} - ${xp} XP`;
+      }
+    } catch (e) {}
+  }
+
+  falarTextoNPC(texto, spaceId = null) {
+    if (!('speechSynthesis' in window) || !texto) return;
+    window.speechSynthesis.cancel();
+    const u = new SpeechSynthesisUtterance(texto);
+    const cfg = CITY_BUILDINGS_LAYOUT.find(b => b.id === (spaceId || this.currentZoneId));
+    u.lang = cfg?.voiceLang || 'en-US';
+    u.pitch = cfg?.voicePitch || 1.0;
+    u.rate = 0.94;
+    window.speechSynthesis.speak(u);
+  }
+
+  // 📌 MODAIS DE POST-IT (CRIAÇÃO, LEITURA AMPLIADA E EDIÇÃO/EXCLUSÃO EXCLUSIVA DO AUTOR NO MONGODB)
+  abrirModalCriarStickyNote(notaParaEditar = null) {
+    document.getElementById('es-sticky-modal')?.remove();
+    const textoInicial = notaParaEditar ? notaParaEditar.text : '';
+    const tituloModal = notaParaEditar ? '✏️ Edit Your Sticky Note' : '📌 New English Sticky Note';
+
+    const html = `
+      <div id="es-sticky-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:16px; padding:24px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.5); transform:rotate(-1deg);">
+          <h3 style="color:#422006; margin:0 0 10px; font-size:18px;">${tituloModal}</h3>
+          <p style="color:#78350f; font-size:12.5px; margin:0 0 12px;">Write a short message or tip for the Coffee Shop wall:</p>
+          <textarea id="es-sticky-text" maxlength="80" placeholder="Type here in English..." style="width:100%; height:95px; background:#fffdf0; border:1px solid #d97706; border-radius:10px; padding:10px; color:#422006; font-size:14.5px; font-weight:600; resize:none; outline:none; box-sizing:border-box;">${textoInicial}</textarea>
+          <div style="display:flex; gap:8px; margin-top:14px;">
+            <button id="es-sticky-cancel" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
+            <button id="es-sticky-save" style="flex:1.3; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">${notaParaEditar ? 'Save Changes ✅' : 'Pin to Wall 📌'}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('es-sticky-text')?.focus();
+
+    document.getElementById('es-sticky-cancel')?.addEventListener('click', () => document.getElementById('es-sticky-modal')?.remove());
+    document.getElementById('es-sticky-save')?.addEventListener('click', () => {
+      const txt = document.getElementById('es-sticky-text')?.value;
+      if (txt && txt.trim()) {
+        if (notaParaEditar && notaParaEditar.id) {
+          this.editarStickyNote(notaParaEditar.id, txt.trim());
+        } else {
+          this.adicionarStickyNote(txt.trim(), true);
+        }
+      }
+      document.getElementById('es-sticky-modal')?.remove();
+    });
+  }
+
+  abrirModalLerStickyNote(notaObj) {
+    document.getElementById('es-sticky-view-modal')?.remove();
+    const meuId = String(this.localPlayer ? this.localPlayer.userId : '');
+    const isAutor = Boolean(notaObj.userId && String(notaObj.userId) === meuId);
+    const nomeAutor = notaObj.author ? notaObj.author : 'Student';
+
+    const botoesAutor = isAutor ? `
+      <button id="es-sticky-edit" style="flex:1; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Edit ✏️</button>
+      <button id="es-sticky-delete" style="flex:1; padding:10px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Delete 🗑️</button>
+    ` : '';
+
+    const html = `
+      <div id="es-sticky-view-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:18px; padding:24px; width:100%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6); transform:rotate(1deg);">
+          <div style="font-size:28px; margin-bottom:4px;">📌</div>
+          <p style="color:#78350f; font-size:11.5px; font-weight:800; margin:0 0 8px; text-transform:uppercase; letter-spacing:0.5px;">Note by ${nomeAutor}</p>
+          <div style="background:#fffdf0; border:1px solid #d97706; border-radius:12px; padding:16px; color:#422006; font-size:15.5px; font-weight:700; line-height:1.45; word-break:break-word; margin-bottom:16px; min-height:60px; display:flex; align-items:center; justify-content:center;">
+            "${notaObj.text}"
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="es-sticky-close" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Close</button>
+            ${botoesAutor}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    document.getElementById('es-sticky-close')?.addEventListener('click', () => document.getElementById('es-sticky-view-modal')?.remove());
+    if (isAutor) {
+      document.getElementById('es-sticky-edit')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.abrirModalCriarStickyNote(notaObj);
+      });
+      document.getElementById('es-sticky-delete')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.removerStickyNote(notaObj.id);
+      });
+    }
+  }
+
+  criarStickyNotesParede() {
+    const b = this.buildingsMeta.find(x => x.id === 'coffee');
+    if (!b) return;
+    this.renderizarStickyNotesNoCoffee();
+
+    const THREE = window.THREE;
+    const addArea = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.6, 1.8),
+      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.16, side: THREE.DoubleSide })
+    );
+    addArea.position.set(b.centerX, 1.6, b.centerZ - 4.76);
+    addArea.userData = { clickable: true, isStickyWall: true, englishName: 'Sticky Note Wall' };
+    this.clickableObjects.push(addArea);
+    const grp = this.interiorGroups.get('coffee');
+    if (grp) grp.add(addArea);
+  }
+
+  renderizarStickyNotesNoCoffee() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'coffee');
+    if (!b) return;
+    const grp = this.interiorGroups.get('coffee') ? this.interiorGroups.get('coffee') : this.scene;
+    this.stickyNotes.forEach(n => {
+      grp.remove(n);
+      const idx = this.clickableObjects.indexOf(n);
+      if (idx > -1) this.clickableObjects.splice(idx, 1);
+    });
+    this.stickyNotes = [];
+
+    const saved = (Array.isArray(this.cloudStickyNotes) && this.cloudStickyNotes.length > 0)
+      ? this.cloudStickyNotes
+      : [
+          { id: 'seed_1', author: 'Paulo', text: 'Hello from Bahia!', userId: 'seed' },
+          { id: 'seed_2', author: 'Teacher', text: 'Coffee first, English second!', userId: 'seed' }
+        ];
+
+    saved.slice(0, 8).forEach((item, i) => {
+      const txt = typeof item === 'string' ? item : (item.text ? item.text : '');
+      const author = typeof item === 'string' ? 'Student' : (item.author ? item.author : 'Student');
+      const noteId = typeof item === 'string' ? ('seed_' + i) : (item.id ? item.id : ('seed_' + i));
+      const uId = typeof item === 'string' ? '' : (item.userId ? item.userId : '');
+
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = i % 2 === 0 ? '#fef08a' : '#fed7aa';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 250);
+      ctx.fillStyle = '#422006'; ctx.font = 'bold 18px Inter, sans-serif';
+      ctx.fillText(String(txt).slice(0, 18), 14, 65);
+      if (txt.length > 18) ctx.fillText(String(txt).slice(18, 36), 14, 98);
+      if (txt.length > 36) ctx.fillText(String(txt).slice(36, 54) + '...', 14, 131);
+      ctx.fillStyle = '#78350f'; ctx.font = 'bold 14px Inter, sans-serif';
+      ctx.fillText('- ' + author, 14, 222);
+
+      const tex = new THREE.CanvasTexture(c);
+      const note = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.52), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+      note.position.set(b.centerX - 0.9 + (i % 4) * 0.6, 1.9 - Math.floor(i / 4) * 0.65, b.centerZ - 4.68);
+      note.userData = {
+        clickable: true,
+        isIndividualSticky: true,
+        stickyData: { id: noteId, author, text: txt, userId: uId },
+        englishName: 'Sticky Note by ' + author
+      };
+      this.clickableObjects.push(note);
+      grp.add(note);
+      this.stickyNotes.push(note);
+    });
+  }
+
+  async adicionarStickyNote(texto, emitirRede = true) {
+    const limpo = String(texto ? texto : '').trim();
+    if (!limpo || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+
+    const res = await fetch('/api/workspace/english-spaces/world/stickies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        escolaId,
+        author: this.localPlayer.nome,
+        userId: this.localPlayer.userId,
+        text: limpo
+      })
+    }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+    }
+    if (emitirRede) {
+      this.parentManager?.registarMissaoConcluida('coffee', 'sticky_note', 20);
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Sticky note pinned to the Coffee Shop wall (+20 XP)!', 'success');
+    }
+  }
+
+  async editarStickyNote(noteId, novoTexto) {
+    if (!noteId || !novoTexto || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+    const res = await fetch(`/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        escolaId,
+        userId: this.localPlayer.userId,
+        text: novoTexto
+      })
+    }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('✏️ Sticky note updated!', 'success');
+    }
+  }
+
+  async removerStickyNote(noteId) {
+    if (!noteId || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+    const url = `/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}?userId=${encodeURIComponent(this.localPlayer.userId)}&escolaId=${encodeURIComponent(escolaId)}`;
+    const res = await fetch(url, { method: 'DELETE', credentials: 'include' }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🗑️ Sticky note deleted!', 'info');
+    }
+  }
+
+  criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
+    const THREE = window.THREE;
+    const group = new THREE.Group();
+
+    const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
+    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
+    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
+    const matCabelo = new THREE.MeshStandardMaterial({ color: isFemale ? 0x5c2b0e : 0x1e1e22, roughness: 0.85 });
+    const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
+    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe });
+    const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xe11d48 : 0x8b4a3e });
+    const matSobrancelha = new THREE.MeshStandardMaterial({ color: 0x2b2b2b });
+
+    const torsoW = isFemale ? 0.43 : 0.54;
+    const shoulderW = isFemale ? 0.24 : 0.34;
+    const hipW = isFemale ? 0.50 : 0.48;
+
+    const footGeo = new THREE.BoxGeometry(0.2, 0.14, 0.3);
+    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
+    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.13, 0.07, 0.05);
+    group.add(leftFoot, rightFoot);
+
+    const legGeo = new THREE.CylinderGeometry(0.1, 0.085, 0.82, 12); legGeo.translate(0, -0.41, 0);
+    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.13, 0.88, 0);
+    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
+    group.add(leftLeg, rightLeg);
+
+    const hipGeo = new THREE.BoxGeometry(hipW, 0.18, 0.28);
+    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
+
+    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.70, 0.28);
+    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.34, 0); group.add(torso);
+
+    if (isFemale) {
+      const skirtGeo = new THREE.CylinderGeometry(0.22, 0.31, 0.34, 14);
+      const skirt = new THREE.Mesh(skirtGeo, matCalca); skirt.position.set(0, 0.86, 0);
+      const chestGeo = new THREE.SphereGeometry(0.12, 10, 10);
+      const chestL = new THREE.Mesh(chestGeo, matCamisa); chestL.position.set(-0.11, 1.43, 0.15); chestL.scale.set(1, 0.85, 0.55);
+      const chestR = new THREE.Mesh(chestGeo, matCamisa); chestR.position.set(0.11, 1.43, 0.15); chestR.scale.set(1, 0.85, 0.55);
+      group.add(skirt, chestL, chestR);
+    }
+
+    const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
+    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
+    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);
+    group.add(leftShoulder, rightShoulder);
+
+    const armGeo = new THREE.CylinderGeometry(0.07, 0.06, 0.62, 10); armGeo.translate(0, -0.31, 0);
+    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.62, 0);
+    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.62, 0);
+    group.add(leftArm, rightArm);
+
+    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
+    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
+    const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1, 1.2, 1.5);
+    const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
+
+    let hairMesh;
+    if (isFemale) {
+      const hairTopGeo = new THREE.SphereGeometry(0.305, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.85);
+      hairMesh = new THREE.Mesh(hairTopGeo, matCabelo); hairMesh.position.set(0, 0.02, -0.02);
+      const ponytailGeo = new THREE.CylinderGeometry(0.08, 0.13, 0.42, 10); ponytailGeo.translate(0, -0.21, 0);
+      const ponytail = new THREE.Mesh(ponytailGeo, matCabelo); ponytail.position.set(0, -0.05, -0.27); ponytail.rotation.x = 0.28;
+      headGroup.add(ponytail);
+    } else {
+      const hairGeo = new THREE.SphereGeometry(0.285, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
+      hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.07, 0);
+    }
+
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 10, 10);
+    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
+    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.06, 0.22);
+    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.06, 0.255);
+    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.06, 0.22);
+    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.06, 0.255);
+
+    const browGeo = new THREE.BoxGeometry(0.09, 0.015, 0.01);
+    const leftBrow = new THREE.Mesh(browGeo, matSobrancelha); leftBrow.position.set(-0.09, 0.12, 0.235);
+    const rightBrow = new THREE.Mesh(browGeo, matSobrancelha); rightBrow.position.set(0.09, 0.12, 0.235);
+    const mouthMesh = new THREE.Mesh(new THREE.BoxGeometry(isFemale ? 0.075 : 0.06, 0.02, 0.01), matBoca);
+    mouthMesh.position.set(0, -0.11, 0.25);
+
+    headGroup.add(headMesh, hairMesh, noseMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil, leftBrow, rightBrow, mouthMesh);
+    group.add(headGroup);
+
+    const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; ringMesh.userData.isRing = true;
+    group.add(ringMesh);
+
+    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, matCamisa, matCalca, matSapato, walkPhase: 0, emotePhase: 0, isEmoting: false, isFemale };
+    return group;
+  }
+
+  async alternarGeneroMeuAvatar() {
     if (!this.localPlayer || !this.scene) return;
     const novoFem = !this.localPlayer.isFemale;
     this.localPlayer.isFemale = novoFem;
@@ -1308,7 +644,7 @@ class EnglishSpaces3DWorld {
   }
 
   aplicarItemCompradoNoAvatar(item) {
-    if (!this.localPlayer?.mesh?.userData || !item) return;
+    if (!this.localPlayer?.mesh?.userData) return;
     const ud = this.localPlayer.mesh.userData;
     if (item.tipo === 'shirt' && ud.matCamisa) {
       ud.matCamisa.color.setHex(item.cor);
@@ -1323,22 +659,12 @@ class EnglishSpaces3DWorld {
       this.scene.add(petMesh);
       this.adoptedPet = petMesh;
       this.localPlayer.petType = item.tipo;
-    } else if (item.tipo === 'vehicle' && item.vehicleType) {
-      if (!this.ownedVehicles.includes(item.vehicleType)) {
-        this.ownedVehicles.push(item.vehicleType);
-      }
-      this.alternarOuMontarVeiculo(item.vehicleType);
-    } else if (item.tipo === 'material') {
-      this.materialsCount = (this.materialsCount || 0) + (item.units || 1);
-    } else if (item.tipo === 'house_upgrade') {
-      this.houseStage = Math.min(5, Math.max(this.houseStage || 1, item.targetStage || (this.houseStage + 1)));
-      this.criarLoteamentoResidencial();
     }
   }
 
   abrirLojaXPModal(buildingId, item) {
     document.getElementById('shop-modal')?.remove();
-    const saldoDRX = DOVRYX.getBalance();
+    const xpAtual = Number(this.parentManager?.progressData?.xp) || Number(this.parentManager?._statsAlunoCache?.coins?.bronze) || 500;
     const precoVoz = Math.max(10, Math.round(item.preco * 0.8));
 
     const html = `
@@ -1346,15 +672,15 @@ class EnglishSpaces3DWorld {
         <div style="background:#0f172a; border:2px solid #8b5cf6; border-radius:20px; padding:24px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.65);">
           <div style="font-size:52px;">${item.emoji}</div>
           <h2 style="color:#f8fafc; margin:10px 0 6px; font-size:20px;">${item.nome}</h2>
-          <p style="color:#94a3b8; font-size:13.5px; margin:0 0 12px;">Price: <b style="color:#facc15;">${item.preco} DRX</b> • Wallet: <b style="color:#34d399;">${saldoDRX.toLocaleString('pt-BR')} DRX 💎</b></p>
+          <p style="color:#94a3b8; font-size:13.5px; margin:0 0 12px;">Price: <b style="color:#facc15;">${item.preco} XP</b> • Your Balance: <b style="color:#34d399;">${xpAtual} XP</b></p>
           <div style="background:rgba(139,92,246,0.15); border:1px solid rgba(167,139,250,0.35); border-radius:12px; padding:10px; margin-bottom:16px; color:#e9d5ff; font-size:13px;">
             🎙️ <b>Voice Discount (-20%):</b> Say:<br><i>"I would like to buy ${item.nome}"</i>
           </div>
           <div style="display:flex; flex-direction:column; gap:8px;">
-            <button id="shop-voice-buy" style="padding:12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13.5px;">🎤 Speak in English (${precoVoz} DRX)</button>
+            <button id="shop-voice-buy" style="padding:12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13.5px;">🎤 Speak in English (${precoVoz} XP)</button>
             <div style="display:flex; gap:8px;">
               <button id="shop-cancel" style="flex:1; padding:11px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Cancel</button>
-              <button id="shop-buy" style="flex:1.3; padding:11px; background:#8b5cf6; color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer;">💎 Buy (${item.preco} DRX)</button>
+              <button id="shop-buy" style="flex:1.3; padding:11px; background:#8b5cf6; color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer;">💳 Buy (${item.preco} XP)</button>
             </div>
           </div>
         </div>
@@ -1363,15 +689,16 @@ class EnglishSpaces3DWorld {
     document.body.insertAdjacentHTML('beforeend', html);
 
     const finalizarCompra = async (custo, viaVoz = false) => {
-      if (DOVRYX.getBalance() < custo) {
-        if (window.Workspace?.mostrarAviso) {
-          window.Workspace.mostrarAviso(`🔒 Need ${custo} DRX! Visit the Guild Baú do Inglês or work a shift to earn more DRX!`, 'warning');
-        }
+      if (xpAtual < custo) {
+        if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🔒 Practice more in the shops to earn enough XP!', 'warning');
         return;
       }
       document.getElementById('shop-modal')?.remove();
       this.aplicarItemCompradoNoAvatar(item);
       this.falarTextoNPC(`Thank you! Enjoy your new ${item.nome}!`, buildingId);
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso(`🛍️ Purchased ${item.nome}${viaVoz ? ' with 20% Voice Discount' : ''}!`, 'success');
+      }
 
       const res = await fetch('/api/workspace/english-spaces/progress/customization', {
         method: 'PUT',
@@ -1379,28 +706,19 @@ class EnglishSpaces3DWorld {
         credentials: 'include',
         body: JSON.stringify({
           userId: this.localPlayer.userId,
-          ownerName: this.localPlayer.nome,
           isFemale: this.localPlayer.isFemale,
           shirtColor: this.localPlayer.shirtColor,
           shoeColor: this.localPlayer.shoeColor,
           petType: this.localPlayer.petType,
-          equippedVehicle: this.currentVehicle,
-          ownedVehicles: this.ownedVehicles,
-          houseStage: this.houseStage,
-          materialsCount: this.materialsCount,
           purchasedItem: item,
           costXP: custo,
-          bonusXP: 15
+          bonusXP: 25
         })
       }).then(r => r.json()).catch(() => null);
 
-      if (res && res.success && typeof res.totalXP === 'number') {
-        DOVRYX.setBalance(res.totalXP);
-      } else {
-        DOVRYX.setBalance(DOVRYX.getBalance() - custo + 15);
-      }
-      if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso(`🛍️ Purchased ${item.nome}${viaVoz ? ' (20% Voice Discount)' : ''}!`, 'success');
+      if (res && res.success && this.parentManager) {
+        this.parentManager.progressData.xp = res.totalXP;
+        this.parentManager.atualizarResumoNoBannerFeed?.();
       }
       this.enviarMinhaPosicaoServidor();
     };
@@ -1490,7 +808,7 @@ class EnglishSpaces3DWorld {
       }
       return false;
     }
-    if (newX < -75 || newX > 82 || newZ < -135 || newZ > 70) return false;
+    if (newX < -68 || newX > 78 || newZ < -128 || newZ > 24) return false;
     return true;
   }
 
@@ -1729,7 +1047,7 @@ class EnglishSpaces3DWorld {
     this.posteLights = [];
     for (let row = 0; row < 6; row++) {
       const zPos = -row * 16 + 6;
-      [-6.8, 6.8, -28.5, -39.5, 28.5, 39.5].forEach((xPos, idx) => {
+      [-5.8, 5.8, -28.5, -39.5, 28.5, 39.5].forEach((xPos, idx) => {
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.2, 8), new THREE.MeshLambertMaterial({ color: 0x1e293b })); pole.position.set(xPos, 2.1, zPos);
         const lampHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfef08a })); lampHead.position.set(xPos, 4.3, zPos);
         this.exteriorGroup.add(pole, lampHead);
@@ -1863,13 +1181,13 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     const paralelepipedoTex = this.gerarTexturaParalelepipedo();
     const sidewalkMat = new THREE.MeshStandardMaterial({ map: paralelepipedoTex, roughness: 0.92, metalness: 0.04 });
-    const leftSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 170), sidewalkMat); leftSidewalk.rotation.x = -Math.PI / 2; leftSidewalk.position.set(-8.8, 0.08, -36); leftSidewalk.receiveShadow = true;
-    const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 170), sidewalkMat); rightSidewalk.rotation.x = -Math.PI / 2; rightSidewalk.position.set(8.8, 0.08, -36); rightSidewalk.receiveShadow = true;
+    const leftSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 170), sidewalkMat); leftSidewalk.rotation.x = -Math.PI / 2; leftSidewalk.position.set(-9.1, 0.08, -36); leftSidewalk.receiveShadow = true;
+    const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(5.0, 170), sidewalkMat); rightSidewalk.rotation.x = -Math.PI / 2; rightSidewalk.position.set(9.1, 0.08, -36); rightSidewalk.receiveShadow = true;
     this.exteriorGroup.add(leftSidewalk, rightSidewalk);
 
     const curbMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7 });
-    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); leftCurb.position.set(-6.55, 0.11, -36);
-    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); rightCurb.position.set(6.55, 0.11, -36);
+    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); leftCurb.position.set(-6.45, 0.11, -36);
+    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); rightCurb.position.set(6.45, 0.11, -36);
     this.exteriorGroup.add(leftCurb, rightCurb);
 
     const laneMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
@@ -1895,7 +1213,7 @@ class EnglishSpaces3DWorld {
     road2Right.rotation.x = -Math.PI / 2; road2Right.position.set(34, 0.01, -36);
     this.exteriorGroup.add(road2Left, road2Right);
 
-    [12, -56, -88].forEach(zCross => {
+    [8, -56, -88].forEach(zCross => {
       const crossRoad = new THREE.Mesh(new THREE.PlaneGeometry(130, 7.0), roadMat);
       crossRoad.rotation.x = -Math.PI / 2; crossRoad.position.set(8, 0.015, zCross);
       this.exteriorGroup.add(crossRoad);
@@ -2113,20 +1431,16 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  // 🛍️ CATÁLOGO COMPLETO DAS 11 LOJAS COMERCIAIS + IMOBILIÁRIA + CONCESSIONÁRIA + MATERIAIS DE CONSTRUÇÃO (EM DRX)
   criarLojaComprável(id) {
     const itensPorLoja = {
-      clothing:        [{ nome: 'Neon Pink Shirt', emoji: '👕', preco: 60, cor: 0xec4899, tipo: 'shirt' }, { nome: 'Royal Blue Jacket', emoji: '🧥', preco: 90, cor: 0x2563eb, tipo: 'shirt' }, { nome: 'Emerald Hoodie', emoji: '🎽', preco: 80, cor: 0x10b981, tipo: 'shirt' }],
-      shoes:           [{ nome: 'Gold Sneakers', emoji: '👟', preco: 70, cor: 0xfacc15, tipo: 'shoes' }, { nome: 'Crimson Boots', emoji: '🥾', preco: 85, cor: 0xe11d48, tipo: 'shoes' }, { nome: 'Cyber Shoes', emoji: '⚡', preco: 95, cor: 0x38bdf8, tipo: 'shoes' }],
-      petshop:         [{ nome: 'Adopt Puppy Dog', emoji: '🐶', preco: 100, cor: 0xd97706, tipo: 'pet_dog' }, { nome: 'Adopt Cute Cat', emoji: '🐱', preco: 100, cor: 0x9ca3af, tipo: 'pet_cat' }, { nome: 'Pet Treat Pack', emoji: '🦴', preco: 40, cor: 0x10b981, tipo: 'item' }],
-      tools:           [{ nome: 'Power Hammer', emoji: '🔨', preco: 50, cor: 0xf59e0b, tipo: 'item' }, { nome: 'Steel Wrench', emoji: '🔧', preco: 45, cor: 0x64748b, tipo: 'item' }, { nome: 'Electric Drill', emoji: '🪛', preco: 80, cor: 0xef4444, tipo: 'item' }],
-      supermarket:     [{ nome: 'Organic Apples', emoji: '🍎', preco: 25, cor: 0xef4444, tipo: 'item' }, { nome: 'Fresh Milk', emoji: '🥛', preco: 30, cor: 0x38bdf8, tipo: 'item' }, { nome: 'Bakery Bread', emoji: '🍞', preco: 35, cor: 0xf59e0b, tipo: 'item' }],
-      bookstore:       [{ nome: 'English Grammar Pro', emoji: '📚', preco: 60, cor: 0xa16207, tipo: 'item' }, { nome: 'Oxford Dictionary', emoji: '📖', preco: 75, cor: 0x0f766e, tipo: 'item' }, { nome: 'Study Notebook', emoji: '📓', preco: 40, cor: 0x8b5cf6, tipo: 'item' }],
-      bank:            [{ nome: 'DRX Savings Bond', emoji: '🏦', preco: 50, cor: 0x0f766e, tipo: 'item' }, { nome: 'Gold Reserve Bar', emoji: '💎', preco: 120, cor: 0xfacc15, tipo: 'item' }],
-      pharmacy:        [{ nome: 'Vitamin C Boost', emoji: '💊', preco: 45, cor: 0x06b6d4, tipo: 'item' }, { nome: 'First Aid Kit', emoji: '🩹', preco: 65, cor: 0xef4444, tipo: 'item' }],
-      real_estate:     [{ nome: 'Brick Walls Deed', emoji: '🧱', preco: 250, cor: 0x7c3aed, tipo: 'house_upgrade', targetStage: 2 }, { nome: 'Colonial Roof Deed', emoji: '🏠', preco: 400, cor: 0xa855f7, tipo: 'house_upgrade', targetStage: 3 }, { nome: 'Luxury Villa Deed', emoji: '🏡', preco: 650, cor: 0xfacc15, tipo: 'house_upgrade', targetStage: 5 }],
-      dealership:      [{ nome: 'City Bicycle', emoji: '🚲', preco: 80, cor: 0x10b981, tipo: 'vehicle', vehicleType: 'bicycle' }, { nome: 'Sport Motorcycle', emoji: '🏍️', preco: 320, cor: 0xef4444, tipo: 'vehicle', vehicleType: 'moto' }, { nome: 'Electric Supercar', emoji: '🚗', preco: 680, cor: 0x2563eb, tipo: 'vehicle', vehicleType: 'car' }],
-      building_supply: [{ nome: 'Brick Pallet (x5)', emoji: '🧱', preco: 75, cor: 0xd97706, tipo: 'material', units: 5 }, { nome: 'Timber Beams (x10)', emoji: '🪵', preco: 130, cor: 0x92400e, tipo: 'material', units: 10 }, { nome: 'House Furniture Kit', emoji: '🛋️', preco: 300, cor: 0x4f46e5, tipo: 'house_upgrade', targetStage: 4 }]
+      clothing:    [{ nome: 'Neon Pink Shirt', emoji: '👕', preco: 60, cor: 0xec4899, tipo: 'shirt' }, { nome: 'Royal Blue Jacket', emoji: '🧥', preco: 90, cor: 0x2563eb, tipo: 'shirt' }, { nome: 'Emerald Hoodie', emoji: '🎽', preco: 80, cor: 0x10b981, tipo: 'shirt' }],
+      shoes:       [{ nome: 'Gold Sneakers', emoji: '👟', preco: 70, cor: 0xfacc15, tipo: 'shoes' }, { nome: 'Crimson Boots', emoji: '🥾', preco: 85, cor: 0xe11d48, tipo: 'shoes' }, { nome: 'Cyber Shoes', emoji: '⚡', preco: 95, cor: 0x38bdf8, tipo: 'shoes' }],
+      petshop:     [{ nome: 'Adopt Puppy Dog', emoji: '🐶', preco: 100, cor: 0xd97706, tipo: 'pet_dog' }, { nome: 'Adopt Cute Cat', emoji: '🐱', preco: 100, cor: 0x9ca3af, tipo: 'pet_cat' }, { nome: 'Pet Treat Pack', emoji: '🦴', preco: 40, cor: 0x10b981, tipo: 'item' }],
+      tools:       [{ nome: 'Power Hammer', emoji: '🔨', preco: 50, cor: 0xf59e0b, tipo: 'item' }, { nome: 'Steel Wrench', emoji: '🔧', preco: 45, cor: 0x64748b, tipo: 'item' }, { nome: 'Electric Drill', emoji: '🪛', preco: 80, cor: 0xef4444, tipo: 'item' }],
+      supermarket: [{ nome: 'Organic Apples', emoji: '🍎', preco: 25, cor: 0xef4444, tipo: 'item' }, { nome: 'Fresh Milk', emoji: '🥛', preco: 30, cor: 0x38bdf8, tipo: 'item' }, { nome: 'Bakery Bread', emoji: '🍞', preco: 35, cor: 0xf59e0b, tipo: 'item' }],
+      bookstore:   [{ nome: 'English Grammar Pro', emoji: '📚', preco: 60, cor: 0xa16207, tipo: 'item' }, { nome: 'Oxford Dictionary', emoji: '📖', preco: 75, cor: 0x0f766e, tipo: 'item' }, { nome: 'Study Notebook', emoji: '📓', preco: 40, cor: 0x8b5cf6, tipo: 'item' }],
+      bank:        [{ nome: 'Gold Investment', emoji: '🏦', preco: 50, cor: 0x0f766e, tipo: 'item' }, { nome: 'Savings Bond', emoji: '💎', preco: 100, cor: 0x38bdf8, tipo: 'item' }],
+      pharmacy:    [{ nome: 'Vitamin C Boost', emoji: '💊', preco: 45, cor: 0x06b6d4, tipo: 'item' }, { nome: 'First Aid Kit', emoji: '🩹', preco: 65, cor: 0xef4444, tipo: 'item' }]
     };
     const lista = itensPorLoja[id];
     if (!lista) return;
@@ -2143,10 +1457,10 @@ class EnglishSpaces3DWorld {
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = '#0f172a'; ctx.fillRect(0, 0, 256, 128);
       ctx.strokeStyle = '#facc15'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 122);
-      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 21px Inter, sans-serif'; ctx.textAlign = 'center';
-      ctx.fillText(`${item.emoji} ${item.nome.slice(0, 15)}`, 128, 48);
-      ctx.fillStyle = '#fde047'; ctx.font = 'bold 25px Inter, sans-serif';
-      ctx.fillText(`${item.preco} DRX`, 128, 95);
+      ctx.fillStyle = '#ffffff'; ctx.font = 'bold 22px Inter, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(`${item.emoji} ${item.nome.slice(0, 14)}`, 128, 48);
+      ctx.fillStyle = '#fde047'; ctx.font = 'bold 26px Inter, sans-serif';
+      ctx.fillText(`${item.preco} XP`, 128, 95);
       const tex = new THREE.CanvasTexture(canvas);
       const label = new THREE.Mesh(new THREE.PlaneGeometry(0.95, 0.48), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
       label.position.set(0, 1.25, 0);
@@ -2182,7 +1496,7 @@ class EnglishSpaces3DWorld {
       cabin.position.set(0, 1.1, -0.1);
       carGroup.add(body, cabin);
 
-      const lane = i % 2 === 0 ? 1.8 : -1.8;
+      const lane = i % 2 === 0 ? 1.6 : -1.6;
       const dir = i % 2 === 0 ? -1 : 1;
       carGroup.position.set(lane, 0, -80 + i * 16);
       carGroup.rotation.y = dir === 1 ? 0 : Math.PI;
@@ -2196,15 +1510,15 @@ class EnglishSpaces3DWorld {
     this.pedestrians = [];
     const phrases = [
       "Beautiful day, isn't it?",
-      "Hi there! Earning DOVRYX today?",
-      "Check out the Guild Baú do Inglês!",
+      "Hi there! Practicing your English?",
+      "Check out the airplanes at the airport!",
       "Have a wonderful day!"
     ];
     for (let i = 0; i < 8; i++) {
       const isLeft = i % 2 === 0;
       const isFemalePed = i % 2 === 1;
       const pedMesh = this.criarBonecoHumano3D(isLeft ? 0xf59e0b : 0x38bdf8, 0x1e293b, 0xfde68a, isFemalePed);
-      const x = isLeft ? -8.8 : 8.8;
+      const x = isLeft ? -8.5 : 8.5;
       const z = -85 + i * 12;
       pedMesh.position.set(x, 0, z);
       pedMesh.rotation.y = i % 2 === 0 ? 0 : Math.PI;
@@ -2227,8 +1541,8 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     this.outdoors = [];
     const expressions = [
-      "Currency: DOVRYX (DRX) 💎",
-      "Tip: Speak to buy with 20% off!",
+      "Idiom: 'Break a leg!' = Good luck!",
+      "Tip: Speak to buy items with 20% off!",
       this.topLeaderText
     ];
     for (let row = 0; row < 3; row++) {
@@ -2241,7 +1555,7 @@ class EnglishSpaces3DWorld {
         ctx.fillStyle = '#a78bfa'; ctx.font = 'bold 24px Inter, sans-serif';
         ctx.fillText(expressions[(row + idx) % expressions.length], 22, 70);
         ctx.fillStyle = '#e2e8f0'; ctx.font = '18px Inter, sans-serif';
-        ctx.fillText('Visit Guild Baú do Inglês to earn DRX!', 22, 135);
+        ctx.fillText('Walk into any shop to practice English!', 22, 135);
         const tex = new THREE.CanvasTexture(canvas);
         const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), new THREE.MeshBasicMaterial({ map: tex }));
         board.position.set(xPos, 2.2, zPos);
@@ -2326,7 +1640,7 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     const b = this.buildingsMeta.find(x => x.id === 'restaurant');
     if (!b) return;
-    const items = ['Grilled Salmon - 18 DRX', 'Cheeseburger - 12 DRX', 'Homemade Pasta - 15 DRX'];
+    const items = ['Grilled Salmon - $18', 'Cheeseburger - $12', 'Homemade Pasta - $15'];
     for (let i = 0; i < 3; i++) {
       const standCanvas = document.createElement('canvas'); standCanvas.width = 256; standCanvas.height = 320;
       const sctx = standCanvas.getContext('2d');
@@ -2394,7 +1708,7 @@ class EnglishSpaces3DWorld {
   criarMusicoDeRua() {
     const THREE = window.THREE;
     const mus = this.criarBonecoHumano3D(0xf97316, 0x1e293b, 0xfde68a, false);
-    mus.position.set(-8.8, 0, -24);
+    mus.position.set(-8.5, 0, -24);
     mus.rotation.y = Math.PI / 3;
     const guitar = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.6), new THREE.MeshLambertMaterial({ color: 0x92400e }));
     guitar.position.set(0, 1.2, 0.25);
@@ -2406,13 +1720,13 @@ class EnglishSpaces3DWorld {
     this.musician = {
       mesh: mus,
       labelEl: label,
-      x: -8.8,
+      x: -8.5,
       z: -24,
       lastTeach: 0,
       slangs: [
         "That song is lit! ('Lit' = amazing!)",
         "This beat is sick! ('Sick' = super cool!)",
-        "I'm hyped for DOVRYX! ('Hyped' = very excited!)"
+        "I'm hyped for English! ('Hyped' = very excited!)"
       ]
     };
   }
@@ -2454,7 +1768,10 @@ class EnglishSpaces3DWorld {
       link.download = `english-city-${Date.now()}.png`;
       link.href = dataURL;
       link.click();
-      DOVRYX.add(25, 'Beach Polaroid Photo');
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('📸 Polaroid guardada! Diga: "I love the beach!" (+25 XP)', 'success');
+      }
+      this.parentManager?.registarMissaoConcluida('beach', 'polaroid', 25);
       this.falarTextoNPC('Cheese! Great photo at the beach!', 'beach');
     } catch (e) {}
   }
@@ -2570,7 +1887,7 @@ class EnglishSpaces3DWorld {
     grad.addColorStop(0, '#1e293b'); grad.addColorStop(1, '#0f172a');
     ctx.fillStyle = grad; ctx.fillRect(0, 0, 1024, 256);
     ctx.strokeStyle = corBorda; ctx.lineWidth = 10; ctx.strokeRect(5, 5, 1014, 246);
-    ctx.fillStyle = '#f8fafc'; ctx.font = '900 70px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillStyle = '#f8fafc'; ctx.font = '900 72px Inter, sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText((isMastered ? '★ ' : '') + texto.toUpperCase(), 512, 134);
 
     const tex = new THREE.CanvasTexture(canvas); tex.anisotropy = 4;
@@ -2606,7 +1923,7 @@ class EnglishSpaces3DWorld {
     this.dirLight.castShadow = true;
     this.scene.add(this.dirLight);
 
-    this.camera = new THREE.PerspectiveCamera(58, w / h, 0.1, 340);
+    this.camera = new THREE.PerspectiveCamera(58, w / h, 0.1, 320);
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, preserveDrawingBuffer: true });
     this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
@@ -2614,19 +1931,17 @@ class EnglishSpaces3DWorld {
     this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
 
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 340), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
-    ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -35); ground.receiveShadow = true;
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(260, 320), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
+    ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -45); ground.receiveShadow = true;
     this.exteriorGroup.add(ground);
 
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 170), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    const road = new THREE.Mesh(new THREE.PlaneGeometry(10, 160), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
     road.rotation.x = -Math.PI / 2; road.position.set(0, 0.01, -36);
     this.exteriorGroup.add(road);
 
     this.criarCeuRealista();
     this.criarAvenidaRealista();
     this.criarSegundaAvenida();
-    this.criarRuasAlargadasComCiclovias();
-    this.criarQuebraMolasESinalizacao();
     this.criarPostesAvenida3D();
     this.criarTransitoInteligente();
     this.criarPedestres();
@@ -2666,8 +1981,7 @@ class EnglishSpaces3DWorld {
         home: 'carpet', cinema: 'carpet', taxi: 'tile-check', beach: 'sand',
         hotel: 'wood', airport: 'marble', job: 'carpet', hospital: 'tile-check',
         bank: 'marble', clothing: 'wood', shoes: 'carpet', tools: 'tile-check',
-        petshop: 'sand', supermarket: 'tile-check', pharmacy: 'tile-check', bookstore: 'wood',
-        real_estate: 'marble', dealership: 'tile-check', building_supply: 'wood', guild_bau: 'carpet'
+        petshop: 'sand', supermarket: 'tile-check', pharmacy: 'tile-check', bookstore: 'wood'
       }[bCfg.id] || 'tile-check';
 
       const texPiso = this.gerarTexturaPisoPremium(tipoPiso);
@@ -2732,7 +2046,7 @@ class EnglishSpaces3DWorld {
 
       const npcX = centerX + (signCol * 3.1);
       const npcZ = centerZ;
-      const isFemaleNPC = ['coffee', 'school', 'shopping', 'cinema', 'hotel', 'job', 'clothing', 'petshop', 'pharmacy', 'real_estate'].includes(bCfg.id);
+      const isFemaleNPC = ['coffee', 'school', 'shopping', 'cinema', 'hotel', 'job', 'clothing', 'petshop', 'pharmacy'].includes(bCfg.id);
       const npcMesh = this.criarBonecoHumano3D(bCfg.npcColor, 0x0f172a, 0xfde68a, isFemaleNPC);
       npcMesh.position.set(npcX, 0, npcZ);
       npcMesh.rotation.y = signCol === -1 ? (Math.PI / 2) : (-Math.PI / 2);
@@ -2760,13 +2074,11 @@ class EnglishSpaces3DWorld {
       });
     });
 
-    // ✅ Inicializa os GLBs da pasta /models/, a Guilda do Mago, os Lotes e as Lojas DEPOIS de buildingsMeta estar pronto!
-    this.tentarCarregarGLTFsTodos();
-    this.criarGuildaMago();
-    this.criarLoteamentoResidencial();
+    const startBuilding = this.buildingsMeta.find(b => b.id === initialSpaceId) || this.buildingsMeta[0];
+
     this.criarAnimaisRua();
     this.criarPistaAeroporto();
-    ['bank', 'clothing', 'shoes', 'tools', 'petshop', 'supermarket', 'pharmacy', 'bookstore', 'real_estate', 'dealership', 'building_supply'].forEach(id => {
+    ['bank', 'clothing', 'shoes', 'tools', 'petshop', 'supermarket', 'pharmacy', 'bookstore'].forEach(id => {
       this.criarLojaComprável(id);
     });
     this.criarMusicoDeRua();
@@ -2778,7 +2090,6 @@ class EnglishSpaces3DWorld {
     this.criarFotoPolaroid();
     this.ativarSombrasReais();
 
-    const startBuilding = this.buildingsMeta.find(b => b.id === initialSpaceId) || this.buildingsMeta[0];
     const u = window.Workspace?.usuario || {};
     const meuNomeCurto = this.formatarNomeCompleto(u.nome || u.login || 'You');
     const meuId = String(u.id || 'local_' + Date.now());
@@ -2854,16 +2165,12 @@ class EnglishSpaces3DWorld {
 
   entrarModoInterior(id) {
     if (this.modoInterior && this.predioAtual === id) return;
-    if (this.currentVehicle) this.desmontarVeiculo();
     this.modoInterior = true;
     this.predioAtual = id;
     this.exteriorGroup.visible = false;
     this.cars.forEach(c => { c.visible = false; });
     this.pedestrians.forEach(p => { p.mesh.visible = false; if (p.labelEl) p.labelEl.style.display = 'none'; });
     if (this.musician?.labelEl) this.musician.labelEl.style.display = 'none';
-
-    const workBtn = document.getElementById('es-city-work-btn');
-    if (workBtn) workBtn.style.display = 'inline-flex';
 
     this.buildingsMeta.forEach(b => {
       const meshes = this.buildingMeshes.get(b.id);
@@ -2906,9 +2213,6 @@ class EnglishSpaces3DWorld {
     this.cars.forEach(c => { c.visible = true; });
     this.pedestrians.forEach(p => { p.mesh.visible = true; });
 
-    const workBtn = document.getElementById('es-city-work-btn');
-    if (workBtn) workBtn.style.display = 'none';
-
     this.buildingsMeta.forEach(b => {
       const meshes = this.buildingMeshes.get(b.id);
       const interiorGrp = this.interiorGroups.get(b.id);
@@ -2946,7 +2250,7 @@ class EnglishSpaces3DWorld {
       if (this.keys['ArrowRight'] || this.keys['KeyD'] || this.keys['pad_right']) inputRight += 1;
 
       let estaAndando = false;
-      const speed = this.currentVehicle ? (this.vehicleSpeed || 12.0) : 7.5;
+      const speed = 7.5;
 
       if (inputRight !== 0 || inputForward !== 0) {
         p.targetX = null; p.targetZ = null;
@@ -2958,8 +2262,8 @@ class EnglishSpaces3DWorld {
         const nextX = p.x + worldDirX * speed * delta;
         const nextZ = p.z + worldDirZ * speed * delta;
         if (this.podeMoverPara(nextX, nextZ, p.x, p.z)) {
-          p.x = Math.max(-75, Math.min(82, nextX));
-          p.z = Math.max(-135, Math.min(70, nextZ));
+          p.x = Math.max(-68, Math.min(78, nextX));
+          p.z = Math.max(-128, Math.min(24, nextZ));
           p.rotY = Math.atan2(worldDirX, worldDirZ);
           estaAndando = true;
         }
@@ -2980,24 +2284,9 @@ class EnglishSpaces3DWorld {
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
 
-      if (this.vehicleMesh) {
-        this.vehicleMesh.position.set(p.x, 0.05, p.z);
-        this.vehicleMesh.rotation.y = p.rotY;
-      }
-
-      if (this.currentVehicle && this.speedBumps) {
-        this.speedBumps.forEach(bump => {
-          const dist = Math.hypot(bump.x - p.x, bump.z - p.z);
-          if (dist < 2.6 && speed > 13.0 && Date.now() - bump.triggered > 15000) {
-            bump.triggered = Date.now();
-            this.triggerBlitzEducativa('Speed Bump');
-          }
-        });
-      }
-
       const yaw = this.cameraYaw;
       const pitch = this.cameraPitch;
-      const distBase = this.modoInterior ? 4.4 : 8.4;
+      const distBase = this.modoInterior ? 4.4 : 8.2;
       const dist = distBase + pitch * 0.6;
       const camHeight = (this.modoInterior ? 3.4 : 4.8) - pitch * 2.2;
       const camOffsetX = Math.sin(yaw) * dist;
@@ -3161,7 +2450,6 @@ class EnglishSpaces3DWorld {
     const sp = bMeta.space;
     this.parentManager.state.currentSpace = sp;
     this.parentManager.registarMissaoConcluida(sp.id, 'visit', 10);
-    DOVRYX.atualizarHud();
     badge.innerHTML = `${sp.emoji} Inside: ${sp.name}`;
   }
 
@@ -3214,7 +2502,7 @@ class EnglishSpaces3DWorld {
 
     if (this.nearbyTargets.length === 0) {
       if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso('🚶 Aproxime-se de outro aluno ou personagem (até acender o círculo verde no chão) para conversar!', 'warning');
+        window.Workspace.mostrarAviso('🚶 Aproxime-se de outro aluno ou de um personagem (até acender o círculo verde no chão) para conversar!', 'warning');
       }
       return;
     }
@@ -3252,7 +2540,12 @@ class EnglishSpaces3DWorld {
           this.mostrarBalaoNoBoneco(npcAlvo.ref, res.resposta, 8000);
           this.adicionarMensagemFeedProximidade(sp.npcName, res.resposta, '#34d399');
           this.falarTextoNPC(res.resposta, sp.id);
-          await DOVRYX.add(35, `Conversation at ${sp.name}`);
+
+          const missaoPendente = (sp.missions || []).find(m => !this.parentManager.state.missionsDone.includes(m.id));
+          if (missaoPendente) {
+            this.parentManager.state.missionsDone.push(missaoPendente.id);
+            this.parentManager.registarMissaoConcluida(sp.id, missaoPendente.id, missaoPendente.xp || 75);
+          }
         }
       } catch (e) {}
     }
@@ -3272,7 +2565,7 @@ class EnglishSpaces3DWorld {
 
     this._onKeyDown = (e) => {
       this.garantirAudioAtivo();
-      if (['es-city-chat-input', 'es-sticky-text', 'job-answer'].includes(document.activeElement?.id)) return;
+      if (document.activeElement?.id === 'es-city-chat-input' || document.activeElement?.id === 'es-sticky-text') return;
       this.keys[e.code] = true;
       this.keys[e.key] = true;
     };
@@ -3294,40 +2587,6 @@ class EnglishSpaces3DWorld {
     document.getElementById('es-city-gender-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.alternarGeneroMeuAvatar();
-    });
-
-    document.getElementById('es-city-vehicle-btn')?.addEventListener('click', () => {
-      this.garantirAudioAtivo();
-      this.alternarOuMontarVeiculo();
-    });
-
-    document.getElementById('es-city-home-btn')?.addEventListener('click', () => {
-      this.garantirAudioAtivo();
-      if (this.modoInterior) this.sairModoInterior();
-      this.localPlayer.x = -27;
-      this.localPlayer.z = 26;
-      this.localPlayer.targetX = null;
-      this.localPlayer.targetZ = null;
-      this.abrirModalConstrucaoCasa();
-    });
-
-    document.getElementById('es-city-bau-btn')?.addEventListener('click', () => {
-      this.garantirAudioAtivo();
-      const bGuild = this.buildingsMeta.find(b => b.id === 'guild_bau');
-      if (bGuild) {
-        if (this.modoInterior) this.sairModoInterior();
-        this.localPlayer.x = bGuild.frontX - bGuild.col * 2.2;
-        this.localPlayer.z = bGuild.centerZ;
-        this.localPlayer.targetX = null;
-        this.localPlayer.targetZ = null;
-        if (window.Workspace?.mostrarAviso) {
-          window.Workspace.mostrarAviso('🧙‍♂️ Arrived at Guild Baú do Inglês! Walk through the door to meet the Master Wizard!', 'info');
-        }
-      }
-    });
-
-    document.getElementById('es-city-work-btn')?.addEventListener('click', () => {
-      if (this.predioAtual) this.iniciarTrabalhoPartTime(this.predioAtual);
     });
 
     const domCanvas = this.renderer.domElement;
@@ -3369,33 +2628,41 @@ class EnglishSpaces3DWorld {
           while (obj && !obj.userData?.clickable && obj.parent) obj = obj.parent;
           const ud = obj?.userData || hits[0].object.userData || {};
 
-          if (ud.isMage) { this.interagirComMestreMago(); return; }
-          if (ud.isPortal) { this.abrirPortalBauIngles(); return; }
-          if (ud.isLot) { this.abrirModalConstrucaoCasa(); return; }
-          if (ud.isShopItem && ud.item) { this.abrirLojaXPModal(ud.shopId, ud.item); return; }
+          if (ud.isShopItem && ud.item) {
+            this.abrirLojaXPModal(ud.shopId, ud.item);
+            return;
+          }
           if (ud.isPolaroidCam) { this.tirarFotoPolaroid(); return; }
-          if (ud.isIndividualSticky && ud.stickyData) { this.abrirModalLerStickyNote(ud.stickyData); return; }
-          if (ud.isStickyWall) { this.abrirModalCriarStickyNote(); return; }
+          // ✅ Verifica primeiro se clicou num Post-it já colado para abrir a leitura legível!
+          if (ud.isIndividualSticky && ud.stickyData) {
+            this.abrirModalLerStickyNote(ud.stickyData);
+            return;
+          }
+          if (ud.isStickyWall) {
+            this.abrirModalCriarStickyNote();
+            return;
+          }
           if (ud.isTaxiRadio) { this.tocarRadioTaxi(); return; }
           if (ud.isBlackboard && typeof ud.nextLesson === 'function') {
             const licao = ud.nextLesson();
             this.falarTextoNPC(licao, 'school');
             this.mostrarBalaoNoBoneco(this.localPlayer, `📖 ${licao}`, 5000);
-            DOVRYX.add(15, 'Classboard Lesson');
+            this.parentManager?.registarMissaoConcluida('school', 'blackboard', 15);
             return;
           }
 
           const name = ud.englishName || 'Object';
           this.falarTextoNPC(name, this.currentZoneId);
           this.mostrarBalaoNoBoneco(this.localPlayer, `💡 ${name}`, 3500);
-          DOVRYX.add(15, name);
+          this.parentManager?.registarMissaoConcluida(this.currentZoneId, 'click_' + name.toLowerCase().replace(/\s+/g, '_'), 15);
+          if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso(`💡 ${name} (+15 XP)`, 'info');
           return;
         }
 
         const intersectPt = new THREE.Vector3();
         if (raycaster.ray.intersectPlane(planeY0, intersectPt)) {
-          const tx = Math.max(-75, Math.min(82, intersectPt.x));
-          const tz = Math.max(-135, Math.min(70, intersectPt.z));
+          const tx = Math.max(-68, Math.min(78, intersectPt.x));
+          const tz = Math.max(-128, Math.min(24, intersectPt.z));
           if (this.podeMoverPara(tx, tz, this.localPlayer.x, this.localPlayer.z)) {
             this.localPlayer.targetX = tx;
             this.localPlayer.targetZ = tz;
@@ -3443,8 +2710,6 @@ class EnglishSpaces3DWorld {
         shirtColor: this.localPlayer.shirtColor || null,
         shoeColor: this.localPlayer.shoeColor || null,
         petType: this.localPlayer.petType || null,
-        equippedVehicle: this.currentVehicle || null,
-        houseStage: this.houseStage || 1,
         x: Math.round(this.localPlayer.x * 100) / 100,
         z: Math.round(this.localPlayer.z * 100) / 100,
         rotY: Math.round(this.localPlayer.rotY * 100) / 100,
@@ -3562,9 +2827,9 @@ class EnglishSpaces3DWorld {
   fecharCidade3D() {
     this.active = false;
     document.body.style.overflow = '';
-    ['shop-modal', 'es-sticky-modal', 'es-sticky-view-modal', 'es-mage-dialog', 'es-house-modal', 'job-modal', 'blitz-modal'].forEach(id => {
-      document.getElementById(id)?.remove();
-    });
+    document.getElementById('shop-modal')?.remove();
+    document.getElementById('es-sticky-modal')?.remove();
+    document.getElementById('es-sticky-view-modal')?.remove();
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.dayNightInterval) clearInterval(this.dayNightInterval);
