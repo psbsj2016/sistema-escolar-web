@@ -1940,9 +1940,25 @@ class EnglishSpaces3DWorld {
         if (perto) this.nearbyTargets.push({ type: 'npc', id: npc.id, name: npc.name, space: npc.space, dist: d, ref: npc });
       });
 
-      this.otherPlayers3D.forEach((op) => {
-        const naMesmaZona = !this.modoInterior ? (op.spaceId === 'street' || !op.spaceId) : (op.spaceId === this.predioAtual);
+           this.otherPlayers3D.forEach((op) => {
+        // FIX: nunca esconder quem tá na mesma rua. Só esconder se um tá dentro e outro fora
+        const isStreet = !this.modoInterior;
+        const opIsStreet = !op.spaceId || op.spaceId === 'street';
+        const sameBuilding = this.modoInterior && op.spaceId === this.predioAtual;
+        const naMesmaZona = isStreet ? opIsStreet : sameBuilding;
+
+        // Força visível quando na mesma zona - antes tava sumindo o mesh
         op.mesh.visible = naMesmaZona;
+        // Garante que todos os filhos do boneco fiquem opacos (bug do GLTF cache que deixava só o círculo)
+        if (naMesmaZona) {
+          op.mesh.traverse(o => {
+            if (o.isMesh && o.material) {
+              o.material.transparent = false;
+              o.material.opacity = 1;
+              o.visible = true;
+            }
+          });
+        }
         if (op.labelEl) op.labelEl.style.display = naMesmaZona ? 'flex' : 'none';
 
         const dx = op.targetX - op.mesh.position.x;
@@ -1956,7 +1972,7 @@ class EnglishSpaces3DWorld {
         const d = Math.hypot(op.mesh.position.x - p.x, op.mesh.position.z - p.z);
         const perto = naMesmaZona && d <= PROXIMITY_RADIUS;
         if (perto) this.nearbyTargets.push({ type: 'player', id: op.userId, name: op.nome, dist: d, ref: op });
-        op.mesh.userData.ringMat.opacity = perto ? 0.75 : 0.0;
+        if (op.mesh.userData?.ringMat) op.mesh.userData.ringMat.opacity = perto ? 0.75 : 0.0;
       });
 
       this.cars.forEach(car => {
@@ -2296,7 +2312,12 @@ class EnglishSpaces3DWorld {
       if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
       let op = this.otherPlayers3D.get(pData.userId);
       if (!op) {
-        const mesh = this.criarBonecoHumano3D(0x3b82f6, 0x0f172a, 0xfde68a);
+                const isFemale = String(pData.nome||'').toLowerCase().endsWith('a');
+        // Força criar Box realista, não usa cache GLTF do Soldier que fica só com círculo
+        const _cacheTemp = this.gltfCache.get('avatar');
+        this.gltfCache.delete('avatar');
+        const mesh = this.criarBonecoHumano3D(0x3b82f6, 0x0f172a, 0xfde68a, isFemale);
+        if (_cacheTemp) this.gltfCache.set('avatar', _cacheTemp);
         mesh.position.set(pData.x || 0, 0, pData.z || 0);
         this.scene.add(mesh);
         const labelEl = this.criarEtiquetaHTML(pData.nome || 'Student', pData.role || 'PEER', '#38bdf8');
