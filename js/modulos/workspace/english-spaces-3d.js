@@ -99,14 +99,29 @@ class EnglishSpaces3DWorld {
     this.modoInterior = false;
     this.predioAtual = null;
     this.topLeaderText = 'Leader: Paulo - 1,250 XP';
+    // GLTF e Animais
+    this.gltfLoader = null;
+    this.gltfCache = new Map();
+    this.animais = { caes: [], gatos: [], passaros: [], passarosGroup: null };
+  }
+
+  async carregarGLTFLoader() {
+    if (window.THREE && window.THREE.GLTFLoader) { this.gltfLoader = new window.THREE.GLTFLoader(); return; }
+    return new Promise((resolve) => {
+      const s = document.createElement('script');
+      s.src = 'https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js';
+      s.onload = () => { try { this.gltfLoader = new window.THREE.GLTFLoader(); } catch(e){} resolve(); };
+      s.onerror = () => resolve();
+      document.head.appendChild(s);
+    });
   }
 
   async carregarThreeJS() {
-    if (window.THREE) return window.THREE;
+    if (window.THREE) { await this.carregarGLTFLoader(); return window.THREE; }
     return new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      script.onload = () => resolve(window.THREE);
+      script.onload = async () => { await this.carregarGLTFLoader(); resolve(window.THREE); };
       script.onerror = reject;
       document.head.appendChild(script);
     });
@@ -227,17 +242,35 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     const group = new THREE.Group();
 
+    // Tenta usar cache GLTF de avatar se existir
+    const cachedAvatar = this.gltfCache?.get('avatar');
+    if (cachedAvatar) {
+      const clone = cachedAvatar.clone(true);
+      clone.traverse(o=>{ if(o.isMesh){ o.castShadow=true; }});
+      group.add(clone);
+      const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
+      const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
+      const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; group.add(ringMesh);
+      const dummy = new THREE.Group();
+      group.userData = { leftLeg: dummy, rightLeg: dummy, leftArm: dummy, rightArm: dummy, headGroup: dummy, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false, isFemale };
+      return group;
+    }
+
     const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
     const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
     const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
-    const matCabelo = new THREE.MeshStandardMaterial({ color: isFemale ? 0x78350f : 0x1e1e22, roughness: 0.9 });
+    const matCabeloFem = new THREE.MeshStandardMaterial({ color: 0x5c2b0e, roughness: 0.85 });
+    const matCabeloMasc = new THREE.MeshStandardMaterial({ color: 0x1e1e22, roughness: 0.9 });
+    const matCabelo = isFemale ? matCabeloFem : matCabeloMasc;
     const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
     const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe });
     const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
+    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xc94c6a : 0x8b4a3e });
+    const matSobrancelha = new THREE.MeshStandardMaterial({ color: 0x2b2b2b });
 
-    // Ajuste morfológico subtil: ombros ligeiramente mais estreitos e ancas proporcionadas para feminino
-    const torsoW = isFemale ? 0.46 : 0.52;
-    const shoulderW = isFemale ? 0.26 : 0.31;
+    const torsoW = isFemale ? 0.44 : 0.54;
+    const shoulderW = isFemale ? 0.24 : 0.34;
+    const hipW = isFemale ? 0.52 : 0.48;
 
     const footGeo = new THREE.BoxGeometry(0.2, 0.14, 0.3);
     const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
@@ -249,42 +282,78 @@ class EnglishSpaces3DWorld {
     const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
     group.add(leftLeg, rightLeg);
 
-    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.68, 0.26);
-    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.32, 0);
-    group.add(torso);
+    const hipGeo = new THREE.BoxGeometry(hipW, 0.18, 0.28);
+    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
 
-    const shoulderGeo = new THREE.SphereGeometry(0.1, 10, 10);
-    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.6, 0);
-    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.6, 0);
+    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.70, 0.28);
+    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.34, 0); group.add(torso);
+    if (isFemale) {
+      const chestGeo = new THREE.SphereGeometry(0.13, 10, 10);
+      const chestL = new THREE.Mesh(chestGeo, matCamisa); chestL.position.set(-0.12, 1.42, 0.16); chestL.scale.set(1,0.8,0.5);
+      const chestR = new THREE.Mesh(chestGeo, matCamisa); chestR.position.set(0.12, 1.42, 0.16); chestR.scale.set(1,0.8,0.5);
+      group.add(chestL, chestR);
+    }
+
+    const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
+    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
+    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);
     group.add(leftShoulder, rightShoulder);
 
     const armGeo = new THREE.CylinderGeometry(0.07, 0.06, 0.62, 10); armGeo.translate(0, -0.31, 0);
-    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.6, 0);
-    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.6, 0);
+    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.62, 0);
+    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.62, 0);
     group.add(leftArm, rightArm);
 
-    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.92, 0);
-    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.26, 18, 18), matPele);
+    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
+    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
     
-    // Cabelo diferenciado para feminino (mais longo) vs masculino
-    const hairGeo = isFemale ? new THREE.SphereGeometry(0.31, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.85) : new THREE.SphereGeometry(0.28, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
-    const hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, isFemale ? -0.04 : 0.06, isFemale ? -0.04 : 0);
+    // Nariz
+    const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1,1.2,1.5);
+    const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
 
-    const eyeWhiteGeo = new THREE.SphereGeometry(0.05, 10, 10);
-    const eyePupilGeo = new THREE.SphereGeometry(0.02, 8, 8);
-    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.08, 0.04, 0.21);
-    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.08, 0.04, 0.24);
-    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.08, 0.04, 0.21);
-    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.08, 0.04, 0.24);
+    // Cabelo diferenciado
+    let hairMesh;
+    if (isFemale) {
+      const hairTopGeo = new THREE.SphereGeometry(0.31, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.88);
+      hairMesh = new THREE.Mesh(hairTopGeo, matCabelo); hairMesh.position.set(0, 0.02, -0.02);
+      const ponytailGeo = new THREE.CylinderGeometry(0.09, 0.12, 0.38, 8); ponytailGeo.translate(0, -0.19, 0);
+      const ponytail = new THREE.Mesh(ponytailGeo, matCabelo); ponytail.position.set(0, -0.08, -0.28); ponytail.rotation.x = -0.3;
+      headGroup.add(ponytail);
+    } else {
+      const hairGeo = new THREE.SphereGeometry(0.285, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.65);
+      hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.07, 0);
+    }
 
-    headGroup.add(headMesh, hairMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil);
+    const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 10, 10);
+    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
+    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.06, 0.22);
+    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.06, 0.255);
+    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.06, 0.22);
+    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.06, 0.255);
+
+    const browGeo = new THREE.BoxGeometry(0.09, 0.015, 0.01);
+    const leftBrow = new THREE.Mesh(browGeo, matSobrancelha); leftBrow.position.set(-0.09, 0.12, 0.235); leftBrow.rotation.z = isFemale ? 0.12 : -0.08;
+    const rightBrow = new THREE.Mesh(browGeo, matSobrancelha); rightBrow.position.set(0.09, 0.12, 0.235); rightBrow.rotation.z = isFemale ? -0.12 : 0.08;
+
+    const mouthGeo = new THREE.BoxGeometry(isFemale ? 0.07 : 0.06, 0.018, 0.01);
+    const mouthMesh = new THREE.Mesh(mouthGeo, matBoca); mouthMesh.position.set(0, -0.11, 0.25);
+
+    headGroup.add(headMesh, hairMesh, noseMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil, leftBrow, rightBrow, mouthMesh);
     group.add(headGroup);
 
     const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
     const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; group.add(ringMesh);
 
-    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false };
+    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, walkPhase: 0, emotePhase: 0, isEmoting: false, isFemale };
+    // Tenta carregar GLTF avatar em background (fallback já existe)
+    if (this.gltfLoader && !this.gltfCache.has('avatar_loading')) {
+      this.gltfCache.set('avatar_loading', true);
+      this.gltfLoader.load('https://threejs.org/examples/models/gltf/Soldier.glb', (gltf)=>{
+        const model = gltf.scene; model.scale.set(0.32,0.32,0.32);
+        this.gltfCache.set('avatar', model);
+      }, null, ()=>{});
+    }
     return group;
   }
 
@@ -748,7 +817,8 @@ class EnglishSpaces3DWorld {
     ];
     for (let i = 0; i < 8; i++) {
       const isLeft = i % 2 === 0;
-      const pedMesh = this.criarBonecoHumano3D(isLeft ? 0xf59e0b : 0x38bdf8, 0x1e293b, 0xfde68a);
+      const isFemalePed = i % 3 === 0;
+      const pedMesh = this.criarBonecoHumano3D(isLeft ? 0xf59e0b : 0x38bdf8, 0x1e293b, 0xfde68a, isFemalePed);
       const x = isLeft ? -8.5 + (Math.random() - 0.5) : 8.5 + (Math.random() - 0.5);
       const z = -90 + Math.random() * 100;
       pedMesh.position.set(x, 0, z);
@@ -1251,7 +1321,151 @@ class EnglishSpaces3DWorld {
     } catch (e) {}
   }
 
-  criarLetreiro3D(texto, pos, col, isMastered = false) {
+
+  // 🐾 ANIMAIS NA RUA - CACHORRO, GATO E PÁSSAROS
+  criarAnimaisRua() {
+    const THREE = window.THREE;
+    this.animais.caes = [];
+    this.animais.gatos = [];
+    this.animais.passaros = [];
+    // 2 cachorros
+    for(let i=0;i<2;i++){
+      const dog = this.criarCachorro3D();
+      dog.position.set(-9 + i*5.5, 0, -12 - i*7);
+      dog.rotation.y = Math.random()*Math.PI;
+      this.exteriorGroup.add(dog);
+      this.animais.caes.push({ mesh: dog, dir: Math.random()>0.5?1:-1, speed: 0.9+Math.random()*0.6, x: dog.position.x, z: dog.position.z, walkPhase: Math.random()*Math.PI });
+    }
+    // 2 gatos
+    for(let i=0;i<2;i++){
+      const cat = this.criarGato3D();
+      cat.position.set(8.8 + (Math.random()-0.5)*1.5, 0, -22 - i*11);
+      this.exteriorGroup.add(cat);
+      this.animais.gatos.push({ mesh: cat, dir: 1, speed: 0.6+Math.random()*0.4, x: cat.position.x, z: cat.position.z, walkPhase: Math.random()*Math.PI, idleTime: 0 });
+    }
+    // Pássaros no céu
+    this.animais.passarosGroup = new THREE.Group();
+    for(let i=0;i<9;i++){
+      const bird = this.criarPassaro3D();
+      bird.position.set((Math.random()-0.5)*70, 14+Math.random()*8, -35 + (Math.random()-0.5)*80);
+      bird.userData = { speed: 2.5+Math.random()*2, angle: Math.random()*Math.PI*2, radius: 8+Math.random()*12 };
+      this.animais.passarosGroup.add(bird);
+      this.animais.passaros.push(bird);
+    }
+    this.scene.add(this.animais.passarosGroup);
+  }
+
+  criarCachorro3D() {
+    const THREE = window.THREE;
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 });
+    const headMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.65,0.32,0.42), bodyMat); body.position.set(0,0.28,0);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22,10,10), headMat); head.position.set(0.42,0.42,0);
+    const snout = new THREE.Mesh(new THREE.BoxGeometry(0.18,0.12,0.16), new THREE.MeshStandardMaterial({ color: 0x2b1d12 })); snout.position.set(0.62,0.38,0);
+    const ear1 = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.14,0.02), headMat); ear1.position.set(0.38,0.56,0.12); ear1.rotation.z=-0.3;
+    const ear2 = new THREE.Mesh(new THREE.BoxGeometry(0.08,0.14,0.02), headMat); ear2.position.set(0.38,0.56,-0.12); ear2.rotation.z=-0.3;
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04,0.02,0.28,6), bodyMat); tail.position.set(-0.38,0.38,0); tail.rotation.z=0.8;
+    group.add(body,head,snout,ear1,ear2,tail);
+    for(let i=0;i<4;i++){
+      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05,0.04,0.28,6), bodyMat); leg.position.set((i<2?0.22:-0.22),0.14,(i%2===0?0.14:-0.14)); group.add(leg);
+    }
+    group.userData = { isDog: true };
+    return group;
+  }
+
+  criarGato3D() {
+    const THREE = window.THREE;
+    const group = new THREE.Group();
+    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.7 });
+    const body = new THREE.Mesh(new THREE.BoxGeometry(0.48,0.22,0.32), bodyMat); body.position.set(0,0.22,0);
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18,10,10), bodyMat); head.position.set(0.32,0.38,0);
+    const earGeo = new THREE.ConeGeometry(0.06,0.12,4);
+    const ear1 = new THREE.Mesh(earGeo, bodyMat); ear1.position.set(0.32,0.54,0.08);
+    const ear2 = new THREE.Mesh(earGeo, bodyMat); ear2.position.set(0.32,0.54,-0.08);
+    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.015,0.42,6), bodyMat); tail.position.set(-0.32,0.32,0); tail.rotation.z=1.1;
+    group.add(body,head,ear1,ear2,tail);
+    return group;
+  }
+
+  criarPassaro3D() {
+    const THREE = window.THREE;
+    const group = new THREE.Group();
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.09,6,6), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
+    const wingGeo = new THREE.PlaneGeometry(0.22,0.06);
+    const wingMat = new THREE.MeshBasicMaterial({ color: 0x111827, side: THREE.DoubleSide });
+    const wingL = new THREE.Mesh(wingGeo, wingMat); wingL.position.set(0,0.04,0.12); wingL.rotation.z=0.2;
+    const wingR = new THREE.Mesh(wingGeo, wingMat); wingR.position.set(0,0.04,-0.12); wingR.rotation.z=-0.2;
+    group.add(body,wingL,wingR);
+    group.userData.wingL = wingL; group.userData.wingR = wingR;
+    return group;
+  }
+
+  atualizarAnimais(delta) {
+    if (this.modoInterior) return;
+    const THREE = window.THREE;
+    // Cães andando e abanando rabo
+    this.animais.caes.forEach(dogData=>{
+      dogData.walkPhase += delta*6;
+      dogData.mesh.position.z += dogData.dir * dogData.speed * delta * 0.5;
+      if (dogData.mesh.position.z > 8) dogData.mesh.position.z = -82;
+      if (dogData.mesh.position.z < -82) dogData.mesh.position.z = 8;
+      dogData.mesh.position.x = dogData.x + Math.sin(dogData.walkPhase*0.5)*0.6;
+      // abanar rabo
+      const tail = dogData.mesh.children.find(c=>c.geometry && c.geometry.type==='CylinderGeometry' && c.position.x< -0.3);
+      if (tail) tail.rotation.z = 0.8 + Math.sin(dogData.walkPhase*2)*0.6;
+    });
+    // Gatos mais parados, às vezes deitam
+    this.animais.gatos.forEach(catData=>{
+      catData.idleTime += delta;
+      if (catData.idleTime > 4 + Math.random()*3) {
+        catData.dir *= -1; catData.idleTime = 0;
+        catData.mesh.rotation.y += Math.PI;
+      }
+      if (catData.idleTime < 2) {
+        catData.mesh.position.z += catData.dir * catData.speed * delta * 0.35;
+      }
+    });
+    // Pássaros voando em círculos
+    this.animais.passaros.forEach(bird=>{
+      bird.userData.angle += delta * 0.6 * bird.userData.speed * 0.15;
+      bird.position.x += Math.cos(bird.userData.angle) * delta * bird.userData.speed;
+      bird.position.z += Math.sin(bird.userData.angle) * delta * bird.userData.speed;
+      bird.rotation.y = bird.userData.angle;
+      if (bird.userData.wingL) {
+        bird.userData.wingL.rotation.z = 0.2 + Math.sin(Date.now()*0.02 + bird.position.x)*0.7;
+        bird.userData.wingR.rotation.z = -0.2 - Math.sin(Date.now()*0.02 + bird.position.x)*0.7;
+      }
+    });
+  }
+
+  // GLTF - COFFEE COM FALLBACK
+  tentarCarregarGLTFCoffee() {
+    if (!this.gltfLoader) return;
+    const bMeta = this.buildingsMeta.find(b=>b.id==='coffee');
+    if (!bMeta) return;
+    const interiorGrp = this.interiorGroups.get('coffee');
+    if (!interiorGrp) return;
+    // Tenta carregar /models/coffee.glb - se falhar, mantém Box temático
+    this.gltfLoader.load('/models/coffee.glb', (gltf)=>{
+      const model = gltf.scene;
+      model.scale.set(1.2,1.2,1.2);
+      model.position.set(bMeta.centerX,0,bMeta.centerZ);
+      model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; }});
+      interiorGrp.add(model);
+      console.log('☕ GLTF Coffee carregado com sucesso');
+      // Esconde os Boxes antigos para não duplicar
+      interiorGrp.children.forEach(child=>{
+        if (child !== model && child.isMesh && child.geometry && child.geometry.type==='BoxGeometry') {
+          child.visible = false;
+        }
+      });
+    }, null, (err)=>{
+      console.log('☕ GLTF Coffee não encontrado, usando fallback Box (normal)');
+    });
+  }
+
+    criarLetreiro3D(texto, pos, col, isMastered = false) {
     const THREE = window.THREE;
     const canvas = document.createElement('canvas'); canvas.width = 1024; canvas.height = 256;
     const ctx = canvas.getContext('2d');
@@ -1321,6 +1535,7 @@ class EnglishSpaces3DWorld {
     this.atualizarCicloDiaNoite();
     this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
     this.criarCenarioFundoMontanhasArvores();
+    // GLTF Coffee será carregado após buildingsMeta existir
 
     this.buildingsMeta = [];
     this.buildingMeshes.clear();
@@ -1406,7 +1621,8 @@ class EnglishSpaces3DWorld {
 
       const npcX = centerX + (bCfg.col * 3.1);
       const npcZ = centerZ;
-      const npcMesh = this.criarBonecoHumano3D(bCfg.npcColor, 0x0f172a, 0xfde68a);
+      const isFemaleNPC = ['coffee','school','shopping','cinema','beach','hotel','hospital'].includes(bCfg.id);
+      const npcMesh = this.criarBonecoHumano3D(bCfg.npcColor, 0x0f172a, 0xfde68a, isFemaleNPC);
       npcMesh.position.set(npcX, 0, npcZ);
       npcMesh.rotation.y = bCfg.col === -1 ? (Math.PI / 2) : (-Math.PI / 2);
       this.scene.add(npcMesh);
@@ -1439,11 +1655,15 @@ class EnglishSpaces3DWorld {
       }
     }); // Fim do forEach dos edifícios
 
+    // Tenta carregar GLTF do Coffee com fallback
+    setTimeout(()=>{ this.tentarCarregarGLTFCoffee(); }, 800);
+
     // 🎯 CORREÇÃO DO ERRO: Calculamos o startBuilding aqui, com segurança, 
     // sabendo que this.buildingsMeta já está totalmente preenchido!
     const startBuilding = this.buildingsMeta.find(b => b.id === initialSpaceId) || this.buildingsMeta[0];
 
     // Inicializa as 14 Maravilhas interativas
+    this.criarAnimaisRua();
     this.criarAudioZones3D();
     this.criarSistemaChuvaNeblina();
     this.criarNightMarket();
@@ -1669,6 +1889,7 @@ class EnglishSpaces3DWorld {
       this.camera.lookAt(lookAtX, lookAtY, lookAtZ);
 
       this.atualizarPortas();
+      this.atualizarAnimais(delta);
       this.atualizarAudioZones();
       this.atualizarChuvaNeblina(delta);
       this.atualizarNightMarket();
@@ -1781,8 +2002,9 @@ class EnglishSpaces3DWorld {
       const vw = viewport.clientWidth || window.innerWidth;
       const vh = viewport.clientHeight || window.innerHeight;
       this.projetarEtiquetaHTML(p.mesh.position, 2.45, p.labelEl, vw, vh);
+      // IA só mostra nome quando entra no espaço dela - fora só personagens e avatares
       this.npcs3D.forEach(npc => {
-        if (!this.modoInterior || this.predioAtual === npc.id) this.projetarEtiquetaHTML(npc.mesh.position, 2.45, npc.labelEl, vw, vh);
+        if (this.modoInterior && this.predioAtual === npc.id) this.projetarEtiquetaHTML(npc.mesh.position, 2.45, npc.labelEl, vw, vh);
       });
       this.otherPlayers3D.forEach(op => {
         if (op.mesh.visible) this.projetarEtiquetaHTML(op.mesh.position, 2.45, op.labelEl, vw, vh);
