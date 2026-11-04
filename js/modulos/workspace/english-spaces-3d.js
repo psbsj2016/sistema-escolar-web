@@ -1439,31 +1439,26 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  // GLTF - COFFEE COM FALLBACK
-  tentarCarregarGLTFCoffee() {
-    if (!this.gltfLoader) return;
-    const bMeta = this.buildingsMeta.find(b=>b.id==='coffee');
-    if (!bMeta) return;
-    const interiorGrp = this.interiorGroups.get('coffee');
-    if (!interiorGrp) return;
-    // Tenta carregar /models/coffee.glb - se falhar, mantém Box temático
-    this.gltfLoader.load('/models/coffee.glb', (gltf)=>{
+// GLTF - TODOS OS 12 PRÉDIOS COM FALLBACK
+tentarCarregarGLTFsTodos() {
+  if (!this.gltfLoader) return;
+  const ids = ['coffee','restaurant','school','shopping','home','cinema','taxi','beach','hotel','airport','job','hospital'];
+  ids.forEach(id=>{
+    const bMeta = this.buildingsMeta.find(b=>b.id===id);
+    const interiorGrp = this.interiorGroups.get(id);
+    if (!bMeta || !interiorGrp) return;
+    this.gltfLoader.load(`/models/${id}.glb`, (gltf)=>{
       const model = gltf.scene;
-      model.scale.set(1.2,1.2,1.2);
+      model.scale.set(1.1,1.1,1.1);
       model.position.set(bMeta.centerX,0,bMeta.centerZ);
       model.traverse(o=>{ if(o.isMesh){ o.castShadow=true; o.receiveShadow=true; }});
       interiorGrp.add(model);
-      console.log('☕ GLTF Coffee carregado com sucesso');
-      // Esconde os Boxes antigos para não duplicar
-      interiorGrp.children.forEach(child=>{
-        if (child !== model && child.isMesh && child.geometry && child.geometry.type==='BoxGeometry') {
-          child.visible = false;
-        }
-      });
-    }, null, (err)=>{
-      console.log('☕ GLTF Coffee não encontrado, usando fallback Box (normal)');
+      console.log(`✅ GLTF ${id} carregado`);
+    }, null, ()=>{
+      console.log(`ℹ️ ${id}.glb não encontrado, usando Box`);
     });
-  }
+  });
+}
 
     criarLetreiro3D(texto, pos, col, isMastered = false) {
     const THREE = window.THREE;
@@ -1656,7 +1651,7 @@ class EnglishSpaces3DWorld {
     }); // Fim do forEach dos edifícios
 
     // Tenta carregar GLTF do Coffee com fallback
-    setTimeout(()=>{ this.tentarCarregarGLTFCoffee(); }, 800);
+    this.tentarCarregarGLTFsTodos();
 
     // 🎯 CORREÇÃO DO ERRO: Calculamos o startBuilding aqui, com segurança, 
     // sabendo que this.buildingsMeta já está totalmente preenchido!
