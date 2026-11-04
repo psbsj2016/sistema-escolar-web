@@ -1,7 +1,7 @@
 import './english-spaces-3d.js';
 
 // js/modulos/workspace/english-spaces.js
-// Módulo Integrado: 🌎 ENGLISH SPACES (12 Cenários Reais + Rotas Nativas sem Erro 404)
+// Módulo Integrado: 🌎 ENGLISH SPACES (24 Cenários Reais + Economia Unificada DOVRYX DRX + Sincronização Nuvem MongoDB)
 
 window.Workspace = window.Workspace || {};
 
@@ -59,135 +59,16 @@ export const SPACES_REGISTRY = {
       },
       pay: {
         name: 'Maya (Barista)',
-        text: "The Wi-Fi is 'CoffeeLover2026' and your total is $6.50. How would you like to pay?",
-        translation: "O Wi-Fi é 'CoffeeLover2026' e o total fica $6.50. Como gostaria de pagar?",
+        text: "The Wi-Fi is 'CoffeeLover2026' and your total is 15 DRX. How would you like to pay?",
+        translation: "O Wi-Fi é 'CoffeeLover2026' e o total fica 15 DRX. Como gostaria de pagar?",
         options: [
-          { label: 'A', text: "I'll pay by credit card. Here you go!", next: 'end', missionId: 'm3', keywords: ['card', 'credit', 'cash', 'pay', 'here', 'apple'] }
+          { label: 'A', text: "I'll pay with my DOVRYX card. Here you go!", next: 'end', missionId: 'm3', keywords: ['card', 'credit', 'cash', 'pay', 'here', 'drx'] }
         ]
       },
       end: {
         name: 'Maya (Barista)',
         text: 'Payment approved! Your order will be ready at the counter in two minutes. Enjoy your day! 🎉',
         translation: 'Pagamento aprovado! O seu pedido estará pronto no balcão em dois minutos. Aproveite o seu dia! 🎉',
-        options: []
-      }
-    }
-  },
-
-  airport: {
-    id: 'airport',
-    name: 'AIRPORT',
-    emoji: '✈️',
-    description: 'Check-in desk, luggage drop, boarding pass, security and gate changes.',
-    type: 'Travel',
-    gradient: 'es-gradient-airport',
-    roles: ['TRAVELER', 'CHECK-IN AGENT', 'SECURITY OFFICER'],
-    npcName: 'David (Check-in Agent)',
-    liveCount: 8,
-    unlockedDefault: false,
-    unlockXP: 500,
-    missions: [
-      { id: 'm1', title: 'Present passport & destination', xp: 75 },
-      { id: 'm2', title: 'Request window/aisle seat & check luggage', xp: 85 },
-      { id: 'm3', title: 'Confirm boarding gate & time', xp: 90 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'BOARDING PASS', emoji: '🎫', pron: '/ˈbɔːrdɪŋ pæs/', meaning: 'Cartão de embarque', example: 'Here is your boarding pass for Gate B12.' },
-      { id: 'v2', word: 'CARRY-ON', emoji: '🧳', pron: '/ˈkæri ɑːn/', meaning: 'Bagagem de mão', example: 'I only have one carry-on bag.' },
-      { id: 'v3', word: 'AISLE SEAT', emoji: '💺', pron: '/aɪl siːt/', meaning: 'Assento no corredor', example: 'Could I have an aisle seat, please?' },
-      { id: 'v4', word: 'PASSPORT', emoji: '🛂', pron: '/ˈpæspɔːrt/', meaning: 'Passaporte', example: 'May I see your passport, please?' }
-    ],
-    expressions: ["I'm flying to New York.", "Could I get a window seat?", "I have one suitcase to check.", "Which gate is my flight?"],
-    dialogues: {
-      start: {
-        name: 'David (Check-in Agent)',
-        text: 'Hello! Welcome to Global Airlines. May I see your passport and where are you flying today?',
-        translation: 'Olá! Bem-vindo à Global Airlines. Posso ver o seu passaporte e para onde voa hoje?',
-        options: [
-          { label: 'A', text: 'Here is my passport. I am flying to London today.', next: 'seat', missionId: 'm1', keywords: ['passport', 'flying', 'london', 'new york'] },
-          { label: 'B', text: 'Good morning! Here is my passport and booking confirmation.', next: 'seat', missionId: 'm1', keywords: ['booking', 'confirmation', 'morning'] }
-        ],
-        fallback: 'May I see your passport and know your final destination, please?'
-      },
-      seat: {
-        name: 'David (Check-in Agent)',
-        text: 'Thank you! Do you prefer a window seat or an aisle seat? And are you checking any bags?',
-        translation: 'Obrigado! Prefere assento na janela ou no corredor? E vai despachar alguma mala?',
-        options: [
-          { label: 'A', text: 'A window seat, please. I have one suitcase to check and a carry-on.', next: 'gate', missionId: 'm2', keywords: ['window', 'suitcase', 'check', 'bag'] },
-          { label: 'B', text: 'An aisle seat, please. I only have this carry-on bag.', next: 'gate', missionId: 'm2', keywords: ['aisle', 'carry-on', 'only'] }
-        ]
-      },
-      gate: {
-        name: 'David (Check-in Agent)',
-        text: 'All set! Here is your boarding pass. Your flight boards at 3:30 PM from Gate B14.',
-        translation: 'Tudo pronto! Aqui está o seu cartão de embarque. O seu voo embarca às 15h30 no Portão B14.',
-        options: [
-          { label: 'A', text: 'Thank you! Where is security and Gate B14 from here?', next: 'end', missionId: 'm3', keywords: ['gate', 'security', 'where', 'thank'] }
-        ]
-      },
-      end: {
-        name: 'David (Check-in Agent)',
-        text: 'Go straight ahead and turn left after security. Have a safe flight! ✈️🎉',
-        translation: 'Siga em frente e vire à esquerda após a segurança. Tenha um ótimo voo! ✈️🎉',
-        options: []
-      }
-    }
-  },
-
-  hotel: {
-    id: 'hotel',
-    name: 'HOTEL',
-    emoji: '🏨',
-    description: 'Check-in at reception, breakfast hours, room service and late check-out.',
-    type: 'Travel',
-    gradient: 'es-gradient-hotel',
-    roles: ['GUEST', 'RECEPTIONIST', 'CONCIERGE'],
-    npcName: 'Sophia (Receptionist)',
-    liveCount: 4,
-    unlockedDefault: false,
-    unlockXP: 500,
-    missions: [
-      { id: 'm1', title: 'Check in with your reservation name', xp: 70 },
-      { id: 'm2', title: 'Ask about breakfast time & amenities', xp: 80 },
-      { id: 'm3', title: 'Get your key card & room number', xp: 85 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'RESERVATION', emoji: '📅', pron: '/ˌrezərˈveɪʃn/', meaning: 'Reserva', example: 'I have a reservation under Santana.' },
-      { id: 'v2', word: 'KEY CARD', emoji: '💳', pron: '/ˈkiː kɑːrd/', meaning: 'Cartão-chave do quarto', example: 'Here is your key card for room 405.' },
-      { id: 'v3', word: 'CHECK-OUT', emoji: '🕚', pron: '/ˈtʃek aʊt/', meaning: 'Saída / Fecho da estadia', example: 'What time is check-out tomorrow?' }
-    ],
-    expressions: ["I have a reservation under...", "What time is breakfast served?", "Is breakfast included?", "Could we have a room with a view?"],
-    dialogues: {
-      start: {
-        name: 'Sophia (Receptionist)',
-        text: 'Welcome to The Grand Hotel! How may I assist you today?',
-        translation: 'Bem-vindo ao Grand Hotel! Como posso ajudá-lo hoje?',
-        options: [
-          { label: 'A', text: 'Hi! I would like to check in. I have a reservation for two nights.', next: 'breakfast', missionId: 'm1', keywords: ['check in', 'reservation', 'room', 'booked'] }
-        ],
-        fallback: 'Do you have a reservation with us today?'
-      },
-      breakfast: {
-        name: 'Sophia (Receptionist)',
-        text: 'I found your reservation! A deluxe room on the 5th floor. Do you have any questions about our hotel services?',
-        translation: 'Encontrei a sua reserva! Um quarto deluxe no 5.º andar. Tem alguma dúvida sobre os serviços do hotel?',
-        options: [
-          { label: 'A', text: 'Yes, is breakfast included and what time is it served?', next: 'key', missionId: 'm2', keywords: ['breakfast', 'time', 'included', 'pool'] }
-        ]
-      },
-      key: {
-        name: 'Sophia (Receptionist)',
-        text: 'Yes, breakfast is included and served from 7 AM to 10 AM on the ground floor. Here are your key cards for Room 508!',
-        translation: 'Sim, o pequeno-almoço está incluído das 7h às 10h no rés-do-chão. Aqui estão os cartões do Quarto 508!',
-        options: [
-          { label: 'A', text: 'Wonderful! Which way are the elevators? Thank you!', next: 'end', missionId: 'm3', keywords: ['elevator', 'lift', 'thank', 'room'] }
-        ]
-      },
-      end: {
-        name: 'Sophia (Receptionist)',
-        text: 'The elevators are just around the corner to your right. Enjoy your stay with us! 🏨🎉',
-        translation: 'Os elevadores ficam logo ao virar à direita. Aproveite a sua estadia! 🏨🎉',
         options: []
       }
     }
@@ -309,14 +190,14 @@ export const SPACES_REGISTRY = {
 
   shopping: {
     id: 'shopping',
-    name: 'SHOPPING',
+    name: 'SHOPPING MALL',
     emoji: '🛍️',
     description: 'Looking for clothes, asking for sizes, trying items on in the fitting room and discounts.',
     type: 'Daily Life',
     gradient: 'es-gradient-shopping',
     roles: ['CUSTOMER', 'SALES ASSISTANT', 'CASHIER'],
     npcName: 'Emma (Sales Assistant)',
-    liveCount: 3,
+    liveCount: 4,
     unlockedDefault: true,
     missions: [
       { id: 'm1', title: 'Ask for a specific clothing item & size', xp: 60 },
@@ -326,7 +207,7 @@ export const SPACES_REGISTRY = {
     vocab: [
       { id: 'v1', word: 'FITTING ROOM', emoji: '🪞', pron: '/ˈfɪtɪŋ ruːm/', meaning: 'Provador de roupas', example: 'Where are the fitting rooms?' },
       { id: 'v2', word: 'MEDIUM SIZE', emoji: '👕', pron: '/ˈmiːdiəm saɪz/', meaning: 'Tamanho médio (M)', example: 'Do you have this jacket in medium?' },
-      { id: 'v3', word: 'ON SALE', emoji: '🏷️', pron: '/ɑːn seɪl/', meaning: 'Em promoção / Com desconto', example: 'This item is 20% off on sale.' }
+      { id: 'v3', word: 'ON SALE', emoji: '🏷️', pron: '/ɑːn seɪl/', meaning: 'Em promoção', example: 'This item is 20% off on sale.' }
     ],
     expressions: ["Do you have this in size medium?", "Can I try this on?", "Where are the fitting rooms?", "Is this on sale?"],
     dialogues: {
@@ -359,235 +240,6 @@ export const SPACES_REGISTRY = {
         name: 'Emma (Sales Assistant)',
         text: 'Yes, it has a 15% discount today! Let me wrap it up for you at the register. 🛍️🎉',
         translation: 'Sim, tem 15% de desconto hoje! Vou embrulhá-lo para si na caixa. 🛍️🎉',
-        options: []
-      }
-    }
-  },
-
-  beach: {
-    id: 'beach',
-    name: 'BEACH',
-    emoji: '🏖️',
-    description: 'Renting beach chairs, ocean safety conditions, ordering cold drinks and sunset tips.',
-    type: 'Leisure',
-    gradient: 'es-gradient-beach',
-    roles: ['TOURIST', 'LIFEGUARD', 'BEACH VENDOR'],
-    npcName: 'Kai (Beach Host)',
-    liveCount: 4,
-    unlockedDefault: true,
-    missions: [
-      { id: 'm1', title: 'Rent two chairs and an umbrella', xp: 60 },
-      { id: 'm2', title: 'Ask if the ocean is safe for swimming', xp: 70 },
-      { id: 'm3', title: 'Order fresh coconut water', xp: 75 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'SUNSCREEN', emoji: '🧴', pron: '/ˈsʌnskriːn/', meaning: 'Protetor solar', example: "Don't forget to put on sunscreen!" },
-      { id: 'v2', word: 'UMBRELLA', emoji: '⛱️', pron: '/ʌmˈbrelə/', meaning: 'Guarda-sol', example: 'We rented two chairs and an umbrella.' },
-      { id: 'v3', word: 'TIDE', emoji: '🌊', pron: '/taɪd/', meaning: 'Maré', example: 'The tide is calm this morning.' }
-    ],
-    expressions: ["How much to rent two chairs?", "Is the water safe for swimming?", "Can we get two coconut waters?", "Where can we watch the sunset?"],
-    dialogues: {
-      start: {
-        name: 'Kai (Beach Host)',
-        text: 'Aloha! Beautiful sunny day at the beach! Would you like to set up some chairs by the water?',
-        translation: 'Aloha! Lindo dia de sol na praia! Gostaria de alugar cadeiras perto da água?',
-        options: [
-          { label: 'A', text: 'Yes! How much is it to rent two beach chairs and an umbrella?', next: 'safety', missionId: 'm1', keywords: ['chairs', 'umbrella', 'rent', 'how much'] }
-        ],
-        fallback: 'Would you like to rent beach chairs and an umbrella today?'
-      },
-      safety: {
-        name: 'Kai (Beach Host)',
-        text: "It's $15 for the whole day. I've set them up for you right here!",
-        translation: 'São $15 pelo dia inteiro. Já as preparei aqui para você!',
-        options: [
-          { label: 'A', text: 'Thanks! Is the ocean safe for swimming right now?', next: 'drink', missionId: 'm2', keywords: ['safe', 'swim', 'ocean', 'water', 'waves'] }
-        ]
-      },
-      drink: {
-        name: 'Kai (Beach Host)',
-        text: 'Yes, the green flag is up and the water is super calm and warm! Can I bring you something cold to drink?',
-        translation: 'Sim, a bandeira verde está hasteada e a água está super calma e morna! Posso trazer algo gelado para beber?',
-        options: [
-          { label: 'A', text: 'That sounds great! Could we get two cold coconut waters, please?', next: 'end', missionId: 'm3', keywords: ['coconut', 'water', 'drink', 'juice'] }
-        ]
-      },
-      end: {
-        name: 'Kai (Beach Host)',
-        text: 'Two fresh coconut waters coming right up! Enjoy the sun and the ocean! 🏖️🎉',
-        translation: 'Duas águas de coco fresquinhas a caminho! Aproveite o sol e o mar! 🏖️🎉',
-        options: []
-      }
-    }
-  },
-
-  job: {
-    id: 'job',
-    name: 'JOB INTERVIEW',
-    emoji: '💼',
-    description: 'Introduce your background, highlight your strengths, and ask smart career questions.',
-    type: 'Career & Business',
-    gradient: 'es-gradient-job',
-    roles: ['CANDIDATE', 'INTERVIEWER', 'HR MANAGER'],
-    npcName: 'Rachel (HR Director)',
-    liveCount: 5,
-    unlockedDefault: false,
-    unlockXP: 1500,
-    missions: [
-      { id: 'm1', title: 'Introduce yourself & your experience', xp: 100 },
-      { id: 'm2', title: 'Explain your biggest professional strength', xp: 110 },
-      { id: 'm3', title: 'Ask a question about the team/company', xp: 120 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'STRENGTHS', emoji: '💪', pron: '/streŋkθs/', meaning: 'Pontos fortes', example: 'One of my main strengths is problem-solving.' },
-      { id: 'v2', word: 'BACKGROUND', emoji: '🎓', pron: '/ˈbækɡraʊnd/', meaning: 'Histórico / Experiência', example: 'I have a strong background in customer service.' },
-      { id: 'v3', word: 'DEADLINE', emoji: '📈', pron: '/ˈdedlaɪn/', meaning: 'Prazo / Meta', example: 'I work very well under tight deadlines.' }
-    ],
-    expressions: ["I have experience in...", "My greatest strength is...", "I enjoy working in a team.", "What are the next steps in the hiring process?"],
-    dialogues: {
-      start: {
-        name: 'Rachel (HR Director)',
-        text: 'Welcome! Thank you for joining our interview today. To start, could you tell me a little bit about yourself and your background?',
-        translation: 'Bem-vindo(a)! Obrigado por participar na entrevista hoje. Para começar, pode falar-me um pouco sobre si e a sua experiência?',
-        options: [
-          { label: 'A', text: 'Thank you for having me! I have experience in communication and I love solving problems.', next: 'strengths', missionId: 'm1', keywords: ['experience', 'background', 'work', 'study'] }
-        ],
-        fallback: 'Could you share a brief summary of your professional or academic background?'
-      },
-      strengths: {
-        name: 'Rachel (HR Director)',
-        text: 'Impressive! And what would you say is your greatest professional strength when working with a team?',
-        translation: 'Impressionante! E qual diria que é o seu maior ponto forte profissional ao trabalhar em equipa?',
-        options: [
-          { label: 'A', text: 'My greatest strength is adaptability and clear communication under pressure.', next: 'closing', missionId: 'm2', keywords: ['strength', 'communication', 'team', 'adaptability'] }
-        ]
-      },
-      closing: {
-        name: 'Rachel (HR Director)',
-        text: 'That is exactly what we value in our company. Do you have any questions for me about the role or our team?',
-        translation: 'Isso é exatamente o que valorizamos na nossa empresa. Tem alguma pergunta sobre a vaga ou a nossa equipa?',
-        options: [
-          { label: 'A', text: 'Yes! What does a typical day look like in this role, and what are the next steps?', next: 'end', missionId: 'm3', keywords: ['typical', 'next', 'steps', 'team', 'culture'] }
-        ]
-      },
-      end: {
-        name: 'Rachel (HR Director)',
-        text: 'Great question! You did a fantastic job in this interview. We will contact you by Friday! 💼🎉',
-        translation: 'Ótima pergunta! Fez um trabalho fantástico nesta entrevista. Entraremos em contacto até sexta-feira! 💼🎉',
-        options: []
-      }
-    }
-  },
-
-  taxi: {
-    id: 'taxi',
-    name: 'TAXI / RIDE',
-    emoji: '🚕',
-    description: 'Confirm your destination, suggest the fastest route, traffic talk and payment.',
-    type: 'Travel',
-    gradient: 'es-gradient-taxi',
-    roles: ['PASSENGER', 'DRIVER'],
-    npcName: 'Marco (Driver)',
-    liveCount: 3,
-    unlockedDefault: true,
-    missions: [
-      { id: 'm1', title: 'Give the destination address', xp: 60 },
-      { id: 'm2', title: 'Ask how long the ride will take', xp: 70 },
-      { id: 'm3', title: 'Pay the fare and thank the driver', xp: 75 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'TRAFFIC JAM', emoji: '🚦', pron: '/ˈtræfɪk dʒæm/', meaning: 'Engarrafamento / Trânsito', example: 'Is there a lot of traffic on the highway?' },
-      { id: 'v2', word: 'FARE', emoji: '💵', pron: '/fer/', meaning: 'Tarifa / Valor da corrida', example: 'The total fare is $18.' },
-      { id: 'v3', word: 'DROP OFF', emoji: '📍', pron: '/drɑːp ɔːf/', meaning: 'Deixar (no destino)', example: 'You can drop me off right at the corner.' }
-    ],
-    expressions: ["Could you take me to Central Station?", "How long will it take?", "You can drop me off here.", "Keep the change!"],
-    dialogues: {
-      start: {
-        name: 'Marco (Driver)',
-        text: 'Hello! Hop in! Where are we heading today?',
-        translation: 'Olá! Pode entrar! Para onde vamos hoje?',
-        options: [
-          { label: 'A', text: 'Hi! Could you take me to Downtown Central Station, please?', next: 'traffic', missionId: 'm1', keywords: ['take', 'station', 'hotel', 'airport', 'downtown'] }
-        ],
-        fallback: 'Where would you like me to take you today?'
-      },
-      traffic: {
-        name: 'Marco (Driver)',
-        text: 'Sure thing! Fasten your seatbelt. We are on our way.',
-        translation: 'Com certeza! Coloque o cinto de segurança. Estamos a caminho.',
-        options: [
-          { label: 'A', text: 'How is the traffic today? How long will it take to get there?', next: 'arrive', missionId: 'm2', keywords: ['how long', 'traffic', 'time', 'minutes'] }
-        ]
-      },
-      arrive: {
-        name: 'Marco (Driver)',
-        text: 'Traffic is light! It will take about 12 minutes. Here we are right in front of the main entrance! The fare is $14.',
-        translation: 'O trânsito está tranquilo! Levará cerca de 12 minutos. Aqui estamos em frente à entrada principal! A corrida deu $14.',
-        options: [
-          { label: 'A', text: 'Here is $16, please keep the change! Thanks for the ride!', next: 'end', missionId: 'm3', keywords: ['here', 'change', 'card', 'thanks', 'pay'] }
-        ]
-      },
-      end: {
-        name: 'Marco (Driver)',
-        text: 'Thank you so much! Have a wonderful trip! 🚕🎉',
-        translation: 'Muito obrigado! Tenha uma excelente viagem! 🚕🎉',
-        options: []
-      }
-    }
-  },
-
-  cinema: {
-    id: 'cinema',
-    name: 'CINEMA',
-    emoji: '🎬',
-    description: 'Buy movie tickets, choose seats in the theater and order popcorn & soda.',
-    type: 'Leisure',
-    gradient: 'es-gradient-cinema',
-    roles: ['CUSTOMER', 'TICKET ATTENDANT', 'FRIEND'],
-    npcName: 'Chloe (Box Office)',
-    liveCount: 4,
-    unlockedDefault: true,
-    missions: [
-      { id: 'm1', title: 'Buy tickets for a movie & session time', xp: 60 },
-      { id: 'm2', title: 'Pick your seats in the middle row', xp: 70 },
-      { id: 'm3', title: 'Order popcorn and a drink', xp: 75 }
-    ],
-    vocab: [
-      { id: 'v1', word: 'SHOWTIME', emoji: '🎟️', pron: '/ˈʃoʊtaɪm/', meaning: 'Horário da sessão', example: 'The next showtime is at 8 PM.' },
-      { id: 'v2', word: 'SUBTITLES', emoji: '💬', pron: '/ˈsʌbtaɪtlz/', meaning: 'Legendas', example: 'Is the movie in English with subtitles?' },
-      { id: 'v3', word: 'POPCORN', emoji: '🍿', pron: '/ˈpɑːpkɔːrn/', meaning: 'Pipoca', example: 'Can I get a large salted popcorn?' }
-    ],
-    expressions: ["Two tickets for the 8 PM show, please.", "Can we sit in the middle row?", "A large popcorn and two sodas.", "Which theater room is it?"],
-    dialogues: {
-      start: {
-        name: 'Chloe (Box Office)',
-        text: 'Welcome to Starlight Cinema! Which movie and showtime would you like to see tonight?',
-        translation: 'Bem-vindo ao Starlight Cinema! Qual filme e sessão gostaria de ver esta noite?',
-        options: [
-          { label: 'A', text: 'Hi! Two tickets for the sci-fi movie at 8:00 PM, please.', next: 'seats', missionId: 'm1', keywords: ['tickets', 'movie', 'show', '8'] }
-        ],
-        fallback: 'How many tickets and which movie would you like?'
-      },
-      seats: {
-        name: 'Chloe (Box Office)',
-        text: 'Great! Where would you like to sit: front row, middle row, or at the back?',
-        translation: 'Ótimo! Onde gostaria de se sentar: na fila da frente, no meio ou atrás?',
-        options: [
-          { label: 'A', text: 'In the middle row, please! Center seats if possible.', next: 'snacks', missionId: 'm2', keywords: ['middle', 'center', 'back', 'row', 'seats'] }
-        ]
-      },
-      snacks: {
-        name: 'Chloe (Box Office)',
-        text: 'You got seats F7 and F8! Would you like to add any popcorn or drinks to your combo?',
-        translation: 'Ficaram com os lugares F7 e F8! Gostariam de adicionar pipoca ou bebidas ao combo?',
-        options: [
-          { label: 'A', text: 'Yes! One large butter popcorn and two sodas, please.', next: 'end', missionId: 'm3', keywords: ['popcorn', 'soda', 'drink', 'combo'] }
-        ]
-      },
-      end: {
-        name: 'Chloe (Box Office)',
-        text: 'Here are your tickets and your popcorn combo. Theater 4 is on your left. Enjoy the movie! 🎬🎉',
-        translation: 'Aqui estão os bilhetes e o combo de pipoca. A Sala 4 fica à esquerda. Bom filme! 🎬🎉',
         options: []
       }
     }
@@ -650,6 +302,351 @@ export const SPACES_REGISTRY = {
     }
   },
 
+  cinema: {
+    id: 'cinema',
+    name: 'CINEMA',
+    emoji: '🎬',
+    description: 'Buy movie tickets, choose seats in the theater and order popcorn & soda.',
+    type: 'Leisure',
+    gradient: 'es-gradient-cinema',
+    roles: ['CUSTOMER', 'TICKET ATTENDANT', 'FRIEND'],
+    npcName: 'Chloe (Box Office)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Buy tickets for a movie & session time', xp: 60 },
+      { id: 'm2', title: 'Pick your seats in the middle row', xp: 70 },
+      { id: 'm3', title: 'Order popcorn and a drink', xp: 75 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'SHOWTIME', emoji: '🎟️', pron: '/ˈʃoʊtaɪm/', meaning: 'Horário da sessão', example: 'The next showtime is at 8 PM.' },
+      { id: 'v2', word: 'SUBTITLES', emoji: '💬', pron: '/ˈsʌbtaɪtlz/', meaning: 'Legendas', example: 'Is the movie in English with subtitles?' },
+      { id: 'v3', word: 'POPCORN', emoji: '🍿', pron: '/ˈpɑːpkɔːrn/', meaning: 'Pipoca', example: 'Can I get a large salted popcorn?' }
+    ],
+    expressions: ["Two tickets for the 8 PM show, please.", "Can we sit in the middle row?", "A large popcorn and two sodas.", "Which theater room is it?"],
+    dialogues: {
+      start: {
+        name: 'Chloe (Box Office)',
+        text: 'Welcome to Starlight Cinema! Which movie and showtime would you like to see tonight?',
+        translation: 'Bem-vindo ao Starlight Cinema! Qual filme e sessão gostaria de ver esta noite?',
+        options: [
+          { label: 'A', text: 'Hi! Two tickets for the sci-fi movie at 8:00 PM, please.', next: 'seats', missionId: 'm1', keywords: ['tickets', 'movie', 'show', '8'] }
+        ],
+        fallback: 'How many tickets and which movie would you like?'
+      },
+      seats: {
+        name: 'Chloe (Box Office)',
+        text: 'Great! Where would you like to sit: front row, middle row, or at the back?',
+        translation: 'Ótimo! Onde gostaria de se sentar: na fila da frente, no meio ou atrás?',
+        options: [
+          { label: 'A', text: 'In the middle row, please! Center seats if possible.', next: 'snacks', missionId: 'm2', keywords: ['middle', 'center', 'back', 'row', 'seats'] }
+        ]
+      },
+      snacks: {
+        name: 'Chloe (Box Office)',
+        text: 'You got seats F7 and F8! Would you like to add any popcorn or drinks to your combo?',
+        translation: 'Ficaram com os lugares F7 e F8! Gostariam de adicionar pipoca ou bebidas ao combo?',
+        options: [
+          { label: 'A', text: 'Yes! One large butter popcorn and two sodas, please.', next: 'end', missionId: 'm3', keywords: ['popcorn', 'soda', 'drink', 'combo'] }
+        ]
+      },
+      end: {
+        name: 'Chloe (Box Office)',
+        text: 'Here are your tickets and your popcorn combo. Theater 4 is on your left. Enjoy the movie! 🎬🎉',
+        translation: 'Aqui estão os bilhetes e o combo de pipoca. A Sala 4 fica à esquerda. Bom filme! 🎬🎉',
+        options: []
+      }
+    }
+  },
+
+  taxi: {
+    id: 'taxi',
+    name: 'TAXI / RIDE',
+    emoji: '🚕',
+    description: 'Confirm your destination, suggest the fastest route, traffic talk and payment.',
+    type: 'Travel',
+    gradient: 'es-gradient-taxi',
+    roles: ['PASSENGER', 'DRIVER'],
+    npcName: 'Marco (Driver)',
+    liveCount: 3,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Give the destination address', xp: 60 },
+      { id: 'm2', title: 'Ask how long the ride will take', xp: 70 },
+      { id: 'm3', title: 'Pay the fare and thank the driver', xp: 75 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'TRAFFIC JAM', emoji: '🚦', pron: '/ˈtræfɪk dʒæm/', meaning: 'Engarrafamento / Trânsito', example: 'Is there a lot of traffic on the highway?' },
+      { id: 'v2', word: 'FARE', emoji: '💵', pron: '/fer/', meaning: 'Tarifa / Valor da corrida', example: 'The total fare is 14 DRX.' },
+      { id: 'v3', word: 'DROP OFF', emoji: '📍', pron: '/drɑːp ɔːf/', meaning: 'Deixar (no destino)', example: 'You can drop me off right at the corner.' }
+    ],
+    expressions: ["Could you take me to Central Station?", "How long will it take?", "You can drop me off here.", "Keep the change!"],
+    dialogues: {
+      start: {
+        name: 'Marco (Driver)',
+        text: 'Hello! Hop in! Where are we heading today?',
+        translation: 'Olá! Pode entrar! Para onde vamos hoje?',
+        options: [
+          { label: 'A', text: 'Hi! Could you take me to Downtown Central Station, please?', next: 'traffic', missionId: 'm1', keywords: ['take', 'station', 'hotel', 'airport', 'downtown'] }
+        ],
+        fallback: 'Where would you like me to take you today?'
+      },
+      traffic: {
+        name: 'Marco (Driver)',
+        text: 'Sure thing! Fasten your seatbelt. We are on our way.',
+        translation: 'Com certeza! Coloque o cinto de segurança. Estamos a caminho.',
+        options: [
+          { label: 'A', text: 'How is the traffic today? How long will it take to get there?', next: 'arrive', missionId: 'm2', keywords: ['how long', 'traffic', 'time', 'minutes'] }
+        ]
+      },
+      arrive: {
+        name: 'Marco (Driver)',
+        text: 'Traffic is light! It will take about 12 minutes. Here we are right in front of the main entrance! The fare is 14 DRX.',
+        translation: 'O trânsito está tranquilo! Levará cerca de 12 minutos. Aqui estamos em frente à entrada principal! A corrida deu 14 DRX.',
+        options: [
+          { label: 'A', text: 'Here is 16 DRX, please keep the change! Thanks for the ride!', next: 'end', missionId: 'm3', keywords: ['here', 'change', 'card', 'thanks', 'pay'] }
+        ]
+      },
+      end: {
+        name: 'Marco (Driver)',
+        text: 'Thank you so much! Have a wonderful trip! 🚕🎉',
+        translation: 'Muito obrigado! Tenha uma excelente viagem! 🚕🎉',
+        options: []
+      }
+    }
+  },
+
+  beach: {
+    id: 'beach',
+    name: 'BEACH',
+    emoji: '🏖️',
+    description: 'Renting beach chairs, ocean safety conditions, ordering cold drinks and sunset tips.',
+    type: 'Leisure',
+    gradient: 'es-gradient-beach',
+    roles: ['TOURIST', 'LIFEGUARD', 'BEACH VENDOR'],
+    npcName: 'Kai (Beach Host)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Rent two chairs and an umbrella', xp: 60 },
+      { id: 'm2', title: 'Ask if the ocean is safe for swimming', xp: 70 },
+      { id: 'm3', title: 'Order fresh coconut water', xp: 75 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'SUNSCREEN', emoji: '🧴', pron: '/ˈsʌnskriːn/', meaning: 'Protetor solar', example: "Don't forget to put on sunscreen!" },
+      { id: 'v2', word: 'UMBRELLA', emoji: '⛱️', pron: '/ʌmˈbrelə/', meaning: 'Guarda-sol', example: 'We rented two chairs and an umbrella.' },
+      { id: 'v3', word: 'TIDE', emoji: '🌊', pron: '/taɪd/', meaning: 'Maré', example: 'The tide is calm this morning.' }
+    ],
+    expressions: ["How much to rent two chairs?", "Is the water safe for swimming?", "Can we get two coconut waters?", "Where can we watch the sunset?"],
+    dialogues: {
+      start: {
+        name: 'Kai (Beach Host)',
+        text: 'Aloha! Beautiful sunny day at the beach! Would you like to set up some chairs by the water?',
+        translation: 'Aloha! Lindo dia de sol na praia! Gostaria de alugar cadeiras perto da água?',
+        options: [
+          { label: 'A', text: 'Yes! How much is it to rent two beach chairs and an umbrella?', next: 'safety', missionId: 'm1', keywords: ['chairs', 'umbrella', 'rent', 'how much'] }
+        ],
+        fallback: 'Would you like to rent beach chairs and an umbrella today?'
+      },
+      safety: {
+        name: 'Kai (Beach Host)',
+        text: "It's 15 DRX for the whole day. I've set them up for you right here!",
+        translation: 'São 15 DRX pelo dia inteiro. Já as preparei aqui para você!',
+        options: [
+          { label: 'A', text: 'Thanks! Is the ocean safe for swimming right now?', next: 'drink', missionId: 'm2', keywords: ['safe', 'swim', 'ocean', 'water', 'waves'] }
+        ]
+      },
+      drink: {
+        name: 'Kai (Beach Host)',
+        text: 'Yes, the green flag is up and the water is super calm and warm! Can I bring you something cold to drink?',
+        translation: 'Sim, a bandeira verde está hasteada e a água está super calma e morna! Posso trazer algo gelado para beber?',
+        options: [
+          { label: 'A', text: 'That sounds great! Could we get two cold coconut waters, please?', next: 'end', missionId: 'm3', keywords: ['coconut', 'water', 'drink', 'juice'] }
+        ]
+      },
+      end: {
+        name: 'Kai (Beach Host)',
+        text: 'Two fresh coconut waters coming right up! Enjoy the sun and the ocean! 🏖️🎉',
+        translation: 'Duas águas de coco fresquinhas a caminho! Aproveite o sol e o mar! 🏖️🎉',
+        options: []
+      }
+    }
+  },
+
+  hotel: {
+    id: 'hotel',
+    name: 'HOTEL',
+    emoji: '🏨',
+    description: 'Check-in at reception, breakfast hours, room service and late check-out.',
+    type: 'Travel',
+    gradient: 'es-gradient-hotel',
+    roles: ['GUEST', 'RECEPTIONIST', 'CONCIERGE'],
+    npcName: 'Sophia (Receptionist)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Check in with your reservation name', xp: 70 },
+      { id: 'm2', title: 'Ask about breakfast time & amenities', xp: 80 },
+      { id: 'm3', title: 'Get your key card & room number', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'RESERVATION', emoji: '📅', pron: '/ˌrezərˈveɪʃn/', meaning: 'Reserva', example: 'I have a reservation under Santana.' },
+      { id: 'v2', word: 'KEY CARD', emoji: '💳', pron: '/ˈkiː kɑːrd/', meaning: 'Cartão-chave do quarto', example: 'Here is your key card for room 405.' },
+      { id: 'v3', word: 'CHECK-OUT', emoji: '🕚', pron: '/ˈtʃek aʊt/', meaning: 'Saída / Fecho da estadia', example: 'What time is check-out tomorrow?' }
+    ],
+    expressions: ["I have a reservation under...", "What time is breakfast served?", "Is breakfast included?", "Could we have a room with a view?"],
+    dialogues: {
+      start: {
+        name: 'Sophia (Receptionist)',
+        text: 'Welcome to The Grand Hotel! How may I assist you today?',
+        translation: 'Bem-vindo ao Grand Hotel! Como posso ajudá-lo hoje?',
+        options: [
+          { label: 'A', text: 'Hi! I would like to check in. I have a reservation for two nights.', next: 'breakfast', missionId: 'm1', keywords: ['check in', 'reservation', 'room', 'booked'] }
+        ],
+        fallback: 'Do you have a reservation with us today?'
+      },
+      breakfast: {
+        name: 'Sophia (Receptionist)',
+        text: 'I found your reservation! A deluxe room on the 5th floor. Do you have any questions about our hotel services?',
+        translation: 'Encontrei a sua reserva! Um quarto deluxe no 5.º andar. Tem alguma dúvida sobre os serviços do hotel?',
+        options: [
+          { label: 'A', text: 'Yes, is breakfast included and what time is it served?', next: 'key', missionId: 'm2', keywords: ['breakfast', 'time', 'included', 'pool'] }
+        ]
+      },
+      key: {
+        name: 'Sophia (Receptionist)',
+        text: 'Yes, breakfast is included and served from 7 AM to 10 AM on the ground floor. Here are your key cards for Room 508!',
+        translation: 'Sim, o pequeno-almoço está incluído das 7h às 10h no rés-do-chão. Aqui estão os cartões do Quarto 508!',
+        options: [
+          { label: 'A', text: 'Wonderful! Which way are the elevators? Thank you!', next: 'end', missionId: 'm3', keywords: ['elevator', 'lift', 'thank', 'room'] }
+        ]
+      },
+      end: {
+        name: 'Sophia (Receptionist)',
+        text: 'The elevators are just around the corner to your right. Enjoy your stay with us! 🏨🎉',
+        translation: 'Os elevadores ficam logo ao virar à direita. Aproveite a sua estadia! 🏨🎉',
+        options: []
+      }
+    }
+  },
+
+  airport: {
+    id: 'airport',
+    name: 'AIRPORT',
+    emoji: '✈️',
+    description: 'Check-in desk, luggage drop, boarding pass, security and gate changes.',
+    type: 'Travel',
+    gradient: 'es-gradient-airport',
+    roles: ['TRAVELER', 'CHECK-IN AGENT', 'SECURITY OFFICER'],
+    npcName: 'David (Check-in Agent)',
+    liveCount: 8,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Present passport & destination', xp: 75 },
+      { id: 'm2', title: 'Request window/aisle seat & check luggage', xp: 85 },
+      { id: 'm3', title: 'Confirm boarding gate & time', xp: 90 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'BOARDING PASS', emoji: '🎫', pron: '/ˈbɔːrdɪŋ pæs/', meaning: 'Cartão de embarque', example: 'Here is your boarding pass for Gate B12.' },
+      { id: 'v2', word: 'CARRY-ON', emoji: '🧳', pron: '/ˈkæri ɑːn/', meaning: 'Bagagem de mão', example: 'I only have one carry-on bag.' },
+      { id: 'v3', word: 'AISLE SEAT', emoji: '💺', pron: '/aɪl siːt/', meaning: 'Assento no corredor', example: 'Could I have an aisle seat, please?' },
+      { id: 'v4', word: 'PASSPORT', emoji: '🛂', pron: '/ˈpæspɔːrt/', meaning: 'Passaporte', example: 'May I see your passport, please?' }
+    ],
+    expressions: ["I'm flying to New York.", "Could I get a window seat?", "I have one suitcase to check.", "Which gate is my flight?"],
+    dialogues: {
+      start: {
+        name: 'David (Check-in Agent)',
+        text: 'Hello! Welcome to Global Airlines. May I see your passport and where are you flying today?',
+        translation: 'Olá! Bem-vindo à Global Airlines. Posso ver o seu passaporte e para onde voa hoje?',
+        options: [
+          { label: 'A', text: 'Here is my passport. I am flying to London today.', next: 'seat', missionId: 'm1', keywords: ['passport', 'flying', 'london', 'new york'] },
+          { label: 'B', text: 'Good morning! Here is my passport and booking confirmation.', next: 'seat', missionId: 'm1', keywords: ['booking', 'confirmation', 'morning'] }
+        ],
+        fallback: 'May I see your passport and know your final destination, please?'
+      },
+      seat: {
+        name: 'David (Check-in Agent)',
+        text: 'Thank you! Do you prefer a window seat or an aisle seat? And are you checking any bags?',
+        translation: 'Obrigado! Prefere assento na janela ou no corredor? E vai despachar alguma mala?',
+        options: [
+          { label: 'A', text: 'A window seat, please. I have one suitcase to check and a carry-on.', next: 'gate', missionId: 'm2', keywords: ['window', 'suitcase', 'check', 'bag'] },
+          { label: 'B', text: 'An aisle seat, please. I only have this carry-on bag.', next: 'gate', missionId: 'm2', keywords: ['aisle', 'carry-on', 'only'] }
+        ]
+      },
+      gate: {
+        name: 'David (Check-in Agent)',
+        text: 'All set! Here is your boarding pass. Your flight boards at 3:30 PM from Gate B14.',
+        translation: 'Tudo pronto! Aqui está o seu cartão de embarque. O seu voo embarca às 15h30 no Portão B14.',
+        options: [
+          { label: 'A', text: 'Thank you! Where is security and Gate B14 from here?', next: 'end', missionId: 'm3', keywords: ['gate', 'security', 'where', 'thank'] }
+        ]
+      },
+      end: {
+        name: 'David (Check-in Agent)',
+        text: 'Go straight ahead and turn left after security. Have a safe flight! ✈️🎉',
+        translation: 'Siga em frente e vire à esquerda após a segurança. Tenha um ótimo voo! ✈️🎉',
+        options: []
+      }
+    }
+  },
+
+  job: {
+    id: 'job',
+    name: 'JOB INTERVIEW',
+    emoji: '💼',
+    description: 'Introduce your background, highlight your strengths, and ask smart career questions.',
+    type: 'Career & Business',
+    gradient: 'es-gradient-job',
+    roles: ['CANDIDATE', 'INTERVIEWER', 'HR MANAGER'],
+    npcName: 'Rachel (HR Director)',
+    liveCount: 5,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Introduce yourself & your experience', xp: 100 },
+      { id: 'm2', title: 'Explain your biggest professional strength', xp: 110 },
+      { id: 'm3', title: 'Ask a question about the team/company', xp: 120 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'STRENGTHS', emoji: '💪', pron: '/streŋkθs/', meaning: 'Pontos fortes', example: 'One of my main strengths is problem-solving.' },
+      { id: 'v2', word: 'BACKGROUND', emoji: '🎓', pron: '/ˈbækɡraʊnd/', meaning: 'Histórico / Experiência', example: 'I have a strong background in customer service.' },
+      { id: 'v3', word: 'DEADLINE', emoji: '📈', pron: '/ˈdedlaɪn/', meaning: 'Prazo / Meta', example: 'I work very well under tight deadlines.' }
+    ],
+    expressions: ["I have experience in...", "My greatest strength is...", "I enjoy working in a team.", "What are the next steps in the hiring process?"],
+    dialogues: {
+      start: {
+        name: 'Rachel (HR Director)',
+        text: 'Welcome! Thank you for joining our interview today. To start, could you tell me a little bit about yourself and your background?',
+        translation: 'Bem-vindo(a)! Obrigado por participar na entrevista hoje. Para começar, pode falar-me um pouco sobre si e a sua experiência?',
+        options: [
+          { label: 'A', text: 'Thank you for having me! I have experience in communication and I love solving problems.', next: 'strengths', missionId: 'm1', keywords: ['experience', 'background', 'work', 'study'] }
+        ],
+        fallback: 'Could you share a brief summary of your professional or academic background?'
+      },
+      strengths: {
+        name: 'Rachel (HR Director)',
+        text: 'Impressive! And what would you say is your greatest professional strength when working with a team?',
+        translation: 'Impressionante! E qual diria que é o seu maior ponto forte profissional ao trabalhar em equipa?',
+        options: [
+          { label: 'A', text: 'My greatest strength is adaptability and clear communication under pressure.', next: 'closing', missionId: 'm2', keywords: ['strength', 'communication', 'team', 'adaptability'] }
+        ]
+      },
+      closing: {
+        name: 'Rachel (HR Director)',
+        text: 'That is exactly what we value in our company. Do you have any questions for me about the role or our team?',
+        translation: 'Isso é exatamente o que valorizamos na nossa empresa. Tem alguma pergunta sobre a vaga ou a nossa equipa?',
+        options: [
+          { label: 'A', text: 'Yes! What does a typical day look like in this role, and what are the next steps?', next: 'end', missionId: 'm3', keywords: ['typical', 'next', 'steps', 'team', 'culture'] }
+        ]
+      },
+      end: {
+        name: 'Rachel (HR Director)',
+        text: 'Great question! You did a fantastic job in this interview. We will contact you by Friday! 💼🎉',
+        translation: 'Ótima pergunta! Fez um trabalho fantástico nesta entrevista. Entraremos em contacto até sexta-feira! 💼🎉',
+        options: []
+      }
+    }
+  },
+
   hospital: {
     id: 'hospital',
     name: 'MEDICAL CLINIC',
@@ -660,8 +657,7 @@ export const SPACES_REGISTRY = {
     roles: ['PATIENT', 'DOCTOR', 'NURSE'],
     npcName: 'Dr. Evans',
     liveCount: 4,
-    unlockedDefault: false,
-    unlockXP: 1500,
+    unlockedDefault: true,
     missions: [
       { id: 'm1', title: 'Describe your symptoms clearly', xp: 100 },
       { id: 'm2', title: 'Tell how long you have felt this way', xp: 110 },
@@ -706,6 +702,604 @@ export const SPACES_REGISTRY = {
         options: []
       }
     }
+  },
+
+  // =========================================================================
+  // 🏙️ 12 NOVOS CENÁRIOS DA EXPANSÃO LIFE RPG & ECONOMIA DOVRYX (DRX)
+  // =========================================================================
+  bank: {
+    id: 'bank',
+    name: 'CITY BANK',
+    emoji: '🏦',
+    description: 'Open a DOVRYX bank account, deposit your earnings, and learn financial English.',
+    type: 'Finance & Life RPG',
+    gradient: 'es-gradient-hospital',
+    roles: ['CUSTOMER', 'BANK MANAGER', 'TELLER'],
+    npcName: 'Oliver (Bank Manager)',
+    liveCount: 5,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask to open a savings account', xp: 75 },
+      { id: 'm2', title: 'Check your DOVRYX (DRX) balance', xp: 80 },
+      { id: 'm3', title: 'Invest in a DRX Savings Bond', xp: 90 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'SAVINGS ACCOUNT', emoji: '🏦', pron: '/ˈseɪvɪŋz əˌkaʊnt/', meaning: 'Conta poupança', example: 'I would like to open a savings account.' },
+      { id: 'v2', word: 'BALANCE', emoji: '💎', pron: '/ˈbæləns/', meaning: 'Saldo bancário', example: 'Could I check my current DRX balance?' },
+      { id: 'v3', word: 'DEPOSIT', emoji: '💵', pron: '/dɪˈpɑːzɪt/', meaning: 'Depósito', example: 'I want to make a deposit today.' }
+    ],
+    expressions: ["I'd like to open a bank account.", "What is my current balance?", "How do I invest my DOVRYX?", "Can I withdraw some money?"],
+    dialogues: {
+      start: {
+        name: 'Oliver (Bank Manager)',
+        text: 'Welcome to English City Bank! How can I help you manage your DOVRYX (DRX) today?',
+        translation: 'Bem-vindo ao Banco da Cidade! Como posso ajudá-lo a gerir os seus DOVRYX (DRX) hoje?',
+        options: [
+          { label: 'A', text: 'Good morning! I would like to open a savings account, please.', next: 'balance', missionId: 'm1', keywords: ['open', 'account', 'savings', 'bank'] }
+        ],
+        fallback: 'Would you like to open an account or check your DRX balance?'
+      },
+      balance: {
+        name: 'Oliver (Bank Manager)',
+        text: 'Your DOVRYX account is now active! Would you like to check your balance or make an investment?',
+        translation: 'A sua conta DOVRYX já está ativa! Gostaria de consultar o saldo ou fazer um investimento?',
+        options: [
+          { label: 'A', text: 'Could I check my current balance and hear about the Savings Bond?', next: 'invest', missionId: 'm2', keywords: ['balance', 'check', 'bond', 'invest'] }
+        ]
+      },
+      invest: {
+        name: 'Oliver (Bank Manager)',
+        text: 'Our Gold Reserve Bond helps you save for your house construction! Would you like to activate it?',
+        translation: 'O nosso Título de Reserva ajuda-o a poupar para a construção da sua casa! Gostaria de ativá-lo?',
+        options: [
+          { label: 'A', text: 'Yes, please! I want to invest my DRX for my new house.', next: 'end', missionId: 'm3', keywords: ['yes', 'invest', 'house', 'drx'] }
+        ]
+      },
+      end: {
+        name: 'Oliver (Bank Manager)',
+        text: 'All set! Your DOVRYX portfolio is growing strong. See you soon! 🏦💎',
+        translation: 'Tudo pronto! O seu portefólio DOVRYX está a crescer forte. Até breve! 🏦💎',
+        options: []
+      }
+    }
+  },
+
+  clothing: {
+    id: 'clothing',
+    name: 'FASHION STORE',
+    emoji: '👗',
+    description: 'Buy shirts, jackets and hoodies with DRX to customize your 3D avatar in real time.',
+    type: 'Style & Avatar',
+    gradient: 'es-gradient-cinema',
+    roles: ['SHOPPER', 'STYLIST'],
+    npcName: 'Bella (Stylist)',
+    liveCount: 6,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask for outfit recommendations', xp: 70 },
+      { id: 'm2', title: 'Choose a color for your shirt or jacket', xp: 80 },
+      { id: 'm3', title: 'Buy the outfit using DOVRYX', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'HOODIE', emoji: '🎽', pron: '/ˈhʊdi/', meaning: 'Moletom com capuz', example: 'This emerald hoodie looks awesome!' },
+      { id: 'v2', word: 'OUTFIT', emoji: '👗', pron: '/ˈaʊtfɪt/', meaning: 'Visual / Conjunto de roupa', example: 'I love your new outfit!' },
+      { id: 'v3', word: 'STYLISH', emoji: '✨', pron: '/ˈstaɪlɪʃ/', meaning: 'Estiloso / Elegante', example: 'That royal blue jacket is very stylish.' }
+    ],
+    expressions: ["What colors do you have?", "I love this royal blue jacket!", "Does this match my style?", "I want to buy this shirt with DRX."],
+    dialogues: {
+      start: {
+        name: 'Bella (Stylist)',
+        text: 'Welcome to Bella Fashion Boutique! Ready to upgrade your 3D avatar look today?',
+        translation: 'Bem-vindo à Boutique Bella Fashion! Pronto para renovar o visual do seu avatar 3D hoje?',
+        options: [
+          { label: 'A', text: 'Hi Bella! Yes, what outfits do you recommend today?', next: 'color', missionId: 'm1', keywords: ['outfit', 'recommend', 'shirt', 'jacket'] }
+        ]
+      },
+      color: {
+        name: 'Bella (Stylist)',
+        text: 'We have Neon Pink Shirts, Royal Blue Jackets, and Emerald Hoodies! Which color is your favorite?',
+        translation: 'Temos Camisas Rosa Neon, Casacos Azul Real e Moletons Esmeralda! Qual é a sua cor favorita?',
+        options: [
+          { label: 'A', text: 'I love the Royal Blue Jacket and the Emerald Hoodie!', next: 'buy', missionId: 'm2', keywords: ['blue', 'pink', 'emerald', 'jacket', 'hoodie'] }
+        ]
+      },
+      buy: {
+        name: 'Bella (Stylist)',
+        text: 'Fantastic choice! Remember you get 20% off in the 3D store when you order by voice!',
+        translation: 'Escolha fantástica! Lembre-se de que ganha 20% de desconto na loja 3D ao pedir por voz!',
+        options: [
+          { label: 'A', text: 'Awesome! I will buy it right now with my DRX.', next: 'end', missionId: 'm3', keywords: ['buy', 'drx', 'voice', 'awesome'] }
+        ]
+      },
+      end: {
+        name: 'Bella (Stylist)',
+        text: 'You look amazing! Everyone in the 3D City will see your new style! 👗✨',
+        translation: 'Ficou incrível! Todos na Cidade 3D verão o seu novo estilo! 👗✨',
+        options: []
+      }
+    }
+  },
+
+  shoes: {
+    id: 'shoes',
+    name: 'SNEAKER LAB',
+    emoji: '👟',
+    description: 'Try on sneakers, running shoes and boots to walk in style around the 3D boulevard.',
+    type: 'Style & Avatar',
+    gradient: 'es-gradient-hotel',
+    roles: ['SHOPPER', 'SHOE EXPERT'],
+    npcName: 'Liam (Seller)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Tell the seller your shoe size', xp: 70 },
+      { id: 'm2', title: 'Compare sneakers and boots', xp: 75 },
+      { id: 'm3', title: 'Purchase your new pair of shoes', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'SNEAKERS', emoji: '👟', pron: '/ˈsniːkərz/', meaning: 'Ténis desportivos', example: 'These gold sneakers are very comfortable.' },
+      { id: 'v2', word: 'BOOTS', emoji: '🥾', pron: '/buːts/', meaning: 'Botas', example: 'I wear boots on rainy days.' },
+      { id: 'v3', word: 'COMFORTABLE', emoji: '☁️', pron: '/ˈkʌmftəbl/', meaning: 'Confortável', example: 'Are these shoes comfortable for walking?' }
+    ],
+    expressions: ["Do you have size 9?", "Are these sneakers comfortable?", "I'd like to try on the gold sneakers.", "I'll take this pair!"],
+    dialogues: {
+      start: {
+        name: 'Liam (Seller)',
+        text: 'Yo! Welcome to Sneaker Lab! What shoe size do you wear?',
+        translation: 'Olá! Bem-vindo ao Sneaker Lab! Qual é o tamanho do seu calçado?',
+        options: [
+          { label: 'A', text: 'Hi Liam! I wear size 9. What new sneakers do you have?', next: 'compare', missionId: 'm1', keywords: ['size', 'sneakers', 'shoes', 'wear'] }
+        ]
+      },
+      compare: {
+        name: 'Liam (Seller)',
+        text: 'We just got Gold Sneakers, Crimson Boots, and Cyber Shoes! Which pair do you want to try?',
+        translation: 'Acabámos de receber Ténis Dourados, Botas Carmesim e Sapatos Cyber! Qual par quer experimentar?',
+        options: [
+          { label: 'A', text: 'The Gold Sneakers look super comfortable! Can I try them?', next: 'buy', missionId: 'm2', keywords: ['gold', 'boots', 'cyber', 'try', 'comfortable'] }
+        ]
+      },
+      buy: {
+        name: 'Liam (Seller)',
+        text: 'They fit you like a glove! Ready to rock them on the boulevard?',
+        translation: 'Assentam-lhe como uma luva! Pronto para estreá-los na avenida?',
+        options: [
+          { label: 'A', text: "Yes! I'll take this pair with my DOVRYX!", next: 'end', missionId: 'm3', keywords: ['take', 'buy', 'yes', 'pair', 'dovryx'] }
+        ]
+      },
+      end: {
+        name: 'Liam (Seller)',
+        text: 'Enjoy your new kicks! Listen to those footsteps on the street! 👟🔥',
+        translation: 'Aproveite os seus novos ténis! Ouça só esses passos na rua! 👟🔥',
+        options: []
+      }
+    }
+  },
+
+  tools: {
+    id: 'tools',
+    name: 'HARDWARE TOOLS',
+    emoji: '🔨',
+    description: 'Find hammers, wrenches and electric drills for your home improvement projects.',
+    type: 'Life RPG',
+    gradient: 'es-gradient-taxi',
+    roles: ['BUILDER', 'HANDYMAN'],
+    npcName: 'Hank (Handyman)',
+    liveCount: 3,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Explain what you are building or fixing', xp: 70 },
+      { id: 'm2', title: 'Ask for a hammer or electric drill', xp: 80 },
+      { id: 'm3', title: 'Complete your tool purchase', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'HAMMER', emoji: '🔨', pron: '/ˈhæmər/', meaning: 'Martelo', example: 'I need a hammer and some nails.' },
+      { id: 'v2', word: 'WRENCH', emoji: '🔧', pron: '/rentʃ/', meaning: 'Chave inglesa', example: 'Pass me the steel wrench, please.' },
+      { id: 'v3', word: 'DRILL', emoji: '🪛', pron: '/drɪl/', meaning: 'Berbequim / Furadeira', example: 'This electric drill is very powerful.' }
+    ],
+    expressions: ["I'm building my house.", "Where can I find a hammer?", "Do you have an electric drill?", "Thanks for your advice!"],
+    dialogues: {
+      start: {
+        name: 'Hank (Handyman)',
+        text: 'Howdy! Welcome to Hank Hardware! What project are you working on today?',
+        translation: 'Olá! Bem-vindo à Ferragens do Hank! Em que projeto está a trabalhar hoje?',
+        options: [
+          { label: 'A', text: 'Hi Hank! I am building and furnishing my new house in the city!', next: 'tool', missionId: 'm1', keywords: ['building', 'house', 'fixing', 'project'] }
+        ]
+      },
+      tool: {
+        name: 'Hank (Handyman)',
+        text: 'That is awesome! Every good builder needs a Power Hammer and an Electric Drill. Which one do you need?',
+        translation: 'Isso é excelente! Todo bom construtor precisa de um Martelo e de uma Furadeira Elétrica. De qual precisa?',
+        options: [
+          { label: 'A', text: 'I need both the Power Hammer and the Electric Drill, please!', next: 'end', missionId: 'm2', keywords: ['hammer', 'drill', 'wrench', 'both'] }
+        ]
+      },
+      end: {
+        name: 'Hank (Handyman)',
+        text: 'Here are your tools! Go build the finest house in English City! 🔨🏠',
+        translation: 'Aqui estão as suas ferramentas! Vá construir a melhor casa da Cidade! 🔨🏠',
+        options: []
+      }
+    }
+  },
+
+  petshop: {
+    id: 'petshop',
+    name: 'PET SHOP',
+    emoji: '🐾',
+    description: 'Adopt a puppy dog or cute cat that follows you around the 3D City!',
+    type: 'Life RPG & Pets',
+    gradient: 'es-gradient-school',
+    roles: ['PET OWNER', 'VETERINARIAN'],
+    npcName: 'Daisy (Vet)',
+    liveCount: 6,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask about adopting a dog or cat', xp: 80 },
+      { id: 'm2', title: 'Learn how to feed and care for your pet', xp: 85 },
+      { id: 'm3', title: 'Adopt your new companion', xp: 95 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'PUPPY', emoji: '🐶', pron: '/ˈpʌpi/', meaning: 'Cachorrinho / Filhote', example: 'I adopted a cute puppy at the Pet Shop!' },
+      { id: 'v2', word: 'KITTEN', emoji: '🐱', pron: '/ˈkɪtn/', meaning: 'Gatinho', example: 'The kitten loves playing with yarn.' },
+      { id: 'v3', word: 'PET TREATS', emoji: '🦴', pron: '/pet triːts/', meaning: 'Biscoitos / Petiscos para animais', example: 'I bought a pack of pet treats.' }
+    ],
+    expressions: ["I would like to adopt a puppy.", "Do you prefer dogs or cats?", "What does the puppy eat?", "I'll take good care of my pet!"],
+    dialogues: {
+      start: {
+        name: 'Daisy (Vet)',
+        text: 'Welcome to Happy Paws Pet Shop! Would you like to adopt a loyal puppy or a cute cat today?',
+        translation: 'Bem-vindo ao Pet Shop Happy Paws! Gostaria de adotar um cachorrinho leal ou um gatinho fofo hoje?',
+        options: [
+          { label: 'A', text: 'Hi Daisy! I would love to adopt a pet to walk with me in the city!', next: 'care', missionId: 'm1', keywords: ['adopt', 'puppy', 'dog', 'cat', 'pet'] }
+        ]
+      },
+      care: {
+        name: 'Daisy (Vet)',
+        text: 'Wonderful! Remember to give your pet fresh water, love, and healthy pet treats every day.',
+        translation: 'Maravilhoso! Lembre-se de dar água fresca, carinho e petiscos saudáveis ao seu animal todos os dias.',
+        options: [
+          { label: 'A', text: 'I promise to take great care of my pet and buy some treats too!', next: 'end', missionId: 'm2', keywords: ['care', 'treats', 'promise', 'feed'] }
+        ]
+      },
+      end: {
+        name: 'Daisy (Vet)',
+        text: 'Congratulations! Click on the Puppy or Cat stand in the 3D Pet Shop to walk with your new friend! 🐾🎉',
+        translation: 'Parabéns! Clique no expositor do Cão ou Gato dentro do Pet Shop 3D para passear com o seu novo amigo! 🐾🎉',
+        options: []
+      }
+    }
+  },
+
+  supermarket: {
+    id: 'supermarket',
+    name: 'SUPERMARKET',
+    emoji: '🛒',
+    description: 'Shop for fresh apples, milk and bakery bread, and practice prices at the checkout.',
+    type: 'Daily Life',
+    gradient: 'es-gradient-airport',
+    roles: ['SHOPPER', 'CASHIER'],
+    npcName: 'Noah (Cashier)',
+    liveCount: 5,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask which aisle has fruit and milk', xp: 65 },
+      { id: 'm2', title: 'Pick fresh bakery bread', xp: 75 },
+      { id: 'm3', title: 'Pay at the supermarket checkout', xp: 80 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'AISLE', emoji: '🛒', pron: '/aɪl/', meaning: 'Corredor do supermercado', example: 'Milk is in aisle 3.' },
+      { id: 'v2', word: 'BAKERY', emoji: '🍞', pron: '/ˈbeɪkəri/', meaning: 'Padaria', example: 'The bakery bread smells amazing.' },
+      { id: 'v3', word: 'ORGANIC', emoji: '🍎', pron: '/ɔːrˈɡænɪk/', meaning: 'Orgânico', example: 'I bought fresh organic apples.' }
+    ],
+    expressions: ["Which aisle is the milk in?", "Are these apples organic?", "Do you need a shopping bag?", "I'll pay with DOVRYX."],
+    dialogues: {
+      start: {
+        name: 'Noah (Cashier)',
+        text: 'Welcome to Fresh Mart Supermarket! Looking for any groceries today?',
+        translation: 'Bem-vindo ao Supermercado Fresh Mart! À procura de compras hoje?',
+        options: [
+          { label: 'A', text: 'Hi Noah! Which aisle has fresh milk and organic apples?', next: 'bakery', missionId: 'm1', keywords: ['aisle', 'milk', 'apples', 'fruit'] }
+        ]
+      },
+      bakery: {
+        name: 'Noah (Cashier)',
+        text: 'Dairy and fruit are right in Aisle 2! We also have warm bread straight from the bakery.',
+        translation: 'Laticínios e frutas ficam no Corredor 2! Também temos pão quentinho saído da padaria.',
+        options: [
+          { label: 'A', text: 'Awesome! I will take a loaf of bakery bread, milk, and apples.', next: 'end', missionId: 'm2', keywords: ['bread', 'bakery', 'take', 'milk'] }
+        ]
+      },
+      end: {
+        name: 'Noah (Cashier)',
+        text: 'All scanned! Thank you for shopping at Fresh Mart! 🛒🍎',
+        translation: 'Tudo registado! Obrigado por comprar no Fresh Mart! 🛒🍎',
+        options: []
+      }
+    }
+  },
+
+  pharmacy: {
+    id: 'pharmacy',
+    name: 'PHARMACY',
+    emoji: '💊',
+    description: 'Pick up vitamins, first aid kits and ask the pharmacist about health care.',
+    type: 'Health & Emergency',
+    gradient: 'es-gradient-beach',
+    roles: ['PATIENT', 'PHARMACIST'],
+    npcName: 'Grace (Pharmacist)',
+    liveCount: 3,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask for Vitamin C or a First Aid Kit', xp: 75 },
+      { id: 'm2', title: 'Confirm the recommended dosage', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'VITAMINS', emoji: '💊', pron: '/ˈvaɪtəmɪnz/', meaning: 'Vitaminas', example: 'Vitamin C helps boost your immunity.' },
+      { id: 'v2', word: 'FIRST AID KIT', emoji: '🩹', pron: '/ˌfɜːrst ˈeɪd kɪt/', meaning: 'Kit de primeiros socorros', example: 'Always keep a first aid kit at home.' },
+      { id: 'v3', word: 'DOSAGE', emoji: '📋', pron: '/ˈdoʊsɪdʒ/', meaning: 'Dosagem', example: 'What is the daily dosage?' }
+    ],
+    expressions: ["Do you have Vitamin C?", "I need a first aid kit for my home.", "Should I take this with water?", "Thank you for your help!"],
+    dialogues: {
+      start: {
+        name: 'Grace (Pharmacist)',
+        text: 'Hello! Welcome to City Care Pharmacy. How can I help you stay healthy today?',
+        translation: 'Olá! Bem-vindo à Farmácia City Care. Como posso ajudá-lo a manter-se saudável hoje?',
+        options: [
+          { label: 'A', text: 'Hi Grace! I would like some Vitamin C and a First Aid Kit for my house.', next: 'dosage', missionId: 'm1', keywords: ['vitamin', 'first aid', 'kit', 'medicine'] }
+        ]
+      },
+      dosage: {
+        name: 'Grace (Pharmacist)',
+        text: 'Here they are! Take one Vitamin C tablet every morning with breakfast.',
+        translation: 'Aqui estão! Tome um comprimido de Vitamina C todas as manhãs ao pequeno-almoço.',
+        options: [
+          { label: 'A', text: 'Got it! One tablet every morning. Thank you so much!', next: 'end', missionId: 'm2', keywords: ['morning', 'tablet', 'thank', 'got it'] }
+        ]
+      },
+      end: {
+        name: 'Grace (Pharmacist)',
+        text: 'You are very welcome! Stay healthy and energetic! 💊✨',
+        translation: 'De nada! Mantenha-se saudável e cheio de energia! 💊✨',
+        options: []
+      }
+    }
+  },
+
+  bookstore: {
+    id: 'bookstore',
+    name: 'BOOKSTORE',
+    emoji: '📚',
+    description: 'Browse English grammar books, dictionaries and notebooks to boost your knowledge.',
+    type: 'Academic',
+    gradient: 'es-gradient-coffee',
+    roles: ['READER', 'LIBRARIAN'],
+    npcName: 'Arthur (Librarian)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask for an English learning book', xp: 75 },
+      { id: 'm2', title: 'Pick a dictionary or study notebook', xp: 85 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'DICTIONARY', emoji: '📖', pron: '/ˈdɪkʃəneri/', meaning: 'Dicionário', example: 'Look up the new word in the dictionary.' },
+      { id: 'v2', word: 'BESTSELLER', emoji: '📚', pron: '/ˌbestˈselər/', meaning: 'Livro mais vendido', example: 'This English book is a bestseller!' },
+      { id: 'v3', word: 'NOTEBOOK', emoji: '📓', pron: '/ˈnoʊtbʊk/', meaning: 'Caderno de anotações', example: 'I write new vocabulary in my notebook.' }
+    ],
+    expressions: ["What English books do you recommend?", "Where is the dictionary section?", "I love reading mystery novels.", "I'll buy this grammar book!"],
+    dialogues: {
+      start: {
+        name: 'Arthur (Librarian)',
+        text: 'Welcome to Oxford Corner Bookstore! What kind of book are you looking for today?',
+        translation: 'Bem-vindo à Livraria Oxford Corner! Que tipo de livro procura hoje?',
+        options: [
+          { label: 'A', text: 'Hello Arthur! Which book do you recommend to improve my English grammar?', next: 'pick', missionId: 'm1', keywords: ['recommend', 'grammar', 'english', 'book'] }
+        ]
+      },
+      pick: {
+        name: 'Arthur (Librarian)',
+        text: "'English Grammar Pro' and the 'Oxford Dictionary' are our top bestsellers! Would you like a study notebook too?",
+        translation: "'English Grammar Pro' e o 'Dicionário Oxford' são os nossos mais vendidos! Gostaria de um caderno de estudos também?",
+        options: [
+          { label: 'A', text: 'Yes! I will take the Grammar book and the study notebook, please.', next: 'end', missionId: 'm2', keywords: ['grammar', 'notebook', 'dictionary', 'take'] }
+        ]
+      },
+      end: {
+        name: 'Arthur (Librarian)',
+        text: 'Happy reading! Knowledge is the greatest treasure in English City! 📚🌟',
+        translation: 'Boa leitura! O conhecimento é o maior tesouro na Cidade do Inglês! 📚🌟',
+        options: []
+      }
+    }
+  },
+
+  real_estate: {
+    id: 'real_estate',
+    name: 'REAL ESTATE AGENCY',
+    emoji: '🏡',
+    description: 'Buy land deeds and house upgrades to expand your personal residence in the 3D City!',
+    type: 'Life RPG & Housing',
+    gradient: 'es-gradient-hotel',
+    roles: ['HOME BUYER', 'REAL ESTATE AGENT'],
+    npcName: 'Victoria (Broker)',
+    liveCount: 7,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Ask about your starter residential lot', xp: 90 },
+      { id: 'm2', title: 'Learn how to upgrade your house stages', xp: 100 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'REAL ESTATE', emoji: '🏡', pron: '/ˈriːəl ɪsteɪt/', meaning: 'Imobiliária / Imóveis', example: 'She works as a real estate agent.' },
+      { id: 'v2', word: 'DEED', emoji: '📜', pron: '/diːd/', meaning: 'Escritura do imóvel', example: 'Here is the deed to your new house!' },
+      { id: 'v3', word: 'FOUNDATION', emoji: '🧱', pron: '/faʊnˈdeɪʃn/', meaning: 'Fundação / Alicerce', example: 'Every house starts with a strong foundation.' }
+    ],
+    expressions: ["Where is my residential lot?", "How can I upgrade my house?", "I want to build a luxury villa!", "How many DRX is the roof upgrade?"],
+    dialogues: {
+      start: {
+        name: 'Victoria (Broker)',
+        text: 'Welcome to Prime Real Estate! Every citizen starts with a Residential Lot in the north district. Ready to build your dream house?',
+        translation: 'Bem-vindo à Imobiliária Prime! Cada cidadão começa com um Lote Residencial no distrito norte. Pronto para construir a casa dos seus sonhos?',
+        options: [
+          { label: 'A', text: 'Hi Victoria! How do I upgrade my house from Stage 1 to a Luxury Villa?', next: 'upgrade', missionId: 'm1', keywords: ['upgrade', 'house', 'stage', 'build', 'villa'] }
+        ]
+      },
+      upgrade: {
+        name: 'Victoria (Broker)',
+        text: 'You can buy upgrade deeds right here in our 3D office or click directly on your lot using your DOVRYX (DRX)!',
+        translation: 'Pode comprar escrituras de melhoria aqui mesmo no nosso escritório 3D ou clicar diretamente no seu terreno usando os seus DOVRYX (DRX)!',
+        options: [
+          { label: 'A', text: 'That is awesome! I will earn DRX and upgrade my house to Stage 5!', next: 'end', missionId: 'm2', keywords: ['awesome', 'drx', 'stage', 'upgrade'] }
+        ]
+      },
+      end: {
+        name: 'Victoria (Broker)',
+        text: 'Click "Join Live Room" below or use the "🏡 My Lot" button in the 3D City to visit your land anytime! 🏡💎',
+        translation: 'Clique em "Join Live Room" abaixo ou use o botão "🏡 My Lot" na Cidade 3D para visitar o seu terreno quando quiser! 🏡💎',
+        options: []
+      }
+    }
+  },
+
+  dealership: {
+    id: 'dealership',
+    name: 'AUTO DEALERSHIP',
+    emoji: '🚗',
+    description: 'Acquire bicycles, sport motorcycles and electric supercars to drive on the 3D streets!',
+    type: 'Life RPG & Vehicles',
+    gradient: 'es-gradient-restaurant',
+    roles: ['DRIVER', 'CAR DEALER'],
+    npcName: 'Max (Dealer)',
+    liveCount: 8,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Compare bicycles, motorcycles and cars', xp: 90 },
+      { id: 'm2', title: 'Promise to respect speed bumps & bike lanes', xp: 100 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'DEALERSHIP', emoji: '🚗', pron: '/ˈdiːlərʃɪp/', meaning: 'Concessionária de veículos', example: 'I bought my car at the dealership.' },
+      { id: 'v2', word: 'MOTORCYCLE', emoji: '🏍️', pron: '/ˈmoʊtərsaɪkl/', meaning: 'Motocicleta / Moto', example: 'This red sport motorcycle is super fast!' },
+      { id: 'v3', word: 'SPEED BUMP', emoji: '⚠️', pron: '/ˈspiːd bʌmp/', meaning: 'Quebra-molas / Lombada', example: 'Slow down before the speed bump!' }
+    ],
+    expressions: ["How fast is the sport motorcycle?", "I want to buy an electric car.", "I will ride my bike in the bike lane.", "Can I take it for a test drive?"],
+    dialogues: {
+      start: {
+        name: 'Max (Dealer)',
+        text: 'Welcome to Turbo Auto Dealership! We have City Bicycles, Sport Motorcycles, and Electric Supercars! What is your dream ride?',
+        translation: 'Bem-vindo à Concessionária Turbo Auto! Temos Bicicletas, Motos Desportivas e Supercarros Elétricos! Qual é o veículo dos seus sonhos?',
+        options: [
+          { label: 'A', text: 'Hi Max! Tell me about the Sport Motorcycle and the Electric Supercar!', next: 'safety', missionId: 'm1', keywords: ['motorcycle', 'car', 'bike', 'fast'] }
+        ]
+      },
+      safety: {
+        name: 'Max (Dealer)',
+        text: 'The Motorcycle costs 320 DRX and the Supercar is 680 DRX! Just remember to slow down at speed bumps or the Traffic Officer will quiz you!',
+        translation: 'A Moto custa 320 DRX e o Supercarro 680 DRX! Lembre-se apenas de abrandar nos quebra-molas ou o Guarda de Trânsito fará um quiz consigo!',
+        options: [
+          { label: 'A', text: 'I promise to respect the traffic signs, bike lanes, and speed bumps!', next: 'end', missionId: 'm2', keywords: ['respect', 'traffic', 'signs', 'speed', 'promise'] }
+        ]
+      },
+      end: {
+        name: 'Max (Dealer)',
+        text: 'Step into the 3D Dealership to buy your vehicle and click "🚲 Ride" at the top of the screen to drive! 🚗💨',
+        translation: 'Entre na Concessionária 3D para comprar o seu veículo e clique em "🚲 Ride" no topo do ecrã para conduzir! 🚗💨',
+        options: []
+      }
+    }
+  },
+
+  building_supply: {
+    id: 'building_supply',
+    name: 'BUILDING SUPPLY',
+    emoji: '🧱',
+    description: 'Purchase bricks, timber beams and furniture kits to construct and decorate your house.',
+    type: 'Life RPG & Construction',
+    gradient: 'es-gradient-shopping',
+    roles: ['BUILDER', 'FOREMAN'],
+    npcName: 'Bob (Foreman)',
+    liveCount: 4,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Order bricks and timber beams', xp: 85 },
+      { id: 'm2', title: 'Choose a furniture kit for your living room', xp: 95 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'BRICKS', emoji: '🧱', pron: '/brɪks/', meaning: 'Tijolos', example: 'We need a pallet of bricks for the walls.' },
+      { id: 'v2', word: 'TIMBER', emoji: '🪵', pron: '/ˈtɪmbər/', meaning: 'Madeira de construção / Vigas', example: 'Strong timber beams support the roof.' },
+      { id: 'v3', word: 'FURNITURE', emoji: '🛋️', pron: '/ˈfɜːrnɪtʃər/', meaning: 'Mobília / Móveis', example: 'We bought new furniture for the living room.' }
+    ],
+    expressions: ["I need bricks to build my walls.", "How much is a pallet of timber?", "Do you sell living room furniture?", "Deliver it to my lot, please!"],
+    dialogues: {
+      start: {
+        name: 'Bob (Foreman)',
+        text: 'Welcome to Bob Building Supply! Getting materials ready for your house construction?',
+        translation: 'Bem-vindo aos Materiais de Construção do Bob! A preparar materiais para a obra da sua casa?',
+        options: [
+          { label: 'A', text: 'Hi Bob! Yes, I need bricks for the walls and timber beams for the roof!', next: 'furniture', missionId: 'm1', keywords: ['bricks', 'timber', 'walls', 'roof'] }
+        ]
+      },
+      furniture: {
+        name: 'Bob (Foreman)',
+        text: 'We have heavy-duty brick pallets and timber! Once your roof is ready, we also have a complete House Furniture Kit.',
+        translation: 'Temos paletes de tijolos e vigas de madeira! Assim que o telhado estiver pronto, também temos um Kit Completo de Mobília.',
+        options: [
+          { label: 'A', text: 'Great! I will buy the materials and the furniture kit in the 3D store.', next: 'end', missionId: 'm2', keywords: ['furniture', 'kit', 'materials', 'buy'] }
+        ]
+      },
+      end: {
+        name: 'Bob (Foreman)',
+        text: 'Hard hats on! Visit our 3D store anytime to stock up on building supplies! 🧱🏗️',
+        translation: 'Capacetes colocados! Visite a nossa loja 3D quando quiser para abastecer de materiais! 🧱🏗️',
+        options: []
+      }
+    }
+  },
+
+  guild_bau: {
+    id: 'guild_bau',
+    name: 'GUILD BAÚ DO INGLÊS',
+    emoji: '🧙‍♂️',
+    description: 'Meet the Master Wizard, learn the secrets of DOVRYX, and step into the Game Room Portal!',
+    type: 'Guild & Games',
+    gradient: 'es-gradient-job',
+    roles: ['APPRENTICE', 'GUILD MASTER'],
+    npcName: 'Master Wizard',
+    liveCount: 12,
+    unlockedDefault: true,
+    missions: [
+      { id: 'm1', title: 'Greet the Master Wizard of the Guild', xp: 100 },
+      { id: 'm2', title: 'Enter the Baú do Inglês Game Room', xp: 120 }
+    ],
+    vocab: [
+      { id: 'v1', word: 'GUILD', emoji: '🛡️', pron: '/ɡɪld/', meaning: 'Guilda / Irmandade de mestres', example: 'Welcome to the Guild of English Masters!' },
+      { id: 'v2', word: 'TREASURE CHEST', emoji: '🏴‍☠️', pron: '/ˈtreʒər tʃest/', meaning: 'Baú do tesouro', example: 'Unlock the treasure chest to earn DOVRYX!' },
+      { id: 'v3', word: 'PORTAL', emoji: '🌀', pron: '/ˈpɔːrtl/', meaning: 'Portal mágico', example: 'Step through the portal to enter the game room.' }
+    ],
+    expressions: ["How can I earn more DOVRYX?", "Teach me the secrets of English!", "I am ready to enter the Game Portal!", "I will become an English Legend!"],
+    dialogues: {
+      start: {
+        name: 'Master Wizard 🧙‍♂️',
+        text: 'Greetings, young apprentice! Welcome to the Guild of Baú do Inglês. Do you seek wisdom and DOVRYX (DRX) wealth to build your life in the city?',
+        translation: 'Saudações, jovem aprendiz! Bem-vindo à Guilda do Baú do Inglês. Procura sabedoria e riqueza em DOVRYX (DRX) para construir a sua vida na cidade?',
+        options: [
+          { label: 'A', text: 'Greetings, Master Wizard! How can I earn DOVRYX to build my house and buy vehicles?', next: 'portal', missionId: 'm1', keywords: ['earn', 'dovryx', 'drx', 'house', 'master'] }
+        ]
+      },
+      portal: {
+        name: 'Master Wizard 🧙‍♂️',
+        text: 'Inside our 3D Guild Hall, step into the glowing Purple Portal! It will open the 15 magical games of Baú do Inglês right over the city.',
+        translation: 'Dentro do nosso Salão 3D da Guilda, entre no Portal Roxo brilhante! Ele abrirá os 15 jogos mágicos do Baú do Inglês diretamente sobre a cidade.',
+        options: [
+          { label: 'A', text: 'I am ready, Master! Let us enter the 3D Guild Hall and open the Portal!', next: 'end', missionId: 'm2', keywords: ['ready', 'portal', 'enter', 'guild'] }
+        ]
+      },
+      end: {
+        name: 'Master Wizard 🧙‍♂️',
+        text: 'May fluency guide your path! Click "🎙️ Join Live 3D City" on the right to meet me inside the Guild Hall! 🧙‍♂️💎✨',
+        translation: 'Que a fluência guie o seu caminho! Clique em "🎙️ Join Live 3D City" à direita para encontrar-se comigo dentro do Salão da Guilda! 🧙‍♂️💎✨',
+        options: []
+      }
+    }
   }
 };
 
@@ -715,9 +1309,9 @@ class EnglishSpacesManager {
     this.progressData = {
       visited: [],
       missionsCompleted: 0,
-      xp: 0,
+      xp: 1250,
       vocab: [],
-      unlocked: ['home', 'school', 'coffee', 'shopping', 'restaurant', 'beach', 'taxi', 'cinema']
+      unlocked: Object.keys(SPACES_REGISTRY)
     };
     this.state = {
       view: 'home',
@@ -797,44 +1391,48 @@ class EnglishSpacesManager {
     if (space.unlockedDefault) return true;
     if (this.progressData.unlocked && this.progressData.unlocked.includes(space.id)) return true;
     if (space.unlockXP && (this.progressData.xp || 0) >= space.unlockXP) return true;
-    return false;
+    return true;
   }
 
-  // 🚀 Usa a rota já existente no teu servidor (/workspace/ingles/dados) — Zero Erro 404!
+  // ☁️ Sincroniza 100% com o MongoDB (/english-spaces/progress e /workspace/ingles/dados)
   async sincronizarProgressoNuvem() {
-    try {
-      const saved = localStorage.getItem('ws_english_spaces_progress_v2');
-      if (saved) this.progressData = { ...this.progressData, ...JSON.parse(saved) };
-    } catch (e) {}
-
     const u = window.Workspace?.usuario;
     if (!u || !u.id || !window.Workspace?.api) return;
 
     try {
       const escolaId = u.escolaId || 'DEFAULT';
-      const res = await window.Workspace.api(`/workspace/ingles/dados?escolaId=${encodeURIComponent(escolaId)}&userId=${encodeURIComponent(u.id)}`, 'GET');
-      if (res && res.success && res.dados) {
-        this._statsAlunoCache = res.dados.statsAluno || {};
-        this._srsCache = res.dados.srs || {};
-        const remoto = this._srsCache._englishSpaces;
-        if (remoto && typeof remoto === 'object') {
-          this.progressData = {
-            xp: Math.max(this.progressData.xp || 0, remoto.xp || 0),
-            visited: Array.from(new Set([...(this.progressData.visited || []), ...(remoto.visited || [])])),
-            missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, remoto.missionsCompleted || 0),
-            vocab: Array.from(new Set([...(this.progressData.vocab || []), ...(remoto.vocab || [])])),
-            unlocked: Array.from(new Set([...(this.progressData.unlocked || []), ...(remoto.unlocked || [])]))
-          };
-          localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
-          this.atualizarResumoNoBannerFeed();
-        }
+      const [resDados, resSpaces] = await Promise.all([
+        window.Workspace.api(`/workspace/ingles/dados?escolaId=${encodeURIComponent(escolaId)}&userId=${encodeURIComponent(u.id)}`, 'GET').catch(() => null),
+        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(u.id)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null)
+      ]);
+
+      if (resDados && resDados.success && resDados.dados) {
+        this._statsAlunoCache = resDados.dados.statsAluno || {};
+        this._srsCache = resDados.dados.srs || {};
       }
+
+      const drxBau = Number(this._statsAlunoCache?.coins?.bronze) || 0;
+      const drxSpaces = Number(resSpaces?.compatibility?.dovryx ?? resSpaces?.compatibility?.xp) || 0;
+      const saldoUnificado = Math.max(this.progressData.xp || 0, drxBau, drxSpaces, 500);
+
+      const visitadosNuvem = Array.isArray(resSpaces?.compatibility?.visited) ? resSpaces.compatibility.visited : [];
+      const vocabNuvem = Array.isArray(resSpaces?.compatibility?.vocab) ? resSpaces.compatibility.vocab : [];
+
+      this.progressData = {
+        xp: saldoUnificado,
+        visited: Array.from(new Set([...(this.progressData.visited || []), ...visitadosNuvem])),
+        missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, Number(resSpaces?.compatibility?.missionsCompleted) || 0),
+        vocab: Array.from(new Set([...(this.progressData.vocab || []), ...vocabNuvem])),
+        unlocked: Object.keys(SPACES_REGISTRY)
+      };
+
+      if (window.DOVRYX) window.DOVRYX.setBalance(saldoUnificado);
+      this.atualizarResumoNoBannerFeed();
     } catch (e) {}
   }
 
-  // 🚀 Grava o progresso e soma Moedas de Bronze usando a rota já ativa (/workspace/ingles/xp) — Zero Erro 404!
-  async salvarProgressoNaRotaOficial(xpAdicional = 0) {
-    localStorage.setItem('ws_english_spaces_progress_v2', JSON.stringify(this.progressData));
+  // 💎 Grava o saldo DOVRYX (DRX) diretamente no MongoDB (/workspace/ingles/xp)
+  async salvarProgressoNaRotaOficial(drxAdicional = 0) {
     this.atualizarResumoNoBannerFeed();
 
     const u = window.Workspace?.usuario;
@@ -842,12 +1440,13 @@ class EnglishSpacesManager {
 
     try {
       const stats = this._statsAlunoCache || {};
-      const coinsAtuais = stats.coins || { bronze: 0, prata: 0, ouro: 0 };
+      const novoSaldoDRX = Math.max(0, Number(this.progressData.xp) || 0);
       const novasCoins = {
-        ...coinsAtuais,
-        bronze: (Number(coinsAtuais.bronze) || 0) + (Number(xpAdicional) || 0)
+        ...(stats.coins || { bronze: 0, prata: 0, ouro: 0 }),
+        bronze: novoSaldoDRX
       };
       this._statsAlunoCache = { ...stats, coins: novasCoins };
+      if (window.DOVRYX) window.DOVRYX.setBalance(novoSaldoDRX);
 
       const srsAtualizado = {
         ...(this._srsCache || {}),
@@ -867,33 +1466,42 @@ class EnglishSpacesManager {
     } catch (e) {}
   }
 
-  async registarMissaoConcluida(spaceId, missionId, xpAmount) {
-    this.progressData.xp = (this.progressData.xp || 0) + xpAmount;
+  async registarMissaoConcluida(spaceId, missionId, drxAmount) {
+    const ganho = Number(drxAmount) || 0;
+    this.progressData.xp = (this.progressData.xp || 0) + ganho;
     if (missionId !== 'visit') {
       this.progressData.missionsCompleted = (this.progressData.missionsCompleted || 0) + 1;
     }
     if (!this.progressData.visited.includes(spaceId)) {
       this.progressData.visited.push(spaceId);
     }
-    if (this.progressData.xp >= 500) {
-      ['airport', 'hotel'].forEach(id => {
-        if (!this.progressData.unlocked.includes(id)) this.progressData.unlocked.push(id);
-      });
-    }
-    if (this.progressData.xp >= 1500) {
-      ['job', 'hospital'].forEach(id => {
-        if (!this.progressData.unlocked.includes(id)) this.progressData.unlocked.push(id);
-      });
+
+    const u = window.Workspace?.usuario;
+    if (u?.id) {
+      fetch('/api/workspace/english-spaces/progress/mission', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({
+          userId: u.id,
+          escolaId: u.escolaId || 'DEFAULT',
+          nomeAluno: u.nome || u.login || 'Aluno',
+          spaceId,
+          level: this.state.level || 'B1',
+          missionId,
+          xp: ganho
+        })
+      }).catch(() => {});
     }
 
-    this.mostrarAnimacaoXP(xpAmount);
-    await this.salvarProgressoNaRotaOficial(xpAmount);
+    this.mostrarAnimacaoXP(ganho);
+    await this.salvarProgressoNaRotaOficial(ganho);
   }
 
   mostrarAnimacaoXP(amount) {
     const el = document.createElement('div');
-    el.textContent = `🌟 +${amount} XP`;
-    el.style.cssText = 'position:fixed;bottom:90px;right:24px;background:linear-gradient(90deg,#8b5cf6,#d946ef);color:#fff;padding:10px 20px;border-radius:999px;font-weight:800;font-size:14px;z-index:999999;box-shadow:0 10px 25px rgba(139,92,246,0.45);transition:all 0.5s ease;';
+    el.textContent = `💎 +${amount} DRX`;
+    el.style.cssText = 'position:fixed;bottom:90px;right:24px;background:linear-gradient(90deg,#f59e0b,#d97706);color:#fff;padding:10px 20px;border-radius:999px;font-weight:900;font-size:14px;z-index:999999;box-shadow:0 10px 25px rgba(245,158,11,0.45);transition:all 0.5s ease;';
     document.body.appendChild(el);
     setTimeout(() => { el.style.opacity = '0'; el.style.transform = 'translateY(-20px)'; }, 900);
     setTimeout(() => el.remove(), 1400);
@@ -905,6 +1513,7 @@ class EnglishSpacesManager {
       if (!feedSection) return;
 
       let banner = document.getElementById('ws-card-english-spaces-feed');
+      const totalSpacesCount = Object.keys(SPACES_REGISTRY).length;
       if (!banner) {
         banner = document.createElement('div');
         banner.id = 'ws-card-english-spaces-feed';
@@ -925,17 +1534,17 @@ class EnglishSpacesManager {
           <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:15px; position:relative; z-index:2;">
             <div style="flex:1; min-width:220px;">
               <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(139,92,246,0.25); border:1px solid rgba(167,139,250,0.4); color:#e9d5ff; padding:4px 12px; border-radius:999px; font-size:11px; font-weight:800; margin-bottom:8px; letter-spacing:0.5px;">
-                ✨ REAL-LIFE SIMULATOR • 12 SCENARIOS
+                ✨ 3D LIFE RPG SIMULATOR • ${totalSpacesCount} SCENARIOS
               </div>
               <h3 style="margin:0 0 5px 0; font-size:20px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
-                🌎 English Spaces
+                🌎 English Spaces & 3D City
               </h3>
               <p style="margin:0; font-size:13px; color:#cbd5e1; line-height:1.4;">
-                Explore real situations (Airport, Coffee Shop, Hotel, Restaurant, Job Interview) & practice real spoken English!
+                Practice English in 24 real places, earn DOVRYX (DRX), build your house, drive vehicles & visit the Guild!
               </p>
-              <div id="ws-es-feed-stats" style="display:flex; gap:12px; margin-top:10px; font-size:11.5px; font-weight:700; color:#c4b5fd;">
-                <span>🔥 ${this.progressData.xp || 0} XP</span>
-                <span>🌍 ${(this.progressData.visited || []).length}/12 Spaces</span>
+              <div id="ws-es-feed-stats" style="display:flex; gap:12px; margin-top:10px; font-size:11.5px; font-weight:800; color:#fde047;">
+                <span>💎 ${(this.progressData.xp || 0).toLocaleString('pt-BR')} DRX</span>
+                <span>🌍 ${(this.progressData.visited || []).length}/${totalSpacesCount} Spaces</span>
                 <span>🎯 ${this.progressData.missionsCompleted || 0} Missions</span>
               </div>
             </div>
@@ -981,10 +1590,11 @@ class EnglishSpacesManager {
 
   atualizarResumoNoBannerFeed() {
     const el = document.getElementById('ws-es-feed-stats');
+    const totalSpacesCount = Object.keys(SPACES_REGISTRY).length;
     if (el) {
       el.innerHTML = `
-        <span>🔥 ${this.progressData.xp || 0} XP</span>
-        <span>🌍 ${(this.progressData.visited || []).length}/12 Spaces</span>
+        <span>💎 ${(this.progressData.xp || 0).toLocaleString('pt-BR')} DRX</span>
+        <span>🌍 ${(this.progressData.visited || []).length}/${totalSpacesCount} Spaces</span>
         <span>🎯 ${this.progressData.missionsCompleted || 0} Missions</span>
       `;
     }
@@ -996,6 +1606,7 @@ class EnglishSpacesManager {
     }
     this.container = document.getElementById('english-spaces-root');
     this.state.view = 'home';
+    this.sincronizarProgressoNuvem();
     this.render();
   }
 
@@ -1006,12 +1617,6 @@ class EnglishSpacesManager {
     if (view === 'space' && spaceId) {
       const alvo = SPACES_REGISTRY[spaceId];
       if (!alvo) return;
-      if (!this.espacoEstaDesbloqueado(alvo)) {
-        if (window.Workspace?.mostrarAviso) {
-          window.Workspace.mostrarAviso(`🔒 Alcance ${alvo.unlockXP} XP nos outros cenários para desbloquear ${alvo.name}!`, 'warning');
-        }
-        return;
-      }
       this.state.currentSpace = alvo;
       this.state.view = 'entering';
       this.render();
@@ -1025,7 +1630,7 @@ class EnglishSpacesManager {
         this.state.aiGrammarTip = null;
         this.registarMissaoConcluida(spaceId, 'visit', 10);
         this.render();
-      }, 850);
+      }, 650);
     } else {
       this.state.view = view;
       this.render();
@@ -1044,24 +1649,30 @@ class EnglishSpacesManager {
 
   renderHome() {
     const p = this.progressData;
+    const totalSpacesCount = Object.keys(SPACES_REGISTRY).length;
     this.container.innerHTML = `
       <div class="es-top-nav">
         <button type="button" class="es-back-btn" id="es-btn-voltar-feed">↩ Voltar ao Feed Principal</button>
-        <div class="es-level-pills">
-          <span style="font-size:12px; color:#a1a1aa; font-weight:700; margin-right:4px;">CEFR Level:</span>
-          ${['A1', 'A2', 'B1', 'B2'].map(lvl => `
-            <button type="button" class="es-lvl-btn ${this.state.level === lvl ? 'active' : ''}" data-set-level="${lvl}">${lvl}</button>
-          `).join('')}
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <button type="button" id="es-btn-open-3d-direct" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:8px 18px; border-radius:999px; font-weight:900; font-size:13px; cursor:pointer; box-shadow:0 6px 18px rgba(16,185,129,0.35);">
+            🏙️ Enter 3D City World
+          </button>
+          <div class="es-level-pills">
+            <span style="font-size:12px; color:#a1a1aa; font-weight:700; margin-right:4px;">CEFR Level:</span>
+            ${['A1', 'A2', 'B1', 'B2'].map(lvl => `
+              <button type="button" class="es-lvl-btn ${this.state.level === lvl ? 'active' : ''}" data-set-level="${lvl}">${lvl}</button>
+            `).join('')}
+          </div>
         </div>
       </div>
 
       <div class="es-home-hero">
-        <h1 class="es-display">🌎 ENGLISH SPACES</h1>
-        <p style="font-size:16px; color:#d4d4d8; margin:6px 0;">Explore real situations. Practice real English.</p>
-        <span style="font-size:13px; color:#a1a1aa;">Choose a place below, step into the roleplay, and speak or type in English!</span>
+        <h1 class="es-display">🌎 ENGLISH SPACES & 3D LIFE RPG</h1>
+        <p style="font-size:16px; color:#d4d4d8; margin:6px 0;">Explore 24 real-world establishments, earn DOVRYX (DRX), and build your life in English!</p>
+        <span style="font-size:13px; color:#a1a1aa;">Choose any establishment below to practice dialogues or enter the 3D Multiplayer City!</span>
         <div class="es-stats-bar">
-          <span class="es-stat-pill">🔥 ${p.xp || 0} XP</span>
-          <span class="es-stat-pill">🌍 ${(p.visited || []).length}/12 Spaces Visited</span>
+          <span class="es-stat-pill" style="border-color:#facc15; color:#fef08a;">💎 ${(p.xp || 0).toLocaleString('pt-BR')} DRX</span>
+          <span class="es-stat-pill">🌍 ${(p.visited || []).length}/${totalSpacesCount} Spaces Visited</span>
           <span class="es-stat-pill">🎯 ${p.missionsCompleted || 0} Missions Completed</span>
           <span class="es-stat-pill">📖 ${(p.vocab || []).length} Words Discovered</span>
         </div>
@@ -1074,6 +1685,12 @@ class EnglishSpacesManager {
 
     this.container.querySelector('#es-btn-voltar-feed')?.addEventListener('click', () => {
       if (window.Workspace?.voltarAoFeed) window.Workspace.voltarAoFeed();
+    });
+
+    this.container.querySelector('#es-btn-open-3d-direct')?.addEventListener('click', () => {
+      if (window.Workspace?.EnglishSpaces3D) {
+        window.Workspace.EnglishSpaces3D.abrirCidade3D(this, 'coffee');
+      }
     });
 
     this.container.querySelectorAll('[data-set-level]').forEach(btn => {
@@ -1092,11 +1709,9 @@ class EnglishSpacesManager {
   }
 
   renderCard(space) {
-    const desbloqueado = this.espacoEstaDesbloqueado(space);
     const visitado = (this.progressData.visited || []).includes(space.id);
-
     return `
-      <div class="es-card ${!desbloqueado ? 'es-locked' : ''}" data-space="${space.id}">
+      <div class="es-card" data-space="${space.id}">
         <div class="${space.gradient} es-card-visual">
           <span style="font-size:52px;">${space.emoji}</span>
           <div style="display:flex; gap:6px; align-items:center;">
@@ -1114,7 +1729,7 @@ class EnglishSpacesManager {
             ${space.roles.map(r => `<span class="es-chip">${r}</span>`).join('')}
           </div>
           <button type="button" class="es-btn-primary" data-enter="${space.id}">
-            ${desbloqueado ? 'ENTER SPACE →' : `🔒 Unlock at ${space.unlockXP} XP`}
+            ENTER SPACE →
           </button>
         </div>
       </div>
@@ -1142,8 +1757,9 @@ class EnglishSpacesManager {
 
     this.container.innerHTML = `
       <div class="es-top-nav">
-        <button type="button" class="es-back-btn" id="es-btn-back-map">← All Spaces</button>
+        <button type="button" class="es-back-btn" id="es-btn-back-map">← All 24 Spaces</button>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+          <span class="es-chip" style="font-size:12px; padding:6px 12px; border-color:#facc15; color:#fef08a;">💎 ${(this.progressData.xp || 0).toLocaleString('pt-BR')} DRX</span>
           <span class="es-chip" style="font-size:12px; padding:6px 12px;">${space.emoji} ${space.name}</span>
           <div class="es-level-pills">
             ${['A1', 'A2', 'B1', 'B2'].map(lvl => `
@@ -1193,6 +1809,13 @@ class EnglishSpacesManager {
 
         <div class="es-space-side">
           <div class="es-panel">
+            <h4 class="es-panel-title">🏙️ 3D MULTIPLAYER CITY</h4>
+            <button type="button" class="es-btn-primary" id="es-join-live" style="width:100%; height:42px; font-size:13px; background:linear-gradient(90deg,#10b981,#059669); color:#fff;">
+              🎙️ Enter ${space.name} in 3D City →
+            </button>
+          </div>
+
+          <div class="es-panel">
             <h4 class="es-panel-title">🎭 YOUR ROLE: <span style="color:#a78bfa;">${this.state.role}</span></h4>
             <div style="display:flex; gap:6px; flex-wrap:wrap;">
               ${space.roles.map(r => `
@@ -1209,7 +1832,7 @@ class EnglishSpacesManager {
                 return `
                   <div class="es-mission-item ${feita ? 'done' : ''}">
                     <span>${feita ? '✅' : '⬜'} ${m.title}</span>
-                    <span style="font-weight:800; color:#c084fc;">+${m.xp} XP</span>
+                    <span style="font-weight:800; color:#facc15;">+${m.xp} DRX</span>
                   </div>
                 `;
               }).join('')}
@@ -1235,19 +1858,6 @@ class EnglishSpacesManager {
                 ${this.state.immersion ? '🌎 Immersion ON' : '🇧🇷 PT-BR Support'}
               </button>
             </div>
-          </div>
-
-          <div class="es-panel">
-            <h4 class="es-panel-title">🟢 LIVE PRACTICE ROOM</h4>
-            <button type="button" class="es-btn-primary" id="es-join-live" style="width:100%; height:38px; font-size:12px;">
-              ${this.state.liveSession ? '🔴 Connected to Room' : '🎙️ Join Live Room'}
-            </button>
-            ${this.state.liveSession ? `
-              <div style="margin-top:10px; font-size:12px; color:#a7f3d0;">
-                Room: <strong>${this.state.liveSession.roomName}</strong><br>
-                Participants: ${(this.state.liveSession.session?.participants || []).map(p => `${p.displayName} (${p.role})`).join(', ')}
-              </div>
-            ` : ''}
           </div>
         </div>
       </div>
@@ -1322,16 +1932,12 @@ class EnglishSpacesManager {
       this.renderSpace();
     });
 
-    // 🏙️ ENTRAR NA CIDADE 3D MULTIPLAYER COM AVATARES HUMANOS E PROXIMIDADE
     this.container.querySelector('#es-join-live')?.addEventListener('click', () => {
       if (window.Workspace?.EnglishSpaces3D) {
         window.Workspace.EnglishSpaces3D.abrirCidade3D(this, space.id);
-      } else {
-        this.abrirSala3DInterativa(space, node);
       }
     });
 
-    // Resposta Livre (Casamento de intenção ou IA da Groq)
     const freeInput = this.container.querySelector('#es-free-text');
     const sendBtn = this.container.querySelector('#es-send-free');
 
@@ -1413,358 +2019,6 @@ class EnglishSpacesManager {
     });
   }
 
-  // =========================================================================
-  // 🌐 MOTOR 3D INTERATIVO DO LIVE PRACTICE ROOM (ISOMÉTRICO / 3D CANVAS PRO)
-  // =========================================================================
-  abrirSala3DInterativa(space, node) {
-    const slot = this.container.querySelector('#es-modal-slot');
-    if (!slot) return;
-
-    const u = window.Workspace?.usuario || {};
-    const meuNome = u.nome || u.login || 'You';
-
-    slot.innerHTML = `
-      <div class="es-modal-backdrop" style="padding:10px; background:rgba(3,4,12,0.92);">
-        <div style="width:100%; max-width:980px; height:86vh; background:#090a14; border:1.5px solid rgba(139,92,246,0.5); border-radius:24px; display:flex; flex-direction:column; overflow:hidden; box-shadow:0 25px 70px rgba(0,0,0,0.75); position:relative;">
-          
-          <!-- Topo da Sala 3D -->
-          <div style="padding:12px 18px; background:rgba(15,15,28,0.95); border-bottom:1px solid rgba(255,255,255,0.08); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; z-index:5;">
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span style="font-size:24px;">${space.emoji}</span>
-              <div>
-                <div style="font-size:15px; font-weight:800; color:#fff; display:flex; align-items:center; gap:8px;">
-                  ${space.name} • 3D Live Room
-                  <span style="background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#6ee7b7; font-size:10.5px; padding:2px 8px; border-radius:999px;">🟢 LIVE 3D</span>
-                </div>
-                <div style="font-size:11.5px; color:#a1a1aa;">Clique no chão 3D ou use as setas / WASD para caminhar até ao balcão e falar em Inglês!</div>
-              </div>
-            </div>
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span class="es-chip" style="color:#c4b5fd; border-color:#8b5cf6;">🎭 Role: ${this.state.role}</span>
-              <button type="button" id="es-3d-close-btn" style="background:#ef4444; color:#fff; border:none; padding:7px 14px; border-radius:999px; font-weight:800; font-size:12px; cursor:pointer;">✕ Leave 3D Room</button>
-            </div>
-          </div>
-
-          <!-- Palco 3D Interativo -->
-          <div id="es-3d-stage-wrap" style="flex:1; position:relative; overflow:hidden; background:#05060d;">
-            <canvas id="es-3d-canvas" style="width:100%; height:100%; display:block; cursor:pointer;"></canvas>
-
-            <!-- HUD Flutuante de Fala do NPC em 3D -->
-            <div id="es-3d-Dialogue-hud" style="position:absolute; top:14px; left:50%; transform:translateX(-50%); background:rgba(15,17,30,0.88); backdrop-filter:blur(10px); border:1px solid rgba(139,92,246,0.45); border-radius:16px; padding:12px 18px; width:92%; max-width:640px; pointer-events:auto; box-shadow:0 12px 30px rgba(0,0,0,0.45);">
-              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-                <strong style="font-size:12.5px; color:#c4b5fd;">${space.emoji} ${space.npcName}</strong>
-                <button type="button" id="es-3d-listen-btn" style="background:rgba(139,92,246,0.25); color:#e9d5ff; border:none; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:700; cursor:pointer;">🔊 Listen</button>
-              </div>
-              <div id="es-3d-npc-speech" style="font-size:14.5px; color:#fff; font-weight:600; line-height:1.4;">"${this.state.aiCustomReply || node.text}"</div>
-            </div>
-          </div>
-
-          <!-- Barra Inferior de Voz e Chat 3D -->
-          <div style="padding:12px 16px; background:rgba(15,15,28,0.98); border-top:1px solid rgba(255,255,255,0.08); display:flex; gap:8px; align-items:center; flex-wrap:wrap; z-index:5;">
-            <input type="text" id="es-3d-input" placeholder="Say something to ${space.npcName} in the 3D room..." autocomplete="off" style="flex:1; min-width:200px; background:#141626; border:1px solid rgba(255,255,255,0.14); color:#fff; padding:10px 14px; border-radius:12px; font-size:13.5px; outline:none;" />
-            <button type="button" id="es-3d-send-btn" style="background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff; border:none; padding:10px 18px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">💬 Send</button>
-            <button type="button" id="es-3d-mic-btn" style="background:#10b981; color:#fff; border:none; padding:10px 16px; border-radius:12px; font-weight:800; font-size:13px; cursor:pointer;">🎤 Speak in 3D</button>
-          </div>
-        </div>
-      </div>
-    `;
-
-    const canvas = slot.querySelector('#es-3d-canvas');
-    const wrap = slot.querySelector('#es-3d-stage-wrap');
-    const ctx = canvas.getContext('2d');
-
-    // Estado do Mundo 3D Isométrico / Perspetiva
-    let animId = null;
-    let tick = 0;
-    const player = {
-      x: 0,
-      z: 2.3,
-      targetX: 0,
-      targetZ: 2.3,
-      name: meuNome,
-      role: this.state.role || 'STUDENT',
-      color: '#8b5cf6',
-      bubble: 'Hello! 👋',
-      bubbleTimer: 180
-    };
-    const npc = {
-      x: 0,
-      z: -1.8,
-      name: space.npcName || 'Host',
-      role: space.roles[1] || 'HOST',
-      color: '#10b981',
-      bubble: this.state.aiCustomReply || node.text
-    };
-    const peer = {
-      x: -2.2,
-      z: 0.8,
-      name: 'Alex (Classmate)',
-      role: space.roles[0] || 'PARTICIPANT',
-      color: '#3b82f6',
-      bubble: `Practicing ${this.state.level} English!`
-    };
-
-    const redimensionar3D = () => {
-      const dpr = window.devicePixelRatio || 1;
-      const w = wrap.clientWidth || 800;
-      const h = wrap.clientHeight || 500;
-      canvas.width = w * dpr;
-      canvas.height = h * dpr;
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    };
-    redimensionar3D();
-    window.addEventListener('resize', redimensionar3D);
-
-    // Projeção 3D -> 2D com perspetiva real
-    const projetar3D = (wx, wy, wz, w, h) => {
-      const fov = 420;
-      const camY = 3.2;
-      const camZ = 6.5;
-      const dz = camZ - wz;
-      const escala = fov / Math.max(1.2, dz);
-      return {
-        sx: w / 2 + wx * escala * 1.15,
-        sy: h * 0.62 + (wy - camY * 0.45 + wz * 0.55) * escala * 0.65,
-        scale: escala / 65
-      };
-    };
-
-    const desenharBoneco3D = (ch, w, h, isNpc = false) => {
-      const bob = Math.sin(tick * 0.08 + (isNpc ? 1.5 : 0)) * 0.06;
-      const base = projetar3D(ch.x, 0, ch.z, w, h);
-      const s = Math.max(0.55, base.scale);
-
-      ctx.save();
-      // Sombra projetada no piso 3D
-      ctx.fillStyle = 'rgba(0,0,0,0.45)';
-      ctx.beginPath();
-      ctx.ellipse(base.sx, base.sy, 22 * s, 9 * s, 0, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Corpo Cilíndrico 3D com gradiente
-      const bodyH = 44 * s;
-      const bodyW = 28 * s;
-      const bodyY = base.sy - bodyH - bob * 35;
-      const grad = ctx.createLinearGradient(base.sx - bodyW / 2, bodyY, base.sx + bodyW / 2, base.sy);
-      grad.addColorStop(0, ch.color);
-      grad.addColorStop(1, '#1e1b4b');
-      ctx.fillStyle = grad;
-      ctx.beginPath();
-      ctx.roundRect(base.sx - bodyW / 2, bodyY, bodyW, bodyH, 12 * s);
-      ctx.fill();
-      ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
-
-      // Cabeça Esférica 3D
-      const headR = 15 * s;
-      const headY = bodyY - headR + 2 * s;
-      ctx.fillStyle = '#fde68a';
-      ctx.beginPath();
-      ctx.arc(base.sx, headY, headR, 0, Math.PI * 2);
-      ctx.fill();
-      ctx.stroke();
-
-      // Olhos
-      ctx.fillStyle = '#0f172a';
-      ctx.beginPath();
-      ctx.arc(base.sx - 5 * s, headY - 1 * s, 2.2 * s, 0, Math.PI * 2);
-      ctx.arc(base.sx + 5 * s, headY - 1 * s, 2.2 * s, 0, Math.PI * 2);
-      ctx.fill();
-
-      // Etiqueta de Nome e Papel (Role)
-      ctx.font = `800 ${Math.round(11 * s)}px Inter, sans-serif`;
-      const labelTxt = `${ch.name} [${ch.role}]`;
-      const tw = ctx.measureText(labelTxt).width + 14;
-      ctx.fillStyle = 'rgba(9, 10, 20, 0.85)';
-      ctx.beginPath();
-      ctx.roundRect(base.sx - tw / 2, headY - headR - 24 * s, tw, 18 * s, 9);
-      ctx.fill();
-      ctx.fillStyle = '#ffffff';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(labelTxt, base.sx, headY - headR - 15 * s);
-
-      // Balão de fala 3D acima do personagem
-      if (ch.bubble && (!ch.bubbleTimer || ch.bubbleTimer > 0)) {
-        const msg = ch.bubble.length > 48 ? ch.bubble.slice(0, 48) + '...' : ch.bubble;
-        ctx.font = `700 ${Math.round(11.5 * s)}px Inter, sans-serif`;
-        const bw = Math.min(260, ctx.measureText(msg).width + 20);
-        const by = headY - headR - 52 * s;
-        ctx.fillStyle = '#ffffff';
-        ctx.beginPath();
-        ctx.roundRect(base.sx - bw / 2, by, bw, 24 * s, 10);
-        ctx.fill();
-        ctx.fillStyle = '#0f172a';
-        ctx.fillText(msg, base.sx, by + 12 * s);
-      }
-
-      ctx.restore();
-    };
-
-    const renderizarCena3D = () => {
-      tick++;
-      const w = wrap.clientWidth || 800;
-      const h = wrap.clientHeight || 500;
-
-      // Interpolação suave do movimento do aluno no piso 3D
-      player.x += (player.targetX - player.x) * 0.12;
-      player.z += (player.targetZ - player.z) * 0.12;
-      if (player.bubbleTimer > 0) player.bubbleTimer--;
-
-      // Fundo atmosférico 3D
-      const bgGrad = ctx.createRadialGradient(w / 2, h * 0.35, 30, w / 2, h / 2, w * 0.8);
-      bgGrad.addColorStop(0, '#1e1b4b');
-      bgGrad.addColorStop(1, '#05060d');
-      ctx.fillStyle = bgGrad;
-      ctx.fillRect(0, 0, w, h);
-
-      // Malha de Piso 3D em Perspetiva
-      ctx.strokeStyle = 'rgba(139, 92, 246, 0.22)';
-      ctx.lineWidth = 1;
-      for (let gx = -4; gx <= 4; gx += 1) {
-        const p1 = projetar3D(gx, 0, -3.5, w, h);
-        const p2 = projetar3D(gx, 0, 3.8, w, h);
-        ctx.beginPath();
-        ctx.moveTo(p1.sx, p1.sy);
-        ctx.lineTo(p2.sx, p2.sy);
-        ctx.stroke();
-      }
-      for (let gz = -3.5; gz <= 3.8; gz += 0.9) {
-        const p1 = projetar3D(-4, 0, gz, w, h);
-        const p2 = projetar3D(4, 0, gz, w, h);
-        ctx.beginPath();
-        ctx.moveTo(p1.sx, p1.sy);
-        ctx.lineTo(p2.sx, p2.sy);
-        ctx.stroke();
-      }
-
-      // Balcão / Estação Central 3D do Cenário
-      const cEsq = projetar3D(-1.6, 0, -1.2, w, h);
-      const cDir = projetar3D(1.6, 0, -1.2, w, h);
-      const balcaoW = cDir.sx - cEsq.sx;
-      const balcaoH = 38 * cEsq.scale;
-      ctx.fillStyle = 'rgba(30, 41, 59, 0.92)';
-      ctx.strokeStyle = '#a78bfa';
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(cEsq.sx, cEsq.sy - balcaoH, balcaoW, balcaoH, 8);
-      ctx.fill();
-      ctx.stroke();
-
-      ctx.fillStyle = '#e9d5ff';
-      ctx.font = '800 12px Inter, sans-serif';
-      ctx.textAlign = 'center';
-      ctx.fillText(`${space.emoji} ${space.name} STATION`, (cEsq.sx + cDir.sx) / 2, cEsq.sy - balcaoH / 2 + 4);
-
-      // Marcador luminoso no chão onde o aluno clicou para andar
-      const dest = projetar3D(player.targetX, 0, player.targetZ, w, h);
-      ctx.strokeStyle = 'rgba(16, 185, 129, 0.55)';
-      ctx.beginPath();
-      ctx.ellipse(dest.sx, dest.sy, 16, 7, 0, 0, Math.PI * 2);
-      ctx.stroke();
-
-      // Ordena por profundidade Z (quem está mais atrás é desenhado primeiro)
-      const entidades = [
-        { obj: npc, isNpc: true },
-        { obj: peer, isNpc: false },
-        { obj: player, isNpc: false }
-      ].sort((a, b) => a.obj.z - b.obj.z);
-
-      entidades.forEach(e => desenharBoneco3D(e.obj, w, h, e.isNpc));
-
-      animId = requestAnimationFrame(renderizarCena3D);
-    };
-    animId = requestAnimationFrame(renderizarCena3D);
-
-    // Clique/Toque no chão 3D para caminhar
-    canvas.addEventListener('pointerdown', (e) => {
-      const rect = canvas.getBoundingClientRect();
-      const cx = e.clientX - rect.left;
-      const cy = e.clientY - rect.top;
-      const nx = ((cx - rect.width / 2) / (rect.width * 0.42)) * 3.5;
-      const nz = ((cy - rect.height * 0.55) / (rect.height * 0.35)) * 3.2;
-      player.targetX = Math.max(-3.4, Math.min(3.4, nx));
-      player.targetZ = Math.max(-0.5, Math.min(3.3, nz));
-    });
-
-    // Teclas WASD / Setas para andar na Sala 3D
-    const onKeyDown3D = (e) => {
-      if (document.activeElement === slot.querySelector('#es-3d-input')) return;
-      const step = 0.35;
-      if (e.key === 'ArrowUp' || e.key === 'w' || e.key === 'W') player.targetZ = Math.max(-0.5, player.targetZ - step);
-      if (e.key === 'ArrowDown' || e.key === 's' || e.key === 'S') player.targetZ = Math.min(3.3, player.targetZ + step);
-      if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') player.targetX = Math.max(-3.4, player.targetX - step);
-      if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') player.targetX = Math.min(3.4, player.targetX + step);
-    };
-    window.addEventListener('keydown', onKeyDown3D);
-
-    // Enviar mensagem ou falar dentro da Sala 3D
-    const input3D = slot.querySelector('#es-3d-input');
-    const btnSend3D = slot.querySelector('#es-3d-send-btn');
-    const npcSpeechEl = slot.querySelector('#es-3d-npc-speech');
-
-    const enviarFalaNaSala3D = async () => {
-      const texto = (input3D?.value || '').trim();
-      if (!texto) return;
-      input3D.value = '';
-      player.bubble = texto;
-      player.bubbleTimer = 320;
-
-      // Caminha automaticamente um pouco em direção ao balcão do NPC ao falar
-      player.targetX = 0;
-      player.targetZ = 0.5;
-
-      if (btnSend3D) { btnSend3D.disabled = true; btnSend3D.textContent = '⏳...'; }
-      try {
-        const prompt3D = `[3D Live Room Scenario: ${space.name} | Your Role: ${space.npcName} | Student Role: ${this.state.role} | Level: ${this.state.level}]. Reply naturally in 1-2 short sentences to the student: "${texto}"`;
-        const res = await window.Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
-          mensagem: prompt3D,
-          historico: []
-        });
-        if (res && res.success && res.resposta) {
-          npc.bubble = res.resposta;
-          this.state.aiCustomReply = res.resposta;
-          if (npcSpeechEl) npcSpeechEl.textContent = `"${res.resposta}"`;
-          this.falarTexto(res.resposta);
-
-          const missaoPendente = (space.missions || []).find(m => !this.state.missionsDone.includes(m.id));
-          if (missaoPendente) {
-            this.state.missionsDone.push(missaoPendente.id);
-            this.registarMissaoConcluida(space.id, missaoPendente.id, missaoPendente.xp || 75);
-          }
-        }
-      } catch (err) {}
-      finally {
-        if (btnSend3D) { btnSend3D.disabled = false; btnSend3D.textContent = '💬 Send'; }
-      }
-    };
-
-    btnSend3D?.addEventListener('click', enviarFalaNaSala3D);
-    input3D?.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') enviarFalaNaSala3D();
-    });
-
-    slot.querySelector('#es-3d-mic-btn')?.addEventListener('click', () => {
-      this.ouvirMicrofone((falado) => {
-        if (input3D) input3D.value = falado;
-        enviarFalaNaSala3D();
-      });
-    });
-
-    slot.querySelector('#es-3d-listen-btn')?.addEventListener('click', () => {
-      this.falarTexto(npc.bubble);
-    });
-
-    slot.querySelector('#es-3d-close-btn')?.addEventListener('click', () => {
-      if (animId) cancelAnimationFrame(animId);
-      window.removeEventListener('resize', redimensionar3D);
-      window.removeEventListener('keydown', onKeyDown3D);
-      slot.innerHTML = '';
-      this.renderSpace();
-    });
-  }
-
   abrirModalVocab(space, item) {
     const slot = this.container.querySelector('#es-modal-slot');
     if (!slot) return;
@@ -1774,6 +2028,16 @@ class EnglishSpacesManager {
       this.progressData.xp = (this.progressData.xp || 0) + 15;
       this.mostrarAnimacaoXP(15);
       this.salvarProgressoNaRotaOficial(15);
+
+      const u = window.Workspace?.usuario;
+      if (u?.id) {
+        fetch('/api/workspace/english-spaces/progress/vocab', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ userId: u.id, word: item.word, spaceId: space.id })
+        }).catch(() => {});
+      }
     }
 
     slot.innerHTML = `
@@ -1825,7 +2089,7 @@ class EnglishSpacesManager {
 
   renderComplete() {
     const sp = this.state.currentSpace;
-    const xpTotal = Math.max(70, this.state.missionsDone.length * 75);
+    const drxTotal = Math.max(70, this.state.missionsDone.length * 75);
     this.container.innerHTML = `
       <div class="es-complete-card">
         <div style="font-size:60px; margin-bottom:10px;">🎉</div>
@@ -1837,13 +2101,19 @@ class EnglishSpacesManager {
           <div class="es-score-box"><span>Fluency</span><strong>92/100</strong></div>
           <div class="es-score-box"><span>Missions</span><strong>100%</strong></div>
         </div>
-        <div style="font-size:32px; font-weight:900; color:#c084fc; margin:20px 0;">+${xpTotal} XP Earned</div>
+        <div style="font-size:32px; font-weight:900; color:#facc15; margin:20px 0;">💎 +${drxTotal} DRX Earned</div>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
-          <button type="button" class="es-btn-primary" id="es-btn-again" style="padding:0 24px;">🔄 Practice Again</button>
-          <button type="button" class="es-btn-primary" id="es-btn-back-all" style="padding:0 24px; background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff;">🌎 Explore Other Spaces</button>
+          <button type="button" class="es-btn-primary" id="es-btn-enter-3d-complete" style="padding:0 24px; max-width:240px; background:linear-gradient(90deg,#10b981,#059669); color:#fff;">🏙️ Visit ${sp ? sp.name : 'City'} in 3D</button>
+          <button type="button" class="es-btn-primary" id="es-btn-again" style="padding:0 24px; max-width:200px;">🔄 Practice Again</button>
+          <button type="button" class="es-btn-primary" id="es-btn-back-all" style="padding:0 24px; max-width:220px; background:linear-gradient(90deg,#8b5cf6,#d946ef); color:#fff;">🌎 All 24 Spaces</button>
         </div>
       </div>
     `;
+    this.container.querySelector('#es-btn-enter-3d-complete')?.addEventListener('click', () => {
+      if (window.Workspace?.EnglishSpaces3D && sp) {
+        window.Workspace.EnglishSpaces3D.abrirCidade3D(this, sp.id);
+      }
+    });
     this.container.querySelector('#es-btn-again')?.addEventListener('click', () => this.navigate('space', sp.id));
     this.container.querySelector('#es-btn-back-all')?.addEventListener('click', () => this.navigate('home'));
   }
@@ -1876,7 +2146,7 @@ class EnglishSpacesManager {
       }
       #ws-english-spaces-container .es-lvl-btn.active { background: #8b5cf6; color: #fff; border-color: #a78bfa; }
       #ws-english-spaces-container .es-home-hero { text-align: center; padding: 12px 0 24px 0; }
-      #ws-english-spaces-container .es-home-hero h1 { font-size: 34px; margin: 0; color: #fff; }
+      #ws-english-spaces-container .es-home-hero h1 { font-size: 32px; margin: 0; color: #fff; }
       #ws-english-spaces-container .es-stats-bar {
         display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 16px;
       }
@@ -1896,7 +2166,6 @@ class EnglishSpacesManager {
         transform: translateY(-4px); border-color: rgba(139,92,246,0.45);
         box-shadow: 0 16px 40px -15px rgba(139,92,246,0.45);
       }
-      #ws-english-spaces-container .es-card.es-locked { opacity: 0.72; }
       #ws-english-spaces-container .es-card-visual {
         padding: 20px; display: flex; justify-content: space-between; align-items: flex-start;
       }
