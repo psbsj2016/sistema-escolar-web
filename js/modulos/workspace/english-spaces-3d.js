@@ -497,7 +497,7 @@ class EnglishSpaces3DWorld {
       }
       return false;
     }
-    if (newX < -62 || newX > 62 || newZ < -128 || newZ > 22) return false;
+    if (newX < -75 || newX > 75 || newZ < -135 || newZ > 70) return false;
     return true;
   }
 
@@ -894,47 +894,60 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     const bAirport = this.buildingsMeta.find(b=>b.id==='airport');
     if (!bAirport) return;
-    const pista = new THREE.Mesh(new THREE.PlaneGeometry(14, 110), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness:0.85, metalness:0.1 }));
+    const pista = new THREE.Mesh(new THREE.PlaneGeometry(18, 130), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness:0.85, metalness:0.1 }));
     pista.rotation.x=-Math.PI/2; pista.position.set(38,0.02,-78); pista.receiveShadow=true; this.exteriorGroup.add(pista);
     const whiteMat = new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.3 });
-    for(let z=-125; z<-25; z+=7){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.4,3.8),whiteMat); m.rotation.x=-Math.PI/2; m.position.set(38,0.04,z); this.exteriorGroup.add(m); }
+    for(let z=-130; z<-20; z+=7){ const m=new THREE.Mesh(new THREE.PlaneGeometry(1.8,4.2),whiteMat); m.rotation.x=-Math.PI/2; m.position.set(38,0.04,z); this.exteriorGroup.add(m); }
     const canvasNum = document.createElement('canvas'); canvasNum.width=256; canvasNum.height=128;
     const ctxN=canvasNum.getContext('2d'); ctxN.fillStyle='#1e293b'; ctxN.fillRect(0,0,256,128); ctxN.fillStyle='#f8fafc'; ctxN.font='bold 64px Inter'; ctxN.textAlign='center'; ctxN.fillText('27L',128,84);
     const texNum=new THREE.CanvasTexture(canvasNum);
-    const numMesh=new THREE.Mesh(new THREE.PlaneGeometry(5,2.5), new THREE.MeshBasicMaterial({ map:texNum })); numMesh.rotation.x=-Math.PI/2; numMesh.position.set(38,0.05,-118); this.exteriorGroup.add(numMesh);
+    const numMesh=new THREE.Mesh(new THREE.PlaneGeometry(6,3), new THREE.MeshBasicMaterial({ map:texNum })); numMesh.rotation.x=-Math.PI/2; numMesh.position.set(38,0.05,-125); this.exteriorGroup.add(numMesh);
     const yellowMat = new THREE.MeshStandardMaterial({ color:0xfacc15, emissive:0xfacc15, emissiveIntensity:0.2 });
-    const edgeL=new THREE.Mesh(new THREE.PlaneGeometry(0.35,110),yellowMat); edgeL.rotation.x=-Math.PI/2; edgeL.position.set(31.2,0.03,-78); this.exteriorGroup.add(edgeL);
-    const edgeR=new THREE.Mesh(new THREE.PlaneGeometry(0.35,110),yellowMat); edgeR.rotation.x=-Math.PI/2; edgeR.position.set(44.8,0.03,-78); this.exteriorGroup.add(edgeR);
-    const blueLightMat = new THREE.MeshStandardMaterial({ color:0x38bdf8, emissive:0x38bdf8, emissiveIntensity:1.2 });
-    for(let z=-120; z<-30; z+=9){
-      const l1=new THREE.Mesh(new THREE.SphereGeometry(0.12,6,6), blueLightMat); l1.position.set(31.2,0.18,z); this.exteriorGroup.add(l1);
-      const l2=new THREE.Mesh(new THREE.SphereGeometry(0.12,6,6), blueLightMat); l2.position.set(44.8,0.18,z); this.exteriorGroup.add(l2);
+    const edgeL=new THREE.Mesh(new THREE.PlaneGeometry(0.45,130),yellowMat); edgeL.rotation.x=-Math.PI/2; edgeL.position.set(29.5,0.03,-78); this.exteriorGroup.add(edgeL);
+    const edgeR=new THREE.Mesh(new THREE.PlaneGeometry(0.45,130),yellowMat); edgeR.rotation.x=-Math.PI/2; edgeR.position.set(46.5,0.03,-78); this.exteriorGroup.add(edgeR);
+    const blueLightMat = new THREE.MeshStandardMaterial({ color:0x38bdf8, emissive:0x38bdf8, emissiveIntensity:1.5 });
+    for(let z=-125; z<-25; z+=8){
+      const l1=new THREE.Mesh(new THREE.SphereGeometry(0.15,6,6), blueLightMat); l1.position.set(29.5,0.22,z); this.exteriorGroup.add(l1);
+      const l2=new THREE.Mesh(new THREE.SphereGeometry(0.15,6,6), blueLightMat); l2.position.set(46.5,0.22,z); this.exteriorGroup.add(l2);
     }
-    const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(0.9,1.1,5.5,8), new THREE.MeshStandardMaterial({ color:0xcbd5e1 })); towerBase.position.set(46,2.75,-38); towerBase.castShadow=true; this.exteriorGroup.add(towerBase);
-    const towerTop = new THREE.Mesh(new THREE.CylinderGeometry(1.4,1.4,0.9,8), new THREE.MeshStandardMaterial({ color:0x0ea5e9, transparent:true, opacity:0.7 })); towerTop.position.set(46,5.8,-38); this.exteriorGroup.add(towerTop);
+    const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1,1.3,6.5,8), new THREE.MeshStandardMaterial({ color:0xcbd5e1 })); towerBase.position.set(48,3.25,-35); towerBase.castShadow=true; this.exteriorGroup.add(towerBase);
+    const towerTop = new THREE.Mesh(new THREE.CylinderGeometry(1.6,1.6,1.1,8), new THREE.MeshStandardMaterial({ color:0x0ea5e9, transparent:true, opacity:0.75 })); towerTop.position.set(48,6.8,-35); this.exteriorGroup.add(towerTop);
+
     this.avioes = [];
-    for(let i=0;i<4;i++){
+    for(let i=0;i<5;i++){
       const aviaoGroup = new THREE.Group();
-      const fuselagemFront = new THREE.Mesh(new THREE.SphereGeometry(0.42,12,12), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.2, metalness:0.15 }));
-      fuselagemFront.position.set(1.7,0,0); fuselagemFront.scale.set(1.3,1,1);
-      const fuselagemMid = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.42,2.8,16), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.25, metalness:0.2 })); fuselagemMid.rotation.z=Math.PI/2; fuselagemMid.position.set(0.2,0,0); fuselagemMid.castShadow=true;
-      const fuselagemRear = new THREE.Mesh(new THREE.CylinderGeometry(0.42,0.18,1.2,12), new THREE.MeshStandardMaterial({ color:0xf8fafc })); fuselagemRear.rotation.z=Math.PI/2; fuselagemRear.position.set(-1.5,0,0);
-      const cockpitMat = new THREE.MeshStandardMaterial({ color:0x0f172a, roughness:0.05, metalness:0.9 });
-      const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.22,8,8), cockpitMat); cockpit.position.set(1.95,0.12,0); cockpit.scale.set(1.2,0.6,1.1);
-      const wingMat = new THREE.MeshStandardMaterial({ color:0xe2e8f0, roughness:0.3, metalness:0.2 });
-      const asaL = new THREE.Mesh(new THREE.BoxGeometry(1.1,0.09,1.7), wingMat); asaL.position.set(-0.2, -0.08, 0.95); asaL.rotation.y=0.28; asaL.castShadow=true;
-      const asaR = new THREE.Mesh(new THREE.BoxGeometry(1.1,0.09,1.7), wingMat); asaR.position.set(-0.2, -0.08, -0.95); asaR.rotation.y=-0.28; asaR.castShadow=true;
-      const engineGeo = new THREE.CylinderGeometry(0.18,0.18,0.55,12); engineGeo.rotateZ(Math.PI/2);
-      const engineMat = new THREE.MeshStandardMaterial({ color:0x334155, roughness:0.4, metalness:0.6 });
-      const engL = new THREE.Mesh(engineGeo, engineMat); engL.position.set(-0.3, -0.18, 0.65);
-      const engR = new THREE.Mesh(engineGeo, engineMat); engR.position.set(-0.3, -0.18, -0.65);
-      const tailV = new THREE.Mesh(new THREE.BoxGeometry(0.55,0.85,0.08), new THREE.MeshStandardMaterial({ color:0x0284c7 })); tailV.position.set(-2.1,0.45,0);
-      const tailH = new THREE.Mesh(new THREE.BoxGeometry(0.85,0.08,0.85), new THREE.MeshStandardMaterial({ color:0xe2e8f0 })); tailH.position.set(-2.0,0.1,0);
+      // Fuselagem MUITO maior e realista
+      const fuselagemFront = new THREE.Mesh(new THREE.SphereGeometry(0.85,16,16), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.18, metalness:0.2 }));
+      fuselagemFront.position.set(3.4,0,0); fuselagemFront.scale.set(1.4,1,1);
+      const fuselagemMid = new THREE.Mesh(new THREE.CylinderGeometry(0.85,0.85,5.6,20), new THREE.MeshStandardMaterial({ color:0xf8fafc, roughness:0.22, metalness:0.25 })); fuselagemMid.rotation.z=Math.PI/2; fuselagemMid.position.set(0.4,0,0); fuselagemMid.castShadow=true;
+      const fuselagemRear = new THREE.Mesh(new THREE.CylinderGeometry(0.85,0.35,2.4,16), new THREE.MeshStandardMaterial({ color:0xf8fafc })); fuselagemRear.rotation.z=Math.PI/2; fuselagemRear.position.set(-3.0,0,0);
+      const cockpitMat = new THREE.MeshStandardMaterial({ color:0x0f172a, roughness:0.05, metalness:0.95 });
+      const cockpit = new THREE.Mesh(new THREE.SphereGeometry(0.42,12,12), cockpitMat); cockpit.position.set(3.95,0.22,0); cockpit.scale.set(1.3,0.7,1.2);
+      const wingMat = new THREE.MeshStandardMaterial({ color:0xe2e8f0, roughness:0.28, metalness:0.25 });
+      const asaL = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.18,3.2), wingMat); asaL.position.set(-0.4, -0.15, 1.85); asaL.rotation.y=0.32; asaL.castShadow=true;
+      const asaR = new THREE.Mesh(new THREE.BoxGeometry(2.2,0.18,3.2), wingMat); asaR.position.set(-0.4, -0.15, -1.85); asaR.rotation.y=-0.32; asaR.castShadow=true;
+      const engineGeo = new THREE.CylinderGeometry(0.36,0.36,1.1,16); engineGeo.rotateZ(Math.PI/2);
+      const engineMat = new THREE.MeshStandardMaterial({ color:0x334155, roughness:0.35, metalness:0.7 });
+      const engL = new THREE.Mesh(engineGeo, engineMat); engL.position.set(-0.6, -0.35, 1.25);
+      const engR = new THREE.Mesh(engineGeo, engineMat); engR.position.set(-0.6, -0.35, -1.25);
+      const tailV = new THREE.Mesh(new THREE.BoxGeometry(1.1,1.7,0.16), new THREE.MeshStandardMaterial({ color:0x0284c7 })); tailV.position.set(-4.2,0.9,0);
+      const tailH = new THREE.Mesh(new THREE.BoxGeometry(1.7,0.16,1.7), new THREE.MeshStandardMaterial({ color:0xe2e8f0 })); tailH.position.set(-4.0,0.2,0);
       const logoMat = new THREE.MeshBasicMaterial({ color:0xef4444 });
-      const logo = new THREE.Mesh(new THREE.CircleGeometry(0.18,12), logoMat); logo.position.set(-2.12,0.55,0.05); logo.rotation.y=Math.PI/2;
-      aviaoGroup.add(fuselagemFront,fuselagemMid,fuselagemRear,cockpit,asaL,asaR,engL,engR,tailV,tailH,logo);
-      aviaoGroup.position.set(38 + (Math.random()-0.5)*1.5, 0.65 + i*10, -118 - i*32);
-      aviaoGroup.userData = { speed: 5.2 + Math.random()*2.8, state: 'taxi', alt:0, t: Math.random()*10, type: i%2===0?'landing':'takeoff' };
+      const logo = new THREE.Mesh(new THREE.CircleGeometry(0.36,16), logoMat); logo.position.set(-4.22,1.1,0.09); logo.rotation.y=Math.PI/2;
+      // Trem de pouso
+      const gearMat = new THREE.MeshStandardMaterial({ color:0x111827 });
+      const gearFront = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.5,8), gearMat); gearFront.position.set(1.5,-0.7,0);
+      const gearRearL = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.5,8), gearMat); gearRearL.position.set(-0.5,-0.7,0.8);
+      const gearRearR = new THREE.Mesh(new THREE.CylinderGeometry(0.12,0.12,0.5,8), gearMat); gearRearR.position.set(-0.5,-0.7,-0.8);
+      const wheelGeo = new THREE.CylinderGeometry(0.14,0.14,0.08,8); wheelGeo.rotateZ(Math.PI/2);
+      const wheelMat = new THREE.MeshStandardMaterial({ color:0x000000 });
+      [gearFront,gearRearL,gearRearR].forEach(g=>{
+        const w=new THREE.Mesh(wheelGeo,wheelMat); w.position.set(0,-0.3,0); g.add(w);
+      });
+      
+      aviaoGroup.add(fuselagemFront,fuselagemMid,fuselagemRear,cockpit,asaL,asaR,engL,engR,tailV,tailH,logo,gearFront,gearRearL,gearRearR);
+      aviaoGroup.position.set(38 + (Math.random()-0.5)*2, 0.85 + i*12, -135 - i*38);
+      aviaoGroup.userData = { speed: 6.5 + Math.random()*2.5, state: 'taxi', alt:0, t: Math.random()*10, type: i%2===0?'takeoff':'landing', gearVisible:true };
       this.exteriorGroup.add(aviaoGroup);
       this.avioes.push(aviaoGroup);
     }
@@ -1293,18 +1306,61 @@ class EnglishSpaces3DWorld {
     if (this.modoInterior || !this.avioes) return;
     this.avioes.forEach(av=>{
       av.userData.t += delta;
-      if (av.userData.state==='taxi') {
-        av.position.z += av.userData.speed * delta;
-        if (av.position.z > -45) { av.userData.state='takeoff'; }
-      } else if (av.userData.state==='takeoff') {
-        av.position.z += av.userData.speed * delta * 0.9;
-        av.position.y += delta * 3.5;
-        av.rotation.x = -0.25;
-        if (av.position.y > 18) { av.userData.state='voando'; }
-      } else {
-        av.position.z += av.userData.speed * delta * 1.2;
-        av.position.x += Math.sin(av.userData.t*0.3)*delta*0.8;
-        if (av.position.z > 28) { av.position.set(32 + (Math.random()-0.5)*3, 0.6, -118); av.position.y=0.6; av.rotation.set(0,0,0); av.userData.state='taxi'; }
+      const data = av.userData;
+      if (data.state==='taxi') {
+        av.position.z += data.speed * delta;
+        av.rotation.x = 0;
+        // Trem de pouso visível
+        av.children.forEach(c=>{ if(c.geometry && c.geometry.type==='CylinderGeometry' && c.position.y<0) c.visible=true; });
+        if (av.position.z > -50) { 
+          data.state='takeoff'; 
+          data.takeoffStartZ = av.position.z;
+        }
+      } else if (data.state==='takeoff') {
+        av.position.z += data.speed * delta * 0.95;
+        av.position.y += delta * 4.2;
+        av.rotation.x = -0.18 - Math.sin((av.position.y/22)*Math.PI)*0.12;
+        // Recolhe trem de pouso após 3m
+        if (av.position.y > 3) {
+          av.children.forEach(c=>{ if(c.position.y<0 && c.geometry && c.geometry.type==='CylinderGeometry') c.visible=false; });
+        }
+        if (av.position.y > 28) { 
+          data.state='cruise'; 
+          data.cruiseTime=0;
+        }
+      } else if (data.state==='cruise') {
+        data.cruiseTime += delta;
+        av.position.z += data.speed * delta * 1.15;
+        av.position.y = 28 + Math.sin(data.cruiseTime*0.6)*2.5;
+        av.position.x = 38 + Math.sin(data.t*0.35)*4.5;
+        av.rotation.x = Math.sin(data.cruiseTime*0.6)*0.08;
+        av.rotation.z = Math.sin(data.t*0.4)*0.05;
+        if (data.cruiseTime > 8 + Math.random()*4) {
+          data.state='landing';
+          data.landingStartY = av.position.y;
+        }
+      } else if (data.state==='landing') {
+        av.position.z += data.speed * delta * 0.9;
+        av.position.y -= delta * 3.0;
+        av.rotation.x = 0.15;
+        if (av.position.y < 4) {
+          // Mostra trem de pouso
+          av.children.forEach(c=>{ if(c.position.y<0 && c.geometry && c.geometry.type==='CylinderGeometry') c.visible=true; });
+        }
+        if (av.position.y <= 0.85) {
+          av.position.y = 0.85;
+          av.rotation.x = 0;
+          data.state='taxi';
+          av.position.set(38 + (Math.random()-0.5)*2.5, 0.85, -135 - Math.random()*20);
+        }
+      }
+      // Volta ao início se sair muito longe
+      if (av.position.z > 45) {
+        av.position.set(38 + (Math.random()-0.5)*3, 0.85, -135 - Math.random()*25);
+        av.position.y=0.85;
+        av.rotation.set(0,0,0);
+        data.state='taxi';
+        data.cruiseTime=0;
       }
     });
   }
@@ -2300,6 +2356,7 @@ tentarCarregarGLTFsTodos() {
 
     // Tenta carregar GLTF do Coffee com fallback
     this.tentarCarregarGLTFsTodos();
+    setTimeout(()=>this.tentarCarregarGLTFsTodos(), 1500);
 
     // 🎯 CORREÇÃO DO ERRO: Calculamos o startBuilding aqui, com segurança, 
     // sabendo que this.buildingsMeta já está totalmente preenchido!
