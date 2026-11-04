@@ -1,11 +1,10 @@
 // js/modulos/workspace/english-spaces-3d.js
-// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (20 EDIFÍCIOS + AEROPORTO REALISTA + LOJAS DE XP + PASSOS SONOROS + PETS)
+// 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER (20 EDIFÍCIOS + AEROPORTO REALISTA + LOJAS DE XP + PASSOS SONOROS + STICKY NOTES MONGODB)
 
 window.Workspace = window.Workspace || {};
 
 const PROXIMITY_RADIUS = 6.0;
 
-// Coordenadas e cores dos 20 Edifícios da Cidade 3D (Avenida Central: col -1 e 1 | Avenidas Laterais: col -3 e 3)
 const CITY_BUILDINGS_LAYOUT = [
   { id: 'coffee',      col: -1, row: 0, color: 0xd97706, roof: 0x451a03, npcColor: 0xf59e0b, voiceLang: 'en-US', voicePitch: 1.15 },
   { id: 'restaurant',  col:  1, row: 0, color: 0xe11d48, roof: 0x4c0519, npcColor: 0xfb7185, voiceLang: 'en-US', voicePitch: 0.92 },
@@ -19,7 +18,6 @@ const CITY_BUILDINGS_LAYOUT = [
   { id: 'airport',     col:  1, row: 4, color: 0x0284c7, roof: 0x082f49, npcColor: 0x38bdf8, voiceLang: 'en-GB', voicePitch: 0.94 },
   { id: 'job',         col: -1, row: 5, color: 0x4f46e5, roof: 0x1e1b4b, npcColor: 0x818cf8, voiceLang: 'en-US', voicePitch: 1.10 },
   { id: 'hospital',    col:  1, row: 5, color: 0x059669, roof: 0x022c22, npcColor: 0x34d399, voiceLang: 'en-GB', voicePitch: 0.90 },
-  // 8 LOJAS COMPRÁVEIS COM XP NAS AVENIDAS LATERAIS
   { id: 'bank',        col: -3, row: 0, color: 0x0f766e, roof: 0x042f2e, npcColor: 0x2dd4bf, voiceLang: 'en-US', voicePitch: 0.88 },
   { id: 'clothing',    col:  3, row: 0, color: 0xec4899, roof: 0x500724, npcColor: 0xf472b6, voiceLang: 'en-US', voicePitch: 1.16 },
   { id: 'shoes',       col: -3, row: 1, color: 0x7c3aed, roof: 0x3b0764, npcColor: 0xc084fc, voiceLang: 'en-GB', voicePitch: 1.08 },
@@ -89,21 +87,15 @@ class EnglishSpaces3DWorld {
     this.posteLights = [];
     this.audioCtx = null;
     this.lastDoorEnter = null;
-    this.audioZones = [];
     this.footprints = [];
     this.lastFootprint = 0;
     this.vitrines = [];
-    this.rainGroup = null;
-    this.nightMarketGroup = null;
     this.musician = null;
     this.stickyNotes = [];
-    this.ghost = null;
-    this.ghostPath = [];
-    this.ghostIdx = 0;
+    this.cloudStickyNotes = [];
+    this.cloudAvatarConfig = null;
     this.polaroidCam = null;
     this.flightBoard = null;
-    this.blackboard = null;
-    this.menuStands = [];
 
     this.exteriorGroup = null;
     this.interiorGroups = new Map();
@@ -115,99 +107,27 @@ class EnglishSpaces3DWorld {
     this.adoptedPet = null;
   }
 
-   // 📝 Modal moderno para escrever um Post-it
-  abrirModalCriarStickyNote() {
-    document.getElementById('es-sticky-modal')?.remove();
-    const html = `
-      <div id="es-sticky-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
-        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:16px; padding:24px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.5); transform:rotate(-1deg);">
-          <h3 style="color:#422006; margin:0 0 10px; font-size:18px;">📌 New English Sticky Note</h3>
-          <p style="color:#78350f; font-size:12.5px; margin:0 0 12px;">Write a short message or tip for the Coffee Shop wall:</p>
-          <textarea id="es-sticky-text" maxlength="80" placeholder="Type here in English..." style="width:100%; height:90px; background:#fffdf0; border:1px solid #d97706; border-radius:10px; padding:10px; color:#422006; font-size:14px; font-weight:600; resize:none; outline:none; box-sizing:border-box;"></textarea>
-          <div style="display:flex; gap:8px; margin-top:14px;">
-            <button id="es-sticky-cancel" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
-            <button id="es-sticky-save" style="flex:1.3; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Pin to Wall 📌</button>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-    document.getElementById('es-sticky-text')?.focus();
-
-    document.getElementById('es-sticky-cancel')?.addEventListener('click', () => document.getElementById('es-sticky-modal')?.remove());
-    document.getElementById('es-sticky-save')?.addEventListener('click', () => {
-      const txt = document.getElementById('es-sticky-text')?.value;
-      if (txt && txt.trim()) {
-        this.adicionarStickyNote(txt.trim(), true);
-      }
-      document.getElementById('es-sticky-modal')?.remove();
-    });
-  }
-
-  // 🔍 Modal ampliado para ler, editar ou excluir o Post-it (com restrição de autor)
-  abrirModalLerStickyNote(notaObj) {
-    document.getElementById('es-sticky-view-modal')?.remove();
-    const meuId = String(this.localPlayer?.userId || '');
-    const isAutor = notaObj.userId && String(notaObj.userId) === meuId;
-
-    const html = `
-      <div id="es-sticky-view-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
-        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:18px; padding:28px; width:100%; max-width:380px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative;">
-          <div style="font-size:32px; margin-bottom:8px;">📌</div>
-          <p style="color:#78350f; font-size:11.5px; font-weight:700; margin:0 0 6px; text-transform:uppercase; letter-spacing:0.5px;">Written by ${notaObj.author || 'Student'}</p>
-          <div style="background:#fffdf0; border:1px solid #d97706; border-radius:12px; padding:16px; color:#422006; font-size:16px; font-weight:700; line-height:1.4; word-break:break-word; margin-bottom:18px; min-height:60px; display:flex; align-items:center; justify-content:center;">
-            "${notaObj.text}"
-          </div>
-          <div style="display:flex; gap:8px;">
-            <button id="es-sticky-close" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Close</button>
-            ${isAutor ? `
-              <button id="es-sticky-edit" style="flex:1; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Edit ✏️</button>
-              <button id="es-sticky-delete" style="flex:1; padding:10px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Delete 🗑️</button>
-            ` : ''}
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    document.getElementById('es-sticky-close')?.addEventListener('click', () => document.getElementById('es-sticky-view-modal')?.remove());
-    if (isAutor) {
-      document.getElementById('es-sticky-edit')?.addEventListener('click', () => {
-        document.getElementById('es-sticky-view-modal')?.remove();
-        this.abrirModalCriarStickyNote();
-        const ta = document.getElementById('es-sticky-text');
-        if (ta) ta.value = notaObj.text;
-      });
-      document.getElementById('es-sticky-delete')?.addEventListener('click', () => {
-        document.getElementById('es-sticky-view-modal')?.remove();
-        this.removerStickyNote(notaObj.id || notaObj.text);
-      });
-    }
-  }
-
-  // 👤 Formata apenas o Primeiro e o Último nome se o nome for longo
   formatarNomeCompleto(nomeBruto) {
-    const limpo = String(nomeBruto || 'Student').replace(/\(@.*\)/, '').trim();
+    const limpo = String(nomeBruto ? nomeBruto : 'Student').replace(/\(@.*\)/, '').trim();
     const partes = limpo.split(/\s+/).filter(Boolean);
     if (partes.length <= 2) return partes.join(' ');
     return `${partes[0]} ${partes[partes.length - 1]}`;
   }
 
- detetarGeneroPadrao(u) {
+  detetarGeneroPadrao(u) {
     if (this.cloudAvatarConfig && typeof this.cloudAvatarConfig.isFemale === 'boolean') {
       return this.cloudAvatarConfig.isFemale;
     }
-    const gen = String(u?.genero || u?.sexo || '').toLowerCase();
+    const gen = String((u && (u.genero || u.sexo)) ? (u.genero || u.sexo) : '').toLowerCase();
     if (gen.startsWith('f') || gen.startsWith('m')) return gen.startsWith('f');
-    const primeiroNome = String(u?.nome || u?.login || '').trim().split(/\s+/)[0].toLowerCase();
+    const primeiroNome = String((u && (u.nome || u.login)) ? (u.nome || u.login) : '').trim().split(/\s+/)[0].toLowerCase();
     return primeiroNome.endsWith('a') && !['luca', 'joshua', 'nikola'].includes(primeiroNome);
   }
 
-  // ☁️ Carrega Customização do Avatar, Saldo de XP e Post-its diretamente do MongoDB
   async carregarEstadoInicialNuvem() {
     const u = window.Workspace?.usuario || {};
-    const uid = String(u.id || 'demo_user');
-    const escolaId = String(u.escolaId || 'DEFAULT');
+    const uid = String(u.id ? u.id : 'demo_user');
+    const escolaId = String(u.escolaId ? u.escolaId : 'DEFAULT');
     try {
       const [resProg, resStickies] = await Promise.all([
         fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(uid)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null),
@@ -215,12 +135,11 @@ class EnglishSpaces3DWorld {
       ]);
 
       if (resProg && resProg.success) {
-        const cfg = resProg.data?.avatarConfig || resProg.compatibility?.avatarConfig || {};
+        const cfg = (resProg.data && resProg.data.avatarConfig) ? resProg.data.avatarConfig : ((resProg.compatibility && resProg.compatibility.avatarConfig) ? resProg.compatibility.avatarConfig : {});
         this.cloudAvatarConfig = cfg;
         if (this.parentManager && typeof resProg.compatibility?.xp === 'number') {
           this.parentManager.progressData.xp = Math.max(this.parentManager.progressData.xp || 0, resProg.compatibility.xp);
         }
-        // Aplica visual salvo na nuvem ao nosso avatar 3D
         if (this.localPlayer) {
           const femSalvo = typeof cfg.isFemale === 'boolean' ? cfg.isFemale : this.localPlayer.isFemale;
           const corCamisaSalva = typeof cfg.shirtColor === 'number' ? cfg.shirtColor : (femSalvo ? 0xec4899 : 0x8b5cf6);
@@ -229,7 +148,7 @@ class EnglishSpaces3DWorld {
           this.localPlayer.isFemale = femSalvo;
           this.localPlayer.shirtColor = corCamisaSalva;
           this.localPlayer.shoeColor = corSapatoSalvo;
-          this.localPlayer.petType = cfg.petType || null;
+          this.localPlayer.petType = cfg.petType ? cfg.petType : null;
 
           const btn = document.getElementById('es-city-gender-btn');
           if (btn) btn.innerHTML = femSalvo ? '👩 Female' : '🧑 Male';
@@ -268,15 +187,10 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  // 🔊 Desbloqueia o sintetizador de áudio do navegador no primeiro clique/tecla
   garantirAudioAtivo() {
     try {
-      if (!this.audioCtx) {
-        this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      }
-      if (this.audioCtx.state === 'suspended') {
-        this.audioCtx.resume();
-      }
+      if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
     } catch (e) {}
     return this.audioCtx;
   }
@@ -393,7 +307,213 @@ class EnglishSpaces3DWorld {
     window.speechSynthesis.speak(u);
   }
 
-  // 👤 CONSTRUTOR DE BONECO HUMANO 3D (DIFERENCIAÇÃO REAL HOMEM vs MULHER)
+  // 📌 MODAIS DE POST-IT (CRIAÇÃO, LEITURA AMPLIADA E EDIÇÃO/EXCLUSÃO EXCLUSIVA DO AUTOR NO MONGODB)
+  abrirModalCriarStickyNote(notaParaEditar = null) {
+    document.getElementById('es-sticky-modal')?.remove();
+    const textoInicial = notaParaEditar ? notaParaEditar.text : '';
+    const tituloModal = notaParaEditar ? '✏️ Edit Your Sticky Note' : '📌 New English Sticky Note';
+
+    const html = `
+      <div id="es-sticky-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:16px; padding:24px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.5); transform:rotate(-1deg);">
+          <h3 style="color:#422006; margin:0 0 10px; font-size:18px;">${tituloModal}</h3>
+          <p style="color:#78350f; font-size:12.5px; margin:0 0 12px;">Write a short message or tip for the Coffee Shop wall:</p>
+          <textarea id="es-sticky-text" maxlength="80" placeholder="Type here in English..." style="width:100%; height:95px; background:#fffdf0; border:1px solid #d97706; border-radius:10px; padding:10px; color:#422006; font-size:14.5px; font-weight:600; resize:none; outline:none; box-sizing:border-box;">${textoInicial}</textarea>
+          <div style="display:flex; gap:8px; margin-top:14px;">
+            <button id="es-sticky-cancel" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
+            <button id="es-sticky-save" style="flex:1.3; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">${notaParaEditar ? 'Save Changes ✅' : 'Pin to Wall 📌'}</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('es-sticky-text')?.focus();
+
+    document.getElementById('es-sticky-cancel')?.addEventListener('click', () => document.getElementById('es-sticky-modal')?.remove());
+    document.getElementById('es-sticky-save')?.addEventListener('click', () => {
+      const txt = document.getElementById('es-sticky-text')?.value;
+      if (txt && txt.trim()) {
+        if (notaParaEditar && notaParaEditar.id) {
+          this.editarStickyNote(notaParaEditar.id, txt.trim());
+        } else {
+          this.adicionarStickyNote(txt.trim(), true);
+        }
+      }
+      document.getElementById('es-sticky-modal')?.remove();
+    });
+  }
+
+  abrirModalLerStickyNote(notaObj) {
+    document.getElementById('es-sticky-view-modal')?.remove();
+    const meuId = String(this.localPlayer ? this.localPlayer.userId : '');
+    const isAutor = Boolean(notaObj.userId && String(notaObj.userId) === meuId);
+    const nomeAutor = notaObj.author ? notaObj.author : 'Student';
+
+    const botoesAutor = isAutor ? `
+      <button id="es-sticky-edit" style="flex:1; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Edit ✏️</button>
+      <button id="es-sticky-delete" style="flex:1; padding:10px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Delete 🗑️</button>
+    ` : '';
+
+    const html = `
+      <div id="es-sticky-view-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:18px; padding:24px; width:100%; max-width:340px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6); transform:rotate(1deg);">
+          <div style="font-size:28px; margin-bottom:4px;">📌</div>
+          <p style="color:#78350f; font-size:11.5px; font-weight:800; margin:0 0 8px; text-transform:uppercase; letter-spacing:0.5px;">Note by ${nomeAutor}</p>
+          <div style="background:#fffdf0; border:1px solid #d97706; border-radius:12px; padding:16px; color:#422006; font-size:15.5px; font-weight:700; line-height:1.45; word-break:break-word; margin-bottom:16px; min-height:60px; display:flex; align-items:center; justify-content:center;">
+            "${notaObj.text}"
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="es-sticky-close" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Close</button>
+            ${botoesAutor}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    document.getElementById('es-sticky-close')?.addEventListener('click', () => document.getElementById('es-sticky-view-modal')?.remove());
+    if (isAutor) {
+      document.getElementById('es-sticky-edit')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.abrirModalCriarStickyNote(notaObj);
+      });
+      document.getElementById('es-sticky-delete')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.removerStickyNote(notaObj.id);
+      });
+    }
+  }
+
+  criarStickyNotesParede() {
+    const b = this.buildingsMeta.find(x => x.id === 'coffee');
+    if (!b) return;
+    this.renderizarStickyNotesNoCoffee();
+
+    const THREE = window.THREE;
+    const addArea = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.6, 1.8),
+      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.16, side: THREE.DoubleSide })
+    );
+    addArea.position.set(b.centerX, 1.6, b.centerZ - 4.76);
+    addArea.userData = { clickable: true, isStickyWall: true, englishName: 'Sticky Note Wall' };
+    this.clickableObjects.push(addArea);
+    const grp = this.interiorGroups.get('coffee');
+    if (grp) grp.add(addArea);
+  }
+
+  renderizarStickyNotesNoCoffee() {
+    const THREE = window.THREE;
+    const b = this.buildingsMeta.find(x => x.id === 'coffee');
+    if (!b) return;
+    const grp = this.interiorGroups.get('coffee') ? this.interiorGroups.get('coffee') : this.scene;
+    this.stickyNotes.forEach(n => {
+      grp.remove(n);
+      const idx = this.clickableObjects.indexOf(n);
+      if (idx > -1) this.clickableObjects.splice(idx, 1);
+    });
+    this.stickyNotes = [];
+
+    const saved = (Array.isArray(this.cloudStickyNotes) && this.cloudStickyNotes.length > 0)
+      ? this.cloudStickyNotes
+      : [
+          { id: 'seed_1', author: 'Paulo', text: 'Hello from Bahia!', userId: 'seed' },
+          { id: 'seed_2', author: 'Teacher', text: 'Coffee first, English second!', userId: 'seed' }
+        ];
+
+    saved.slice(0, 8).forEach((item, i) => {
+      const txt = typeof item === 'string' ? item : (item.text ? item.text : '');
+      const author = typeof item === 'string' ? 'Student' : (item.author ? item.author : 'Student');
+      const noteId = typeof item === 'string' ? ('seed_' + i) : (item.id ? item.id : ('seed_' + i));
+      const uId = typeof item === 'string' ? '' : (item.userId ? item.userId : '');
+
+      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = i % 2 === 0 ? '#fef08a' : '#fed7aa';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.strokeStyle = '#ca8a04'; ctx.lineWidth = 6; ctx.strokeRect(3, 3, 250, 250);
+      ctx.fillStyle = '#422006'; ctx.font = 'bold 18px Inter, sans-serif';
+      ctx.fillText(String(txt).slice(0, 18), 14, 65);
+      if (txt.length > 18) ctx.fillText(String(txt).slice(18, 36), 14, 98);
+      if (txt.length > 36) ctx.fillText(String(txt).slice(36, 54) + '...', 14, 131);
+      ctx.fillStyle = '#78350f'; ctx.font = 'bold 14px Inter, sans-serif';
+      ctx.fillText('- ' + author, 14, 222);
+
+      const tex = new THREE.CanvasTexture(c);
+      const note = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.52), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
+      note.position.set(b.centerX - 0.9 + (i % 4) * 0.6, 1.9 - Math.floor(i / 4) * 0.65, b.centerZ - 4.68);
+      note.userData = {
+        clickable: true,
+        isIndividualSticky: true,
+        stickyData: { id: noteId, author, text: txt, userId: uId },
+        englishName: 'Sticky Note by ' + author
+      };
+      this.clickableObjects.push(note);
+      grp.add(note);
+      this.stickyNotes.push(note);
+    });
+  }
+
+  async adicionarStickyNote(texto, emitirRede = true) {
+    const limpo = String(texto ? texto : '').trim();
+    if (!limpo || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+
+    const res = await fetch('/api/workspace/english-spaces/world/stickies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        escolaId,
+        author: this.localPlayer.nome,
+        userId: this.localPlayer.userId,
+        text: limpo
+      })
+    }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+    }
+    if (emitirRede) {
+      this.parentManager?.registarMissaoConcluida('coffee', 'sticky_note', 20);
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Sticky note pinned to the Coffee Shop wall (+20 XP)!', 'success');
+    }
+  }
+
+  async editarStickyNote(noteId, novoTexto) {
+    if (!noteId || !novoTexto || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+    const res = await fetch(`/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        escolaId,
+        userId: this.localPlayer.userId,
+        text: novoTexto
+      })
+    }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('✏️ Sticky note updated!', 'success');
+    }
+  }
+
+  async removerStickyNote(noteId) {
+    if (!noteId || !this.localPlayer) return;
+    const escolaId = window.Workspace?.usuario?.escolaId ? window.Workspace.usuario.escolaId : 'DEFAULT';
+    const url = `/api/workspace/english-spaces/world/stickies/${encodeURIComponent(noteId)}?userId=${encodeURIComponent(this.localPlayer.userId)}&escolaId=${encodeURIComponent(escolaId)}`;
+    const res = await fetch(url, { method: 'DELETE', credentials: 'include' }).then(r => r.json()).catch(() => null);
+
+    if (res && res.success && Array.isArray(res.notes)) {
+      this.cloudStickyNotes = res.notes;
+      this.renderizarStickyNotesNoCoffee();
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🗑️ Sticky note deleted!', 'info');
+    }
+  }
+
   criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
     const THREE = window.THREE;
     const group = new THREE.Group();
@@ -429,7 +549,6 @@ class EnglishSpaces3DWorld {
     const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.34, 0); group.add(torso);
 
     if (isFemale) {
-      // Saia/cintura acinturada e silhueta feminina
       const skirtGeo = new THREE.CylinderGeometry(0.22, 0.31, 0.34, 14);
       const skirt = new THREE.Mesh(skirtGeo, matCalca); skirt.position.set(0, 0.86, 0);
       const chestGeo = new THREE.SphereGeometry(0.12, 10, 10);
@@ -490,7 +609,7 @@ class EnglishSpaces3DWorld {
     return group;
   }
 
- async alternarGeneroMeuAvatar() {
+  async alternarGeneroMeuAvatar() {
     if (!this.localPlayer || !this.scene) return;
     const novoFem = !this.localPlayer.isFemale;
     this.localPlayer.isFemale = novoFem;
@@ -509,7 +628,6 @@ class EnglishSpaces3DWorld {
     this.scene.add(newMesh);
     this.localPlayer.mesh = newMesh;
 
-    // Salva permanentemente no MongoDB e transmite para todos os colegas online!
     await fetch('/api/workspace/english-spaces/progress/customization', {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
@@ -582,7 +700,6 @@ class EnglishSpaces3DWorld {
         window.Workspace.mostrarAviso(`🛍️ Purchased ${item.nome}${viaVoz ? ' with 20% Voice Discount' : ''}!`, 'success');
       }
 
-      // Grava a compra, a nova cor/pet e o saldo de XP diretamente no MongoDB!
       const res = await fetch('/api/workspace/english-spaces/progress/customization', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -712,7 +829,6 @@ class EnglishSpaces3DWorld {
     } catch (e) {}
   }
 
-  // 👣 SOM DE PASSO REALISTA E NÍTIDO (PERCUSSÃO DE SOLA + ATRITO DE PISO)
   tocarSomPasso(volume = 0.26) {
     try {
       const ctx = this.garantirAudioAtivo();
@@ -720,7 +836,6 @@ class EnglishSpaces3DWorld {
       const now = ctx.currentTime;
       const isIndoor = this.modoInterior;
 
-      // 1. Batida grave do calcanhar (Thump)
       const osc = ctx.createOscillator();
       const gainOsc = ctx.createGain();
       osc.type = isIndoor ? 'triangle' : 'sine';
@@ -733,7 +848,6 @@ class EnglishSpaces3DWorld {
       osc.start(now);
       osc.stop(now + 0.085);
 
-      // 2. Estalo curto da sola no paralelepípedo/madeira (Crisp Click)
       const bufferSize = Math.floor(ctx.sampleRate * 0.045);
       const noiseBuffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate);
       const output = noiseBuffer.getChannelData(0);
@@ -917,7 +1031,6 @@ class EnglishSpaces3DWorld {
         break;
       }
       default: {
-        // Balcão estilizado para as 8 lojas compráveis
         const shopCounter = makeClickable(new THREE.Mesh(new THREE.BoxGeometry(1.3, 1.05, 3.6), new THREE.MeshLambertMaterial({ color: bCfg.color || 0x334155 })), `${id.toUpperCase()} Counter`);
         shopCounter.position.set(cX, 0.525, centerZ);
         props.add(shopCounter);
@@ -1093,7 +1206,6 @@ class EnglishSpaces3DWorld {
 
   criarSegundaAvenida() {
     const THREE = window.THREE;
-    // Avenidas laterais em x = -34 e x = 34 (assim as 8 novas lojas em x = -48 e x = 48 ficam na calçada e não no meio da pista!)
     const roadMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
     const road2Left = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 160), roadMat);
     road2Left.rotation.x = -Math.PI / 2; road2Left.position.set(-34, 0.01, -36);
@@ -1101,7 +1213,6 @@ class EnglishSpaces3DWorld {
     road2Right.rotation.x = -Math.PI / 2; road2Right.position.set(34, 0.01, -36);
     this.exteriorGroup.add(road2Left, road2Right);
 
-    // Ruas transversais conectando as avenidas e o aeroporto
     [8, -56, -88].forEach(zCross => {
       const crossRoad = new THREE.Mesh(new THREE.PlaneGeometry(130, 7.0), roadMat);
       crossRoad.rotation.x = -Math.PI / 2; crossRoad.position.set(8, 0.015, zCross);
@@ -1158,10 +1269,9 @@ class EnglishSpaces3DWorld {
     this.exteriorGroup.add(fundoGroup);
   }
 
-  // ✈️ PISTA DE AEROPORTO E AVIÕES COM PINTURA REALISTA E FÍSICA DE DECOLAGEM / POUSO
   criarPistaAeroporto() {
     const THREE = window.THREE;
-    const runwayX = 68; // Posicionada à direita da Segunda Avenida para nunca sobrepor as lojas
+    const runwayX = 68;
     const pista = new THREE.Mesh(new THREE.PlaneGeometry(14, 130), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85, metalness: 0.1 }));
     pista.rotation.x = -Math.PI / 2; pista.position.set(runwayX, 0.02, -55); pista.receiveShadow = true;
     this.exteriorGroup.add(pista);
@@ -1185,7 +1295,6 @@ class EnglishSpaces3DWorld {
       this.exteriorGroup.add(l1, l2);
     }
 
-    // Torre de Controlo do Aeroporto
     const towerBase = new THREE.Mesh(new THREE.CylinderGeometry(1.1, 1.4, 7.5, 10), new THREE.MeshStandardMaterial({ color: 0xcbd5e1 }));
     towerBase.position.set(runwayX + 10.5, 3.75, -45);
     const towerGlass = new THREE.Mesh(new THREE.CylinderGeometry(1.8, 1.5, 1.4, 10), new THREE.MeshStandardMaterial({ color: 0x38bdf8, transparent: true, opacity: 0.75 }));
@@ -1194,7 +1303,6 @@ class EnglishSpaces3DWorld {
     towerRoof.position.set(runwayX + 10.5, 9.2, -45);
     this.exteriorGroup.add(towerBase, towerGlass, towerRoof);
 
-    // Paleta de Companhias Aéreas (Fuselagem perolada + Faixa Lateral + Cauda Colorida + Motores)
     const liveries = [
       { name: 'Global Blue',   stripe: 0x2563eb, tail: 0x1d4ed8, engine: 0x1e3a8a, belly: 0x94a3b8 },
       { name: 'Royal Crimson', stripe: 0xe11d48, tail: 0xbe123c, engine: 0x881337, belly: 0xcbd5e1 },
@@ -1211,7 +1319,6 @@ class EnglishSpaces3DWorld {
       const matEngine = new THREE.MeshStandardMaterial({ color: liv.engine, roughness: 0.35, metalness: 0.4 });
       const matCockpit = new THREE.MeshStandardMaterial({ color: 0x090d16, roughness: 0.1, metalness: 0.9 });
 
-      // Fuselagem alinhada ao eixo Z (nariz apontado para +Z, direção da decolagem!)
       const bodyCyl = new THREE.Mesh(new THREE.CylinderGeometry(0.55, 0.55, 4.4, 18), matWhite);
       bodyCyl.rotation.x = Math.PI / 2; bodyCyl.position.set(0, 0.85, 0);
       const noseCone = new THREE.Mesh(new THREE.SphereGeometry(0.55, 16, 16), matWhite);
@@ -1219,13 +1326,11 @@ class EnglishSpaces3DWorld {
       const tailCone = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.55, 1.8, 16), matWhite);
       tailCone.rotation.x = Math.PI / 2; tailCone.position.set(0, 0.92, -3.1);
 
-      // Faixa lateral da companhia aérea (Cheatline) e janelas
       const stripeL = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 4.5), matStripe); stripeL.position.set(0.54, 0.92, 0.1);
       const stripeR = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 4.5), matStripe); stripeR.position.set(-0.54, 0.92, 0.1);
       const cockpitVisor = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.22, 0.55), matCockpit);
       cockpitVisor.position.set(0, 1.06, 2.35); cockpitVisor.rotation.x = 0.25;
 
-      // Asas principais enflechadas + Winglets nas pontas
       const wingL = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.1, 1.15), matBelly);
       wingL.position.set(-1.9, 0.72, -0.1); wingL.rotation.y = 0.22;
       const wingR = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.1, 1.15), matBelly);
@@ -1233,11 +1338,9 @@ class EnglishSpaces3DWorld {
       const wingletL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.45, 0.35), matTail); wingletL.position.set(-3.55, 0.92, -0.45);
       const wingletR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.45, 0.35), matTail); wingletR.position.set(3.55, 0.92, -0.45);
 
-      // Luzes de navegação (Vermelha na asa esquerda, Verde na direita)
       const navRed = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2222 })); navRed.position.set(-3.6, 0.75, -0.3);
       const navGreen = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), new THREE.MeshBasicMaterial({ color: 0x22ff55 })); navGreen.position.set(3.6, 0.75, -0.3);
 
-      // 2 Turbinas sob as asas
       [-1.35, 1.35].forEach(ex => {
         const eng = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.22, 0.95, 14), matEngine);
         eng.rotation.x = Math.PI / 2; eng.position.set(ex, 0.48, 0.25);
@@ -1246,7 +1349,6 @@ class EnglishSpaces3DWorld {
         aviaoGroup.add(eng, intake);
       });
 
-      // Cauda Vertical (Leme pintado com logo) e Estabilizadores Horizontais
       const tailFin = new THREE.Mesh(new THREE.BoxGeometry(0.12, 1.45, 1.25), matTail);
       tailFin.position.set(0, 1.7, -3.35); tailFin.rotation.x = -0.28;
       const logoCircle = new THREE.Mesh(new THREE.CircleGeometry(0.28, 14), new THREE.MeshBasicMaterial({ color: 0xfef08a, side: THREE.DoubleSide }));
@@ -1254,7 +1356,6 @@ class EnglishSpaces3DWorld {
       const tailStab = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.08, 0.65), matBelly);
       tailStab.position.set(0, 1.0, -3.45);
 
-      // Trem de Pouso com Rodas
       const wheelMat = new THREE.MeshLambertMaterial({ color: 0x111111 });
       [[0, 0.2, 1.8], [-0.65, 0.2, -0.3], [0.65, 0.2, -0.3]].forEach(([wx, wy, wz]) => {
         const wheel = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.14, 10), wheelMat);
@@ -1264,7 +1365,6 @@ class EnglishSpaces3DWorld {
 
       aviaoGroup.add(bodyCyl, noseCone, tailCone, stripeL, stripeR, cockpitVisor, wingL, wingR, wingletL, wingletR, navRed, navGreen, tailFin, logoCircle, tailStab);
 
-      // Posiciona cada avião numa fase distinta do ciclo para tráfego aéreo contínuo e realista
       const startZ = -112 + i * 38;
       aviaoGroup.position.set(runwayX, 0, startZ);
       aviaoGroup.userData = {
@@ -1283,7 +1383,6 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  // 🛫 FÍSICA REALISTA DE TÁXI, CORRIDA, ROTAÇÃO (LIFTOFF), SUBIDA E POUSO
   atualizarAvioes(delta) {
     if (this.modoInterior || !this.avioes) return;
     this.avioes.forEach(av => {
@@ -1291,7 +1390,6 @@ class EnglishSpaces3DWorld {
       ud.timer += delta;
 
       if (ud.phase === 'taxi') {
-        // 1. Táxi suave na pista
         av.position.y = 0;
         av.rotation.x += (0 - av.rotation.x) * 0.1;
         av.rotation.z += (0 - av.rotation.z) * 0.1;
@@ -1299,33 +1397,27 @@ class EnglishSpaces3DWorld {
         av.position.z += ud.speed * delta;
         if (av.position.z >= -88) ud.phase = 'roll';
       } else if (ud.phase === 'roll') {
-        // 2. Corrida de decolagem (aceleração progressiva no asfalto)
         ud.speed = Math.min(18.5, ud.speed + delta * 6.5);
         av.position.z += ud.speed * delta;
         if (av.position.z >= -48) ud.phase = 'rotate';
       } else if (ud.phase === 'rotate') {
-        // 3. Rotação (ergue o nariz suavemente e sai do chão!)
         ud.speed = Math.min(22.0, ud.speed + delta * 4.0);
         av.position.z += ud.speed * delta;
-        // No Three.js, com o nariz em +Z, rotation.x negativo ergue o nariz para o céu!
         av.rotation.x += (-0.28 - av.rotation.x) * delta * 3.2;
         av.position.y += delta * 4.8;
         if (av.position.y >= 6.5) ud.phase = 'climb';
       } else if (ud.phase === 'climb') {
-        // 4. Subida firme com leve inclinação lateral (bank)
         av.position.z += ud.speed * delta;
         av.position.y += delta * 7.2;
         av.rotation.x += (-0.22 - av.rotation.x) * delta * 2.0;
         av.rotation.z += (-0.12 - av.rotation.z) * delta * 1.5;
         if (av.position.z > 65 || av.position.y > 34) {
-          // Reposiciona lá atrás para aproximação de pouso
           av.position.set(ud.runwayX, 16, -155);
           av.rotation.set(0.08, 0, 0);
           ud.speed = 14.5;
           ud.phase = 'approach';
         }
       } else if (ud.phase === 'approach') {
-        // 5. Aproximação final e toque suave na pista (Touchdown & Flare)
         av.position.z += ud.speed * delta;
         if (av.position.y > 0) {
           av.position.y = Math.max(0, av.position.y - delta * 4.2);
@@ -1382,77 +1474,6 @@ class EnglishSpaces3DWorld {
       stand.position.set(bMeta.centerX - Math.sign(bMeta.col) * 1.4, 0, bMeta.centerZ + (i - 1) * 2.2);
       grp.add(stand);
       this.clickableObjects.push(stand);
-    });
-  }
-
-  aplicarItemCompradoNoAvatar(item) {
-    if (!this.localPlayer?.mesh?.userData) return;
-    const ud = this.localPlayer.mesh.userData;
-    if (item.tipo === 'shirt' && ud.matCamisa) {
-      ud.matCamisa.color.setHex(item.cor);
-    } else if (item.tipo === 'shoes' && ud.matSapato) {
-      ud.matSapato.color.setHex(item.cor);
-    } else if (item.tipo === 'pet_dog' || item.tipo === 'pet_cat') {
-      if (this.adoptedPet) this.scene.remove(this.adoptedPet);
-      const petMesh = item.tipo === 'pet_dog' ? this.criarCachorro3D() : this.criarGato3D();
-      petMesh.position.set(this.localPlayer.x - 0.9, 0, this.localPlayer.z + 0.9);
-      this.scene.add(petMesh);
-      this.adoptedPet = petMesh;
-    }
-  }
-
-  abrirLojaXPModal(buildingId, item) {
-    document.getElementById('shop-modal')?.remove();
-    const xpAtual = Number(this.parentManager?.progressData?.xp) || Number(this.parentManager?._statsAlunoCache?.coins?.bronze) || 500;
-    const precoVoz = Math.max(10, Math.round(item.preco * 0.8));
-
-    const html = `
-      <div id="shop-modal" style="position:fixed; inset:0; z-index:1000100; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
-        <div style="background:#0f172a; border:2px solid #8b5cf6; border-radius:20px; padding:24px; width:100%; max-width:380px; text-align:center; box-shadow:0 20px 60px rgba(0,0,0,0.65);">
-          <div style="font-size:52px;">${item.emoji}</div>
-          <h2 style="color:#f8fafc; margin:10px 0 6px; font-size:20px;">${item.nome}</h2>
-          <p style="color:#94a3b8; font-size:13.5px; margin:0 0 12px;">Price: <b style="color:#facc15;">${item.preco} XP</b> • Your Balance: <b style="color:#34d399;">${xpAtual} XP</b></p>
-          <div style="background:rgba(139,92,246,0.15); border:1px solid rgba(167,139,250,0.35); border-radius:12px; padding:10px; margin-bottom:16px; color:#e9d5ff; font-size:13px;">
-            🎙️ <b>Voice Discount (-20%):</b> Say:<br><i>"I would like to buy ${item.nome}"</i>
-          </div>
-          <div style="display:flex; flex-direction:column; gap:8px;">
-            <button id="shop-voice-buy" style="padding:12px; background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer; font-size:13.5px;">🎤 Speak in English (${precoVoz} XP)</button>
-            <div style="display:flex; gap:8px;">
-              <button id="shop-cancel" style="flex:1; padding:11px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Cancel</button>
-              <button id="shop-buy" style="flex:1.3; padding:11px; background:#8b5cf6; color:#fff; border:none; border-radius:12px; font-weight:800; cursor:pointer;">💳 Buy (${item.preco} XP)</button>
-            </div>
-          </div>
-        </div>
-      </div>
-    `;
-    document.body.insertAdjacentHTML('beforeend', html);
-
-    const finalizarCompra = async (custo, viaVoz = false) => {
-      if (xpAtual < custo) {
-        if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🔒 Practice more in the shops to earn enough XP!', 'warning');
-        return;
-      }
-      document.getElementById('shop-modal')?.remove();
-      this.aplicarItemCompradoNoAvatar(item);
-      this.falarTextoNPC(`Thank you! Enjoy your new ${item.nome}!`, buildingId);
-      if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso(`🛍️ Purchased ${item.nome}${viaVoz ? ' with 20% Voice Discount' : ''}!`, 'success');
-      }
-      if (this.parentManager) {
-        this.parentManager.progressData.xp = Math.max(0, xpAtual - custo + 25);
-        await this.parentManager.salvarProgressoNaRotaOficial(25);
-      }
-    };
-
-    document.getElementById('shop-cancel')?.addEventListener('click', () => document.getElementById('shop-modal')?.remove());
-    document.getElementById('shop-buy')?.addEventListener('click', () => finalizarCompra(item.preco, false));
-    document.getElementById('shop-voice-buy')?.addEventListener('click', () => {
-      this.parentManager?.ouvirMicrofone((falado) => {
-        if (falado && falado.trim().length > 2) {
-          this.mostrarBalaoNoBoneco(this.localPlayer, falado, 5000);
-          finalizarCompra(precoVoz, true);
-        }
-      });
     });
   }
 
@@ -1720,184 +1741,6 @@ class EnglishSpaces3DWorld {
     }
   }
 
-  criarStickyNotesParede() {
-    const b = this.buildingsMeta.find(x => x.id === 'coffee');
-    if (!b) return;
-    this.renderizarStickyNotesNoCoffee();
-
-    const THREE = window.THREE;
-    const addArea = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.4, 1.8),
-      new THREE.MeshBasicMaterial({ color: 0xfef08a, transparent: true, opacity: 0.18, side: THREE.DoubleSide })
-    );
-    addArea.position.set(b.centerX, 1.6, b.centerZ - 4.75);
-    addArea.userData = { clickable: true, isStickyWall: true, englishName: 'Sticky Note Wall' };
-    this.clickableObjects.push(addArea);
-    const grp = this.interiorGroups.get('coffee');
-    if (grp) grp.add(addArea);
-  }
-
- renderizarStickyNotesNoCoffee() {
-    const THREE = window.THREE;
-    const b = this.buildingsMeta.find(x => x.id === 'coffee');
-    if (!b) return;
-    const grp = this.interiorGroups.get('coffee') || this.scene;
-    this.stickyNotes.forEach(n => grp.remove(n));
-    this.stickyNotes = [];
-
-    // Carrega dados estruturados do localStorage ou backend
-    const saved = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || JSON.stringify([
-      { id: '1', author: 'Paulo', text: 'Hello from Bahia!', userId: 'demo' },
-      { id: '2', author: 'Teacher', text: 'Coffee first, English second!', userId: 'teacher' }
-    ]));
-
-    saved.slice(0, 8).forEach((item, i) => {
-      const txt = typeof item === 'string' ? item : item.text;
-      const author = typeof item === 'string' ? 'Student' : (item.author || 'Student');
-      const noteId = typeof item === 'string' ? String(i) : (item.id || String(i));
-      const uId = typeof item === 'string' ? '' : (item.userId || '');
-
-      const c = document.createElement('canvas'); c.width = 256; c.height = 256;
-      const ctx = c.getContext('2d');
-      ctx.fillStyle = i % 2 === 0 ? '#fef08a' : '#fed7aa';
-      ctx.fillRect(0, 0, 256, 256);
-      ctx.fillStyle = '#422006'; ctx.font = 'bold 18px Inter, sans-serif';
-      ctx.fillText(String(txt).slice(0, 20), 14, 70);
-      if (txt.length > 20) ctx.fillText(String(txt).slice(20, 40), 14, 105);
-      ctx.fillStyle = '#78350f'; ctx.font = '12px Inter, sans-serif';
-      ctx.fillText(`- ${author}`, 14, 210);
-
-      const tex = new THREE.CanvasTexture(c);
-      const note = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-      note.position.set(b.centerX - 0.9 + (i % 4) * 0.6, 1.9 - Math.floor(i / 4) * 0.65, b.centerZ - 4.72);
-      
-      // Cada post-it 3D individual torna-se clicável!
-      note.userData = {
-        clickable: true,
-        isIndividualSticky: true,
-        stickyData: { id: noteId, author, text: txt, userId: uId },
-        englishName: `Sticky Note by ${author}`
-      };
-      this.clickableObjects.push(note);
-      grp.add(note);
-      this.stickyNotes.push(note);
-    });
-  }
-
-  adicionarStickyNote(texto, emitirRede = true) {
-    const limpo = String(texto || '').trim();
-    if (!limpo) return;
-    const autorNome = this.formatarNomeCompleto(this.localPlayer?.nome || 'Student');
-    const uId = String(this.localPlayer?.userId || 'demo');
-    
-    const arr = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || '[]');
-    const novaNota = { id: 'note_' + Date.now(), author: autorNome, text: limpo, userId: uId };
-    arr.unshift(novaNota);
-    localStorage.setItem('es_sticky_notes_struct', JSON.stringify(arr.slice(0, 16)));
-    
-    this.renderizarStickyNotesNoCoffee();
-
-    if (emitirRede && this.localPlayer) {
-      this.parentManager?.registarMissaoConcluida('coffee', 'sticky_note', 20);
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Post-it pinned to wall (+20 XP)!', 'success');
-    }
-  }
-
-  removerStickyNote(idOuTexto) {
-    let arr = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || '[]');
-    arr = arr.filter(n => (n.id && n.id !== idOuTexto) && (n.text && n.text !== idOuTexto));
-    localStorage.setItem('es_sticky_notes_struct', JSON.stringify(arr));
-    this.renderizarStickyNotesNoCoffee();
-    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🗑️ Sticky note removed.', 'info');
-  }
-
-  enviarMinhaPosicaoServidor() {
-    if (!this.localPlayer) return;
-    fetch('/api/workspace/english-spaces/world/move', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      credentials: 'include',
-      body: JSON.stringify({
-        userId: this.localPlayer.userId,
-        nome: this.localPlayer.nome,
-        avatar: this.localPlayer.avatar,
-        role: this.localPlayer.role,
-        isFemale: Boolean(this.localPlayer.isFemale),
-        shirtColor: this.localPlayer.shirtColor || null,
-        shoeColor: this.localPlayer.shoeColor || null,
-        petType: this.localPlayer.petType || null,
-        x: Math.round(this.localPlayer.x * 100) / 100,
-        z: Math.round(this.localPlayer.z * 100) / 100,
-        rotY: Math.round(this.localPlayer.rotY * 100) / 100,
-        spaceId: this.currentZoneId
-      })
-    }).then(r => r.json()).then(data => {
-      if (data && Array.isArray(data.players)) this.sincronizarListaJogadoresRemotos(data.players);
-    }).catch(() => {});
-  }
-
-  sincronizarListaJogadoresRemotos(lista) {
-    if (!this.active || !this.scene || !this.localPlayer) return;
-    lista.forEach(pData => {
-      if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
-      let op = this.otherPlayers3D.get(pData.userId);
-      const nomeCurto = this.formatarNomeCompleto(pData.nome || 'Student');
-      const isFem = typeof pData.isFemale === 'boolean'
-        ? pData.isFemale
-        : String(pData.nome || '').trim().split(/\s+/)[0].toLowerCase().endsWith('a');
-      const corCamisa = typeof pData.shirtColor === 'number' ? pData.shirtColor : (isFem ? 0xec4899 : 0x3b82f6);
-      const corSapato = typeof pData.shoeColor === 'number' ? pData.shoeColor : 0x111111;
-
-      if (!op) {
-        const mesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
-        if (mesh.userData?.matSapato) mesh.userData.matSapato.color.setHex(corSapato);
-        mesh.position.set(pData.x || 0, 0, pData.z || 0);
-        this.scene.add(mesh);
-        const labelEl = this.criarEtiquetaHTML(nomeCurto, null, '#38bdf8');
-        op = {
-          userId: pData.userId,
-          nome: nomeCurto,
-          role: pData.role || 'PEER',
-          isFemale: isFem,
-          shirtColor: corCamisa,
-          shoeColor: corSapato,
-          spaceId: pData.spaceId || 'street',
-          mesh,
-          labelEl,
-          targetX: pData.x || 0,
-          targetZ: pData.z || 0,
-          rotY: pData.rotY || 0
-        };
-        this.otherPlayers3D.set(pData.userId, op);
-      } else {
-        op.targetX = Number(pData.x) || 0;
-        op.targetZ = Number(pData.z) || 0;
-        op.rotY = Number(pData.rotY) || 0;
-        op.spaceId = pData.spaceId || 'street';
-
-        // Se o colega mudou de género ou comprou roupa/sapato novo, atualiza o boneco 3D dele ao vivo!
-        if (op.isFemale !== isFem) {
-          this.scene.remove(op.mesh);
-          const novoMesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
-          if (novoMesh.userData?.matSapato) novoMesh.userData.matSapato.color.setHex(corSapato);
-          novoMesh.position.copy(op.mesh.position);
-          this.scene.add(novoMesh);
-          op.mesh = novoMesh;
-          op.isFemale = isFem;
-        } else {
-          if (op.shirtColor !== corCamisa && op.mesh.userData?.matCamisa) {
-            op.mesh.userData.matCamisa.color.setHex(corCamisa);
-            op.shirtColor = corCamisa;
-          }
-          if (op.shoeColor !== corSapato && op.mesh.userData?.matSapato) {
-            op.mesh.userData.matSapato.color.setHex(corSapato);
-            op.shoeColor = corSapato;
-          }
-        }
-      }
-    });
-  }
-
   criarFotoPolaroid() {
     const THREE = window.THREE;
     const b = this.buildingsMeta.find(x => x.id === 'beach');
@@ -1934,7 +1777,6 @@ class EnglishSpaces3DWorld {
   }
 
   criarAnimaisRua() {
-    const THREE = window.THREE;
     this.animais.caes = [];
     this.animais.gatos = [];
     this.animais.passaros = [];
@@ -1950,6 +1792,7 @@ class EnglishSpaces3DWorld {
       this.exteriorGroup.add(cat);
       this.animais.gatos.push({ mesh: cat, dir: 1, speed: 0.7, x: cat.position.x, z: cat.position.z, idleTime: 0 });
     }
+    const THREE = window.THREE;
     this.animais.passarosGroup = new THREE.Group();
     for (let i = 0; i < 8; i++) {
       const bird = this.criarPassaro3D();
@@ -2130,7 +1973,6 @@ class EnglishSpaces3DWorld {
       const centerX = bCfg.col * 16;
       const centerZ = -bCfg.row * 16;
       const bw = 10; const bd = 10; const bh = 4.4;
-      // ✅ Usa signCol (-1 ou 1) para a porta ficar sempre colada na fachada correta!
       const frontX = centerX - signCol * (bw / 2);
       const doorHalfW = 1.05;
 
@@ -2211,7 +2053,7 @@ class EnglishSpaces3DWorld {
       this.scene.add(npcMesh);
 
       const labelEl = this.criarEtiquetaHTML(`${spInfo.emoji} ${spInfo.npcName}`, 'AI HOST', '#10b981');
-      if (labelEl) labelEl.style.display = 'none'; // Oculto na rua; só aparece quando o aluno entra na loja!
+      if (labelEl) labelEl.style.display = 'none';
       this.npcs3D.set(bCfg.id, { id: bCfg.id, space: spInfo, name: spInfo.npcName, x: npcX, z: npcZ, mesh: npcMesh, labelEl, col: signCol });
 
       this.buildingsMeta.push({
@@ -2248,7 +2090,6 @@ class EnglishSpaces3DWorld {
     this.criarFotoPolaroid();
     this.ativarSombrasReais();
 
-    // 👤 Criação do Avatar do Utilizador com Primeiro e Último Nome e Morfologia Homem/Mulher
     const u = window.Workspace?.usuario || {};
     const meuNomeCurto = this.formatarNomeCompleto(u.nome || u.login || 'You');
     const meuId = String(u.id || 'local_' + Date.now());
@@ -2260,7 +2101,6 @@ class EnglishSpaces3DWorld {
     playerMesh.position.set(initialX, 0, initialZ);
     this.scene.add(playerMesh);
 
-    // Exibe apenas o nome formatado do utilizador (sem tag extra a poluir)
     const myLabel = this.criarEtiquetaHTML(meuNomeCurto, null, '#38bdf8', true);
 
     this.localPlayer = {
@@ -2270,6 +2110,9 @@ class EnglishSpaces3DWorld {
       role: this.parentManager.state.role || 'STUDENT',
       actingRole: null,
       isFemale: isFemaleUser,
+      shirtColor: isFemaleUser ? 0xec4899 : 0x8b5cf6,
+      shoeColor: 0x111111,
+      petType: null,
       x: initialX,
       z: initialZ,
       targetX: null,
@@ -2383,7 +2226,6 @@ class EnglishSpaces3DWorld {
       }
       if (interiorGrp) interiorGrp.visible = true;
       if (door) door.visible = true;
-      // ✅ Oculta as etiquetas dos NPCs quando estamos cá fora na rua!
       if (npc) { npc.mesh.visible = true; if (npc.labelEl) npc.labelEl.style.display = 'none'; }
     });
     this.currentZoneId = 'street';
@@ -2555,18 +2397,15 @@ class EnglishSpaces3DWorld {
 
       const vw = viewport.clientWidth || window.innerWidth;
       const vh = viewport.clientHeight || window.innerHeight;
-      // ✅ Sempre projeta o nome do próprio utilizador e dos outros alunos reais!
       this.projetarEtiquetaHTML(p.mesh.position, 2.45, p.labelEl, vw, vh);
       this.otherPlayers3D.forEach(op => {
         if (op.mesh.visible) this.projetarEtiquetaHTML(op.mesh.position, 2.45, op.labelEl, vw, vh);
       });
-      // NPC da IA só mostra etiqueta quando o aluno entra na loja dele (ou quando tem balão de fala ativo)
       this.npcs3D.forEach(npc => {
         const mostrarNpc = (this.modoInterior && this.predioAtual === npc.id);
         if (npc.labelEl) npc.labelEl.style.display = mostrarNpc ? 'flex' : 'none';
         if (mostrarNpc) this.projetarEtiquetaHTML(npc.mesh.position, 2.45, npc.labelEl, vw, vh);
       });
-      // Pedestres e músico só projetam se estiverem com balão de fala visível (evita nomes flutuantes na rua)
       this.pedestrians.forEach(ped => {
         const bubble = ped.labelEl?.querySelector('.es-speech-bubble');
         const falando = !this.modoInterior && bubble && bubble.style.display === 'block';
@@ -2726,7 +2565,7 @@ class EnglishSpaces3DWorld {
 
     this._onKeyDown = (e) => {
       this.garantirAudioAtivo();
-      if (document.activeElement?.id === 'es-city-chat-input') return;
+      if (document.activeElement?.id === 'es-city-chat-input' || document.activeElement?.id === 'es-sticky-text') return;
       this.keys[e.code] = true;
       this.keys[e.key] = true;
     };
@@ -2794,14 +2633,15 @@ class EnglishSpaces3DWorld {
             return;
           }
           if (ud.isPolaroidCam) { this.tirarFotoPolaroid(); return; }
+          // ✅ Verifica primeiro se clicou num Post-it já colado para abrir a leitura legível!
+          if (ud.isIndividualSticky && ud.stickyData) {
+            this.abrirModalLerStickyNote(ud.stickyData);
+            return;
+          }
           if (ud.isStickyWall) {
-                                this.abrirModalCriarStickyNote();
-                               return;
-                            }
-                           if (ud.isIndividualSticky && ud.stickyData) {
-                               this.abrirModalLerStickyNote(ud.stickyData);
-                                return;
-                           }
+            this.abrirModalCriarStickyNote();
+            return;
+          }
           if (ud.isTaxiRadio) { this.tocarRadioTaxi(); return; }
           if (ud.isBlackboard && typeof ud.nextLesson === 'function') {
             const licao = ud.nextLesson();
@@ -2866,6 +2706,10 @@ class EnglishSpaces3DWorld {
         nome: this.localPlayer.nome,
         avatar: this.localPlayer.avatar,
         role: this.localPlayer.role,
+        isFemale: Boolean(this.localPlayer.isFemale),
+        shirtColor: this.localPlayer.shirtColor || null,
+        shoeColor: this.localPlayer.shoeColor || null,
+        petType: this.localPlayer.petType || null,
         x: Math.round(this.localPlayer.x * 100) / 100,
         z: Math.round(this.localPlayer.z * 100) / 100,
         rotY: Math.round(this.localPlayer.rotY * 100) / 100,
@@ -2882,9 +2726,15 @@ class EnglishSpaces3DWorld {
       if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
       let op = this.otherPlayers3D.get(pData.userId);
       const nomeCurto = this.formatarNomeCompleto(pData.nome || 'Student');
+      const isFem = typeof pData.isFemale === 'boolean'
+        ? pData.isFemale
+        : String(pData.nome || '').trim().split(/\s+/)[0].toLowerCase().endsWith('a');
+      const corCamisa = typeof pData.shirtColor === 'number' ? pData.shirtColor : (isFem ? 0xec4899 : 0x3b82f6);
+      const corSapato = typeof pData.shoeColor === 'number' ? pData.shoeColor : 0x111111;
+
       if (!op) {
-        const isFemale = String(pData.nome || '').trim().split(/\s+/)[0].toLowerCase().endsWith('a');
-        const mesh = this.criarBonecoHumano3D(isFemale ? 0xec4899 : 0x3b82f6, 0x0f172a, 0xfde68a, isFemale);
+        const mesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
+        if (mesh.userData?.matSapato) mesh.userData.matSapato.color.setHex(corSapato);
         mesh.position.set(pData.x || 0, 0, pData.z || 0);
         this.scene.add(mesh);
         const labelEl = this.criarEtiquetaHTML(nomeCurto, null, '#38bdf8');
@@ -2892,6 +2742,9 @@ class EnglishSpaces3DWorld {
           userId: pData.userId,
           nome: nomeCurto,
           role: pData.role || 'PEER',
+          isFemale: isFem,
+          shirtColor: corCamisa,
+          shoeColor: corSapato,
           spaceId: pData.spaceId || 'street',
           mesh,
           labelEl,
@@ -2905,6 +2758,25 @@ class EnglishSpaces3DWorld {
         op.targetZ = Number(pData.z) || 0;
         op.rotY = Number(pData.rotY) || 0;
         op.spaceId = pData.spaceId || 'street';
+
+        if (op.isFemale !== isFem) {
+          this.scene.remove(op.mesh);
+          const novoMesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
+          if (novoMesh.userData?.matSapato) novoMesh.userData.matSapato.color.setHex(corSapato);
+          novoMesh.position.copy(op.mesh.position);
+          this.scene.add(novoMesh);
+          op.mesh = novoMesh;
+          op.isFemale = isFem;
+        } else {
+          if (op.shirtColor !== corCamisa && op.mesh.userData?.matCamisa) {
+            op.mesh.userData.matCamisa.color.setHex(corCamisa);
+            op.shirtColor = corCamisa;
+          }
+          if (op.shoeColor !== corSapato && op.mesh.userData?.matSapato) {
+            op.mesh.userData.matSapato.color.setHex(corSapato);
+            op.shoeColor = corSapato;
+          }
+        }
       }
     });
   }
@@ -2924,9 +2796,9 @@ class EnglishSpaces3DWorld {
             this.sincronizarListaJogadoresRemotos([data.player]);
           }
           if (data.type === 'ES_STICKY_UPDATE' && Array.isArray(data.notes)) {
-                               this.cloudStickyNotes = data.notes;
-                               this.renderizarStickyNotesNoCoffee();
-                           }
+            this.cloudStickyNotes = data.notes;
+            this.renderizarStickyNotesNoCoffee();
+          }
           if (data.type === 'ES_WORLD_LEAVE' && data.userId) {
             const rem = this.otherPlayers3D.get(data.userId);
             if (rem) {
@@ -2936,11 +2808,6 @@ class EnglishSpaces3DWorld {
             }
           }
           if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
-            if (String(data.text || '').startsWith('[STICKY_NOTE] ')) {
-              const notaRemota = String(data.text).replace('[STICKY_NOTE] ', '').trim();
-              this.adicionarStickyNote(notaRemota, false);
-              return;
-            }
             const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
             if (dist <= PROXIMITY_RADIUS) {
               const op = this.otherPlayers3D.get(data.speakerId);
@@ -2961,6 +2828,8 @@ class EnglishSpaces3DWorld {
     this.active = false;
     document.body.style.overflow = '';
     document.getElementById('shop-modal')?.remove();
+    document.getElementById('es-sticky-modal')?.remove();
+    document.getElementById('es-sticky-view-modal')?.remove();
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.dayNightInterval) clearInterval(this.dayNightInterval);
