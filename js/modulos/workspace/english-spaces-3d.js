@@ -115,6 +115,76 @@ class EnglishSpaces3DWorld {
     this.adoptedPet = null;
   }
 
+   // 📝 Modal moderno para escrever um Post-it
+  abrirModalCriarStickyNote() {
+    document.getElementById('es-sticky-modal')?.remove();
+    const html = `
+      <div id="es-sticky-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:16px; padding:24px; width:100%; max-width:360px; text-align:center; box-shadow:0 20px 50px rgba(0,0,0,0.5); transform:rotate(-1deg);">
+          <h3 style="color:#422006; margin:0 0 10px; font-size:18px;">📌 New English Sticky Note</h3>
+          <p style="color:#78350f; font-size:12.5px; margin:0 0 12px;">Write a short message or tip for the Coffee Shop wall:</p>
+          <textarea id="es-sticky-text" maxlength="80" placeholder="Type here in English..." style="width:100%; height:90px; background:#fffdf0; border:1px solid #d97706; border-radius:10px; padding:10px; color:#422006; font-size:14px; font-weight:600; resize:none; outline:none; box-sizing:border-box;"></textarea>
+          <div style="display:flex; gap:8px; margin-top:14px;">
+            <button id="es-sticky-cancel" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Cancel</button>
+            <button id="es-sticky-save" style="flex:1.3; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Pin to Wall 📌</button>
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+    document.getElementById('es-sticky-text')?.focus();
+
+    document.getElementById('es-sticky-cancel')?.addEventListener('click', () => document.getElementById('es-sticky-modal')?.remove());
+    document.getElementById('es-sticky-save')?.addEventListener('click', () => {
+      const txt = document.getElementById('es-sticky-text')?.value;
+      if (txt && txt.trim()) {
+        this.adicionarStickyNote(txt.trim(), true);
+      }
+      document.getElementById('es-sticky-modal')?.remove();
+    });
+  }
+
+  // 🔍 Modal ampliado para ler, editar ou excluir o Post-it (com restrição de autor)
+  abrirModalLerStickyNote(notaObj) {
+    document.getElementById('es-sticky-view-modal')?.remove();
+    const meuId = String(this.localPlayer?.userId || '');
+    const isAutor = notaObj.userId && String(notaObj.userId) === meuId;
+
+    const html = `
+      <div id="es-sticky-view-modal" style="position:fixed; inset:0; z-index:1000200; background:rgba(5,7,14,0.78); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; font-family:Inter,sans-serif; padding:16px;">
+        <div style="background:#fef08a; border:2px solid #ca8a04; border-radius:18px; padding:28px; width:100%; max-width:380px; text-align:center; box-shadow:0 25px 60px rgba(0,0,0,0.6); position:relative;">
+          <div style="font-size:32px; margin-bottom:8px;">📌</div>
+          <p style="color:#78350f; font-size:11.5px; font-weight:700; margin:0 0 6px; text-transform:uppercase; letter-spacing:0.5px;">Written by ${notaObj.author || 'Student'}</p>
+          <div style="background:#fffdf0; border:1px solid #d97706; border-radius:12px; padding:16px; color:#422006; font-size:16px; font-weight:700; line-height:1.4; word-break:break-word; margin-bottom:18px; min-height:60px; display:flex; align-items:center; justify-content:center;">
+            "${notaObj.text}"
+          </div>
+          <div style="display:flex; gap:8px;">
+            <button id="es-sticky-close" style="flex:1; padding:10px; background:#f3f4f6; color:#4b5563; border:none; border-radius:10px; font-weight:700; cursor:pointer;">Close</button>
+            ${isAutor ? `
+              <button id="es-sticky-edit" style="flex:1; padding:10px; background:#d97706; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Edit ✏️</button>
+              <button id="es-sticky-delete" style="flex:1; padding:10px; background:#dc2626; color:#fff; border:none; border-radius:10px; font-weight:800; cursor:pointer;">Delete 🗑️</button>
+            ` : ''}
+          </div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    document.getElementById('es-sticky-close')?.addEventListener('click', () => document.getElementById('es-sticky-view-modal')?.remove());
+    if (isAutor) {
+      document.getElementById('es-sticky-edit')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.abrirModalCriarStickyNote();
+        const ta = document.getElementById('es-sticky-text');
+        if (ta) ta.value = notaObj.text;
+      });
+      document.getElementById('es-sticky-delete')?.addEventListener('click', () => {
+        document.getElementById('es-sticky-view-modal')?.remove();
+        this.removerStickyNote(notaObj.id || notaObj.text);
+      });
+    }
+  }
+
   // 👤 Formata apenas o Primeiro e o Último nome se o nome for longo
   formatarNomeCompleto(nomeBruto) {
     const limpo = String(nomeBruto || 'Student').replace(/\(@.*\)/, '').trim();
@@ -1675,11 +1745,18 @@ class EnglishSpaces3DWorld {
     this.stickyNotes.forEach(n => grp.remove(n));
     this.stickyNotes = [];
 
-    const saved = Array.isArray(this.cloudStickyNotes) && this.cloudStickyNotes.length > 0
-      ? this.cloudStickyNotes
-      : ['Hello from Bahia!', 'Coffee first, English second!'];
+    // Carrega dados estruturados do localStorage ou backend
+    const saved = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || JSON.stringify([
+      { id: '1', author: 'Paulo', text: 'Hello from Bahia!', userId: 'demo' },
+      { id: '2', author: 'Teacher', text: 'Coffee first, English second!', userId: 'teacher' }
+    ]));
 
-    saved.slice(0, 8).forEach((txt, i) => {
+    saved.slice(0, 8).forEach((item, i) => {
+      const txt = typeof item === 'string' ? item : item.text;
+      const author = typeof item === 'string' ? 'Student' : (item.author || 'Student');
+      const noteId = typeof item === 'string' ? String(i) : (item.id || String(i));
+      const uId = typeof item === 'string' ? '' : (item.userId || '');
+
       const c = document.createElement('canvas'); c.width = 256; c.height = 256;
       const ctx = c.getContext('2d');
       ctx.fillStyle = i % 2 === 0 ? '#fef08a' : '#fed7aa';
@@ -1687,38 +1764,51 @@ class EnglishSpaces3DWorld {
       ctx.fillStyle = '#422006'; ctx.font = 'bold 18px Inter, sans-serif';
       ctx.fillText(String(txt).slice(0, 20), 14, 70);
       if (txt.length > 20) ctx.fillText(String(txt).slice(20, 40), 14, 105);
+      ctx.fillStyle = '#78350f'; ctx.font = '12px Inter, sans-serif';
+      ctx.fillText(`- ${author}`, 14, 210);
+
       const tex = new THREE.CanvasTexture(c);
       const note = new THREE.Mesh(new THREE.PlaneGeometry(0.5, 0.5), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
       note.position.set(b.centerX - 0.9 + (i % 4) * 0.6, 1.9 - Math.floor(i / 4) * 0.65, b.centerZ - 4.72);
+      
+      // Cada post-it 3D individual torna-se clicável!
+      note.userData = {
+        clickable: true,
+        isIndividualSticky: true,
+        stickyData: { id: noteId, author, text: txt, userId: uId },
+        englishName: `Sticky Note by ${author}`
+      };
+      this.clickableObjects.push(note);
       grp.add(note);
       this.stickyNotes.push(note);
     });
   }
 
-  async adicionarStickyNote(texto, emitirRede = true) {
+  adicionarStickyNote(texto, emitirRede = true) {
     const limpo = String(texto || '').trim();
     if (!limpo) return;
-    if (!this.cloudStickyNotes) this.cloudStickyNotes = [];
-    if (!this.cloudStickyNotes.includes(limpo)) {
-      this.cloudStickyNotes.unshift(limpo);
-    }
+    const autorNome = this.formatarNomeCompleto(this.localPlayer?.nome || 'Student');
+    const uId = String(this.localPlayer?.userId || 'demo');
+    
+    const arr = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || '[]');
+    const novaNota = { id: 'note_' + Date.now(), author: autorNome, text: limpo, userId: uId };
+    arr.unshift(novaNota);
+    localStorage.setItem('es_sticky_notes_struct', JSON.stringify(arr.slice(0, 16)));
+    
     this.renderizarStickyNotesNoCoffee();
 
     if (emitirRede && this.localPlayer) {
       this.parentManager?.registarMissaoConcluida('coffee', 'sticky_note', 20);
-      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Post-it gravado na nuvem do Coffee Shop (+20 XP)!', 'success');
-      const escolaId = window.Workspace?.usuario?.escolaId || 'DEFAULT';
-      await fetch('/api/workspace/english-spaces/world/stickies', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          escolaId,
-          author: this.localPlayer.nome,
-          text: limpo
-        })
-      }).catch(() => {});
+      if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('📝 Post-it pinned to wall (+20 XP)!', 'success');
     }
+  }
+
+  removerStickyNote(idOuTexto) {
+    let arr = JSON.parse(localStorage.getItem('es_sticky_notes_struct') || '[]');
+    arr = arr.filter(n => (n.id && n.id !== idOuTexto) && (n.text && n.text !== idOuTexto));
+    localStorage.setItem('es_sticky_notes_struct', JSON.stringify(arr));
+    this.renderizarStickyNotesNoCoffee();
+    if (window.Workspace?.mostrarAviso) window.Workspace.mostrarAviso('🗑️ Sticky note removed.', 'info');
   }
 
   enviarMinhaPosicaoServidor() {
@@ -2705,10 +2795,13 @@ class EnglishSpaces3DWorld {
           }
           if (ud.isPolaroidCam) { this.tirarFotoPolaroid(); return; }
           if (ud.isStickyWall) {
-            const nota = prompt('📝 Write a short Sticky Note in English for the Coffee Shop wall:');
-            if (nota && nota.trim()) this.adicionarStickyNote(nota.trim(), true);
-            return;
-          }
+                                this.abrirModalCriarStickyNote();
+                               return;
+                            }
+                           if (ud.isIndividualSticky && ud.stickyData) {
+                               this.abrirModalLerStickyNote(ud.stickyData);
+                                return;
+                           }
           if (ud.isTaxiRadio) { this.tocarRadioTaxi(); return; }
           if (ud.isBlackboard && typeof ud.nextLesson === 'function') {
             const licao = ud.nextLesson();
