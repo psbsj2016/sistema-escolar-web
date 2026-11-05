@@ -3534,47 +3534,90 @@ criarAvenidaRealista() {
     });
   }
 
-  iniciarMultiplayerRealtime() {
+ iniciarMultiplayerRealtime() {
     this.enviarMinhaPosicaoServidor();
-    this.pollInterval = setInterval(() => this.enviarMinhaPosicaoServidor(), 4000);
-    try {
-      let escolaId = 'DEFAULT';
-      try { escolaId = JSON.parse(localStorage.getItem('ws_usuario_logado'))?.escolaId || 'DEFAULT'; } catch (e) {}
-      this.sseConnection = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`);
-      this.sseConnection.onmessage = (ev) => {
-        if (!this.active || !this.localPlayer) return;
-        try {
-          const data = JSON.parse(ev.data);
-          if (data.type === 'ES_WORLD_MOVE' && data.player) {
-            this.sincronizarListaJogadoresRemotos([data.player]);
-          }
-          if (data.type === 'ES_STICKY_UPDATE' && Array.isArray(data.notes)) {
-            this.cloudStickyNotes = data.notes;
-            this.renderizarStickyNotesNoCoffee();
-          }
-          if (data.type === 'ES_WORLD_LEAVE' && data.userId) {
-            const rem = this.otherPlayers3D.get(data.userId);
-            if (rem) {
-              this.scene.remove(rem.mesh);
-              if (rem.labelEl) rem.labelEl.remove();
-              this.otherPlayers3D.delete(data.userId);
+    if (this.pollInterval) clearInterval(this.pollInterval);
+    this.pollInterval = setInterval(() => {
+      if (!document.hidden) this.enviarMinhaPosicaoServidor();
+    }, 4000);
+
+    const conectarSSE = () => {
+      if (!this.active) return;
+      if (this.sseConnection) {
+        try { this.sseConnection.close(); } catch (e) {}
+        this.sseConnection = null;
+      }
+
+      try {
+        const escolaId = window.Workspace?.usuario?.escolaId || 'DEFAULT';
+        this.sseConnection = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(escolaId)}`, {
+          withCredentials: true
+        });
+
+        this.sseConnection.onmessage = (ev) => {
+          if (!this.active || !this.localPlayer) return;
+          try {
+            const data = JSON.parse(ev.data);
+            if (data.type === 'ES_WORLD_MOVE' && data.player) {
+              this.sincronizarListaJogadoresRemotos([data.player]);
             }
-          }
-          if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
-            const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
-            if (dist <= PROXIMITY_RADIUS) {
-              const op = this.otherPlayers3D.get(data.speakerId);
-              if (op) {
-                this.mostrarBalaoNoBoneco(op, data.text, 7000);
-                this.animarEmote(op);
+            if (data.type === 'ES_STICKY_UPDATE' && Array.isArray(data.notes)) {
+              this.cloudStickyNotes = data.notes;
+              this.renderizarStickyNotesNoCoffee();
+            }
+            if (data.type === 'ES_WORLD_LEAVE' && data.userId) {
+              const rem = this.otherPlayers3D.get(data.userId);
+              if (rem) {
+                this.scene.remove(rem.mesh);
+                if (rem.labelEl) rem.labelEl.remove();
+                this.otherPlayers3D.delete(data.userId);
               }
-              this.adicionarMensagemFeedProximidade(`🧑 ${data.speakerName}`, data.text, '#38bdf8');
-              this.falarTextoNPC(data.text, data.spaceId);
             }
+            if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
+              const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
+              if (dist <= PROXIMITY_RADIUS) {
+                const op = this.otherPlayers3D.get(data.speakerId);
+                if (op) {
+                  this.mostrarBalaoNoBoneco(op, data.text, 7000);
+                  this.animarEmote(op);
+                }
+                this.adicionarMensagemFeedProximidade(`🧑 ${data.speakerName}`, data.text, '#38bdf8');
+                this.falarTextoNPC(data.text, data.spaceId);
+              }
+            }
+          } catch (e) {}
+        };
+
+        // 🛡️ Se o navegador suspender a rede (ERR_NETWORK_IO_SUSPENDED), fecha limpo e reconecta após 5s
+        this.sseConnection.onerror = () => {
+          if (this.sseConnection) {
+            try { this.sseConnection.close(); } catch (e) {}
+            this.sseConnection = null;
           }
-        } catch (e) {}
-      };
-    } catch (e) {}
+          clearTimeout(this._sseRetryTimer);
+          if (this.active && !document.hidden) {
+            this._sseRetryTimer = setTimeout(() => conectarSSE(), 5000);
+          }
+        };
+      } catch (e) {}
+    };
+
+    conectarSSE();
+
+    // 🔄 Quando o utilizador volta para a aba do navegador, reativa o túnel imediatamente
+    this._onVisibilityChange = () => {
+      if (!this.active) return;
+      if (document.hidden) {
+        if (this.sseConnection) {
+          try { this.sseConnection.close(); } catch (e) {}
+          this.sseConnection = null;
+        }
+      } else {
+        this.enviarMinhaPosicaoServidor();
+        if (!this.sseConnection) conectarSSE();
+      }
+    };
+    document.addEventListener('visibilitychange', this._onVisibilityChange);
   }
 
   fecharCidade3D() {
@@ -3587,6 +3630,7 @@ criarAvenidaRealista() {
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.dayNightInterval) clearInterval(this.dayNightInterval);
     if (this.flightBoardInterval) clearInterval(this.flightBoardInterval);
+    clearTimeout(this._sseRetryTimer);
     if (this.audioCtx) {
       try { this.audioCtx.close(); } catch (e) {}
       this.audioCtx = null;
@@ -3594,6 +3638,9 @@ criarAvenidaRealista() {
     if (this.sseConnection) {
       try { this.sseConnection.close(); } catch (e) {}
       this.sseConnection = null;
+    }
+    if (this._onVisibilityChange) {
+      document.removeEventListener('visibilitychange', this._onVisibilityChange);
     }
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKeyDown);
