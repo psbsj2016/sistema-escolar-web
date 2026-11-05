@@ -844,9 +844,11 @@ class EnglishSpaces3DWorld {
     }
   }
 
-// 🛣️ RUAS ALARGADAS COM CICLOVIAS, QUEBRA-MOLAS E PLACAS DE TRÂNSITO REAIS
+// 🛣️ RUAS ALARGADAS COM CICLOVIAS (CORRIGIDO COM DECLARAÇÃO SEGURA DE CANVAS)
   criarRuasAlargadasComCiclovias() {
     const THREE = window.THREE;
+    if (!THREE || !this.exteriorGroup) return;
+
     const bikeLaneMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 });
     [-5.6, 5.6].forEach(xLane => {
       const bikeLane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 170), bikeLaneMat);
@@ -855,16 +857,33 @@ class EnglishSpaces3DWorld {
       this.exteriorGroup.add(bikeLane);
     });
 
-    const canvasBike = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
-    const ctxB = canvasBike.getContext('2d');
-    ctxB.fillStyle = '#059669'; ctxB.fillRect(0, 0, 512, 128);
-    ctxB.fillStyle = '#ffffff'; ctxB.font = 'bold 34px Inter, sans-serif'; ctxB.textAlign = 'center';
+    // Declara tanto 'canvas' quanto 'canvasBike' para evitar qualquer ReferenceError
+    const canvas = document.createElement('canvas');
+    const canvasBike = canvas;
+    canvas.width = 512;
+    canvas.height = 128;
+
+    const ctx = canvas.getContext('2d');
+    const ctxB = ctx;
+    ctxB.fillStyle = '#059669';
+    ctxB.fillRect(0, 0, 512, 128);
+    ctxB.fillStyle = '#ffffff';
+    ctxB.font = 'bold 34px Inter, sans-serif';
+    ctxB.textAlign = 'center';
     ctxB.fillText('BIKE LANE 🚲', 256, 76);
-    const texBike = new THREE.CanvasTexture(canvasBike);
+
+    const texBike = new THREE.CanvasTexture(canvas);
     [-20, -50].forEach(zPos => {
-      const mL = new THREE.Mesh(new THREE.PlaneGeometry(1.3, 3.6), new THREE.MeshBasicMaterial({ map: texBike }));
-      mL.rotation.x = -Math.PI / 2; mL.rotation.z = Math.PI / 2; mL.position.set(-5.6, 0.05, zPos);
-      const mR = mL.clone(); mR.position.set(5.6, 0.05, zPos);
+      const mL = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.3, 3.6),
+        new THREE.MeshBasicMaterial({ map: texBike })
+      );
+      mL.rotation.x = -Math.PI / 2;
+      mL.rotation.z = Math.PI / 2;
+      mL.position.set(-5.6, 0.05, zPos);
+
+      const mR = mL.clone();
+      mR.position.set(5.6, 0.05, zPos);
       this.exteriorGroup.add(mL, mR);
     });
   }
@@ -2617,18 +2636,22 @@ criarAvenidaRealista() {
     road.rotation.x = -Math.PI / 2; road.position.set(0, 0.01, -36);
     this.exteriorGroup.add(road);
 
-    this.criarCeuRealista();
-    this.criarAvenidaRealista();
-    this.criarSegundaAvenida();
-    this.criarRuasAlargadasComCiclovias();
-    this.criarQuebraMolasESinalizacao();
-    this.criarPostesAvenida3D();
-    this.criarTransitoInteligente();
-    this.criarPedestres();
-    this.criarOutdoorsInteligentes();
-    this.atualizarCicloDiaNoite();
-    this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
-    this.criarCenarioFundoMontanhasArvores();
+    try {
+      this.criarCeuRealista();
+      this.criarAvenidaRealista();
+      this.criarSegundaAvenida();
+      this.criarRuasAlargadasComCiclovias();
+      this.criarQuebraMolasESinalizacao();
+      this.criarPostesAvenida3D();
+      this.criarTransitoInteligente();
+      this.criarPedestres();
+      this.criarOutdoorsInteligentes();
+      this.atualizarCicloDiaNoite();
+      this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
+      this.criarCenarioFundoMontanhasArvores();
+    } catch (errCenario) {
+      console.warn('Aviso ao renderizar decoração de rua:', errCenario);
+    }
 
     this.buildingsMeta = [];
     this.buildingMeshes.clear();
