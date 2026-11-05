@@ -502,28 +502,90 @@ class EnglishSpaces3DWorld {
     });
   }
 
-  // 🧙‍♂️ GUILDA BAÚ DO INGLÊS COM O MESTRE MAGO (/assets/mago_bau_ingles.png) E PORTAL INTERATIVO
+  // 🧙‍♂️ TRANSFORMA O PERSONAGEM 3D DA GUILDA NO MESTRE MAGO + CRIA O PORTAL E PLACA
   criarGuildaMago() {
     const THREE = window.THREE;
     const bGuild = this.buildingsMeta.find(b => b.id === 'guild_bau');
     const grp = this.interiorGroups.get('guild_bau');
+    const npcGuild = this.npcs3D.get('guild_bau');
     if (!bGuild || !grp) return;
 
-    const loader = new THREE.TextureLoader();
-    const magoTex = loader.load('/assets/mago_bau_ingles.png', undefined, undefined, () => {});
-    magoTex.minFilter = THREE.LinearFilter;
-    const magoMat = new THREE.MeshBasicMaterial({ map: magoTex, transparent: true, side: THREE.DoubleSide });
-    const magoPlane = new THREE.Mesh(new THREE.PlaneGeometry(2.4, 3.1), magoMat);
-    magoPlane.position.set(bGuild.centerX + 1.2, 1.6, bGuild.centerZ - 1.2);
-    magoPlane.rotation.y = -Math.PI / 2;
-    magoPlane.userData = {
-      clickable: true,
-      isMage: true,
-      englishName: 'Master Wizard of the English Chest'
-    };
-    grp.add(magoPlane);
-    this.clickableObjects.push(magoPlane);
+    // 1. Transforma o boneco 3D que já fica na loja num Mago 3D completo!
+    if (npcGuild && npcGuild.mesh) {
+      const wizMesh = npcGuild.mesh;
+      const ud = wizMesh.userData || {};
 
+      // Pinta a roupa de Roxo Místico Real
+      if (ud.matCamisa) ud.matCamisa.color.setHex(0x4c1d95);
+      if (ud.matCalca) ud.matCalca.color.setHex(0x2e1065);
+
+      const matRobe = new THREE.MeshStandardMaterial({ color: 0x4c1d95, roughness: 0.65, metalness: 0.1 });
+      const matGold = new THREE.MeshStandardMaterial({ color: 0xfacc15, roughness: 0.3, metalness: 0.8 });
+      const matBeard = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.85 });
+
+      // Túnica longa de Mago (cobre as pernas com borda dourada)
+      const robeSkirt = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.38, 0.92, 16), matRobe);
+      robeSkirt.position.set(0, 0.52, 0);
+      const goldBelt = new THREE.Mesh(new THREE.CylinderGeometry(0.265, 0.265, 0.08, 16), matGold);
+      goldBelt.position.set(0, 0.98, 0);
+      const goldHem = new THREE.Mesh(new THREE.CylinderGeometry(0.382, 0.385, 0.05, 16), matGold);
+      goldHem.position.set(0, 0.09, 0);
+      wizMesh.add(robeSkirt, goldBelt, goldHem);
+
+      // Chapéu Pontudo de Mago + Barba Longa Branca presos à cabeça (headGroup)
+      if (ud.headGroup) {
+        const hatBrim = new THREE.Mesh(new THREE.CylinderGeometry(0.52, 0.52, 0.04, 18), matRobe);
+        hatBrim.position.set(0, 0.21, 0);
+        const hatBand = new THREE.Mesh(new THREE.CylinderGeometry(0.285, 0.295, 0.06, 16), matGold);
+        hatBand.position.set(0, 0.25, 0);
+        const hatCone = new THREE.Mesh(new THREE.ConeGeometry(0.28, 0.78, 16), matRobe);
+        hatCone.position.set(0, 0.64, -0.03);
+        hatCone.rotation.x = -0.12;
+
+        const beard = new THREE.Mesh(new THREE.ConeGeometry(0.18, 0.48, 12), matBeard);
+        beard.rotation.x = Math.PI; // Ponta da barba virada para baixo
+        beard.position.set(0, -0.26, 0.21);
+
+        ud.headGroup.add(hatBrim, hatBand, hatCone, beard);
+      }
+
+      // Cajado Mágico com Orbe de Cristal Brilhante ao lado direito do Mago
+      const staffGroup = new THREE.Group();
+      const staffWood = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.035, 0.025, 2.05, 10),
+        new THREE.MeshStandardMaterial({ color: 0x78350f, roughness: 0.8 })
+      );
+      staffWood.position.set(0, 1.02, 0);
+      const staffRing = new THREE.Mesh(new THREE.TorusGeometry(0.14, 0.025, 10, 20), matGold);
+      staffRing.position.set(0, 2.12, 0);
+      const staffOrb = new THREE.Mesh(
+        new THREE.SphereGeometry(0.11, 14, 14),
+        new THREE.MeshBasicMaterial({ color: 0xc084fc })
+      );
+      staffOrb.position.set(0, 2.12, 0);
+      const staffLight = new THREE.PointLight(0xa855f7, 1.2, 6);
+      staffLight.position.set(0, 2.2, 0);
+
+      staffGroup.add(staffWood, staffRing, staffOrb, staffLight);
+      staffGroup.position.set(0.38, 0, 0.22);
+      wizMesh.add(staffGroup);
+
+      // Torna todas as partes do Mago 3D clicáveis para abrir o diálogo da Guilda
+      const mageData = {
+        clickable: true,
+        isMage: true,
+        englishName: 'Master Wizard of the English Chest'
+      };
+      wizMesh.userData = { ...wizMesh.userData, ...mageData };
+      wizMesh.traverse(child => {
+        if (child.isMesh) {
+          child.userData = { ...child.userData, ...mageData };
+        }
+      });
+      this.clickableObjects.push(wizMesh);
+    }
+
+    // 2. Portal Mágico Roxo para a Sala de Jogos do Baú do Inglês
     const portalGroup = new THREE.Group();
     const ringOuter = new THREE.Mesh(
       new THREE.TorusGeometry(1.25, 0.12, 16, 40),
@@ -542,25 +604,38 @@ class EnglishSpaces3DWorld {
     portalCore.userData = portalData;
     portalGroup.userData = portalData;
     portalGroup.add(ringOuter, portalCore);
-    portalGroup.position.set(bGuild.centerX + 2.2, 1.55, bGuild.centerZ + 2.2);
+    portalGroup.position.set(bGuild.centerX + 1.8, 1.55, bGuild.centerZ + 2.5);
     portalGroup.rotation.y = -Math.PI / 2;
     grp.add(portalGroup);
     this.clickableObjects.push(portalGroup);
 
-    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 256;
+    // 3. Placa Dourada Explicativa na Parede da Guilda
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 256;
     const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#1e1b4b'; ctx.fillRect(0, 0, 512, 256);
-    ctx.strokeStyle = '#facc15'; ctx.lineWidth = 8; ctx.strokeRect(4, 4, 504, 248);
-    ctx.fillStyle = '#fde047'; ctx.font = 'bold 24px Inter, sans-serif';
+    ctx.fillStyle = '#1e1b4b';
+    ctx.fillRect(0, 0, 512, 256);
+    ctx.strokeStyle = '#facc15';
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, 504, 248);
+    ctx.fillStyle = '#fde047';
+    ctx.font = 'bold 24px Inter, sans-serif';
     ctx.fillText('🧙‍♂️ GUILD: BAÚ DO INGLÊS', 24, 52);
-    ctx.fillStyle = '#e2e8f0'; ctx.font = 'bold 17px Inter, sans-serif';
-    ctx.fillText('1. Click Master Wizard for instructions', 24, 110);
+    ctx.fillStyle = '#e2e8f0';
+    ctx.font = 'bold 17px Inter, sans-serif';
+    ctx.fillText('1. Click the 3D Master Wizard to talk', 24, 110);
     ctx.fillText('2. Click the Purple Portal to play games', 24, 150);
-    ctx.fillStyle = '#34d399'; ctx.font = 'bold 18px Inter, sans-serif';
+    ctx.fillStyle = '#34d399';
+    ctx.font = 'bold 18px Inter, sans-serif';
     ctx.fillText('💎 Earn DOVRYX (DRX) to build your house!', 24, 205);
+
     const tex = new THREE.CanvasTexture(canvas);
-    const board = new THREE.Mesh(new THREE.PlaneGeometry(3.2, 1.6), new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide }));
-    board.position.set(bGuild.centerX + 4.4, 2.2, bGuild.centerZ - 1.2);
+    const board = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.2, 1.6),
+      new THREE.MeshBasicMaterial({ map: tex, side: THREE.DoubleSide })
+    );
+    board.position.set(bGuild.centerX + 4.4, 2.2, bGuild.centerZ);
     board.rotation.y = -Math.PI / 2;
     board.userData = portalData;
     grp.add(board);
@@ -568,16 +643,20 @@ class EnglishSpaces3DWorld {
   }
 
   interagirComMestreMago() {
-    const msg = "Welcome, young apprentice! Play the English Chest games through the Purple Portal to earn DOVRYX (DRX). Use your DRX to build your house, buy vehicles, and master English!";
+    const msg = "Welcome, young apprentice! Step through the glowing Purple Portal to play the English Chest games and earn DOVRYX (DRX). Use your DRX to build your house, buy vehicles, and master English!";
+    const npcGuild = this.npcs3D.get('guild_bau');
+    if (npcGuild) {
+      this.mostrarBalaoNoBoneco(npcGuild, "🧙‍♂️ Enter the Purple Portal to earn DOVRYX (DRX)!", 6500);
+      this.animarEmote(npcGuild);
+    }
     this.falarTextoNPC(msg, 'guild_bau');
-    this.mostrarBalaoNoBoneco(this.localPlayer, "🧙‍♂️ Let's earn DOVRYX (DRX)!", 4500);
 
     document.getElementById('es-mage-dialog')?.remove();
     const html = `
       <div id="es-mage-dialog" style="position:fixed; inset:0; z-index:1000250; background:rgba(5,7,14,0.82); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
         <div style="background:linear-gradient(145deg,#1e1b4b,#0f172a); border:2px solid #a855f7; border-radius:24px; padding:26px; max-width:440px; width:100%; text-align:center; color:#fff; box-shadow:0 25px 70px rgba(0,0,0,0.75);">
-          <img src="/assets/mago_bau_ingles.png" alt="Master Wizard" style="width:110px; height:110px; object-fit:contain; margin:0 auto 10px; display:block; filter:drop-shadow(0 8px 16px rgba(168,85,247,0.5));" onerror="this.style.display='none'" />
-          <h2 style="margin:0 0 8px; color:#fde047; font-size:21px;">🧙‍♂️ Master of the Guild</h2>
+          <div style="width:84px; height:84px; border-radius:50%; background:radial-gradient(circle, rgba(168,85,247,0.35), rgba(30,27,75,0.9)); border:2px solid #facc15; display:flex; align-items:center; justify-content:center; font-size:46px; margin:0 auto 12px; box-shadow:0 0 25px rgba(168,85,247,0.5);">🧙‍♂️</div>
+          <h2 style="margin:0 0 8px; color:#fde047; font-size:21px;">Master Wizard of the Guild</h2>
           <p style="color:#e2e8f0; font-size:14px; line-height:1.55; margin:0 0 18px;">
             "${msg}"
           </p>
@@ -585,8 +664,8 @@ class EnglishSpaces3DWorld {
             💎 Your Wallet: <b>${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</b>
           </div>
           <div style="display:flex; gap:10px;">
-            <button id="es-mage-close" style="flex:1; padding:12px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Stay Here</button>
-            <button id="es-mage-enter-portal" style="flex:1.5; padding:12px; background:linear-gradient(135deg,#8b5cf6,#d946ef); color:#fff; border:none; border-radius:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 20px rgba(139,92,246,0.4);">🌀 Enter Game Room →</button>
+            <button id="es-mage-close" style="flex:1; padding:12px; background:#1e293b; color:#cbd5e1; border:none; border-radius:12px; font-weight:700; cursor:pointer;">Stay in Guild</button>
+            <button id="es-mage-enter-portal" style="flex:1.5; padding:12px; background:linear-gradient(135deg,#8b5cf6,#d946ef); color:#fff; border:none; border-radius:12px; font-weight:900; cursor:pointer; box-shadow:0 8px 20px rgba(139,92,246,0.4);">🌀 Enter Game Portal →</button>
           </div>
         </div>
       </div>
