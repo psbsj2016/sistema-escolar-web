@@ -965,6 +965,173 @@ class EnglishSpaces3DWorld {
       mR.position.set(5.6, 0.05, zPos);
       this.exteriorGroup.add(mL, mR);
     });
+       // 🚴 CICLISTAS E BICICLETAS NA CICLOVIA
+this.cyclists = [];
+
+const coresBicicletas = [0x10b981, 0x2563eb, 0xdc2626, 0xfacc15];
+const coresCamisetas = [0x1e3a8a, 0x7c3aed, 0x166534, 0xb45309];
+
+for (let i = 0; i < 4; i++) {
+  const cyclist = new THREE.Group();
+
+  const bikeMat = new THREE.MeshStandardMaterial({
+    color: coresBicicletas[i],
+    metalness: 0.45,
+    roughness: 0.35
+  });
+
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x171717,
+    roughness: 0.95
+  });
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0xb8c2cc,
+    metalness: 0.8,
+    roughness: 0.25
+  });
+
+  const riderMat = new THREE.MeshStandardMaterial({
+    color: coresCamisetas[i],
+    roughness: 0.8
+  });
+
+  // Rodas
+  const wheels = [];
+
+  [-0.68, 0.68].forEach(z => {
+    const wheel = new THREE.Group();
+
+    const tire = new THREE.Mesh(
+      new THREE.TorusGeometry(0.29, 0.055, 10, 20),
+      tireMat
+    );
+    tire.rotation.y = Math.PI / 2;
+    wheel.add(tire);
+
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.21, 0.018, 8, 18),
+      metalMat
+    );
+    rim.rotation.y = Math.PI / 2;
+    wheel.add(rim);
+
+    const axle = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.035, 0.035, 0.2, 10),
+      metalMat
+    );
+    axle.rotation.z = Math.PI / 2;
+    wheel.add(axle);
+
+    wheel.position.set(0, 0.35, z);
+    cyclist.add(wheel);
+    wheels.push(wheel);
+  });
+
+  // Quadro da bicicleta
+  const criarBarra = (a, b, raio = 0.035) => {
+    const start = new THREE.Vector3(...a);
+    const end = new THREE.Vector3(...b);
+    const direction = new THREE.Vector3().subVectors(end, start);
+
+    const bar = new THREE.Mesh(
+      new THREE.CylinderGeometry(raio, raio, direction.length(), 8),
+      bikeMat
+    );
+
+    bar.position.copy(start).add(end).multiplyScalar(0.5);
+    bar.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direction.normalize()
+    );
+
+    cyclist.add(bar);
+  };
+
+  criarBarra([0, 0.35, -0.68], [0, 0.85, 0.05]);
+  criarBarra([0, 0.85, 0.05], [0, 0.35, 0.68]);
+  criarBarra([0, 0.35, 0.68], [0, 0.35, -0.68]);
+  criarBarra([0, 0.85, 0.05], [0, 0.88, 0.68]);
+
+  // Selim e guidão
+  const seat = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.07, 0.3),
+    tireMat
+  );
+  seat.position.set(0, 0.94, -0.18);
+  cyclist.add(seat);
+
+  const handle = new THREE.Mesh(
+    new THREE.BoxGeometry(0.65, 0.045, 0.045),
+    metalMat
+  );
+  handle.position.set(0, 0.94, 0.75);
+  cyclist.add(handle);
+
+  // Pedais
+  const pedal = new THREE.Mesh(
+    new THREE.BoxGeometry(0.48, 0.045, 0.08),
+    tireMat
+  );
+  pedal.position.set(0, 0.35, 0);
+  cyclist.add(pedal);
+
+  // Corpo do ciclista
+  const torso = new THREE.Mesh(
+    new THREE.CapsuleGeometry(0.19, 0.42, 5, 10),
+    riderMat
+  );
+  torso.position.set(0, 1.35, -0.12);
+  torso.rotation.x = -0.25;
+  cyclist.add(torso);
+
+  // Cabeça
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.15, 14, 12),
+    new THREE.MeshStandardMaterial({ color: 0xd9a17c })
+  );
+  head.position.set(0, 1.72, 0.16);
+  cyclist.add(head);
+
+  // Capacete
+  const helmet = new THREE.Mesh(
+    new THREE.SphereGeometry(0.18, 16, 14),
+    new THREE.MeshStandardMaterial({
+      color: coresBicicletas[i],
+      roughness: 0.3,
+      metalness: 0.2
+    })
+  );
+  helmet.position.set(0, 1.82, 0.16);
+  cyclist.add(helmet);
+
+  // Braços até o guidão
+  [-1, 1].forEach(side => {
+    const arm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.055, 0.48, 8),
+      riderMat
+    );
+    arm.position.set(side * 0.19, 1.23, 0.37);
+    arm.rotation.x = -0.85;
+    arm.rotation.z = side * -0.2;
+    cyclist.add(arm);
+  });
+
+  const dir = i % 2 === 0 ? -1 : 1;
+  const lane = i % 2 === 0 ? -5.6 : 5.6;
+
+  cyclist.position.set(lane, 0, -70 + i * 38);
+  cyclist.rotation.y = dir === 1 ? 0 : Math.PI;
+
+  cyclist.userData = {
+    dir,
+    speed: 3.2 + Math.random() * 1.2,
+    wheels
+  };
+
+  this.exteriorGroup.add(cyclist);
+  this.cyclists.push(cyclist);
+}
   }
 
   criarQuebraMolasESinalizacao() {
@@ -1348,10 +1515,173 @@ const greenMat = new THREE.MeshStandardMaterial({
     if (this.vehicleMesh) this.scene.remove(this.vehicleMesh);
     const THREE = window.THREE;
     const vm = new THREE.Group();
-    if (escolhido === 'bicycle') {
-      const frame = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.55, 1.35), new THREE.MeshStandardMaterial({ color: 0x10b981 }));
-      frame.position.set(0, 0.35, 0); vm.add(frame);
-    } else if (escolhido === 'moto') {
+    
+if (escolhido === 'bicycle') {
+  // Materiais da bicicleta
+  const frameMat = new THREE.MeshStandardMaterial({
+    color: 0x10b981,
+    metalness: 0.65,
+    roughness: 0.3
+  });
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0xbfc7d1,
+    metalness: 0.85,
+    roughness: 0.22
+  });
+
+  const rubberMat = new THREE.MeshStandardMaterial({
+    color: 0x171717,
+    roughness: 0.95
+  });
+
+  const seatMat = new THREE.MeshStandardMaterial({
+    color: 0x202020,
+    roughness: 0.8
+  });
+
+  // Criador de tubos metálicos
+  const criarTubo = (a, b, raio, material) => {
+    const inicio = new THREE.Vector3(...a);
+    const fim = new THREE.Vector3(...b);
+    const direcao = new THREE.Vector3().subVectors(fim, inicio);
+
+    const tubo = new THREE.Mesh(
+      new THREE.CylinderGeometry(
+        raio, raio, direcao.length(), 10
+      ),
+      material
+    );
+
+    tubo.position.copy(inicio).add(fim).multiplyScalar(0.5);
+    tubo.quaternion.setFromUnitVectors(
+      new THREE.Vector3(0, 1, 0),
+      direcao.normalize()
+    );
+
+    vm.add(tubo);
+  };
+
+  // Rodas completas
+  [-0.62, 0.62].forEach(z => {
+    const wheel = new THREE.Group();
+
+    const tire = new THREE.Mesh(
+      new THREE.TorusGeometry(0.34, 0.055, 12, 32),
+      rubberMat
+    );
+    tire.rotation.y = Math.PI / 2;
+    wheel.add(tire);
+
+    const rim = new THREE.Mesh(
+      new THREE.TorusGeometry(0.275, 0.015, 8, 32),
+      metalMat
+    );
+    rim.rotation.y = Math.PI / 2;
+    wheel.add(rim);
+
+    // Raios
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const y = Math.cos(angle) * 0.27;
+      const zOffset = Math.sin(angle) * 0.27;
+
+      criarTubo(
+        [0, 0, 0],
+        [0, y, zOffset],
+        0.008,
+        metalMat
+      );
+    }
+
+    const cubo = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.16, 12),
+      metalMat
+    );
+    cubo.rotation.z = Math.PI / 2;
+    wheel.add(cubo);
+
+    wheel.position.set(0, 0.39, z);
+    vm.add(wheel);
+  });
+
+  // Quadro triangular
+  criarTubo([0, 0.39, -0.62], [0, 0.92, 0], 0.035, frameMat);
+  criarTubo([0, 0.92, 0], [0, 0.39, 0.62], 0.035, frameMat);
+  criarTubo([0, 0.39, 0.62], [0, 0.39, -0.62], 0.035, frameMat);
+  criarTubo([0, 0.92, 0], [0, 1.02, 0.48], 0.035, frameMat);
+  criarTubo([0, 0.39, -0.62], [0, 0.39, 0], 0.025, metalMat);
+
+  // Garfo dianteiro
+  criarTubo([0, 0.39, 0.62], [0, 0.92, 0.62], 0.028, metalMat);
+
+  // Guidão
+  criarTubo([0, 0.92, 0.48], [0, 1.04, 0.48], 0.035, metalMat);
+  criarTubo([-0.28, 1.04, 0.48], [0.28, 1.04, 0.48], 0.035, metalMat);
+
+  // Manoplas
+  [-1, 1].forEach(side => {
+    const grip = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.045, 0.045, 0.13, 10),
+      rubberMat
+    );
+    grip.rotation.z = Math.PI / 2;
+    grip.position.set(side * 0.3, 1.04, 0.48);
+    vm.add(grip);
+  });
+
+  // Selim e suporte
+  criarTubo([0, 0.92, 0], [0, 1.12, -0.12], 0.025, metalMat);
+
+  const seat = new THREE.Mesh(
+    new THREE.BoxGeometry(0.22, 0.07, 0.34),
+    seatMat
+  );
+  seat.position.set(0, 1.15, -0.15);
+  vm.add(seat);
+
+  // Pedivela e pedais
+  const crank = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.045, 0.045, 0.2, 12),
+    metalMat
+  );
+  crank.rotation.z = Math.PI / 2;
+  crank.position.set(0, 0.39, 0);
+  vm.add(crank);
+
+  const pedal = new THREE.Mesh(
+    new THREE.BoxGeometry(0.12, 0.045, 0.22),
+    rubberMat
+  );
+  pedal.position.set(0.13, 0.39, 0.13);
+  vm.add(pedal);
+
+  // Farol dianteiro
+  const light = new THREE.Mesh(
+    new THREE.SphereGeometry(0.07, 12, 10),
+    new THREE.MeshStandardMaterial({
+      color: 0xfff1a8,
+      emissive: 0xffd45c,
+      emissiveIntensity: 0.7
+    })
+  );
+  light.position.set(0, 0.98, 0.7);
+  vm.add(light);
+
+  // Refletor traseiro
+  const rearLight = new THREE.Mesh(
+    new THREE.BoxGeometry(0.08, 0.07, 0.06),
+    new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0xdc2626,
+      emissiveIntensity: 0.5
+    })
+  );
+  rearLight.position.set(0, 0.95, -0.68);
+  vm.add(rearLight);
+
+} else if (escolhido === 'moto') {
+
       const body = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.55, 1.75), new THREE.MeshStandardMaterial({ color: 0xef4444 }));
       body.position.set(0, 0.4, 0); vm.add(body);
     } else {
@@ -4332,6 +4662,22 @@ this.motos.forEach(moto => {
         moto.userData.dir * moto.userData.speed * delta / 0.32;
     });
   }
+});
+
+  // Movimento dos ciclistas na ciclovia
+this.cyclists?.forEach(cyclist => {
+  if (this.modoInterior) return;
+
+  cyclist.position.z +=
+    cyclist.userData.dir * cyclist.userData.speed * delta;
+
+  if (cyclist.position.z > 18) cyclist.position.z = -90;
+  if (cyclist.position.z < -90) cyclist.position.z = 18;
+
+  cyclist.userData.wheels.forEach(wheel => {
+    wheel.rotation.x -=
+      cyclist.userData.dir * cyclist.userData.speed * delta / 0.29;
+  });
 });
 
       this.pedestrians.forEach(ped => {
