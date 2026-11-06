@@ -988,6 +988,147 @@ class EnglishSpaces3DWorld {
       this.speedBumps.push({ mesh: bumpGroup, z: zPos, x: 0, triggered: 0 });
     });
 
+  // Faixas de pedestres - pintura horizontal realista
+const crosswalkMat = new THREE.MeshStandardMaterial({
+  color: 0xf5f5ed,
+  roughness: 0.88,
+  metalness: 0
+});
+
+[-56, -24].forEach(zPos => {
+  for (let x = -5.1; x <= 5.1; x += 1.0) {
+    const stripe = new THREE.Mesh(
+      new THREE.BoxGeometry(0.62, 0.025, 1.45),
+      crosswalkMat
+    );
+
+    stripe.position.set(x, 0.025, zPos);
+    stripe.receiveShadow = true;
+
+    this.exteriorGroup.add(stripe);
+  }
+});
+
+// Piso tátil de acessibilidade nas faixas de pedestres
+const tactileBaseMat = new THREE.MeshStandardMaterial({
+  color: 0xfacc15,
+  roughness: 0.82,
+  metalness: 0.02
+});
+
+const tactileDotMat = new THREE.MeshStandardMaterial({
+  color: 0xffd84a,
+  roughness: 0.72,
+  metalness: 0.01
+});
+
+[-56, -24].forEach(zCross => {
+  [-1, 1].forEach(side => {
+    const tactileGroup = new THREE.Group();
+
+    // Placa de piso tátil
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(1.3, 0.025, 1.0),
+      tactileBaseMat
+    );
+
+    base.position.y = 0.095;
+    base.receiveShadow = true;
+    tactileGroup.add(base);
+
+    // Relevos táteis
+    for (let x = -2; x <= 2; x++) {
+      for (let z = -1; z <= 1; z++) {
+        const dot = new THREE.Mesh(
+          new THREE.SphereGeometry(0.045, 10, 8),
+          tactileDotMat
+        );
+
+        dot.scale.y = 0.45;
+        dot.position.set(x * 0.22, 0.13, z * 0.25);
+        dot.castShadow = true;
+
+        tactileGroup.add(dot);
+      }
+    }
+
+    tactileGroup.position.set(side * 7.45, 0, zCross);
+    this.exteriorGroup.add(tactileGroup);
+  });
+});
+
+ // Semáforos urbanos nos cruzamentos
+const signalPoleMat = new THREE.MeshStandardMaterial({
+  color: 0x343a40,
+  metalness: 0.72,
+  roughness: 0.38
+});
+
+const signalBodyMat = new THREE.MeshStandardMaterial({
+  color: 0x20262b,
+  metalness: 0.35,
+  roughness: 0.55
+});
+
+const redMat = new THREE.MeshStandardMaterial({
+  color: 0x7f1d1d,
+  emissive: 0xff0000,
+  emissiveIntensity: 0.8
+});
+
+const yellowMat = new THREE.MeshStandardMaterial({
+  color: 0x78350f,
+  emissive: 0xffaa00,
+  emissiveIntensity: 0.12
+});
+
+const greenMat = new THREE.MeshStandardMaterial({
+  color: 0x14532d,
+  emissive: 0x00ff55,
+  emissiveIntensity: 0.12
+});
+
+[-56, -24].forEach((zPos, index) => {
+  [-1, 1].forEach(side => {
+    const signal = new THREE.Group();
+
+    const pole = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.07, 0.09, 3.5, 10),
+      signalPoleMat
+    );
+    pole.position.y = 1.75;
+    signal.add(pole);
+
+    const housing = new THREE.Mesh(
+      new THREE.BoxGeometry(0.48, 1.18, 0.42),
+      signalBodyMat
+    );
+    housing.position.set(-side * 0.22, 3.05, 0);
+    signal.add(housing);
+
+    [3.4, 3.05, 2.7].forEach((y, i) => {
+      const lens = new THREE.Mesh(
+        new THREE.SphereGeometry(0.125, 12, 10),
+        [redMat, yellowMat, greenMat][i]
+      );
+
+      lens.position.set(-side * 0.47, y, 0);
+      signal.add(lens);
+    });
+
+    signal.position.set(side * 6.1, 0, zPos);
+    signal.rotation.y = side === 1 ? 0 : Math.PI;
+
+    signal.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+      }
+    });
+
+    this.exteriorGroup.add(signal);
+  });
+});
+
     const placas = [
       { pos: [-7.2, -72], tipo: 'STOP',  texto: 'STOP' },
       { pos: [ 7.2, -40], tipo: 'YIELD', texto: 'YIELD' },
@@ -1325,6 +1466,26 @@ class EnglishSpaces3DWorld {
     group.add(leftArm, rightArm);
 
     const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
+    // Pescoço com acabamento anatômico
+const neck = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.105, 0.12, 0.28, 16),
+  matPele
+);
+neck.position.set(0, -0.27, 0.015);
+headGroup.add(neck);
+
+// Orelhas tridimensionais
+const earGeo = new THREE.SphereGeometry(0.065, 14, 12);
+const leftEar = new THREE.Mesh(earGeo, matPele);
+const rightEar = new THREE.Mesh(earGeo, matPele);
+
+leftEar.position.set(-0.255, 0, 0.015);
+rightEar.position.set(0.255, 0, 0.015);
+
+leftEar.scale.set(0.65, 1.1, 0.65);
+rightEar.scale.set(0.65, 1.1, 0.65);
+
+headGroup.add(leftEar, rightEar);
     const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
     const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1, 1.2, 1.5);
     const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
