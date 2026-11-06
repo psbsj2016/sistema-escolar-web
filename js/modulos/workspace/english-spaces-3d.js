@@ -1746,7 +1746,9 @@ if (escolhido === 'bicycle') {
     const shoulderW = isFemale ? 0.24 : 0.34;
     const hipW = isFemale ? 0.50 : 0.48;
 
-    const footGeo = new THREE.BoxGeometry(0.2, 0.14, 0.3);
+    // Pés arredondados com formato anatômico
+const footGeo = new THREE.SphereGeometry(0.13, 18, 14);
+footGeo.scale(0.82, 0.58, 1.35);
     const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
     const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.13, 0.07, 0.05);
     group.add(leftFoot, rightFoot);
@@ -1780,6 +1782,48 @@ if (escolhido === 'bicycle') {
     const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.62, 0);
     const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.62, 0);
     group.add(leftArm, rightArm);
+
+ // ✋ MÃOS HUMANIZADAS COM DEDOS
+const criarMao = (braco) => {
+  const mao = new THREE.Group();
+
+  const palma = new THREE.Mesh(
+    new THREE.SphereGeometry(0.105, 16, 14),
+    matPele
+  );
+  palma.scale.set(0.88, 1.12, 0.62);
+  mao.add(palma);
+
+  // Quatro dedos arredondados
+  for (let i = 0; i < 4; i++) {
+    const dedo = new THREE.Mesh(
+      new THREE.SphereGeometry(0.032, 10, 10),
+      matPele
+    );
+
+    dedo.scale.set(0.85, 1.7, 0.85);
+    dedo.position.set(-0.065 + i * 0.043, -0.105, 0.015);
+    mao.add(dedo);
+  }
+
+  // Polegar
+  const polegar = new THREE.Mesh(
+    new THREE.SphereGeometry(0.04, 12, 12),
+    matPele
+  );
+  polegar.scale.set(0.8, 1.5, 0.9);
+  polegar.position.set(0.105, -0.005, 0.025);
+  polegar.rotation.z = -0.55;
+  mao.add(polegar);
+
+  mao.position.set(0, -0.62, 0);
+  braco.add(mao);
+
+  return mao;
+};
+
+const leftHand = criarMao(leftArm);
+const rightHand = criarMao(rightArm);
 
     const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
     // Pescoço com acabamento anatômico
