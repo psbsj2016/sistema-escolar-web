@@ -2908,6 +2908,8 @@ for (let z = -119.5; z < 48; z += 3.2) {
   criarTransitoInteligente() {
     const THREE = window.THREE;
     this.cars = [];
+    // Motocicletas do trânsito urbano
+ this.motos = [];
     const carModels = [
       { body: 0xef4444, type: 'sedan' },
       { body: 0x3b82f6, type: 'suv' },
@@ -2924,6 +2926,88 @@ for (let z = -119.5; z < 48; z += 3.2) {
       cabin.position.set(0, 1.1, -0.1);
       carGroup.add(body, cabin);
 
+  // Rodas realistas com pneus e aros
+const tireMat = new THREE.MeshStandardMaterial({
+  color: 0x171717,
+  roughness: 0.92
+});
+
+const rimMat = new THREE.MeshStandardMaterial({
+  color: 0xcbd5e1,
+  metalness: 0.8,
+  roughness: 0.25
+});
+
+[-1.25, 1.25].forEach(z => {
+  [-0.9, 0.9].forEach(x => {
+    const tire = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.34, 0.34, 0.18, 20),
+      tireMat
+    );
+    tire.rotation.z = Math.PI / 2;
+    tire.position.set(x, 0.36, z);
+    carGroup.add(tire);
+
+    const rim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.17, 0.17, 0.19, 16),
+      rimMat
+    );
+    rim.rotation.z = Math.PI / 2;
+    rim.position.set(x, 0.36, z);
+    carGroup.add(rim);
+  });
+});
+
+// Faróis dianteiros
+const headlightMat = new THREE.MeshStandardMaterial({
+  color: 0xfff7cc,
+  emissive: 0xffd76a,
+  emissiveIntensity: 0.7
+});
+
+[-0.58, 0.58].forEach(x => {
+  const light = new THREE.Mesh(
+    new THREE.BoxGeometry(0.38, 0.16, 0.07),
+    headlightMat
+  );
+  light.position.set(x, 0.67, -1.91);
+  carGroup.add(light);
+});
+
+// Lanternas traseiras
+const tailMat = new THREE.MeshStandardMaterial({
+  color: 0xef4444,
+  emissive: 0xdc2626,
+  emissiveIntensity: 0.45
+});
+
+[-0.58, 0.58].forEach(x => {
+  const tail = new THREE.Mesh(
+    new THREE.BoxGeometry(0.35, 0.15, 0.07),
+    tailMat
+  );
+  tail.position.set(x, 0.67, 1.91);
+  carGroup.add(tail);
+});
+
+// Motorista visível dentro do veículo
+const driver = new THREE.Group();
+
+const driverBody = new THREE.Mesh(
+  new THREE.BoxGeometry(0.38, 0.42, 0.28),
+  new THREE.MeshStandardMaterial({ color: 0x475569 })
+);
+driverBody.position.y = 0.88;
+
+const driverHead = new THREE.Mesh(
+  new THREE.SphereGeometry(0.16, 14, 14),
+  new THREE.MeshStandardMaterial({ color: 0xfde68a })
+);
+driverHead.position.set(0, 1.22, 0);
+
+driver.add(driverBody, driverHead);
+carGroup.add(driver);
+
       const lane = i % 2 === 0 ? 1.8 : -1.8;
       const dir = i % 2 === 0 ? -1 : 1;
       carGroup.position.set(lane, 0, -80 + i * 16);
@@ -2932,6 +3016,220 @@ for (let z = -119.5; z < 48; z += 3.2) {
       this.exteriorGroup.add(carGroup);
       this.cars.push(carGroup);
     }
+       // 🏍️ Motocicletas com pilotos e capacetes
+const motoColors = [0xdc2626, 0x2563eb, 0x111827, 0xfacc15];
+
+for (let i = 0; i < 4; i++) {
+  const moto = new THREE.Group();
+
+  const dir = i % 2 === 0 ? -1 : 1;
+  const lane = dir === -1 ? 3.3 : -3.3;
+
+  const tireMat = new THREE.MeshStandardMaterial({
+    color: 0x151515,
+    roughness: 0.95
+  });
+
+  const rimMat = new THREE.MeshStandardMaterial({
+    color: 0xb8c2cc,
+    metalness: 0.8,
+    roughness: 0.25
+  });
+
+  const bodyMat = new THREE.MeshStandardMaterial({
+    color: motoColors[i],
+    metalness: 0.35,
+    roughness: 0.3
+  });
+
+  const blackMat = new THREE.MeshStandardMaterial({
+    color: 0x171717,
+    roughness: 0.8
+  });
+
+  // Rodas
+  const rodas = [];
+
+  [-0.78, 0.78].forEach(z => {
+    const wheel = new THREE.Group();
+
+    const tire = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.32, 0.32, 0.17, 20),
+      tireMat
+    );
+
+    tire.rotation.z = Math.PI / 2;
+    wheel.add(tire);
+
+    const rim = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.17, 0.17, 0.19, 16),
+      rimMat
+    );
+
+    rim.rotation.z = Math.PI / 2;
+    wheel.add(rim);
+
+    wheel.position.set(0, 0.34, z);
+    moto.add(wheel);
+    rodas.push(wheel);
+  });
+
+  // Chassi e motor
+  const engine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.42, 0.42, 0.65),
+    blackMat
+  );
+  engine.position.set(0, 0.68, 0);
+  moto.add(engine);
+
+  const tank = new THREE.Mesh(
+    new THREE.SphereGeometry(0.31, 16, 14),
+    bodyMat
+  );
+  tank.scale.set(0.9, 0.8, 1.35);
+  tank.position.set(0, 0.98, 0.08);
+  moto.add(tank);
+
+  const seat = new THREE.Mesh(
+    new THREE.BoxGeometry(0.48, 0.13, 0.75),
+    blackMat
+  );
+  seat.position.set(0, 1.03, -0.43);
+  moto.add(seat);
+
+  // Garfo dianteiro
+  const forkMat = new THREE.MeshStandardMaterial({
+    color: 0x9ca3af,
+    metalness: 0.85,
+    roughness: 0.25
+  });
+
+  const fork = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.045, 0.055, 0.85, 10),
+    forkMat
+  );
+  fork.position.set(0, 0.69, 0.65);
+  moto.add(fork);
+
+  // Guidão
+  const handle = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.035, 0.035, 0.85, 10),
+    rimMat
+  );
+  handle.rotation.z = Math.PI / 2;
+  handle.position.set(0, 1.25, 0.67);
+  moto.add(handle);
+
+  // Farol e lanterna
+  const headlight = new THREE.Mesh(
+    new THREE.SphereGeometry(0.12, 12, 12),
+    new THREE.MeshStandardMaterial({
+      color: 0xffffff,
+      emissive: 0xfff1b5,
+      emissiveIntensity: 0.8
+    })
+  );
+  headlight.position.set(0, 0.96, 0.82);
+  moto.add(headlight);
+
+  const taillight = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 0.1, 0.08),
+    new THREE.MeshStandardMaterial({
+      color: 0xef4444,
+      emissive: 0x7f1d1d,
+      emissiveIntensity: 0.5
+    })
+  );
+  taillight.position.set(0, 1.02, -0.83);
+  moto.add(taillight);
+
+  // Piloto
+  const rider = new THREE.Group();
+
+  const jacket = new THREE.Mesh(
+    new THREE.BoxGeometry(0.48, 0.62, 0.34),
+    new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      roughness: 0.85
+    })
+  );
+  jacket.position.set(0, 1.43, -0.12);
+  rider.add(jacket);
+
+  const pants = new THREE.Mesh(
+    new THREE.BoxGeometry(0.42, 0.36, 0.3),
+    blackMat
+  );
+  pants.position.set(0, 1.13, -0.48);
+  rider.add(pants);
+
+  // Braços direcionados ao guidão
+  [-1, 1].forEach(side => {
+    const arm = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.065, 0.075, 0.53, 10),
+      jacket.material
+    );
+
+    arm.rotation.x = Math.PI / 2;
+    arm.rotation.z = side * -0.12;
+    arm.position.set(side * 0.2, 1.48, 0.24);
+    rider.add(arm);
+
+    const glove = new THREE.Mesh(
+      new THREE.SphereGeometry(0.075, 10, 10),
+      blackMat
+    );
+    glove.position.set(side * 0.39, 1.25, 0.63);
+    rider.add(glove);
+  });
+
+  // Cabeça e capacete
+  const head = new THREE.Mesh(
+    new THREE.SphereGeometry(0.19, 16, 14),
+    new THREE.MeshStandardMaterial({ color: 0xd9a17c })
+  );
+  head.position.set(0, 1.87, 0.02);
+  rider.add(head);
+
+  const helmet = new THREE.Mesh(
+    new THREE.SphereGeometry(0.235, 18, 16),
+    new THREE.MeshStandardMaterial({
+      color: motoColors[i],
+      metalness: 0.35,
+      roughness: 0.25
+    })
+  );
+  helmet.scale.set(1, 1.05, 1.05);
+  helmet.position.set(0, 1.98, 0.02);
+  rider.add(helmet);
+
+  const visor = new THREE.Mesh(
+    new THREE.BoxGeometry(0.3, 0.1, 0.035),
+    new THREE.MeshStandardMaterial({
+      color: 0x172554,
+      metalness: 0.6,
+      roughness: 0.15
+    })
+  );
+  visor.position.set(0, 1.96, 0.225);
+  rider.add(visor);
+
+  moto.add(rider);
+
+  moto.position.set(lane, 0, -72 + i * 34);
+  moto.rotation.y = dir === 1 ? 0 : Math.PI;
+
+  moto.userData = {
+    lane,
+    dir,
+    speed: 6.2 + Math.random() * 1.5,
+    stopped: false,
+    rodas
+  };
+
+  this.exteriorGroup.add(moto);
+  this.motos.push(moto);
+}
   }
 
   criarPedestres() {
@@ -4008,6 +4306,33 @@ this.scene.add(facadeHeader);
           if (car.position.z < -90) car.position.z = 18;
         }
       });
+
+  // Movimento automático das motocicletas
+this.motos.forEach(moto => {
+  const distToPlayer = Math.hypot(
+    moto.position.x - p.x,
+    moto.position.z - p.z
+  );
+
+  const playerOnRoad =
+    Math.abs(p.x - moto.position.x) < 2.2 &&
+    Math.abs(moto.position.z - p.z) < 4.5;
+
+  moto.userData.stopped = playerOnRoad && distToPlayer < 4.5;
+
+  if (!moto.userData.stopped && !this.modoInterior) {
+    moto.position.z +=
+      moto.userData.dir * moto.userData.speed * delta;
+
+    if (moto.position.z > 18) moto.position.z = -90;
+    if (moto.position.z < -90) moto.position.z = 18;
+
+    moto.userData.rodas.forEach(wheel => {
+      wheel.rotation.x -=
+        moto.userData.dir * moto.userData.speed * delta / 0.32;
+    });
+  }
+});
 
       this.pedestrians.forEach(ped => {
         if (this.modoInterior) return;
