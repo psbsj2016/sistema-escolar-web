@@ -2034,25 +2034,108 @@ class EnglishSpaces3DWorld {
   }
 
   gerarTexturaParalelepipedo() {
-    const THREE = window.THREE;
-    const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 512;
-    const ctx = canvas.getContext('2d');
-    ctx.fillStyle = '#2a2f3a'; ctx.fillRect(0, 0, 512, 512);
-    const cores = ['#94a3b8', '#9aa8bd', '#a1b0c5', '#b0becf', '#c2d0e2', '#cbd5e1'];
-    const blockW = 64, blockH = 32;
-    for (let y = 0; y < 512; y += blockH) {
-      const offset = (Math.floor(y / blockH) % 2 === 0) ? 0 : blockW / 2;
-      for (let x = -blockW; x < 512 + blockW; x += blockW) {
-        ctx.fillStyle = cores[Math.floor(Math.random() * cores.length)];
-        const px = x + offset + 2; const py = y + 2;
-        ctx.fillRect(px, py, blockW - 4, blockH - 4);
+  const THREE = window.THREE;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext('2d');
+
+  // Base escura dos rejuntes
+  ctx.fillStyle = '#343b40';
+  ctx.fillRect(0, 0, 512, 512);
+
+  const cores = [
+    '#a7aaa5',
+    '#b8b9b2',
+    '#999f9d',
+    '#c2c1b8',
+    '#8f9795',
+    '#adb2ac',
+    '#c8c5bb'
+  ];
+
+  const blockW = 64;
+  const blockH = 32;
+
+  for (let y = 0; y < 512; y += blockH) {
+    const offset =
+      Math.floor(y / blockH) % 2 === 0
+        ? 0
+        : blockW / 2;
+
+    for (
+      let x = -blockW;
+      x < 512 + blockW;
+      x += blockW
+    ) {
+      const px = x + offset + 2;
+      const py = y + 2;
+
+      const cor =
+        cores[Math.floor(Math.random() * cores.length)];
+
+      ctx.fillStyle = cor;
+
+      // Pedra principal
+      ctx.fillRect(
+        px,
+        py,
+        blockW - 4,
+        blockH - 4
+      );
+
+      // Variação de iluminação na superfície
+      const gradient = ctx.createLinearGradient(
+        px,
+        py,
+        px,
+        py + blockH
+      );
+
+      gradient.addColorStop(
+        0,
+        'rgba(255,255,255,0.12)'
+      );
+
+      gradient.addColorStop(
+        1,
+        'rgba(0,0,0,0.16)'
+      );
+
+      ctx.fillStyle = gradient;
+
+      ctx.fillRect(
+        px,
+        py,
+        blockW - 4,
+        blockH - 4
+      );
+
+      // Pequenas marcas naturais
+      for (let i = 0; i < 5; i++) {
+        ctx.fillStyle = 'rgba(40,45,45,0.07)';
+
+        ctx.fillRect(
+          px + Math.random() * (blockW - 10),
+          py + Math.random() * (blockH - 8),
+          2 + Math.random() * 5,
+          1 + Math.random() * 2
+        );
       }
     }
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.wrapS = THREE.RepeatWrapping; tex.wrapT = THREE.RepeatWrapping;
-    tex.repeat.set(1, 18); tex.anisotropy = 4;
-    return tex;
   }
+
+  const tex = new THREE.CanvasTexture(canvas);
+
+  tex.wrapS = THREE.RepeatWrapping;
+  tex.wrapT = THREE.RepeatWrapping;
+  tex.repeat.set(1, 18);
+  tex.anisotropy = 8;
+
+  return tex;
+}
 
 criarAvenidaRealista() {
     const THREE = window.THREE;
