@@ -1502,12 +1502,44 @@ headGroup.add(leftEar, rightEar);
       hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.07, 0);
     }
 
-    const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 10, 10);
-    const eyePupilGeo = new THREE.SphereGeometry(0.022, 8, 8);
-    const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); leftEyeWhite.position.set(-0.09, 0.06, 0.22);
-    const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); leftEyePupil.position.set(-0.09, 0.06, 0.255);
-    const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho); rightEyeWhite.position.set(0.09, 0.06, 0.22);
-    const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho); rightEyePupil.position.set(0.09, 0.06, 0.255);
+   // Olhos com íris, pupilas e reflexos
+const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 14, 14);
+const eyeIrisGeo = new THREE.SphereGeometry(0.031, 14, 14);
+const eyePupilGeo = new THREE.SphereGeometry(0.015, 12, 12);
+const eyeGlintGeo = new THREE.SphereGeometry(0.006, 8, 8);
+
+const matIris = new THREE.MeshStandardMaterial({
+  color: 0x704323,
+  roughness: 0.38
+});
+
+const matGlint = new THREE.MeshBasicMaterial({
+  color: 0xffffff
+});
+
+const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho);
+leftEyeWhite.position.set(-0.09, 0.06, 0.22);
+
+const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho);
+rightEyeWhite.position.set(0.09, 0.06, 0.22);
+
+const leftIris = new THREE.Mesh(eyeIrisGeo, matIris);
+leftIris.position.set(-0.09, 0.06, 0.267);
+
+const rightIris = new THREE.Mesh(eyeIrisGeo, matIris);
+rightIris.position.set(0.09, 0.06, 0.267);
+
+const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho);
+leftEyePupil.position.set(-0.09, 0.06, 0.291);
+
+const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho);
+rightEyePupil.position.set(0.09, 0.06, 0.291);
+
+const leftGlint = new THREE.Mesh(eyeGlintGeo, matGlint);
+leftGlint.position.set(-0.098, 0.071, 0.304);
+
+const rightGlint = new THREE.Mesh(eyeGlintGeo, matGlint);
+rightGlint.position.set(0.082, 0.071, 0.304);
 
     const browGeo = new THREE.BoxGeometry(0.09, 0.015, 0.01);
     const leftBrow = new THREE.Mesh(browGeo, matSobrancelha); leftBrow.position.set(-0.09, 0.12, 0.235);
@@ -1515,7 +1547,22 @@ headGroup.add(leftEar, rightEar);
     const mouthMesh = new THREE.Mesh(new THREE.BoxGeometry(isFemale ? 0.075 : 0.06, 0.02, 0.01), matBoca);
     mouthMesh.position.set(0, -0.11, 0.25);
 
-    headGroup.add(headMesh, hairMesh, noseMesh, leftEyeWhite, leftEyePupil, rightEyeWhite, rightEyePupil, leftBrow, rightBrow, mouthMesh);
+    headGroup.add(
+  headMesh,
+  hairMesh,
+  noseMesh,
+  leftEyeWhite,
+  rightEyeWhite,
+  leftIris,
+  rightIris,
+  leftEyePupil,
+  rightEyePupil,
+  leftGlint,
+  rightGlint,
+  leftBrow,
+  rightBrow,
+  mouthMesh
+);
     group.add(headGroup);
 
     const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
