@@ -2137,6 +2137,44 @@ class EnglishSpaces3DWorld {
   return tex;
 }
 
+gerarTexturaAsfalto() {
+  const THREE = window.THREE;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = 512;
+  canvas.height = 512;
+
+  const ctx = canvas.getContext('2d');
+
+  ctx.fillStyle = '#34383b';
+  ctx.fillRect(0, 0, 512, 512);
+
+  for (let i = 0; i < 18000; i++) {
+    const shade = 35 + Math.random() * 55;
+    const alpha = 0.08 + Math.random() * 0.18;
+
+    ctx.fillStyle = `rgba(${shade},${shade},${shade},${alpha})`;
+
+    const size = 1 + Math.random() * 2;
+
+    ctx.fillRect(
+      Math.random() * 512,
+      Math.random() * 512,
+      size,
+      size
+    );
+  }
+
+  const texture = new THREE.CanvasTexture(canvas);
+
+  texture.wrapS = THREE.RepeatWrapping;
+  texture.wrapT = THREE.RepeatWrapping;
+  texture.repeat.set(2, 8);
+  texture.anisotropy = 8;
+
+  return texture;
+}
+
 criarAvenidaRealista() {
     const THREE = window.THREE;
     const paralelepipedoTex = this.gerarTexturaParalelepipedo();
@@ -2166,7 +2204,12 @@ criarAvenidaRealista() {
 
   criarSegundaAvenida() {
     const THREE = window.THREE;
-    const roadMat = new THREE.MeshLambertMaterial({ color: 0x1e293b });
+    const roadMat = new THREE.MeshStandardMaterial({
+  map: this.gerarTexturaAsfalto(),
+  color: 0x777777,
+  roughness: 0.96,
+  metalness: 0.02
+});
     const road2Left = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 160), roadMat);
     road2Left.rotation.x = -Math.PI / 2; road2Left.position.set(-34, 0.01, -36);
     const road2Right = new THREE.Mesh(new THREE.PlaneGeometry(8.5, 160), roadMat);
@@ -2896,7 +2939,20 @@ criarAvenidaRealista() {
     ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -35); ground.receiveShadow = true;
     this.exteriorGroup.add(ground);
 
-    const road = new THREE.Mesh(new THREE.PlaneGeometry(13.2, 170), new THREE.MeshLambertMaterial({ color: 0x1e293b }));
+    const asphaltTexture = this.gerarTexturaAsfalto();
+
+const roadMaterial = new THREE.MeshStandardMaterial({
+  map: asphaltTexture,
+  color: 0x777777,
+  roughness: 0.96,
+  metalness: 0.02
+});
+
+const road = new THREE.Mesh(
+  new THREE.PlaneGeometry(13.2, 170),
+  roadMaterial
+);
+
     road.rotation.x = -Math.PI / 2; road.position.set(0, 0.01, -36);
     this.exteriorGroup.add(road);
 
