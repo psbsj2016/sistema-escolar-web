@@ -928,6 +928,10 @@ class EnglishSpaces3DWorld {
     const THREE = window.THREE;
     if (!THREE || !this.exteriorGroup) return;
 
+  
+    // Inicializa a lista de ciclistas da cidade
+    this.ciclistas = [];
+
     const bikeLaneMat = new THREE.MeshStandardMaterial({ color: 0x059669, roughness: 0.8 });
     [-5.6, 5.6].forEach(xLane => {
       const bikeLane = new THREE.Mesh(new THREE.PlaneGeometry(1.5, 170), bikeLaneMat);
@@ -965,7 +969,156 @@ class EnglishSpaces3DWorld {
       mR.position.set(5.6, 0.05, zPos);
       this.exteriorGroup.add(mL, mR);
     });
-       
+         
+  
+    // 🚴 BICICLETAS E CICLISTAS 3D NA CICLOVIA
+    const bikeFrameMat = new THREE.MeshStandardMaterial({
+      color: 0x334155,
+      metalness: 0.72,
+      roughness: 0.3
+    });
+
+    const tireMatBike = new THREE.MeshStandardMaterial({
+      color: 0x111827,
+      roughness: 0.9
+    });
+
+    const helmetColors = [0xef4444, 0x2563eb, 0xfacc15, 0x10b981];
+    const shirtColors = [0x2563eb, 0xdc2626, 0xf8fafc, 0x7c3aed];
+
+    const addTube = (group, a, b, radius, material) => {
+      const start = new THREE.Vector3(...a);
+      const end = new THREE.Vector3(...b);
+      const direction = new THREE.Vector3().subVectors(end, start);
+      const tube = new THREE.Mesh(
+        new THREE.CylinderGeometry(radius, radius, direction.length(), 8),
+        material
+      );
+
+      tube.position.copy(start).add(end).multiplyScalar(0.5);
+      tube.quaternion.setFromUnitVectors(
+        new THREE.Vector3(0, 1, 0),
+        direction.normalize()
+      );
+      group.add(tube);
+    };
+
+    [-5.6, 5.6].forEach((xLane, laneIndex) => {
+      for (let i = 0; i < 2; i++) {
+        const cyclist = new THREE.Group();
+        const wheels = [];
+
+        // Rodas com pneus e aros
+        [-0.62, 0.62].forEach(z => {
+          const wheel = new THREE.Mesh(
+            new THREE.TorusGeometry(0.32, 0.045, 10, 28),
+            tireMatBike
+          );
+          wheel.rotation.y = Math.PI / 2;
+          wheel.position.set(0, 0.34, z);
+          cyclist.add(wheel);
+          wheels.push(wheel);
+
+          const hub = new THREE.Mesh(
+            new THREE.CylinderGeometry(0.055, 0.055, 0.12, 12),
+            bikeFrameMat
+          );
+          hub.rotation.z = Math.PI / 2;
+          hub.position.set(0, 0.34, z);
+          cyclist.add(hub);
+        });
+
+        // Quadro da bicicleta
+        const rear = [0, 0.34, 0.62];
+        const front = [0, 0.34, -0.62];
+        const crank = [0, 0.34, 0.05];
+        const seat = [0, 0.78, 0.36];
+        const handle = [0, 0.78, -0.48];
+
+        addTube(cyclist, rear, crank, 0.035, bikeFrameMat);
+        addTube(cyclist, crank, front, 0.035, bikeFrameMat);
+        addTube(cyclist, rear, seat, 0.035, bikeFrameMat);
+        addTube(cyclist, seat, crank, 0.035, bikeFrameMat);
+        addTube(cyclist, seat, handle, 0.035, bikeFrameMat);
+        addTube(cyclist, handle, front, 0.035, bikeFrameMat);
+
+        // Selim e guidão
+        const saddle = new THREE.Mesh(
+          new THREE.BoxGeometry(0.22, 0.055, 0.28),
+          new THREE.MeshStandardMaterial({ color: 0x171717 })
+        );
+        saddle.position.set(0, 0.81, 0.36);
+        cyclist.add(saddle);
+
+        addTube(cyclist, handle, [0, 0.88, -0.48], 0.025, bikeFrameMat);
+
+        // Corpo do ciclista
+        const shirtMat = new THREE.MeshStandardMaterial({
+          color: shirtColors[laneIndex * 2 + i],
+          roughness: 0.75
+        });
+
+        const skinMat = new THREE.MeshStandardMaterial({
+          color: 0xd6a078,
+          roughness: 0.85
+        });
+
+        const torso = new THREE.Mesh(
+          new THREE.BoxGeometry(0.3, 0.42, 0.2),
+          shirtMat
+        );
+        torso.position.set(0, 1.12, 0.08);
+        torso.rotation.x = -0.28;
+        cyclist.add(torso);
+
+        const head = new THREE.Mesh(
+          new THREE.SphereGeometry(0.145, 16, 16),
+          skinMat
+        );
+        head.position.set(0, 1.48, -0.12);
+        cyclist.add(head);
+
+        // Capacete
+        const helmet = new THREE.Mesh(
+          new THREE.SphereGeometry(0.16, 16, 12),
+          new THREE.MeshStandardMaterial({
+            color: helmetColors[laneIndex * 2 + i],
+            roughness: 0.42
+          })
+        );
+        helmet.scale.set(1, 0.72, 1.05);
+        helmet.position.set(0, 1.57, -0.12);
+        cyclist.add(helmet);
+
+        // Braços apoiados no guidão
+        addTube(cyclist, [-0.13, 1.25, 0.02], [-0.13, 0.84, -0.43], 0.055, shirtMat);
+        addTube(cyclist, [0.13, 1.25, 0.02], [0.13, 0.84, -0.43], 0.055, shirtMat);
+
+        // Pernas
+        const pantsMat = new THREE.MeshStandardMaterial({ color: 0x1e293b });
+        addTube(cyclist, [-0.09, 0.96, 0.12], [-0.12, 0.48, -0.05], 0.065, pantsMat);
+        addTube(cyclist, [0.09, 0.96, 0.12], [0.12, 0.48, 0.18], 0.065, pantsMat);
+
+        // Posicionamento nas duas ciclovias
+        const dir = laneIndex === 0 ? 1 : -1;
+        cyclist.position.set(xLane, 0, -95 + i * 48);
+        cyclist.rotation.y = dir > 0 ? Math.PI : 0;
+
+        cyclist.userData.dir = dir;
+        cyclist.userData.speed = 4.2 + i * 0.5;
+        cyclist.userData.rodas = wheels;
+
+        this.exteriorGroup.add(cyclist);
+
+        this.ciclistas.push({
+          mesh: cyclist,
+          rodas: wheels,
+          dir,
+          speed: cyclist.userData.speed
+        });
+      }
+    });
+
   }
 
   criarQuebraMolasESinalizacao() {
