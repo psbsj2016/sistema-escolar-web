@@ -2182,11 +2182,224 @@ criarAvenidaRealista() {
     const leftSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 170), sidewalkMat); leftSidewalk.rotation.x = -Math.PI / 2; leftSidewalk.position.set(-8.8, 0.08, -36); leftSidewalk.receiveShadow = true;
     const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 170), sidewalkMat); rightSidewalk.rotation.x = -Math.PI / 2; rightSidewalk.position.set(8.8, 0.08, -36); rightSidewalk.receiveShadow = true;
     this.exteriorGroup.add(leftSidewalk, rightSidewalk);
+ 
+// Mobiliário urbano: bancos e lixeiras
+const benchWoodMat = new THREE.MeshStandardMaterial({
+  color: 0x795438,
+  roughness: 0.82
+});
 
-    const curbMat = new THREE.MeshStandardMaterial({ color: 0xe2e8f0, roughness: 0.7 });
-    const leftCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); leftCurb.position.set(-6.55, 0.11, -36);
-    const rightCurb = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.22, 170), curbMat); rightCurb.position.set(6.55, 0.11, -36);
-    this.exteriorGroup.add(leftCurb, rightCurb);
+const benchMetalMat = new THREE.MeshStandardMaterial({
+  color: 0x343b40,
+  metalness: 0.72,
+  roughness: 0.38
+});
+
+const binMat = new THREE.MeshStandardMaterial({
+  color: 0x46565a,
+  metalness: 0.55,
+  roughness: 0.48
+});
+
+for (let z = -82; z <= 14; z += 48) {
+  [-1, 1].forEach(side => {
+    const x = side * 7.65;
+
+    // Assento do banco
+    const seat = new THREE.Mesh(
+      new THREE.BoxGeometry(1.55, 0.13, 0.43),
+      benchWoodMat
+    );
+    seat.position.set(x, 0.65, z);
+    seat.castShadow = true;
+    this.exteriorGroup.add(seat);
+
+    // Encosto
+    const back = new THREE.Mesh(
+      new THREE.BoxGeometry(1.55, 0.48, 0.12),
+      benchWoodMat
+    );
+    back.position.set(x, 0.96, z - 0.17);
+    back.castShadow = true;
+    this.exteriorGroup.add(back);
+
+    // Pés metálicos
+    [-0.58, 0.58].forEach(offset => {
+      const leg = new THREE.Mesh(
+        new THREE.BoxGeometry(0.09, 0.62, 0.12),
+        benchMetalMat
+      );
+      leg.position.set(x + offset, 0.36, z);
+      this.exteriorGroup.add(leg);
+    });
+
+    // Lixeira urbana
+    const bin = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.25, 0.22, 0.78, 12),
+      binMat
+    );
+    bin.position.set(side * 10.25, 0.48, z + 5.5);
+    bin.castShadow = true;
+    this.exteriorGroup.add(bin);
+
+    // Tampa da lixeira
+    const lid = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.27, 0.27, 0.07, 12),
+      benchMetalMat
+    );
+    lid.position.set(side * 10.25, 0.9, z + 5.5);
+    this.exteriorGroup.add(lid);
+  });
+}
+
+ // Árvores ornamentais e canteiros urbanos
+const planterMat = new THREE.MeshStandardMaterial({
+  color: 0x77736a,
+  roughness: 0.92
+});
+
+const soilMat = new THREE.MeshStandardMaterial({
+  color: 0x493522,
+  roughness: 1
+});
+
+const trunkMat = new THREE.MeshStandardMaterial({
+  color: 0x654321,
+  roughness: 0.95
+});
+
+const foliageMat = new THREE.MeshStandardMaterial({
+  color: 0x356b3b,
+  roughness: 0.9
+});
+
+const foliageLightMat = new THREE.MeshStandardMaterial({
+  color: 0x4b8548,
+  roughness: 0.92
+});
+
+for (let z = -105; z <= 39; z += 24) {
+  [-9.55, 9.55].forEach(x => {
+    // Canteiro de concreto
+    const planter = new THREE.Mesh(
+      new THREE.BoxGeometry(1.05, 0.24, 1.65),
+      planterMat
+    );
+
+    planter.position.set(x, 0.19, z);
+    planter.castShadow = true;
+    planter.receiveShadow = true;
+    this.exteriorGroup.add(planter);
+
+    // Terra dentro do canteiro
+    const soil = new THREE.Mesh(
+      new THREE.BoxGeometry(0.91, 0.045, 1.5),
+      soilMat
+    );
+
+    soil.position.set(x, 0.33, z);
+    this.exteriorGroup.add(soil);
+
+    // Tronco da árvore
+    const trunk = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.13, 0.19, 2.25, 8),
+      trunkMat
+    );
+
+    trunk.position.set(x, 1.45, z);
+    trunk.castShadow = true;
+    this.exteriorGroup.add(trunk);
+
+    // Copa principal
+    const crown = new THREE.Mesh(
+      new THREE.SphereGeometry(0.95, 10, 8),
+      foliageMat
+    );
+
+    crown.position.set(x, 3.05, z);
+    crown.scale.set(1, 1.12, 1);
+    crown.castShadow = true;
+    this.exteriorGroup.add(crown);
+
+    // Volume adicional da copa
+    const crownSide1 = new THREE.Mesh(
+      new THREE.SphereGeometry(0.62, 9, 7),
+      foliageLightMat
+    );
+
+    crownSide1.position.set(x - 0.48, 3.12, z + 0.12);
+    crownSide1.castShadow = true;
+    this.exteriorGroup.add(crownSide1);
+
+    const crownSide2 = new THREE.Mesh(
+      new THREE.SphereGeometry(0.62, 9, 7),
+      foliageMat
+    );
+
+    crownSide2.position.set(x + 0.48, 3.08, z - 0.12);
+    crownSide2.castShadow = true;
+    this.exteriorGroup.add(crownSide2);
+  });
+}
+
+
+// Juntas discretas entre as placas das calçadas
+const sidewalkJointMat = new THREE.MeshStandardMaterial({
+  color: 0x55514b,
+  roughness: 1,
+  transparent: true,
+  opacity: 0.32
+});
+
+// Divisões transversais das placas
+for (let z = -119.5; z < 48; z += 2.4) {
+  [-8.8, 8.8].forEach(x => {
+    const joint = new THREE.Mesh(
+      new THREE.BoxGeometry(4.12, 0.018, 0.025),
+      sidewalkJointMat
+    );
+
+    joint.position.set(x, 0.09, z);
+    this.exteriorGroup.add(joint);
+  });
+}
+
+// Divisões longitudinais das placas
+[-8.8, 8.8].forEach(x => {
+  [-1.35, 1.35].forEach(offset => {
+    const joint = new THREE.Mesh(
+      new THREE.BoxGeometry(0.025, 0.018, 169),
+      sidewalkJointMat
+    );
+
+    joint.position.set(x + offset, 0.09, -36);
+    this.exteriorGroup.add(joint);
+  });
+});
+
+   
+const curbMat = new THREE.MeshStandardMaterial({
+  color: 0xbfc4c8,
+  roughness: 0.88,
+  metalness: 0.02
+});
+
+// Guias modulares de concreto com juntas entre as peças
+for (let z = -119.5; z < 48; z += 3.2) {
+  [-6.55, 6.55].forEach(x => {
+    const curbBlock = new THREE.Mesh(
+      new THREE.BoxGeometry(0.28, 0.22, 3.12),
+      curbMat
+    );
+
+    curbBlock.position.set(x, 0.11, z);
+    curbBlock.castShadow = true;
+    curbBlock.receiveShadow = true;
+
+    this.exteriorGroup.add(curbBlock);
+  });
+}
+
 
     const laneMat = new THREE.MeshBasicMaterial({ color: 0xf8fafc });
     for (let z = -85; z < 20; z += 6) {
