@@ -4623,6 +4623,26 @@ this.scene.add(facadeHeader);
         }
       });
 
+  // 🚴 MOVIMENTO AUTOMÁTICO DOS CICLISTAS
+(this.ciclistas || []).forEach(ciclista => {
+  if (!ciclista.mesh) return;
+
+  // Deslocamento pela ciclovia
+  ciclista.mesh.position.z += ciclista.dir * ciclista.speed * delta;
+
+  // Retorno automático ao início da ciclovia
+  if (ciclista.dir > 0 && ciclista.mesh.position.z > 49) {
+    ciclista.mesh.position.z = -121;
+  } else if (ciclista.dir < 0 && ciclista.mesh.position.z < -121) {
+    ciclista.mesh.position.z = 49;
+  }
+
+  // Rotação das rodas
+  (ciclista.rodas || []).forEach(roda => {
+    roda.rotation.x += ciclista.speed * delta * 2.5;
+  });
+});
+
 // Movimento automático das motocicletas
 (this.motos || []).forEach(moto => {
   const distToPlayer = Math.hypot(
