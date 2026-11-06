@@ -4470,8 +4470,8 @@ this.scene.add(facadeHeader);
         }
       });
 
-  // Movimento automático das motocicletas
-this.motos.forEach(moto => {
+// Movimento automático das motocicletas
+(this.motos || []).forEach(moto => {
   const distToPlayer = Math.hypot(
     moto.position.x - p.x,
     moto.position.z - p.z

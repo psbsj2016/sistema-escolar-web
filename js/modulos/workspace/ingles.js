@@ -117,7 +117,7 @@ Workspace.Ingles = {
         magoConfig: { vozAtiva: true },
         _comboCount: 0,
         itensComprados: [], mascoteAtivo: '', tituloAtivo: '', recompensasProf: [],
-        streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
+        streak:1, streakFreeze:0, coins:{bronze:0, prata:0, ouro:0}, cofre:{saldo:0, ultimoRendimento:''}, words:[], phrases:[], quizzes:[], pictures:[], minimalPairs:[], debates:[], wordPickers:[], roleplays:[], questions:[], answerStatements:[], submissions:[], pool:[],
         errosRetidos:[], itensConcluidos:[], srs:{}, _minimalTarget:null, _debateChat:[]
     },
     recognition:null, jogoAtual:null, desafioAtualObj:null,
@@ -172,7 +172,8 @@ Workspace.Ingles = {
             {id:'picturePop', title:'👁🗨 Visão do Alquimista', desc:'Fale ou escreva o que vê.', icon:'👁🗨', color:'#DCFCE7'},
             {id:'memoryGame', title:'🃏 Ilusão do Mago', desc:'Encontre os pares ocultos.', icon:'🃏', color:'#FBCFE8'},
             {id:'hangman', title:'🔤 Enigma das Letras', desc:'Adivinhe a palavra (Forca).', icon:'🔤', color:'#FEE2E2'},
-            {id:'videoQuiz', title:'🎬 Cinema do Mago', desc:'Assista e responda.', icon:'🎬', color:'#E0E7FF'}
+            {id:'videoQuiz', title:'🎬 Cinema do Mago', desc:'Assista e responda.', icon:'🎬', color:'#E0E7FF'},
+            {id:'bossRaid', title:'🐉 Guardião do Baú (Boss)', desc:'Vença 5 desafios seguidos contra o Boss e ganhe +300 DRX!', icon:'🐉', color:'#FEF08A'}
         ]
     },
 
@@ -321,12 +322,15 @@ Workspace.Ingles = {
             const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
             const statsNuvem = res?.dados?.statsAluno || null;
 
-            try{ 
-                const coinsLocal = JSON.parse(localStorage.getItem(`${userK}_coins`)||'{"bronze":0,"prata":0,"ouro":0}');
-                const bronzeNuvem = statsNuvem?.coins?.bronze || 0;
-                this.state.coins = (bronzeNuvem > (coinsLocal.bronze || 0)) ? statsNuvem.coins : coinsLocal;
-            }catch{ this.state.coins={bronze:0,prata:0,ouro:0}; }
-
+            try {
+                const cofreLocal = JSON.parse(localStorage.getItem(`${userK}_cofre`) || '{"saldo":0,"ultimoRendimento":""}');
+                const cofreNuvem = statsNuvem?.cofre || { saldo: 0, ultimoRendimento: '' };
+                this.state.cofre = (Number(cofreNuvem.saldo) >= Number(cofreLocal.saldo || 0)) ? cofreNuvem : cofreLocal;
+            } catch {
+                this.state.cofre = { saldo: 0, ultimoRendimento: '' };
+            }
+             
+            
             const freezeLocal = parseInt(localStorage.getItem(`${userK}_freeze`) || '0');
             const freezeNuvem = parseInt(statsNuvem?.streakFreeze || '0');
             this.state.streakFreeze = Math.max(freezeLocal, freezeNuvem);
@@ -358,6 +362,7 @@ Workspace.Ingles = {
         const userK = `ws_ingles_user_${Workspace.usuario?.id||'default'}`;
         try{
             localStorage.setItem(`${userK}_coins`, JSON.stringify(this.state.coins));
+            localStorage.setItem(`${userK}_cofre`, JSON.stringify(this.state.cofre || { saldo: 0, ultimoRendimento: '' }));
             localStorage.setItem(`${userK}_streak`, String(this.state.streak));
             localStorage.setItem(`${userK}_freeze`, String(this.state.streakFreeze || 0));
             localStorage.setItem(`${userK}_concluidos`, JSON.stringify(this.state.itensConcluidos));
@@ -376,6 +381,7 @@ Workspace.Ingles = {
                     escolaId: Workspace.usuario.escolaId || 'DEFAULT', 
                     nome: nomeRealAluno,
                     coins: this.state.coins,
+                    cofre: this.state.cofre || { saldo: 0, ultimoRendimento: '' },
                     streak: this.state.streak,
                     streakFreeze: this.state.streakFreeze || 0,
                     itensComprados: this.state.itensComprados || [],
@@ -557,6 +563,7 @@ Workspace.Ingles = {
             .ig-big-phrase { background: #F1F5F9; border: 2px solid #E2E8F0; color: #0F172A; font-weight: 700; font-size: 20px; text-align: center; padding: 20px; border-radius: 12px; margin: 16px 0; line-height: 1.5; }
             .ig-tap-word { cursor: pointer; border-bottom: 2px dotted rgba(79, 70, 229, 0.35); border-radius: 6px; padding: 1px 3px; transition: all 0.15s ease; display: inline-block; }
             .ig-tap-word:hover, .ig-tap-word:active { background: #EEF2FF; color: #4F46E5; border-bottom-color: #4F46E5; transform: translateY(-1px); }
+            .ig-tap-word.ig-karaoke-active { background: linear-gradient(135deg, #f59e0b, #d97706) !important; color: #ffffff !important; border-bottom-color: transparent !important; transform: scale(1.12) translateY(-2px); box-shadow: 0 4px 12px rgba(245, 158, 11, 0.45); padding: 2px 6px; border-radius: 8px; }
             .ig-input, .ig-textarea { background: #fff; color: #0F172A; border: 2px solid #CBD5E1; border-radius: 10px; font-weight: 500; font-size: 14px; width: 100%; padding: 12px 14px; box-sizing: border-box; outline: none; transition: 0.2s; font-family:'Inter', sans-serif;}
             .ig-input:focus, .ig-textarea:focus { border-color: #4F46E5; box-shadow: 0 0 0 4px rgba(79,70,229,0.1); }
             
@@ -713,6 +720,9 @@ Workspace.Ingles = {
                                 🛡️ <span id="freezeCount">0</span>/2
                             </button>
                             <div id="coinBag" class="ig-coin-bag" title="Saldo Disponível de DOVRYX (DRX)">💎 <span id="coinsCount">0</span> <span style="font-size:12px; font-weight:900; color:#b45309;">DRX</span></div>
+                           <button type="button" data-action="abrir-cofre" class="ws-btn" style="background:linear-gradient(135deg, #059669, #047857); color:#fff; border:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 4px 10px rgba(5,150,105,0.25); cursor:pointer;" title="Banco Central DOVRYX: Rende +5% DRX ao concluir as Missões Diárias!">
+                                🏦 Cofre: <span id="vaultCount">0</span>
+                            </button>
                             <button type="button" data-action="abrir-loja" class="ws-btn" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 4px 10px rgba(109,40,217,0.25); cursor:pointer;" title="Abrir Loja de Títulos e Mascotes">
                                 🏪 Loja
                             </button>
@@ -828,6 +838,8 @@ Workspace.Ingles = {
         }
         if (stEl) stEl.textContent = this.state.streak || 1;
         if (frEl) frEl.textContent = this.state.streakFreeze || 0;
+        const vEl = document.getElementById('vaultCount');
+        if (vEl) vEl.textContent = `${(this.state.cofre?.saldo || 0).toLocaleString('pt-BR')} DRX`;
     },
 
     ganharCoins(tipo, qtd){
@@ -966,6 +978,18 @@ Workspace.Ingles = {
                 this.resgatarBauDiario();
                 return;
             }
+            if(a === 'abrir-cofre') {
+                this.abrirCofreModal();
+                return;
+            }
+            if(a === 'depositar-cofre') {
+                this.operarCofre('depositar');
+                return;
+            }
+            if(a === 'sacar-cofre') {
+                this.operarCofre('sacar');
+                return;
+            }
             if(a === 'abrir-loja') {
                 this.abrirLoja();
                 return;
@@ -981,20 +1005,38 @@ Workspace.Ingles = {
             if(a === 'fechar-jogo') this.fecharJogo();
             if(a === 'abrir-jogo') this.abrirJogo(b.dataset.gameId);
             if(a === 'iniciar-jogo') { e.preventDefault(); this.renderDesafioAtual(); }
+            if(a === 'atacar-boss') {
+                e.preventDefault();
+                this.processarAtaqueBoss(b);
+                return;
+            }
 
             const cur = this.desafioAtualObj;
             const listen = document.getElementById('ig-listenInput')?.value?.trim()||'';
             const inputGenerico = document.getElementById('ig-input')?.value?.trim()||'';
             
-           if(a === 'falar-frase'){
-                if(b.dataset.text) VoiceService.falar(b.dataset.text, {rate:0.95, isMago:false});
-                else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.95, isMago:false});
-                else if(cur?.word) VoiceService.falar(cur.word, {rate:0.95, isMago:false});
+          if(a === 'falar-frase'){
+                const txtAlvo = b.dataset.text || cur?.phrase || cur?.word || '';
+                if(txtAlvo) {
+                    this.iniciarKaraokeVisual(txtAlvo, 0.95);
+                    VoiceService.falar(txtAlvo, {rate:0.95, isMago:false});
+                }
             }
-          if(a === 'falar-lento'){
-                if(b.dataset.text) VoiceService.falar(b.dataset.text, {rate:0.62, isMago:false});
-                else if(cur?.phrase) VoiceService.falar(cur.phrase, {rate:0.62, isMago:false});
-                else if(cur?.word) VoiceService.falar(cur.word, {rate:0.62, isMago:false});
+            if(a === 'falar-lento'){
+                const txtAlvo = b.dataset.text || cur?.phrase || cur?.word || '';
+                if(txtAlvo) {
+                    this.iniciarKaraokeVisual(txtAlvo, 0.62);
+                    VoiceService.falar(txtAlvo, {rate:0.62, isMago:false});
+                }
+            }
+            if(a === 'iniciar-shadowing'){
+                const esperado = cur?.phrase || cur?.word;
+                if(esperado) {
+                    this.iniciarKaraokeVisual(esperado, 0.85);
+                    VoiceService.falar(esperado, {rate:0.85, isMago:false});
+                    this.iniciarReconhecimentoDeVoz(esperado, cur, 'phrase', true);
+                }
+                return;
             }
             if(a === 'falar-palavra-isolada'){
                 e.stopPropagation();
@@ -1415,7 +1457,7 @@ Workspace.Ingles = {
         }
     },
 
-    // 🎁 ENTREGA AS 250 MOEDAS DO BAÚ DE TESOURO DOURADO
+    // 🎁 ENTREGA AS 250 DRX DO BAÚ DOURADO + RENDE 5% DE JUROS NO COFRE DOVRYX!
     resgatarBauDiario(){
         const missoes = this.inicializarMissoesDiarias();
         const todasConcluidas = missoes.lista.every(m => m.atual >= m.meta);
@@ -1431,11 +1473,22 @@ Workspace.Ingles = {
         const userK = `ws_ingles_user_${Workspace.usuario?.id ? Workspace.usuario.id : 'default'}_missoes`;
         try { localStorage.setItem(userK, JSON.stringify(missoes)); } catch(e) {}
 
+        // 🏦 Cálculo de Juros do Banco Central DOVRYX (+5% sobre o saldo guardado no Cofre)
+        this.state.cofre = this.state.cofre || { saldo: 0, ultimoRendimento: '' };
+        const saldoCofreAtual = Number(this.state.cofre.saldo) || 0;
+        let msgJuros = '';
+        if (saldoCofreAtual > 0 && this.state.cofre.ultimoRendimento !== missoes.data) {
+            const jurosGanhos = Math.max(1, Math.round(saldoCofreAtual * 0.05));
+            this.state.cofre.saldo = saldoCofreAtual + jurosGanhos;
+            this.state.cofre.ultimoRendimento = missoes.data;
+            msgJuros = ` + 🏦 ${jurosGanhos} DRX de Juros no Cofre!`;
+        }
+
         this.ganharCoins('bronze', 250);
         if (window.Workspace?.Feed?.dispararConfetes) {
             window.Workspace.Feed.dispararConfetes();
         }
-        this.mostrarAvisoLocal('🎉 TESOURO DESBLOQUEADO! Ganhou +250 DRX 💎 no Baú Diário!', 'success');
+        this.mostrarAvisoLocal(`🎉 TESOURO DESBLOQUEADO! +250 DRX 💎${msgJuros}`, 'success');
         this.renderizarMissoesDiarias();
     },
 
@@ -1545,7 +1598,7 @@ Workspace.Ingles = {
                 </div>
 
                 <div style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
-                   <span style="background:#FEF3C7; color:#B45309; border:1px solid #FDE68A; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800;">💎 +${['picturePop','minimalPairs'].includes(g.id)?'75':'50'} DRX</span>
+                   <span style="background:#FEF3C7; color:#B45309; border:1px solid #FDE68A; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800;">💎 +${g.id==='bossRaid'?'300':(['picturePop','minimalPairs'].includes(g.id)?'75':'50')} DRX</span>
                     ${vencidos ? `<span style="color:#EF4444; font-size:11px; font-weight:700;">${vencidos} para revisar</span>` : `<span style="color:#64748B; font-size:11px; font-weight:700;">${percentagem}% Concluído</span>`}
                 </div>
             </div>`;
@@ -1731,6 +1784,7 @@ Workspace.Ingles = {
             const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
             return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
         }
+        if(id==='bossRaid') return db ? this.state.words : this.defaults.words;
         return [];
     },
 
@@ -1752,6 +1806,7 @@ Workspace.Ingles = {
         else if(id==='memoryGame') this.renderGameMemory();
         else if(id==='hangman') this.renderGameHangman();
         else if(id==='videoQuiz') this.renderGameVideoQuiz();
+        else if(id==='bossRaid') this.iniciarBossRaid();
     },
 
     renderTelaFimDeJornada(){
@@ -1806,21 +1861,25 @@ Workspace.Ingles = {
             </div>`;
     },
 
-    renderGameReadAloud(){
+   renderGameReadAloud(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
         const p = this.desafioAtualObj;
         document.getElementById('modalBody').innerHTML=`
-            <div style="font-size:11px; color:#64748B; text-align:center; font-weight:700; margin-bottom:4px;">💡 Dica: Toque em qualquer palavra abaixo para ouvir a pronúncia isolada!</div>
-            <div class="ig-big-phrase" style="margin-top:4px;">${this._tornarPalavrasClicaveis(p.phrase)}</div>
-            <div style="display:flex; justify-content:center; gap:10px; margin:15px 0;">
-                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir Frase</button>
+            <div style="font-size:11.5px; color:#64748B; text-align:center; font-weight:700; margin-bottom:4px;">💡 Acompanhe as palavras a brilhar em tempo real (Karaoke) ou toque nelas!</div>
+            <div id="ig-karaoke-stage" class="ig-big-phrase" style="margin-top:4px;">${this._tornarPalavrasClicaveis(p.phrase)}</div>
+            <div style="display:flex; justify-content:center; gap:10px; margin:15px 0; flex-wrap:wrap;">
+                <button data-action="falar-frase" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir (Karaoke)</button>
                 <button data-action="falar-lento" class="ws-btn" style="background:#475569; color:#fff; padding:10px 20px; border-radius:20px; border:none; cursor:pointer;">🐢 Ouvir Devagar</button>
             </div>
-            <div style="background:#F8FAFC; padding:20px; border-radius:12px; border:1px solid #E2E8F0; text-align:center;">
-                <p style="font-weight:600; margin:0 0 10px 0;">Sua vez de ler em voz alta:</p>
-                <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="background:linear-gradient(135deg, #10b981, #059669); color:#fff; width:100%; padding:14px; border-radius:12px; border:none; cursor:pointer;">🎤 Gravar Pronúncia</button>
+            <div style="background:#F8FAFC; padding:20px; border-radius:16px; border:1px solid #E2E8F0; text-align:center;">
+                <p style="font-weight:700; color:#1e293b; margin:0 0 12px 0;">Escolha o seu modo de gravação:</p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button data-action="iniciar-voz" data-tipo="phrase" class="ws-btn" style="flex:1; min-width:180px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; padding:14px; border-radius:12px; border:none; cursor:pointer; font-size:14px;">🎤 Gravar Pronúncia (+50 DRX)</button>
+                    <button data-action="iniciar-shadowing" class="ws-btn" style="flex:1.2; min-width:210px; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; padding:14px; border-radius:12px; border:none; cursor:pointer; font-size:14px; box-shadow:0 4px 14px rgba(245,158,11,0.3);">⚡ Shadowing Express (+75 DRX 💎)</button>
+                </div>
+                <div style="font-size:11.5px; color:#64748b; margin-top:8px;">No <b>Shadowing Express</b>, fale junto com o ritmo do Karaoke para ganhar bónus de fluência!</div>
                 <div id="ig-speechResult" style="margin-top:15px; font-weight:600;"></div>
             </div>`;
     },
@@ -2287,16 +2346,260 @@ Workspace.Ingles = {
         `;
     },
 
-    iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo){
-        const btn = document.getElementById('modalBody').querySelector('[data-action="iniciar-voz"]');
+    // =========================================================================
+    // 🐉 MODO ESPECIAL 16: BOSS BATTLE - O GUARDIÃO DO BAÚ (5 FASES SEGUIDAS)
+    // =========================================================================
+    iniciarBossRaid() {
+        const q1 = this.obterItemInteligente(this.getColecaoPorJogo('quiz'), 'quiz') || this.defaults.quizzes[0];
+        const q2 = this.obterItemInteligente(this.getColecaoPorJogo('wordPicker'), 'picker') || this.defaults.wordPickers[0];
+        const q3 = this.obterItemInteligente(this.getColecaoPorJogo('minimalPairs'), 'minimal') || this.defaults.minimalPairs[0];
+        const q4 = this.obterItemInteligente(this.getColecaoPorJogo('listenType'), 'phrase') || this.defaults.phrases[0];
+        const q5 = this.obterItemInteligente(this.getColecaoPorJogo('wordSpark'), 'word') || this.defaults.words[0];
+
+        const minTarget = Math.random() > 0.5 ? q3.a : q3.b;
+
+        this.state._bossRaid = {
+            hp: 100,
+            maxHp: 100,
+            lives: 3,
+            stageIndex: 0,
+            stages: [
+                { tipo: 'quiz', titulo: 'Fase 1/5 • Escudo da Esfinge (Gramática)', item: q1 },
+                { tipo: 'picker', titulo: 'Fase 2/5 • Armadura Sintática (Lacuna)', item: q2 },
+                { tipo: 'minimal', titulo: 'Fase 3/5 • Eco Gémeo (Audição)', item: q3, target: minTarget },
+                { tipo: 'listen', titulo: 'Fase 4/5 • Sussurro do Dragão (Transcrição)', item: q4 },
+                { tipo: 'wordSpark', titulo: 'Fase 5/5 • Golpe Final de Fogo (Frase com IA)', item: q5 }
+            ]
+        };
+        this.renderizarPalcoBoss();
+    },
+
+    renderizarPalcoBoss() {
+        const raid = this.state._bossRaid;
+        if (!raid) return;
+
+        const etapa = raid.stages[raid.stageIndex];
+        this.desafioAtualObj = etapa.item;
+        if (etapa.tipo === 'minimal') this.state._minimalTarget = etapa.target;
+
+        const corações = '❤️'.repeat(raid.lives) + '🖤'.repeat(3 - raid.lives);
+        const corHp = raid.hp > 60 ? '#ef4444' : (raid.hp > 20 ? '#f59e0b' : '#10b981');
+
+        let arenaDesafioHtml = '';
+
+        if (etapa.tipo === 'quiz') {
+            const opcoes = this._embaralharOpcoes(etapa.item.options || []);
+            arenaDesafioHtml = `
+                <div class="ig-big-phrase" style="font-size:20px; margin-top:8px;">${this._tornarPalavrasClicaveis(etapa.item.question)}</div>
+                <div style="display:flex; flex-direction:column; gap:10px; margin-top:14px;">
+                    ${opcoes.map(o => `<button data-action="atacar-boss" data-choice-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px;">⚔️ ${Workspace.escapeHTML(o.texto)}</button>`).join('')}
+                </div>
+            `;
+        } else if (etapa.tipo === 'picker') {
+            const opcoes = this._embaralharOpcoes(etapa.item.options || []);
+            arenaDesafioHtml = `
+                <div class="ig-big-phrase" style="color:#4F46E5; margin-top:8px;">${this._tornarPalavrasClicaveis(etapa.item.text)}</div>
+                <div style="display:flex; gap:12px; justify-content:center; margin-top:16px; flex-wrap:wrap;">
+                    ${opcoes.map(o => `<button data-action="atacar-boss" data-choice-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px 28px; border-radius:30px; cursor:pointer; font-size:16px;">⚔️ ${Workspace.escapeHTML(o.texto)}</button>`).join('')}
+                </div>
+            `;
+        } else if (etapa.tipo === 'minimal') {
+            arenaDesafioHtml = `
+                <div style="text-align:center; padding:12px 0;">
+                    <button data-action="falar-frase" data-text="${Workspace.escapeHTML(etapa.target)}" class="ws-btn" style="background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; padding:12px 26px; border-radius:30px; border:none; cursor:pointer; font-size:14px;">🎧 Ouvir Som do Guardião</button>
+                    <div style="display:flex; gap:14px; justify-content:center; margin-top:20px;">
+                        <button data-action="atacar-boss" data-choice-word="${Workspace.escapeHTML(etapa.item.a)}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:18px; border-radius:14px; font-size:18px; font-weight:800; cursor:pointer;">⚔️ ${Workspace.escapeHTML(etapa.item.a)}</button>
+                        <button data-action="atacar-boss" data-choice-word="${Workspace.escapeHTML(etapa.item.b)}" class="ws-btn" style="flex:1; background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:18px; border-radius:14px; font-size:18px; font-weight:800; cursor:pointer;">⚔️ ${Workspace.escapeHTML(etapa.item.b)}</button>
+                    </div>
+                </div>
+            `;
+        } else if (etapa.tipo === 'listen') {
+            arenaDesafioHtml = `
+                <div style="text-align:center;">
+                    <div style="display:flex; justify-content:center; gap:10px; margin:12px 0 16px;">
+                        <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:10px 22px; border-radius:20px; border:none; cursor:pointer;">🔊 Ouvir Frase</button>
+                        <button data-action="falar-lento" class="ws-btn" style="background:#0F172A; color:#fff; padding:10px 22px; border-radius:20px; border:none; cursor:pointer;">🐢 Lento</button>
+                    </div>
+                    <input id="ig-boss-input" class="ig-input" placeholder="Transcreva o que ouviu para atacar..." style="text-align:center;" />
+                    <button data-action="atacar-boss" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #ef4444, #dc2626); color:#fff; margin-top:14px; padding:15px; border-radius:12px; border:none; font-size:15px; cursor:pointer;">⚔️ Desferir Ataque (-20 HP)</button>
+                </div>
+            `;
+        } else if (etapa.tipo === 'wordSpark') {
+            arenaDesafioHtml = `
+                <div style="text-align:center;">
+                    <div class="ig-big-phrase" style="font-size:28px; color:#dc2626; border-color:#fca5a5; background:#fef2f2;">🔥 ${this._tornarPalavrasClicaveis(etapa.item.word)} <span style="font-size:14px; color:#64748b; display:block; margin-top:4px;">(${Workspace.escapeHTML(etapa.item.translation || '')})</span></div>
+                    <p style="font-weight:700; font-size:13.5px; color:#334155; margin:8px 0;">Golpe Final! Crie uma frase em inglês com esta palavra para derrotar o Guardião:</p>
+                    <textarea id="ig-boss-input" class="ig-textarea" placeholder="Write your final strike sentence in English..." style="min-height:85px;"></textarea>
+                    <button data-action="atacar-boss" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; margin-top:14px; padding:16px; border-radius:12px; border:none; font-size:16px; font-weight:900; cursor:pointer;">⚡ GOLPE FINAL SUPREMO (-20 HP)</button>
+                </div>
+            `;
+        }
+
+        document.getElementById('modalBody').innerHTML = `
+            <div style="max-width:640px; width:100%; margin:0 auto;">
+                <!-- Cabeçalho de Batalha do Guardião -->
+                <div style="background:linear-gradient(135deg, #1e1b4b, #4c1d95); color:#fff; padding:18px 20px; border-radius:18px; margin-bottom:18px; border:2px solid #facc15; box-shadow:0 10px 25px rgba(76,29,149,0.3);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span style="font-size:36px;">🐉</span>
+                            <div>
+                                <div style="font-size:16px; font-weight:900; color:#fde047;">Guardião Ancião do Baú</div>
+                                <div style="font-size:11.5px; color:#e9d5ff; font-weight:700;">${etapa.titulo}</div>
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:11px; color:#cbd5e1; font-weight:700;">Suas Vidas</div>
+                            <div style="font-size:18px; letter-spacing:2px;">${corações}</div>
+                        </div>
+                    </div>
+                    <!-- Barra de Vida (HP) do Guardião -->
+                    <div style="background:rgba(0,0,0,0.45); height:14px; border-radius:999px; overflow:hidden; border:1px solid rgba(255,255,255,0.2);">
+                        <div style="width:${raid.hp}%; height:100%; background:${corHp}; transition:width 0.4s ease;"></div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:800; margin-top:5px; color:#fde047;">
+                        <span>HP DO BOSS: ${raid.hp}/${raid.maxHp}</span>
+                        <span>RECOMPENSA ÉPICA: 💎 +300 DRX</span>
+                    </div>
+                </div>
+
+                ${arenaDesafioHtml}
+            </div>
+        `;
+    },
+
+    async processarAtaqueBoss(btnEl) {
+        const raid = this.state._bossRaid;
+        if (!raid) return;
+        const etapa = raid.stages[raid.stageIndex];
+        let acertou = false;
+
+        if (etapa.tipo === 'quiz' || etapa.tipo === 'picker') {
+            const idx = parseInt(btnEl.dataset.choiceIndex);
+            const certa = (etapa.item.correct !== undefined && etapa.item.correct !== null) ? parseInt(etapa.item.correct) : (etapa.tipo === 'picker' ? 0 : 1);
+            acertou = (idx === certa);
+        } else if (etapa.tipo === 'minimal') {
+            acertou = (btnEl.dataset.choiceWord === etapa.target);
+        } else if (etapa.tipo === 'listen') {
+            const digitado = document.getElementById('ig-boss-input')?.value?.trim() || '';
+            if (!digitado) return this.mostrarAvisoLocal('Escreva o que ouviu para atacar!', 'warning');
+            acertou = (this.similaridade(digitado, etapa.item.phrase) >= 0.88);
+        } else if (etapa.tipo === 'wordSpark') {
+            const frase = document.getElementById('ig-boss-input')?.value?.trim() || '';
+            if (frase.length < 3) return this.mostrarAvisoLocal('Escreva uma frase válida em inglês!', 'warning');
+            btnEl.disabled = true;
+            btnEl.innerText = '🐉 Avaliando Golpe Final com IA...';
+            try {
+                const r = await Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
+                    jogo: 'wordSpark',
+                    palavra: etapa.item.word,
+                    fraseAluno: frase
+                });
+                acertou = Boolean(r && r.success && r.correto);
+            } catch (e) {
+                acertou = frase.toLowerCase().includes(String(etapa.item.word).toLowerCase());
+            }
+        }
+
+        if (acertou) {
+            raid.hp = Math.max(0, raid.hp - 20);
+            raid.stageIndex++;
+            this.tocarSom('coin');
+
+            if (raid.hp <= 0 || raid.stageIndex >= raid.stages.length) {
+                this.vencerBossRaid();
+            } else {
+                this.mostrarAvisoLocal(`⚔️ Golpe Certeiro! -20 HP no Guardião!`, 'success');
+                this.renderizarPalcoBoss();
+            }
+        } else {
+            raid.lives--;
+            if (raid.lives <= 0) {
+                this.mostrarAvisoLocal('💀 O Guardião resistiu! Tente novamente a Boss Raid!', 'error');
+                document.getElementById('modalBody').innerHTML = `
+                    <div style="text-align:center; padding:30px;">
+                        <div style="font-size:64px;">🐉🔥</div>
+                        <h2 style="color:#dc2626; margin:10px 0;">Você foi derrotado pelo Guardião!</h2>
+                        <p style="color:#64748b; font-size:14px; margin-bottom:20px;">Não desista! Treine mais e volte para conquistar os +300 DRX!</p>
+                        <button data-action="iniciar-jogo" class="ws-btn" style="background:linear-gradient(135deg,#ef4444,#dc2626); color:#fff; border:none; padding:14px 28px; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer;">🔄 Tentar Novamente</button>
+                    </div>
+                `;
+            } else {
+                this.mostrarAvisoLocal(`🛡️ Você errou o ataque e perdeu 1 vida! (${raid.lives} restantes)`, 'warning');
+                this.renderizarPalcoBoss();
+            }
+        }
+    },
+
+    vencerBossRaid() {
+        this.ganharCoins('bronze', 300);
+        if (!Array.isArray(this.state.itensComprados)) this.state.itensComprados = [];
+        if (!this.state.itensComprados.includes('tit_slayer')) {
+            this.state.itensComprados.push('tit_slayer');
+            this.state.tituloAtivo = '⚔️ Boss Slayer';
+            this.saveDados();
+        }
+        if (window.Workspace?.Feed?.dispararConfetes) {
+            window.Workspace.Feed.dispararConfetes();
+        }
+        document.getElementById('modalBody').innerHTML = `
+            <div style="text-align:center; padding:30px;">
+                <div style="font-size:70px;">🏆🐉💎</div>
+                <h2 style="color:#059669; font-size:26px; margin:10px 0;">VITÓRIA ÉPICA! GUARDIÃO DERROTADO!</h2>
+                <p style="color:#475569; font-size:15px; margin-bottom:16px;">Você superou as 5 provações seguidas do Baú do Inglês!</p>
+                <div style="background:#fef3c7; border:2px solid #f59e0b; color:#b45309; padding:16px; border-radius:16px; font-size:22px; font-weight:900; margin-bottom:20px;">
+                    💎 +300 DRX + Título "⚔️ Boss Slayer"
+                </div>
+                <button data-action="fechar-jogo" class="ws-btn" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:14px 30px; border-radius:12px; font-size:15px; font-weight:800; cursor:pointer;">Celebrar Vitória 🎉</button>
+            </div>
+        `;
+    },
+
+    // 🎵 MOTOR DE KARAOKE EM TEMPO REAL (ILUMINA CADA PALAVRA NO RITMO DA VOZ)
+    iniciarKaraokeVisual(texto, rate = 0.95) {
+        if (this._karaokeTimers) {
+            this._karaokeTimers.forEach(t => clearTimeout(t));
+        }
+        this._karaokeTimers = [];
+
+        const container = document.getElementById('modalBody');
+        if (!container) return;
+        const spans = Array.from(container.querySelectorAll('.ig-tap-word'));
+        if (!spans.length) return;
+
+        spans.forEach(s => s.classList.remove('ig-karaoke-active'));
+
+        // Calcula o tempo médio de cada palavra conforme o número de letras e a velocidade (rate)
+        let tempoAcumulado = 120;
+        spans.forEach((spanEl, idx) => {
+            const palavra = spanEl.textContent || '';
+            const duracaoPalavra = Math.max(240, (palavra.length * 68) / Math.max(0.5, rate));
+
+            const tOn = setTimeout(() => {
+                spans.forEach(s => s.classList.remove('ig-karaoke-active'));
+                spanEl.classList.add('ig-karaoke-active');
+            }, tempoAcumulado);
+
+            const tOff = setTimeout(() => {
+                spanEl.classList.remove('ig-karaoke-active');
+            }, tempoAcumulado + duracaoPalavra);
+
+            this._karaokeTimers.push(tOn, tOff);
+            tempoAcumulado += duracaoPalavra;
+        });
+    },
+
+    iniciarReconhecimentoDeVoz(esperado, itemObj, tipoConteudo, isShadowing = false){
+        const btn = document.getElementById('modalBody').querySelector(isShadowing ? '[data-action="iniciar-shadowing"]' : '[data-action="iniciar-voz"]');
         const resEl = document.getElementById('ig-speechResult');
         if(!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)){ this.mostrarAvisoLocal('O seu navegador não suporta voz','error'); return; }
         
         const SR = window.SpeechRecognition||window.webkitSpeechRecognition;
         this.recognition = new SR(); this.recognition.lang='en-US'; this.recognition.interimResults=false; this.recognition.maxAlternatives=1;
         
+        const inicioGravacao = Date.now();
+
         if(btn){ 
-            btn.innerHTML=`🎧 Escutando... Fale agora! <div class="soundwave"><div></div><div></div><div></div><div></div><div></div></div>`; 
+            btn.innerHTML=`${isShadowing ? '⚡ Repita junto com o Karaoke!' : '🎧 Escutando... Fale agora!'} <div class="soundwave"><div></div><div></div><div></div><div></div><div></div></div>`; 
             btn.style.background='#F59E0B'; 
             btn.style.display = 'flex';
             btn.style.flexDirection = 'column';
@@ -2306,23 +2609,33 @@ Workspace.Ingles = {
         
         this.recognition.onresult=(e)=>{
             const falado = e.results[0][0].transcript;
-            if(btn){ btn.style.background='#10B981'; btn.innerText=`Avaliando a pronúncia... 🤖`; btn.disabled = true; }
+            const duracaoSegundos = Math.max(1.2, (Date.now() - inicioGravacao) / 1000);
+            const totalPalavras = String(falado || '').trim().split(/\s+/).filter(Boolean).length;
+            const wpm = Math.round((totalPalavras / duracaoSegundos) * 60);
+            const fluenciaAlta = isShadowing || wpm >= 65;
+
+            if(btn){ btn.style.background='#10B981'; btn.innerText=`Avaliando pronúncia e fluência... 🤖`; btn.disabled = true; }
             
-            // 🚀 A MÁGICA AQUI: Identifica se é o Sopro do Dragão ou a Visão do Alquimista por Voz
             const gameId = tipoConteudo === 'phrase' ? 'readAloud' : 'picturePopSpeech';
 
             Workspace.api('/workspace/ingles/jogo/avaliar', 'POST', {
                 jogo: gameId,
-                pergunta: esperado, // A frase ou palavra que ele devia ler
-                respostaAluno: falado // O que o microfone ouviu
+                pergunta: esperado,
+                respostaAluno: falado
             }).then(r => {
-                if(btn){ btn.innerText=`🎤 Tentar novamente`; btn.disabled = false; }
+                if(btn){ btn.innerText = isShadowing ? `⚡ Shadowing Express (+75 DRX 💎)` : `🎤 Tentar novamente`; btn.disabled = false; }
                 
                 if (r.success && r.correto) {
-                    if(resEl) resEl.innerHTML=`<div style="background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s; color:#064E3B; margin-top:10px;"><b>✅ ${r.feedback}</b><br>🎙️ O microfone ouviu: <i>"${falado}"</i></div>`;
+                    const recompensaBase = tipoConteudo === 'picture' ? 75 : 50;
+                    const bonusFluencia = (tipoConteudo === 'phrase' && fluenciaAlta) ? 25 : 0;
+                    const badgeFluencia = tipoConteudo === 'phrase'
+                        ? `<div style="margin-top:6px; font-weight:800; color:#b45309; background:#fef3c7; padding:6px 10px; border-radius:8px; display:inline-block;">⚡ Ritmo: ${wpm} palavras/min (${duracaoSegundos.toFixed(1)}s) ${bonusFluencia > 0 ? '• 🔥 Bónus Fluência +25 DRX!' : ''}</div>`
+                        : '';
+
+                    if(resEl) resEl.innerHTML=`<div style="background:#ECFDF5; border:1px solid #10B981; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s; color:#064E3B; margin-top:10px;"><b>✅ ${r.feedback}</b><br>🎙️ O microfone ouviu: <i>"${falado}"</i><br>${badgeFluencia}</div>`;
                     if(itemObj) this.updateSRS(itemObj.id, tipoConteudo, true);
                     this.superarErro(itemObj?.id);
-                    this.sucessoGenerico(tipoConteudo === 'picture' ? 75 : 50);
+                    this.sucessoGenerico(recompensaBase + bonusFluencia);
                 } else {
                     if(resEl) resEl.innerHTML=`<div style="background:#FEF2F2; border:1px solid #EF4444; padding:12px; border-radius:10px; font-size:13px; animation: fadeIn 0.3s; color:#7F1D1D; margin-top:10px;">❌ ${r.feedback}<br>🎙️ O microfone ouviu: <i>"${falado}"</i><br>💡 Dica de Pronúncia: ${r.correcao}</div>`;
                     if(itemObj) this.registrarErro(itemObj, tipoConteudo);
@@ -2335,6 +2648,104 @@ Workspace.Ingles = {
         };
         
         this.recognition.onerror=()=>{ if(btn){ btn.style.background='#10B981'; btn.innerText='🎤 Tentar novamente (Erro no Microfone)'; btn.disabled = false; } };
+    },
+
+    // 🏦 BANCO CENTRAL DOVRYX - COFRE DE POUPANÇA COM RENDIMENTO DE +5% AO DIA
+    abrirCofreModal(){
+        this.jogoAtual = 'vault';
+        document.getElementById('modalIcon').textContent = '🏦';
+        document.getElementById('modalTitle').textContent = 'Banco Central DOVRYX • Cofre de Rendimento';
+
+        const modalContent = document.querySelector('#gameModal .modal-content');
+        if (modalContent) {
+            modalContent.style.background = 'linear-gradient(to bottom, #ffffff 30%, #ecfdf5 100%)';
+        }
+        const badgeCombo = document.getElementById('ig-combo-badge');
+        if (badgeCombo) badgeCombo.style.display = 'none';
+
+        document.body.style.overflow = 'hidden';
+        document.getElementById('gameModal').classList.remove('hidden');
+        this.renderizarConteudoCofre();
+    },
+
+    renderizarConteudoCofre(){
+        this.state.cofre = this.state.cofre || { saldo: 0, ultimoRendimento: '' };
+        const saldoCarteira = this.state.coins?.bronze || 0;
+        const saldoCofre = this.state.cofre.saldo || 0;
+        const projecaoJuros = Math.max(0, Math.round(saldoCofre * 0.05));
+
+        document.getElementById('modalBody').innerHTML = `
+            <div style="max-width:620px; width:100%; margin:0 auto;">
+                <div style="background:linear-gradient(135deg, #064e3b, #047857); color:#fff; padding:24px; border-radius:20px; margin-bottom:24px; box-shadow:0 12px 30px rgba(4,120,87,0.25);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                        <div>
+                            <div style="font-size:11px; text-transform:uppercase; letter-spacing:1px; color:#a7f3d0; font-weight:800;">🏦 Saldo Guardado no Cofre</div>
+                            <div style="font-size:32px; font-weight:900; color:#fde047; margin-top:4px;">💎 ${saldoCofre.toLocaleString('pt-BR')} DRX</div>
+                            <div style="font-size:12.5px; color:#d1fae5; margin-top:6px;">
+                                📈 Rendimento no próximo Baú Diário (+5%): <b>+${projecaoJuros.toLocaleString('pt-BR')} DRX</b>
+                            </div>
+                        </div>
+                        <div style="background:rgba(255,255,255,0.12); padding:14px 20px; border-radius:14px; text-align:right; border:1px solid rgba(255,255,255,0.2);">
+                            <div style="font-size:11px; color:#d1fae5; font-weight:700;">Carteira Livre (Para Gastar)</div>
+                            <div style="font-size:22px; font-weight:900; color:#fff;">💎 ${saldoCarteira.toLocaleString('pt-BR')} DRX</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div style="background:#fff; border:2px solid #a7f3d0; border-radius:18px; padding:22px; box-shadow:0 4px 15px rgba(0,0,0,0.03);">
+                    <h3 style="margin:0 0 8px 0; color:#0f172a; font-size:17px;">💸 Movimentar DOVRYX (DRX)</h3>
+                    <p style="margin:0 0 16px 0; color:#64748b; font-size:13px; line-height:1.45;">
+                        Guarde os seus <b>DRX</b> no Cofre para renderem <b>+5% de juros</b> sempre que você concluir as 3 Missões Diárias e abrir o Baú Dourado! Você pode levantar o valor de volta para a carteira a qualquer momento para comprar na Cidade 3D.
+                    </p>
+                    <input type="number" id="ig-vault-amount" class="ig-input" placeholder="Digite a quantia de DRX (ex: 500)" min="10" style="font-size:16px; font-weight:800; text-align:center; margin-bottom:14px;" />
+                    <div style="display:flex; gap:12px; flex-wrap:wrap;">
+                        <button type="button" data-action="depositar-cofre" class="ws-btn" style="flex:1; min-width:180px; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border:none; padding:14px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer;">
+                            📥 Depositar no Cofre (+5%/dia)
+                        </button>
+                        <button type="button" data-action="sacar-cofre" class="ws-btn" style="flex:1; min-width:180px; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:14px; border-radius:12px; font-size:14px; font-weight:800; cursor:pointer;">
+                            📤 Levantar para a Carteira
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    },
+
+    operarCofre(tipoOperacao){
+        const inputEl = document.getElementById('ig-vault-amount');
+        const quantia = Math.floor(Number(inputEl?.value) || 0);
+        if (quantia <= 0) {
+            return this.mostrarAvisoLocal('Digite uma quantia válida de DRX!', 'warning');
+        }
+
+        this.state.cofre = this.state.cofre || { saldo: 0, ultimoRendimento: '' };
+        const saldoCarteira = this.state.coins?.bronze || 0;
+        const saldoCofre = this.state.cofre.saldo || 0;
+
+        if (tipoOperacao === 'depositar') {
+            if (quantia > saldoCarteira) {
+                return this.mostrarAvisoLocal(`Saldo insuficiente na carteira! Você tem 💎 ${saldoCarteira} DRX disponíveis.`, 'warning');
+            }
+            this.state.coins.bronze = saldoCarteira - quantia;
+            this.state.cofre.saldo = saldoCofre + quantia;
+            this.mostrarAvisoLocal(`🏦 Depositou 💎 ${quantia} DRX no Cofre!`, 'success');
+        } else {
+            if (quantia > saldoCofre) {
+                return this.mostrarAvisoLocal(`Você só tem 💎 ${saldoCofre} DRX guardados no Cofre!`, 'warning');
+            }
+            this.state.cofre.saldo = saldoCofre - quantia;
+            this.state.coins.bronze = saldoCarteira + quantia;
+            this.mostrarAvisoLocal(`💸 Levantou 💎 ${quantia} DRX para a sua carteira livre!`, 'success');
+        }
+
+        if (window.DOVRYX && typeof window.DOVRYX.setBalance === 'function') {
+            window.DOVRYX.setBalance(this.state.coins.bronze);
+        }
+
+        this.tocarSom('coin');
+        this.atualizarHUD();
+        this.saveDados();
+        this.renderizarConteudoCofre();
     },
 
 // 🏪 ABRE A LOJA DE TÍTULOS MÁGICOS E MASCOTES
