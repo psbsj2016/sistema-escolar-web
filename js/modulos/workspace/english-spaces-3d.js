@@ -1817,22 +1817,118 @@ class EnglishSpaces3DWorld {
     this.interiorGroups.set(id, props);
   }
 
-  criarPostesAvenida3D() {
-    const THREE = window.THREE;
-    this.posteLights = [];
-    for (let row = 0; row < 6; row++) {
-      const zPos = -row * 16 + 6;
-      [-6.8, 6.8, -28.5, -39.5, 28.5, 39.5].forEach((xPos, idx) => {
-        const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.12, 4.2, 8), new THREE.MeshLambertMaterial({ color: 0x1e293b })); pole.position.set(xPos, 2.1, zPos);
-        const lampHead = new THREE.Mesh(new THREE.SphereGeometry(0.28, 10, 10), new THREE.MeshBasicMaterial({ color: 0xfef08a })); lampHead.position.set(xPos, 4.3, zPos);
-        this.exteriorGroup.add(pole, lampHead);
-        if (idx < 2) {
-          const light = new THREE.PointLight(0xfef08a, 0.0, 18); light.position.set(xPos, 4.3, zPos);
-          this.scene.add(light); this.posteLights.push({ light, lampHead });
-        }
-      });
-    }
+ criarPostesAvenida3D() {
+  const THREE = window.THREE;
+  if (!THREE || !this.exteriorGroup || !this.scene) return;
+
+  this.posteLights = [];
+
+  const metalMat = new THREE.MeshStandardMaterial({
+    color: 0x263442,
+    metalness: 0.72,
+    roughness: 0.38
+  });
+
+  const housingMat = new THREE.MeshStandardMaterial({
+    color: 0x374151,
+    metalness: 0.65,
+    roughness: 0.42
+  });
+
+  const lampOffMat = new THREE.MeshBasicMaterial({
+    color: 0x64748b
+  });
+
+  const lampOnMat = new THREE.MeshBasicMaterial({
+    color: 0xffe2a8
+  });
+
+  for (let row = 0; row < 6; row++) {
+    const zPos = -row * 16 + 6;
+
+    [-6.8, 6.8, -28.5, -39.5, 28.5, 39.5].forEach((xPos, idx) => {
+
+      const direction = xPos > 0 ? -1 : 1;
+
+      // Corpo principal do poste
+      const pole = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.065, 0.12, 4.2, 12),
+        metalMat
+      );
+
+      pole.position.set(xPos, 2.1, zPos);
+      pole.castShadow = true;
+
+      // Braço horizontal
+      const arm = new THREE.Mesh(
+        new THREE.BoxGeometry(0.85, 0.07, 0.07),
+        metalMat
+      );
+
+      arm.position.set(
+        xPos + direction * 0.38,
+        4.12,
+        zPos
+      );
+
+      // Estrutura da luminária
+      const housing = new THREE.Mesh(
+        new THREE.BoxGeometry(0.72, 0.13, 0.34),
+        housingMat
+      );
+
+      housing.position.set(
+        xPos + direction * 0.78,
+        4.19,
+        zPos
+      );
+
+      housing.castShadow = true;
+
+      // Difusor de luz
+      const lampHead = new THREE.Mesh(
+        new THREE.BoxGeometry(0.55, 0.025, 0.24),
+        lampOffMat.clone()
+      );
+
+      lampHead.position.set(
+        xPos + direction * 0.78,
+        4.11,
+        zPos
+      );
+
+      this.exteriorGroup.add(
+        pole,
+        arm,
+        housing,
+        lampHead
+      );
+
+      // Luzes principais da avenida
+      if (idx < 2) {
+        const light = new THREE.PointLight(
+          0xffd6a0,
+          0,
+          13,
+          2
+        );
+
+        light.position.set(
+          xPos + direction * 0.78,
+          4.05,
+          zPos
+        );
+
+        this.scene.add(light);
+
+        this.posteLights.push({
+          light,
+          lampHead
+        });
+      }
+    });
   }
+}
 
   criarCeuRealista() {
     const THREE = window.THREE;
