@@ -709,10 +709,10 @@ Workspace.Ingles = {
                         <div class="ig-wallet" id="xpBadge">
                             <div id="leagueBadge" class="ig-league-badge liga-bronze">🥉 Bronze</div>
                             <div class="ig-wallet-item streak" title="Dias Seguidos de Estudo">🔥 <span id="streakCount">1</span>d</div>
-                            <button type="button" data-action="comprar-escudo" id="freezeBadge" class="ig-wallet-item" style="display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:12px; font-size:13px; font-weight:800; color:#0284c7; background:#e0f2fe; border:1px solid #7dd3fc; border-bottom:2px solid #38bdf8; cursor:pointer; transition:0.2s;" title="Escudo de Ofensiva: Protege os seus dias seguidos se faltar 1 dia (Clique para comprar por 300 moedas)">
+                            <button type="button" data-action="comprar-escudo" id="freezeBadge" class="ig-wallet-item" style="display:flex; align-items:center; gap:5px; padding:6px 12px; border-radius:12px; font-size:13px; font-weight:800; color:#0284c7; background:#e0f2fe; border:1px solid #7dd3fc; border-bottom:2px solid #38bdf8; cursor:pointer; transition:0.2s;" title="Escudo de Ofensiva: Protege os seus dias seguidos se faltar 1 dia (Clique para comprar por 300 DRX)">
                                 🛡️ <span id="freezeCount">0</span>/2
                             </button>
-                            <div id="coinBag" class="ig-coin-bag" title="Saldo Disponível de Moedas">💰 <span id="coinsCount">0</span></div>
+                            <div id="coinBag" class="ig-coin-bag" title="Saldo Disponível de DOVRYX (DRX)">💎 <span id="coinsCount">0</span> <span style="font-size:12px; font-weight:900; color:#b45309;">DRX</span></div>
                             <button type="button" data-action="abrir-loja" class="ws-btn" style="background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border:none; padding:8px 14px; border-radius:12px; font-size:13px; font-weight:800; display:flex; align-items:center; gap:6px; box-shadow:0 4px 10px rgba(109,40,217,0.25); cursor:pointer;" title="Abrir Loja de Títulos e Mascotes">
                                 🏪 Loja
                             </button>
@@ -836,21 +836,30 @@ Workspace.Ingles = {
         this.state.coins.bronze = valorAntigo + qtd;
         this.state.coins.maiorSaldo = Math.max(this.state.coins.bronze, this.state.coins.maiorSaldo || 0);
         
+        if (window.DOVRYX && typeof window.DOVRYX.setBalance === 'function') {
+            window.DOVRYX.setBalance(this.state.coins.bronze);
+        }
+
         this.tocarSom('coin'); 
         this.atualizarHUD(valorAntigo);
         this.saveDados();
     },
 
-    // 💰 Desconta moedas da carteira quando o aluno compra uma ajuda ou item na loja
+    // 💎 Desconta DOVRYX (DRX) da carteira quando o aluno compra uma ajuda ou item na loja
     gastarCoins(custo){
         this.state.coins = this.state.coins || {bronze:0, prata:0, ouro:0, maiorSaldo:0};
         const saldoAtual = this.state.coins.bronze || 0;
         if (saldoAtual < custo) {
-            this.mostrarAvisoLocal(`Moedas insuficientes! Precisa de 🪙 ${custo} moedas.`, 'warning');
+            this.mostrarAvisoLocal(`Saldo insuficiente! Precisa de 💎 ${custo} DRX.`, 'warning');
             return false;
         }
         const valorAntigo = saldoAtual;
         this.state.coins.bronze = saldoAtual - custo;
+
+        if (window.DOVRYX && typeof window.DOVRYX.setBalance === 'function') {
+            window.DOVRYX.setBalance(this.state.coins.bronze);
+        }
+
         this.atualizarHUD(valorAntigo);
         this.saveDados();
         return true;
@@ -929,7 +938,7 @@ Workspace.Ingles = {
                 document.getElementById('professorView').classList.add('hidden');
             }
 
-            if(a === 'comprar-escudo') {
+           if(a === 'comprar-escudo') {
                 const escudosAtuais = parseInt(this.state.streakFreeze) || 0;
                 if (escudosAtuais >= 2) {
                     return this.mostrarAvisoLocal('🛡️ Já possui a carga máxima de 2 Escudos de Ofensiva!', 'warning');
@@ -945,10 +954,10 @@ Workspace.Ingles = {
                 if (window.Workspace?.Feed?.confirmarAcao) {
                     window.Workspace.Feed.confirmarAcao(
                         '🛡️ Comprar Escudo de Ofensiva?',
-                        `Deseja gastar 🪙 300 moedas para equipar 1 Escudo Protetor? Se você faltar 1 dia de treino, o escudo será ativado automaticamente para salvar os seus ${this.state.streak || 1} dia(s) de ofensiva!`,
+                        `Deseja gastar 💎 300 DRX para equipar 1 Escudo Protetor? Se você faltar 1 dia de treino, o escudo será ativado automaticamente para salvar os seus ${this.state.streak || 1} dia(s) de ofensiva!`,
                         confirmarCompra
                     );
-                } else if (confirm('Deseja comprar 1 Escudo de Ofensiva por 300 moedas?')) {
+                } else if (confirm('Deseja comprar 1 Escudo de Ofensiva por 300 DRX?')) {
                     confirmarCompra();
                 }
                 return;
@@ -1426,7 +1435,7 @@ Workspace.Ingles = {
         if (window.Workspace?.Feed?.dispararConfetes) {
             window.Workspace.Feed.dispararConfetes();
         }
-        this.mostrarAvisoLocal('🎉 TESOURO DESBLOQUEADO! Ganhou +250 Moedas no Baú Diário!', 'success');
+        this.mostrarAvisoLocal('🎉 TESOURO DESBLOQUEADO! Ganhou +250 DRX 💎 no Baú Diário!', 'success');
         this.renderizarMissoesDiarias();
     },
 
@@ -1473,19 +1482,19 @@ Workspace.Ingles = {
         if (missoes.recompensado) {
             botaoBauHTML = `
                 <button disabled class="ws-btn" style="background: #ecfdf5; color: #059669; border: 2px solid #10b981; padding: 12px 22px; border-radius: 14px; font-size: 13px; font-weight: 800; cursor: default;">
-                    🔓 Baú de Hoje Resgatado (+250 🪙)
+                    🔓 Baú de Hoje Resgatado (+250 DRX 💎)
                 </button>
             `;
         } else if (todasConcluidas) {
             botaoBauHTML = `
                 <button data-action="resgatar-bau-diario" class="ws-btn bounce-active" style="background: linear-gradient(135deg, #f59e0b, #d97706); color: #fff; border: 2px solid #fde047; padding: 12px 24px; border-radius: 14px; font-size: 14px; font-weight: 900; cursor: pointer; box-shadow: 0 6px 20px rgba(245, 158, 11, 0.4);">
-                    🎁 Abrir Baú Dourado (+250 🪙)
+                    🎁 Abrir Baú Dourado (+250 DRX 💎)
                 </button>
             `;
         } else {
             botaoBauHTML = `
                 <button data-action="resgatar-bau-diario" class="ws-btn" style="background: #f1f5f9; color: #64748b; border: 2px dashed #cbd5e1; padding: 10px 18px; border-radius: 14px; font-size: 12.5px; font-weight: 800; cursor: pointer;">
-                    🔒 Baú Dourado (${concluidasCount}/3 Missões) • +250 🪙
+                    🔒 Baú Dourado (${concluidasCount}/3 Missões) • +250 DRX 💎
                 </button>
             `;
         }
@@ -1536,7 +1545,7 @@ Workspace.Ingles = {
                 </div>
 
                 <div style="margin-top:12px; display:flex; gap:8px; justify-content:space-between; align-items:center;">
-                    <span style="background:#F1F5F9; color:#475569; padding:4px 8px; border-radius:6px; font-size:11px; font-weight:700;">🪙 +${['picturePop','minimalPairs'].includes(g.id)?'75':'50'} BZ</span>
+                   <span style="background:#FEF3C7; color:#B45309; border:1px solid #FDE68A; padding:4px 10px; border-radius:6px; font-size:11px; font-weight:800;">💎 +${['picturePop','minimalPairs'].includes(g.id)?'75':'50'} DRX</span>
                     ${vencidos ? `<span style="color:#EF4444; font-size:11px; font-weight:700;">${vencidos} para revisar</span>` : `<span style="color:#64748B; font-size:11px; font-weight:700;">${percentagem}% Concluído</span>`}
                 </div>
             </div>`;
@@ -1632,12 +1641,12 @@ Workspace.Ingles = {
         this.ganharCoins('bronze', bonusFinal);
         this.tocarSom('coin'); 
         
-        // 🚀 Moeda voadora com indicação do Multiplicador de Combo
+        // 🚀 Moeda voadora em DOVRYX (DRX) com indicação do Multiplicador de Combo
         const modalBody = document.getElementById('modalBody');
         if (modalBody) {
             const coinAnim = document.createElement('div');
             coinAnim.className = 'coin-anim';
-            coinAnim.innerText = multiplicador > 1 ? `🪙 +${bonusFinal} (${multiplicador}x 🔥)` : `🪙 +${bonusFinal}`;
+            coinAnim.innerText = multiplicador > 1 ? `💎 +${bonusFinal} DRX (${multiplicador}x 🔥)` : `💎 +${bonusFinal} DRX`;
             coinAnim.style.left = '50%';
             coinAnim.style.top = '30%';
             modalBody.appendChild(coinAnim);
@@ -1770,7 +1779,7 @@ Workspace.Ingles = {
                 <p style="color:#64748B; font-size:15px; margin:0 0 20px 0;">${game.desc}</p>
                 <div style="display:inline-flex; gap:10px; background:#F8FAFC; padding:10px 16px; border-radius:12px; border:1px solid #E2E8F0; margin-bottom:24px;">
                     <span style="font-weight:700; font-size:13px; color:#475569;">📦 ${totalItens} Desafios (SRS)</span>
-                    <span style="font-weight:700; font-size:13px; color:#D97706;">🪙 Recompensa Contínua</span>
+                    <span style="font-weight:700; font-size:13px; color:#D97706;">DRX 💎 Recompensa Contínua</span>
                 </div>
                 <button data-action="iniciar-jogo" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #6366f1, #4f46e5); color:#fff; border:none; padding:16px; border-radius:12px; font-size:16px; font-weight:bold; cursor:pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.3);">Começar Treino Infinito ▶</button>
             </div>
@@ -1816,7 +1825,7 @@ Workspace.Ingles = {
             </div>`;
     },
 
-    renderGameListenType(){
+   renderGameListenType(){
         const col = this.getColecaoDoJogoAtual();
         this.desafioAtualObj = this.obterItemInteligente(col, 'phrase'); 
         if(!this.desafioAtualObj) return this.renderTelaFimDeJornada();
@@ -1826,7 +1835,7 @@ Workspace.Ingles = {
                 <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
                     <button data-action="falar-frase" class="ws-btn" style="background:#4F46E5; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🔊 Tocar Áudio</button>
                     <button data-action="falar-lento" class="ws-btn" style="background:#0F172A; color:#fff; padding:12px 24px; border-radius:20px; border:none; cursor:pointer;">🐢 Tocar Devagar</button>
-                    <button data-action="ajuda-lupa" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:12px 18px; border-radius:20px; cursor:pointer; font-size:13px;">🔍 Pista (-25 🪙)</button>
+                    <button data-action="ajuda-lupa" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:12px 18px; border-radius:20px; cursor:pointer; font-size:13px;">🔍 Pista (-25 DRX 💎)</button>
                 </div>
                 <input id="ig-listenInput" class="ig-input" placeholder="Transcreva exatamente o que ouviu..." style="text-align:center;" onkeydown="if(event.key==='Enter') document.querySelector('[data-action=\\'verificar-listen\\']')?.click()">
                 <div id="ig-listen-feedback" style="display:none;"></div>
@@ -1844,7 +1853,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
                 <span style="font-size:11px; color:#64748B; font-weight:700;">💡 Toque numa palavra para ouvir</span>
-                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 DRX 💎)</button>
             </div>
             <div class="ig-big-phrase" style="font-size:22px; margin-top:0;">${this._tornarPalavrasClicaveis(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:12px; margin-top:20px;">
@@ -1862,7 +1871,7 @@ Workspace.Ingles = {
         document.getElementById('modalBody').innerHTML=`
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; flex-wrap:wrap; gap:6px;">
                 <span style="font-size:11px; color:#64748B; font-weight:700;">💡 Toque numa palavra para ouvir</span>
-                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 DRX 💎)</button>
             </div>
             <div class="ig-big-phrase" style="color:#4F46E5; margin-top:0;">${this._tornarPalavrasClicaveis(s.text)}</div>
             <div style="display:flex; gap:12px; justify-content:center; margin-top:20px; flex-wrap:wrap;">
@@ -2188,7 +2197,7 @@ Workspace.Ingles = {
         this.atualizarTelaForca();
     },
 
-   atualizarTelaForca() {
+  atualizarTelaForca() {
         const w = this.state._hangmanWord;
         const guessed = this.state._hangmanGuessed;
         
@@ -2225,7 +2234,7 @@ Workspace.Ingles = {
                     <p style="font-weight:800; color:#0F172A; margin:5px 0 8px 0; font-size:18px;">${Workspace.escapeHTML(this.desafioAtualObj.translation)}</p>
                     <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap;">
                         <button data-action="falar-lento" class="ws-btn" style="background:#4F46E5; color:#fff; padding:5px 14px; border-radius:16px; border:none; font-size:12px;">🎧 Ouvir Dica Sonora</button>
-                        <button data-action="ajuda-forca" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:5px 14px; border-radius:16px; font-size:12px; cursor:pointer;">💡 Revelar Letra + ❤️ (-40 🪙)</button>
+                        <button data-action="ajuda-forca" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:5px 14px; border-radius:16px; font-size:12px; cursor:pointer;">💡 Revelar Letra + ❤️ (-40 DRX 💎)</button>
                     </div>
                 </div>
                 <div class="lives-box" title="Vidas restantes">${hearts}</div>
@@ -2269,9 +2278,9 @@ Workspace.Ingles = {
                 <iframe src="${Workspace.escapeHTML(embedUrl)}" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
             </div>
             <div style="display:flex; justify-content:flex-end; margin-bottom:8px;">
-                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 🪙)</button>
+                <button data-action="ajuda-5050" class="ws-btn" style="background:#FEF3C7; color:#B45309; border:1px solid #F59E0B; padding:6px 14px; border-radius:20px; font-size:12px; cursor:pointer;">⚡ Cortar 50% (-30 DRX 💎)</button>
             </div>
-            <div class="ig-big-phrase" style="font-size:18px; padding:15px; margin-top:0;">${this._tornarPalavrasClicaveis(q.question)}</div>
+            <div style="font-size:18px; padding:15px; margin-top:0;" class="ig-big-phrase">${this._tornarPalavrasClicaveis(q.question)}</div>
             <div style="display:flex; flex-direction:column; gap:10px;">
                 ${opcoesBaralhadas.map(o => `<button data-action="verificar-quiz" data-index="${o.indexOriginal}" class="ws-btn" style="background:#fff; color:#0F172A; border:2px solid #E2E8F0; padding:14px; border-radius:12px; cursor:pointer; text-align:left; font-size:15px; transition: 0.2s;" onmouseover="this.style.borderColor='#4F46E5'" onmouseout="this.style.borderColor='#E2E8F0'">${Workspace.escapeHTML(o.texto)}</button>`).join('')}
             </div>
@@ -2372,7 +2381,7 @@ Workspace.Ingles = {
             } else if (jaComprou) {
                 btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:#4f46e5; color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">✨ Equipar Agora</button>`;
             } else {
-                btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">🪙 Comprar por ${item.preco.toLocaleString('pt-BR')}</button>`;
+                btnHtml = `<button data-action="comprar-item-loja" data-item-id="${item.id}" class="ws-btn" style="width:100%; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:10px; border-radius:10px; font-size:12.5px; font-weight:800; cursor:pointer;">DRX 💎 Comprar por ${item.preco.toLocaleString('pt-BR')} DRX</button>`;
             }
 
             return `
@@ -2396,7 +2405,7 @@ Workspace.Ingles = {
                     <div>
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                             <span style="font-size:36px;">${Workspace.escapeHTML(cup.emoji ? cup.emoji : '🎟️')}</span>
-                            <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:900;">🪙 ${(cup.preco ? cup.preco : 1000).toLocaleString('pt-BR')}</span>
+                            <span style="background:#fef3c7; color:#b45309; border:1px solid #fde68a; padding:4px 10px; border-radius:20px; font-size:12px; font-weight:900;">DRX 💎 ${(cup.preco ? cup.preco : 1000).toLocaleString('pt-BR')} DRX</span>
                         </div>
                         <div style="font-size:15px; font-weight:800; color:#0f172a;">${Workspace.escapeHTML(cup.titulo)}</div>
                         <div style="font-size:12px; color:#64748b; margin-top:4px; line-height:1.4;">${Workspace.escapeHTML(cup.desc ? cup.desc : '')}</div>
@@ -2428,7 +2437,7 @@ Workspace.Ingles = {
                     </div>
                     <div style="background:rgba(255,255,255,0.1); padding:12px 20px; border-radius:14px; text-align:right; border:1px solid rgba(255,255,255,0.15);">
                         <div style="font-size:11px; color:#cbd5e1; font-weight:700;">Saldo Disponível</div>
-                        <div style="font-size:22px; font-weight:900; color:#fde047;">💰 ${saldoAtual.toLocaleString('pt-BR')}</div>
+                        <div style="font-size:22px; font-weight:900; color:#fde047;">💎 ${saldoAtual.toLocaleString('pt-BR')} DRX</div>
                     </div>
                 </div>
 
@@ -2494,7 +2503,7 @@ Workspace.Ingles = {
         if (window.Workspace?.Feed?.confirmarAcao) {
             window.Workspace.Feed.confirmarAcao(
                 `🎟️ Resgatar "${cupom.titulo}"?`,
-                `Deseja gastar 🪙 ${preco.toLocaleString('pt-BR')} moedas para resgatar este cupom? O seu professor receberá um aviso na aba de Envios/Cupons para validar o seu prémio!`,
+                `Deseja gastar DRX 💎${preco.toLocaleString('pt-BR')} DRX moedas para resgatar este cupom? O seu professor receberá um aviso na aba de Envios/Cupons para validar o seu prémio!`,
                 executarResgate
             );
         } else if (confirm(`Deseja resgatar "${cupom.titulo}" por ${preco} moedas?`)) {
@@ -2562,7 +2571,7 @@ Workspace.Ingles = {
                         <div class="marquee-info">
                             <span class="marquee-name">${Workspace.escapeHTML(aluno.nome)}${mascoteHtml}</span>${tituloHtml}
                             <span class="marquee-stats">
-                                <span style="color:#d97706;">💰 ${totalMoedas.toLocaleString('pt-BR')}</span> 
+                                <span style="color:#d97706; font-weight:900;">💎 ${totalMoedas.toLocaleString('pt-BR')} DRX</span> 
                                 <span style="color:#cbd5e1;">|</span>
                                 <span>${ligaTexto}</span>
                             </span>

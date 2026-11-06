@@ -2573,18 +2573,98 @@ criarAvenidaRealista() {
     }
   }
 
-  criarVitrinesVivas() {
-    this.vitrines = [];
-    ['shopping', 'clothing'].forEach(id => {
-      const b = this.buildingsMeta.find(x => x.id === id);
-      if (!b) return;
-      const mannequin = this.criarBonecoHumano3D(0xec4899, 0x0f172a, 0xfde68a, true);
-      mannequin.position.set(b.frontX + Math.sign(b.col) * 0.5, 0, b.doorZ + 2.2);
-      mannequin.scale.set(0.9, 0.9, 0.9);
-      this.exteriorGroup.add(mannequin);
-      this.vitrines.push({ mesh: mannequin });
+
+criarVitrinesVivas() {
+  const THREE = window.THREE;
+  this.vitrines = [];
+
+  ['shopping', 'clothing'].forEach(id => {
+    const b = this.buildingsMeta.find(x => x.id === id);
+    if (!b) return;
+
+    const frente = b.frontX - Math.sign(b.col) * 0.22;
+
+    // Estrutura metálica das vitrines
+    const frameMat = new THREE.MeshStandardMaterial({
+      color: 0x303943,
+      roughness: 0.55,
+      metalness: 0.65
     });
-  }
+
+    // Vidro com transparência e reflexo suave
+    const glassMat = new THREE.MeshStandardMaterial({
+      color: 0xb9dce8,
+      transparent: true,
+      opacity: 0.32,
+      roughness: 0.16,
+      metalness: 0.22,
+      side: THREE.DoubleSide
+    });
+
+    // Duas vitrines, uma de cada lado da entrada
+    [-3.05, 3.05].forEach(offsetZ => {
+      const z = b.doorZ + offsetZ;
+
+      const frame = new THREE.Mesh(
+        new THREE.BoxGeometry(0.16, 2.55, 2.55),
+        frameMat
+      );
+
+      frame.position.set(frente, 1.65, z);
+      frame.castShadow = true;
+      frame.receiveShadow = true;
+      this.exteriorGroup.add(frame);
+
+      const glass = new THREE.Mesh(
+        new THREE.PlaneGeometry(2.35, 2.28),
+        glassMat
+      );
+
+      glass.position.set(
+        frente - Math.sign(b.col) * 0.09,
+        1.68,
+        z
+      );
+
+      glass.rotation.y = Math.sign(b.col) * Math.PI / 2;
+      this.exteriorGroup.add(glass);
+
+      // Base inferior da vitrine
+      const base = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, 0.16, 2.55),
+        new THREE.MeshStandardMaterial({
+          color: 0x555b60,
+          roughness: 0.7,
+          metalness: 0.25
+        })
+      );
+
+      base.position.set(frente, 0.42, z);
+      this.exteriorGroup.add(base);
+
+      this.vitrines.push({ mesh: glass });
+    });
+
+    // Mantém o manequim original da loja
+    const mannequin = this.criarBonecoHumano3D(
+      0xec4899,
+      0x0f172a,
+      0xfde68a,
+      true
+    );
+
+    mannequin.position.set(
+      b.frontX + Math.sign(b.col) * 0.5,
+      0,
+      b.doorZ + 2.2
+    );
+
+    mannequin.scale.set(0.9, 0.9, 0.9);
+    this.exteriorGroup.add(mannequin);
+    this.vitrines.push({ mesh: mannequin });
+  });
+}
+
 
   ativarSombrasReais() {
     if (!this.renderer) return;
@@ -3017,6 +3097,57 @@ const road = new THREE.Mesh(
       shopLight.position.set(centerX, 3.2, centerZ);
       this.scene.add(shopLight);
 
+  
+// Arandelas decorativas na fachada
+const lampHousingMat = new THREE.MeshStandardMaterial({
+  color: 0x34302a,
+  roughness: 0.48,
+  metalness: 0.72
+});
+
+const lampGlowMat = new THREE.MeshStandardMaterial({
+  color: 0xffd28a,
+  emissive: 0xffa928,
+  emissiveIntensity: 1.8,
+  roughness: 0.35
+});
+
+[-1.55, 1.55].forEach(offsetZ => {
+  const lampGroup = new THREE.Group();
+
+  const housing = new THREE.Mesh(
+    new THREE.BoxGeometry(0.22, 0.62, 0.34),
+    lampHousingMat
+  );
+
+  housing.position.y = 0;
+  lampGroup.add(housing);
+
+  const diffuser = new THREE.Mesh(
+    new THREE.BoxGeometry(0.045, 0.42, 0.19),
+    lampGlowMat
+  );
+
+  diffuser.position.x = -signCol * 0.125;
+  lampGroup.add(diffuser);
+
+  lampGroup.position.set(
+    frontX - signCol * 0.25,
+    2.65,
+    centerZ + offsetZ
+  );
+
+  lampGroup.traverse(obj => {
+    if (obj.isMesh) {
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+    }
+  });
+
+  this.scene.add(lampGroup);
+});
+
+
       const wallMat = new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.85, metalness: 0.1 });
       const wallMatsTransp = [];
 
@@ -3048,6 +3179,48 @@ const road = new THREE.Mesh(
       const roof = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 0.36, bd + 0.6), new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.9 }));
       roof.position.set(centerX, bh + 0.18, centerZ);
       this.scene.add(roof);
+
+  // Acabamento arquitetônico da fachada
+const facadeTrimMat = new THREE.MeshStandardMaterial({
+  color: 0xd6d0c4,
+  roughness: 0.82,
+  metalness: 0.06
+});
+
+// Colunas decorativas nas extremidades da fachada
+[-4.65, 4.65].forEach(offsetZ => {
+  const column = new THREE.Mesh(
+    new THREE.BoxGeometry(0.24, bh, 0.28),
+    facadeTrimMat
+  );
+
+  column.position.set(
+    frontX - signCol * 0.24,
+    bh / 2,
+    centerZ + offsetZ
+  );
+
+  column.castShadow = true;
+  column.receiveShadow = true;
+
+  this.scene.add(column);
+});
+
+// Acabamento horizontal superior da fachada
+const facadeHeader = new THREE.Mesh(
+  new THREE.BoxGeometry(0.24, 0.22, bd + 0.35),
+  facadeTrimMat
+);
+
+facadeHeader.position.set(
+  frontX - signCol * 0.24,
+  bh - 0.12,
+  centerZ
+);
+
+facadeHeader.castShadow = true;
+
+this.scene.add(facadeHeader);
 
       const doorGroup = new THREE.Group();
       doorGroup.position.set(frontX, 0, centerZ);

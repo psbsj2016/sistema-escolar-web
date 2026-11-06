@@ -370,7 +370,7 @@ Workspace.InglesProfessor = {
                         <div style="display:flex;gap:12px;margin-top:6px;font-size:12px;color:#64748B;font-weight:600;"><span>🔥 Streak: ${r.streak ? r.streak : 1}d</span></div>
                     </div>
                     <div style="text-align:right;flex-shrink:0">
-                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:800; border:1px solid #FDE68A;">💰 ${(r.coins?.bronze ? r.coins.bronze : 0).toLocaleString('pt-BR')}</div>
+                        <div style="font-size:14px;background:#FFFBEB;color:#D97706;padding:8px 16px;border-radius:20px;font-weight:900; border:1px solid #FDE68A;">💎 ${(r.coins?.bronze ? r.coins.bronze : 0).toLocaleString('pt-BR')} DRX</div>
                     </div>
                 </div>`;
             }).join('');
@@ -517,18 +517,18 @@ Workspace.InglesProfessor = {
                     </div>
                 </div>`;
         }
-       else if (tabId === 'envios'){
+      else if (tabId === 'envios'){
             const pendentes = state.submissions.filter(s=>s.status==='pending');
             document.getElementById('pendingCount').textContent = pendentes.length;
             document.getElementById('tab-envios').innerHTML=`
                 <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📥 Forja de Conteúdo & Resgates (${pendentes.length})</div>
-                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Aprove as frases criativas dos alunos para a Piscina Global ou confirme os cupons resgatados na Loja.</p>
+                <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Aprove as frases criativas dos alunos para a Piscina Global ou confirme os cupons resgatados na Loja com DOVRYX (DRX).</p>
                 ${pendentes.length===0 ? '<div style="background:#fff; border:1px dashed #cbd5e1; border-radius:16px; padding:40px; text-align:center;"><span style="font-size:40px;">📭</span><h3 style="color:#475569;margin-top:15px;">Nenhum envio ou resgate pendente.</h3></div>' : 
                 pendentes.map(s=>`
                     <div class="prof-card" style="border-left: 5px solid ${s.isCoupon ? '#f59e0b' : '#6366f1'}; background:${s.isCoupon ? '#fffbeb' : '#ffffff'}; margin-bottom:16px;">
                         <div style="font-size:12px; color:#64748B; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center;">
                             <span><b>👤 ${esc(s.student)}</b> • ${s.isCoupon ? '<b style="color:#d97706;">🎟️ RESGATE DE CUPOM DA LOJA</b>' : `no jogo 🎮 <b>${esc(s.game)}</b>`}</span>
-                            ${s.precoPago ? `<span style="background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800;">Pagou 🪙 ${s.precoPago.toLocaleString('pt-BR')}</span>` : ''}
+                            ${s.precoPago ? `<span style="background:#fef3c7; color:#b45309; padding:3px 10px; border-radius:12px; font-weight:800;">Pagou 💎 ${s.precoPago.toLocaleString('pt-BR')} DRX</span>` : ''}
                         </div>
                         <div style="font-size:16px; color:#0F172A; margin-bottom:16px; font-weight:700; background:#fff; padding:15px; border-radius:8px; border:1px solid #e2e8f0;">"${esc(s.text)}"</div>
                         <div style="display:flex; flex-wrap:wrap; gap:12px;">
@@ -561,7 +561,7 @@ Workspace.InglesProfessor = {
                     <div style="display:flex; flex-wrap:wrap; gap:10px;">
                         <input id="ig-cupEmoji" class="ig-input" placeholder="Emoji 🎟️" style="width:90px; text-align:center; font-size:18px;">
                         <input id="ig-cupTitulo" class="ig-input" placeholder="Título (ex: Escolher a Música da Semana)" style="flex:2; min-width:200px;">
-                        <input id="ig-cupPreco" type="number" class="ig-input" placeholder="Preço 🪙 (ex: 1500)" style="flex:1; min-width:140px;">
+                        <input id="ig-cupPreco" type="number" class="ig-input" placeholder="Preço em DRX 💎 (ex: 1500)" style="flex:1; min-width:140px;">
                     </div>
                     <div style="display:flex; flex-wrap:wrap; gap:10px; margin-top:10px;">
                         <input id="ig-cupDesc" class="ig-input" placeholder="Regras / Descrição curta para o aluno..." style="flex:1; min-width:220px;">
@@ -575,7 +575,7 @@ Workspace.InglesProfessor = {
                         <div class="prof-card" style="border:2px dashed #fcd34d; background:#fffbeb;">
                             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                                 <span style="font-size:32px;">${esc(c.emoji ? c.emoji : '🎟️')}</span>
-                                <span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:20px; font-weight:900; font-size:13px; border:1px solid #fde68a;">🪙 ${(c.preco ? c.preco : 1000).toLocaleString('pt-BR')}</span>
+                                <span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:20px; font-weight:900; font-size:13px; border:1px solid #fde68a;">💎 ${(c.preco ? c.preco : 1000).toLocaleString('pt-BR')} DRX</span>
                             </div>
                             <h4 style="margin:0 0 6px 0; color:#0f172a; font-size:16px;">${esc(c.titulo)}</h4>
                             <p style="margin:0 0 14px 0; color:#64748b; font-size:12.5px; line-height:1.4;">${esc(c.desc ? c.desc : '')}</p>
