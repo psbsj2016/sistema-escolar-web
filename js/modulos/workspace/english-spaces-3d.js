@@ -1985,7 +1985,10 @@ class EnglishSpaces3DWorld {
       if (this.moonMesh) this.moonMesh.visible = false;
       if (this.starsGroup) this.starsGroup.visible = false;
       if (this.cloudsGroup) this.cloudsGroup.visible = true;
-      this.posteLights.forEach(p => { p.light.intensity = 0.6; p.lampHead.material.color.setHex(0xfef08a); });
+      this.posteLights.forEach(p => {
+  p.light.intensity = 0.35;
+  p.lampHead.material.color.setHex(0xffe2a8);
+});
     } else {
       this.scene.background = new THREE.Color(0x070b1a); this.scene.fog = new THREE.FogExp2(0x070b1a, 0.008);
       if (this.ambientLight) { this.ambientLight.color.setHex(0x8b9dc3); this.ambientLight.intensity = 0.45; }
@@ -1997,7 +2000,10 @@ class EnglishSpaces3DWorld {
         this.starsGroup.children.forEach(s => { s.userData.twinkle += 0.04; s.material.opacity = 0.6 + Math.sin(s.userData.twinkle) * 0.4; s.material.transparent = true; });
       }
       if (this.cloudsGroup) this.cloudsGroup.visible = true;
-      this.posteLights.forEach(p => { p.light.intensity = 1.4; p.lampHead.material.color.setHex(0xfef08a); });
+      this.posteLights.forEach(p => {
+  p.light.intensity = 0.85;
+  p.lampHead.material.color.setHex(0xffe2a8);
+});
     }
   }
 
