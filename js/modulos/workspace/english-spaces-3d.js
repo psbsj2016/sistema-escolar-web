@@ -34,6 +34,43 @@ const CITY_BUILDINGS_LAYOUT = [
   { id: 'guild_bau',       col:  3, row: 5, color: 0x1e1b4b, roof: 0x312e81, npcColor: 0x818cf8, voiceLang: 'en-GB', voicePitch: 0.88 }
 ];
 
+// 🏢 NOVOS EDIFÍCIOS VERTICAIS DA CIDADE
+const CITY_TOWERS_LAYOUT = [
+  {
+    id: 'tower_4',
+    name: 'RESIDENCIAL HORIZON',
+    floors: 4,
+    x: -55,
+    z: -112,
+    width: 12,
+    depth: 12,
+    color: 0xdbeafe,
+    accent: 0x2563eb
+  },
+  {
+    id: 'tower_8',
+    name: 'RESIDENCIAL SKY GARDEN',
+    floors: 8,
+    x: -20,
+    z: -112,
+    width: 12,
+    depth: 12,
+    color: 0xe2e8f0,
+    accent: 0x0f766e
+  },
+  {
+    id: 'tower_12',
+    name: 'RESIDENCIAL GRAND TOWER',
+    floors: 12,
+    x: 55,
+    z: -112,
+    width: 14,
+    depth: 14,
+    color: 0xf1f5f9,
+    accent: 0x7c3aed
+  }
+];
+
 const FALLBACK_NEW_SPACES = {
   bank:            { id: 'bank',            name: 'CITY BANK',       emoji: '🏦', npcName: 'Oliver (Banker)',     roles: ['CUSTOMER', 'BANKER'],     missions: [{ id: 'm1', title: 'Open a DRX account', xp: 80 }] },
   clothing:        { id: 'clothing',        name: 'FASHION STORE',   emoji: '👗', npcName: 'Bella (Stylist)',     roles: ['SHOPPER', 'STYLIST'],     missions: [{ id: 'm1', title: 'Buy a new outfit', xp: 80 }] },
@@ -4336,6 +4373,227 @@ pracaGroup.add(painelGroup);
   this.exteriorGroup.add(pracaGroup);
 }
   
+ // 🏢 CONSTRUÇÃO DAS TORRES RESIDENCIAIS
+criarTorresResidenciais3D() {
+  const THREE = window.THREE;
+  if (!THREE || !this.exteriorGroup) return;
+
+  const materialVidro = new THREE.MeshStandardMaterial({
+    color: 0x7dd3fc,
+    metalness: 0.55,
+    roughness: 0.2,
+    transparent: true,
+    opacity: 0.88
+  });
+
+  const materialMetal = new THREE.MeshStandardMaterial({
+    color: 0x334155,
+    metalness: 0.72,
+    roughness: 0.32
+  });
+
+  const materialConcreto = new THREE.MeshStandardMaterial({
+    color: 0xcbd5e1,
+    roughness: 0.86
+  });
+
+  CITY_TOWERS_LAYOUT.forEach(cfg => {
+    const torre = new THREE.Group();
+
+    const alturaAndar = 3.2;
+    const alturaTotal = cfg.floors * alturaAndar;
+    const largura = cfg.width;
+    const profundidade = cfg.depth;
+
+    const materialFachada = new THREE.MeshStandardMaterial({
+      color: cfg.color,
+      roughness: 0.78,
+      metalness: 0.08
+    });
+
+    const materialDestaque = new THREE.MeshStandardMaterial({
+      color: cfg.accent,
+      roughness: 0.48,
+      metalness: 0.3
+    });
+
+    // Corpo principal da torre
+    const corpo = new THREE.Mesh(
+      new THREE.BoxGeometry(largura, alturaTotal, profundidade),
+      materialFachada
+    );
+
+    corpo.position.y = alturaTotal / 2;
+    corpo.castShadow = true;
+    corpo.receiveShadow = true;
+    torre.add(corpo);
+
+    // Base arquitetônica
+    const base = new THREE.Mesh(
+      new THREE.BoxGeometry(largura + 0.8, 0.65, profundidade + 0.8),
+      materialConcreto
+    );
+
+    base.position.y = 0.32;
+    torre.add(base);
+
+    // Colunas verticais de acabamento
+    [-1, 1].forEach(lado => {
+      const coluna = new THREE.Mesh(
+        new THREE.BoxGeometry(0.28, alturaTotal, 0.3),
+        materialDestaque
+      );
+
+      coluna.position.set(
+        lado * (largura / 2 - 0.25),
+        alturaTotal / 2,
+        profundidade / 2 + 0.13
+      );
+
+      torre.add(coluna);
+    });
+
+    // Janelas e sacadas de cada andar
+    for (let andar = 0; andar < cfg.floors; andar++) {
+      const altura = andar * alturaAndar + 1.65;
+
+      // Três janelas frontais
+      [-1, 0, 1].forEach(pos => {
+        const janela = new THREE.Mesh(
+          new THREE.BoxGeometry(2.0, 1.65, 0.12),
+          materialVidro
+        );
+
+        janela.position.set(
+          pos * (largura * 0.29),
+          altura,
+          profundidade / 2 + 0.09
+        );
+
+        torre.add(janela);
+
+        // Moldura inferior da janela
+        const moldura = new THREE.Mesh(
+          new THREE.BoxGeometry(2.08, 0.09, 0.2),
+          materialMetal
+        );
+
+        moldura.position.set(
+          pos * (largura * 0.29),
+          altura - 0.88,
+          profundidade / 2 + 0.14
+        );
+
+        torre.add(moldura);
+      });
+
+      // Sacada central
+      const sacada = new THREE.Mesh(
+        new THREE.BoxGeometry(3.0, 0.16, 1.05),
+        materialConcreto
+      );
+
+      sacada.position.set(
+        0,
+        andar * alturaAndar + 0.75,
+        profundidade / 2 + 0.48
+      );
+
+      torre.add(sacada);
+
+      // Guarda-corpo da sacada
+      const guardaCorpo = new THREE.Mesh(
+        new THREE.BoxGeometry(2.9, 0.65, 0.07),
+        materialVidro
+      );
+
+      guardaCorpo.position.set(
+        0,
+        andar * alturaAndar + 1.1,
+        profundidade / 2 + 0.92
+      );
+
+      torre.add(guardaCorpo);
+
+      // Divisória horizontal entre andares
+      const faixa = new THREE.Mesh(
+        new THREE.BoxGeometry(largura + 0.15, 0.12, profundidade + 0.15),
+        materialDestaque
+      );
+
+      faixa.position.y = (andar + 1) * alturaAndar;
+      torre.add(faixa);
+    }
+
+    // Fachada lateral com janelas
+    for (let andar = 0; andar < cfg.floors; andar++) {
+      [-1, 1].forEach(lado => {
+        const janelaLateral = new THREE.Mesh(
+          new THREE.BoxGeometry(0.12, 1.55, 2.0),
+          materialVidro
+        );
+
+        janelaLateral.position.set(
+          lado * (largura / 2 + 0.07),
+          andar * alturaAndar + 1.65,
+          0
+        );
+
+        torre.add(janelaLateral);
+      });
+    }
+
+    // Entrada principal envidraçada
+    const entrada = new THREE.Mesh(
+      new THREE.BoxGeometry(2.2, 2.5, 0.14),
+      materialVidro
+    );
+
+    entrada.position.set(
+      0,
+      1.65,
+      profundidade / 2 + 0.12
+    );
+
+    torre.add(entrada);
+
+    // Cobertura superior
+    const cobertura = new THREE.Mesh(
+      new THREE.BoxGeometry(largura + 0.8, 0.45, profundidade + 0.8),
+      materialDestaque
+    );
+
+    cobertura.position.y = alturaTotal + 0.22;
+    torre.add(cobertura);
+
+    // Nome da torre na fachada
+    const placa = new THREE.Mesh(
+      new THREE.BoxGeometry(4.8, 0.65, 0.16),
+      materialMetal
+    );
+
+    placa.position.set(
+      0,
+      2.65,
+      profundidade / 2 + 0.16
+    );
+
+    torre.add(placa);
+
+    // Posicionamento na cidade
+    torre.position.set(cfg.x, 0, cfg.z);
+
+    torre.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+
+    this.exteriorGroup.add(torre);
+  });
+}
+
   criarCenarioFundoMontanhasArvores() {
     const THREE = window.THREE;
     const fundoGroup = new THREE.Group();
@@ -5525,6 +5783,7 @@ const road = new THREE.Mesh(
       this.atualizarCicloDiaNoite();
       this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
       this.criarCenarioFundoMontanhasArvores();
+      this.criarTorresResidenciais3D();
       this.criarPracaCentral3D();
       // 🏞️ PRAÇA PÚBLICA — ESTRUTURA INICIAL
 const pracaGroup = new THREE.Group();
