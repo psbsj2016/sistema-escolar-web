@@ -1831,6 +1831,70 @@ if (isFemale) {
   group.add(noGravata);
 }
 
+  // 👕 VARIEDADE DE ESTILOS NAS ROUPAS
+// O estilo é definido pela cor da camisa e permanece estável.
+const estiloVisualRoupa = Math.abs(Math.floor(corCamisa)) % 4;
+
+const matDetalheRoupa = new THREE.MeshStandardMaterial({
+  color: 0x263244,
+  roughness: 0.72
+});
+
+const matBotaoRoupa = new THREE.MeshStandardMaterial({
+  color: 0xd4af37,
+  metalness: 0.55,
+  roughness: 0.35
+});
+
+// Variação 1: camisa com bolso
+if (estiloVisualRoupa === 0) {
+  const bolso = new THREE.Mesh(
+    new THREE.BoxGeometry(0.13, 0.13, 0.025),
+    matDetalheRoupa
+  );
+  bolso.position.set(-torsoW * 0.27, 1.43, 0.155);
+  group.add(bolso);
+
+  const abaBolso = new THREE.Mesh(
+    new THREE.BoxGeometry(0.14, 0.035, 0.03),
+    matCamisa
+  );
+  abaBolso.position.set(-torsoW * 0.27, 1.50, 0.17);
+  group.add(abaBolso);
+}
+
+// Variação 2: camisa com botões
+else if (estiloVisualRoupa === 1) {
+  for (let i = 0; i < 3; i++) {
+    const botao = new THREE.Mesh(
+      new THREE.SphereGeometry(0.018, 10, 10),
+      matBotaoRoupa
+    );
+    botao.position.set(0, 1.48 - i * 0.12, 0.17);
+    group.add(botao);
+  }
+}
+
+// Variação 3: faixa decorativa no peito
+else if (estiloVisualRoupa === 2) {
+  const faixa = new THREE.Mesh(
+    new THREE.BoxGeometry(torsoW * 0.78, 0.045, 0.018),
+    matDetalheRoupa
+  );
+  faixa.position.set(0, 1.48, 0.155);
+  group.add(faixa);
+}
+
+// Variação 4: acabamento na parte superior
+else {
+  const acabamento = new THREE.Mesh(
+    new THREE.BoxGeometry(torsoW * 0.72, 0.035, 0.018),
+    matBotaoRoupa
+  );
+  acabamento.position.set(0, 1.59, 0.155);
+  group.add(acabamento);
+}
+
     const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
     const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
     const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);

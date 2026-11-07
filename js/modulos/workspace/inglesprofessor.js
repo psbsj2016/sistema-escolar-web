@@ -425,7 +425,7 @@ Workspace.InglesProfessor = {
                             <option value="B1">Nível B1 (Intermédio)</option>
                             <option value="B2">Nível B2 (Avançado)</option>
                         </select>
-                        <button type="button" data-action="gerar-pacote-ia" id="ig-btn-gerar-ia" class="ws-btn" style="flex:1; min-width:210px; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:14px 20px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 6px 18px rgba(245,158,11,0.35);">
+                       <button type="button" id="ig-btn-gerar-ia" onclick="Workspace.InglesProfessor.gerarPacoteComIA()" class="ws-btn" style="flex:1; min-width:210px; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:14px 20px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 6px 18px rgba(245,158,11,0.35);">
                             ✨ Gerar Pacote com IA (+13 Itens)
                         </button>
                     </div>
@@ -804,21 +804,48 @@ Workspace.InglesProfessor = {
         const nivel = selectNivel?.value || 'A2';
 
         if (!tema) {
-            return Ingles.mostrarAvisoLocal('Digite um tema para a aula (ex: At the Airport)!', 'warning');
+            return Ingles.mostrarAvisoLocal('⚠️ Digite um tema para a aula (ex: At the Airport)!', 'warning');
         }
 
         if (btn) {
             btn.disabled = true;
             btn.innerHTML = '⏳ A forjar 13 desafios com IA...';
+            btn.style.opacity = '0.75';
         }
 
         try {
-            const res = await Workspace.api('/workspace/ingles/gerar-pacote-ia', 'POST', { tema, nivel });
-            if (!res || !res.success || !res.pacote) {
-                throw new Error(res?.error || 'Falha ao gerar pacote');
+            let p = null;
+
+            // 1. Tenta primeiro a rota dedicada /gerar-pacote-ia
+            const res = await Workspace.api('/workspace/ingles/gerar-pacote-ia', 'POST', { tema, nivel }).catch(() => null);
+            if (res && res.success && res.pacote) {
+                p = res.pacote;
+            } else {
+                // 2. Fallback automático: usa a rota /ia-teste/groq que já está ativa no servidor!
+                const promptGroq = `Generate an English learning package about "${tema}" for CEFR level ${nivel}. Return ONLY a raw valid JSON object (no markdown, no backticks, no extra text) with this exact structure:
+{"words":[{"word":"AIRPORT","translation":"Aeroporto"},{"word":"FLIGHT","translation":"Voo"},{"word":"LUGGAGE","translation":"Bagagem"},{"word":"PASSPORT","translation":"Passaporte"},{"word":"GATE","translation":"Portão"}],"phrases":[{"phrase":"May I see your passport, please?"},{"phrase":"What time does the flight board?"},{"phrase":"I have one carry-on bag."}],"quizzes":[{"question":"Where ___ you flying today?","options":["are","is","am"],"correct":0},{"question":"She ___ her ticket yesterday.","options":["bought","buy","buying"],"correct":0}],"wordPickers":[{"text":"I would like a ___ seat, please.","options":["window","table"],"correct":0},{"text":"Please go to boarding ___ B12.","options":["gate","roof"],"correct":0}],"roleplays":[{"title":"${tema}","prompt":"Hello! Welcome. How can I help you today?","tip":"Use polite English expressions"}]}
+Create original content specifically for the theme "${tema}" (${nivel}) keeping the exact same JSON keys and array sizes (5 words, 3 phrases, 2 quizzes, 2 wordPickers, 1 roleplay).`;
+
+                const resGroq = await Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
+                    mensagem: promptGroq,
+                    historico: []
+                });
+
+                if (resGroq && resGroq.success && resGroq.resposta) {
+                    const textoBruto = String(resGroq.resposta);
+                    const inicioJson = textoBruto.indexOf('{');
+                    const fimJson = textoBruto.lastIndexOf('}');
+                    if (inicioJson !== -1 && fimJson !== -1) {
+                        const jsonExtraido = textoBruto.substring(inicioJson, fimJson + 1);
+                        p = JSON.parse(jsonExtraido);
+                    }
+                }
             }
 
-            const p = res.pacote;
+            if (!p || typeof p !== 'object') {
+                throw new Error('Formato de resposta inválido da IA.');
+            }
+
             const agora = Date.now();
             let totalAdicionados = 0;
 
@@ -868,7 +895,7 @@ Workspace.InglesProfessor = {
                 });
             }
 
-            // 4. Poção Sintática / Lacunas (wordPickers - mantém o padrão [Errada, Correta] com correct: 1)
+            // 4. Poção Sintática / Lacunas (wordPickers - padrão [Errada, Correta] com correct: 1)
             if (Array.isArray(p.wordPickers)) {
                 p.wordPickers.forEach((wp, idx) => {
                     if (wp.text && Array.isArray(wp.options) && wp.options.length >= 2) {
@@ -886,7 +913,7 @@ Workspace.InglesProfessor = {
                 });
             }
 
-            // 5. Roleplays (roleplays - usa title, prompt e tip)
+            // 5. Roleplays (roleplays)
             if (Array.isArray(p.roleplays)) {
                 p.roleplays.forEach((rp, idx) => {
                     const falaNpc = rp.prompt || rp.scenario;
@@ -906,9 +933,11 @@ Workspace.InglesProfessor = {
             Ingles.mostrarAvisoLocal(`🎉 Pacote "${tema}" (${nivel}) criado! +${totalAdicionados} desafios adicionados à Biblioteca!`, 'success');
             Workspace.InglesProfessor.renderProfessorTab('biblioteca');
         } catch (err) {
-            Ingles.mostrarAvisoLocal('Não foi possível gerar o pacote agora. Verifique a conexão.', 'error');
+            console.error('Erro ao gerar pacote IA:', err);
+            Ingles.mostrarAvisoLocal('Não foi possível gerar o pacote agora. Verifique a sua chave Groq.', 'error');
             if (btn) {
                 btn.disabled = false;
+                btn.style.opacity = '1';
                 btn.innerHTML = '✨ Gerar Pacote com IA (+13 Itens)';
             }
         }
