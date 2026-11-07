@@ -181,6 +181,28 @@ Workspace.Ingles = {
         this.injetarCSS(); 
         this.construirHTML(); 
         this.bindEvents();
+
+        // 🚀 OUVINTE DE TEMPO REAL: Atualiza a Biblioteca do Aluno instantaneamente se o Professor gerar um pacote via IA
+        if (window.workspaceStream && !this._streamBaúConfigurado) {
+            this._streamBaúConfigurado = true;
+            window.workspaceStream.addEventListener('evento_realtime', (e) => {
+                try {
+                    const data = JSON.parse(e.data);
+                    if (data && data.type === 'BAU_INGLES_UPDATE') {
+                        const ehAluno = Workspace.usuario?.tipo === 'Aluno';
+                        if (ehAluno) {
+                            this.loadDados().then(() => {
+                                this.mostrarAvisoLocal('📚 Novos desafios foram adicionados pelo Professor!', 'success');
+                                const modal = document.getElementById('gameModal');
+                                if (modal && !modal.classList.contains('hidden')) {
+                                    this.renderDesafioAtual();
+                                }
+                            });
+                        }
+                    }
+                } catch(err) {}
+            });
+        }
         
         if(typeof Workspace.navegarPara==='function' && !this.navConfigurada){
             const orig=Workspace.navegarPara;
@@ -1764,27 +1786,27 @@ Workspace.Ingles = {
         return this.getColecaoPorJogo(this.jogoAtual);
     },
 
-    getColecaoPorJogo: function(id){
+   getColecaoPorJogo: function(id){
         const db = this.state._dbLoaded; 
-        if(id==='wordSpark' || id==='memoryGame' || id==='hangman') return db ? this.state.words : this.defaults.words;
-        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return db ? this.state.phrases : this.defaults.phrases;
-        if(id==='quiz') return db ? this.state.quizzes : this.defaults.quizzes;
-        if(id==='wordPicker') return db ? this.state.wordPickers : this.defaults.wordPickers;
-        if(id==='minimalPairs') return db ? this.state.minimalPairs : this.defaults.minimalPairs;
-        if(id==='picturePop') return db ? this.state.pictures : this.defaults.pictures;
-        if(id==='answerQuest') return db ? this.state.questions : this.defaults.questions;
-        if(id==='contextRole') return db ? this.state.roleplays : this.defaults.roleplays;
-        if(id==='debateAI') return db ? this.state.debates : this.defaults.debates;
+        if(id==='wordSpark' || id==='memoryGame' || id==='hangman') return (db && Array.isArray(this.state.words) && this.state.words.length) ? this.state.words : this.defaults.words;
+        if(['readAloud','listenType','sentenceShuffle'].includes(id)) return (db && Array.isArray(this.state.phrases) && this.state.phrases.length) ? this.state.phrases : this.defaults.phrases;
+        if(id==='quiz') return (db && Array.isArray(this.state.quizzes) && this.state.quizzes.length) ? this.state.quizzes : this.defaults.quizzes;
+        if(id==='wordPicker') return (db && Array.isArray(this.state.wordPickers) && this.state.wordPickers.length) ? this.state.wordPickers : this.defaults.wordPickers;
+        if(id==='minimalPairs') return (db && Array.isArray(this.state.minimalPairs) && this.state.minimalPairs.length) ? this.state.minimalPairs : this.defaults.minimalPairs;
+        if(id==='picturePop') return (db && Array.isArray(this.state.pictures) && this.state.pictures.length) ? this.state.pictures : this.defaults.pictures;
+        if(id==='answerQuest') return (db && Array.isArray(this.state.questions) && this.state.questions.length) ? this.state.questions : this.defaults.questions;
+        if(id==='contextRole') return (db && Array.isArray(this.state.roleplays) && this.state.roleplays.length) ? this.state.roleplays : this.defaults.roleplays;
+        if(id==='debateAI') return (db && Array.isArray(this.state.debates) && this.state.debates.length) ? this.state.debates : this.defaults.debates;
         if(id==='questionMaker') {
             const daPiscina = (this.state.pool ? this.state.pool : []).filter(p => p.type === 'answerQuest' || p.type === 'questionMaker');
             const doProfessor = (this.state.answerStatements && this.state.answerStatements.length) ? this.state.answerStatements : this.defaults.answerStatements;
             return [...daPiscina, ...doProfessor];
         }
         if(id==='videoQuiz') {
-            const todosQuizzes = db ? this.state.quizzes : this.defaults.quizzes;
+            const todosQuizzes = (db && Array.isArray(this.state.quizzes) && this.state.quizzes.length) ? this.state.quizzes : this.defaults.quizzes;
             return todosQuizzes.filter(q => q && q.videoUrl && typeof q.videoUrl === 'string' && q.videoUrl.trim() !== ''); 
         }
-        if(id==='bossRaid') return db ? this.state.words : this.defaults.words;
+        if(id==='bossRaid') return (db && Array.isArray(this.state.words) && this.state.words.length) ? this.state.words : this.defaults.words;
         return [];
     },
 

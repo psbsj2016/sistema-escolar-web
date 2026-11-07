@@ -3256,30 +3256,109 @@ for (let z = -119.5; z < 48; z += 3.2) {
     });
   }
 
+  
   criarCenarioFundoMontanhasArvores() {
     const THREE = window.THREE;
     const fundoGroup = new THREE.Group();
-    const montanhaCores = [0x334155, 0x475569, 0x1e293b, 0x3f4a5a];
-    for (let i = -4; i <= 4; i++) {
-      const h = 18 + Math.random() * 14 + Math.abs(i) * 1.5;
-      const geo = new THREE.ConeGeometry(10 + Math.random() * 6, h, 7);
-      const mat = new THREE.MeshStandardMaterial({ color: montanhaCores[Math.abs(i) % montanhaCores.length], roughness: 0.95, flatShading: true });
-      const mont = new THREE.Mesh(geo, mat);
-      mont.position.set(i * 24 + (Math.random() - 0.5) * 6, h / 2 - 2, -124 - Math.random() * 12);
-      fundoGroup.add(mont);
 
-      const neve = new THREE.Mesh(new THREE.ConeGeometry(3.2, 4.5, 6), new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.8 }));
-      neve.position.set(0, h / 2 - 1.2, 0);
-      mont.add(neve);
+    // ⛰️ Montanhas com formas naturais e irregulares
+    const montanhaCores = [
+      0x365447,
+      0x49634f,
+      0x596b52,
+      0x405a49,
+      0x68715a
+    ];
+
+    for (let i = -4; i <= 4; i++) {
+      const altura = 18 + Math.random() * 14 + Math.abs(i) * 1.5;
+
+      const geometria = new THREE.IcosahedronGeometry(1, 3);
+      const posicoes = geometria.attributes.position;
+
+      for (let v = 0; v < posicoes.count; v++) {
+        const x = posicoes.getX(v);
+        const y = posicoes.getY(v);
+        const z = posicoes.getZ(v);
+
+        const variacao =
+          1 +
+          Math.sin(x * 8 + i) * 0.055 +
+          Math.cos(z * 9 - i) * 0.045;
+
+        posicoes.setXYZ(
+          v,
+          x * variacao,
+          y * variacao,
+          z * variacao
+        );
+      }
+
+      geometria.computeVertexNormals();
+
+      const material = new THREE.MeshStandardMaterial({
+        color: montanhaCores[Math.abs(i) % montanhaCores.length],
+        roughness: 1,
+        flatShading: false
+      });
+
+      const montanha = new THREE.Mesh(geometria, material);
+
+      montanha.scale.set(
+        11 + Math.random() * 6,
+        altura,
+        9 + Math.random() * 5
+      );
+
+      montanha.position.set(
+        i * 24 + (Math.random() - 0.5) * 6,
+        altura * 0.65,
+        -124 - Math.random() * 12
+      );
+
+      montanha.castShadow = true;
+      montanha.receiveShadow = true;
+
+      fundoGroup.add(montanha);
     }
 
+    // 🌳 Árvores do cenário
     const criarArvore = (x, z, scale = 1) => {
-      const tronco = new THREE.Mesh(new THREE.CylinderGeometry(0.12 * scale, 0.18 * scale, 1.2 * scale, 6), new THREE.MeshStandardMaterial({ color: 0x422006, roughness: 0.9 }));
+      const tronco = new THREE.Mesh(
+        new THREE.CylinderGeometry(
+          0.12 * scale,
+          0.18 * scale,
+          1.2 * scale,
+          8
+        ),
+        new THREE.MeshStandardMaterial({
+          color: 0x422006,
+          roughness: 0.9
+        })
+      );
+
       tronco.position.set(x, 0.6 * scale, z);
-      const copa = new THREE.Mesh(new THREE.ConeGeometry(0.85 * scale, 2.2 * scale, 7), new THREE.MeshStandardMaterial({ color: 0x14532d, roughness: 0.8, flatShading: true }));
+
+      const copa = new THREE.Mesh(
+        new THREE.SphereGeometry(0.85 * scale, 10, 8),
+        new THREE.MeshStandardMaterial({
+          color: 0x14532d,
+          roughness: 0.9
+        })
+      );
+
       copa.position.set(x, 1.8 * scale, z);
-      const copa2 = new THREE.Mesh(new THREE.ConeGeometry(0.65 * scale, 1.6 * scale, 6), new THREE.MeshStandardMaterial({ color: 0x166534, roughness: 0.85, flatShading: true }));
-      copa2.position.set(x, 2.6 * scale, z);
+
+      const copa2 = new THREE.Mesh(
+        new THREE.SphereGeometry(0.65 * scale, 10, 8),
+        new THREE.MeshStandardMaterial({
+          color: 0x166534,
+          roughness: 0.9
+        })
+      );
+
+      copa2.position.set(x, 2.45 * scale, z);
+
       fundoGroup.add(tronco, copa, copa2);
     };
 
@@ -3287,8 +3366,10 @@ for (let z = -119.5; z < 48; z += 3.2) {
       criarArvore(-23.5, z, 1.1);
       criarArvore(23.5, z, 1.1);
     }
+
     this.exteriorGroup.add(fundoGroup);
   }
+
 
   criarPistaAeroporto() {
     const THREE = window.THREE;
