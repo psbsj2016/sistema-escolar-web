@@ -1758,11 +1758,21 @@ footGeo.scale(0.82, 0.58, 1.35);
     const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
     group.add(leftLeg, rightLeg);
 
-    const hipGeo = new THREE.BoxGeometry(hipW, 0.18, 0.28);
-    const hip = new THREE.Mesh(hipGeo, matCalca); hip.position.set(0, 0.9, 0); group.add(hip);
+    // Quadril arredondado com volume mais natural
+const hipGeo = new THREE.SphereGeometry(0.5, 24, 18);
+hipGeo.scale(hipW, 0.20, 0.30);
 
-    const torsoGeo = new THREE.BoxGeometry(torsoW, 0.70, 0.28);
-    const torso = new THREE.Mesh(torsoGeo, matCamisa); torso.position.set(0, 1.34, 0); group.add(torso);
+const hip = new THREE.Mesh(hipGeo, matCalca);
+hip.position.set(0, 0.9, 0);
+group.add(hip);
+
+    // Tronco arredondado, mantendo a silhueta masculina e feminina
+const torsoGeo = new THREE.SphereGeometry(0.5, 28, 22);
+torsoGeo.scale(torsoW, 0.70, 0.30);
+
+const torso = new THREE.Mesh(torsoGeo, matCamisa);
+torso.position.set(0, 1.34, 0);
+group.add(torso);
 
     if (isFemale) {
       const skirtGeo = new THREE.CylinderGeometry(0.22, 0.31, 0.34, 14);
