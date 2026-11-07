@@ -1783,6 +1783,54 @@ group.add(torso);
       group.add(skirt, chestL, chestR);
     }
 
+  // 👔 DETALHES DE ROUPAS E ACESSÓRIOS
+const matAcessorio = new THREE.MeshStandardMaterial({
+  color: 0xd4af37,
+  metalness: 0.72,
+  roughness: 0.28
+});
+
+if (isFemale) {
+  // Colar delicado
+  const colar = new THREE.Mesh(
+    new THREE.TorusGeometry(0.13, 0.012, 8, 32),
+    matAcessorio
+  );
+  colar.rotation.x = Math.PI / 2;
+  colar.position.set(0, 1.62, 0.13);
+  group.add(colar);
+
+  // Pingente
+  const pingente = new THREE.Mesh(
+    new THREE.SphereGeometry(0.035, 12, 12),
+    matAcessorio
+  );
+  pingente.position.set(0, 1.48, 0.265);
+  group.add(pingente);
+
+} else {
+  // Gravata masculina
+  const matGravata = new THREE.MeshStandardMaterial({
+    color: 0x991b1b,
+    roughness: 0.65
+  });
+
+  const gravata = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.065, 0.34, 8),
+    matGravata
+  );
+  gravata.position.set(0, 1.39, 0.285);
+  group.add(gravata);
+
+  // Nó da gravata
+  const noGravata = new THREE.Mesh(
+    new THREE.SphereGeometry(0.045, 12, 10),
+    matGravata
+  );
+  noGravata.position.set(0, 1.57, 0.29);
+  group.add(noGravata);
+}
+
     const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
     const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
     const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);
@@ -1856,21 +1904,135 @@ leftEar.scale.set(0.65, 1.1, 0.65);
 rightEar.scale.set(0.65, 1.1, 0.65);
 
 headGroup.add(leftEar, rightEar);
+     // ✨ BRINCOS FEMININOS
+if (isFemale) {
+  const criarBrinco = (lado) => {
+    const brinco = new THREE.Mesh(
+      new THREE.SphereGeometry(0.035, 12, 12),
+      new THREE.MeshStandardMaterial({
+        color: 0xfacc15,
+        metalness: 0.75,
+        roughness: 0.25
+      })
+    );
+
+    brinco.position.set(lado * 0.26, -0.075, 0.055);
+    headGroup.add(brinco);
+  };
+
+  criarBrinco(-1);
+  criarBrinco(1);
+}
     const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
     const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1, 1.2, 1.5);
     const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
 
-    let hairMesh;
-    if (isFemale) {
-      const hairTopGeo = new THREE.SphereGeometry(0.305, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.85);
-      hairMesh = new THREE.Mesh(hairTopGeo, matCabelo); hairMesh.position.set(0, 0.02, -0.02);
-      const ponytailGeo = new THREE.CylinderGeometry(0.08, 0.13, 0.42, 10); ponytailGeo.translate(0, -0.21, 0);
-      const ponytail = new THREE.Mesh(ponytailGeo, matCabelo); ponytail.position.set(0, -0.05, -0.27); ponytail.rotation.x = 0.28;
-      headGroup.add(ponytail);
-    } else {
-      const hairGeo = new THREE.SphereGeometry(0.285, 16, 16, 0, Math.PI * 2, 0, Math.PI * 0.62);
-      hairMesh = new THREE.Mesh(hairGeo, matCabelo); hairMesh.position.set(0, 0.07, 0);
+   // 💇 CABELOS COM ESTILOS VARIADOS
+let hairMesh;
+const hairExtras = [];
+
+// A cor da camisa determina um estilo consistente para cada avatar
+const hairStyle = Math.abs((Number(corCamisa) || 0) % 3);
+
+if (isFemale) {
+
+  // Base arredondada do cabelo feminino
+  const hairTopGeo = new THREE.SphereGeometry(
+    0.305, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.85
+  );
+
+  hairMesh = new THREE.Mesh(hairTopGeo, matCabelo);
+  hairMesh.position.set(0, 0.02, -0.02);
+
+  if (hairStyle === 0) {
+    // Rabo de cavalo
+    const ponytail = new THREE.Mesh(
+      new THREE.SphereGeometry(0.11, 16, 14),
+      matCabelo
+    );
+    ponytail.scale.set(0.85, 1.8, 0.9);
+    ponytail.position.set(0, -0.22, -0.27);
+    hairExtras.push(ponytail);
+
+  } else if (hairStyle === 1) {
+    // Coque arredondado
+    const bun = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 18, 16),
+      matCabelo
+    );
+    bun.position.set(0, 0.19, -0.24);
+    hairExtras.push(bun);
+
+    // Mechas laterais
+    for (const lado of [-1, 1]) {
+      const mecha = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 14, 12),
+        matCabelo
+      );
+      mecha.scale.set(0.8, 2.2, 0.9);
+      mecha.position.set(lado * 0.23, -0.12, -0.03);
+      hairExtras.push(mecha);
     }
+
+  } else {
+    // Cabelo comprido com duas mechas laterais
+    for (const lado of [-1, 1]) {
+      const mecha = new THREE.Mesh(
+        new THREE.SphereGeometry(0.105, 16, 14),
+        matCabelo
+      );
+      mecha.scale.set(0.85, 2.5, 1);
+      mecha.position.set(lado * 0.23, -0.19, -0.06);
+      hairExtras.push(mecha);
+    }
+  }
+
+} else {
+
+  if (hairStyle === 0) {
+    // Cabelo masculino curto
+    const hairGeo = new THREE.SphereGeometry(
+      0.285, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.62
+    );
+    hairMesh = new THREE.Mesh(hairGeo, matCabelo);
+    hairMesh.position.set(0, 0.07, 0);
+
+  } else if (hairStyle === 1) {
+    // Cabelo ondulado com volume
+    hairMesh = new THREE.Mesh(
+      new THREE.SphereGeometry(0.29, 20, 18),
+      matCabelo
+    );
+    hairMesh.scale.set(1, 0.75, 0.95);
+    hairMesh.position.set(0, 0.12, -0.015);
+
+    // Pequenas mechas arredondadas
+    for (let i = 0; i < 5; i++) {
+      const curl = new THREE.Mesh(
+        new THREE.SphereGeometry(0.09, 12, 12),
+        matCabelo
+      );
+      curl.position.set(-0.20 + i * 0.10, 0.22, 0.08);
+      hairExtras.push(curl);
+    }
+
+  } else {
+    // Cabelo com franja
+    const hairGeo = new THREE.SphereGeometry(
+      0.285, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.65
+    );
+    hairMesh = new THREE.Mesh(hairGeo, matCabelo);
+    hairMesh.position.set(0, 0.07, 0);
+
+    const fringe = new THREE.Mesh(
+      new THREE.SphereGeometry(0.16, 16, 14),
+      matCabelo
+    );
+    fringe.scale.set(1.5, 0.55, 0.7);
+    fringe.position.set(0, 0.13, 0.22);
+    hairExtras.push(fringe);
+  }
+}
 
    // Olhos com íris, pupilas e reflexos
 const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 14, 14);
@@ -1920,6 +2082,7 @@ rightGlint.position.set(0.082, 0.071, 0.304);
     headGroup.add(
   headMesh,
   hairMesh,
+  ...hairExtras,
   noseMesh,
   leftEyeWhite,
   rightEyeWhite,
