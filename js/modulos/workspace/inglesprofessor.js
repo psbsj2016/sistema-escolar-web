@@ -290,8 +290,11 @@ Workspace.InglesProfessor = {
                 if (iCDesc) iCDesc.value = '';
                 if (iCPreco) iCPreco.value = '';
 
-                Workspace.InglesProfessor.renderProfessorTab('cupons');
+               Workspace.InglesProfessor.renderProfessorTab('cupons');
                 Ingles.mostrarAvisoLocal('🎟️ Novo Cupom publicado na Loja dos Alunos!', 'success');
+                break;
+            case 'gerar-pacote-ia':
+                await Workspace.InglesProfessor.gerarPacoteComIA();
                 break;
             case 'atualizar-ranking':
                 Workspace.InglesProfessor.carregarRanking();
@@ -402,6 +405,31 @@ Workspace.InglesProfessor = {
             document.getElementById('tab-biblioteca').innerHTML=`
                 <div class="ig-prof-header" style="border:none; margin-bottom:5px;">📚 Biblioteca Principal (SRS)</div>
                 <p style="color:#64748B; font-size:14px; margin-bottom:24px;">Os itens criados aqui serão treinados pelo algoritmo de repetição espaçada na área do aluno.</p>
+
+                <!-- 🧠 GERADOR AUTOMÁTICO DE PACOTES COM IA (1 CLIQUE) -->
+                <div class="prof-card" style="background:linear-gradient(135deg, #1e1b4b, #312e81); color:#fff; border:2px solid #8b5cf6; margin-bottom:24px; box-shadow:0 12px 30px rgba(79,70,229,0.22);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:12px;">
+                        <div>
+                            <div style="display:inline-block; background:rgba(250,204,21,0.2); border:1px solid #facc15; color:#fde047; padding:3px 10px; border-radius:999px; font-size:11px; font-weight:900; margin-bottom:6px;">
+                                ✨ FORJA INTELIGENTE GROQ IA
+                            </div>
+                            <h3 style="margin:0; font-size:19px; color:#fff; font-weight:900;">🧠 Gerador de Pacote Completo em 1 Clique</h3>
+                            <p style="margin:4px 0 0 0; font-size:13px; color:#cbd5e1;">Digite o tema da aula e a IA criará automaticamente <b>5 Palavras, 3 Frases, 2 Quizzes, 2 Lacunas e 1 Roleplay</b> na sua Biblioteca!</p>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                        <input id="ig-ai-tema" class="ig-input" placeholder="Ex: At the Airport, Restaurant & Food, Job Interview..." style="flex:2; min-width:220px; margin:0; background:#fff; color:#0f172a; font-weight:700;" />
+                        <select id="ig-ai-nivel" class="ig-select" style="flex:0.6; min-width:120px; margin:0; background:#fff; color:#0f172a; font-weight:800;">
+                            <option value="A1">Nível A1 (Iniciante)</option>
+                            <option value="A2" selected>Nível A2 (Básico)</option>
+                            <option value="B1">Nível B1 (Intermédio)</option>
+                            <option value="B2">Nível B2 (Avançado)</option>
+                        </select>
+                        <button type="button" data-action="gerar-pacote-ia" id="ig-btn-gerar-ia" class="ws-btn" style="flex:1; min-width:210px; background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; border:none; padding:14px 20px; border-radius:12px; font-weight:900; font-size:14px; cursor:pointer; box-shadow:0 6px 18px rgba(245,158,11,0.35);">
+                            ✨ Gerar Pacote com IA (+13 Itens)
+                        </button>
+                    </div>
+                </div>
                 <div class="grid-cards">
                     <div class="prof-card">
                         <div class="ig-prof-header">Vocabulário <span style="color:#64748B;font-size:14px">(${state.words.length})</span></div>
@@ -759,8 +787,130 @@ Workspace.InglesProfessor = {
                         </div>
                     </div>
 
-                </div>
+               </div>
             `;
+        }
+    },
+
+    // 🧠 GERA 13 DESAFIOS DE UMA SÓ VEZ COM A IA E SALVA NA BIBLIOTECA DO PROFESSOR
+    gerarPacoteComIA: async function() {
+        const Ingles = Workspace.Ingles;
+        const state = Ingles.state;
+        const inputTema = document.getElementById('ig-ai-tema');
+        const selectNivel = document.getElementById('ig-ai-nivel');
+        const btn = document.getElementById('ig-btn-gerar-ia');
+
+        const tema = inputTema?.value?.trim() || '';
+        const nivel = selectNivel?.value || 'A2';
+
+        if (!tema) {
+            return Ingles.mostrarAvisoLocal('Digite um tema para a aula (ex: At the Airport)!', 'warning');
+        }
+
+        if (btn) {
+            btn.disabled = true;
+            btn.innerHTML = '⏳ A forjar 13 desafios com IA...';
+        }
+
+        try {
+            const res = await Workspace.api('/workspace/ingles/gerar-pacote-ia', 'POST', { tema, nivel });
+            if (!res || !res.success || !res.pacote) {
+                throw new Error(res?.error || 'Falha ao gerar pacote');
+            }
+
+            const p = res.pacote;
+            const agora = Date.now();
+            let totalAdicionados = 0;
+
+            // 1. Vocabulário (words)
+            if (Array.isArray(p.words)) {
+                p.words.forEach((w, idx) => {
+                    if (w.word && w.translation) {
+                        state.words.unshift({
+                            id: `w_ai_${agora}_${idx}`,
+                            word: String(w.word).trim(),
+                            translation: String(w.translation).trim(),
+                            level: nivel
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 2. Frases e Expressões (phrases)
+            if (Array.isArray(p.phrases)) {
+                p.phrases.forEach((ph, idx) => {
+                    if (ph.phrase) {
+                        state.phrases.unshift({
+                            id: `p_ai_${agora}_${idx}`,
+                            phrase: String(ph.phrase).trim(),
+                            level: nivel
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 3. Quizzes (quizzes)
+            if (Array.isArray(p.quizzes)) {
+                p.quizzes.forEach((q, idx) => {
+                    if (q.question && Array.isArray(q.options) && q.options.length >= 2) {
+                        state.quizzes.unshift({
+                            id: `q_ai_${agora}_${idx}`,
+                            question: String(q.question).trim(),
+                            options: q.options.map(o => String(o).trim()),
+                            correct: typeof q.correct === 'number' ? q.correct : 0,
+                            level: nivel,
+                            videoUrl: null
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 4. Poção Sintática / Lacunas (wordPickers - mantém o padrão [Errada, Correta] com correct: 1)
+            if (Array.isArray(p.wordPickers)) {
+                p.wordPickers.forEach((wp, idx) => {
+                    if (wp.text && Array.isArray(wp.options) && wp.options.length >= 2) {
+                        const idxCorreto = typeof wp.correct === 'number' ? wp.correct : 0;
+                        const optCorreta = String(wp.options[idxCorreto] || wp.options[0]).trim();
+                        const optErrada = String(wp.options.find((_, i) => i !== idxCorreto) || wp.options[1]).trim();
+                        state.wordPickers.unshift({
+                            id: `wp_ai_${agora}_${idx}`,
+                            text: String(wp.text).trim(),
+                            options: [optErrada, optCorreta],
+                            correct: 1
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 5. Roleplays (roleplays - usa title, prompt e tip)
+            if (Array.isArray(p.roleplays)) {
+                p.roleplays.forEach((rp, idx) => {
+                    const falaNpc = rp.prompt || rp.scenario;
+                    if (falaNpc) {
+                        state.roleplays.unshift({
+                            id: `rp_ai_${agora}_${idx}`,
+                            title: rp.title ? String(rp.title).trim() : `${tema} (${nivel})`,
+                            prompt: String(falaNpc).trim(),
+                            tip: rp.tip ? String(rp.tip).trim() : 'Use natural English sentences'
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            await Ingles.saveDados();
+            Ingles.mostrarAvisoLocal(`🎉 Pacote "${tema}" (${nivel}) criado! +${totalAdicionados} desafios adicionados à Biblioteca!`, 'success');
+            Workspace.InglesProfessor.renderProfessorTab('biblioteca');
+        } catch (err) {
+            Ingles.mostrarAvisoLocal('Não foi possível gerar o pacote agora. Verifique a conexão.', 'error');
+            if (btn) {
+                btn.disabled = false;
+                btn.innerHTML = '✨ Gerar Pacote com IA (+13 Itens)';
+            }
         }
     }
 };
