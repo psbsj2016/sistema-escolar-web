@@ -1378,6 +1378,320 @@ const greenMat = new THREE.MeshStandardMaterial({
       terreno.rotation.x = -Math.PI / 2;
       lotGroup.add(terreno);
 
+   // 🌿 PAISAGISMO RESIDENCIAL — JARDIM E CAMINHO
+const gramaBordaMat = new THREE.MeshStandardMaterial({
+  color: 0x237a35,
+  roughness: 0.95
+});
+
+const pedraMat = new THREE.MeshStandardMaterial({
+  color: 0xb8b5a8,
+  roughness: 0.9
+});
+
+const vasoMat = new THREE.MeshStandardMaterial({
+  color: 0x9b6545,
+  roughness: 0.85
+});
+
+const folhasMat = new THREE.MeshStandardMaterial({
+  color: 0x276b35,
+  roughness: 0.9
+});
+
+const florMat = new THREE.MeshStandardMaterial({
+  color: 0xf5c842,
+  roughness: 0.7
+});
+
+// Caminho de pedras até a entrada
+for (let p = 0; p < 4; p++) {
+  const pedra = new THREE.Mesh(
+    new THREE.BoxGeometry(1.25, 0.09, 0.65),
+    pedraMat
+  );
+
+  pedra.position.set(0, 0.23, -5 + p * 0.85);
+  pedra.rotation.y = (p % 2 === 0 ? 0.025 : -0.025);
+  lotGroup.add(pedra);
+}
+
+// Canteiros laterais
+[-1, 1].forEach(lado => {
+  const canteiro = new THREE.Mesh(
+    new THREE.BoxGeometry(2.4, 0.16, 1.5),
+    gramaBordaMat
+  );
+
+  canteiro.position.set(lado * 4.35, 0.09, -3.9);
+  lotGroup.add(canteiro);
+
+  // Arbustos arredondados
+  for (let b = 0; b < 3; b++) {
+    const arbusto = new THREE.Mesh(
+      new THREE.SphereGeometry(0.42, 12, 10),
+      folhasMat
+    );
+
+    arbusto.scale.set(1.1, 0.8, 0.9);
+    arbusto.position.set(
+      lado * (3.65 + b * 0.65),
+      0.48,
+      -4.15
+    );
+
+    lotGroup.add(arbusto);
+  }
+
+  // Pequenas flores
+  for (let f = 0; f < 3; f++) {
+    const flor = new THREE.Mesh(
+      new THREE.SphereGeometry(0.12, 8, 8),
+      florMat
+    );
+
+    flor.position.set(
+      lado * (3.8 + f * 0.55),
+      0.62,
+      -3.55
+    );
+
+    lotGroup.add(flor);
+  }
+});
+
+   // 🌳 ÁRVORES ORNAMENTAIS DOS TERRENOS
+const troncoArvoreMat = new THREE.MeshStandardMaterial({
+  color: 0x79502e,
+  roughness: 0.95
+});
+
+const copaArvoreMat = new THREE.MeshStandardMaterial({
+  color: 0x287a3b,
+  roughness: 0.9
+});
+
+[-1, 1].forEach(lado => {
+  const arvore = new THREE.Group();
+
+  const tronco = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.13, 0.2, 1.25, 10),
+    troncoArvoreMat
+  );
+  tronco.position.y = 0.72;
+
+  const copa = new THREE.Mesh(
+    new THREE.SphereGeometry(0.85, 14, 12),
+    copaArvoreMat
+  );
+  copa.position.y = 1.75;
+  copa.scale.set(1, 1.15, 0.95);
+
+  const copaSuperior = new THREE.Mesh(
+    new THREE.SphereGeometry(0.58, 12, 10),
+    copaArvoreMat
+  );
+  copaSuperior.position.set(0.12, 2.35, 0);
+
+  arvore.add(tronco, copa, copaSuperior);
+  arvore.position.set(lado * 4.8, 0, 4.5);
+
+  lotGroup.add(arvore);
+});
+
+  // 💡 BALIZADORES MODERNOS DO CAMINHO
+const posteJardimMat = new THREE.MeshStandardMaterial({
+  color: 0x263238,
+  metalness: 0.65,
+  roughness: 0.35
+});
+
+const luzJardimMat = new THREE.MeshStandardMaterial({
+  color: 0xffe6a3,
+  emissive: 0xffc45c,
+  emissiveIntensity: 1.5,
+  roughness: 0.3
+});
+
+[-1, 1].forEach(lado => {
+  const balizador = new THREE.Group();
+
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.16, 0.19, 0.12, 12),
+    posteJardimMat
+  );
+  base.position.y = 0.06;
+
+  const haste = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.045, 0.06, 0.48, 10),
+    posteJardimMat
+  );
+  haste.position.y = 0.34;
+
+  const lampada = new THREE.Mesh(
+    new THREE.SphereGeometry(0.13, 12, 10),
+    luzJardimMat
+  );
+  lampada.position.y = 0.63;
+
+  balizador.add(base, haste, lampada);
+  balizador.position.set(lado * 1.35, 0, -4.45);
+
+  lotGroup.add(balizador);
+});
+
+  // 📬 CAIXA DE CORREIO RESIDENCIAL
+const caixaCorreioGroup = new THREE.Group();
+
+const correioMetalMat = new THREE.MeshStandardMaterial({
+  color: 0x334155,
+  metalness: 0.7,
+  roughness: 0.3
+});
+
+const correioDetalheMat = new THREE.MeshStandardMaterial({
+  color: 0xe2e8f0,
+  metalness: 0.55,
+  roughness: 0.35
+});
+
+// Suporte vertical
+const suporteCorreio = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.055, 0.075, 0.85, 10),
+  correioMetalMat
+);
+suporteCorreio.position.y = 0.43;
+
+// Corpo da caixa
+const corpoCorreio = new THREE.Mesh(
+  new THREE.BoxGeometry(0.65, 0.42, 0.42),
+  correioMetalMat
+);
+corpoCorreio.position.y = 0.95;
+
+// Tampa superior
+const tampaCorreio = new THREE.Mesh(
+  new THREE.BoxGeometry(0.72, 0.07, 0.48),
+  correioDetalheMat
+);
+tampaCorreio.position.y = 1.19;
+
+// Bandeirinha lateral
+const hasteBandeira = new THREE.Mesh(
+  new THREE.BoxGeometry(0.06, 0.32, 0.06),
+  correioDetalheMat
+);
+hasteBandeira.position.set(0.38, 1.05, 0);
+
+const bandeiraCorreio = new THREE.Mesh(
+  new THREE.BoxGeometry(0.22, 0.1, 0.06),
+  new THREE.MeshStandardMaterial({ color: 0xdc2626 })
+);
+bandeiraCorreio.position.set(0.49, 1.17, 0);
+
+caixaCorreioGroup.add(
+  suporteCorreio,
+  corpoCorreio,
+  tampaCorreio,
+  hasteBandeira,
+  bandeiraCorreio
+);
+
+caixaCorreioGroup.position.set(2.8, 0, -4.5);
+lotGroup.add(caixaCorreioGroup);
+
+   // ❄️ AR-CONDICIONADO EXTERNO DAS RESIDÊNCIAS
+if (stage >= 2) {
+  const arGroup = new THREE.Group();
+
+  const arMat = new THREE.MeshStandardMaterial({
+    color: 0xe2e8f0,
+    roughness: 0.55,
+    metalness: 0.2
+  });
+
+  const gradeMat = new THREE.MeshStandardMaterial({
+    color: 0x64748b,
+    metalness: 0.65,
+    roughness: 0.4
+  });
+
+  // Corpo do aparelho
+  const corpoAr = new THREE.Mesh(
+    new THREE.BoxGeometry(0.85, 0.55, 0.35),
+    arMat
+  );
+  corpoAr.position.y = 1.25;
+
+  // Grade frontal
+  const gradeAr = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.19, 0.19, 0.035, 20),
+    gradeMat
+  );
+  gradeAr.rotation.x = Math.PI / 2;
+  gradeAr.position.set(0, 1.25, -0.19);
+
+  // Pequenos suportes
+  [-0.27, 0.27].forEach(x => {
+    const suporte = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.12, 0.48),
+      gradeMat
+    );
+    suporte.position.set(x, 0.91, 0);
+    arGroup.add(suporte);
+  });
+
+  arGroup.add(corpoAr, gradeAr);
+
+  // Instalação na parede lateral direita
+  arGroup.position.set(3.58, 0, 1.2);
+  lotGroup.add(arGroup);
+}
+
+   // 🏡 PLACA DE NUMERAÇÃO DA RESIDÊNCIA
+if (stage >= 2) {
+  const placaNumeroCanvas = document.createElement('canvas');
+  placaNumeroCanvas.width = 256;
+  placaNumeroCanvas.height = 128;
+
+  const numeroCtx = placaNumeroCanvas.getContext('2d');
+
+  numeroCtx.fillStyle = '#172554';
+  numeroCtx.fillRect(0, 0, 256, 128);
+
+  numeroCtx.strokeStyle = '#facc15';
+  numeroCtx.lineWidth = 7;
+  numeroCtx.strokeRect(5, 5, 246, 118);
+
+  numeroCtx.fillStyle = '#ffffff';
+  numeroCtx.font = 'bold 76px Arial';
+  numeroCtx.textAlign = 'center';
+  numeroCtx.textBaseline = 'middle';
+  numeroCtx.fillText(String(i + 1), 128, 65);
+
+  const placaNumeroTex = new THREE.CanvasTexture(placaNumeroCanvas);
+
+  const placaNumero = new THREE.Mesh(
+    new THREE.BoxGeometry(0.85, 0.48, 0.07),
+    new THREE.MeshStandardMaterial({
+      color: 0x1e293b,
+      metalness: 0.35,
+      roughness: 0.5
+    })
+  );
+
+  const frenteNumero = new THREE.Mesh(
+    new THREE.PlaneGeometry(0.72, 0.35),
+    new THREE.MeshBasicMaterial({ map: placaNumeroTex })
+  );
+
+  placaNumero.position.set(0, 2.35, -3.55);
+  frenteNumero.position.set(0, 2.35, -3.59);
+  frenteNumero.rotation.y = Math.PI;
+
+  lotGroup.add(placaNumero, frenteNumero);
+}
+
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = isMeuLote ? '#1e1b4b' : '#0f172a'; ctx.fillRect(0, 0, 512, 128);
@@ -1488,6 +1802,64 @@ const greenMat = new THREE.MeshStandardMaterial({
         const roof = new THREE.Mesh(new THREE.ConeGeometry(5.6, 2.2, 4), new THREE.MeshStandardMaterial({ color: 0xb91c1c }));
         roof.position.set(0, 4.1, 0); roof.rotation.y = Math.PI / 4;
         lotGroup.add(roof);
+                 // 🧱 Chaminé da casa
+        const chaminéMat = new THREE.MeshStandardMaterial({
+          color: 0x92400e,
+          roughness: 0.9
+        });
+
+        const chaminé = new THREE.Mesh(
+          new THREE.BoxGeometry(0.65, 1.45, 0.65),
+          chaminéMat
+        );
+        chaminé.position.set(2.1, 4.35, 1.45);
+
+        const topoChaminé = new THREE.Mesh(
+          new THREE.BoxGeometry(0.85, 0.16, 0.85),
+          new THREE.MeshStandardMaterial({ color: 0x57534e })
+        );
+        topoChaminé.position.set(2.1, 5.12, 1.45);
+
+        // 🏡 Colunas da varanda
+        const colunaMat = new THREE.MeshStandardMaterial({
+          color: 0xf5f5f4,
+          roughness: 0.8
+        });
+
+        const colunaEsquerda = new THREE.Mesh(
+          new THREE.CylinderGeometry(0.12, 0.16, 2.5, 12),
+          colunaMat
+        );
+        colunaEsquerda.position.set(-1.25, 1.25, -4.15);
+
+        const colunaDireita = colunaEsquerda.clone();
+        colunaDireita.position.x = 1.25;
+
+        // Cobertura da varanda
+        const coberturaVaranda = new THREE.Mesh(
+          new THREE.BoxGeometry(3.5, 0.2, 1.7),
+          new THREE.MeshStandardMaterial({
+            color: 0x78350f,
+            roughness: 0.75
+          })
+        );
+        coberturaVaranda.position.set(0, 2.65, -4.05);
+
+        // Degrau de entrada
+        const degrau = new THREE.Mesh(
+          new THREE.BoxGeometry(2.1, 0.18, 0.65),
+          new THREE.MeshStandardMaterial({ color: 0xd6d3d1 })
+        );
+        degrau.position.set(0, 0.27, -3.95);
+
+        lotGroup.add(
+          chaminé,
+          topoChaminé,
+          colunaEsquerda,
+          colunaDireita,
+          coberturaVaranda,
+          degrau
+        );
       }
       if (stage >= 4) {
         const sofa = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.7, 0.9), new THREE.MeshStandardMaterial({ color: 0x8b5cf6 }));
