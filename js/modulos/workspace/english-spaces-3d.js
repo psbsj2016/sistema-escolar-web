@@ -3926,6 +3926,410 @@ fonteGroup.traverse(obj => {
 
 pracaGroup.add(fonteGroup);
 
+// 🪑 BANCOS MODERNOS DA PRAÇA
+const madeiraBancoMat = new THREE.MeshStandardMaterial({
+  color: 0x8b5a35,
+  roughness: 0.78
+});
+
+const metalBancoMat = new THREE.MeshStandardMaterial({
+  color: 0x334155,
+  metalness: 0.55,
+  roughness: 0.42
+});
+
+function criarBancoPraca(x, z, rotacao = 0) {
+  const banco = new THREE.Group();
+
+  // Assento
+  const assento = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 0.14, 0.48),
+    madeiraBancoMat
+  );
+  assento.position.y = 0.62;
+  banco.add(assento);
+
+  // Encosto
+  const encosto = new THREE.Mesh(
+    new THREE.BoxGeometry(1.8, 0.48, 0.12),
+    madeiraBancoMat
+  );
+  encosto.position.set(0, 0.91, -0.19);
+  banco.add(encosto);
+
+  // Pés metálicos
+  [-0.72, 0.72].forEach(px => {
+    const pe = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, 0.58, 0.42),
+      metalBancoMat
+    );
+    pe.position.set(px, 0.34, 0);
+    banco.add(pe);
+  });
+
+  banco.position.set(x, 0.16, z);
+  banco.rotation.y = rotacao;
+
+  banco.traverse(obj => {
+    if (obj.isMesh) {
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+    }
+  });
+
+  pracaGroup.add(banco);
+}
+
+// Três bancos distribuídos nos canteiros
+criarBancoPraca(-3.65, -4.25);
+criarBancoPraca(4.25, -3.65, Math.PI / 2);
+criarBancoPraca(-4.25, 3.65, Math.PI / 2);
+
+
+// ☕ MESA DE CONVIVÊNCIA
+const mesaGroup = new THREE.Group();
+
+const tampoMesa = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.58, 0.58, 0.12, 24),
+  madeiraBancoMat
+);
+tampoMesa.position.y = 0.85;
+
+const peMesa = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.09, 0.13, 0.72, 12),
+  metalBancoMat
+);
+peMesa.position.y = 0.43;
+
+mesaGroup.add(tampoMesa, peMesa);
+
+// Mesa no canteiro superior esquerdo
+mesaGroup.position.set(-3.65, 0.16, -3.65);
+
+mesaGroup.traverse(obj => {
+  if (obj.isMesh) {
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  }
+});
+
+pracaGroup.add(mesaGroup);
+
+  // 💡 POSTES DE ILUMINAÇÃO ORNAMENTAL
+const postePracaMat = new THREE.MeshStandardMaterial({
+  color: 0x334155,
+  metalness: 0.7,
+  roughness: 0.35
+});
+
+const lampadaPracaMat = new THREE.MeshStandardMaterial({
+  color: 0xffe4a3,
+  emissive: 0xffb84d,
+  emissiveIntensity: 1.5,
+  roughness: 0.25
+});
+
+function criarPostePraca(x, z) {
+  const posteGroup = new THREE.Group();
+
+  // Base metálica
+  const base = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.19, 0.23, 0.16, 16),
+    postePracaMat
+  );
+  base.position.y = 0.24;
+
+  // Haste
+  const haste = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.065, 0.09, 1.65, 12),
+    postePracaMat
+  );
+  haste.position.y = 1.12;
+
+  // Cúpula da luminária
+  const cupula = new THREE.Mesh(
+    new THREE.SphereGeometry(0.23, 16, 12),
+    lampadaPracaMat
+  );
+  cupula.position.y = 2.02;
+  cupula.scale.y = 0.75;
+
+  // Proteção superior
+  const topo = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.27, 0.18, 0.09, 16),
+    postePracaMat
+  );
+  topo.position.y = 2.20;
+
+  posteGroup.add(base, haste, cupula, topo);
+
+  posteGroup.position.set(x, 0.16, z);
+
+  posteGroup.traverse(obj => {
+    if (obj.isMesh) {
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+    }
+  });
+
+  pracaGroup.add(posteGroup);
+
+  // Luz quente da luminária
+  const luz = new THREE.PointLight(0xffd28a, 0.65, 5.5);
+  luz.position.set(x, 2.15, z);
+  pracaGroup.add(luz);
+}
+
+// Quatro postes nos cantos da praça
+criarPostePraca(-5.8, -5.8);
+criarPostePraca(5.8, -5.8);
+criarPostePraca(-5.8, 5.8);
+criarPostePraca(5.8, 5.8);
+ 
+// 🌺 PAISAGISMO ORNAMENTAL DA PRAÇA
+const folhasPracaMat = new THREE.MeshStandardMaterial({
+  color: 0x287447,
+  roughness: 0.9
+});
+
+const florPracaCores = [
+  0xff5c8a,
+  0xffd166,
+  0xa78bfa,
+  0xffffff,
+  0xf97316
+];
+
+function criarArbustoPraca(x, z, escala = 1) {
+  const arbusto = new THREE.Group();
+
+  const copa = new THREE.Mesh(
+    new THREE.SphereGeometry(0.38, 12, 10),
+    folhasPracaMat
+  );
+  copa.position.y = 0.48;
+  copa.scale.set(1, 0.85, 1);
+
+  arbusto.add(copa);
+  arbusto.position.set(x, 0.16, z);
+  arbusto.scale.setScalar(escala);
+
+  pracaGroup.add(arbusto);
+}
+
+function criarFlorPraca(x, z, cor) {
+  const flor = new THREE.Group();
+
+  const haste = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.025, 0.035, 0.32, 6),
+    folhasPracaMat
+  );
+  haste.position.y = 0.32;
+
+  const petalasMat = new THREE.MeshStandardMaterial({
+    color: cor,
+    roughness: 0.65
+  });
+
+  const mioloMat = new THREE.MeshStandardMaterial({
+    color: 0xffd166,
+    roughness: 0.7
+  });
+
+  for (let i = 0; i < 5; i++) {
+    const angulo = (Math.PI * 2 * i) / 5;
+
+    const petala = new THREE.Mesh(
+      new THREE.SphereGeometry(0.095, 8, 8),
+      petalasMat
+    );
+
+    petala.position.set(
+      Math.cos(angulo) * 0.105,
+      0.49,
+      Math.sin(angulo) * 0.105
+    );
+
+    petala.scale.set(1, 0.65, 1);
+    flor.add(petala);
+  }
+
+  const miolo = new THREE.Mesh(
+    new THREE.SphereGeometry(0.065, 8, 8),
+    mioloMat
+  );
+  miolo.position.y = 0.49;
+
+  flor.add(haste, miolo);
+  flor.position.set(x, 0.16, z);
+
+  pracaGroup.add(flor);
+}
+
+// Arbustos distribuídos nas bordas dos canteiros
+[
+  [-5.1, -3.5],
+  [-3.5, -5.1],
+  [5.1, -3.5],
+  [3.5, -5.1],
+  [-5.1, 3.5],
+  [-3.5, 5.1],
+  [5.1, 3.5],
+  [3.5, 5.1]
+].forEach((pos, i) => {
+  criarArbustoPraca(pos[0], pos[1], i % 2 === 0 ? 1 : 0.8);
+});
+
+// Flores coloridas
+[
+  [-4.5, -3.2],
+  [-4.1, -4.5],
+  [-3.1, -4.1],
+  [4.5, -4.5],
+  [3.2, -4.2],
+  [-4.5, 4.5],
+  [-3.2, 4.2],
+  [4.5, 3.2],
+  [4.1, 4.5],
+  [3.2, 3.2]
+].forEach((pos, i) => {
+  criarFlorPraca(
+    pos[0],
+    pos[1],
+    florPracaCores[i % florPracaCores.length]
+  );
+});
+
+ // 🗑️ LIXEIRAS MODERNAS DA PRAÇA
+const lixeiraGroupMat = new THREE.MeshStandardMaterial({
+  color: 0x334155,
+  metalness: 0.45,
+  roughness: 0.55
+});
+
+const tampaLixeiraMat = new THREE.MeshStandardMaterial({
+  color: 0x64748b,
+  metalness: 0.55,
+  roughness: 0.4
+});
+
+function criarLixeiraPraca(x, z) {
+  const lixeira = new THREE.Group();
+
+  const corpo = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.22, 0.19, 0.68, 16),
+    lixeiraGroupMat
+  );
+  corpo.position.y = 0.52;
+
+  const tampa = new THREE.Mesh(
+    new THREE.CylinderGeometry(0.24, 0.24, 0.09, 16),
+    tampaLixeiraMat
+  );
+  tampa.position.y = 0.91;
+
+  const abertura = new THREE.Mesh(
+    new THREE.BoxGeometry(0.19, 0.045, 0.035),
+    new THREE.MeshStandardMaterial({ color: 0x111827 })
+  );
+  abertura.position.set(0, 0.82, 0.205);
+
+  lixeira.add(corpo, tampa, abertura);
+  lixeira.position.set(x, 0.16, z);
+
+  lixeira.traverse(obj => {
+    if (obj.isMesh) {
+      obj.castShadow = true;
+      obj.receiveShadow = true;
+    }
+  });
+
+  pracaGroup.add(lixeira);
+}
+
+criarLixeiraPraca(-5.2, 1.8);
+criarLixeiraPraca(5.2, -1.8);
+
+
+// 🪧 PAINEL DE IDENTIFICAÇÃO DA PRAÇA
+const painelGroup = new THREE.Group();
+
+const painelMetalMat = new THREE.MeshStandardMaterial({
+  color: 0x334155,
+  metalness: 0.55,
+  roughness: 0.4
+});
+
+const painelBase = new THREE.Mesh(
+  new THREE.BoxGeometry(1.9, 1.15, 0.12),
+  painelMetalMat
+);
+painelBase.position.y = 1.65;
+
+// Criar arte do painel
+const canvasPainel = document.createElement('canvas');
+canvasPainel.width = 768;
+canvasPainel.height = 384;
+
+const ctxPainel = canvasPainel.getContext('2d');
+
+const gradientePainel = ctxPainel.createLinearGradient(
+  0, 0, 768, 384
+);
+gradientePainel.addColorStop(0, '#14532d');
+gradientePainel.addColorStop(1, '#166534');
+
+ctxPainel.fillStyle = gradientePainel;
+ctxPainel.fillRect(0, 0, 768, 384);
+
+ctxPainel.strokeStyle = '#facc15';
+ctxPainel.lineWidth = 12;
+ctxPainel.strokeRect(14, 14, 740, 356);
+
+ctxPainel.textAlign = 'center';
+ctxPainel.fillStyle = '#ffffff';
+ctxPainel.font = 'bold 58px Arial';
+ctxPainel.fillText('PRAÇA CENTRAL', 384, 165);
+
+ctxPainel.fillStyle = '#fde68a';
+ctxPainel.font = '32px Arial';
+ctxPainel.fillText('ESPAÇO DE CONVIVÊNCIA', 384, 235);
+
+const texturaPainel = new THREE.CanvasTexture(canvasPainel);
+texturaPainel.needsUpdate = true;
+
+const frentePainel = new THREE.Mesh(
+  new THREE.PlaneGeometry(1.72, 0.86),
+  new THREE.MeshStandardMaterial({
+    map: texturaPainel,
+    roughness: 0.7
+  })
+);
+frentePainel.position.set(0, 1.65, 0.066);
+
+painelGroup.add(painelBase, frentePainel);
+
+// Dois suportes metálicos
+[-0.65, 0.65].forEach(x => {
+  const suporte = new THREE.Mesh(
+    new THREE.BoxGeometry(0.09, 1.25, 0.09),
+    painelMetalMat
+  );
+  suporte.position.set(x, 0.68, 0);
+  painelGroup.add(suporte);
+});
+
+painelGroup.position.set(0, 0.16, -6.1);
+
+painelGroup.traverse(obj => {
+  if (obj.isMesh) {
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  }
+});
+
+pracaGroup.add(painelGroup);
+
   // Posicionamento em uma área livre da cidade
   pracaGroup.position.set(18, 0, -103);
 
