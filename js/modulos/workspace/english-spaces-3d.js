@@ -1402,6 +1402,87 @@ const greenMat = new THREE.MeshStandardMaterial({
         const wLeft = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 7), wallMat); wLeft.position.set(-3.35, 1.6, 0);
         const wRight = new THREE.Mesh(new THREE.BoxGeometry(0.3, 2.8, 7), wallMat); wRight.position.set(3.35, 1.6, 0);
         lotGroup.add(wBack, wLeft, wRight);
+                 // 🏡 Fachada frontal com porta e janelas
+        const fachadaMat = new THREE.MeshStandardMaterial({
+          color: 0xfef3c7,
+          roughness: 0.85
+        });
+
+        const portaMat = new THREE.MeshStandardMaterial({
+          color: 0x78350f,
+          roughness: 0.65
+        });
+
+        const vidroMat = new THREE.MeshStandardMaterial({
+          color: 0x7dd3fc,
+          metalness: 0.25,
+          roughness: 0.2
+        });
+
+        const molduraMat = new THREE.MeshStandardMaterial({
+          color: 0xffffff,
+          roughness: 0.7
+        });
+
+        // Paredes laterais da entrada, deixando espaço para a porta
+        const frenteEsquerda = new THREE.Mesh(
+          new THREE.BoxGeometry(2.5, 2.8, 0.3),
+          fachadaMat
+        );
+        frenteEsquerda.position.set(-2.25, 1.6, -3.35);
+
+        const frenteDireita = new THREE.Mesh(
+          new THREE.BoxGeometry(2.5, 2.8, 0.3),
+          fachadaMat
+        );
+        frenteDireita.position.set(2.25, 1.6, -3.35);
+
+        // Porta principal
+        const porta = new THREE.Mesh(
+          new THREE.BoxGeometry(1.35, 2.25, 0.12),
+          portaMat
+        );
+        porta.position.set(0, 1.3, -3.48);
+
+        // Moldura superior da porta
+        const topoPorta = new THREE.Mesh(
+          new THREE.BoxGeometry(1.65, 0.16, 0.18),
+          molduraMat
+        );
+        topoPorta.position.set(0, 2.48, -3.49);
+
+        // Janelas frontais
+        const criarJanela = (x) => {
+          const vidro = new THREE.Mesh(
+            new THREE.BoxGeometry(1.05, 0.95, 0.08),
+            vidroMat
+          );
+          vidro.position.set(x, 1.75, -3.53);
+
+          const moldura = new THREE.Mesh(
+            new THREE.BoxGeometry(1.25, 1.15, 0.10),
+            molduraMat
+          );
+          moldura.position.set(x, 1.75, -3.48);
+
+          const divisoria = new THREE.Mesh(
+            new THREE.BoxGeometry(0.07, 0.95, 0.05),
+            molduraMat
+          );
+          divisoria.position.set(x, 1.75, -3.59);
+
+          lotGroup.add(moldura, vidro, divisoria);
+        };
+
+        criarJanela(-2.25);
+        criarJanela(2.25);
+
+        lotGroup.add(
+          frenteEsquerda,
+          frenteDireita,
+          porta,
+          topoPorta
+        );
       }
       if (stage >= 3) {
         const roof = new THREE.Mesh(new THREE.ConeGeometry(5.6, 2.2, 4), new THREE.MeshStandardMaterial({ color: 0xb91c1c }));
