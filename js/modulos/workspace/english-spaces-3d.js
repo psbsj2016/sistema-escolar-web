@@ -1692,6 +1692,52 @@ if (stage >= 2) {
   lotGroup.add(placaNumero, frenteNumero);
 }
 
+  // 🌺 VASOS ORNAMENTAIS NA ENTRADA DAS CASAS
+if (stage >= 2) {
+  const vasoCeramicaMat = new THREE.MeshStandardMaterial({
+    color: 0x9a5738,
+    roughness: 0.75
+  });
+
+  const folhasVasoMat = new THREE.MeshStandardMaterial({
+    color: 0x237a3b,
+    roughness: 0.9
+  });
+
+  const floresVasoMat = new THREE.MeshStandardMaterial({
+    color: 0xec4899,
+    roughness: 0.65
+  });
+
+  [-1, 1].forEach(lado => {
+    const vasoGroup = new THREE.Group();
+
+    const vaso = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.32, 0.22, 0.55, 14),
+      vasoCeramicaMat
+    );
+    vaso.position.y = 0.28;
+
+    const planta = new THREE.Mesh(
+      new THREE.SphereGeometry(0.38, 12, 10),
+      folhasVasoMat
+    );
+    planta.scale.set(0.9, 1.15, 0.9);
+    planta.position.y = 0.75;
+
+    const flor = new THREE.Mesh(
+      new THREE.SphereGeometry(0.13, 10, 8),
+      floresVasoMat
+    );
+    flor.position.set(0.12, 1.05, 0.08);
+
+    vasoGroup.add(vaso, planta, flor);
+
+    vasoGroup.position.set(lado * 2.85, 0, -3.65);
+    lotGroup.add(vasoGroup);
+  });
+}
+
       const canvas = document.createElement('canvas'); canvas.width = 512; canvas.height = 128;
       const ctx = canvas.getContext('2d');
       ctx.fillStyle = isMeuLote ? '#1e1b4b' : '#0f172a'; ctx.fillRect(0, 0, 512, 128);
@@ -3709,6 +3755,182 @@ for (let z = -119.5; z < 48; z += 3.2) {
     });
   }
 
+ // 🏞️ PRAÇA CENTRAL — BASE, CAMINHOS E CANTEIROS
+criarPracaCentral3D() {
+  const THREE = window.THREE;
+  if (!THREE || !this.exteriorGroup) return;
+
+  const pracaGroup = new THREE.Group();
+
+  const pisoMat = new THREE.MeshStandardMaterial({
+    color: 0x9ca3af,
+    roughness: 0.92
+  });
+
+  const caminhoMat = new THREE.MeshStandardMaterial({
+    color: 0xd6d3d1,
+    roughness: 0.9
+  });
+
+  const gramaMat = new THREE.MeshStandardMaterial({
+    color: 0x328044,
+    roughness: 1
+  });
+
+  const bordaMat = new THREE.MeshStandardMaterial({
+    color: 0x64748b,
+    roughness: 0.85
+  });
+
+  // Piso geral da praça
+  const piso = new THREE.Mesh(
+    new THREE.PlaneGeometry(14, 14),
+    pisoMat
+  );
+  piso.rotation.x = -Math.PI / 2;
+  piso.position.y = 0.025;
+  piso.receiveShadow = true;
+  pracaGroup.add(piso);
+
+  // Caminho central horizontal
+  const caminhoH = new THREE.Mesh(
+    new THREE.PlaneGeometry(13.5, 2.2),
+    caminhoMat
+  );
+  caminhoH.rotation.x = -Math.PI / 2;
+  caminhoH.position.y = 0.05;
+  pracaGroup.add(caminhoH);
+
+  // Caminho central vertical
+  const caminhoV = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.2, 13.5),
+    caminhoMat
+  );
+  caminhoV.rotation.x = -Math.PI / 2;
+  caminhoV.position.y = 0.052;
+  pracaGroup.add(caminhoV);
+
+  // Quatro áreas verdes
+  [-1, 1].forEach(x => {
+    [-1, 1].forEach(z => {
+      const canteiro = new THREE.Mesh(
+        new THREE.BoxGeometry(4.7, 0.12, 4.7),
+        bordaMat
+      );
+      canteiro.position.set(x * 3.65, 0.09, z * 3.65);
+
+      const grama = new THREE.Mesh(
+        new THREE.PlaneGeometry(4.45, 4.45),
+        gramaMat
+      );
+      grama.rotation.x = -Math.PI / 2;
+      grama.position.set(x * 3.65, 0.16, z * 3.65);
+      grama.receiveShadow = true;
+
+      pracaGroup.add(canteiro, grama);
+    });
+  });
+
+ // ⛲ FONTE ORNAMENTAL DA PRAÇA
+const fonteGroup = new THREE.Group();
+
+const pedraFonteMat = new THREE.MeshStandardMaterial({
+  color: 0xb8b2a5,
+  roughness: 0.82
+});
+
+const detalheFonteMat = new THREE.MeshStandardMaterial({
+  color: 0x64748b,
+  metalness: 0.35,
+  roughness: 0.45
+});
+
+const aguaFonteMat = new THREE.MeshStandardMaterial({
+  color: 0x38bdf8,
+  transparent: true,
+  opacity: 0.78,
+  roughness: 0.18,
+  metalness: 0.25
+});
+
+// Base circular
+const baseFonte = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.35, 1.45, 0.22, 32),
+  pedraFonteMat
+);
+baseFonte.position.y = 0.18;
+
+// Bacia inferior
+const baciaInferior = new THREE.Mesh(
+  new THREE.CylinderGeometry(1.15, 1.05, 0.35, 32),
+  pedraFonteMat
+);
+baciaInferior.position.y = 0.43;
+
+// Água da bacia inferior
+const aguaInferior = new THREE.Mesh(
+  new THREE.CircleGeometry(1.02, 32),
+  aguaFonteMat
+);
+aguaInferior.rotation.x = -Math.PI / 2;
+aguaInferior.position.y = 0.62;
+
+// Coluna central
+const colunaFonte = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.16, 0.25, 1.15, 16),
+  detalheFonteMat
+);
+colunaFonte.position.y = 1.05;
+
+// Bacia superior
+const baciaSuperior = new THREE.Mesh(
+  new THREE.CylinderGeometry(0.68, 0.22, 0.18, 24),
+  pedraFonteMat
+);
+baciaSuperior.position.y = 1.62;
+
+// Água superior
+const aguaSuperior = new THREE.Mesh(
+  new THREE.CircleGeometry(0.58, 24),
+  aguaFonteMat
+);
+aguaSuperior.rotation.x = -Math.PI / 2;
+aguaSuperior.position.y = 1.73;
+
+// Elemento decorativo no topo
+const topoFonte = new THREE.Mesh(
+  new THREE.SphereGeometry(0.19, 16, 12),
+  detalheFonteMat
+);
+topoFonte.position.y = 1.95;
+
+fonteGroup.add(
+  baseFonte,
+  baciaInferior,
+  aguaInferior,
+  colunaFonte,
+  baciaSuperior,
+  aguaSuperior,
+  topoFonte
+);
+
+// Fonte instalada no canteiro inferior direito
+fonteGroup.position.set(3.65, 0.16, 3.65);
+
+fonteGroup.traverse(obj => {
+  if (obj.isMesh) {
+    obj.castShadow = true;
+    obj.receiveShadow = true;
+  }
+});
+
+pracaGroup.add(fonteGroup);
+
+  // Posicionamento em uma área livre da cidade
+  pracaGroup.position.set(18, 0, -103);
+
+  this.exteriorGroup.add(pracaGroup);
+}
   
   criarCenarioFundoMontanhasArvores() {
     const THREE = window.THREE;
@@ -4899,6 +5121,62 @@ const road = new THREE.Mesh(
       this.atualizarCicloDiaNoite();
       this.dayNightInterval = setInterval(() => this.atualizarCicloDiaNoite(), 60000);
       this.criarCenarioFundoMontanhasArvores();
+      this.criarPracaCentral3D();
+      // 🏞️ PRAÇA PÚBLICA — ESTRUTURA INICIAL
+const pracaGroup = new THREE.Group();
+
+const pisoPracaMat = new THREE.MeshStandardMaterial({
+  color: 0xc8c3b5,
+  roughness: 0.92
+});
+
+const pisoCaminhoMat = new THREE.MeshStandardMaterial({
+  color: 0x92999b,
+  roughness: 0.88
+});
+
+const gramadoPracaMat = new THREE.MeshStandardMaterial({
+  color: 0x367c3b,
+  roughness: 0.95
+});
+
+// Base da praça
+const pisoPraca = new THREE.Mesh(
+  new THREE.BoxGeometry(15, 0.16, 17),
+  pisoPracaMat
+);
+pisoPraca.position.y = 0.08;
+pisoPraca.receiveShadow = true;
+pracaGroup.add(pisoPraca);
+
+// Gramado central
+const gramado = new THREE.Mesh(
+  new THREE.BoxGeometry(8, 0.12, 9),
+  gramadoPracaMat
+);
+gramado.position.set(0, 0.19, 0);
+gramado.receiveShadow = true;
+pracaGroup.add(gramado);
+
+// Caminho central horizontal
+const caminhoHorizontal = new THREE.Mesh(
+  new THREE.BoxGeometry(15, 0.045, 1.8),
+  pisoCaminhoMat
+);
+caminhoHorizontal.position.set(0, 0.19, 0);
+pracaGroup.add(caminhoHorizontal);
+
+// Caminho central vertical
+const caminhoVertical = new THREE.Mesh(
+  new THREE.BoxGeometry(1.8, 0.045, 17),
+  pisoCaminhoMat
+);
+caminhoVertical.position.set(0, 0.19, 0);
+pracaGroup.add(caminhoVertical);
+
+// Posicionamento na cidade
+pracaGroup.position.set(-50, 0, -36);
+this.exteriorGroup.add(pracaGroup);
     } catch (errCenario) {
       console.warn('Aviso ao renderizar decoração de rua:', errCenario);
     }
