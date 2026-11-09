@@ -792,7 +792,7 @@ Workspace.InglesProfessor = {
         }
     },
 
-   // 🧠 GERA DESAFIOS PARA TODOS OS JOGOS DE UMA SÓ VEZ COM A IA E DESCARREGA NOS JOGOS
+ // 🧠 GERA DESAFIOS 100% INÉDITOS (SEM REPETIÇÃO) PARA TODOS OS JOGOS E DESCARREGA NA HORA
     gerarPacoteComIA: async function() {
         const Ingles = Workspace.Ingles;
         const state = Ingles.state;
@@ -809,22 +809,50 @@ Workspace.InglesProfessor = {
 
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '⏳ A forjar desafios para os jogos...';
+            btn.innerHTML = '⏳ A forjar desafios inéditos...';
             btn.style.opacity = '0.75';
         }
 
         try {
+            // Garante que todos os arrays existem no state
+            ['words','phrases','quizzes','wordPickers','minimalPairs','debates','roleplays','questions','answerStatements','pictures'].forEach(k => {
+                if (!Array.isArray(state[k])) state[k] = [];
+            });
+
+            // 📋 Recolhe todos os itens que já existem na Biblioteca para proibir a IA de os repetir
+            const existentes = {
+                words: state.words.map(x => String(x.word || '').trim().toUpperCase()).filter(Boolean),
+                phrases: state.phrases.map(x => String(x.phrase || '').trim()).filter(Boolean),
+                quizzes: state.quizzes.map(x => String(x.question || '').trim()).filter(Boolean),
+                wordPickers: state.wordPickers.map(x => String(x.text || '').trim()).filter(Boolean),
+                minimalPairs: state.minimalPairs.map(x => `${String(x.a || '').trim()}/${String(x.b || '').trim()}`).filter(Boolean),
+                debates: state.debates.map(x => String(x.topic || '').trim()).filter(Boolean),
+                roleplays: state.roleplays.map(x => String(x.prompt || '').trim()).filter(Boolean),
+                questions: state.questions.map(x => String(x.text || '').trim()).filter(Boolean),
+                answerStatements: state.answerStatements.map(x => String(x.text || '').trim()).filter(Boolean),
+                pictures: state.pictures.map(x => String(x.word || '').trim().toLowerCase()).filter(Boolean)
+            };
+
             let p = null;
 
-            // 1. Tenta primeiro a rota dedicada /gerar-pacote-ia
-            const res = await Workspace.api('/workspace/ingles/gerar-pacote-ia', 'POST', { tema, nivel }).catch(() => null);
+            // 1. Chama a rota /gerar-pacote-ia enviando também a lista de itens existentes
+            const res = await Workspace.api('/workspace/ingles/gerar-pacote-ia', 'POST', { tema, nivel, existentes }).catch(() => null);
             if (res && res.success && res.pacote) {
                 p = res.pacote;
             } else {
-                // 2. Fallback automático via /ia-teste/groq gerando todas as 10 categorias
-                const promptGroq = `Generate an English learning package about "${tema}" for CEFR level ${nivel}. Return ONLY a raw valid JSON object (no markdown, no backticks, no extra text) with this exact structure:
-{"words":[{"word":"AIRPORT","translation":"Aeroporto"},{"word":"FLIGHT","translation":"Voo"},{"word":"LUGGAGE","translation":"Bagagem"},{"word":"PASSPORT","translation":"Passaporte"},{"word":"GATE","translation":"Portão"}],"phrases":[{"phrase":"May I see your passport, please?"},{"phrase":"What time does the flight board?"},{"phrase":"I have one carry-on bag."}],"quizzes":[{"question":"Where ___ you flying today?","options":["are","is","am"],"correct":0},{"question":"She ___ her ticket yesterday.","options":["bought","buy","buying"],"correct":0}],"wordPickers":[{"text":"I would like a ___ seat, please.","options":["window","table"],"correct":0},{"text":"Please go to boarding ___ B12.","options":["gate","roof"],"correct":0}],"minimalPairs":[{"a":"ship","b":"sheep"},{"a":"seat","b":"sit"}],"debates":[{"topic":"Traveling about ${tema}","starter":"What is your opinion about ${tema}?"}],"roleplays":[{"title":"${tema}","prompt":"Hello! Welcome. How can I help you today?","tip":"Use polite English expressions"}],"questions":[{"text":"What is your favorite thing about ${tema}?"}],"answerStatements":[{"text":"I really enjoy learning about ${tema}."}],"pictures":[{"word":"ticket","translation":"bilhete","emoji":"🎫"}]}
-Create original content specifically for the theme "${tema}" (${nivel}) keeping the exact same JSON keys.`;
+                // 2. Fallback automático via /ia-teste/groq com bloqueio de duplicados
+                const proibidoStr = JSON.stringify({
+                    words: existentes.words.slice(0, 80),
+                    phrases: existentes.phrases.slice(0, 30),
+                    quizzes: existentes.quizzes.slice(0, 25),
+                    pictures: existentes.pictures.slice(0, 40)
+                });
+
+                const promptGroq = `Generate a 100% BRAND-NEW English learning package about "${tema}" for CEFR level ${nivel}.
+CRITICAL RULE: Do NOT repeat any of these existing items: ${proibidoStr}.
+Return ONLY a raw valid JSON object (no markdown, no backticks) with these exact 10 arrays:
+{"words":[{"word":"NEW_WORD","translation":"Tradução"}],"phrases":[{"phrase":"New sentence."}],"quizzes":[{"question":"New question ___?","options":["correct","wrong1","wrong2"],"correct":0}],"wordPickers":[{"text":"New ___ sentence.","options":["correct","wrong"],"correct":0}],"minimalPairs":[{"a":"word1","b":"word2"}],"debates":[{"topic":"New debate topic","starter":"Starter question?"}],"roleplays":[{"title":"${tema}","prompt":"New NPC line?","tip":"Polite English"}],"questions":[{"text":"New open question?"}],"answerStatements":[{"text":"New statement."}],"pictures":[{"word":"new_noun","translation":"tradução","emoji":"🌟"}]}
+Generate 5 words, 3 phrases, 2 quizzes, 2 wordPickers, 2 minimalPairs, 1 debate, 1 roleplay, 2 questions, 2 answerStatements, and 2 pictures.`;
 
                 const resGroq = await Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
                     mensagem: promptGroq,
@@ -848,167 +876,208 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
             const agora = Date.now();
             let totalAdicionados = 0;
 
-            // Garante que todos os arrays existem no state
-            ['words','phrases','quizzes','wordPickers','minimalPairs','debates','roleplays','questions','answerStatements','pictures'].forEach(k => {
-                if (!Array.isArray(state[k])) state[k] = [];
-            });
+            // 🛡️ Função normalizadora para bloquear qualquer item repetido (mesmo mudando maiúsculas ou pontuação final)
+            const norm = (str) => String(str || '').toLowerCase().trim().replace(/[.!?]+$/g, '');
 
-            // 1. Vocabulário (Jogos: Feitiço das Palavras, Memória, Forca e Boss)
+            // 1. Vocabulário (words) - Sem repetir palavras!
             if (Array.isArray(p.words)) {
                 p.words.forEach((w, idx) => {
-                    if (w.word && w.translation) {
-                        state.words.unshift({
-                            id: `w_ai_${agora}_${idx}`,
-                            word: String(w.word).trim(),
-                            translation: String(w.translation).trim(),
-                            level: nivel
-                        });
-                        totalAdicionados++;
+                    const palavraLimpa = String(w?.word || '').trim().toUpperCase();
+                    const tradLimpa = String(w?.translation || '').trim();
+                    if (palavraLimpa && tradLimpa) {
+                        const repetida = state.words.some(item => norm(item.word) === norm(palavraLimpa));
+                        if (!repetida) {
+                            state.words.unshift({
+                                id: `w_ai_${agora}_${idx}`,
+                                word: palavraLimpa,
+                                translation: tradLimpa,
+                                level: nivel
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 2. Frases (Jogos: Sopro do Dragão, Ecos da Coruja, Labirinto Ilusório e Boss)
+            // 2. Frases e Expressões (phrases) - Sem repetir frases!
             if (Array.isArray(p.phrases)) {
                 p.phrases.forEach((ph, idx) => {
-                    if (ph.phrase) {
-                        state.phrases.unshift({
-                            id: `p_ai_${agora}_${idx}`,
-                            phrase: String(ph.phrase).trim(),
-                            level: nivel
-                        });
-                        totalAdicionados++;
+                    const fraseLimpa = String(ph?.phrase || '').trim();
+                    if (fraseLimpa) {
+                        const repetida = state.phrases.some(item => norm(item.phrase) === norm(fraseLimpa));
+                        if (!repetida) {
+                            state.phrases.unshift({
+                                id: `p_ai_${agora}_${idx}`,
+                                phrase: fraseLimpa,
+                                level: nivel
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 3. Quizzes (Jogos: Enigma da Esfinge e Boss)
+            // 3. Quizzes (quizzes) - Sem repetir perguntas!
             if (Array.isArray(p.quizzes)) {
                 p.quizzes.forEach((q, idx) => {
-                    if (q.question && Array.isArray(q.options) && q.options.length >= 2) {
-                        state.quizzes.unshift({
-                            id: `q_ai_${agora}_${idx}`,
-                            question: String(q.question).trim(),
-                            options: q.options.map(o => String(o).trim()),
-                            correct: typeof q.correct === 'number' ? q.correct : 0,
-                            level: nivel,
-                            videoUrl: null
-                        });
-                        totalAdicionados++;
+                    const pergLimpa = String(q?.question || '').trim();
+                    if (pergLimpa && Array.isArray(q.options) && q.options.length >= 2) {
+                        const repetida = state.quizzes.some(item => norm(item.question) === norm(pergLimpa));
+                        if (!repetida) {
+                            state.quizzes.unshift({
+                                id: `q_ai_${agora}_${idx}`,
+                                question: pergLimpa,
+                                options: q.options.map(o => String(o).trim()),
+                                correct: typeof q.correct === 'number' ? q.correct : 0,
+                                level: nivel,
+                                videoUrl: null
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 4. Poção Sintática / Lacunas (Jogo: Poção Sintática e Boss)
+            // 4. Poção Sintática / Lacunas (wordPickers) - Sem repetir frases de lacuna!
             if (Array.isArray(p.wordPickers)) {
                 p.wordPickers.forEach((wp, idx) => {
-                    if (wp.text && Array.isArray(wp.options) && wp.options.length >= 2) {
-                        const idxCorreto = typeof wp.correct === 'number' ? wp.correct : 0;
-                        const optCorreta = String(wp.options[idxCorreto] || wp.options[0]).trim();
-                        const optErrada = String(wp.options.find((_, i) => i !== idxCorreto) || wp.options[1]).trim();
-                        state.wordPickers.unshift({
-                            id: `wp_ai_${agora}_${idx}`,
-                            text: String(wp.text).trim(),
-                            options: [optErrada, optCorreta],
-                            correct: 1
-                        });
-                        totalAdicionados++;
+                    const txtLimpo = String(wp?.text || '').trim();
+                    if (txtLimpo && Array.isArray(wp.options) && wp.options.length >= 2) {
+                        const repetida = state.wordPickers.some(item => norm(item.text) === norm(txtLimpo));
+                        if (!repetida) {
+                            const idxCorreto = typeof wp.correct === 'number' ? wp.correct : 0;
+                            const optCorreta = String(wp.options[idxCorreto] || wp.options[0]).trim();
+                            const optErrada = String(wp.options.find((_, i) => i !== idxCorreto) || wp.options[1]).trim();
+                            state.wordPickers.unshift({
+                                id: `wp_ai_${agora}_${idx}`,
+                                text: txtLimpo,
+                                options: [optErrada, optCorreta],
+                                correct: 1
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 5. Pares Mínimos (Jogo: Sussurros Gêmeos e Boss)
+            // 5. Pares Mínimos (minimalPairs) - Sem repetir pares de sons!
             if (Array.isArray(p.minimalPairs)) {
                 p.minimalPairs.forEach((mp, idx) => {
-                    if (mp.a && mp.b) {
-                        state.minimalPairs.unshift({
-                            id: `mp_ai_${agora}_${idx}`,
-                            a: String(mp.a).trim(),
-                            b: String(mp.b).trim()
-                        });
-                        totalAdicionados++;
+                    const somA = String(mp?.a || '').trim();
+                    const somB = String(mp?.b || '').trim();
+                    if (somA && somB) {
+                        const repetida = state.minimalPairs.some(item =>
+                            (norm(item.a) === norm(somA) && norm(item.b) === norm(somB)) ||
+                            (norm(item.a) === norm(somB) && norm(item.b) === norm(somA))
+                        );
+                        if (!repetida) {
+                            state.minimalPairs.unshift({
+                                id: `mp_ai_${agora}_${idx}`,
+                                a: somA,
+                                b: somB
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 6. Debates (Jogo: Duelo de Mentes)
+            // 6. Debates (debates) - Sem repetir tópicos!
             if (Array.isArray(p.debates)) {
                 p.debates.forEach((db, idx) => {
-                    if (db.topic) {
-                        state.debates.unshift({
-                            id: `d_ai_${agora}_${idx}`,
-                            topic: String(db.topic).trim(),
-                            starter: db.starter ? String(db.starter).trim() : 'What is your opinion on this topic?'
-                        });
-                        totalAdicionados++;
+                    const topicoLimpo = String(db?.topic || '').trim();
+                    if (topicoLimpo) {
+                        const repetida = state.debates.some(item => norm(item.topic) === norm(topicoLimpo));
+                        if (!repetida) {
+                            state.debates.unshift({
+                                id: `d_ai_${agora}_${idx}`,
+                                topic: topicoLimpo,
+                                starter: db.starter ? String(db.starter).trim() : 'What is your opinion on this topic?'
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 7. Roleplays (Jogo: Manto do Metamorfo)
+            // 7. Roleplays (roleplays) - Sem repetir falas de NPC!
             if (Array.isArray(p.roleplays)) {
                 p.roleplays.forEach((rp, idx) => {
-                    const falaNpc = rp.prompt || rp.scenario;
+                    const falaNpc = String(rp?.prompt || rp?.scenario || '').trim();
                     if (falaNpc) {
-                        state.roleplays.unshift({
-                            id: `rp_ai_${agora}_${idx}`,
-                            title: rp.title ? String(rp.title).trim() : `${tema} (${nivel})`,
-                            prompt: String(falaNpc).trim(),
-                            tip: rp.tip ? String(rp.tip).trim() : 'Use natural English sentences'
-                        });
-                        totalAdicionados++;
+                        const repetida = state.roleplays.some(item => norm(item.prompt) === norm(falaNpc));
+                        if (!repetida) {
+                            state.roleplays.unshift({
+                                id: `rp_ai_${agora}_${idx}`,
+                                title: rp.title ? String(rp.title).trim() : `${tema} (${nivel})`,
+                                prompt: falaNpc,
+                                tip: rp.tip ? String(rp.tip).trim() : 'Use natural English sentences'
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 8. Perguntas Abertas (Jogo: Pergaminho do Herói)
+            // 8. Perguntas Abertas (questions) - Sem repetir perguntas!
             if (Array.isArray(p.questions)) {
                 p.questions.forEach((qu, idx) => {
-                    if (qu.text) {
-                        state.questions.unshift({
-                            id: `aq_ai_${agora}_${idx}`,
-                            text: String(qu.text).trim()
-                        });
-                        totalAdicionados++;
+                    const pergAberta = String(qu?.text || '').trim();
+                    if (pergAberta) {
+                        const repetida = state.questions.some(item => norm(item.text) === norm(pergAberta));
+                        if (!repetida) {
+                            state.questions.unshift({
+                                id: `aq_ai_${agora}_${idx}`,
+                                text: pergAberta
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 9. Espelho do Oráculo (Jogo: Espelho do Oráculo)
+            // 9. Espelho do Oráculo (answerStatements) - Sem repetir afirmações!
             if (Array.isArray(p.answerStatements)) {
                 p.answerStatements.forEach((as, idx) => {
-                    if (as.text) {
-                        state.answerStatements.unshift({
-                            id: `as_ai_${agora}_${idx}`,
-                            text: String(as.text).trim(),
-                            type: 'answerQuest'
-                        });
-                        totalAdicionados++;
+                    const afirmacao = String(as?.text || '').trim();
+                    if (afirmacao) {
+                        const repetida = state.answerStatements.some(item => norm(item.text) === norm(afirmacao));
+                        if (!repetida) {
+                            state.answerStatements.unshift({
+                                id: `as_ai_${agora}_${idx}`,
+                                text: afirmacao,
+                                type: 'answerQuest'
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 10. Figuras (Jogo: Visão do Alquimista)
+            // 10. Figuras (pictures) - Sem repetir palavras de imagem!
             if (Array.isArray(p.pictures)) {
                 p.pictures.forEach((pic, idx) => {
-                    if (pic.word) {
-                        state.pictures.unshift({
-                            id: `pic_ai_${agora}_${idx}`,
-                            word: String(pic.word).trim(),
-                            translation: String(pic.translation || '').trim(),
-                            emoji: String(pic.emoji || '🖼️').trim(),
-                            category: tema
-                        });
-                        totalAdicionados++;
+                    const picWord = String(pic?.word || '').trim();
+                    if (picWord) {
+                        const repetida = state.pictures.some(item => norm(item.word) === norm(picWord));
+                        if (!repetida) {
+                            state.pictures.unshift({
+                                id: `pic_ai_${agora}_${idx}`,
+                                word: picWord,
+                                translation: String(pic.translation || '').trim(),
+                                emoji: String(pic.emoji || '🖼️').trim(),
+                                category: tema
+                            });
+                            totalAdicionados++;
+                        }
                     }
                 });
             }
 
-            // 🚀 Ativa a flag _dbLoaded imediatamente e atualiza os cartões dos jogos!
             state._dbLoaded = true;
             await Ingles.saveDados();
             Ingles.renderAlunoGrid();
-            Ingles.mostrarAvisoLocal(`🎉 Pacote "${tema}" (${nivel}) criado! +${totalAdicionados} desafios descarregados nos jogos!`, 'success');
+            Ingles.mostrarAvisoLocal(`🎉 +${totalAdicionados} desafios 100% inéditos de "${tema}" (${nivel}) adicionados!`, 'success');
             Workspace.InglesProfessor.renderProfessorTab('biblioteca');
         } catch (err) {
             console.error('Erro ao gerar pacote IA:', err);

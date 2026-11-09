@@ -4386,6 +4386,12 @@ criarTorresResidenciais3D() {
   const THREE = window.THREE;
   if (!THREE || !this.exteriorGroup) return;
 
+ // 🏢 Grupo independente dos interiores das torres
+this.torresInterioresGroup = new THREE.Group();
+this.torresInterioresGroup.name = 'TorresInteriores';
+this.torresInterioresGroup.visible = false;
+this.scene.add(this.torresInterioresGroup);
+
   const materialVidro = new THREE.MeshStandardMaterial({
     color: 0x7dd3fc,
     metalness: 0.55,
@@ -4407,6 +4413,12 @@ criarTorresResidenciais3D() {
 
   CITY_TOWERS_LAYOUT.forEach(cfg => {
     const torre = new THREE.Group();
+
+  // Interior independente desta torre
+const interiorTorre = new THREE.Group();
+interiorTorre.name = `Interior_${cfg.id}`;
+interiorTorre.visible = false;
+this.torresInterioresGroup.add(interiorTorre);
 
     const alturaAndar = 3.2;
     const alturaTotal = cfg.floors * alturaAndar;
