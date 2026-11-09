@@ -217,9 +217,17 @@ class EnglishSpaces3DWorld {
     this.exteriorGroup = null;
     this.interiorGroups = new Map();
     this.doors = new Map();
-    this.modoInterior = false;
-    this.predioAtual = null;
-    this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
+   this.modoInterior = false;
+this.predioAtual = null;
+
+// 🏢 CONTROLE DOS ANDARES DAS TORRES
+this.torreAtual = null;
+this.andarTorreAtual = 0;
+this.alturaAndarTorre = 3.2;
+this.transicaoVerticalTorre = null;
+this.torresResidenciais = new Map();
+
+this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
 
     this.gltfLoader = null;
     this.gltfLoadedSet = new Set();
@@ -4582,6 +4590,31 @@ criarTorresResidenciais3D() {
 
     // Posicionamento na cidade
     torre.position.set(cfg.x, 0, cfg.z);
+  // 🏢 REGISTRO DOS PAVIMENTOS DA TORRE
+torre.userData.torreId = cfg.id;
+torre.userData.nome = cfg.name;
+torre.userData.totalAndares = cfg.floors;
+torre.userData.alturaAndar = alturaAndar;
+
+this.torresResidenciais.set(cfg.id, {
+  id: cfg.id,
+  nome: cfg.name,
+  totalAndares: cfg.floors,
+  alturaAndar: alturaAndar,
+  alturaTotal: alturaTotal,
+  x: cfg.x,
+  z: cfg.z,
+  largura: largura,
+  profundidade: profundidade,
+  grupo: torre,
+  andares: Array.from(
+    { length: cfg.floors },
+    (_, i) => ({
+      numero: i + 1,
+      altura: i * alturaAndar
+    })
+  )
+});
 
     torre.traverse(obj => {
       if (obj.isMesh) {
@@ -6105,6 +6138,7 @@ this.scene.add(facadeHeader);
       shoeColor: 0x111111,
       petType: null,
       x: initialX,
+      y: 0,
       z: initialZ,
       targetX: null,
       targetZ: null,
@@ -6278,7 +6312,7 @@ this.scene.add(facadeHeader);
         } else { p.targetX = null; p.targetZ = null; }
       }
 
-      p.mesh.position.set(p.x, 0, p.z);
+      p.mesh.position.set(p.x, p.y || 0, p.z);
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
 
@@ -6304,9 +6338,13 @@ this.scene.add(facadeHeader);
       const camHeight = (this.modoInterior ? 3.4 : 4.8) - pitch * 2.2;
       const camOffsetX = Math.sin(yaw) * dist;
       const camOffsetZ = Math.cos(yaw) * dist;
-      this.camera.position.set(p.x + camOffsetX, Math.max(0.8, camHeight), p.z + camOffsetZ);
+      this.camera.position.set(
+  p.x + camOffsetX,
+  Math.max(0.8, camHeight + (p.y || 0)),
+  p.z + camOffsetZ
+);
 
-      const lookAtY = 1.4 + pitch * 10;
+      const lookAtY = (p.y || 0) + 1.4 + pitch * 10;
       const lookAtX = p.x - Math.sin(yaw) * pitch * 1.2;
       const lookAtZ = p.z - Math.cos(yaw) * pitch * 1.2;
       this.camera.lookAt(lookAtX, lookAtY, lookAtZ);
