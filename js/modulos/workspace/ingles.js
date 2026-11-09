@@ -395,7 +395,8 @@ Workspace.Ingles = {
         }catch{}
         
         try{
-            const ehAluno = Workspace.usuario?.tipo === 'Aluno';
+            const profViewAtiva = !document.getElementById('professorView')?.classList.contains('hidden');
+            const ehAluno = (Workspace.usuario?.tipo === 'Aluno') && !profViewAtiva;
             if(ehAluno && Workspace.usuario?.id){
                 const nomeRealAluno = Workspace.usuario.nome || Workspace.usuario.login || 'Aluno';
                 Workspace.api('/workspace/ingles/xp','POST', {
@@ -466,33 +467,38 @@ Workspace.Ingles = {
             const srs = this.state.srs[item.id];
             return {item, srs, isDue: srs ? srs.due <= now : false, isNew: !srs || srs.repetitions===0};
         });
+
+        // 🚀 1.º PRIORIDADE TOTAL: Desafios NOVOS recém-criados pelo Professor (ou gerados pela IA) que ainda não foram jogados!
+        const novos = comSRS.filter(e=>e.isNew && !concluidos.includes(e.item.id));
+        if(novos.length){
+            // Retorna primeiro o item mais recente do topo da lista (inserido com unshift)
+            return novos[0].item;
+        }
         
+        // 2.º Erros recentes retidos para reforço
+        const retidos = this.state.errosRetidos.filter(e=>e._tipoDefeito===tipoConteudo && !concluidos.includes(e.id));
+        if(retidos.length && Math.random()<0.6){
+            return retidos[Math.floor(Math.random()*retidos.length)];
+        }
+
+        // 3.º Desafios antigos com revisão SRS vencida
         const vencidos = comSRS.filter(e=>e.srs && e.isDue).sort((a,b)=>a.srs.due - b.srs.due);
         if(vencidos.length){
             if(Math.random()<0.8) return vencidos[0].item;
             return vencidos[Math.floor(Math.random()*Math.min(3,vencidos.length))].item;
         }
         
-        const retidos = this.state.errosRetidos.filter(e=>e._tipoDefeito===tipoConteudo && !concluidos.includes(e.id));
-        if(retidos.length && Math.random()<0.6){
-            return retidos[Math.floor(Math.random()*retidos.length)];
-        }
-        
-        const novos = comSRS.filter(e=>e.isNew && !concluidos.includes(e.item.id));
-        if(novos.length){
-            return novos[Math.floor(Math.random()*novos.length)].item;
-        }
-        
+        // 4.º Qualquer item disponível ou reinício de ciclo
         const disponiveis = listaPadrao.filter(i=>!concluidos.includes(i.id) || (this.state.srs[i.id]?.due||0) <= now);
         
         if(!disponiveis.length) {
             const idsDesteJogo = listaPadrao.map(i => i.id);
             this.state.itensConcluidos = concluidos.filter(id => !idsDesteJogo.includes(id));
             this.saveDados(); 
-            return listaPadrao[Math.floor(Math.random() * listaPadrao.length)];
+            return listaPadrao[0];
         }
         
-        return disponiveis[Math.floor(Math.random()*disponiveis.length)];
+        return disponiveis[0];
     },
 
     tocarSom(tipo){
@@ -965,11 +971,13 @@ Workspace.Ingles = {
                     if (Workspace.InglesProfessor) Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: 'biblioteca' } });
                 });
             }
-            if(a === 'toggle-aluno') {
+           if(a === 'toggle-aluno') {
                 document.getElementById('btnAluno').classList.add('active');
                 document.getElementById('btnProfessor').classList.remove('active');
                 document.getElementById('alunoView').classList.remove('hidden');
                 document.getElementById('professorView').classList.add('hidden');
+                this.renderAlunoGrid();
+                this.renderizarMarquee();
             }
 
            if(a === 'comprar-escudo') {

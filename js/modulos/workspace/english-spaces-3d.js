@@ -4607,6 +4607,7 @@ this.torresResidenciais.set(cfg.id, {
   largura: largura,
   profundidade: profundidade,
   grupo: torre,
+  grupoInterior: interiorTorre,
   andares: Array.from(
     { length: cfg.floors },
     (_, i) => ({
@@ -6265,6 +6266,38 @@ this.scene.add(facadeHeader);
     this.enviarMinhaPosicaoServidor();
   }
 
+ // 🏢 MOVIMENTAÇÃO VERTICAL NAS TORRES
+iniciarTransicaoVerticalTorre(andarDestino) {
+  const torre = this.torreAtual
+    ? this.torresResidenciais.get(this.torreAtual)
+    : null;
+
+  if (!torre || !this.localPlayer) return;
+  if (this.transicaoVerticalTorre) return;
+
+  if (
+    !Number.isInteger(andarDestino) ||
+    andarDestino < 1 ||
+    andarDestino > torre.totalAndares
+  ) return;
+
+  if (andarDestino === this.andarTorreAtual) return;
+
+  const alturaInicial = this.localPlayer.y || 0;
+  const alturaFinal = (andarDestino - 1) * torre.alturaAndar;
+
+  this.transicaoVerticalTorre = {
+    andarDestino,
+    alturaInicial,
+    alturaFinal,
+    progresso: 0,
+    duracao: Math.max(
+      1,
+      Math.abs(alturaFinal - alturaInicial) / 2.5
+    )
+  };
+}
+
   iniciarLoopRenderizacao() {
     const viewport = document.getElementById('es-city-viewport');
     const animar = () => {
@@ -6273,6 +6306,28 @@ this.scene.add(facadeHeader);
 
       const delta = Math.min(this.clock.getDelta(), 0.1);
       const p = this.localPlayer;
+      // 🏢 Atualiza transição vertical da torre
+if (this.transicaoVerticalTorre) {
+  const transicao = this.transicaoVerticalTorre;
+
+  transicao.progresso = Math.min(
+    1,
+    transicao.progresso + delta / transicao.duracao
+  );
+
+  const t = transicao.progresso;
+  const suavizado = t * t * (3 - 2 * t);
+
+  p.y = transicao.alturaInicial +
+    (transicao.alturaFinal - transicao.alturaInicial) * suavizado;
+
+  if (t >= 1) {
+    p.y = transicao.alturaFinal;
+    this.andarTorreAtual = transicao.andarDestino;
+    this.transicaoVerticalTorre = null;
+    this.enviarMinhaPosicaoServidor();
+  }
+}
       if (!p) return;
 
       let inputRight = 0; let inputForward = 0;

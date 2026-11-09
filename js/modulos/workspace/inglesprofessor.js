@@ -792,7 +792,7 @@ Workspace.InglesProfessor = {
         }
     },
 
-    // 🧠 GERA 13 DESAFIOS DE UMA SÓ VEZ COM A IA E SALVA NA BIBLIOTECA DO PROFESSOR
+   // 🧠 GERA DESAFIOS PARA TODOS OS JOGOS DE UMA SÓ VEZ COM A IA E DESCARREGA NOS JOGOS
     gerarPacoteComIA: async function() {
         const Ingles = Workspace.Ingles;
         const state = Ingles.state;
@@ -809,7 +809,7 @@ Workspace.InglesProfessor = {
 
         if (btn) {
             btn.disabled = true;
-            btn.innerHTML = '⏳ A forjar 13 desafios com IA...';
+            btn.innerHTML = '⏳ A forjar desafios para os jogos...';
             btn.style.opacity = '0.75';
         }
 
@@ -821,10 +821,10 @@ Workspace.InglesProfessor = {
             if (res && res.success && res.pacote) {
                 p = res.pacote;
             } else {
-                // 2. Fallback automático: usa a rota /ia-teste/groq que já está ativa no servidor!
+                // 2. Fallback automático via /ia-teste/groq gerando todas as 10 categorias
                 const promptGroq = `Generate an English learning package about "${tema}" for CEFR level ${nivel}. Return ONLY a raw valid JSON object (no markdown, no backticks, no extra text) with this exact structure:
-{"words":[{"word":"AIRPORT","translation":"Aeroporto"},{"word":"FLIGHT","translation":"Voo"},{"word":"LUGGAGE","translation":"Bagagem"},{"word":"PASSPORT","translation":"Passaporte"},{"word":"GATE","translation":"Portão"}],"phrases":[{"phrase":"May I see your passport, please?"},{"phrase":"What time does the flight board?"},{"phrase":"I have one carry-on bag."}],"quizzes":[{"question":"Where ___ you flying today?","options":["are","is","am"],"correct":0},{"question":"She ___ her ticket yesterday.","options":["bought","buy","buying"],"correct":0}],"wordPickers":[{"text":"I would like a ___ seat, please.","options":["window","table"],"correct":0},{"text":"Please go to boarding ___ B12.","options":["gate","roof"],"correct":0}],"roleplays":[{"title":"${tema}","prompt":"Hello! Welcome. How can I help you today?","tip":"Use polite English expressions"}]}
-Create original content specifically for the theme "${tema}" (${nivel}) keeping the exact same JSON keys and array sizes (5 words, 3 phrases, 2 quizzes, 2 wordPickers, 1 roleplay).`;
+{"words":[{"word":"AIRPORT","translation":"Aeroporto"},{"word":"FLIGHT","translation":"Voo"},{"word":"LUGGAGE","translation":"Bagagem"},{"word":"PASSPORT","translation":"Passaporte"},{"word":"GATE","translation":"Portão"}],"phrases":[{"phrase":"May I see your passport, please?"},{"phrase":"What time does the flight board?"},{"phrase":"I have one carry-on bag."}],"quizzes":[{"question":"Where ___ you flying today?","options":["are","is","am"],"correct":0},{"question":"She ___ her ticket yesterday.","options":["bought","buy","buying"],"correct":0}],"wordPickers":[{"text":"I would like a ___ seat, please.","options":["window","table"],"correct":0},{"text":"Please go to boarding ___ B12.","options":["gate","roof"],"correct":0}],"minimalPairs":[{"a":"ship","b":"sheep"},{"a":"seat","b":"sit"}],"debates":[{"topic":"Traveling about ${tema}","starter":"What is your opinion about ${tema}?"}],"roleplays":[{"title":"${tema}","prompt":"Hello! Welcome. How can I help you today?","tip":"Use polite English expressions"}],"questions":[{"text":"What is your favorite thing about ${tema}?"}],"answerStatements":[{"text":"I really enjoy learning about ${tema}."}],"pictures":[{"word":"ticket","translation":"bilhete","emoji":"🎫"}]}
+Create original content specifically for the theme "${tema}" (${nivel}) keeping the exact same JSON keys.`;
 
                 const resGroq = await Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
                     mensagem: promptGroq,
@@ -836,8 +836,7 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                     const inicioJson = textoBruto.indexOf('{');
                     const fimJson = textoBruto.lastIndexOf('}');
                     if (inicioJson !== -1 && fimJson !== -1) {
-                        const jsonExtraido = textoBruto.substring(inicioJson, fimJson + 1);
-                        p = JSON.parse(jsonExtraido);
+                        p = JSON.parse(textoBruto.substring(inicioJson, fimJson + 1));
                     }
                 }
             }
@@ -849,7 +848,12 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
             const agora = Date.now();
             let totalAdicionados = 0;
 
-            // 1. Vocabulário (words)
+            // Garante que todos os arrays existem no state
+            ['words','phrases','quizzes','wordPickers','minimalPairs','debates','roleplays','questions','answerStatements','pictures'].forEach(k => {
+                if (!Array.isArray(state[k])) state[k] = [];
+            });
+
+            // 1. Vocabulário (Jogos: Feitiço das Palavras, Memória, Forca e Boss)
             if (Array.isArray(p.words)) {
                 p.words.forEach((w, idx) => {
                     if (w.word && w.translation) {
@@ -864,7 +868,7 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                 });
             }
 
-            // 2. Frases e Expressões (phrases)
+            // 2. Frases (Jogos: Sopro do Dragão, Ecos da Coruja, Labirinto Ilusório e Boss)
             if (Array.isArray(p.phrases)) {
                 p.phrases.forEach((ph, idx) => {
                     if (ph.phrase) {
@@ -878,7 +882,7 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                 });
             }
 
-            // 3. Quizzes (quizzes)
+            // 3. Quizzes (Jogos: Enigma da Esfinge e Boss)
             if (Array.isArray(p.quizzes)) {
                 p.quizzes.forEach((q, idx) => {
                     if (q.question && Array.isArray(q.options) && q.options.length >= 2) {
@@ -895,7 +899,7 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                 });
             }
 
-            // 4. Poção Sintática / Lacunas (wordPickers - padrão [Errada, Correta] com correct: 1)
+            // 4. Poção Sintática / Lacunas (Jogo: Poção Sintática e Boss)
             if (Array.isArray(p.wordPickers)) {
                 p.wordPickers.forEach((wp, idx) => {
                     if (wp.text && Array.isArray(wp.options) && wp.options.length >= 2) {
@@ -913,7 +917,35 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                 });
             }
 
-            // 5. Roleplays (roleplays)
+            // 5. Pares Mínimos (Jogo: Sussurros Gêmeos e Boss)
+            if (Array.isArray(p.minimalPairs)) {
+                p.minimalPairs.forEach((mp, idx) => {
+                    if (mp.a && mp.b) {
+                        state.minimalPairs.unshift({
+                            id: `mp_ai_${agora}_${idx}`,
+                            a: String(mp.a).trim(),
+                            b: String(mp.b).trim()
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 6. Debates (Jogo: Duelo de Mentes)
+            if (Array.isArray(p.debates)) {
+                p.debates.forEach((db, idx) => {
+                    if (db.topic) {
+                        state.debates.unshift({
+                            id: `d_ai_${agora}_${idx}`,
+                            topic: String(db.topic).trim(),
+                            starter: db.starter ? String(db.starter).trim() : 'What is your opinion on this topic?'
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 7. Roleplays (Jogo: Manto do Metamorfo)
             if (Array.isArray(p.roleplays)) {
                 p.roleplays.forEach((rp, idx) => {
                     const falaNpc = rp.prompt || rp.scenario;
@@ -929,8 +961,54 @@ Create original content specifically for the theme "${tema}" (${nivel}) keeping 
                 });
             }
 
+            // 8. Perguntas Abertas (Jogo: Pergaminho do Herói)
+            if (Array.isArray(p.questions)) {
+                p.questions.forEach((qu, idx) => {
+                    if (qu.text) {
+                        state.questions.unshift({
+                            id: `aq_ai_${agora}_${idx}`,
+                            text: String(qu.text).trim()
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 9. Espelho do Oráculo (Jogo: Espelho do Oráculo)
+            if (Array.isArray(p.answerStatements)) {
+                p.answerStatements.forEach((as, idx) => {
+                    if (as.text) {
+                        state.answerStatements.unshift({
+                            id: `as_ai_${agora}_${idx}`,
+                            text: String(as.text).trim(),
+                            type: 'answerQuest'
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 10. Figuras (Jogo: Visão do Alquimista)
+            if (Array.isArray(p.pictures)) {
+                p.pictures.forEach((pic, idx) => {
+                    if (pic.word) {
+                        state.pictures.unshift({
+                            id: `pic_ai_${agora}_${idx}`,
+                            word: String(pic.word).trim(),
+                            translation: String(pic.translation || '').trim(),
+                            emoji: String(pic.emoji || '🖼️').trim(),
+                            category: tema
+                        });
+                        totalAdicionados++;
+                    }
+                });
+            }
+
+            // 🚀 Ativa a flag _dbLoaded imediatamente e atualiza os cartões dos jogos!
+            state._dbLoaded = true;
             await Ingles.saveDados();
-            Ingles.mostrarAvisoLocal(`🎉 Pacote "${tema}" (${nivel}) criado! +${totalAdicionados} desafios adicionados à Biblioteca!`, 'success');
+            Ingles.renderAlunoGrid();
+            Ingles.mostrarAvisoLocal(`🎉 Pacote "${tema}" (${nivel}) criado! +${totalAdicionados} desafios descarregados nos jogos!`, 'success');
             Workspace.InglesProfessor.renderProfessorTab('biblioteca');
         } catch (err) {
             console.error('Erro ao gerar pacote IA:', err);
