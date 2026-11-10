@@ -258,7 +258,7 @@ Workspace.Ingles = {
         localStorage.setItem(`${userK}_streak`, String(this.state.streak));
     },
 
-    abrirBau(jaCarregou = false){ 
+   abrirBau(jaCarregou = false){ 
         const executarAbertura = () => {
             this.renderAlunoGrid();
             this.atualizarHUD();
@@ -268,12 +268,23 @@ Workspace.Ingles = {
             const btnAluno = document.getElementById('btnAluno');
             
             if(isProfessor) {
+                const profViewEl = document.getElementById('professorView');
+                const jaEstavaNoProf = profViewEl && !profViewEl.classList.contains('hidden');
+
                 if(btnProf) { btnProf.style.display = 'inline-block'; btnProf.classList.add('active'); }
                 if(btnAluno) btnAluno.classList.remove('active');
                 
-                document.getElementById('professorView').classList.remove('hidden');
+                if (profViewEl) profViewEl.classList.remove('hidden');
                 document.getElementById('alunoView').classList.add('hidden');
-                if (Workspace.InglesProfessor) Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: 'biblioteca' } });
+
+                if (Workspace.InglesProfessor) {
+                    const abaAlvo = Workspace.InglesProfessor._abaAtiva || document.querySelector('.ig-side-item.active')?.dataset.tab || 'biblioteca';
+                    const painelAtivo = document.getElementById(`tab-${abaAlvo}`);
+                    // Só renderiza se o painel ainda estiver vazio ou se acabou de entrar na visão do professor
+                    if (!jaEstavaNoProf || !painelAtivo || !painelAtivo.innerHTML.trim()) {
+                        Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: abaAlvo } });
+                    }
+                }
             } else {
                 if(btnProf) btnProf.style.display = 'none';
                 if(btnAluno) btnAluno.classList.add('active');
@@ -767,8 +778,7 @@ Workspace.Ingles = {
                 <main id="app">
                    <section id="professorView" class="view hidden">
                         <div class="ig-sidebar">
-                            <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Biblioteca</button>
-                            <button class="ig-side-item" data-action="render-tab" data-tab="imagens">🖼️ Figuras</button>
+                            <button class="ig-side-item active" data-action="render-tab" data-tab="biblioteca">📚 Jogos & Biblioteca</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="cupons">🎟️ Cupons</button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="envios">📥 Envios <span class="count" id="pendingCount" style="background:#F59E0B; color:#fff; padding:2px 6px; border-radius:10px; font-size:11px;">0</span></button>
                             <button class="ig-side-item" data-action="render-tab" data-tab="algoritmo">🧠 Algoritmo</button>
@@ -960,7 +970,7 @@ Workspace.Ingles = {
                 return;
             }
 
-            if(a === 'toggle-prof') {
+           if(a === 'toggle-prof') {
                 if(Workspace.usuario?.tipo === 'Aluno') { this.mostrarAvisoLocal('Apenas para Mestres!','error'); return; }
                 document.getElementById('btnProfessor').classList.add('active');
                 document.getElementById('btnAluno').classList.remove('active');
@@ -968,7 +978,10 @@ Workspace.Ingles = {
                 document.getElementById('alunoView').classList.add('hidden');
                 
                 this.loadDados().then(() => {
-                    if (Workspace.InglesProfessor) Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: 'biblioteca' } });
+                    if (Workspace.InglesProfessor) {
+                        const abaAlvo = Workspace.InglesProfessor._abaAtiva || 'biblioteca';
+                        Workspace.InglesProfessor.handleAction('render-tab', { dataset: { tab: abaAlvo } });
+                    }
                 });
             }
            if(a === 'toggle-aluno') {

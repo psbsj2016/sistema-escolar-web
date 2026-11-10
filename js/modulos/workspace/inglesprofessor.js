@@ -4,6 +4,7 @@ window.Workspace = window.Workspace || {};
 Workspace.InglesProfessor = {
     _groqHistory: [],
     _iaHistory: [],
+    _abaAtiva: 'biblioteca',
 
     handleAction: async function(acao, b) {
         const Ingles = Workspace.Ingles;
@@ -11,7 +12,9 @@ Workspace.InglesProfessor = {
 
         switch(acao) {
             case 'render-tab':
-                Workspace.InglesProfessor.renderProfessorTab(b.dataset.tab);
+                const tabEscolhida = (b.dataset.tab === 'imagens') ? 'biblioteca' : (b.dataset.tab || 'biblioteca');
+                Workspace.InglesProfessor._abaAtiva = tabEscolhida;
+                Workspace.InglesProfessor.renderProfessorTab(tabEscolhida);
                 break;
             case 'remover-item':
                 if (Array.isArray(state[b.dataset.key])) {
@@ -66,15 +69,15 @@ Workspace.InglesProfessor = {
                 Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
                 Ingles.mostrarAvisoLocal('Quiz adicionado!', 'success'); 
                 break;
-            case 'add-pic':
+           case 'add-pic':
                 const iPicW = document.getElementById('ig-picWord'), iPicT = document.getElementById('ig-picTrans'), iPicE = document.getElementById('ig-picEmoji'); 
-                const picW = iPicW?.value.trim(), picT = iPicT?.value.trim(), picE = iPicE?.value.trim() || '🖼';
+                const picW = iPicW?.value.trim().toLowerCase(), picT = iPicT?.value.trim().toLowerCase(), picE = iPicE?.value.trim() || '🖼';
                 if(!picW) return Ingles.mostrarAvisoLocal('Digite a palavra!', 'warning'); 
                 state.pictures.unshift({id: 'pic'+Date.now(), word: picW, translation: picT, emoji: picE, category: 'Custom'}); 
                 await Ingles.saveDados(); 
                 if(iPicW) iPicW.value=''; if(iPicT) iPicT.value=''; if(iPicE) iPicE.value='';
-                Workspace.InglesProfessor.renderProfessorTab('imagens'); 
-                Ingles.mostrarAvisoLocal('Figura adicionada!', 'success'); 
+                Workspace.InglesProfessor.renderProfessorTab('biblioteca'); 
+                Ingles.mostrarAvisoLocal('Figura adicionada à Visão do Alquimista!', 'success'); 
                 break;
             case 'add-wordPicker':
                 const iWpT = document.getElementById('ig-wpText'), iWpO1 = document.getElementById('ig-wpOpt1'), iWpO2 = document.getElementById('ig-wpOpt2');
@@ -383,12 +386,15 @@ Workspace.InglesProfessor = {
     },
 
     renderProfessorTab: function(tabId) {
+        if (tabId === 'imagens') tabId = 'biblioteca';
+        this._abaAtiva = tabId || this._abaAtiva || 'biblioteca';
+
         document.querySelectorAll('.ig-side-item').forEach(b=>b.classList.remove('active'));
-        const activeBtn = document.querySelector(`.ig-side-item[data-tab="${tabId}"]`);
+        const activeBtn = document.querySelector(`.ig-side-item[data-tab="${this._abaAtiva}"]`);
         if(activeBtn) activeBtn.classList.add('active');
         
         document.querySelectorAll('.tab-panel').forEach(p=>p.classList.remove('active'));
-        const panel = document.getElementById(`tab-${tabId}`);
+        const panel = document.getElementById(`tab-${this._abaAtiva}`);
         if(panel) panel.classList.add('active');
 
         const esc = Workspace.escapeHTML;
@@ -541,6 +547,18 @@ Workspace.InglesProfessor = {
                         </div>
                         <div class="prof-list-scroll">
                             ${statementsList.length ? statementsList.map(st=>`<div class="prof-list-item"><span>💬 "${esc(st.text)}"</span><button data-action="remover-item" data-key="answerStatements" data-id="${st.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
+                        </div>
+                    </div>
+                    <div class="prof-card" style="border-top: 3px solid #16A34A;">
+                        <div class="ig-prof-header">🖼️ Visão do Alquimista (Figuras) <span style="color:#64748B;font-size:14px">(${state.pictures.length})</span></div>
+                        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px;">
+                            <input id="ig-picEmoji" class="ig-input" style="width:64px; text-align:center; font-size:18px;" placeholder="🍎">
+                            <input id="ig-picWord" class="ig-input" style="flex:1; min-width:95px;" placeholder="Inglês (apple)">
+                            <input id="ig-picTrans" class="ig-input" style="flex:1; min-width:95px;" placeholder="Tradução">
+                            <button data-action="add-pic" class="ws-btn-primary">➕</button>
+                        </div>
+                        <div class="prof-list-scroll">
+                            ${state.pictures.length ? state.pictures.map(p=>`<div class="prof-list-item"><span><span style="font-size:18px; margin-right:6px;">${p.emoji || '🖼️'}</span><b>${esc(p.word)}</b> <span style="color:#cbd5e1;margin:0 4px">|</span> ${esc(p.translation || '')}</span><button data-action="remover-item" data-key="pictures" data-id="${p.id}" class="ws-btn-danger" style="padding:4px 8px;font-size:11px">✕</button></div>`).join('') : '<span style="color:#94a3b8;font-size:12px;">Vazio</span>'}
                         </div>
                     </div>
                 </div>`;
