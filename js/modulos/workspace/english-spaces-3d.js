@@ -4672,11 +4672,14 @@ const fundoCabine = new THREE.Mesh(
 fundoCabine.position.set(0, 1.2, -0.59);
 cabineElevador.add(fundoCabine);
 
-// Duas folhas da porta frontal
+
+// 🛗 PORTAS DESLIZANTES AUTOMÁTICAS DA CABINE
+const portasCabine = [];
+
 [-1, 1].forEach(lado => {
   const portaCabine = new THREE.Mesh(
     new THREE.BoxGeometry(0.59, 2.1, 0.055),
-    materialMetal
+    materialMetal.clone()
   );
 
   portaCabine.position.set(
@@ -4685,8 +4688,20 @@ cabineElevador.add(fundoCabine);
     0.59
   );
 
+  portaCabine.userData.lado = lado;
+  portaCabine.userData.posicaoFechada = lado * 0.3;
+  portaCabine.userData.posicaoAberta = lado * 0.62;
+
+  portasCabine.push(portaCabine);
   cabineElevador.add(portaCabine);
 });
+
+// Referências para controlar as portas
+cabineElevador.userData.portas = portasCabine;
+cabineElevador.userData.aberturaPortas = 0;
+cabineElevador.userData.aberturaDesejada = 0;
+cabineElevador.userData.estado = 'fechado';
+
 
 // Teto da cabine
 const tetoCabine = new THREE.Mesh(
@@ -6798,6 +6813,37 @@ if (this.transicaoVerticalTorre) {
     this.enviarMinhaPosicaoServidor();
   }
 }
+
+ // 🛗 ANIMAÇÃO SUAVE DAS PORTAS DO ELEVADOR
+if (this.torreAtual) {
+  const torre = this.torresResidenciais.get(this.torreAtual);
+  const cabine = torre?.grupoInterior?.userData?.elevadorCabine;
+
+  if (cabine?.userData?.portas) {
+    const aberturaAtual = cabine.userData.aberturaPortas || 0;
+    const aberturaAlvo = cabine.userData.aberturaDesejada || 0;
+
+    const velocidadePortas = Math.min(1, delta * 5);
+
+    cabine.userData.aberturaPortas +=
+      (aberturaAlvo - aberturaAtual) * velocidadePortas;
+
+    const abertura = cabine.userData.aberturaPortas;
+
+    cabine.userData.portas.forEach(porta => {
+      const lado = porta.userData.lado;
+
+      porta.position.x =
+        porta.userData.posicaoFechada +
+        lado * 0.32 * abertura;
+    });
+
+    if (Math.abs(aberturaAlvo - abertura) < 0.01) {
+      cabine.userData.aberturaPortas = aberturaAlvo;
+    }
+  }
+}
+
 // 🛗 Sincroniza a cabine com a altura do jogador
 if (this.torreAtual) {
   const torre = this.torresResidenciais.get(this.torreAtual);
@@ -6806,6 +6852,22 @@ if (this.torreAtual) {
 
   if (cabine) {
     cabine.position.y = p.y || 0;
+// 🛗 Animação suave das portas deslizantes
+if (cabine.userData.portas?.length) {
+  const aberturaAtual = cabine.userData.aberturaPortas || 0;
+  const aberturaAlvo = cabine.userData.aberturaDesejada || 0;
+
+  cabine.userData.aberturaPortas +=
+    (aberturaAlvo - aberturaAtual) * Math.min(1, delta * 5);
+
+  const abertura = cabine.userData.aberturaPortas;
+
+  cabine.userData.portas.forEach(porta => {
+    porta.position.x =
+      porta.userData.posicaoFechada +
+      porta.userData.lado * 0.32 * abertura;
+  });
+}
   }
 }
       if (!p) return;
