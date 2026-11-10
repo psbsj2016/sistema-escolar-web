@@ -6866,11 +6866,17 @@ if (this.torreAtual) {
         });
       }
 
-      const yaw = this.cameraYaw;
-      const pitch = this.cameraPitch;
-      const distBase = this.modoInterior ? 4.4 : 8.4;
-      const dist = distBase + pitch * 0.6;
-      const camHeight = (this.modoInterior ? 3.4 : 4.8) - pitch * 2.2;
+     const yaw = this.cameraYaw;
+  const pitch = this.cameraPitch;
+
+// Reconhece interiores de prédios e torres residenciais
+  const dentroAmbiente = this.modoInterior || !!this.torreAtual;
+
+// Câmera mais próxima dentro dos ambientes
+  const distBase = dentroAmbiente ? 3.2 : 8.4;
+  const dist = distBase + pitch * 0.35;
+
+  const camHeight = (dentroAmbiente ? 2.9 : 4.8) - pitch * 1.8;
       const camOffsetX = Math.sin(yaw) * dist;
       const camOffsetZ = Math.cos(yaw) * dist;
       this.camera.position.set(
@@ -7032,7 +7038,20 @@ if (painelElevador && botaoElevadorUp && botaoElevadorDown) {
     ? this.torresResidenciais.get(this.torreAtual)
     : null;
 
-  const elevadorDisponivel = !!torreElevador && !this.transicaoVerticalTorre;
+  // O jogador precisa estar próximo da cabine para usar o elevador
+const distanciaAteElevador = torreElevador
+  ? Math.hypot(
+      p.x - torreElevador.x,
+      p.z - torreElevador.z
+    )
+  : Infinity;
+
+const pertoDoElevador = distanciaAteElevador <= 2.6;
+
+const elevadorDisponivel =
+  !!torreElevador &&
+  pertoDoElevador &&
+  !this.transicaoVerticalTorre;
 
   const podeSubir = elevadorDisponivel &&
     this.andarTorreAtual < torreElevador.totalAndares;
