@@ -879,11 +879,11 @@ Generate 5 words, 3 phrases, 2 quizzes, 2 wordPickers, 2 minimalPairs, 1 debate,
             // 🛡️ Função normalizadora para bloquear qualquer item repetido (mesmo mudando maiúsculas ou pontuação final)
             const norm = (str) => String(str || '').toLowerCase().trim().replace(/[.!?]+$/g, '');
 
-            // 1. Vocabulário (words) - Sem repetir palavras!
+           // 1. Vocabulário (words) - Sempre em letras 100% minúsculas e sem repetir!
             if (Array.isArray(p.words)) {
                 p.words.forEach((w, idx) => {
-                    const palavraLimpa = String(w?.word || '').trim().toUpperCase();
-                    const tradLimpa = String(w?.translation || '').trim();
+                    const palavraLimpa = String(w?.word || '').trim().toLowerCase();
+                    const tradLimpa = String(w?.translation || '').trim().toLowerCase();
                     if (palavraLimpa && tradLimpa) {
                         const repetida = state.words.some(item => norm(item.word) === norm(palavraLimpa));
                         if (!repetida) {

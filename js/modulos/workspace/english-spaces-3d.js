@@ -4420,6 +4420,9 @@ interiorTorre.name = `Interior_${cfg.id}`;
 interiorTorre.visible = false;
 this.torresInterioresGroup.add(interiorTorre);
 
+  // Mantém o interior alinhado à posição da torre na cidade
+interiorTorre.position.set(cfg.x, 0, cfg.z);
+
     const alturaAndar = 3.2;
     const alturaTotal = cfg.floors * alturaAndar;
     const largura = cfg.width;
