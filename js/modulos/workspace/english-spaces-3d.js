@@ -2932,6 +2932,41 @@ rightGlint.position.set(0.082, 0.071, 0.304);
       }
       return false;
     }
+        // 🏢 COLISÕES DAS TORRES RESIDENCIAIS
+    if (this.torresResidenciais?.size) {
+      for (const torre of this.torresResidenciais.values()) {
+        const limiteMinX = torre.x - torre.largura / 2;
+        const limiteMaxX = torre.x + torre.largura / 2;
+        const limiteMinZ = torre.z - torre.profundidade / 2;
+        const limiteMaxZ = torre.z + torre.profundidade / 2;
+
+        if (this.torreAtual === torre.id) {
+          // Dentro da torre: impede atravessar as paredes
+          const margem = 0.7;
+
+          if (
+            newX < limiteMinX + margem ||
+            newX > limiteMaxX - margem ||
+            newZ < limiteMinZ + margem ||
+            newZ > limiteMaxZ - margem
+          ) {
+            return false;
+          }
+        } else {
+          // Fora da torre: impede atravessar sua estrutura
+          const margemExterna = 0.55;
+
+          if (
+            newX > limiteMinX - margemExterna &&
+            newX < limiteMaxX + margemExterna &&
+            newZ > limiteMinZ - margemExterna &&
+            newZ < limiteMaxZ + margemExterna
+          ) {
+            return false;
+          }
+        }
+      }
+    }
     if (newX < -75 || newX > 82 || newZ < -135 || newZ > 70) return false;
     return true;
   }
@@ -6615,6 +6650,14 @@ interagirTorreResidencial() {
     torreProxima.grupoInterior.visible = true;
   }
 
+   // 🛗 Reinicia o elevador no térreo ao entrar
+  const cabineInicial =
+    torreProxima.grupoInterior?.userData?.elevadorCabine;
+
+  if (cabineInicial) {
+    cabineInicial.position.y = 0;
+  }
+
   p.x = torreProxima.x;
   p.z = torreProxima.z + torreProxima.profundidade / 2 - 2;
   p.y = 0;
@@ -6646,7 +6689,13 @@ iniciarTransicaoVerticalTorre(andarDestino) {
     andarDestino > torre.totalAndares
   ) return;
 
-  if (andarDestino === this.andarTorreAtual) return;
+   if (andarDestino === this.andarTorreAtual) return;
+
+  // 🛗 Posiciona o jogador dentro da cabine
+  this.localPlayer.x = torre.x;
+  this.localPlayer.z = torre.z;
+  this.localPlayer.targetX = null;
+  this.localPlayer.targetZ = null;
 
   const alturaInicial = this.localPlayer.y || 0;
   const alturaFinal = (andarDestino - 1) * torre.alturaAndar;
@@ -6692,6 +6741,16 @@ if (this.transicaoVerticalTorre) {
     this.andarTorreAtual = transicao.andarDestino;
     this.transicaoVerticalTorre = null;
     this.enviarMinhaPosicaoServidor();
+  }
+}
+// 🛗 Sincroniza a cabine com a altura do jogador
+if (this.torreAtual) {
+  const torre = this.torresResidenciais.get(this.torreAtual);
+
+  const cabine = torre?.grupoInterior?.userData?.elevadorCabine;
+
+  if (cabine) {
+    cabine.position.y = p.y || 0;
   }
 }
       if (!p) return;
@@ -7087,6 +7146,32 @@ if (this.transicaoVerticalTorre) {
 if (e.code === 'KeyE' && !e.repeat) {
   this.interagirTorreResidencial();
 }     
+
+  // 🛗 CONTROLE DO ELEVADOR
+if (
+  this.torreAtual &&
+  !e.repeat &&
+  (e.code === 'PageUp' || e.code === 'PageDown')
+) {
+  const torre = this.torresResidenciais.get(this.torreAtual);
+
+  if (torre) {
+    e.preventDefault();
+
+    const destino = e.code === 'PageUp'
+      ? Math.min(torre.totalAndares, this.andarTorreAtual + 1)
+      : Math.max(1, this.andarTorreAtual - 1);
+
+    if (destino !== this.andarTorreAtual) {
+      this.iniciarTransicaoVerticalTorre(destino);
+    } else if (window.Workspace?.mostrarAviso) {
+      window.Workspace.mostrarAviso(
+        'Você já está no limite dos andares.',
+        'info'
+      );
+    }
+  }
+}
 
     };
     this._onKeyUp = (e) => { this.keys[e.code] = false; this.keys[e.key] = false; };
