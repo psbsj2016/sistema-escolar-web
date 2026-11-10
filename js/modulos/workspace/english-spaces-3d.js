@@ -4428,6 +4428,251 @@ interiorTorre.position.set(cfg.x, 0, cfg.z);
     const largura = cfg.width;
     const profundidade = cfg.depth;
 
+  // 🏢 PISOS INTERNOS DOS ANDARES
+const aberturaCentral = 2.4;
+const larguraPiso = largura - 0.8;
+const profundidadePiso = profundidade - 0.8;
+const espessuraPiso = 0.12;
+
+for (let andar = 0; andar < cfg.floors; andar++) {
+  const yPiso = andar * alturaAndar - espessuraPiso / 2;
+
+  // Faixas frontal e traseira
+  const profundidadeFaixa = (profundidadePiso - aberturaCentral) / 2;
+
+  const pisoFrontal = new THREE.Mesh(
+    new THREE.BoxGeometry(larguraPiso, espessuraPiso, profundidadeFaixa),
+    materialConcreto
+  );
+
+  pisoFrontal.position.set(
+    0,
+    yPiso,
+    profundidadePiso / 2 - profundidadeFaixa / 2
+  );
+
+  interiorTorre.add(pisoFrontal);
+
+  const pisoTraseiro = new THREE.Mesh(
+    new THREE.BoxGeometry(larguraPiso, espessuraPiso, profundidadeFaixa),
+    materialConcreto
+  );
+
+  pisoTraseiro.position.set(
+    0,
+    yPiso,
+    -profundidadePiso / 2 + profundidadeFaixa / 2
+  );
+
+  interiorTorre.add(pisoTraseiro);
+
+  // Faixas laterais, preservando a abertura central
+  const larguraFaixa = (larguraPiso - aberturaCentral) / 2;
+
+  [-1, 1].forEach(lado => {
+    const pisoLateral = new THREE.Mesh(
+      new THREE.BoxGeometry(larguraFaixa, espessuraPiso, aberturaCentral),
+      materialConcreto
+    );
+
+    pisoLateral.position.set(
+      lado * (aberturaCentral / 2 + larguraFaixa / 2),
+      yPiso,
+      0
+    );
+
+    interiorTorre.add(pisoLateral);
+  });
+}
+
+ // 🛗 ESTRUTURA DO POÇO DO ELEVADOR
+const elevadorGroup = new THREE.Group();
+elevadorGroup.name = `Elevador_${cfg.id}`;
+
+const larguraElevador = 1.45;
+const profundidadeElevador = 1.45;
+const centroElevadorY = alturaTotal / 2;
+
+// Quatro pilares metálicos do poço
+[-1, 1].forEach(xLado => {
+  [-1, 1].forEach(zLado => {
+    const pilar = new THREE.Mesh(
+      new THREE.BoxGeometry(0.12, alturaTotal, 0.12),
+      materialMetal
+    );
+
+    pilar.position.set(
+      xLado * larguraElevador / 2,
+      centroElevadorY,
+      zLado * profundidadeElevador / 2
+    );
+
+    elevadorGroup.add(pilar);
+  });
+});
+
+// Paredes transparentes do poço
+const paredeFrontal = new THREE.Mesh(
+  new THREE.BoxGeometry(larguraElevador, alturaTotal, 0.035),
+  materialVidro
+);
+
+paredeFrontal.position.set(
+  0,
+  centroElevadorY,
+  profundidadeElevador / 2
+);
+
+elevadorGroup.add(paredeFrontal);
+
+const paredeTraseira = paredeFrontal.clone();
+paredeTraseira.position.z = -profundidadeElevador / 2;
+elevadorGroup.add(paredeTraseira);
+
+const paredeLateral = new THREE.Mesh(
+  new THREE.BoxGeometry(0.035, alturaTotal, profundidadeElevador),
+  materialVidro
+);
+
+paredeLateral.position.set(
+  larguraElevador / 2,
+  centroElevadorY,
+  0
+);
+
+elevadorGroup.add(paredeLateral);
+
+const paredeLateralOposta = paredeLateral.clone();
+paredeLateralOposta.position.x = -larguraElevador / 2;
+elevadorGroup.add(paredeLateralOposta);
+
+interiorTorre.add(elevadorGroup);
+
+// 🛗 CABINE MÓVEL DO ELEVADOR
+const cabineElevador = new THREE.Group();
+cabineElevador.name = `CabineElevador_${cfg.id}`;
+
+// Piso da cabine
+const pisoCabine = new THREE.Mesh(
+  new THREE.BoxGeometry(1.25, 0.12, 1.25),
+  materialMetal
+);
+pisoCabine.position.y = 0.06;
+cabineElevador.add(pisoCabine);
+
+// Paredes laterais
+const paredeCabine = new THREE.Mesh(
+  new THREE.BoxGeometry(0.06, 2.25, 1.25),
+  materialVidro
+);
+
+paredeCabine.position.set(-0.59, 1.2, 0);
+cabineElevador.add(paredeCabine);
+
+const paredeCabineDireita = paredeCabine.clone();
+paredeCabineDireita.position.x = 0.59;
+cabineElevador.add(paredeCabineDireita);
+
+// Parede traseira
+const fundoCabine = new THREE.Mesh(
+  new THREE.BoxGeometry(1.25, 2.25, 0.06),
+  materialVidro
+);
+
+fundoCabine.position.set(0, 1.2, -0.59);
+cabineElevador.add(fundoCabine);
+
+// Duas folhas da porta frontal
+[-1, 1].forEach(lado => {
+  const portaCabine = new THREE.Mesh(
+    new THREE.BoxGeometry(0.59, 2.1, 0.055),
+    materialMetal
+  );
+
+  portaCabine.position.set(
+    lado * 0.3,
+    1.2,
+    0.59
+  );
+
+  cabineElevador.add(portaCabine);
+});
+
+// Teto da cabine
+const tetoCabine = new THREE.Mesh(
+  new THREE.BoxGeometry(1.25, 0.08, 1.25),
+  materialMetal
+);
+
+tetoCabine.position.y = 2.36;
+cabineElevador.add(tetoCabine);
+
+// Posição inicial no térreo
+cabineElevador.position.set(0, 0, 0);
+
+interiorTorre.add(cabineElevador);
+
+// Referência para movimentação futura
+interiorTorre.userData.elevadorCabine = cabineElevador;
+
+  // 🪜 ESCADAS INTERNAS ENTRE OS PAVIMENTOS
+const escadaGroup = new THREE.Group();
+escadaGroup.name = `Escadas_${cfg.id}`;
+
+const totalDegraus = 16;
+const alturaDegrau = alturaAndar / totalDegraus;
+const profundidadeDegrau = 0.22;
+const larguraEscada = 1.05;
+
+for (let andar = 0; andar < cfg.floors - 1; andar++) {
+  const lanceEscada = new THREE.Group();
+  lanceEscada.name = `Escada_Andar_${andar + 1}`;
+
+  for (let i = 0; i < totalDegraus; i++) {
+    const alturaDegrauAtual = (i + 1) * alturaDegrau;
+
+    const degrau = new THREE.Mesh(
+      new THREE.BoxGeometry(
+        profundidadeDegrau,
+        alturaDegrauAtual,
+        larguraEscada
+      ),
+      materialConcreto
+    );
+
+    degrau.position.set(
+      4.8 - (i + 0.5) * profundidadeDegrau,
+      andar * alturaAndar + alturaDegrauAtual / 2,
+      0
+    );
+
+    lanceEscada.add(degrau);
+  }
+
+  // Corrimãos laterais
+  [-1, 1].forEach(lado => {
+    const corrimao = new THREE.Mesh(
+      new THREE.BoxGeometry(3.52, 0.07, 0.07),
+      materialMetal
+    );
+
+    corrimao.position.set(
+      3.04,
+      andar * alturaAndar + 2.5,
+      lado * 0.59
+    );
+
+    corrimao.rotation.z = Math.atan2(3.2, -3.52);
+
+    lanceEscada.add(corrimao);
+  });
+
+  escadaGroup.add(lanceEscada);
+}
+
+interiorTorre.add(escadaGroup);
+interiorTorre.userData.escadas = escadaGroup;
+
     const materialFachada = new THREE.MeshStandardMaterial({
       color: cfg.color,
       roughness: 0.78,
@@ -6281,6 +6526,111 @@ this.scene.add(facadeHeader);
     this.enviarMinhaPosicaoServidor();
   }
 
+  // 🏢 ENTRADA E SAÍDA DAS TORRES RESIDENCIAIS
+interagirTorreResidencial() {
+  const p = this.localPlayer;
+  if (!p || !this.torresResidenciais || !this.torresInterioresGroup) return;
+  if (this.modoInterior) return;
+
+  // SAIR DA TORRE ATUAL
+  if (this.torreAtual) {
+    const torre = this.torresResidenciais.get(this.torreAtual);
+
+    if (torre?.grupoInterior) {
+      torre.grupoInterior.visible = false;
+    }
+
+    this.torresInterioresGroup.visible = false;
+
+    this.torreAtual = null;
+    this.andarTorreAtual = 0;
+    this.transicaoVerticalTorre = null;
+
+    p.y = 0;
+
+    if (this.posicaoExteriorTorre) {
+      p.x = this.posicaoExteriorTorre.x;
+      p.z = this.posicaoExteriorTorre.z;
+    }
+
+    p.targetX = null;
+    p.targetZ = null;
+    this.posicaoExteriorTorre = null;
+
+    this.enviarMinhaPosicaoServidor();
+
+    if (window.Workspace?.mostrarAviso) {
+      window.Workspace.mostrarAviso('Você saiu da torre residencial.', 'info');
+    }
+
+    return;
+  }
+
+  // PROCURAR A TORRE MAIS PRÓXIMA
+  let torreProxima = null;
+  let menorDistancia = Infinity;
+
+  this.torresResidenciais.forEach(torre => {
+    const entradaZ = torre.z + torre.profundidade / 2 + 1.8;
+    const distancia = Math.hypot(
+      p.x - torre.x,
+      p.z - entradaZ
+    );
+
+    if (distancia < menorDistancia) {
+      menorDistancia = distancia;
+      torreProxima = torre;
+    }
+  });
+
+  if (!torreProxima || menorDistancia > 3.5) {
+    if (window.Workspace?.mostrarAviso) {
+      window.Workspace.mostrarAviso(
+        'Aproxime-se da entrada de uma torre residencial.',
+        'info'
+      );
+    }
+    return;
+  }
+
+  // ENTRAR NA TORRE
+  this.posicaoExteriorTorre = {
+    x: p.x,
+    z: p.z
+  };
+
+  this.torreAtual = torreProxima.id;
+  this.andarTorreAtual = 1;
+  this.transicaoVerticalTorre = null;
+
+  this.torresResidenciais.forEach(torre => {
+    if (torre.grupoInterior) {
+      torre.grupoInterior.visible = false;
+    }
+  });
+
+  this.torresInterioresGroup.visible = true;
+
+  if (torreProxima.grupoInterior) {
+    torreProxima.grupoInterior.visible = true;
+  }
+
+  p.x = torreProxima.x;
+  p.z = torreProxima.z + torreProxima.profundidade / 2 - 2;
+  p.y = 0;
+  p.targetX = null;
+  p.targetZ = null;
+
+  this.enviarMinhaPosicaoServidor();
+
+  if (window.Workspace?.mostrarAviso) {
+    window.Workspace.mostrarAviso(
+      `Bem-vindo ao ${torreProxima.nome}!`,
+      'success'
+    );
+  }
+}
+
  // 🏢 MOVIMENTAÇÃO VERTICAL NAS TORRES
 iniciarTransicaoVerticalTorre(andarDestino) {
   const torre = this.torreAtual
@@ -6321,6 +6671,7 @@ iniciarTransicaoVerticalTorre(andarDestino) {
 
       const delta = Math.min(this.clock.getDelta(), 0.1);
       const p = this.localPlayer;
+      if (!p) return;
       // 🏢 Atualiza transição vertical da torre
 if (this.transicaoVerticalTorre) {
   const transicao = this.transicaoVerticalTorre;
@@ -6732,6 +7083,11 @@ if (this.transicaoVerticalTorre) {
       if (['es-city-chat-input', 'es-sticky-text', 'job-answer'].includes(document.activeElement?.id)) return;
       this.keys[e.code] = true;
       this.keys[e.key] = true;
+       // 🏢 Interação com torres residenciais
+if (e.code === 'KeyE' && !e.repeat) {
+  this.interagirTorreResidencial();
+}     
+
     };
     this._onKeyUp = (e) => { this.keys[e.code] = false; this.keys[e.key] = false; };
     window.addEventListener('keydown', this._onKeyDown);
