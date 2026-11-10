@@ -406,6 +406,53 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
         .es-move-pad { width: 32px !important; height: 32px !important; border-radius: 50% !important; background: rgba(255,255,255,0.06) !important; border: 1px solid rgba(255,255,255,0.1) !important; color: #cbd5e1 !important; font-size: 12px !important; display: flex !important; align-items: center !important; justify-content: center !important; cursor: pointer !important; }
         .es-move-pad[data-dir="up"] { grid-area: up; } .es-move-pad[data-dir="left"] { grid-area: left; } .es-move-pad[data-dir="right"] { grid-area: right; } .es-move-pad[data-dir="down"] { grid-area: down; }
         .es-move-pad:active, .es-move-pad:hover { background: rgba(139,92,246,0.34) !important; color: #fff !important; }
+        /* CONTROLES VISÍVEIS DO ELEVADOR */
+.es-elevator-controls {
+  position: absolute !important;
+  left: 50% !important;
+  bottom: 112px !important;
+  transform: translateX(-50%) !important;
+  display: none;
+  align-items: center !important;
+  gap: 12px !important;
+  z-index: 25 !important;
+  pointer-events: auto !important;
+}
+
+.es-elevator-btn {
+  min-width: 76px !important;
+  height: 46px !important;
+  padding: 0 18px !important;
+  border: 1px solid rgba(255,255,255,0.22) !important;
+  border-radius: 14px !important;
+  background: linear-gradient(135deg, rgba(30,41,59,0.96), rgba(15,23,42,0.96)) !important;
+  color: #fff !important;
+  font-size: 14px !important;
+  font-weight: 900 !important;
+  letter-spacing: 1px !important;
+  cursor: pointer !important;
+  box-shadow: 0 8px 22px rgba(0,0,0,0.38) !important;
+  touch-action: manipulation !important;
+}
+
+.es-elevator-btn:active {
+  transform: scale(0.94);
+  background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+}
+
+@media (max-width: 600px) {
+  .es-elevator-controls {
+    bottom: 105px !important;
+    gap: 8px !important;
+  }
+
+  .es-elevator-btn {
+    min-width: 68px !important;
+    height: 44px !important;
+    padding: 0 14px !important;
+    font-size: 13px !important;
+  }
+}
         .es-ref-bottom-bar { position: absolute; bottom: 0; left: 0; right: 0; z-index: 30; pointer-events: auto; display: flex; align-items: center; gap: 10px; padding: 12px; margin: 0 16px max(14px, env(safe-area-inset-bottom)) 16px; background: rgba(14, 16, 28, 0.88) !important; border: 1px solid rgba(255,255,255,0.10) !important; border-radius: 20px !important; backdrop-filter: blur(22px) !important; box-shadow: 0 16px 40px rgba(0,0,0,0.45) !important; }
         #es-city-voice-btn { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #10b981 0%, #059669 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
         #es-city-speak-nearby-pill { height: 46px !important; padding: 0 16px !important; border-radius: 14px !important; background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%) !important; color: #fff !important; border: 1px solid rgba(255,255,255,0.14) !important; font-size: 13px !important; font-weight: 800 !important; cursor: pointer !important; display: inline-flex !important; align-items: center !important; gap: 6px !important; white-space: nowrap !important; }
@@ -444,6 +491,14 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
             <button type="button" class="es-move-pad" data-dir="left">◀</button>
             <button type="button" class="es-move-pad" data-dir="right">▶</button>
             <button type="button" class="es-move-pad" data-dir="down">▼</button>
+          </div>
+             <div id="es-city-elevator-controls" class="es-elevator-controls">
+                               <button type="button" id="es-city-elevator-down" class="es-elevator-btn">
+                               ▼ DOWN
+                               </button>
+                               <button type="button" id="es-city-elevator-up" class="es-elevator-btn">
+                               ▲ UP
+                               </button>
           </div>
         </div>
         <div class="es-ref-bottom-bar">
@@ -6965,8 +7020,35 @@ if (this.torreAtual) {
         });
       }
 
-      p.mesh.userData.ringMat.opacity = this.nearbyTargets.length > 0 ? 0.65 : 0.0;
-      this.atualizarBadgeProximidade();
+    p.mesh.userData.ringMat.opacity = this.nearbyTargets.length > 0 ? 0.65 : 0.0;
+
+// 🛗 EXIBE OS CONTROLES DO ELEVADOR CONFORME O ANDAR
+const painelElevador = document.getElementById('es-city-elevator-controls');
+const botaoElevadorUp = document.getElementById('es-city-elevator-up');
+const botaoElevadorDown = document.getElementById('es-city-elevator-down');
+
+if (painelElevador && botaoElevadorUp && botaoElevadorDown) {
+  const torreElevador = this.torreAtual
+    ? this.torresResidenciais.get(this.torreAtual)
+    : null;
+
+  const elevadorDisponivel = !!torreElevador && !this.transicaoVerticalTorre;
+
+  const podeSubir = elevadorDisponivel &&
+    this.andarTorreAtual < torreElevador.totalAndares;
+
+  const podeDescer = elevadorDisponivel &&
+    this.andarTorreAtual > 1;
+
+  botaoElevadorUp.style.display = podeSubir ? 'inline-flex' : 'none';
+  botaoElevadorDown.style.display = podeDescer ? 'inline-flex' : 'none';
+
+  painelElevador.style.display = (podeSubir || podeDescer)
+    ? 'flex'
+    : 'none';
+}
+
+this.atualizarBadgeProximidade();
 
       if (estaAndando && Date.now() - this.lastSyncTime > 260) {
         this.lastSyncTime = Date.now();
@@ -7188,6 +7270,36 @@ if (
       btn.addEventListener('pointerup', () => { this.keys[dir] = false; });
       btn.addEventListener('pointerleave', () => { this.keys[dir] = false; });
     });
+
+  // 🛗 CONTROLES TOUCH E MOUSE DO ELEVADOR
+document.getElementById('es-city-elevator-up')?.addEventListener('click', () => {
+  this.garantirAudioAtivo();
+
+  if (!this.torreAtual || this.transicaoVerticalTorre) return;
+
+  const torre = this.torresResidenciais.get(this.torreAtual);
+  if (!torre) return;
+
+  const destino = Math.min(
+    torre.totalAndares,
+    this.andarTorreAtual + 1
+  );
+
+  this.iniciarTransicaoVerticalTorre(destino);
+});
+
+document.getElementById('es-city-elevator-down')?.addEventListener('click', () => {
+  this.garantirAudioAtivo();
+
+  if (!this.torreAtual || this.transicaoVerticalTorre) return;
+
+  const destino = Math.max(
+    1,
+    this.andarTorreAtual - 1
+  );
+
+  this.iniciarTransicaoVerticalTorre(destino);
+});
 
     document.getElementById('es-city-gender-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
