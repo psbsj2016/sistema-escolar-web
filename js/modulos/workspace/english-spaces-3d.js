@@ -6852,22 +6852,6 @@ if (this.torreAtual) {
 
   if (cabine) {
     cabine.position.y = p.y || 0;
-// 🛗 Animação suave das portas deslizantes
-if (cabine.userData.portas?.length) {
-  const aberturaAtual = cabine.userData.aberturaPortas || 0;
-  const aberturaAlvo = cabine.userData.aberturaDesejada || 0;
-
-  cabine.userData.aberturaPortas +=
-    (aberturaAlvo - aberturaAtual) * Math.min(1, delta * 5);
-
-  const abertura = cabine.userData.aberturaPortas;
-
-  cabine.userData.portas.forEach(porta => {
-    porta.position.x =
-      porta.userData.posicaoFechada +
-      porta.userData.lado * 0.32 * abertura;
-  });
-}
   }
 }
       if (!p) return;

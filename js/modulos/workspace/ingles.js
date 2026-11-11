@@ -184,30 +184,6 @@ Workspace.Ingles = {
         this.construirHTML(); 
         this.bindEvents();
 
-        // 🚀 MENU MOVÍVEL: Faz o cartão do menu lateral acompanhar suavemente ao descer e ao subir a página
-        if (!this._scrollSidebarConfigurado) {
-            this._scrollSidebarConfigurado = true;
-            const atualizarPosicaoMenu = () => {
-                const sb = document.getElementById('igProfSidebar');
-                const profView = document.getElementById('professorView');
-                if (!sb || !profView || profView.classList.contains('hidden') || window.innerWidth <= 768) {
-                    if (sb) sb.style.transform = '';
-                    return;
-                }
-                const rectView = profView.getBoundingClientRect();
-                const topOffset = 80; // Fica logo abaixo da barra azul do topo (65px + 15px de margem)
-                if (rectView.top < topOffset) {
-                    const maxDeslocamento = Math.max(0, profView.offsetHeight - sb.offsetHeight);
-                    const deslocamento = Math.min(maxDeslocamento, topOffset - rectView.top);
-                    sb.style.transform = `translateY(${Math.round(deslocamento)}px)`;
-                } else {
-                    sb.style.transform = 'translateY(0px)';
-                }
-            };
-            window.addEventListener('scroll', atualizarPosicaoMenu, { passive: true });
-            window.addEventListener('resize', atualizarPosicaoMenu, { passive: true });
-        }
-
         // 🚀 OUVINTE DE TEMPO REAL: Atualiza a Biblioteca do Aluno instantaneamente se o Professor gerar um pacote via IA
         if (window.workspaceStream && !this._streamBaúConfigurado) {
             this._streamBaúConfigurado = true;
@@ -662,11 +638,11 @@ Workspace.Ingles = {
             /* TOAST (MENSAGENS DE AVISO) */
             .toast { position: fixed; top: 70px; left: 50%; transform: translateX(-50%); background: #F59E0B; color: #fff; padding: 12px 24px; border-radius: 30px; font-weight: 800; z-index: 2147483647; box-shadow: 0 6px 16px rgba(0,0,0,0.25); transition: opacity 0.3s, transform 0.3s; width: auto; max-width: 85vw; box-sizing: border-box; text-align: center; word-wrap: break-word; }
             
-            /* 🚀 DASHBOARD DO PROFESSOR (MENU ADAPTADO, MOVÍVEL E COLADO AOS CARDS) */
+            /* 🚀 DASHBOARD DO PROFESSOR (MENU FLUTUANTE FIXO + CARDS UNIFORMES 2 EM 2) */
             #professorView { display: flex; gap: 10px; align-items: flex-start; margin-top: 10px; position: relative; width: 100%; }
             
-            /* BARRA LATERAL COMPACTA E MOVÍVEL (STICKY + SCROLL FOLLOW) */
-            .ig-sidebar { width: 220px; height: fit-content; max-height: calc(100vh - 95px); align-self: flex-start; position: sticky; top: 80px; z-index: 30; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(15,23,42,0.05); transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease, transform 0.12s ease-out; overflow-y: auto; overflow-x: hidden; will-change: transform; }
+            /* BARRA LATERAL FLUTUANTE (NUNCA SOME AO ROLAR A TELA) */
+            .ig-sidebar { width: 220px; height: fit-content; max-height: calc(100vh - 95px); align-self: flex-start; position: sticky; top: 80px; z-index: 30; background: #fff; border: 1px solid #E2E8F0; border-radius: 16px; padding: 12px; display: flex; flex-direction: column; gap: 6px; flex-shrink: 0; box-shadow: 0 6px 18px rgba(15,23,42,0.05); transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1), padding 0.25s ease; overflow-y: auto; overflow-x: hidden; }
             .ig-sidebar.collapsed { width: 64px; padding: 12px 8px; align-items: center; }
             .ig-side-toggle { background: #F8FAFC; border: 1px solid #E2E8F0; color: #475569; border-radius: 10px; padding: 8px 10px; cursor: pointer; font-weight: 800; font-size: 12px; display: flex; align-items: center; justify-content: space-between; gap: 6px; transition: 0.2s; margin-bottom: 2px; font-family: 'Inter', sans-serif; width: 100%; }
             .ig-side-toggle:hover { background: #EEF2FF; color: #4F46E5; border-color: #C7D2FE; }
@@ -675,7 +651,7 @@ Workspace.Ingles = {
             .ig-side-item:hover { background: #F8FAFC; color: #0F172A; }
             .ig-side-item.active { background: #EEF2FF; border-color: #4F46E5; color: #4F46E5; font-weight: 800; box-shadow: 0 4px 10px rgba(79,70,229,0.1); }
             .ig-side-item-left { display: flex; align-items: center; gap: 9px; min-width: 0; }
-            .ig-side-icon { font-size: 17px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; }
+            .ig-side-icon { font-size: 17px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: justify-center; }
             .ig-sidebar.collapsed .ig-side-label { display: none !important; }
             .ig-sidebar.collapsed .ig-side-item { justify-content: center; width: 46px; padding: 10px 0; }
             .ig-sidebar.collapsed .ig-side-item .count { position: absolute; top: 2px; right: 2px; padding: 1px 5px !important; font-size: 9px !important; }
@@ -686,18 +662,20 @@ Workspace.Ingles = {
             .tab-panel.active { display: block; }
             @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
             
-            /* GRELHAS E CARTÕES INTERNOS (2 POR LINHA BEM AMPLOS) */
+            /* GRELHAS E CARTÕES INTERNOS (2 POR LINHA COM ALTURA UNIFORME E SEM SOBRA BRANCA) */
             .grid-cards { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: stretch; }
-            .prof-card { background: #fff; border: 1px solid #e2e8f0; padding: 20px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: 0.2s; }
+            .prof-card { background: #fff; border: 1px solid #e2e8f0; padding: 18px; border-radius: 16px; box-shadow: 0 4px 15px rgba(0,0,0,0.03); display: flex; flex-direction: column; transition: 0.2s; min-width: 0; }
+            #tab-biblioteca .grid-cards > .prof-card { height: 430px; }
             .prof-card:hover { border-color: #cbd5e1; box-shadow: 0 6px 20px rgba(0,0,0,0.06); }
-            .ig-prof-header { display: flex; align-items: center; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; font-weight: 800; font-size: 18px; margin-bottom: 15px; border-bottom: 2px solid #f1f5f9; padding-bottom: 12px; }
+            .ig-prof-header { display: flex; align-items: center; justify-content: space-between; font-family: 'Plus Jakarta Sans', sans-serif; color: #0f172a; font-weight: 800; font-size: 17px; margin-bottom: 12px; border-bottom: 2px solid #f1f5f9; padding-bottom: 10px; flex-shrink: 0; }
             
-            /* LISTAS DE ITENS */
-            .prof-list-scroll { max-height: 220px; overflow-y: auto; padding-right: 8px; display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+            /* LISTAS DE ITENS (OCUPAM 100% DO ESPAÇO RESTANTE DO CARD COM FLEX: 1) */
+            .prof-list-scroll { flex: 1; min-height: 0; max-height: 220px; overflow-y: auto; padding: 8px; background: #f8fafc; border: 1px solid #f1f5f9; border-radius: 12px; display: flex; flex-direction: column; gap: 8px; margin-top: 6px; }
+            #tab-biblioteca .grid-cards > .prof-card .prof-list-scroll { max-height: none; }
             .prof-list-scroll::-webkit-scrollbar { width: 6px; }
             .prof-list-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-            .prof-list-item { display: flex; justify-content: space-between; align-items: center; background: #f8fafc; padding: 12px 14px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; color: #1e293b; line-height: 1.4; transition: 0.2s; }
-            .prof-list-item:hover { border-color: #cbd5e1; background: #fff; }
+            .prof-list-item { display: flex; justify-content: space-between; align-items: center; background: #ffffff; padding: 10px 12px; border-radius: 10px; border: 1px solid #e2e8f0; font-size: 13px; color: #1e293b; line-height: 1.4; transition: 0.2s; flex-shrink: 0; }
+            .prof-list-item:hover { border-color: #cbd5e1; box-shadow: 0 2px 6px rgba(0,0,0,0.03); }
 
             /* BOTÕES PREMIUM */
             .ws-btn-primary { background: linear-gradient(135deg, #6366f1, #4f46e5); color: #fff; border: none; padding: 10px 18px; border-radius: 10px; font-weight: 700; cursor: pointer; box-shadow: 0 4px 12px rgba(79,70,229,0.25); transition: all 0.2s; display: inline-flex; align-items: center; justify-content: center; gap: 6px; flex-shrink: 0; font-size: 14px;}
