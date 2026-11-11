@@ -4579,7 +4579,7 @@ for (let andar = 0; andar < cfg.floors; andar++) {
 const elevadorGroup = new THREE.Group();
 elevadorGroup.name = `Elevador_${cfg.id}`;
 
-const larguraElevador = 1.45;
+const larguraElevador = 2.0;
 const profundidadeElevador = 1.45;
 const centroElevadorY = alturaTotal / 2;
 
@@ -4601,22 +4601,36 @@ const centroElevadorY = alturaTotal / 2;
   });
 });
 
-// Paredes transparentes do poço
-const paredeFrontal = new THREE.Mesh(
-  new THREE.BoxGeometry(larguraElevador, alturaTotal, 0.035),
+// 🛗 LATERAIS DE VIDRO DA ENTRADA DO POÇO
+const paredeFrontalLateral = new THREE.Mesh(
+  new THREE.BoxGeometry(0.16, alturaTotal, 0.035),
   materialVidro
 );
 
-paredeFrontal.position.set(
-  0,
+[-1, 1].forEach(lado => {
+  const painel = paredeFrontalLateral.clone();
+
+painel.position.set(
+  lado * 0.88,
   centroElevadorY,
   profundidadeElevador / 2
 );
 
-elevadorGroup.add(paredeFrontal);
+  elevadorGroup.add(painel);
+});
 
-const paredeTraseira = paredeFrontal.clone();
-paredeTraseira.position.z = -profundidadeElevador / 2;
+// 🛗 PAREDE TRASEIRA DE VIDRO DO POÇO
+const paredeTraseira = new THREE.Mesh(
+  new THREE.BoxGeometry(larguraElevador, alturaTotal, 0.035),
+  materialVidro
+);
+
+paredeTraseira.position.set(
+  0,
+  centroElevadorY,
+  -profundidadeElevador / 2
+);
+
 elevadorGroup.add(paredeTraseira);
 
 const paredeLateral = new THREE.Mesh(
@@ -4677,20 +4691,20 @@ cabineElevador.add(fundoCabine);
 const portasCabine = [];
 
 [-1, 1].forEach(lado => {
-  const portaCabine = new THREE.Mesh(
-    new THREE.BoxGeometry(0.59, 2.1, 0.055),
-    materialMetal.clone()
-  );
+ const portaCabine = new THREE.Mesh(
+  new THREE.BoxGeometry(0.50, 2.1, 0.055),
+  materialMetal.clone()
+);
 
-  portaCabine.position.set(
-    lado * 0.3,
-    1.2,
-    0.59
-  );
+portaCabine.position.set(
+  lado * 0.25,
+  1.2,
+  0.59
+);
 
-  portaCabine.userData.lado = lado;
-  portaCabine.userData.posicaoFechada = lado * 0.3;
-  portaCabine.userData.posicaoAberta = lado * 0.62;
+portaCabine.userData.lado = lado;
+portaCabine.userData.posicaoFechada = lado * 0.25;
+portaCabine.userData.posicaoAberta = lado * 0.74;
 
   portasCabine.push(portaCabine);
   cabineElevador.add(portaCabine);
@@ -6833,9 +6847,9 @@ if (this.torreAtual) {
     cabine.userData.portas.forEach(porta => {
       const lado = porta.userData.lado;
 
-      porta.position.x =
-        porta.userData.posicaoFechada +
-        lado * 0.32 * abertura;
+   porta.position.x =
+  porta.userData.posicaoFechada +
+  (porta.userData.posicaoAberta - porta.userData.posicaoFechada) * abertura;
     });
 
     if (Math.abs(aberturaAlvo - abertura) < 0.01) {
