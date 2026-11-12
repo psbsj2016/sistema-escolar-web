@@ -256,73 +256,134 @@ Workspace.Arena = {
         document.body.appendChild(modal);
     },
 
+   guerreirosCache: [],
+
+    carregarGuerreiros: async () => {
+        try {
+            const res = await Workspace.api('/workspace/arena/guerreiros', 'GET');
+            if (res && res.success && Array.isArray(res.guerreiros)) {
+                Workspace.Arena.guerreirosCache = res.guerreiros;
+                // Alimenta também o avatarsCache para quem tiver foto
+                res.guerreiros.forEach(g => {
+                    if (g.nome && g.avatar) {
+                        Workspace.avatarsCache = Workspace.avatarsCache || {};
+                        Workspace.avatarsCache[g.nome] = g.avatar;
+                    }
+                });
+            }
+        } catch (e) {}
+    },
+
     abrirMenuSolo: () => {
         document.getElementById('ws-btn-solo').style.display = 'none';
         document.getElementById('ws-arena-solo-options').style.display = 'flex';
-        document.getElementById('ws-btn-procurar').style.display = 'none'; // Esconde para focar
+        document.getElementById('ws-btn-procurar').style.display = 'none';
     },
 
-    abrirPainel: () => { 
+    abrirPainel: async () => { 
         Workspace.Arena.desbloquearAudioNavegador(); 
-        document.getElementById('ws-modal-arena').style.display = 'flex'; 
+        const modal = document.getElementById('ws-modal-arena');
+        if (modal) {
+            modal.style.display = 'flex';
+            // Restaura o estado visual dos botões sempre que abrir o modal
+            const btnSolo = document.getElementById('ws-btn-solo');
+            const menuSolo = document.getElementById('ws-arena-solo-options');
+            const btnProcurar = document.getElementById('ws-btn-procurar');
+            const status = document.getElementById('ws-arena-status');
+            if (btnSolo) btnSolo.style.display = 'flex';
+            if (menuSolo) menuSolo.style.display = 'none';
+            if (btnProcurar) {
+                btnProcurar.style.display = 'block';
+                btnProcurar.disabled = false;
+                btnProcurar.style.opacity = '1';
+                btnProcurar.innerHTML = '🎲 Procurar Oponente Aleatório';
+                btnProcurar.style.background = '#3b82f6';
+                btnProcurar.style.border = 'none';
+                btnProcurar.style.color = 'white';
+            }
+            if (status) status.style.display = 'none';
+        }
+        await Workspace.Arena.carregarGuerreiros();
     },
 
-   filtrarColegas: () => {
-        const normalizar = (texto) => texto ? texto.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
-        const inputStr = document.getElementById('ws-arena-input-convite').value;
-        const input = normalizar(inputStr);
+    filtrarColegas: async () => {
+        const normalizar = (texto) => texto ? String(texto).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim() : "";
+        const inputEl = document.getElementById('ws-arena-input-convite');
         const lista = document.getElementById('ws-arena-sugestoes');
+        if (!inputEl || !lista) return;
+
+        const input = normalizar(inputEl.value);
         lista.innerHTML = '';
 
-        // 🚀 1. Arranca a pesquisa logo na primeira letra digitada
         if (!input || input.length < 1) { 
             lista.style.display = 'none'; 
             return; 
         }
 
-        const meuNomeNormalizado = normalizar(Workspace.usuario.nome || Workspace.usuario.login);
-        
-        // 🚀 2. Encontra todos os colegas que contêm a letra/nome digitado
-        let colegas = Object.keys(Workspace.avatarsCache || {}).filter(nome => {
-            const nomeNorm = normalizar(nome);
-            return nomeNorm.includes(input) && nomeNorm !== meuNomeNormalizado;
+        // Se o cache da Arena ainda estiver vazio, busca imediatamente no servidor
+        if (!Array.isArray(Workspace.Arena.guerreirosCache) || Workspace.Arena.guerreirosCache.length === 0) {
+            await Workspace.Arena.carregarGuerreiros();
+        }
+
+        const meuId = String(Workspace.usuario?.id || '');
+        const meuRefId = String(Workspace.usuario?.alunoRefId || '');
+        const meuNomeNormalizado = normalizar(Workspace.usuario?.nome || Workspace.usuario?.login);
+        const meuLoginNormalizado = normalizar(Workspace.usuario?.login);
+
+        // Combina a lista completa de guerreiros do servidor + fallback do avatarsCache sem duplicar
+        const mapaNomes = new Map();
+
+        (Workspace.Arena.guerreirosCache || []).forEach(g => {
+            if (!g || !g.nome) return;
+            if (meuId && (String(g.id) === meuId || String(g.alunoRefId) === meuId)) return;
+            if (meuRefId && (String(g.id) === meuRefId || String(g.alunoRefId) === meuRefId)) return;
+            const nNorm = normalizar(g.nome);
+            if (!nNorm || nNorm === meuNomeNormalizado || (meuLoginNormalizado && nNorm === meuLoginNormalizado)) return;
+            mapaNomes.set(nNorm, g.nome.trim());
         });
 
-        // 🧠 3. INTELIGÊNCIA MATEMÁTICA: Ordenação Perfeita
+        Object.keys(Workspace.avatarsCache || {}).forEach(nomeCache => {
+            // Ignora formatos compostos "Nome (@Apelido)" para não poluir a lista
+            const limpo = String(nomeCache).replace(/\s*\(@.*\)\s*$/, '').trim();
+            const nNorm = normalizar(limpo);
+            if (!nNorm || nNorm === meuNomeNormalizado || (meuLoginNormalizado && nNorm === meuLoginNormalizado)) return;
+            if (!mapaNomes.has(nNorm)) {
+                mapaNomes.set(nNorm, limpo);
+            }
+        });
+
+        let colegas = Array.from(mapaNomes.values()).filter(nome => {
+            return normalizar(nome).includes(input);
+        });
+
         colegas.sort((a, b) => {
             const aNorm = normalizar(a);
             const bNorm = normalizar(b);
             const aComeca = aNorm.startsWith(input);
             const bComeca = bNorm.startsWith(input);
-            
-            // Quem COMEÇA com a letra vai para o topo da lista
             if (aComeca && !bComeca) return -1; 
             if (!aComeca && bComeca) return 1;  
-            // Se ambos começam (ou ambos não começam), organiza por ordem alfabética normal
             return aNorm.localeCompare(bNorm);  
         });
 
         if (colegas.length > 0) {
             colegas.forEach(nome => {
-                // Se não tiver foto, o sistema desenha a bolinha colorida automaticamente
                 const fotoHTML = window.Workspace.renderizarAvatar(nome, 30);
-                
                 const item = document.createElement('div');
-                item.style.cssText = 'padding: 10px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #334155; transition: 0.2s;';
+                item.style.cssText = 'padding: 10px 12px; display: flex; align-items: center; gap: 10px; cursor: pointer; border-bottom: 1px solid #334155; transition: 0.2s;';
                 item.onmouseover = () => item.style.background = '#334155';
                 item.onmouseout = () => item.style.background = 'transparent';
                 
                 item.onclick = () => {
-                    document.getElementById('ws-arena-input-convite').value = nome;
+                    inputEl.value = nome;
                     lista.style.display = 'none';
                 };
                 
-                item.innerHTML = `${fotoHTML} <span style="color: #fff; font-size: 14px;">${nome}</span>`;
+                item.innerHTML = `${fotoHTML} <span style="color: #fff; font-size: 14px; font-weight: 600;">${Workspace.escapeHTML(nome)}</span>`;
                 lista.appendChild(item);
             });
             lista.style.display = 'block';
         } else {
-            // Feedback elegante caso o nome não exista
             lista.innerHTML = '<div style="padding: 15px; color: #94a3b8; font-size: 13px; text-align: center;">Nenhum colega encontrado com este nome.</div>';
             lista.style.display = 'block';
         }
@@ -451,16 +512,22 @@ Workspace.Arena = {
             try {
                 const dados = e.detail;
                 if (!dados) return;
-                const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
-                const meuIdStr = String(Workspace.usuario.id);
+              const meuNome = Workspace.usuario.nome || Workspace.usuario.login || '';
+                const meuLogin = Workspace.usuario.login || '';
+                const meuIdStr = String(Workspace.usuario.id || '');
+                const meuRefIdStr = String(Workspace.usuario.alunoRefId || '');
                 
-                // 🚀 O SEGREDO DA PERFEIÇÃO BLINDADA: Filtra por Nome exato OU pela ID (Impressão Digital)
                 const destLimpos = (dados.destinatarios || []).map(n => String(n).trim().toLowerCase());
                 const destIds = (dados.destinatariosIds || []).map(id => String(id));
                 const meuLimpo = String(meuNome).trim().toLowerCase();
+                const meuLoginLimpo = String(meuLogin).trim().toLowerCase();
                 
-                // Agora o "Raio Trator" puxa o jogador mesmo que o nome tenha sido alterado ou escrito errado!
-                if (destLimpos.includes(meuLimpo) || destIds.includes(meuIdStr)) {
+                const souAlvo = destLimpos.includes(meuLimpo) ||
+                                (meuLoginLimpo && destLimpos.includes(meuLoginLimpo)) ||
+                                (meuIdStr && destIds.includes(meuIdStr)) ||
+                                (meuRefIdStr && destIds.includes(meuRefIdStr));
+
+                if (souAlvo) {
                     
                     if (dados.type === 'ARENA_CONVITE_RECEBIDO') {
                         if (window.Toast) {
