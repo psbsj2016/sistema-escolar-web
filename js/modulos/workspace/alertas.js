@@ -5,29 +5,83 @@ Workspace.Alertas = {
     notificacoesAtuais: [],
     idsConhecidos: new Set(),
     primeiraBuscaConcluida: false,
+    _usuarioIdAtivo: null,
+    _usuarioTipoAtivo: null,
+    inicioSessaoMs: Date.now(),
     
     // Variáveis de memória para o Detetive de Retorno e Radar
     conexaoSSE: null, 
     momentoSaida: null,
     radarPolling: null,
 
+    // 🧹 LIMPEZA TOTAL DE SESSÃO: Garante isolamento absoluto ao trocar de utilizador ou sair no mesmo computador
+    resetarEstado: () => {
+        Workspace.Alertas.notificacoesAtuais = [];
+        Workspace.Alertas.idsConhecidos = new Set();
+        Workspace.Alertas.primeiraBuscaConcluida = false;
+        Workspace.Alertas._usuarioIdAtivo = null;
+        Workspace.Alertas._usuarioTipoAtivo = null;
+        Workspace.Alertas.inicioSessaoMs = Date.now();
+
+        if (Workspace.Alertas.conexaoSSE) {
+            try { Workspace.Alertas.conexaoSSE.close(); } catch (e) {}
+            Workspace.Alertas.conexaoSSE = null;
+        }
+        if (Workspace.Alertas.radarPolling) {
+            clearInterval(Workspace.Alertas.radarPolling);
+            Workspace.Alertas.radarPolling = null;
+        }
+        const dropdown = document.getElementById('ws-noti-dropdown');
+        if (dropdown) dropdown.style.display = 'none';
+        Workspace.Alertas.atualizarInterface();
+    },
+
+    // 🛡️ FILTRO DE ISOLAMENTO DE CARGO NO FRONTEND (Aluno vs Professor/Gestor)
+    ehNotificacaoPermitidaParaUsuario: (n) => {
+        if (!n || !Workspace.usuario) return false;
+        const meuId = String(Workspace.usuario.id || '').trim();
+        const meuTipo = String(Workspace.usuario.tipo || 'Aluno').trim().toLowerCase();
+        const ehAluno = meuTipo === 'aluno';
+
+        if (n.destinatarioId && meuId && String(n.destinatarioId) !== meuId) {
+            return false;
+        }
+        if (ehAluno) {
+            if (n.destinatarioTipo && String(n.destinatarioTipo).toLowerCase() !== 'aluno') return false;
+            if (['lousa_espera', 'acesso_online'].includes(n.origem)) return false;
+            const msg = String(n.mensagem || '').toLowerCase();
+            if (msg.includes('enviou o exercício intitulado') || msg.includes('já está disponível na área de exercícios')) {
+                return false;
+            }
+        }
+        return true;
+    },
+
     init: () => {
         console.log("🔔 Motor de Alertas: Conexão em Tempo Real (SSE) Ativada.");
         Workspace.Alertas.injetarCSS();
         Workspace.Alertas.construirDropdown();
+
+        // Se mudou de utilizador no mesmo computador, limpa imediatamente qualquer resquício anterior
+        const idAtual = Workspace.usuario ? String(Workspace.usuario.id || '') : '';
+        const tipoAtual = Workspace.usuario ? String(Workspace.usuario.tipo || 'Aluno') : '';
+        if (Workspace.Alertas._usuarioIdAtivo !== idAtual || Workspace.Alertas._usuarioTipoAtivo !== tipoAtual) {
+            Workspace.Alertas.resetarEstado();
+            Workspace.Alertas._usuarioIdAtivo = idAtual;
+            Workspace.Alertas._usuarioTipoAtivo = tipoAtual;
+            Workspace.Alertas.inicioSessaoMs = Date.now();
+        }
+
         Workspace.Alertas.atualizarInterface();
-        
-        // Liga o vigia de abas adormecidas
         Workspace.Alertas.iniciarDetetiveRetorno();
         
         const aguardarUsuario = setInterval(() => {
             const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
             if (meuNome) {
                 clearInterval(aguardarUsuario);
-                Workspace.Alertas.buscarNotificacoes(); 
+                Workspace.Alertas.buscarNotificacoes(true); 
                 Workspace.Alertas.iniciarConexaoTempoReal(); 
 
-                // 🛡️ Radar de Segurança: Verifica novas notificações a cada 15s caso o túnel SSE oscile
                 if (Workspace.Alertas.radarPolling) clearInterval(Workspace.Alertas.radarPolling);
                 Workspace.Alertas.radarPolling = setInterval(() => {
                     if (document.visibilityState === 'visible' && Workspace.usuario) {
@@ -117,7 +171,7 @@ Workspace.Alertas = {
             if (typeof Workspace.atualizarCacheAvatares === 'function') {
                 await Workspace.atualizarCacheAvatares();
             }
-            if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes();
+            if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes(true);
             
             if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) Workspace.Avaliacoes.carregarLobbies();
             
@@ -184,7 +238,12 @@ Workspace.Alertas = {
                 }
             }
             
-            if (data.type === 'NOVA_NOTIFICACAO' && Array.isArray(data.destinatarios)) {
+          if (data.type === 'NOVA_NOTIFICACAO' && Array.isArray(data.destinatarios)) {
+                if (!Workspace.usuario) return;
+                const ehAluno = String(Workspace.usuario.tipo || 'Aluno').toLowerCase() === 'aluno';
+                if (ehAluno && data.destinatariosTipo && String(data.destinatariosTipo).toLowerCase() !== 'aluno') {
+                    return;
+                }
                 const meuNome = (Workspace.usuario.nome ? Workspace.usuario.nome : '').trim().toLowerCase();
                 const meuLogin = (Workspace.usuario.login ? Workspace.usuario.login : '').trim().toLowerCase();
                 const souDestinatario = data.destinatarios.some(d => {
@@ -192,7 +251,7 @@ Workspace.Alertas = {
                     return destLimpo === 'todos' ? true : (destLimpo === meuNome ? true : destLimpo === meuLogin);
                 });
                 if (souDestinatario) {
-                    Workspace.Alertas.buscarNotificacoes(); 
+                    Workspace.Alertas.buscarNotificacoes(true); 
                 }
             }
 
@@ -436,23 +495,51 @@ Workspace.Alertas = {
         }
     },
 
-    buscarNotificacoes: async (isPollingSilencioso = false) => {
-        const meuNome = Workspace.usuario ? (Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login) : null;
+   buscarNotificacoes: async (isPollingSilencioso = false) => {
+        if (!Workspace.usuario) return;
+        const telaLogin = document.getElementById('ws-login-screen');
+        if (telaLogin && telaLogin.style.display !== 'none') return;
+
+        // 🛡️ Verifica se a conta ou o cargo mudou no mesmo navegador
+        const idAtual = String(Workspace.usuario.id || '');
+        const tipoAtual = String(Workspace.usuario.tipo || 'Aluno');
+        if (Workspace.Alertas._usuarioIdAtivo !== idAtual || Workspace.Alertas._usuarioTipoAtivo !== tipoAtual) {
+            Workspace.Alertas.resetarEstado();
+            Workspace.Alertas._usuarioIdAtivo = idAtual;
+            Workspace.Alertas._usuarioTipoAtivo = tipoAtual;
+            Workspace.Alertas.inicioSessaoMs = Date.now();
+        }
+
+        const meuNome = Workspace.usuario.nome ? Workspace.usuario.nome : Workspace.usuario.login;
         if (!meuNome) return;
         
         try {
-            const data = await Workspace.api(`/workspace/notificacoes/${encodeURIComponent(meuNome.trim())}`);
+            const urlNoti = `/workspace/notificacoes/${encodeURIComponent(meuNome.trim())}?userId=${encodeURIComponent(idAtual)}&tipo=${encodeURIComponent(tipoAtual)}`;
+            const dataBruta = await Workspace.api(urlNoti);
             
-            if (Array.isArray(data)) {                
+            if (Array.isArray(dataBruta)) {
+                // Filtra rigorosamente qualquer notificação que não pertença ao perfil/cargo atual
+                const data = dataBruta.filter(n => Workspace.Alertas.ehNotificacaoPermitidaParaUsuario(n));
+
                 const assinaturaAntiga = Workspace.Alertas.notificacoesAtuais
                     .map(n => `${n.id}_${n.remetenteNome}`)
                     .join('|');
 
-                const locais = Workspace.Alertas.notificacoesAtuais.filter(n => String(n.id).startsWith('alerta_local_'));
+                const locais = Workspace.Alertas.notificacoesAtuais
+                    .filter(n => String(n.id).startsWith('alerta_local_') && Workspace.Alertas.ehNotificacaoPermitidaParaUsuario(n));
+
                 Workspace.Alertas.notificacoesAtuais = [...locais, ...data];
                 
                 const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
-                const novas = data.filter(n => !Workspace.Alertas.idsConhecidos.has(n.id));
+                const agoraMs = Date.now();
+                const JANELA_POPUP_MS = 120000; // 2 minutos: Só dispara pop-up se a notificação acabou mesmo de acontecer!
+
+                const novas = data.filter(n => {
+                    if (Workspace.Alertas.idsConhecidos.has(n.id)) return false;
+                    const dataNotiMs = n.data ? new Date(n.data).getTime() : 0;
+                    // Impede enxurrada de notificações antigas quando o aluno volta da inatividade!
+                    return dataNotiMs > 0 && (agoraMs - dataNotiMs) <= JANELA_POPUP_MS && dataNotiMs >= (Workspace.Alertas.inicioSessaoMs - 15000);
+                });
 
                 if (Workspace.Alertas.primeiraBuscaConcluida && novas.length > 0) {
                     

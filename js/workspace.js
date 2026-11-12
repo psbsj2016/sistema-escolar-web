@@ -1367,10 +1367,9 @@ Object.assign(Workspace, {
     // ============================================================================
     // 🚪 SISTEMA DE LOGOUT E "AMNÉSIA" DE NAVEGAÇÃO SEGURA
     // ============================================================================
-   logout: async (forcado = false) => {
-        if (Workspace.Alertas) {
-            if (Workspace.Alertas.radarPolling) clearInterval(Workspace.Alertas.radarPolling);
-            if (Workspace.Alertas.conexaoSSE) Workspace.Alertas.conexaoSSE.close();
+       logout: async (forcado = false) => {
+        if (Workspace.Alertas && typeof Workspace.Alertas.resetarEstado === 'function') {
+            Workspace.Alertas.resetarEstado();
         }
         
         localStorage.removeItem('ws_usuario_logado');
