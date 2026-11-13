@@ -438,7 +438,8 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-    const ROLE = (params.get('role') || 'aluno').toLowerCase();
+   let ROLE = (params.get('role') || 'aluno').toLowerCase();
+    let IS_GESTOR_OU_PROF = (ROLE === 'professor' || ROLE === 'gestor' || ROLE === 'secretaria');
     const USER_ID = params.get('userId') || '';
     const USER_NAME = params.get('userName') || 'Utilizador';
     const ESCOLA_ID = params.get('escolaId') || 'DEFAULT';
@@ -460,6 +461,15 @@
     let recTimerInterval = null;
     let recSeconds = 0;
 
+    // 🛡️ Mantém a sessão do WorkSpace principal acordada durante aulas longas (até 4 horas)
+    setInterval(() => {
+      try {
+        if (window.parent && window.parent.Workspace && window.parent.Workspace.Sessao) {
+          window.parent.Workspace.Sessao.ultimoAcesso = Date.now();
+        }
+      } catch (e) {}
+    }, 45000);
+
     function mostrarToast(msg, cor = '#10b981') {
       const t = document.getElementById('vc-toast');
       t.innerText = msg;
@@ -480,6 +490,28 @@
       return `${m}:${String(r).padStart(2, '0')}`;
     }
 
+    function aplicarPermissoesVisuaisCargo() {
+      const btnUpload = document.getElementById('btn-open-upload');
+      const painelProfLive = document.getElementById('prof-live-controls');
+      const boxAlunoInfo = document.getElementById('aluno-live-info');
+      const liveGrid = document.querySelector('.live-grid');
+
+      if (IS_GESTOR_OU_PROF) {
+        if (btnUpload) btnUpload.style.display = 'inline-flex';
+        if (painelProfLive) painelProfLive.style.display = 'flex';
+        if (boxAlunoInfo) boxAlunoInfo.style.display = 'none';
+        if (liveGrid) liveGrid.style.gridTemplateColumns = '';
+      } else {
+        // 🔒 ALUNO: Esconde 100% os botões de upload e criação de live e expande o ecrã da aula para 100%!
+        if (btnUpload) btnUpload.style.display = 'none';
+        if (painelProfLive) painelProfLive.style.display = 'none';
+        if (boxAlunoInfo) boxAlunoInfo.style.display = 'block';
+        const painelLateralCard = painelProfLive ? painelProfLive.parentElement : null;
+        if (painelLateralCard) painelLateralCard.style.display = 'none';
+        if (liveGrid) liveGrid.style.gridTemplateColumns = '1fr';
+      }
+    }
+
     // 1. CARREGAR CATÁLOGO DO SERVIDOR
     async function carregarCatalogo(abrirInicial = false) {
       try {
@@ -488,13 +520,19 @@
         const data = await res.json();
         if (!data || !data.success) return;
 
+        // O servidor confirma se é realmente Professor/Gestor ou Aluno
+        if (typeof data.permissaoGestao === 'boolean') {
+          IS_GESTOR_OU_PROF = data.permissaoGestao;
+          ROLE = IS_GESTOR_OU_PROF ? 'professor' : 'aluno';
+        }
+
+        aplicarPermissoesVisuaisCargo();
+
         catalogoVideos = Array.isArray(data.videos) ? data.videos : [];
         catalogoSequencias = Array.isArray(data.sequencias) ? data.sequencias : [];
         liveAtivaObj = data.liveAtiva || null;
 
-        if (ROLE !== 'aluno') {
-          document.getElementById('btn-open-upload').style.display = 'inline-flex';
-          document.getElementById('prof-live-controls').style.display = 'flex';
+        if (IS_GESTOR_OU_PROF) {
           popularSeletoresTurmas(data.turmas || []);
         }
 
@@ -503,7 +541,6 @@
         renderizarBarraAssuntos();
         renderizarGrelhaCatalogo();
 
-        // Se abriu através de um Link Extraído de Vídeo ou de Sequência (Playlist)
         if (abrirInicial) {
           if (INITIAL_VIDEO_ID) {
             const vEncontrado = catalogoVideos.find(v => v.id === INITIAL_VIDEO_ID);
@@ -670,9 +707,7 @@
       renderizarComentariosPlayer();
       renderizarFilaSequenciaSidebar();
 
-      if (ROLE !== 'aluno') {
-        document.getElementById('btn-delete-video').style.display = 'inline-flex';
-      }
+     document.getElementById('btn-delete-video').style.display = IS_GESTOR_OU_PROF ? 'inline-flex' : 'none';
 
       // Regista visualização silenciosamente
       fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(video.id)}/interagir`, {
@@ -1019,22 +1054,61 @@
       }
     }
 
-    // 7. SALA AO VIVO (MEET EMBUTIDO + GRAVADOR NATIVO QUE SALVA NO CATÁLOGO)
+   // 7. SALA AO VIVO (ATÉ 4H GRATUITAS + SEPARAÇÃO ALUNO VS PROFESSOR)
     function atualizarBannerLive() {
       const banner = document.getElementById('live-banner');
       const btnIniciar = document.getElementById('btn-iniciar-live');
       const btnEncerrar = document.getElementById('btn-encerrar-live');
+      const btnTabLive = document.getElementById('btn-tab-live');
 
       if (liveAtivaObj && liveAtivaObj.ativa) {
         banner.style.display = 'flex';
-        document.getElementById('live-banner-text').innerText = `🔴 AO VIVO: "${liveAtivaObj.titulo}" com ${liveAtivaObj.professorNome}`;
+        document.getElementById('live-banner-text').innerText = `🔴 AO VIVO AGORA: "${liveAtivaObj.titulo}" com ${liveAtivaObj.professorNome}`;
         if (btnIniciar) btnIniciar.style.display = 'none';
         if (btnEncerrar) btnEncerrar.style.display = 'inline-flex';
+        if (btnTabLive) {
+          btnTabLive.innerHTML = '🔴 Entrar na Aula Ao Vivo';
+          btnTabLive.classList.add('danger');
+        }
         montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
       } else {
         banner.style.display = 'none';
         if (btnIniciar) btnIniciar.style.display = 'inline-flex';
         if (btnEncerrar) btnEncerrar.style.display = 'none';
+        if (btnTabLive) {
+          btnTabLive.innerHTML = IS_GESTOR_OU_PROF ? '🔴 Estúdio Ao Vivo (Criar Live)' : '🔴 Sala Ao Vivo';
+          btnTabLive.classList.remove('danger');
+        }
+        mostrarTelaEsperaLive();
+      }
+    }
+
+    function mostrarTelaEsperaLive() {
+      const stage = document.getElementById('meet-stage-container');
+      if (!stage) return;
+      stage.dataset.salaMontada = '';
+      if (IS_GESTOR_OU_PROF) {
+        stage.innerHTML = `
+          <div style="text-align: center; padding: 30px; max-width: 460px;">
+            <div style="font-size: 54px; margin-bottom: 12px;">🎥</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px;">Estúdio do Professor / Gestor (Até 4h Seguidas)</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
+              Configure o título e a turma no painel à direita e clique em <b>🔴 Abrir Sala Ao Vivo</b>. Assim que abrir, os alunos serão avisados em tempo real e poderão entrar!
+            </p>
+            <div style="color: #38bdf8; font-size: 12.5px; font-weight: 700;">💡 Transmissão 100% gratuita e ilimitada até 4h contínuas.</div>
+          </div>
+        `;
+      } else {
+        stage.innerHTML = `
+          <div style="text-align: center; padding: 30px; max-width: 440px;">
+            <div style="font-size: 54px; margin-bottom: 12px;">⏳</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Aula Ao Vivo...</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
+              Nenhuma transmissão ao vivo está aberta neste momento. Assim que o professor iniciar a aula, a sala abrirá automaticamente aqui para você participar!
+            </p>
+            <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">📚 Ver Vídeo-Aulas Gravadas</button>
+          </div>
+        `;
       }
     }
 
@@ -1043,9 +1117,18 @@
       if (!codigoSala || stage.dataset.salaMontada === codigoSala) return;
       stage.dataset.salaMontada = codigoSala;
 
-      const urlMeet = `https://meet.jit.si/${encodeURIComponent(codigoSala)}#userInfo.displayName="${encodeURIComponent(USER_NAME)}"&config.prejoinPageEnabled=false`;
+      // 🚀 Servidor comunitário Jitsi Open-Source (meet.ffmuc.net): 100% gratuito, sem login obrigatório e suporta 4h+ seguidas sem cortes!
+      const hashConfig = [
+        `userInfo.displayName="${encodeURIComponent(USER_NAME)}"`,
+        `config.prejoinPageEnabled=false`,
+        `config.disableDeepLinking=true`,
+        `config.startWithVideoMuted=${IS_GESTOR_OU_PROF ? 'false' : 'true'}`,
+        `config.subject="${encodeURIComponent(tituloLive || 'Aula Ao Vivo')}"`
+      ].join('&');
+
+      const urlMeet = `https://meet.ffmuc.net/${encodeURIComponent(codigoSala)}#${hashConfig}`;
       stage.innerHTML = `
-        <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; height:100%; border:none;"></iframe>
+        <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write" style="width:100%; height:100%; border:none;"></iframe>
       `;
     }
 
@@ -1125,7 +1208,7 @@
           ? 'video/webm;codecs=vp9,opus'
           : 'video/webm';
 
-        mediaRecorderLive = new MediaRecorder(streamFinal, { mimeType: mime });
+        mediaRecorderLive = new MediaRecorder(streamFinal, { mimeType: mime, videoBitsPerSecond: 450000, audioBitsPerSecond: 64000 });
         mediaRecorderLive.ondataavailable = (ev) => {
           if (ev.data && ev.data.size > 0) recordedChunksLive.push(ev.data);
         };
