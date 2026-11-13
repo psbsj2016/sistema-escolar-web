@@ -856,6 +856,59 @@
     }
 
     async function fazerUploadFicheiroVideo(file, onProgress) {
+      // 1. Pede a assinatura criptografada ao Backend (leva apenas 5ms e não passa ficheiro pesado pela Vercel)
+      const sigRes = await fetch('/api/workspace/video-aulas/assinatura-upload', {
+        method: 'GET',
+        credentials: 'include'
+      });
+      const sigData = await sigRes.json().catch(() => null);
+
+      // 2. Se recebeu a assinatura, envia o vídeo DIRETAMENTE do navegador para o Cloudinary!
+      if (sigData && sigData.success && sigData.cloudName && sigData.signature) {
+        return new Promise((resolve, reject) => {
+          const urlCloudinary = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`;
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('api_key', sigData.apiKey);
+          formData.append('timestamp', sigData.timestamp);
+          formData.append('signature', sigData.signature);
+          formData.append('folder', sigData.folder);
+
+          const xhr = new XMLHttpRequest();
+          xhr.open('POST', urlCloudinary, true);
+
+          xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable && onProgress) {
+              const pct = Math.round((e.loaded / e.total) * 100);
+              onProgress(pct);
+            }
+          };
+
+          xhr.onload = () => {
+            try {
+              const resp = JSON.parse(xhr.responseText || '{}');
+              if (xhr.status >= 200 && xhr.status < 300 && resp.secure_url) {
+                const miniaturaAuto = resp.secure_url.replace(/\.(mp4|webm|mov|mkv|ogg)$/i, '.jpg');
+                resolve({
+                  success: true,
+                  url: resp.secure_url,
+                  miniatura: miniaturaAuto,
+                  duracaoSegundos: resp.duration ? Math.round(resp.duration) : 0
+                });
+              } else {
+                reject(new Error(resp.error?.message || 'O Cloudinary recusou o ficheiro de vídeo.'));
+              }
+            } catch (err) {
+              reject(new Error('Erro ao ler confirmação da nuvem de vídeos.'));
+            }
+          };
+
+          xhr.onerror = () => reject(new Error('Falha de ligação direta com a nuvem de vídeos.'));
+          xhr.send(formData);
+        });
+      }
+
+      // 3. Fallback: Caso não use assinatura direta, envia pelo servidor
       return new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('video', file);
@@ -874,9 +927,9 @@
           try {
             const resp = JSON.parse(xhr.responseText || '{}');
             if (xhr.status >= 200 && xhr.status < 300 && resp.success) resolve(resp);
-            else reject(new Error(resp.error || 'Falha no upload do vídeo.'));
+            else reject(new Error(resp.error || `Falha no servidor (Status ${xhr.status}).`));
           } catch (err) {
-            reject(new Error('Erro ao processar resposta do servidor.'));
+            reject(new Error(`O servidor demorou a responder ou excedeu o limite (Status ${xhr.status}).`));
           }
         };
         xhr.onerror = () => reject(new Error('Falha de rede durante o envio do vídeo.'));
@@ -901,27 +954,38 @@
       }
 
       const btn = document.getElementById('btn-submit-video');
+      const txtOriginalBtn = btn.innerText;
       btn.disabled = true;
+      btn.innerText = '⏳ A enviar...';
+
+      const wrap = document.getElementById('up-progress-wrap');
+      const bar = document.getElementById('up-progress-bar');
+      const pctTxt = document.getElementById('up-progress-pct');
+      const labelProg = document.getElementById('up-progress-label');
 
       let miniatura = null;
       let duracaoSegundos = 0;
 
       try {
         if (fileInput.files[0]) {
-          const wrap = document.getElementById('up-progress-wrap');
-          const bar = document.getElementById('up-progress-bar');
-          const pctTxt = document.getElementById('up-progress-pct');
           wrap.style.display = 'block';
+          bar.style.width = '0%';
+          pctTxt.innerText = '0%';
+          labelProg.innerText = '☁️ 1/2 A enviar vídeo diretamente para a nuvem...';
 
           const upRes = await fazerUploadFicheiroVideo(fileInput.files[0], (pct) => {
             bar.style.width = pct + '%';
             pctTxt.innerText = pct + '%';
+            if (pct >= 100) {
+              labelProg.innerText = '⚙️ A finalizar processamento do vídeo na nuvem...';
+            }
           });
           urlVideo = upRes.url;
           miniatura = upRes.miniatura;
           duracaoSegundos = upRes.duracaoSegundos || 0;
         }
 
+        labelProg.innerText = '💾 2/2 A registar vídeo-aula no catálogo da turma...';
         const res = await fetch('/api/workspace/video-aulas/videos', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -935,20 +999,23 @@
           })
         });
         const data = await res.json();
-        if (!data || !data.success) throw new Error(data?.error || 'Erro ao publicar aula.');
+        if (!data || !data.success) throw new Error(data?.error || 'Erro ao guardar a aula na base de dados.');
 
         mostrarToast('🎉 Vídeo-aula publicada com sucesso na sequência!');
         document.getElementById('up-titulo').value = '';
         document.getElementById('up-descricao').value = '';
         document.getElementById('up-file').value = '';
         document.getElementById('up-url-direta').value = '';
-        document.getElementById('up-progress-wrap').style.display = 'none';
+        wrap.style.display = 'none';
         fecharModalUpload();
         await carregarCatalogo(false);
       } catch (err) {
+        console.error('Erro detalhado ao publicar vídeo-aula:', err);
+        labelProg.innerText = '❌ ' + (err.message || 'Falha no envio.');
         mostrarToast(err.message || 'Erro ao publicar vídeo.', '#ef4444');
       } finally {
         btn.disabled = false;
+        btn.innerText = txtOriginalBtn;
       }
     }
 
