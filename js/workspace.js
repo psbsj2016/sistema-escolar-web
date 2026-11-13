@@ -1294,11 +1294,17 @@ Object.assign(Workspace, {
         else Workspace.navegarPara('materiais');
     },
 
-    abrirPlataformaVideos: (videoId = '', playlistSlug = '') => {
+   abrirPlataformaVideos: (videoId = '', playlistSlug = '') => {
         if (!Workspace.usuario) return;
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal || !iframe) return;
+
+        // Se já estava minimizado em chamada, apenas restaura para tela inteira sem recarregar a chamada!
+        if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug) {
+            Workspace.alternarMinimizarVideos(false);
+            return;
+        }
 
         const role = Workspace.usuario.tipo === 'Aluno' ? 'aluno' : 'professor';
         const nome = Workspace.usuario.nome || Workspace.usuario.login || 'Utilizador';
@@ -1312,16 +1318,52 @@ Object.assign(Workspace, {
             playlist: playlistSlug || ''
         });
 
-        iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
+        Workspace.alternarMinimizarVideos(false);
+        if (!iframe.src || !iframe.src.includes('workspace-aulas-video.html') || videoId || playlistSlug) {
+            iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
+        }
         modal.style.display = 'flex';
         document.body.style.overflow = 'hidden';
+
+        if (!Workspace._listenerMinimizarVideoAtivo) {
+            window.addEventListener('message', (ev) => {
+                if (!ev.data || typeof ev.data !== 'object') return;
+                if (ev.data.type === 'MINIMIZAR_VIDEO_AULAS') {
+                    Workspace.alternarMinimizarVideos(Boolean(ev.data.minimizar));
+                }
+            });
+            Workspace._listenerMinimizarVideoAtivo = true;
+        }
+    },
+
+    alternarMinimizarVideos: (minimizar = true) => {
+        const modal = document.getElementById('ws-modal-video-aulas');
+        if (!modal) return;
+        const headerModal = modal.firstElementChild;
+
+        if (minimizar) {
+            modal.dataset.minimizado = 'true';
+            modal.style.cssText = 'display:flex; position:fixed; bottom:18px; right:18px; top:auto; left:auto; width:350px; height:230px; max-width:92vw; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.65); border:2px solid #3b82f6; transition:all 0.25s ease;';
+            if (headerModal) headerModal.style.display = 'none';
+            document.body.style.overflow = '';
+        } else {
+            modal.dataset.minimizado = 'false';
+            modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
+            if (headerModal) headerModal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
     },
 
     fecharPlataformaVideos: () => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
+        // Se estiver minimizado em chamada ao vivo, não destrói a chamada ao trocar de aba no Workspace
+        if (modal && modal.dataset.minimizado === 'true') return;
         if (iframe) iframe.src = '';
-        if (modal) modal.style.display = 'none';
+        if (modal) {
+            modal.dataset.minimizado = 'false';
+            modal.style.display = 'none';
+        }
         document.body.style.overflow = '';
     },
 

@@ -63,6 +63,8 @@
     .vc-btn.success { background: var(--success); border-color: #34d399; }
 
     @keyframes pulseRed { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.8; } }
+    @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
     .live-banner-alert {
       display: none; background: linear-gradient(90deg, #991b1b, #dc2626);
       padding: 10px 20px; align-items: center; justify-content: space-between;
@@ -162,15 +164,79 @@
     }
     .video-card-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-between; }
 
-    /* SALA AO VIVO (MEET + GRAVADOR) */
+    /* SALA AO VIVO (MEET + GRAVADOR SEM CORTES DE TELA) */
     #view-live { display: none; }
-    .live-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+    .live-grid { display: grid; grid-template-columns: 1fr 330px; gap: 18px; align-items: start; }
     @media (max-width: 960px) { .live-grid { grid-template-columns: 1fr; } }
     .meet-frame-box {
       background: #000; border: 1px solid var(--border); border-radius: 16px;
-      height: 72vh; min-height: 460px; overflow: hidden; position: relative;
-      display: flex; align-items: center; justify-content: center;
+      height: 76vh; min-height: 480px; overflow: hidden; position: relative;
+      display: flex; flex-direction: column;
     }
+
+    /* MENU DE TRÊS PONTOS (⋮) NO CANTO DIREITO */
+    .more-menu-wrapper { position: relative; display: inline-flex; }
+    .more-dropdown-menu {
+      display: none; position: absolute; bottom: calc(100% + 10px); right: 0;
+      background: rgba(15, 23, 42, 0.98); border: 1px solid #475569;
+      border-radius: 14px; padding: 8px; min-width: 215px;
+      box-shadow: 0 18px 40px rgba(0,0,0,0.65); z-index: 60;
+      flex-direction: column; gap: 4px; backdrop-filter: blur(14px);
+      animation: fadeSlideUp 0.16s ease;
+    }
+    .more-dropdown-menu.open { display: flex; }
+    .more-menu-item {
+      background: transparent; border: none; color: #f1f5f9;
+      padding: 10px 12px; border-radius: 9px; font-size: 13px; font-weight: 700;
+      cursor: pointer; display: flex; align-items: center; gap: 10px;
+      text-align: left; width: 100%; transition: background 0.15s;
+    }
+    .more-menu-item:hover { background: rgba(59, 130, 246, 0.22); color: #60a5fa; }
+
+    /* MINI CHAT AO VIVO + MENSAGENS FLUTUANTES NA TELA */
+    #live-minichat-drawer {
+      display: none; position: absolute; top: 50px; right: 12px; bottom: 68px;
+      width: 300px; max-width: calc(100% - 24px);
+      background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(14px);
+      border: 1px solid #475569; border-radius: 14px; z-index: 45;
+      flex-direction: column; overflow: hidden;
+      box-shadow: 0 16px 40px rgba(0,0,0,0.6); animation: fadeSlideUp 0.18s ease;
+    }
+    #live-minichat-drawer.open { display: flex; }
+    #live-onscreen-overlay {
+      position: absolute; left: 16px; bottom: 74px; z-index: 38;
+      display: flex; flex-direction: column; gap: 6px;
+      max-width: 65%; pointer-events: none;
+    }
+    .onscreen-chat-bubble {
+      background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(8px);
+      border-left: 3px solid #3b82f6; color: #fff;
+      padding: 8px 14px; border-radius: 10px; font-size: 13px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: fadeSlideUp 0.22s ease;
+      word-break: break-word;
+    }
+
+    /* MODO MINIMIZADO (PICTURE-IN-PICTURE ESTILO MEET / TEAMS) */
+    body.modo-minimizado-pip .vc-topbar,
+    body.modo-minimizado-pip #live-banner,
+    body.modo-minimizado-pip #view-catalogo,
+    body.modo-minimizado-pip #view-player,
+    body.modo-minimizado-pip #painel-lateral-transmissao,
+    body.modo-minimizado-pip #live-bottom-controls,
+    body.modo-minimizado-pip #live-top-header {
+      display: none !important;
+    }
+    body.modo-minimizado-pip .vc-container { padding: 0 !important; max-width: 100% !important; height: 100vh !important; }
+    body.modo-minimizado-pip #view-live { display: block !important; height: 100vh !important; }
+    body.modo-minimizado-pip .live-grid { display: block !important; height: 100vh !important; }
+    body.modo-minimizado-pip .meet-frame-box { height: 100vh !important; min-height: 100vh !important; border-radius: 0 !important; border: none !important; }
+    #pip-restore-bar {
+      display: none; position: absolute; inset: 0; z-index: 80;
+      background: linear-gradient(to top, rgba(2,6,23,0.85) 0%, transparent 55%);
+      align-items: flex-end; justify-content: space-between; padding: 10px 12px;
+      pointer-events: none;
+    }
+    body.modo-minimizado-pip #pip-restore-bar { display: flex !important; }
 
     /* MODAL DE UPLOAD */
     .vc-modal {
@@ -241,7 +307,6 @@
       </div>
 
       <div class="player-layout">
-        <!-- Coluna Esquerda: Vídeo + Detalhes + Dúvidas -->
         <div>
           <div class="video-stage-box" id="player-stage"></div>
 
@@ -312,7 +377,7 @@
     <section id="view-live">
       <div class="live-grid">
         <div class="meet-frame-box" id="meet-stage-container">
-          <div style="text-align: center; padding: 30px; max-width: 440px;">
+          <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto;">
             <div style="font-size: 54px; margin-bottom: 12px;">📹</div>
             <h3 style="margin: 0 0 8px 0; font-size: 20px;">Estúdio de Aula Ao Vivo (Meet & Gravação)</h3>
             <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
@@ -323,7 +388,7 @@
         </div>
 
         <!-- Painel de Controlo Ao Vivo & Gravação -->
-        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+        <div id="painel-lateral-transmissao" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
           <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">🎛️ Controlo da Transmissão</h3>
 
           <!-- Controlo exclusivo do Professor -->
@@ -461,7 +526,7 @@
     let recTimerInterval = null;
     let recSeconds = 0;
 
-    // Variáveis do Motor WebRTC Nativo (Livre de bloqueios CSP e sem limite de 4h)
+    // Variáveis do Motor WebRTC Nativo + Som + Lousa + Mini Chat
     let peerInstance = null;
     let meuStreamLocal = null;
     let streamTransmissaoAtual = null;
@@ -469,7 +534,9 @@
     let chamadasAtivas = {};
     let micAtivo = true;
     let camAtiva = true;
-    let modoMotorLive = 'nativo'; // 'nativo' (WebRTC Próprio) ou 'jitsi' (meet.jit.si)
+    let somSaidaAtivo = true; // 🔊 Controla o Viva-Voz / Saída de Som da chamada
+    let lousaProjetadaAtiva = false;
+    let modoMotorLive = 'nativo';
     let timerReconexaoAluno = null;
 
     // 🛡️ Mantém a sessão do WorkSpace principal acordada durante aulas longas (até 4 horas)
@@ -480,6 +547,15 @@
         }
       } catch (e) {}
     }, 45000);
+
+    // Fecha o menu de 3 pontos se clicar fora dele
+    document.addEventListener('click', (e) => {
+      const wrap = document.querySelector('.more-menu-wrapper');
+      const menu = document.getElementById('live-more-dropdown');
+      if (menu && wrap && !wrap.contains(e.target)) {
+        menu.classList.remove('open');
+      }
+    });
 
     function mostrarToast(msg, cor = '#10b981') {
       const t = document.getElementById('vc-toast');
@@ -506,18 +582,18 @@
       const painelProfLive = document.getElementById('prof-live-controls');
       const boxAlunoInfo = document.getElementById('aluno-live-info');
       const liveGrid = document.querySelector('.live-grid');
+      const painelLateralCard = document.getElementById('painel-lateral-transmissao');
 
       if (IS_GESTOR_OU_PROF) {
         if (btnUpload) btnUpload.style.display = 'inline-flex';
         if (painelProfLive) painelProfLive.style.display = 'flex';
         if (boxAlunoInfo) boxAlunoInfo.style.display = 'none';
+        if (painelLateralCard) painelLateralCard.style.display = 'flex';
         if (liveGrid) liveGrid.style.gridTemplateColumns = '';
       } else {
-        // 🔒 ALUNO: Esconde 100% os botões de upload e criação de live e expande o ecrã da aula para 100%!
         if (btnUpload) btnUpload.style.display = 'none';
         if (painelProfLive) painelProfLive.style.display = 'none';
         if (boxAlunoInfo) boxAlunoInfo.style.display = 'block';
-        const painelLateralCard = painelProfLive ? painelProfLive.parentElement : null;
         if (painelLateralCard) painelLateralCard.style.display = 'none';
         if (liveGrid) liveGrid.style.gridTemplateColumns = '1fr';
       }
@@ -531,7 +607,6 @@
         const data = await res.json();
         if (!data || !data.success) return;
 
-        // O servidor confirma se é realmente Professor/Gestor ou Aluno
         if (typeof data.permissaoGestao === 'boolean') {
           IS_GESTOR_OU_PROF = data.permissaoGestao;
           ROLE = IS_GESTOR_OU_PROF ? 'professor' : 'aluno';
@@ -690,7 +765,6 @@
       const stage = document.getElementById('player-stage');
       const url = video.urlVideo || '';
 
-      // Suporta tanto vídeos enviados para a nuvem (.mp4/.webm) quanto links do YouTube
       if (url.includes('youtube.com/watch?v=') || url.includes('youtu.be/')) {
         let embed = url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/');
         if (embed.includes('&')) embed = embed.split('&')[0];
@@ -699,7 +773,6 @@
         stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls autoplay playsinline></video>`;
         const vidEl = document.getElementById('active-html5-video');
         vidEl.onended = () => {
-          // Avança automaticamente para o próximo vídeo da sequência!
           const idxAtual = sequenciaAtualLista.findIndex(x => x.id === video.id);
           if (idxAtual !== -1 && idxAtual + 1 < sequenciaAtualLista.length) {
             mostrarToast('⏭️ A iniciar próxima aula da sequência...');
@@ -720,7 +793,6 @@
 
       document.getElementById('btn-delete-video').style.display = IS_GESTOR_OU_PROF ? 'inline-flex' : 'none';
 
-      // Regista visualização silenciosamente
       fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(video.id)}/interagir`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -764,7 +836,7 @@
       carregarCatalogo(false);
     }
 
-    // 4. EXTRAÇÃO DE LINKS DIRETOS (PARA VÍDEO INDIVIDUAL OU SEQUÊNCIA DE ASSUNTO)
+    // 4. EXTRAÇÃO DE LINKS DIRETOS
     function copiarLinkDireto(tipo, valor) {
       const baseOrigin = window.top ? window.top.location.origin + window.top.location.pathname : window.location.origin + '/workspace.html';
       const hash = tipo === 'video' ? `#video-aula-${valor}` : `#playlist-${valor}`;
@@ -902,14 +974,12 @@
     }
 
     async function fazerUploadFicheiroVideo(file, onProgress) {
-      // 1. Pede a assinatura criptografada ao Backend (leva apenas 5ms e não passa ficheiro pesado pela Vercel)
       const sigRes = await fetch('/api/workspace/video-aulas/assinatura-upload', {
         method: 'GET',
         credentials: 'include'
       });
       const sigData = await sigRes.json().catch(() => null);
 
-      // 2. Se recebeu a assinatura, envia o vídeo DIRETAMENTE do navegador para o Cloudinary!
       if (sigData && sigData.success && sigData.cloudName && sigData.signature) {
         return new Promise((resolve, reject) => {
           const urlCloudinary = `https://api.cloudinary.com/v1_1/${sigData.cloudName}/video/upload`;
@@ -954,7 +1024,6 @@
         });
       }
 
-      // 3. Fallback: Caso não use assinatura direta, envia pelo servidor
       return new Promise((resolve, reject) => {
         const formData = new FormData();
         formData.append('video', file);
@@ -1065,7 +1134,9 @@
       }
     }
 
-    // 7. SALA AO VIVO (ESTÚDIO WEBRTC NATIVO SEM ERRO CSP + 4H GRATUITAS + SEPARAÇÃO ALUNO VS PROFESSOR)
+    // ============================================================================
+    // 7. SALA AO VIVO PRO (SEM CORTES DE TELA + SAÍDA DE SOM + MENU ⋮ + LOUSA + MINI CHAT)
+    // ============================================================================
     function carregarPeerJS() {
       return new Promise((resolve, reject) => {
         if (window.Peer) return resolve(window.Peer);
@@ -1093,16 +1164,7 @@
       }
       conexoesAlunos = [];
       chamadasAtivas = {};
-    }
-
-    function alternarMotorTransmissao(novoModo) {
-      modoMotorLive = novoModo;
-      const stage = document.getElementById('meet-stage-container');
-      if (stage) stage.dataset.salaMontada = '';
-      limparConexoesWebRTC();
-      if (liveAtivaObj && liveAtivaObj.ativa) {
-        montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
-      }
+      lousaProjetadaAtiva = false;
     }
 
     function atualizarBannerLive() {
@@ -1121,6 +1183,9 @@
           btnTabLive.classList.add('danger');
         }
         montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
+        if (liveAtivaObj.lousaProjetada && !lousaProjetadaAtiva) {
+          aplicarProjecaoLousaVisual(true);
+        }
       } else {
         banner.style.display = 'none';
         if (btnIniciar) btnIniciar.style.display = 'inline-flex';
@@ -1140,7 +1205,7 @@
       stage.dataset.salaMontada = '';
       if (IS_GESTOR_OU_PROF) {
         stage.innerHTML = `
-          <div style="text-align: center; padding: 30px; max-width: 460px;">
+          <div style="text-align: center; padding: 30px; max-width: 460px; margin: auto;">
             <div style="font-size: 54px; margin-bottom: 12px;">🎥</div>
             <h3 style="margin: 0 0 8px 0; font-size: 20px;">Estúdio do Professor / Gestor (Até 4h Seguidas)</h3>
             <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
@@ -1151,7 +1216,7 @@
         `;
       } else {
         stage.innerHTML = `
-          <div style="text-align: center; padding: 30px; max-width: 440px;">
+          <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto;">
             <div style="font-size: 54px; margin-bottom: 12px;">⏳</div>
             <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Aula Ao Vivo...</h3>
             <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
@@ -1168,69 +1233,312 @@
       if (!codigoSala || stage.dataset.salaMontada === `${codigoSala}_${modoMotorLive}`) return;
       stage.dataset.salaMontada = `${codigoSala}_${modoMotorLive}`;
 
-      // MODO 2 (OPCIONAL): Jitsi Oficial (meet.jit.si permite iframe em qualquer domínio sem erro CSP)
-      if (modoMotorLive === 'jitsi') {
-        const hashConfig = [
-          `userInfo.displayName="${encodeURIComponent(USER_NAME)}"`,
-          `config.prejoinPageEnabled=false`,
-          `config.disableDeepLinking=true`
-        ].join('&');
-        const urlMeet = `https://meet.jit.si/${encodeURIComponent(codigoSala)}#${hashConfig}`;
-        stage.innerHTML = `
-          <div style="width:100%; height:100%; display:flex; flex-direction:column;">
-            <div style="background:#0f172a; padding:8px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155;">
-              <span style="font-size:12px; color:#38bdf8; font-weight:700;">🌐 Modo Jitsi Externo • ${esc(tituloLive)}</span>
-              <button type="button" class="vc-btn primary" style="padding:4px 10px; font-size:11px;" onclick="alternarMotorTransmissao('nativo')">⚡ Voltar ao Estúdio Nativo (4h Sem Limite)</button>
-            </div>
-            <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex:1; border:none;"></iframe>
-          </div>
-        `;
-        return;
-      }
-
-      // MODO 1 (PADRÃO): ESTÚDIO WEBRTC NATIVO DO WORKSPACE (Sem Iframe, Zero Erro CSP, 4h+ Ilimitado)
       stage.innerHTML = `
-        <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#090d16; position:relative;">
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#050811; position:relative; overflow:hidden;">
           <!-- Barra de Topo da Sala Ao Vivo -->
-          <div style="padding:10px 16px; background:rgba(15,23,42,0.92); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:10;">
+          <div id="live-top-header" style="padding:10px 16px; background:rgba(15,23,42,0.94); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
             <div style="display:flex; align-items:center; gap:8px;">
-              <span style="background:#dc2626; color:#fff; font-size:10.5px; font-weight:900; padding:3px 8px; border-radius:99px;">● AO VIVO (4H ILIMITADO)</span>
+              <span style="background:#dc2626; color:#fff; font-size:10.5px; font-weight:900; padding:3px 8px; border-radius:99px;">● AO VIVO</span>
               <strong style="font-size:13.5px; color:#fff;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
             </div>
-            <div style="display:flex; align-items:center; gap:8px;">
+            <div style="display:flex; align-items:center; gap:10px;">
               <span id="webrtc-status-badge" style="font-size:11.5px; color:#10b981; font-weight:700;">🔄 A conectar sala...</span>
-              <button type="button" class="vc-btn" style="padding:4px 10px; font-size:11px;" onclick="alternarMotorTransmissao('jitsi')" title="Alternar para o Jitsi caso deseje">🌐 Usar Jitsi</button>
+              ${!IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#0f172a;" onclick="levantarMaoNaAula()">✋ Levantar Mão</button>` : ''}
             </div>
           </div>
 
-          <!-- Grelha de Vídeos (Palco do Professor + Participantes) -->
-          <div id="webrtc-video-grid" style="flex:1; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; padding:12px; overflow-y:auto; align-items:center; justify-items:center;">
-            <div id="card-video-principal" style="width:100%; height:100%; min-height:260px; background:#1e293b; border-radius:14px; overflow:hidden; position:relative; border:2px solid #3b82f6; display:flex; align-items:center; justify-content:center;">
-              <video id="video-prof-main" autoplay playsinline style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
-              <div style="position:absolute; bottom:10px; left:10px; background:rgba(15,23,42,0.85); color:#fff; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">
-                👨‍🏫 ${IS_GESTOR_OU_PROF ? `${esc(USER_NAME)} (Você - Professor)` : `Transmissão do Professor`}
+          <!-- Palco Principal de Vídeo (100% Sem Cortes com object-fit: contain) -->
+          <div style="flex:1; width:100%; min-height:0; min-width:0; display:flex; flex-direction:column; position:relative; background:#000; overflow:hidden;">
+            <div id="card-video-principal" style="flex:1; width:100%; height:100%; min-height:0; min-width:0; position:relative; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;">
+              <video id="video-prof-main" autoplay playsinline style="max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain !important; background:#000;"></video>
+              <div style="position:absolute; bottom:10px; left:12px; background:rgba(15,23,42,0.82); color:#fff; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:700; pointer-events:none; z-index:5;">
+                👨‍🏫 ${IS_GESTOR_OU_PROF ? `${esc(USER_NAME)} (Você - Professor)` : `Tela Principal da Aula`}
               </div>
+
+              <!-- 🖍️ CAMADA DE PROJEÇÃO IMEDIATA DA LOUSA NA CHAMADA -->
+              <div id="lousa-live-overlay-wrap" style="display:none; position:absolute; inset:0; z-index:25; background:#0f172a; flex-direction:column;">
+                <div style="height:36px; background:#0f172a; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; padding:0 12px; flex-shrink:0;">
+                  <span style="font-size:12px; font-weight:800; color:#38bdf8;">🖍️ Lousa Projetada Ao Vivo na Chamada</span>
+                  ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn danger" style="padding:3px 10px; font-size:11px;" onclick="alternarProjecaoLousaNaLive(false)">✕ Fechar Projeção da Lousa</button>` : `<span style="font-size:11px; color:#10b981; font-weight:700;">📡 Sincronizado com o Professor</span>`}
+                </div>
+                <iframe id="iframe-lousa-live" src="" style="flex:1; width:100%; height:100%; border:none; background:#fff;"></iframe>
+              </div>
+            </div>
+
+            <!-- Faixa Compacta de Participantes Conectados -->
+            <div id="webrtc-video-grid" style="display:none; height:105px; background:rgba(15,23,42,0.92); border-top:1px solid #1e293b; padding:6px 10px; gap:8px; overflow-x:auto; align-items:center; flex-shrink:0;"></div>
+          </div>
+
+          <!-- 💬 MENSAGENS DO MINI CHAT EXIBIDAS DIRETAMENTE NA TELA -->
+          <div id="live-onscreen-overlay"></div>
+
+          <!-- 💬 GAVETA DO MINI CHAT AO VIVO -->
+          <div id="live-minichat-drawer">
+            <div style="padding:10px 14px; background:#0f172a; border-bottom:1px solid #334155; display:flex; justify-content:space-between; align-items:center;">
+              <strong style="font-size:12.5px; color:#38bdf8;">💬 Chat da Aula Ao Vivo</strong>
+              <button type="button" onclick="alternarMiniChatLive()" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:15px; font-weight:bold;">✕</button>
+            </div>
+            <div id="live-minichat-messages" style="flex:1; padding:10px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; font-size:12.5px;">
+              <div style="color:#64748b; text-align:center; font-size:11.5px; margin-top:10px;">As mensagens enviadas aqui aparecem na tela da chamada!</div>
+            </div>
+            <div style="padding:8px; background:#0f172a; border-top:1px solid #334155; display:flex; gap:6px;">
+              <input type="text" id="live-minichat-input" placeholder="Enviar mensagem na tela..." style="flex:1; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:8px; padding:8px 10px; font-size:12.5px; outline:none;" onkeydown="if(event.key==='Enter') enviarMensagemMiniChat()">
+              <button type="button" class="vc-btn primary" style="padding:8px 12px;" onclick="enviarMensagemMiniChat()">➤</button>
             </div>
           </div>
 
           <!-- Avisos de Mão Levantada -->
-          <div id="webrtc-hand-alerts" style="position:absolute; top:56px; right:16px; display:flex; flex-direction:column; gap:6px; z-index:20;"></div>
+          <div id="webrtc-hand-alerts" style="position:absolute; top:56px; left:16px; display:flex; flex-direction:column; gap:6px; z-index:35;"></div>
 
-          <!-- Barra de Controlo Inferior (Estilo Meet) -->
-          <div style="padding:12px 16px; background:rgba(15,23,42,0.95); border-top:1px solid #1e293b; display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; z-index:10;">
-            <button type="button" class="vc-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()">🎤 Microfone Ativo</button>
-            <button type="button" class="vc-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()">📷 Câmara Ativa</button>
-            ${IS_GESTOR_OU_PROF ? `
-              <button type="button" class="vc-btn success" onclick="partilharEcraNaLive()">🖥️ Partilhar Ecrã na Aula</button>
-            ` : `
-              <button type="button" class="vc-btn" style="background:#f59e0b; color:#0f172a;" onclick="levantarMaoNaAula()">✋ Levantar a Mão</button>
-            `}
-            <button type="button" class="vc-btn" onclick="telaCheiaPalco()">⛶ Tela Cheia</button>
+          <!-- Barra de Restauro quando está Minimizado (Picture-in-Picture) -->
+          <div id="pip-restore-bar">
+            <span style="font-size:11px; font-weight:800; color:#fff; background:rgba(220,38,38,0.9); padding:3px 8px; border-radius:6px;">● Ao Vivo</span>
+            <button type="button" class="vc-btn primary" style="pointer-events:auto; padding:6px 12px; font-size:11.5px;" onclick="maximizarChamadaAoVivo()">🗖 Voltar ao Tamanho Normal</button>
+          </div>
+
+          <!-- 🎛️ BARRA FRONTAL LIMPA (APENAS MICROFONE, CÂMARA E SAÍDA DE SOM + CHAT E MENU ⋮ À DIREITA) -->
+          <div id="live-bottom-controls" style="padding:12px 18px; background:rgba(15,23,42,0.96); border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; z-index:30; flex-shrink:0;">
+            <div style="width:80px; display:none;"></div>
+
+            <!-- Centro: Apenas Microfone, Câmara e Saída de Som (Viva-Voz) -->
+            <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex:1; flex-wrap:wrap;">
+              <button type="button" class="vc-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()">🎤 Microfone</button>
+              <button type="button" class="vc-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()">📷 Câmara</button>
+              <button type="button" class="vc-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">🔊 Saída de Som</button>
+            </div>
+
+            <!-- Canto Direito: Mini Chat + Menu de Três Pontos (⋮) -->
+            <div style="display:flex; align-items:center; gap:8px;">
+              <button type="button" class="vc-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Abrir Mini Chat na Tela">💬 Chat</button>
+
+              <div class="more-menu-wrapper">
+                <button type="button" class="vc-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" style="font-size:18px; padding:6px 13px; font-weight:900;" title="Mais Opções da Chamada">⋮</button>
+                <div id="live-more-dropdown" class="more-dropdown-menu">
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
+                    <span>🖥️</span> <span>Partilhar Tela</span>
+                  </button>
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); minimizarChamadaAoVivo();">
+                    <span>🗕</span> <span>Minimizar</span>
+                  </button>
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
+                    <span>⛶</span> <span>Tela Cheia</span>
+                  </button>
+                  <button type="button" class="more-menu-item" id="menu-item-projetar-lousa" onclick="fecharMenuTresPontos(); alternarProjecaoLousaNaLive();">
+                    <span>🖍️</span> <span id="label-projetar-lousa">Projetar Lousa</span>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       `;
 
       iniciarConexaoWebRTCSala(codigoSala);
+    }
+
+    function alternarMenuTresPontos(e) {
+      if (e) e.stopPropagation();
+      const menu = document.getElementById('live-more-dropdown');
+      if (menu) menu.classList.toggle('open');
+    }
+
+    function fecharMenuTresPontos() {
+      const menu = document.getElementById('live-more-dropdown');
+      if (menu) menu.classList.remove('open');
+    }
+
+    // 🔊 BLOQUEAR SAÍDA DE SOM / TIRAR VIVA-VOZ
+    function alternarSaidaDeSom() {
+      somSaidaAtivo = !somSaidaAtivo;
+      const videoMain = document.getElementById('video-prof-main');
+      if (videoMain) {
+        // O professor mantém o próprio retorno mudo para não dar microfonia; nos alunos controla o som da aula
+        videoMain.muted = IS_GESTOR_OU_PROF ? true : !somSaidaAtivo;
+      }
+      document.querySelectorAll('.remote-participant-video').forEach(v => {
+        v.muted = !somSaidaAtivo;
+      });
+
+      const btn = document.getElementById('btn-toggle-speaker');
+      if (btn) {
+        btn.innerText = somSaidaAtivo ? '🔊 Saída de Som' : '🔈 Som Bloqueado';
+        btn.classList.toggle('primary', somSaidaAtivo);
+        btn.classList.toggle('danger', !somSaidaAtivo);
+      }
+      mostrarToast(somSaidaAtivo ? '🔊 Saída de som ativada (Viva-voz ligado).' : '🔈 Saída de som bloqueada (Silenciado).', somSaidaAtivo ? '#10b981' : '#f59e0b');
+    }
+
+    // 🗕 MINIMIZAR E MAXIMIZAR A CHAMADA (ESTILO MEET / TEAMS)
+    function minimizarChamadaAoVivo() {
+      document.body.classList.add('modo-minimizado-pip');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true }, '*');
+      }
+    }
+
+    function maximizarChamadaAoVivo() {
+      document.body.classList.remove('modo-minimizado-pip');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: false }, '*');
+      }
+    }
+
+    // 🖍️ PROJETAR LOUSA IMEDIATAMENTE NA TELA PARA TODOS NA CHAMADA
+    async function alternarProjecaoLousaNaLive(forcarEstado = null) {
+      const novoEstado = forcarEstado !== null ? forcarEstado : !lousaProjetadaAtiva;
+      aplicarProjecaoLousaVisual(novoEstado);
+
+      // Transmite para todos na sala via P2P e via Servidor SSE
+      const payload = {
+        tipo: 'PROJETAR_LOUSA',
+        subtipo: 'PROJETAR_LOUSA',
+        salaCodigo: liveAtivaObj?.codigoSala || 'sala_live',
+        escolaId: ESCOLA_ID,
+        lousaAtiva: novoEstado,
+        autorNome: USER_NAME
+      };
+
+      conexoesAlunos.forEach(conn => {
+        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
+      });
+      if (window._conexaoComProf && window._conexaoComProf.open) {
+        try { window._conexaoComProf.send(payload); } catch (e) {}
+      }
+
+      try {
+        await fetch('/api/workspace/video-aulas/live/evento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    function aplicarProjecaoLousaVisual(ativar) {
+      lousaProjetadaAtiva = Boolean(ativar);
+      const wrap = document.getElementById('lousa-live-overlay-wrap');
+      const iframe = document.getElementById('iframe-lousa-live');
+      const labelMenu = document.getElementById('label-projetar-lousa');
+
+      if (!wrap || !iframe) return;
+
+      if (lousaProjetadaAtiva) {
+        const salaLousaId = liveAtivaObj?.codigoSala || 'live_lousa_ativa';
+        // Abre com role=professor para saltar qualquer tela de espera e, se for aluno, bloqueia o ponteiro para apenas assistir ao vivo!
+        const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}`;
+        if (!iframe.src || !iframe.src.includes(salaLousaId)) {
+          iframe.src = urlLousa;
+        }
+        iframe.onload = () => {
+          try {
+            const docLousa = iframe.contentDocument || iframe.contentWindow?.document;
+            if (!docLousa) return;
+            const appLousa = docLousa.getElementById('lousa-app');
+            if (!IS_GESTOR_OU_PROF) {
+              // No ecrã do Aluno, esconde os menus da lousa para exibir o quadro 100% limpo e em tempo real
+              if (appLousa) appLousa.classList.add('sidebar-collapsed');
+              const qd = docLousa.getElementById('floating-quick-dock');
+              const toast = docLousa.getElementById('smart-hand-toast');
+              if (qd) qd.style.display = 'none';
+              if (toast) toast.style.display = 'none';
+              iframe.style.pointerEvents = 'none';
+            } else {
+              iframe.style.pointerEvents = 'auto';
+            }
+          } catch (e) {}
+        };
+        wrap.style.display = 'flex';
+        if (labelMenu) labelMenu.innerText = 'Fechar Lousa Projetada';
+        mostrarToast('🖍️ Lousa projetada na tela da chamada!');
+      } else {
+        wrap.style.display = 'none';
+        iframe.src = '';
+        if (labelMenu) labelMenu.innerText = 'Projetar Lousa';
+      }
+    }
+
+    // 💬 MINI CHAT AO VIVO COM EXIBIÇÃO IMEDIATA NA TELA
+    function alternarMiniChatLive() {
+      const drawer = document.getElementById('live-minichat-drawer');
+      if (!drawer) return;
+      drawer.classList.toggle('open');
+      if (drawer.classList.contains('open')) {
+        setTimeout(() => document.getElementById('live-minichat-input')?.focus(), 50);
+      }
+    }
+
+    async function enviarMensagemMiniChat() {
+      const inp = document.getElementById('live-minichat-input');
+      if (!inp) return;
+      const texto = inp.value.trim();
+      if (!texto) return;
+      inp.value = '';
+
+      const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const payload = {
+        id: msgId,
+        tipo: 'CHAT_LIVE',
+        subtipo: 'CHAT',
+        salaCodigo: liveAtivaObj?.codigoSala || '',
+        escolaId: ESCOLA_ID,
+        autorNome: USER_NAME,
+        autorRole: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+        texto: texto
+      };
+
+      desenharMensagemMiniChat(payload, true);
+
+      // Envia via P2P e via Servidor SSE para que todos na chamada vejam na tela
+      conexoesAlunos.forEach(conn => {
+        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
+      });
+      if (window._conexaoComProf && window._conexaoComProf.open) {
+        try { window._conexaoComProf.send(payload); } catch (e) {}
+      }
+
+      try {
+        await fetch('/api/workspace/video-aulas/live/evento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    const mensagensLiveProcessadas = new Set();
+    function desenharMensagemMiniChat(dados, isMinha = false) {
+      if (!dados || !dados.texto) return;
+      const chaveUnica = dados.id || `${dados.autorNome}_${dados.texto}_${Math.floor(Date.now() / 2000)}`;
+      if (mensagensLiveProcessadas.has(chaveUnica)) return;
+      mensagensLiveProcessadas.add(chaveUnica);
+
+      // 1. Adiciona no histórico da gaveta do Mini Chat
+      const box = document.getElementById('live-minichat-messages');
+      if (box) {
+        const corNome = dados.autorRole === 'professor' ? '#f59e0b' : '#38bdf8';
+        const div = document.createElement('div');
+        div.style.cssText = `background:${isMinha ? 'rgba(37,99,235,0.25)' : 'rgba(30,41,59,0.85)'}; border:1px solid ${isMinha ? '#3b82f6' : '#334155'}; padding:8px 10px; border-radius:10px;`;
+        div.innerHTML = `<div style="font-size:11px; font-weight:800; color:${corNome}; margin-bottom:2px;">${esc(dados.autorNome)}</div><div style="color:#f8fafc; line-height:1.35;">${esc(dados.texto)}</div>`;
+        box.appendChild(div);
+        box.scrollTop = box.scrollHeight;
+      }
+
+      // 2. Exibe flutuando diretamente na tela da chamada ao vivo!
+      const overlay = document.getElementById('live-onscreen-overlay');
+      if (overlay) {
+        const bubble = document.createElement('div');
+        bubble.className = 'onscreen-chat-bubble';
+        const badgeProf = dados.autorRole === 'professor' ? '👨‍🏫 ' : '💬 ';
+        bubble.innerHTML = `<strong style="color:#60a5fa;">${badgeProf}${esc(dados.autorNome)}:</strong> ${esc(dados.texto)}`;
+        overlay.appendChild(bubble);
+        setTimeout(() => {
+          bubble.style.opacity = '0';
+          bubble.style.transition = 'opacity 0.35s ease';
+          setTimeout(() => bubble.remove(), 350);
+        }, 6500);
+      }
     }
 
     async function iniciarConexaoWebRTCSala(codigoSala) {
@@ -1242,18 +1550,16 @@
         const idSalaLimpo = String(codigoSala).replace(/[^a-zA-Z0-9]/g, '');
         const idHostProf = `${idSalaLimpo}_HOST`;
 
-        // 1. Captura câmara e microfone
         try {
           meuStreamLocal = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
           });
           if (!IS_GESTOR_OU_PROF) {
-            // Aluno entra inicialmente com microfone mudo para evitar eco na sala
             meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
             micAtivo = false;
             const btnMic = document.getElementById('btn-toggle-mic');
-            if (btnMic) { btnMic.innerText = '🔇 Microfone Mudo'; btnMic.classList.remove('primary'); }
+            if (btnMic) { btnMic.innerText = '🔇 Microfone'; btnMic.classList.remove('primary'); }
           }
         } catch (errMedia) {
           try {
@@ -1266,10 +1572,9 @@
         streamTransmissaoAtual = meuStreamLocal;
 
         if (IS_GESTOR_OU_PROF) {
-          // 👨‍🏫 LÓGICA DO PROFESSOR (ANFITRIÃO DA SALA)
           const videoMain = document.getElementById('video-prof-main');
           if (videoMain && meuStreamLocal) {
-            videoMain.muted = true; // Impede eco no próprio computador do professor
+            videoMain.muted = true;
             videoMain.srcObject = meuStreamLocal;
           }
 
@@ -1280,17 +1585,26 @@
           });
 
           peerInstance.on('connection', (conn) => {
+            conexoesAlunos.push(conn);
             conn.on('data', (dados) => {
-              if (dados && dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
-                conexoesAlunos.push(conn);
+              if (!dados) return;
+              if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
                 mostrarToast(`👋 ${dados.nome} entrou na Aula Ao Vivo!`);
                 const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
                 if (streamEnvio) {
                   const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
                   chamadasAtivas[dados.peerId] = call;
                 }
-              } else if (dados && dados.tipo === 'MAO_LEVANTADA') {
+                if (lousaProjetadaAtiva) {
+                  conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
+                }
+              } else if (dados.tipo === 'MAO_LEVANTADA') {
                 mostrarAlertaMaoLevantada(dados.nome);
+              } else if (dados.tipo === 'CHAT_LIVE') {
+                desenharMensagemMiniChat(dados, false);
+                conexoesAlunos.forEach(c => { if (c !== conn && c.open) c.send(dados); });
+              } else if (dados.tipo === 'PROJETAR_LOUSA') {
+                aplicarProjecaoLousaVisual(dados.lousaAtiva);
               }
             });
           });
@@ -1305,7 +1619,6 @@
           });
 
         } else {
-          // 👨‍🎓 LÓGICA DO ALUNO (CONECTA-SE À TRANSMISSÃO DO PROFESSOR)
           if (meuStreamLocal) {
             adicionarVideoParticipanteNaGrelha('meu_video_local', `${USER_NAME} (Você)`, meuStreamLocal, true);
           }
@@ -1321,6 +1634,11 @@
               if (statusEl) statusEl.innerText = '🟢 Conectado à Sala do Professor';
               conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME });
             });
+            conn.on('data', (dados) => {
+              if (!dados) return;
+              if (dados.tipo === 'CHAT_LIVE') desenharMensagemMiniChat(dados, false);
+              else if (dados.tipo === 'PROJETAR_LOUSA') aplicarProjecaoLousaVisual(dados.lousaAtiva);
+            });
 
             if (meuStreamLocal) {
               const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno' } });
@@ -1328,6 +1646,7 @@
                 callToProf.on('stream', (streamProf) => {
                   const videoMain = document.getElementById('video-prof-main');
                   if (videoMain) {
+                    videoMain.muted = !somSaidaAtivo;
                     videoMain.srcObject = streamProf;
                     videoMain.play().catch(() => {});
                   }
@@ -1338,7 +1657,6 @@
 
           peerInstance.on('open', (idGerado) => {
             conectarAoProfessor(idGerado);
-            // Verifica a cada 6 segundos se o vídeo do professor já chegou; se ainda não, pede novamente
             clearInterval(timerReconexaoAluno);
             timerReconexaoAluno = setInterval(() => {
               const videoMain = document.getElementById('video-prof-main');
@@ -1354,6 +1672,7 @@
               if (statusEl) statusEl.innerText = '🟢 Recebendo Transmissão Ao Vivo';
               const videoMain = document.getElementById('video-prof-main');
               if (videoMain) {
+                videoMain.muted = !somSaidaAtivo;
                 videoMain.srcObject = streamProf;
                 videoMain.play().catch(() => {});
               }
@@ -1368,14 +1687,15 @@
     function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false) {
       const grid = document.getElementById('webrtc-video-grid');
       if (!grid) return;
+      grid.style.display = 'flex';
       let card = document.getElementById(`vid_card_${idCard}`);
       if (!card) {
         card = document.createElement('div');
         card.id = `vid_card_${idCard}`;
-        card.style.cssText = 'width:100%; height:100%; min-height:200px; background:#1e293b; border-radius:14px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        card.style.cssText = 'width:150px; height:90px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
-          <video autoplay playsinline ${isLocal ? 'muted' : ''} style="width:100%; height:100%; object-fit:cover; background:#000;"></video>
-          <div style="position:absolute; bottom:8px; left:8px; background:rgba(15,23,42,0.85); color:#fff; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:700;">
+          <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
+          <div style="position:absolute; bottom:4px; left:6px; background:rgba(15,23,42,0.85); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">
             👤 ${esc(nomePessoa)}
           </div>
         `;
@@ -1394,7 +1714,7 @@
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
       const btn = document.getElementById('btn-toggle-mic');
       if (btn) {
-        btn.innerText = micAtivo ? '🎤 Microfone Ativo' : '🔇 Microfone Mudo';
+        btn.innerText = micAtivo ? '🎤 Microfone' : '🔇 Microfone';
         btn.classList.toggle('primary', micAtivo);
       }
     }
@@ -1405,17 +1725,20 @@
       meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
       const btn = document.getElementById('btn-toggle-cam');
       if (btn) {
-        btn.innerText = camAtiva ? '📷 Câmara Ativa' : '🚫 Câmara Desligada';
+        btn.innerText = camAtiva ? '📷 Câmara' : '🚫 Câmara';
         btn.classList.toggle('primary', camAtiva);
       }
     }
 
+    // 🖥️ PARTILHA DE TELA INTEIRA (100% ENQUADRADA E SEM CORTES)
     async function partilharEcraNaLive() {
       try {
-        const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({
+          video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
+          audio: true
+        });
         const screenTrack = displayStream.getVideoTracks()[0];
 
-        // Mantém o áudio do microfone do professor junto com a imagem do ecrã partilhado
         const tracksCombinadas = [screenTrack];
         if (meuStreamLocal && meuStreamLocal.getAudioTracks().length > 0) {
           tracksCombinadas.push(meuStreamLocal.getAudioTracks()[0]);
@@ -1423,12 +1746,17 @@
         streamTransmissaoAtual = new MediaStream(tracksCombinadas);
 
         const videoMain = document.getElementById('video-prof-main');
-        if (videoMain) videoMain.srcObject = displayStream;
+        if (videoMain) {
+          videoMain.style.objectFit = 'contain';
+          videoMain.srcObject = displayStream;
+        }
 
         Object.values(chamadasAtivas).forEach(call => {
           const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
           if (sender) sender.replaceTrack(screenTrack);
         });
+
+        mostrarToast('🖥️ Partilha de tela ativa (enquadramento 100% ajustado)!');
 
         screenTrack.onended = () => {
           streamTransmissaoAtual = meuStreamLocal;
@@ -1463,7 +1791,12 @@
 
     function telaCheiaPalco() {
       const stage = document.getElementById('meet-stage-container');
-      if (stage && stage.requestFullscreen) stage.requestFullscreen();
+      if (!stage) return;
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      } else if (stage.requestFullscreen) {
+        stage.requestFullscreen().catch(() => {});
+      }
     }
 
     async function iniciarSalaAoVivo() {
@@ -1497,6 +1830,7 @@
 
     async function encerrarSalaAoVivo() {
       try {
+        maximizarChamadaAoVivo();
         limparConexoesWebRTC();
         await fetch('/api/workspace/video-aulas/live/encerrar', {
           method: 'POST',
@@ -1622,7 +1956,7 @@
       document.getElementById('view-live').style.display = aba === 'live' ? 'block' : 'none';
     }
 
-    // Escuta eventos em tempo real do servidor (SSE)
+    // Escuta eventos em tempo real do servidor (SSE: Status da Live, Chat na Tela e Projeção de Lousa)
     try {
       const sse = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(ESCOLA_ID)}`);
       sse.onmessage = (ev) => {
@@ -1633,6 +1967,12 @@
             atualizarBannerLive();
           } else if (data.type === 'VIDEO_AULA_NOVA') {
             carregarCatalogo(false);
+          } else if (data.type === 'VIDEO_LIVE_EVENTO') {
+            if (data.subtipo === 'CHAT') {
+              desenharMensagemMiniChat(data, false);
+            } else if (data.subtipo === 'PROJETAR_LOUSA') {
+              aplicarProjecaoLousaVisual(data.lousaAtiva);
+            }
           }
         } catch (e) {}
       };
