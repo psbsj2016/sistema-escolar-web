@@ -203,54 +203,78 @@ Workspace.Arena = {
         // Deixamos vazio intencionalmente para o F5 sobreviver à recarga da página!
     },
 
-   injetarModalFila: () => {
+   colegasGrupo: [],
+    participantesSala: [],
+    modoLivreAtivo: false,
+
+    injetarModalFila: () => {
         if (document.getElementById('ws-modal-arena')) return;
         const modal = document.createElement('div');
         modal.id = 'ws-modal-arena';
         modal.style.cssText = 'display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 100050; align-items: center; justify-content: center; backdrop-filter: blur(5px);';
         
         modal.innerHTML = `
-            <div style="background: #1e293b; width: 90%; max-width: 450px; padding: 30px; border-radius: 20px; text-align: center; border: 1px solid #334155; position: relative; overflow: visible;">
+            <div style="background: #1e293b; width: 92%; max-width: 480px; padding: 26px; border-radius: 20px; text-align: center; border: 1px solid #334155; position: relative; overflow: visible; max-height: 92vh; overflow-y: auto;">
                 <button onclick="document.getElementById('ws-modal-arena').style.display='none'" style="position: absolute; top: 15px; right: 15px; background: transparent; border: none; color: #94a3b8; font-size: 20px; cursor: pointer;">✖</button>
-                <div style="font-size: 50px; margin-bottom: 15px;">🎙️</div>
-                <h2 style="color: #fff; margin-top: 0;">Arena de Roleplay</h2>
-                <p style="color: #94a3b8; font-size: 14px; margin-bottom: 20px;">Pratique inglês ao vivo. Escolha a duração do combate e desafie um colega!</p>
+                <div style="font-size: 46px; margin-bottom: 10px;">🎙️</div>
+                <h2 style="color: #fff; margin: 0 0 6px 0;">Arena & Prática Livre</h2>
+                <p style="color: #94a3b8; font-size: 13.5px; margin-bottom: 18px;">Treine com IA, faça duelos com cenários ou abra uma <b>Sala Livre (até 5 pessoas)</b> sem contexto fixo!</p>
                 
-                <div style="background: rgba(0,0,0,0.2); padding: 15px; border-radius: 12px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between;">
-                    <strong style="color: #cbd5e1; font-size: 14px;">Duração da Partida:</strong>
+                <div style="background: rgba(0,0,0,0.2); padding: 12px 15px; border-radius: 12px; margin-bottom: 16px; display: flex; align-items: center; justify-content: space-between;">
+                    <strong style="color: #cbd5e1; font-size: 13.5px;">Duração da Sessão:</strong>
                     <div style="display: flex; align-items: center; gap: 8px;">
-                        <input type="number" id="ws-arena-input-tempo" min="5" max="50" value="50" style="width: 60px; padding: 8px; border-radius: 8px; border: 1px solid #3b82f6; background: #0f172a; color: #fff; text-align: center; font-weight: bold; outline: none;">
-                        <span style="color: #94a3b8; font-size: 14px;">min</span>
+                        <input type="number" id="ws-arena-input-tempo" min="5" max="50" value="30" style="width: 60px; padding: 7px; border-radius: 8px; border: 1px solid #3b82f6; background: #0f172a; color: #fff; text-align: center; font-weight: bold; outline: none;">
+                        <span style="color: #94a3b8; font-size: 13.5px;">min</span>
                     </div>
                 </div>
 
-              <div style="display: flex; flex-direction: column; gap: 15px;">
-                    <!-- 🚀 O NOVO SELETOR DO MODO SOLO -->
-                    <button id="ws-btn-solo" onclick="Workspace.Arena.abrirMenuSolo()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.4);" onmouseover="this.style.transform='scale(1.02)'" onmouseout="this.style.transform='scale(1)'">
-                        <span style="font-size: 20px;">🤖</span> Treinar Solo com a IA
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <!-- 🤖 MODO 1: TREINO SOLO COM IA -->
+                    <button id="ws-btn-solo" onclick="Workspace.Arena.abrirMenuSolo()" style="background: linear-gradient(135deg, #8b5cf6, #6d28d9); color: white; padding: 13px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s; display: flex; align-items: center; justify-content: center; gap: 10px; box-shadow: 0 4px 15px rgba(139, 92, 246, 0.35);">
+                        <span style="font-size: 19px;">🤖</span> Treinar Solo com a IA
                     </button>
                     
-                    <!-- Menu de Dificuldades (Escondido inicialmente) -->
-                    <div id="ws-arena-solo-options" style="display: none; flex-direction: column; gap: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 12px; border: 1px solid #475569;">
-                        <strong style="color: #cbd5e1; font-size: 13px; margin-bottom: 5px;">Escolha o Nível de Dificuldade:</strong>
-                        <button onclick="Workspace.Arena.iniciarTreinoSolo('A1_A2')" style="background: #10b981; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟢 Iniciante (A1/A2)</button>
-                        <button onclick="Workspace.Arena.iniciarTreinoSolo('B1_B2')" style="background: #f59e0b; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟡 Intermediário (B1/B2)</button>
-                        <button onclick="Workspace.Arena.iniciarTreinoSolo('C1_C2')" style="background: #ef4444; color: white; padding: 10px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔴 Avançado (C1/C2)</button>
+                    <div id="ws-arena-solo-options" style="display: none; flex-direction: column; gap: 8px; padding: 14px; background: rgba(0,0,0,0.25); border-radius: 12px; border: 1px solid #475569;">
+                        <strong style="color: #cbd5e1; font-size: 12.5px; margin-bottom: 4px;">Escolha o Nível de Dificuldade:</strong>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('A1_A2')" style="background: #10b981; color: white; padding: 9px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟢 Iniciante (A1/A2)</button>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('B1_B2')" style="background: #f59e0b; color: white; padding: 9px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🟡 Intermediário (B1/B2)</button>
+                        <button onclick="Workspace.Arena.iniciarTreinoSolo('C1_C2')" style="background: #ef4444; color: white; padding: 9px; border-radius: 8px; border: none; font-weight: bold; cursor: pointer;">🔴 Avançado (C1/C2)</button>
                     </div>
 
-                    <button id="ws-btn-procurar" onclick="Workspace.Arena.procurarAleatorio()" style="background: #3b82f6; color: white; padding: 15px; border-radius: 12px; border: none; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#2563eb'">
+                    <!-- 🎲 MODO 2: SINALIZADOR ALEATÓRIO -->
+                    <button id="ws-btn-procurar" onclick="Workspace.Arena.procurarAleatorio()" style="background: #3b82f6; color: white; padding: 13px; border-radius: 12px; border: none; font-weight: bold; font-size: 15px; cursor: pointer; transition: 0.2s;">
                         🎲 Procurar Oponente Aleatório
                     </button>
                     
-                    <div style="position: relative; text-align: left;">
-                        <div style="display: flex; align-items: center; gap: 10px;">
-                            <input type="text" id="ws-arena-input-convite" placeholder="Nome do Colega..." style="flex: 1; padding: 15px; border-radius: 12px; border: 1px solid #334155; background: #0f172a; color: #fff; outline: none;" oninput="Workspace.Arena.filtrarColegas()">
-                            <button onclick="Workspace.Arena.convidarColega()" style="background: #10b981; color: white; padding: 15px 20px; border-radius: 12px; border: none; font-weight: bold; cursor: pointer; transition: 0.2s;" onmouseover="this.style.background='#059669'">Convidar</button>
+                    <!-- 👥 MODO 3: BUSCA DE COLEGAS (DUELO 1x1 OU SALA LIVRE ATÉ 5 PESSOAS) -->
+                    <div style="background: rgba(15, 23, 42, 0.6); border: 1px solid #334155; border-radius: 14px; padding: 14px; text-align: left; position: relative;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="color: #38bdf8; font-size: 12.5px; font-weight: 800; text-transform: uppercase;">👥 Selecionar Colegas (Até 5 na Sala)</span>
+                            <span id="ws-arena-contador-grupo" style="background: #1e293b; color: #94a3b8; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: bold; border: 1px solid #334155;">Você + 0/4</span>
                         </div>
-                        <div id="ws-arena-sugestoes" style="display: none; position: absolute; top: 100%; left: 0; width: calc(100% - 100px); max-height: 180px; overflow-y: auto; background: #1e293b; border: 1px solid #334155; border-radius: 8px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); z-index: 100; margin-top: 5px;"></div>
+
+                        <!-- Etiquetas (Chips) dos colegas adicionados para a Sala de Grupo -->
+                        <div id="ws-arena-chips-grupo" style="display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 10px;"></div>
+
+                        <div style="position: relative;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <input type="text" id="ws-arena-input-convite" placeholder="Digite o nome para adicionar..." style="flex: 1; padding: 12px 14px; border-radius: 10px; border: 1px solid #475569; background: #0f172a; color: #fff; outline: none; font-size: 14px;" oninput="Workspace.Arena.filtrarColegas()">
+                                <button type="button" onclick="Workspace.Arena.adicionarColegaInput()" title="Adicionar à lista da sala" style="background: #334155; color: #fff; padding: 12px 14px; border-radius: 10px; border: 1px solid #475569; font-weight: bold; cursor: pointer;">➕</button>
+                            </div>
+                            <div id="ws-arena-sugestoes" style="display: none; position: absolute; top: 100%; left: 0; width: 100%; max-height: 170px; overflow-y: auto; background: #1e293b; border: 1px solid #3b82f6; border-radius: 10px; box-shadow: 0 12px 28px rgba(0,0,0,0.65); z-index: 200; margin-top: 4px;"></div>
+                        </div>
+
+                        <div style="display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap;">
+                            <button type="button" onclick="Workspace.Arena.iniciarSalaGrupoLivre()" style="flex: 1.4; min-width: 170px; background: linear-gradient(135deg, #0ea5e9, #0284c7); color: white; padding: 12px; border-radius: 10px; border: none; font-weight: 800; font-size: 13.5px; cursor: pointer; box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);">
+                                🗣️ Sala Livre (Sem Contexto)
+                            </button>
+                            <button type="button" onclick="Workspace.Arena.convidarColega()" style="flex: 1; min-width: 130px; background: #10b981; color: white; padding: 12px; border-radius: 10px; border: none; font-weight: 800; font-size: 13.5px; cursor: pointer;">
+                                🎭 Duelo c/ Papel
+                            </button>
+                        </div>
                     </div>
                 </div>
-                <div id="ws-arena-status" style="margin-top: 20px; color: #f59e0b; font-weight: bold; font-size: 14px; display: none;">A procurar oponente... ⏳</div>
+                <div id="ws-arena-status" style="margin-top: 16px; color: #f59e0b; font-weight: bold; font-size: 13.5px; display: none;">A procurar oponente... ⏳</div>
             </div>
         `;
         document.body.appendChild(modal);
@@ -374,9 +398,10 @@ Workspace.Arena = {
                 item.onmouseover = () => item.style.background = '#334155';
                 item.onmouseout = () => item.style.background = 'transparent';
                 
-                item.onclick = () => {
+               item.onclick = () => {
                     inputEl.value = nome;
                     lista.style.display = 'none';
+                    Workspace.Arena.adicionarColegaAoGrupo(nome);
                 };
                 
                 item.innerHTML = `${fotoHTML} <span style="color: #fff; font-size: 14px; font-weight: 600;">${Workspace.escapeHTML(nome)}</span>`;
@@ -387,6 +412,165 @@ Workspace.Arena = {
             lista.innerHTML = '<div style="padding: 15px; color: #94a3b8; font-size: 13px; text-align: center;">Nenhum colega encontrado com este nome.</div>';
             lista.style.display = 'block';
         }
+    },
+
+    adicionarColegaInput: () => {
+        const inputEl = document.getElementById('ws-arena-input-convite');
+        if (!inputEl || !inputEl.value.trim()) return;
+        Workspace.Arena.adicionarColegaAoGrupo(inputEl.value.trim());
+        inputEl.value = '';
+        const lista = document.getElementById('ws-arena-sugestoes');
+        if (lista) lista.style.display = 'none';
+    },
+
+    adicionarColegaAoGrupo: (nome) => {
+        const nomeLimpo = String(nome || '').trim();
+        if (!nomeLimpo) return;
+        if (!Array.isArray(Workspace.Arena.colegasGrupo)) Workspace.Arena.colegasGrupo = [];
+
+        const jaExiste = Workspace.Arena.colegasGrupo.some(c => c.toLowerCase() === nomeLimpo.toLowerCase());
+        if (jaExiste) return;
+
+        if (Workspace.Arena.colegasGrupo.length >= 4) {
+            if (window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso("Limite máximo atingido: 4 colegas + você = 5 pessoas na sala!", "warning");
+            }
+            return;
+        }
+
+        Workspace.Arena.colegasGrupo.push(nomeLimpo);
+        const inputEl = document.getElementById('ws-arena-input-convite');
+        if (inputEl) inputEl.value = '';
+        Workspace.Arena.renderizarChipsGrupo();
+    },
+
+    removerColegaDoGrupo: (nome) => {
+        Workspace.Arena.colegasGrupo = (Workspace.Arena.colegasGrupo || []).filter(c => c !== nome);
+        Workspace.Arena.renderizarChipsGrupo();
+    },
+
+    renderizarChipsGrupo: () => {
+        const box = document.getElementById('ws-arena-chips-grupo');
+        const contador = document.getElementById('ws-arena-contador-grupo');
+        const lista = Workspace.Arena.colegasGrupo || [];
+
+        if (contador) {
+            contador.innerText = `Você + ${lista.length}/4 (${lista.length + 1}/5 na sala)`;
+            contador.style.color = lista.length > 0 ? '#38bdf8' : '#94a3b8';
+        }
+        if (!box) return;
+
+        if (lista.length === 0) {
+            box.style.display = 'none';
+            box.innerHTML = '';
+            return;
+        }
+
+        box.style.display = 'flex';
+        box.innerHTML = lista.map(nome => {
+            const seguro = Workspace.escapeHTML(nome);
+            const nomeJs = seguro.replace(/'/g, "\\'");
+            return `
+                <span style="background: #0f172a; border: 1px solid #38bdf8; color: #e0f2fe; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">
+                    👤 ${seguro}
+                    <button type="button" onclick="Workspace.Arena.removerColegaDoGrupo('${nomeJs}')" style="background: transparent; border: none; color: #f87171; cursor: pointer; font-weight: bold; font-size: 13px; padding: 0; line-height: 1;">✖</button>
+                </span>
+            `;
+        }).join('');
+    },
+
+    // 🗣️ INICIA A SALA DE PRÁTICA LIVRE (SEM CONTEXTO E ATÉ 5 PESSOAS)
+    iniciarSalaGrupoLivre: async () => {
+        Workspace.Arena.desbloquearAudioNavegador();
+        const inputEl = document.getElementById('ws-arena-input-convite');
+        const digitadoAgora = inputEl ? inputEl.value.trim() : '';
+        if (digitadoAgora) {
+            Workspace.Arena.adicionarColegaAoGrupo(digitadoAgora);
+        }
+
+        const convidados = Workspace.Arena.colegasGrupo || [];
+        if (convidados.length === 0) {
+            if (window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso("Pesquise e selecione de 1 a 4 colegas para abrir a Sala Livre!", "warning");
+            }
+            return;
+        }
+
+        const status = document.getElementById('ws-arena-status');
+        const tempo = document.getElementById('ws-arena-input-tempo')?.value || 30;
+        if (status) {
+            status.style.display = 'block';
+            status.style.color = '#38bdf8';
+            status.innerText = `A abrir Sala Livre e a chamar ${convidados.join(', ')}... 🚀`;
+        }
+
+        try {
+            const meuNome = Workspace.usuario.nome || Workspace.usuario.login;
+            const res = await Workspace.api('/workspace/arena/grupo-livre/criar', 'POST', {
+                alunoId: Workspace.usuario.id,
+                alunoNome: meuNome,
+                colegasNomes: convidados,
+                escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                limiteMinutos: tempo
+            });
+
+            if (res && res.success) {
+                Workspace.Arena.colegasGrupo = [];
+                Workspace.Arena.renderizarChipsGrupo();
+                Workspace.Arena.abrirSalaGrupoLivreUI(res.salaId, res.participantes || [{ id: Workspace.usuario.id, nome: meuNome }], res.limiteMinutos, convidados);
+            } else {
+                throw new Error(res?.error || 'Não foi possível criar a sala livre.');
+            }
+        } catch (err) {
+            if (status) {
+                status.style.color = '#ef4444';
+                status.innerText = err.message || 'Erro ao criar sala livre.';
+            }
+        }
+    },
+
+    // 🚀 ABRE O PALCO DIRETO PARA PRÁTICA LIVRE (SEM TELA DE ESCOLHA DE PAPÉIS)
+    abrirSalaGrupoLivreUI: (salaId, participantes, limiteMinutos, convidadosPendentes = []) => {
+        Workspace.Arena.salaAtual = salaId;
+        Workspace.Arena.modoLivreAtivo = true;
+        Workspace.Arena.participantesSala = Array.isArray(participantes) ? participantes : [];
+        Workspace.Arena.minutosRestantes = parseInt(limiteMinutos, 10) || 30;
+        Workspace.Arena.papelAtual = 'Prática Livre';
+        Workspace.Arena.cenarioAtual = { id: 'livre_aberto', t: 'Prática Livre em Grupo (Sem Contexto Fixo)', livre: true };
+
+        const nomesPresentes = Workspace.Arena.participantesSala.map(p => p.nome).join(', ');
+        Workspace.Arena.oponenteNome = `Grupo (${Workspace.Arena.participantesSala.length}/5): ${nomesPresentes}`;
+
+        const modal = document.getElementById('ws-modal-arena');
+        if (modal) modal.style.display = 'none';
+
+        Workspace.Arena.injetarPainelBatalha();
+        const painel = document.getElementById('ws-painel-batalha');
+        painel.style.display = 'flex';
+        requestAnimationFrame(() => painel.style.opacity = '1');
+
+        // Esconde completamente a tela de escolha de personagens ("Luzes, Câmera, Ação!")
+        const telaSelecao = document.getElementById('ws-arena-selecao-personagem');
+        if (telaSelecao) telaSelecao.style.display = 'none';
+
+        document.getElementById('ws-arena-oponente-nome').innerText = `👥 Sala Livre (${Workspace.Arena.participantesSala.length}/5): ${nomesPresentes}`;
+
+        const avisoConvidados = convidadosPendentes.length > 0
+            ? `<div style="margin-top: 8px; font-size: 12.5px; color: #38bdf8;">📨 Convite enviado para: <b>${Workspace.escapeHTML(convidadosPendentes.join(', '))}</b> (entrarão automaticamente ao aceitar)</div>`
+            : '';
+
+        const log = document.getElementById('ws-arena-chat-log');
+        log.innerHTML = `
+            <div style="text-align: center; color: #cbd5e1; font-size: 14px; margin-bottom: 20px; background: rgba(14, 165, 233, 0.08); padding: 18px; border-radius: 15px; border: 1px dashed #38bdf8; animation: popUp 0.4s ease;">
+                <strong style="color: #38bdf8; font-size: 16px; display: block; margin-bottom: 4px;">🗣️ SALA DE PRÁTICA LIVRE (ATÉ 5 PESSOAS)</strong>
+                <span style="color: #f8fafc; font-size: 13.5px;">Sem contexto ou personagem fixo! Conversem livremente em inglês sobre o tema da aula.</span>
+                ${avisoConvidados}
+                <div style="margin-top: 10px; font-size: 12px; color: #a855f7;">💡 <b>Dica Mobile/Tablet/PC:</b> Toque em qualquer palavra ou em <b>🌐 Traduzir frase</b> nos balões para ver a tradução e pronúncia!</div>
+            </div>
+        `;
+
+        Workspace.Arena.tocarSom('inicio');
+        Workspace.Arena.iniciarRelogio();
     },
 
     procurarAleatorio: async () => {
@@ -566,6 +750,32 @@ Workspace.Arena = {
                         }
                     }
 
+                    if (dados.type === 'ARENA_CONVITE_GRUPO') {
+                        const entrarNoGrupo = async () => {
+                            Workspace.Arena.desbloquearAudioNavegador();
+                            const res = await Workspace.api(`/workspace/arena/grupo-livre/${dados.salaId}/entrar`, 'POST', {
+                                alunoId: Workspace.usuario.id,
+                                alunoNome: meuNome,
+                                escolaId: Workspace.usuario.escolaId || 'DEFAULT'
+                            });
+                            if (res && res.success) {
+                                Workspace.Arena.abrirSalaGrupoLivreUI(res.salaId, res.participantes, res.limiteMinutos, []);
+                            } else if (res && res.error && window.Workspace?.mostrarAviso) {
+                                Workspace.mostrarAviso(res.error, 'warning');
+                            }
+                        };
+
+                        if (window.Toast && typeof Toast.showInterativo === 'function') {
+                            Toast.showInterativo({
+                                remetenteNome: dados.remetenteNome,
+                                subtitulo: "🗣️ Sala de Prática Livre (Grupo)",
+                                mensagemCorpo: `<strong>${dados.remetenteNome}</strong> convidou-te para uma Sala de Prática Livre em grupo (${dados.limiteMinutos} min). Clique para entrar!`
+                            }, 'arena', entrarNoGrupo);
+                        } else if (confirm(`${dados.remetenteNome} convidou-te para uma Sala de Prática Livre. Deseja entrar agora?`)) {
+                            entrarNoGrupo();
+                        }
+                    }
+
                     // 🚀 3. AMBOS SÃO ENGOLIDOS PARA A ARENA IMEDIATAMENTE!
                     if (dados.type === 'ARENA_MATCH_ENCONTRADO') {
                         // Descobre o nome do oponente limpando a matriz
@@ -618,6 +828,20 @@ Workspace.Arena = {
                 if (dados.type === 'ARENA_TODOS_PRONTOS' && Workspace.Arena.salaAtual === dados.salaId) {
                     if (Workspace.Arena.papelAtual) {
                         Workspace.Arena.comecarCombateReal(Workspace.Arena.papelAtual);
+                    }
+                }
+
+                if (dados.type === 'ARENA_GRUPO_ATUALIZADO' && Workspace.Arena.salaAtual === dados.salaId) {
+                    Workspace.Arena.participantesSala = dados.participantes || [];
+                    const nomesPresentes = Workspace.Arena.participantesSala.map(p => p.nome).join(', ');
+                    const headerEl = document.getElementById('ws-arena-oponente-nome');
+                    if (headerEl) {
+                        headerEl.innerText = `👥 Sala Livre (${Workspace.Arena.participantesSala.length}/5): ${nomesPresentes}`;
+                    }
+                    const log = document.getElementById('ws-arena-chat-log');
+                    if (log && dados.novoMembro && dados.novoMembro !== meuNome) {
+                        log.insertAdjacentHTML('beforeend', `<div style="text-align:center; color:#10b981; font-size:12.5px; margin:6px 0;">✨ <b>${Workspace.escapeHTML(dados.novoMembro)}</b> entrou na Sala Livre! (${Workspace.Arena.participantesSala.length}/5)</div>`);
+                        log.scrollTop = log.scrollHeight;
                     }
                 }
 
@@ -1290,20 +1514,99 @@ Workspace.Arena = {
         }, 1000);
     },
 
+    // 🎨 Transforma cada palavra do balão num elemento tocável para Telemóvel, Tablet e PC
+    _tornarTextoTocavelArena: (textoBruto) => {
+        if (!textoBruto) return '';
+        let corpoFala = String(textoBruto);
+        let seloMestre = '';
+        if (corpoFala.includes('💡 (Ideia do Mestre)')) {
+            corpoFala = corpoFala.replace('💡 (Ideia do Mestre)', '').trim();
+            seloMestre = ' <span style="font-size: 11.5px; color: #fde047; font-weight: bold;">💡 (Ideia do Mestre)</span>';
+        }
+
+        const palavrasHtml = corpoFala.split(/(\s+)/).map(parte => {
+            if (/^\s+$/.test(parte)) return parte;
+            const limpa = parte.replace(/^[^a-zA-Z0-9'-]+|[^a-zA-Z0-9'-]+$/g, '');
+            if (!limpa) return Workspace.escapeHTML(parte);
+            const seguraHtml = Workspace.escapeHTML(parte);
+            const seguraJs = limpa.replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+            return `<span class="ws-arena-word" onclick="Workspace.Arena.tocarPalavraMobile(event, '${seguraJs}', this)" style="cursor: pointer; border-bottom: 1px dotted rgba(255,255,255,0.45); border-radius: 4px; padding: 1px 2px; transition: background 0.15s; display: inline-block;">${seguraHtml}</span>`;
+        }).join('');
+
+        return palavrasHtml + seloMestre;
+    },
+
+    tocarPalavraMobile: (event, palavra, el) => {
+        if (event) {
+            event.stopPropagation();
+        }
+        // Se o utilizador selecionou uma frase inteira arrastando, prioriza a seleção
+        const sel = window.getSelection ? window.getSelection().toString().trim() : '';
+        if (sel && sel.length > palavra.length) return;
+
+        if (el) {
+            const bgOriginal = el.style.background;
+            el.style.background = 'rgba(255,255,255,0.28)';
+            setTimeout(() => { el.style.background = bgOriginal; }, 400);
+        }
+
+        const rect = el ? el.getBoundingClientRect() : null;
+        const coordX = rect ? (rect.left + rect.width / 2) : (event?.clientX || window.innerWidth / 2);
+        const coordY = rect ? rect.top : (event?.clientY || window.innerHeight / 2);
+
+        Workspace.Arena.exibirCaixaTraducao(palavra, coordX, coordY);
+    },
+
+    traduzirBalaoInteiro: (event, btnEl) => {
+        if (event) event.stopPropagation();
+        const balao = btnEl?.closest('[data-texto-original]');
+        const textoOriginal = balao ? balao.getAttribute('data-texto-original') : '';
+        if (!textoOriginal) return;
+
+        const rect = btnEl.getBoundingClientRect();
+        Workspace.Arena.exibirCaixaTraducao(textoOriginal, rect.left + rect.width / 2, rect.top);
+    },
+
     desenharBalao: (nome, texto, isMinha) => {
         const log = document.getElementById('ws-arena-chat-log');
         const alinhamento = isMinha ? 'flex-end' : 'flex-start';
-        const corFundo = isMinha ? '#3b82f6' : '#334155';
-        const raio = isMinha ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
 
-        // 🚀 Magia visual: Mistura o nome real com o papel sorteado!
-        let nomeDisplay = nome;
-        if (Workspace.Arena.cenarioAtual && Workspace.Arena.papelAtual) {
-             const oponentePapel = (Workspace.Arena.papelAtual === Workspace.Arena.cenarioAtual.p1) ? Workspace.Arena.cenarioAtual.p2 : Workspace.Arena.cenarioAtual.p1;
-             nomeDisplay = isMinha ? `${nome} 🎭 (${Workspace.Arena.papelAtual})` : `${nome} 🎭 (${oponentePapel})`;
+        // Cores distintas para identificar até 5 pessoas facilmente na Sala Livre
+        let corFundo = isMinha ? '#2563eb' : '#334155';
+        if (!isMinha && Workspace.Arena.modoLivreAtivo) {
+            const paletaGrupo = ['#334155', '#0f766e', '#6d28d9', '#b45309'];
+            let hash = 0;
+            for (let i = 0; i < String(nome).length; i++) hash = String(nome).charCodeAt(i) + ((hash << 5) - hash);
+            corFundo = paletaGrupo[Math.abs(hash) % paletaGrupo.length];
         }
 
-        const html = `<div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;"><span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span><div onmouseup="Workspace.Arena.capturarToqueTexto(event, this)" style="background: ${corFundo}; color: #fff; padding: 12px 18px; border-radius: ${raio}; max-width: 80%; font-size: 15px; line-height: 1.5; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: text;">${texto}</div></div>`;
+        const raio = isMinha ? '16px 16px 4px 16px' : '16px 16px 16px 4px';
+
+        let nomeDisplay = Workspace.escapeHTML(nome);
+        if (!Workspace.Arena.modoLivreAtivo && Workspace.Arena.cenarioAtual && !Workspace.Arena.cenarioAtual.livre && Workspace.Arena.papelAtual) {
+            const oponentePapel = (Workspace.Arena.papelAtual === Workspace.Arena.cenarioAtual.p1) ? Workspace.Arena.cenarioAtual.p2 : Workspace.Arena.cenarioAtual.p1;
+            nomeDisplay = isMinha ? `${Workspace.escapeHTML(nome)} 🎭 (${Workspace.escapeHTML(Workspace.Arena.papelAtual)})` : `${Workspace.escapeHTML(nome)} 🎭 (${Workspace.escapeHTML(oponentePapel)})`;
+        }
+
+        const textoSemSelo = String(texto || '').replace('💡 (Ideia do Mestre)', '').trim();
+        const textoAtributoSeguro = Workspace.escapeHTML(textoSemSelo);
+        const conteudoInterativo = Workspace.Arena._tornarTextoTocavelArena(texto);
+
+        const html = `
+            <div style="display: flex; flex-direction: column; align-items: ${alinhamento}; width: 100%; animation: fadeIn 0.3s ease;">
+                <span style="color: #94a3b8; font-size: 11px; margin-bottom: 4px; font-weight: bold;">${nomeDisplay}</span>
+                <div data-texto-original="${textoAtributoSeguro}"
+                     onmouseup="Workspace.Arena.capturarToqueTexto(event, this)"
+                     ontouchend="Workspace.Arena.capturarToqueTexto(event, this)"
+                     style="background: ${corFundo}; color: #fff; padding: 12px 16px; border-radius: ${raio}; max-width: 85%; font-size: 15px; line-height: 1.55; box-shadow: 0 4px 10px rgba(0,0,0,0.2); cursor: text;">
+                    <div>${conteudoInterativo}</div>
+                    <div style="display: flex; justify-content: flex-end; margin-top: 6px; padding-top: 5px; border-top: 1px solid rgba(255,255,255,0.12);">
+                        <button type="button" onclick="Workspace.Arena.traduzirBalaoInteiro(event, this)" style="background: rgba(255,255,255,0.14); border: none; color: #e0f2fe; font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 12px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px;">
+                            🌐 Traduzir frase & pronúncia
+                        </button>
+                    </div>
+                </div>
+            </div>`;
         log.insertAdjacentHTML('beforeend', html);
         log.scrollTop = log.scrollHeight;
     },
@@ -1659,38 +1962,27 @@ Workspace.Arena = {
         }
     },
 
-// ============================================================================
+    // ============================================================================
     // 🌍 SISTEMA DE TOQUE INTELIGENTE (SMART TOUCH - TRADUTOR)
     // ============================================================================
     
-    // 1. O Detetive de Toques
+   // 1. O Detetive de Toques e Seleção (Compatível com Telemóvel, Tablet e PC)
     capturarToqueTexto: (event, elemento) => {
-        // Evita abrir a caixa de tradução se o aluno clicar num botão (ex: botão de dica)
-        if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A') return;
+        if (event.target.tagName === 'BUTTON' || event.target.tagName === 'A' || event.target.classList?.contains('ws-arena-word')) return;
 
-        // Damos um atraso de 50 milissegundos para garantir que o sistema operativo 
-        // teve tempo de "pintar" a seleção a azul, caso o aluno tenha arrastado o dedo.
+        const touch = (event.changedTouches && event.changedTouches[0]) || (event.touches && event.touches[0]) || null;
+        const coordX = touch ? touch.clientX : (event.clientX || window.innerWidth / 2);
+        const coordY = touch ? touch.clientY : (event.clientY || window.innerHeight / 2);
+
         setTimeout(() => {
-            let textoCapturado = "";
-            const selecao = window.getSelection();
+            const selecao = window.getSelection ? window.getSelection() : null;
+            const textoSelecionado = selecao ? selecao.toString().trim() : '';
 
-            // Modo A: Frase Completa Selecionada
-            if (selecao && selecao.toString().trim().length > 0) {
-                textoCapturado = selecao.toString().trim();
-            } 
-            // Modo B: Palavra Única (Toque rápido)
-            else {
-                textoCapturado = Workspace.Arena.extrairPalavraDoClique(event);
+            if (textoSelecionado && textoSelecionado.length > 1) {
+                Workspace.Arena.exibirCaixaTraducao(textoSelecionado, coordX, coordY);
+                try { selecao.removeAllRanges(); } catch (e) {}
             }
-
-            if (textoCapturado && textoCapturado.length > 1) {
-                // Abre a caixa mágica nas coordenadas exatas do rato/dedo!
-                Workspace.Arena.exibirCaixaTraducao(textoCapturado, event.clientX, event.clientY);
-                
-                // Limpa a seleção a azul do ecrã para ficar mais limpo
-                if (selecao) selecao.removeAllRanges();
-            }
-        }, 50); 
+        }, 80); 
     },
 
     // 2. O Extrator Matemático de Palavras
