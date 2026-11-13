@@ -448,8 +448,16 @@ Object.assign(Workspace, {
         let telaDestino = localStorage.getItem('ws_ultima_tela_global') || 'feed'; 
         let postAlvo = null;      
         
-        if (window.location.hash && window.location.hash !== '#') {
-            if (window.location.hash.includes('post-')) {
+       if (window.location.hash && window.location.hash !== '#') {
+            if (window.location.hash.startsWith('#video-aula-')) {
+                telaDestino = 'sala_aula';
+                const vidAlvo = window.location.hash.replace('#video-aula-', '');
+                setTimeout(() => Workspace.abrirPlataformaVideos(vidAlvo, ''), 400);
+            } else if (window.location.hash.startsWith('#playlist-')) {
+                telaDestino = 'sala_aula';
+                const plAlvo = window.location.hash.replace('#playlist-', '');
+                setTimeout(() => Workspace.abrirPlataformaVideos('', plAlvo), 400);
+            } else if (window.location.hash.includes('post-')) {
                 telaDestino = 'feed'; 
                 postAlvo = window.location.hash.replace('#post-', ''); 
             } else {
@@ -1272,6 +1280,38 @@ Object.assign(Workspace, {
         if (Workspace.Materiais) Workspace.Materiais.abrirPainel();
         else Workspace.navegarPara('materiais');
     },
+
+    abrirPlataformaVideos: (videoId = '', playlistSlug = '') => {
+        if (!Workspace.usuario) return;
+        const modal = document.getElementById('ws-modal-video-aulas');
+        const iframe = document.getElementById('iframeVideoAulas');
+        if (!modal || !iframe) return;
+
+        const role = Workspace.usuario.tipo === 'Aluno' ? 'aluno' : 'professor';
+        const nome = Workspace.usuario.nome || Workspace.usuario.login || 'Utilizador';
+        const qs = new URLSearchParams({
+            role: role,
+            userId: Workspace.usuario.id || '',
+            userName: nome,
+            escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+            alunoRefId: Workspace.usuario.alunoRefId || '',
+            video: videoId || '',
+            playlist: playlistSlug || ''
+        });
+
+        iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    },
+
+    fecharPlataformaVideos: () => {
+        const modal = document.getElementById('ws-modal-video-aulas');
+        const iframe = document.getElementById('iframeVideoAulas');
+        if (iframe) iframe.src = '';
+        if (modal) modal.style.display = 'none';
+        document.body.style.overflow = '';
+    },
+
     abrirConfiguracoes: () => Workspace.navegarPara('configuracoes'),
     voltarAoFeed: () => Workspace.navegarPara('feed'),
 

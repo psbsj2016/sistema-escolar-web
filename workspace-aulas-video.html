@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="pt-BR" translate="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="google" content="notranslate">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>PlayClass & Meet • Plataforma de Vídeo-Aulas</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-main: #0f172a;
+      --bg-card: #1e293b;
+      --bg-soft: #334155;
+      --border: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --primary: #3b82f6;
+      --primary-hover: #2563eb;
+      --danger: #ef4444;
+      --success: #10b981;
+      --warning: #f59e0b;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body {
+      margin: 0; padding: 0; width: 100%; height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-main); color: var(--text);
+      overflow-x: hidden;
+    }
+
+    /* BARRA DE NAVEGAÇÃO INTERNA */
+    .vc-topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 12px 20px; background: rgba(30, 41, 59, 0.95);
+      border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 50;
+      gap: 14px; flex-wrap: wrap; backdrop-filter: blur(12px);
+    }
+    .vc-brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 16px; }
+    .vc-brand-badge {
+      background: linear-gradient(135deg, #ef4444, #dc2626);
+      width: 34px; height: 34px; border-radius: 10px;
+      display: flex; align-items: center; justify-content: center; font-size: 17px;
+      box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+    }
+    .vc-search-wrap {
+      flex: 1; max-width: 420px; min-width: 200px; position: relative;
+    }
+    .vc-search-input {
+      width: 100%; padding: 9px 14px 9px 36px; border-radius: 999px;
+      border: 1px solid var(--border); background: #0f172a; color: #fff;
+      font-size: 13px; outline: none; transition: 0.2s;
+    }
+    .vc-search-input:focus { border-color: var(--primary); }
+    .vc-nav-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .vc-btn {
+      background: var(--bg-soft); color: #fff; border: 1px solid rgba(255,255,255,0.08);
+      padding: 8px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+    }
+    .vc-btn:hover { background: #475569; transform: translateY(-1px); }
+    .vc-btn.active, .vc-btn.primary { background: var(--primary); border-color: #60a5fa; }
+    .vc-btn.danger { background: var(--danger); border-color: #f87171; }
+    .vc-btn.success { background: var(--success); border-color: #34d399; }
+
+    @keyframes pulseRed { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.8; } }
+    .live-banner-alert {
+      display: none; background: linear-gradient(90deg, #991b1b, #dc2626);
+      padding: 10px 20px; align-items: center; justify-content: space-between;
+      font-size: 13px; font-weight: 700; border-bottom: 1px solid #f87171;
+    }
+
+    /* CONTEÚDO PRINCIPAL */
+    .vc-container { max-width: 1380px; margin: 0 auto; padding: 20px; }
+
+    /* FILTROS DE ASSUNTOS / PLAYLISTS */
+    .vc-subjects-bar {
+      display: flex; align-items: center; gap: 8px; overflow-x: auto;
+      padding-bottom: 10px; margin-bottom: 20px; scrollbar-width: thin;
+    }
+    .vc-subject-pill {
+      background: var(--bg-card); color: var(--text-muted); border: 1px solid var(--border);
+      padding: 8px 15px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px;
+      transition: 0.2s;
+    }
+    .vc-subject-pill.active {
+      background: var(--primary); color: #fff; border-color: #60a5fa;
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+    }
+
+    /* LAYOUT DO REPRODUTOR + FILA DE SEQUÊNCIA (ESTILO YOUTUBE) */
+    #view-player { display: none; margin-bottom: 30px; }
+    .player-layout {
+      display: grid; grid-template-columns: 1fr 360px; gap: 20px; align-items: start;
+    }
+    @media (max-width: 960px) { .player-layout { grid-template-columns: 1fr; } }
+
+    .video-stage-box {
+      background: #000; border-radius: 16px; overflow: hidden;
+      border: 1px solid var(--border); box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+      aspect-ratio: 16 / 9; width: 100%; position: relative;
+    }
+    .video-stage-box video, .video-stage-box iframe {
+      width: 100%; height: 100%; border: none; display: block; background: #000;
+    }
+
+    .video-info-card {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 18px; margin-top: 14px;
+    }
+    .playlist-sidebar {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 16px; overflow: hidden; display: flex; flex-direction: column;
+      max-height: 640px;
+    }
+    .playlist-header {
+      padding: 14px 16px; background: rgba(15, 23, 42, 0.65);
+      border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; gap: 8px;
+    }
+    .playlist-items { overflow-y: auto; flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+    .playlist-item {
+      display: flex; align-items: center; gap: 10px; padding: 10px;
+      border-radius: 10px; background: rgba(15, 23, 42, 0.4); border: 1px solid transparent;
+      cursor: pointer; transition: 0.18s;
+    }
+    .playlist-item:hover { background: rgba(59, 130, 246, 0.12); border-color: rgba(59, 130, 246, 0.3); }
+    .playlist-item.playing { background: rgba(59, 130, 246, 0.22); border-color: var(--primary); }
+    .pl-num {
+      width: 26px; height: 26px; border-radius: 6px; background: #0f172a;
+      color: var(--text-muted); font-size: 11.5px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .playlist-item.playing .pl-num { background: var(--primary); color: #fff; }
+
+    /* GRELHA DE VÍDEOS DO CATÁLOGO */
+    .videos-grid {
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 18px;
+    }
+    .video-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px;
+      overflow: hidden; display: flex; flex-direction: column; transition: 0.22s; cursor: pointer;
+    }
+    .video-card:hover { transform: translateY(-4px); border-color: var(--primary); box-shadow: 0 12px 28px rgba(0,0,0,0.35); }
+    .video-thumb {
+      width: 100%; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #1e1b4b, #0f172a);
+      position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
+    }
+    .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .thumb-play-icon {
+      width: 48px; height: 48px; border-radius: 50%; background: rgba(37, 99, 235, 0.9);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-size: 20px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .thumb-badge-order {
+      position: absolute; top: 10px; left: 10px; background: rgba(15, 23, 42, 0.88);
+      color: #38bdf8; padding: 4px 10px; border-radius: 8px; font-size: 11px; font-weight: 800;
+      border: 1px solid rgba(56, 189, 248, 0.3);
+    }
+    .thumb-badge-live {
+      position: absolute; top: 10px; right: 10px; background: #dc2626;
+      color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800;
+    }
+    .video-card-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-between; }
+
+    /* SALA AO VIVO (MEET + GRAVADOR) */
+    #view-live { display: none; }
+    .live-grid { display: grid; grid-template-columns: 1fr 340px; gap: 18px; align-items: start; }
+    @media (max-width: 960px) { .live-grid { grid-template-columns: 1fr; } }
+    .meet-frame-box {
+      background: #000; border: 1px solid var(--border); border-radius: 16px;
+      height: 72vh; min-height: 460px; overflow: hidden; position: relative;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* MODAL DE UPLOAD */
+    .vc-modal {
+      display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.8);
+      backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 16px;
+    }
+    .vc-modal-card {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: 20px;
+      width: 100%; max-width: 560px; padding: 24px; max-height: 92vh; overflow-y: auto;
+    }
+    .vc-input, .vc-select, .vc-textarea {
+      width: 100%; padding: 11px 14px; border-radius: 10px; border: 1px solid #475569;
+      background: #0f172a; color: #fff; font-size: 13.5px; font-family: inherit; outline: none; margin-top: 5px;
+    }
+    .vc-input:focus, .vc-select:focus, .vc-textarea:focus { border-color: var(--primary); }
+    .vc-label { font-size: 12px; font-weight: 700; color: #cbd5e1; display: block; margin-top: 12px; }
+
+    /* TOAST INTERNO */
+    #vc-toast {
+      position: fixed; bottom: 24px; right: 24px; background: #10b981; color: #fff;
+      padding: 12px 20px; border-radius: 12px; font-weight: 700; font-size: 13px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 200; display: none;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- BARRA SUPERIOR -->
+  <header class="vc-topbar">
+    <div class="vc-brand">
+      <div class="vc-brand-badge">🎬</div>
+      <div>
+        <div>PlayClass & Meet</div>
+        <div style="font-size: 10.5px; color: var(--text-muted); font-weight: 600;">Vídeo-Aulas, Sequências por Assunto & Sala Ao Vivo</div>
+      </div>
+    </div>
+
+    <div class="vc-search-wrap">
+      <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; color: var(--text-muted);">🔍</span>
+      <input type="text" id="input-search" class="vc-search-input" placeholder="Pesquisar vídeo-aula, assunto ou módulo...">
+    </div>
+
+    <div class="vc-nav-actions">
+      <button type="button" class="vc-btn active" id="btn-tab-catalogo" onclick="alternarAba('catalogo')">📚 Catálogo & Assuntos</button>
+      <button type="button" class="vc-btn" id="btn-tab-live" onclick="alternarAba('live')">🔴 Sala Ao Vivo (Meet)</button>
+      <button type="button" class="vc-btn primary" id="btn-open-upload" style="display: none;" onclick="abrirModalUpload()">📤 Enviar Vídeo-Aula</button>
+    </div>
+  </header>
+
+  <!-- ALERTA DE AULA AO VIVO EM ANDAMENTO -->
+  <div id="live-banner" class="live-banner-alert">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span style="background: #fff; color: #dc2626; padding: 2px 8px; border-radius: 99px; font-size: 11px; font-weight: 900; animation: pulseRed 1.5s infinite;">● AO VIVO AGORA</span>
+      <span id="live-banner-text">O professor iniciou uma transmissão ao vivo!</span>
+    </div>
+    <button type="button" class="vc-btn" style="background: #fff; color: #dc2626;" onclick="alternarAba('live')">Entrar na Sala Ao Vivo ➔</button>
+  </div>
+
+  <main class="vc-container">
+    <!-- 1. REPRODUTOR DE VÍDEO + FILA DE SEQUÊNCIA DO ASSUNTO -->
+    <section id="view-player">
+      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="vc-btn" onclick="fecharPlayerVoltarCatalogo()">↩ Voltar para a Galeria de Vídeos</button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+          <button type="button" class="vc-btn" onclick="copiarLinkVideoAtual()" title="Gera link direto apenas para este vídeo">🔗 Extrair Link deste Vídeo</button>
+          <button type="button" class="vc-btn primary" onclick="copiarLinkSequenciaAtual()" title="Gera link para toda a sequência deste assunto">📑 Extrair Link da Sequência (Assunto)</button>
+        </div>
+      </div>
+
+      <div class="player-layout">
+        <!-- Coluna Esquerda: Vídeo + Detalhes + Dúvidas -->
+        <div>
+          <div class="video-stage-box" id="player-stage"></div>
+
+          <div class="video-info-card">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
+              <div>
+                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 6px; flex-wrap: wrap;">
+                  <span id="player-assunto-badge" style="background: rgba(59,130,246,0.2); color: #60a5fa; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800;">Assunto</span>
+                  <span id="player-ordem-badge" style="background: #0f172a; color: #cbd5e1; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 700;">Aula #1</span>
+                  <span id="player-views-badge" style="color: var(--text-muted); font-size: 12px;">👁️ 0 visualizações</span>
+                </div>
+                <h2 id="player-titulo" style="margin: 0; font-size: 20px; color: #fff;">Título da Aula</h2>
+              </div>
+
+              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                <button type="button" class="vc-btn" id="btn-like-video" onclick="interagirVideoAtual('like')">👍 <span id="count-likes">0</span></button>
+                <button type="button" class="vc-btn" id="btn-concluir-video" onclick="interagirVideoAtual('concluir')">✅ Marcar Concluída</button>
+                <button type="button" class="vc-btn danger" id="btn-delete-video" style="display: none;" onclick="apagarVideoAtual()">🗑️ Excluir</button>
+              </div>
+            </div>
+
+            <p id="player-descricao" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.5; margin: 14px 0 0 0; white-space: pre-wrap;"></p>
+
+            <!-- Comentários e Dúvidas da Aula -->
+            <div style="margin-top: 22px; border-top: 1px solid var(--border); padding-top: 16px;">
+              <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #e2e8f0;">💬 Dúvidas e Comentários da Aula</h4>
+              <div style="display: flex; gap: 8px; margin-bottom: 16px;">
+                <input type="text" id="input-comentario-video" class="vc-input" style="margin-top: 0;" placeholder="Escreva uma dúvida ou anotação sobre esta aula..." onkeydown="if(event.key==='Enter') enviarComentarioVideo()">
+                <button type="button" class="vc-btn primary" onclick="enviarComentarioVideo()">Enviar</button>
+              </div>
+              <div id="lista-comentarios-video" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Coluna Direita: Sequência Completa do Assunto (Playlist) -->
+        <aside class="playlist-sidebar">
+          <div class="playlist-header">
+            <div>
+              <div style="font-size: 11px; color: #38bdf8; font-weight: 800; text-transform: uppercase;">📑 Sequência do Assunto</div>
+              <div id="playlist-sidebar-title" style="font-size: 14px; font-weight: 800; color: #fff; margin-top: 2px;">Módulo</div>
+            </div>
+            <button type="button" class="vc-btn" style="padding: 6px 10px; font-size: 11px;" onclick="copiarLinkSequenciaAtual()" title="Copiar link desta sequência">🔗 Link</button>
+          </div>
+          <div class="playlist-items" id="playlist-sidebar-items"></div>
+        </aside>
+      </div>
+    </section>
+
+    <!-- 2. CATÁLOGO DE VÍDEOS E SEQUÊNCIAS POR ASSUNTO -->
+    <section id="view-catalogo">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; flex-wrap: wrap; gap: 10px;">
+        <div>
+          <h3 style="margin: 0; font-size: 17px;">📂 Sequências por Assunto (Playlists)</h3>
+          <p style="margin: 3px 0 0 0; font-size: 12.5px; color: var(--text-muted);">Selecione um assunto para assistir à sequência completa ou extrair o link direto daquele tema.</p>
+        </div>
+        <button type="button" class="vc-btn primary" id="btn-copy-active-subject" style="display: none;" onclick="copiarLinkAssuntoSelecionado()">
+          📑 Copiar Link da Sequência Selecionada
+        </button>
+      </div>
+
+      <div class="vc-subjects-bar" id="bar-assuntos"></div>
+
+      <div id="catalogo-grid" class="videos-grid"></div>
+    </section>
+
+    <!-- 3. SALA AO VIVO (ESTILO MEET / TEAMS) + GRAVADOR AUTOMÁTICO -->
+    <section id="view-live">
+      <div class="live-grid">
+        <div class="meet-frame-box" id="meet-stage-container">
+          <div style="text-align: center; padding: 30px; max-width: 440px;">
+            <div style="font-size: 54px; margin-bottom: 12px;">📹</div>
+            <h3 style="margin: 0 0 8px 0; font-size: 20px;">Estúdio de Aula Ao Vivo (Meet & Gravação)</h3>
+            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
+              Inicie uma sala de videoconferência interativa com os alunos e use o <b>Gravador Integrado</b> para que a aula fique salva automaticamente no catálogo de vídeos!
+            </p>
+            <div id="live-waiting-msg" style="color: #f59e0b; font-size: 13px; font-weight: 700;">Nenhuma transmissão ao vivo aberta neste momento.</div>
+          </div>
+        </div>
+
+        <!-- Painel de Controlo Ao Vivo & Gravação -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
+          <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">🎛️ Controlo da Transmissão</h3>
+
+          <!-- Controlo exclusivo do Professor -->
+          <div id="prof-live-controls" style="display: none; flex-direction: column; gap: 10px;">
+            <div>
+              <label class="vc-label" style="margin-top: 0;">Título da Aula Ao Vivo:</label>
+              <input type="text" id="live-titulo-input" class="vc-input" placeholder="Ex: Live Class - Speaking & Grammar">
+            </div>
+            <div>
+              <label class="vc-label">Salvar Gravação no Assunto (Playlist):</label>
+              <input type="text" id="live-assunto-input" class="vc-input" list="datalist-assuntos" placeholder="Ex: Aulas Ao Vivo Gravadas" value="Aulas Ao Vivo Gravadas">
+            </div>
+            <div>
+              <label class="vc-label">Turma de Destino:</label>
+              <select id="live-destino-select" class="vc-select">
+                <option value="global">🌍 Todas as Turmas</option>
+              </select>
+            </div>
+
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+              <button type="button" class="vc-btn success" style="flex: 1; justify-content: center; padding: 12px;" id="btn-iniciar-live" onclick="iniciarSalaAoVivo()">
+                🔴 Abrir Sala Ao Vivo
+              </button>
+              <button type="button" class="vc-btn danger" style="flex: 1; justify-content: center; padding: 12px; display: none;" id="btn-encerrar-live" onclick="encerrarSalaAoVivo()">
+                ⏹️ Encerrar Sala
+              </button>
+            </div>
+
+            <div style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;">
+              <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">⏺️ GRAVADOR AUTOMÁTICO DE AULA</div>
+              <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.4;">
+                Grave o ecrã da sua aula (ou a sua câmara) com áudio. Ao parar, o vídeo será enviado e publicado automaticamente na sequência escolhida!
+              </p>
+              <button type="button" class="vc-btn primary" style="width: 100%; justify-content: center; padding: 11px;" id="btn-record-screen" onclick="alternarGravacaoAula('screen')">
+                🖥️ Gravar Ecrã + Voz da Aula
+              </button>
+              <button type="button" class="vc-btn" style="width: 100%; justify-content: center; padding: 11px; margin-top: 8px;" id="btn-record-camera" onclick="alternarGravacaoAula('camera')">
+                📷 Gravar Câmara + Voz
+              </button>
+              <div id="recording-status-box" style="display: none; margin-top: 10px; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; padding: 10px; border-radius: 10px; text-align: center;">
+                <div style="color: #fca5a5; font-weight: 800; font-size: 12.5px; margin-bottom: 6px;">🔴 GRAVANDO AULA: <span id="rec-timer">00:00</span></div>
+                <button type="button" class="vc-btn danger" style="width: 100%; justify-content: center;" onclick="pararGravacaoEPublicar()">⏹️ Parar e Publicar no Catálogo</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Visão do Aluno na Sala Ao Vivo -->
+          <div id="aluno-live-info" style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
+            Quando o professor iniciar uma transmissão ao vivo, a sala interativa abrirá automaticamente aqui ao lado. Todas as aulas gravadas ficam disponíveis na aba <b>📚 Catálogo & Assuntos</b>.
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- MODAL DE UPLOAD DE VÍDEO-AULA (PROFESSOR) -->
+  <div class="vc-modal" id="modal-upload">
+    <div class="vc-modal-card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+        <h3 style="margin: 0; font-size: 18px;">📤 Publicar Vídeo-Aula na Sequência</h3>
+        <button type="button" class="vc-btn" onclick="fecharModalUpload()">✕</button>
+      </div>
+
+      <label class="vc-label">Título da Vídeo-Aula *</label>
+      <input type="text" id="up-titulo" class="vc-input" placeholder="Ex: Aula 01 - Como usar Phrasal Verbs no dia a dia">
+
+      <div style="display: grid; grid-template-columns: 2fr 1fr; gap: 10px;">
+        <div>
+          <label class="vc-label">Assunto / Sequência (Playlist) *</label>
+          <input type="text" id="up-assunto" class="vc-input" list="datalist-assuntos" placeholder="Ex: Módulo 1 - Phrasal Verbs">
+          <datalist id="datalist-assuntos"></datalist>
+        </div>
+        <div>
+          <label class="vc-label">Ordem na Sequência</label>
+          <input type="number" id="up-ordem" class="vc-input" min="1" value="1">
+        </div>
+      </div>
+
+      <label class="vc-label">Turma de Destino</label>
+      <select id="up-destino" class="vc-select">
+        <option value="global">🌍 Todas as Turmas</option>
+      </select>
+
+      <label class="vc-label">Descrição / Material de Apoio</label>
+      <textarea id="up-descricao" class="vc-textarea" rows="3" placeholder="Resumo da aula, vocabulário ou instruções para os alunos..."></textarea>
+
+      <label class="vc-label">1. Selecionar Ficheiro de Vídeo do Computador/Telemóvel (MP4, WebM, MOV)</label>
+      <input type="file" id="up-file" accept="video/*" class="vc-input" style="padding: 8px;">
+
+      <label class="vc-label">OU 2. Colar Link Direto / YouTube (Opcional se enviar ficheiro acima)</label>
+      <input type="url" id="up-url-direta" class="vc-input" placeholder="https://...">
+
+      <!-- Barra de Progresso de Upload -->
+      <div id="up-progress-wrap" style="display: none; margin-top: 14px;">
+        <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 4px;">
+          <span id="up-progress-label">A enviar vídeo para a nuvem...</span>
+          <span id="up-progress-pct">0%</span>
+        </div>
+        <div style="width: 100%; height: 8px; background: #0f172a; border-radius: 99px; overflow: hidden;">
+          <div id="up-progress-bar" style="width: 0%; height: 100%; background: linear-gradient(90deg, #3b82f6, #10b981); transition: width 0.2s;"></div>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+        <button type="button" class="vc-btn" onclick="fecharModalUpload()">Cancelar</button>
+        <button type="button" class="vc-btn primary" id="btn-submit-video" onclick="salvarNovaVideoAula()">🚀 Publicar Vídeo-Aula</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="vc-toast"></div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const ROLE = (params.get('role') || 'aluno').toLowerCase();
+    const USER_ID = params.get('userId') || '';
+    const USER_NAME = params.get('userName') || 'Utilizador';
+    const ESCOLA_ID = params.get('escolaId') || 'DEFAULT';
+    const ALUNO_REF_ID = params.get('alunoRefId') || '';
+    const INITIAL_VIDEO_ID = params.get('video') || '';
+    const INITIAL_PLAYLIST = params.get('playlist') || '';
+
+    let catalogoVideos = [];
+    let catalogoSequencias = [];
+    let assuntoFiltroAtual = 'TODOS';
+    let videoAtualObj = null;
+    let sequenciaAtualLista = [];
+    let liveAtivaObj = null;
+
+    // Variáveis do Gravador Nativo de Live
+    let mediaRecorderLive = null;
+    let recordedChunksLive = [];
+    let streamGravacaoAtiva = null;
+    let recTimerInterval = null;
+    let recSeconds = 0;
+
+    function mostrarToast(msg, cor = '#10b981') {
+      const t = document.getElementById('vc-toast');
+      t.innerText = msg;
+      t.style.background = cor;
+      t.style.display = 'block';
+      setTimeout(() => { t.style.display = 'none'; }, 3500);
+    }
+
+    function esc(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[m]));
+    }
+
+    function formatarDuracao(seg) {
+      const s = Number(seg) || 0;
+      if (s <= 0) return 'Vídeo-Aula';
+      const m = Math.floor(s / 60);
+      const r = s % 60;
+      return `${m}:${String(r).padStart(2, '0')}`;
+    }
+
+    // 1. CARREGAR CATÁLOGO DO SERVIDOR
+    async function carregarCatalogo(abrirInicial = false) {
+      try {
+        const url = `/api/workspace/video-aulas/catalogo?escolaId=${encodeURIComponent(ESCOLA_ID)}&userId=${encodeURIComponent(USER_ID)}&alunoRefId=${encodeURIComponent(ALUNO_REF_ID)}&role=${encodeURIComponent(ROLE)}`;
+        const res = await fetch(url, { credentials: 'include' });
+        const data = await res.json();
+        if (!data || !data.success) return;
+
+        catalogoVideos = Array.isArray(data.videos) ? data.videos : [];
+        catalogoSequencias = Array.isArray(data.sequencias) ? data.sequencias : [];
+        liveAtivaObj = data.liveAtiva || null;
+
+        if (ROLE !== 'aluno') {
+          document.getElementById('btn-open-upload').style.display = 'inline-flex';
+          document.getElementById('prof-live-controls').style.display = 'flex';
+          popularSeletoresTurmas(data.turmas || []);
+        }
+
+        popularDatalistAssuntos();
+        atualizarBannerLive();
+        renderizarBarraAssuntos();
+        renderizarGrelhaCatalogo();
+
+        // Se abriu através de um Link Extraído de Vídeo ou de Sequência (Playlist)
+        if (abrirInicial) {
+          if (INITIAL_VIDEO_ID) {
+            const vEncontrado = catalogoVideos.find(v => v.id === INITIAL_VIDEO_ID);
+            if (vEncontrado) reproduzirVideo(vEncontrado.id);
+          } else if (INITIAL_PLAYLIST) {
+            const seq = catalogoSequencias.find(s => s.slug === INITIAL_PLAYLIST || s.assunto.toLowerCase() === INITIAL_PLAYLIST.toLowerCase());
+            if (seq && seq.videos.length > 0) {
+              assuntoFiltroAtual = seq.slug;
+              reproduzirVideo(seq.videos[0].id);
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Erro ao carregar catálogo:', e);
+      }
+    }
+
+    function popularSeletoresTurmas(turmas) {
+      const opcoes = `<option value="global">🌍 Todas as Turmas</option>` +
+        turmas.map(t => `<option value="${esc(t.id)}" data-nome="${esc(t.nome)}">🏫 ${esc(t.nome)}</option>`).join('');
+      document.getElementById('up-destino').innerHTML = opcoes;
+      document.getElementById('live-destino-select').innerHTML = opcoes;
+    }
+
+    function popularDatalistAssuntos() {
+      const dl = document.getElementById('datalist-assuntos');
+      dl.innerHTML = catalogoSequencias.map(s => `<option value="${esc(s.assunto)}">`).join('');
+    }
+
+    // 2. RENDERIZAR BARRA DE ASSUNTOS (PLAYLISTS) E GRELHA
+    function renderizarBarraAssuntos() {
+      const bar = document.getElementById('bar-assuntos');
+      const btnCopySeq = document.getElementById('btn-copy-active-subject');
+
+      let html = `
+        <button type="button" class="vc-subject-pill ${assuntoFiltroAtual === 'TODOS' ? 'active' : ''}" onclick="filtrarPorAssunto('TODOS')">
+          🎬 Todos os Vídeos (${catalogoVideos.length})
+        </button>
+      `;
+
+      catalogoSequencias.forEach(seq => {
+        const ativo = assuntoFiltroAtual === seq.slug ? 'active' : '';
+        html += `
+          <button type="button" class="vc-subject-pill ${ativo}" onclick="filtrarPorAssunto('${esc(seq.slug)}')">
+            📑 ${esc(seq.assunto)} <span style="opacity:0.75;">(${seq.totalVideos})</span>
+          </button>
+        `;
+      });
+
+      bar.innerHTML = html;
+      btnCopySeq.style.display = assuntoFiltroAtual !== 'TODOS' ? 'inline-flex' : 'none';
+    }
+
+    function filtrarPorAssunto(slug) {
+      assuntoFiltroAtual = slug;
+      renderizarBarraAssuntos();
+      renderizarGrelhaCatalogo();
+    }
+
+    function renderizarGrelhaCatalogo() {
+      const grid = document.getElementById('catalogo-grid');
+      const termo = (document.getElementById('input-search').value || '').trim().toLowerCase();
+
+      let lista = catalogoVideos;
+      if (assuntoFiltroAtual !== 'TODOS') {
+        lista = lista.filter(v => v.assuntoSlug === assuntoFiltroAtual);
+      }
+      if (termo) {
+        lista = lista.filter(v =>
+          String(v.titulo || '').toLowerCase().includes(termo) ||
+          String(v.assunto || '').toLowerCase().includes(termo) ||
+          String(v.descricao || '').toLowerCase().includes(termo)
+        );
+      }
+
+      if (lista.length === 0) {
+        grid.innerHTML = `
+          <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: var(--bg-card); border-radius: 16px; border: 1px dashed var(--border);">
+            <div style="font-size: 44px; margin-bottom: 10px;">🎬</div>
+            <h3 style="margin: 0 0 6px 0;">Nenhuma vídeo-aula encontrada</h3>
+            <p style="color: var(--text-muted); font-size: 13px; margin: 0;">${ROLE !== 'aluno' ? 'Clique em "📤 Enviar Vídeo-Aula" no topo para criar a primeira sequência!' : 'O professor ainda não publicou vídeos neste assunto.'}</p>
+          </div>
+        `;
+        return;
+      }
+
+      grid.innerHTML = lista.map(v => {
+        const concluido = Array.isArray(v.concluidosPor) && v.concluidosPor.includes(USER_ID);
+        const capaImg = v.miniatura
+          ? `<img src="${esc(v.miniatura)}" alt="Capa" onerror="this.style.display='none'">`
+          : '';
+        return `
+          <div class="video-card" onclick="reproduzirVideo('${esc(v.id)}')">
+            <div class="video-thumb">
+              ${capaImg}
+              <div class="thumb-badge-order">Aula #${v.ordem || 1}</div>
+              ${v.isGravacaoLive ? `<div class="thumb-badge-live">🔴 LIVE GRAVADA</div>` : ''}
+              <div class="thumb-play-icon">▶</div>
+            </div>
+            <div class="video-card-body">
+              <div>
+                <div style="display: flex; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 6px;">
+                  <span style="font-size: 11px; font-weight: 800; color: #38bdf8; text-transform: uppercase;">📑 ${esc(v.assunto)}</span>
+                  ${concluido ? `<span style="font-size: 11px; color: #10b981; font-weight: 800;">✅ Assistida</span>` : `<span style="font-size: 11px; color: var(--text-muted);">${formatarDuracao(v.duracaoSegundos)}</span>`}
+                </div>
+                <div style="font-weight: 800; font-size: 15px; color: #fff; line-height: 1.35; margin-bottom: 6px;">${esc(v.titulo)}</div>
+                <div style="font-size: 12px; color: var(--text-muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                  ${esc(v.descricao || 'Clique para assistir à aula e ver a sequência.')}
+                </div>
+              </div>
+              <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.06); font-size: 11.5px; color: var(--text-muted);">
+                <span>👨‍🏫 ${esc(v.autorNome || 'Professor')}</span>
+                <button type="button" class="vc-btn" style="padding: 4px 9px; font-size: 11px;" onclick="event.stopPropagation(); copiarLinkDireto('video', '${esc(v.id)}')">🔗 Link</button>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    document.getElementById('input-search').addEventListener('input', renderizarGrelhaCatalogo);
+
+    // 3. REPRODUTOR COM SEQUÊNCIA AUTOMÁTICA (PLAYLIST)
+    function reproduzirVideo(videoId) {
+      const video = catalogoVideos.find(v => v.id === videoId);
+      if (!video) return;
+
+      videoAtualObj = video;
+      const seqObj = catalogoSequencias.find(s => s.slug === video.assuntoSlug);
+      sequenciaAtualLista = seqObj ? seqObj.videos : [video];
+
+      document.getElementById('view-catalogo').style.display = 'none';
+      document.getElementById('view-live').style.display = 'none';
+      document.getElementById('view-player').style.display = 'block';
+
+      const stage = document.getElementById('player-stage');
+      const url = video.urlVideo || '';
+
+      // Suporta tanto vídeos enviados para a nuvem (.mp4/.webm) quanto links do YouTube
+      if (url.includes('youtube.com/watch?v=') || url.includes('youtu.be/')) {
+        let embed = url.replace('watch?v=', 'embed/').replace('youtu.be/', 'www.youtube.com/embed/');
+        if (embed.includes('&')) embed = embed.split('&')[0];
+        stage.innerHTML = `<iframe src="${esc(embed)}?autoplay=1&rel=0" allow="autoplay; encrypted-media; fullscreen" allowfullscreen></iframe>`;
+      } else {
+        stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls autoplay playsinline></video>`;
+        const vidEl = document.getElementById('active-html5-video');
+        vidEl.onended = () => {
+          // Avança automaticamente para o próximo vídeo da sequência!
+          const idxAtual = sequenciaAtualLista.findIndex(x => x.id === video.id);
+          if (idxAtual !== -1 && idxAtual + 1 < sequenciaAtualLista.length) {
+            mostrarToast('⏭️ A iniciar próxima aula da sequência...');
+            setTimeout(() => reproduzirVideo(sequenciaAtualLista[idxAtual + 1].id), 1200);
+          }
+        };
+      }
+
+      document.getElementById('player-assunto-badge').innerText = `📑 ${video.assunto}`;
+      document.getElementById('player-ordem-badge').innerText = `Aula #${video.ordem || 1} de ${sequenciaAtualLista.length}`;
+      document.getElementById('player-views-badge').innerText = `👁️ ${(video.visualizacoes || 0) + 1} visualizações`;
+      document.getElementById('player-titulo').innerText = video.titulo;
+      document.getElementById('player-descricao').innerText = video.descricao || 'Sem descrição adicional.';
+
+      atualizarBotoesInteracaoPlayer();
+      renderizarComentariosPlayer();
+      renderizarFilaSequenciaSidebar();
+
+      if (ROLE !== 'aluno') {
+        document.getElementById('btn-delete-video').style.display = 'inline-flex';
+      }
+
+      // Regista visualização silenciosamente
+      fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(video.id)}/interagir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+        body: JSON.stringify({ acao: 'view', userId: USER_ID })
+      }).catch(() => {});
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function renderizarFilaSequenciaSidebar() {
+      if (!videoAtualObj) return;
+      document.getElementById('playlist-sidebar-title').innerText = `${videoAtualObj.assunto} (${sequenciaAtualLista.length} aulas)`;
+      const container = document.getElementById('playlist-sidebar-items');
+
+      container.innerHTML = sequenciaAtualLista.map((v, idx) => {
+        const tocando = v.id === videoAtualObj.id;
+        const concluido = Array.isArray(v.concluidosPor) && v.concluidosPor.includes(USER_ID);
+        return `
+          <div class="playlist-item ${tocando ? 'playing' : ''}" onclick="reproduzirVideo('${esc(v.id)}')">
+            <div class="pl-num">${tocando ? '▶' : (idx + 1)}</div>
+            <div style="flex: 1; min-width: 0;">
+              <div style="font-size: 13px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                ${esc(v.titulo)}
+              </div>
+              <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px;">
+                Aula #${v.ordem || (idx + 1)} ${concluido ? '• <span style="color:#10b981;">✅ Concluída</span>' : ''}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    function fecharPlayerVoltarCatalogo() {
+      const stage = document.getElementById('player-stage');
+      if (stage) stage.innerHTML = '';
+      videoAtualObj = null;
+      document.getElementById('view-player').style.display = 'none';
+      document.getElementById('view-catalogo').style.display = 'block';
+      carregarCatalogo(false);
+    }
+
+    // 4. EXTRAÇÃO DE LINKS DIRETOS (PARA VÍDEO INDIVIDUAL OU SEQUÊNCIA DE ASSUNTO)
+    function copiarLinkDireto(tipo, valor) {
+      const baseOrigin = window.top ? window.top.location.origin + window.top.location.pathname : window.location.origin + '/workspace.html';
+      const hash = tipo === 'video' ? `#video-aula-${valor}` : `#playlist-${valor}`;
+      const linkCompleto = `${baseOrigin}${hash}`;
+
+      navigator.clipboard.writeText(linkCompleto).then(() => {
+        mostrarToast(tipo === 'video'
+          ? '🔗 Link direto da Vídeo-Aula copiado!'
+          : '📑 Link da Sequência Completa copiado!');
+      }).catch(() => {
+        prompt('Copie o link direto abaixo:', linkCompleto);
+      });
+    }
+
+    function copiarLinkVideoAtual() {
+      if (!videoAtualObj) return;
+      copiarLinkDireto('video', videoAtualObj.id);
+    }
+
+    function copiarLinkSequenciaAtual() {
+      if (!videoAtualObj) return;
+      copiarLinkDireto('playlist', videoAtualObj.assuntoSlug);
+    }
+
+    function copiarLinkAssuntoSelecionado() {
+      if (assuntoFiltroAtual === 'TODOS') return;
+      copiarLinkDireto('playlist', assuntoFiltroAtual);
+    }
+
+    // 5. LIKES, CONCLUSÃO E COMENTÁRIOS
+    function atualizarBotoesInteracaoPlayer() {
+      if (!videoAtualObj) return;
+      const likes = Array.isArray(videoAtualObj.likes) ? videoAtualObj.likes : [];
+      const concluidos = Array.isArray(videoAtualObj.concluidosPor) ? videoAtualObj.concluidosPor : [];
+
+      document.getElementById('count-likes').innerText = likes.length;
+      const btnLike = document.getElementById('btn-like-video');
+      btnLike.classList.toggle('primary', likes.includes(USER_ID));
+
+      const btnConc = document.getElementById('btn-concluir-video');
+      const jaConcluiu = concluidos.includes(USER_ID);
+      btnConc.classList.toggle('success', jaConcluiu);
+      btnConc.innerText = jaConcluiu ? '✅ Aula Concluída' : '☑️ Marcar Concluída';
+    }
+
+    async function interagirVideoAtual(acao) {
+      if (!videoAtualObj) return;
+      try {
+        const res = await fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(videoAtualObj.id)}/interagir`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ acao, userId: USER_ID, autorNome: USER_NAME })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          if (data.likes) videoAtualObj.likes = data.likes;
+          if (data.concluidosPor) videoAtualObj.concluidosPor = data.concluidosPor;
+          atualizarBotoesInteracaoPlayer();
+          renderizarFilaSequenciaSidebar();
+        }
+      } catch (e) {}
+    }
+
+    function renderizarComentariosPlayer() {
+      const box = document.getElementById('lista-comentarios-video');
+      const coms = (videoAtualObj && Array.isArray(videoAtualObj.comentarios)) ? videoAtualObj.comentarios : [];
+      if (coms.length === 0) {
+        box.innerHTML = `<div style="color: var(--text-muted); font-size: 12.5px;">Nenhuma dúvida publicada ainda nesta aula.</div>`;
+        return;
+      }
+      box.innerHTML = coms.slice().reverse().map(c => `
+        <div style="background: rgba(15,23,42,0.55); border: 1px solid var(--border); padding: 10px 14px; border-radius: 10px;">
+          <div style="display: flex; justify-content: space-between; font-size: 11.5px; color: #38bdf8; font-weight: 700; margin-bottom: 4px;">
+            <span>👤 ${esc(c.autorNome)}</span>
+            <span style="color: var(--text-muted);">${new Date(c.data).toLocaleDateString('pt-BR')}</span>
+          </div>
+          <div style="font-size: 13px; color: #f1f5f9;">${esc(c.texto)}</div>
+        </div>
+      `).join('');
+    }
+
+    async function enviarComentarioVideo() {
+      if (!videoAtualObj) return;
+      const inp = document.getElementById('input-comentario-video');
+      const txt = inp.value.trim();
+      if (!txt) return;
+      inp.value = '';
+
+      try {
+        const res = await fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(videoAtualObj.id)}/interagir`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ acao: 'comentar', userId: USER_ID, autorNome: USER_NAME, textoComentario: txt })
+        });
+        const data = await res.json();
+        if (data && data.success && data.comentario) {
+          videoAtualObj.comentarios = videoAtualObj.comentarios || [];
+          videoAtualObj.comentarios.push(data.comentario);
+          renderizarComentariosPlayer();
+        }
+      } catch (e) {}
+    }
+
+    async function apagarVideoAtual() {
+      if (!videoAtualObj || !confirm(`Deseja excluir permanentemente a vídeo-aula "${videoAtualObj.titulo}"?`)) return;
+      try {
+        const res = await fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(videoAtualObj.id)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          mostrarToast('🗑️ Vídeo-aula removida!');
+          fecharPlayerVoltarCatalogo();
+        }
+      } catch (e) {}
+    }
+
+    // 6. UPLOAD DE NOVA VÍDEO-AULA COM BARRA DE PROGRESSO REAL
+    function abrirModalUpload() {
+      document.getElementById('modal-upload').style.display = 'flex';
+      if (assuntoFiltroAtual !== 'TODOS') {
+        const seq = catalogoSequencias.find(s => s.slug === assuntoFiltroAtual);
+        if (seq) {
+          document.getElementById('up-assunto').value = seq.assunto;
+          document.getElementById('up-ordem').value = seq.totalVideos + 1;
+        }
+      }
+    }
+
+    function fecharModalUpload() {
+      document.getElementById('modal-upload').style.display = 'none';
+    }
+
+    async function fazerUploadFicheiroVideo(file, onProgress) {
+      return new Promise((resolve, reject) => {
+        const formData = new FormData();
+        formData.append('video', file);
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/api/workspace/video-aulas/upload-video', true);
+        xhr.withCredentials = true;
+
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable && onProgress) {
+            const pct = Math.round((e.loaded / e.total) * 100);
+            onProgress(pct);
+          }
+        };
+
+        xhr.onload = () => {
+          try {
+            const resp = JSON.parse(xhr.responseText || '{}');
+            if (xhr.status >= 200 && xhr.status < 300 && resp.success) resolve(resp);
+            else reject(new Error(resp.error || 'Falha no upload do vídeo.'));
+          } catch (err) {
+            reject(new Error('Erro ao processar resposta do servidor.'));
+          }
+        };
+        xhr.onerror = () => reject(new Error('Falha de rede durante o envio do vídeo.'));
+        xhr.send(formData);
+      });
+    }
+
+    async function salvarNovaVideoAula() {
+      const titulo = document.getElementById('up-titulo').value.trim();
+      const assunto = document.getElementById('up-assunto').value.trim() || 'Aulas Gerais';
+      const ordem = parseInt(document.getElementById('up-ordem').value, 10) || 1;
+      const selDestino = document.getElementById('up-destino');
+      const destino = selDestino.value || 'global';
+      const destinoNome = selDestino.options[selDestino.selectedIndex]?.getAttribute('data-nome') || 'Todas as Turmas';
+      const descricao = document.getElementById('up-descricao').value.trim();
+      const fileInput = document.getElementById('up-file');
+      let urlVideo = document.getElementById('up-url-direta').value.trim();
+
+      if (!titulo) return mostrarToast('⚠️ Digite o título da vídeo-aula!', '#f59e0b');
+      if (!fileInput.files[0] && !urlVideo) {
+        return mostrarToast('⚠️ Selecione um ficheiro de vídeo ou cole um link!', '#f59e0b');
+      }
+
+      const btn = document.getElementById('btn-submit-video');
+      btn.disabled = true;
+
+      let miniatura = null;
+      let duracaoSegundos = 0;
+
+      try {
+        if (fileInput.files[0]) {
+          const wrap = document.getElementById('up-progress-wrap');
+          const bar = document.getElementById('up-progress-bar');
+          const pctTxt = document.getElementById('up-progress-pct');
+          wrap.style.display = 'block';
+
+          const upRes = await fazerUploadFicheiroVideo(fileInput.files[0], (pct) => {
+            bar.style.width = pct + '%';
+            pctTxt.innerText = pct + '%';
+          });
+          urlVideo = upRes.url;
+          miniatura = upRes.miniatura;
+          duracaoSegundos = upRes.duracaoSegundos || 0;
+        }
+
+        const res = await fetch('/api/workspace/video-aulas/videos', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            escolaId: ESCOLA_ID,
+            titulo, assunto, ordem, descricao,
+            urlVideo, miniatura, duracaoSegundos,
+            destino, destinoNome,
+            autorId: USER_ID, autorNome: USER_NAME
+          })
+        });
+        const data = await res.json();
+        if (!data || !data.success) throw new Error(data?.error || 'Erro ao publicar aula.');
+
+        mostrarToast('🎉 Vídeo-aula publicada com sucesso na sequência!');
+        document.getElementById('up-titulo').value = '';
+        document.getElementById('up-descricao').value = '';
+        document.getElementById('up-file').value = '';
+        document.getElementById('up-url-direta').value = '';
+        document.getElementById('up-progress-wrap').style.display = 'none';
+        fecharModalUpload();
+        await carregarCatalogo(false);
+      } catch (err) {
+        mostrarToast(err.message || 'Erro ao publicar vídeo.', '#ef4444');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    // 7. SALA AO VIVO (MEET EMBUTIDO + GRAVADOR NATIVO QUE SALVA NO CATÁLOGO)
+    function atualizarBannerLive() {
+      const banner = document.getElementById('live-banner');
+      const btnIniciar = document.getElementById('btn-iniciar-live');
+      const btnEncerrar = document.getElementById('btn-encerrar-live');
+
+      if (liveAtivaObj && liveAtivaObj.ativa) {
+        banner.style.display = 'flex';
+        document.getElementById('live-banner-text').innerText = `🔴 AO VIVO: "${liveAtivaObj.titulo}" com ${liveAtivaObj.professorNome}`;
+        if (btnIniciar) btnIniciar.style.display = 'none';
+        if (btnEncerrar) btnEncerrar.style.display = 'inline-flex';
+        montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
+      } else {
+        banner.style.display = 'none';
+        if (btnIniciar) btnIniciar.style.display = 'inline-flex';
+        if (btnEncerrar) btnEncerrar.style.display = 'none';
+      }
+    }
+
+    function montarPalcoMeetAoVivo(codigoSala, tituloLive) {
+      const stage = document.getElementById('meet-stage-container');
+      if (!codigoSala || stage.dataset.salaMontada === codigoSala) return;
+      stage.dataset.salaMontada = codigoSala;
+
+      const urlMeet = `https://meet.jit.si/${encodeURIComponent(codigoSala)}#userInfo.displayName="${encodeURIComponent(USER_NAME)}"&config.prejoinPageEnabled=false`;
+      stage.innerHTML = `
+        <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; height:100%; border:none;"></iframe>
+      `;
+    }
+
+    async function iniciarSalaAoVivo() {
+      const titulo = document.getElementById('live-titulo-input').value.trim() || `Aula Ao Vivo - ${new Date().toLocaleDateString('pt-BR')}`;
+      const assunto = document.getElementById('live-assunto-input').value.trim() || 'Aulas Ao Vivo Gravadas';
+      const sel = document.getElementById('live-destino-select');
+      const destino = sel.value || 'global';
+      const destinoNome = sel.options[sel.selectedIndex]?.getAttribute('data-nome') || 'Todas as Turmas';
+
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/iniciar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            escolaId: ESCOLA_ID,
+            titulo, assunto, destino, destinoNome,
+            professorNome: USER_NAME
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          liveAtivaObj = data.live;
+          atualizarBannerLive();
+          mostrarToast('🔴 Sala Ao Vivo iniciada! Os alunos já podem entrar.');
+        }
+      } catch (e) {
+        mostrarToast('Erro ao iniciar sala ao vivo.', '#ef4444');
+      }
+    }
+
+    async function encerrarSalaAoVivo() {
+      try {
+        await fetch('/api/workspace/video-aulas/live/encerrar', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({ liveId: liveAtivaObj?.id, escolaId: ESCOLA_ID })
+        });
+        liveAtivaObj = null;
+        const stage = document.getElementById('meet-stage-container');
+        stage.dataset.salaMontada = '';
+        stage.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px;">Transmissão encerrada.</div>`;
+        atualizarBannerLive();
+        mostrarToast('⏹️ Transmissão ao vivo encerrada.');
+      } catch (e) {}
+    }
+
+    // ⏺️ GRAVADOR AUTOMÁTICO DE AULA (ECRÃ OU CÂMARA -> CATÁLOGO)
+    async function alternarGravacaoAula(modo) {
+      if (mediaRecorderLive && mediaRecorderLive.state === 'recording') {
+        pararGravacaoEPublicar();
+        return;
+      }
+
+      try {
+        let streamFinal = null;
+        if (modo === 'screen') {
+          const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+          let micStream = null;
+          try { micStream = await navigator.mediaDevices.getUserMedia({ audio: true }); } catch (e) {}
+          const tracks = [...displayStream.getVideoTracks()];
+          if (micStream && micStream.getAudioTracks().length > 0) {
+            tracks.push(micStream.getAudioTracks()[0]);
+          } else if (displayStream.getAudioTracks().length > 0) {
+            tracks.push(displayStream.getAudioTracks()[0]);
+          }
+          streamFinal = new MediaStream(tracks);
+        } else {
+          streamFinal = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        }
+
+        streamGravacaoAtiva = streamFinal;
+        recordedChunksLive = [];
+        const mime = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+          ? 'video/webm;codecs=vp9,opus'
+          : 'video/webm';
+
+        mediaRecorderLive = new MediaRecorder(streamFinal, { mimeType: mime });
+        mediaRecorderLive.ondataavailable = (ev) => {
+          if (ev.data && ev.data.size > 0) recordedChunksLive.push(ev.data);
+        };
+
+        mediaRecorderLive.onstop = async () => {
+          clearInterval(recTimerInterval);
+          document.getElementById('recording-status-box').style.display = 'none';
+          if (streamGravacaoAtiva) {
+            streamGravacaoAtiva.getTracks().forEach(t => t.stop());
+            streamGravacaoAtiva = null;
+          }
+
+          if (recordedChunksLive.length === 0) return;
+          mostrarToast('⏳ A processar e publicar a gravação da aula no catálogo...', '#3b82f6');
+
+          const blob = new Blob(recordedChunksLive, { type: 'video/webm' });
+          const fileGravado = new File([blob], `live_aula_${Date.now()}.webm`, { type: 'video/webm' });
+
+          try {
+            const upRes = await fazerUploadFicheiroVideo(fileGravado, null);
+            const tituloGravacao = document.getElementById('live-titulo-input').value.trim() || `Gravação de Aula Ao Vivo (${new Date().toLocaleDateString('pt-BR')})`;
+            const assuntoGravacao = document.getElementById('live-assunto-input').value.trim() || 'Aulas Ao Vivo Gravadas';
+            const sel = document.getElementById('live-destino-select');
+            const destino = sel.value || 'global';
+            const destinoNome = sel.options[sel.selectedIndex]?.getAttribute('data-nome') || 'Todas as Turmas';
+
+            await fetch('/api/workspace/video-aulas/videos', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                escolaId: ESCOLA_ID,
+                titulo: `🔴 ${tituloGravacao}`,
+                assunto: assuntoGravacao,
+                descricao: 'Aula ao vivo gravada e disponibilizada automaticamente na plataforma.',
+                urlVideo: upRes.url,
+                miniatura: upRes.miniatura,
+                duracaoSegundos: upRes.duracaoSegundos || recSeconds,
+                destino, destinoNome,
+                autorId: USER_ID, autorNome: USER_NAME,
+                isGravacaoLive: true
+              })
+            });
+
+            mostrarToast('🎉 Gravação da Live publicada automaticamente no Catálogo!');
+            await carregarCatalogo(false);
+          } catch (errUp) {
+            mostrarToast('Erro ao salvar gravação na nuvem.', '#ef4444');
+          }
+        };
+
+        mediaRecorderLive.start(1000);
+        recSeconds = 0;
+        document.getElementById('recording-status-box').style.display = 'block';
+        recTimerInterval = setInterval(() => {
+          recSeconds++;
+          const m = String(Math.floor(recSeconds / 60)).padStart(2, '0');
+          const s = String(recSeconds % 60).padStart(2, '0');
+          document.getElementById('rec-timer').innerText = `${m}:${s}`;
+        }, 1000);
+
+        mostrarToast('🔴 Gravação iniciada! Quando terminar, clique em "Parar e Publicar".');
+      } catch (err) {
+        mostrarToast('Permissão de gravação cancelada.', '#f59e0b');
+      }
+    }
+
+    function pararGravacaoEPublicar() {
+      if (mediaRecorderLive && mediaRecorderLive.state === 'recording') {
+        mediaRecorderLive.stop();
+      }
+    }
+
+    function alternarAba(aba) {
+      document.getElementById('btn-tab-catalogo').classList.toggle('active', aba === 'catalogo');
+      document.getElementById('btn-tab-live').classList.toggle('active', aba === 'live');
+      document.getElementById('view-player').style.display = 'none';
+      document.getElementById('view-catalogo').style.display = aba === 'catalogo' ? 'block' : 'none';
+      document.getElementById('view-live').style.display = aba === 'live' ? 'block' : 'none';
+    }
+
+    // Escuta eventos em tempo real do servidor (SSE)
+    try {
+      const sse = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(ESCOLA_ID)}`);
+      sse.onmessage = (ev) => {
+        try {
+          const data = JSON.parse(ev.data);
+          if (data.type === 'VIDEO_LIVE_STATUS') {
+            liveAtivaObj = data.ativa ? data.live : null;
+            atualizarBannerLive();
+          } else if (data.type === 'VIDEO_AULA_NOVA') {
+            carregarCatalogo(false);
+          }
+        } catch (e) {}
+      };
+    } catch (e) {}
+
+    carregarCatalogo(true);
+  </script>
+</body>
+</html>
