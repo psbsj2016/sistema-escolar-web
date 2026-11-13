@@ -38,7 +38,7 @@ Object.assign(App, {
     usuario: null, entidadeAtual: null, idEdicao: null, idEdicaoUsuario: null, listaCache: [], 
     
     // =========================================================
-    // 📝 AUTO-RASCUNHO PARA FORMULÁRIOS (Prevenção de Perda de Dados)
+    // 📝 AUTO-RASCUNHO SILENCIOSO PARA MODAIS (Sem travar digitação nem exibir avisos)
     // =========================================================
     salvarRascunhoModal: () => {
         const container = document.getElementById('modal-form-content');
@@ -48,13 +48,19 @@ Object.assign(App, {
         let rascunho = {};
         
         inputs.forEach(inp => {
-            // Só guarda se o campo tiver ID e NÃO for uma password
-            if (inp.id && inp.type !== 'password') {
-                rascunho[inp.id] = inp.type === 'checkbox' ? inp.checked : inp.value;
+            if (inp.id && !['password', 'search', 'file', 'button', 'hidden'].includes(inp.type)) {
+                const val = inp.type === 'checkbox' ? inp.checked : inp.value;
+                if (val !== '' && val !== false) {
+                    rascunho[inp.id] = val;
+                }
             }
         });
         
-        sessionStorage.setItem('ws_rascunho_modal', JSON.stringify(rascunho));
+        if (Object.keys(rascunho).length > 0) {
+            sessionStorage.setItem('ws_rascunho_modal', JSON.stringify(rascunho));
+        } else {
+            sessionStorage.removeItem('ws_rascunho_modal');
+        }
     },
 
     restaurarRascunhoModal: () => {
@@ -62,52 +68,30 @@ Object.assign(App, {
         if (!rascunhoStr) return;
 
         try {
-            const rascunho = JSON.parse(rascunhoStr);
             const container = document.getElementById('modal-form-content');
-            if (!container) return;
+            // Só restaura uma única vez quando o formulário acaba de abrir
+            if (!container || container.dataset.rascunhoAplicado === 'true') return;
 
-            let restaurouAlgo = false;
+            const rascunho = JSON.parse(rascunhoStr);
             for (const [id, valor] of Object.entries(rascunho)) {
                 const inp = container.querySelector(`#${id}`);
-                if (inp) {
+                if (inp && document.activeElement !== inp) {
                     if (inp.type === 'checkbox') inp.checked = valor;
-                    else inp.value = valor;
-                    restaurouAlgo = true;
+                    else if (inp.value === '') inp.value = valor;
                 }
             }
-            
-            // Mostra um aviso elegante para o utilizador saber que foi salvo!
-            if (restaurouAlgo && !App._rascunhoAvisado) {
-                App.showToast("Rascunho recuperado automaticamente! 📝", "info");
-                App._rascunhoAvisado = true; 
-                setTimeout(() => { App._rascunhoAvisado = false; }, 3500);
-            }
-        } catch (e) { console.warn("Erro ao ler rascunho."); }
+            container.dataset.rascunhoAplicado = 'true';
+        } catch (e) {}
     },
 
     iniciarRastreadorRascunho: () => {
-        // 1. Grava os dados sempre que o utilizador digita algo no Modal
-        document.addEventListener('input', (e) => {
+        // Atualiza ou remove do rascunho silenciosamente quando o utilizador sai de um campo do modal
+        document.addEventListener('change', (e) => {
             const container = document.getElementById('modal-form-content');
             if (container && container.contains(e.target)) {
                 App.salvarRascunhoModal();
             }
         });
-
-        // 2. O Detetive: Fica a vigiar quando o formulário é injetado no HTML
-        const container = document.getElementById('modal-form-content');
-        if (container) {
-            const observer = new MutationObserver((mutations) => {
-                mutations.forEach((mutation) => {
-                    // Se novos elementos (inputs) foram desenhados na tela, tenta restaurar!
-                    if (mutation.addedNodes && mutation.addedNodes.length > 0) {
-                        App.restaurarRascunhoModal();
-                    }
-                });
-            });
-            // Liga o detetive a observar alterações dentro da caixa do modal
-            observer.observe(container, { childList: true, subtree: true });
-        }
     },
 
     // =========================================================

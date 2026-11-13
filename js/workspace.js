@@ -117,46 +117,105 @@ Object.assign(Workspace, {
         localStorage.setItem('ws_estado_profundo', JSON.stringify(estado));
     },
 
-    Rascunho: {
-        salvar: () => {
-            // Capta inputs, textareas e as caixas de Texto Rico (como o editor de Notas do Baú)
-            const inputs = document.querySelectorAll('input:not([type="password"]), textarea, [contenteditable="true"]');
-            let rascunho = {};
-            inputs.forEach(el => {
-                if (el.id && el.offsetParent !== null) { // Só guarda os que estão visíveis
-                    if (el.isContentEditable) rascunho[el.id] = { tipo: 'html', valor: el.innerHTML };
-                    else if (el.type === 'checkbox') rascunho[el.id] = { tipo: 'check', valor: el.checked };
-                    else rascunho[el.id] = { tipo: 'text', valor: el.value };
-                }
-            });
-            sessionStorage.setItem('ws_rascunho_global', JSON.stringify(rascunho));
+   Rascunho: {
+        // 🔍 Filtra apenas caixas de criação de conteúdo real (ignora pesquisas, chats, filtros e senhas)
+        ehCampoValido: (el) => {
+            if (!el || !el.id || el.offsetParent === null) return false;
+            const tipo = (el.type || '').toLowerCase();
+            if (['password', 'search', 'file', 'checkbox', 'radio', 'hidden', 'button', 'submit'].includes(tipo)) return false;
+
+            const idLower = String(el.id).toLowerCase();
+            const placeLower = String(el.getAttribute('placeholder') || '').toLowerCase();
+            const termosIgnorados = ['busca', 'search', 'pesquis', 'filtro', 'spotlight', 'login', 'senha', 'convite', 'fala', 'chat', 'comentario'];
+            if (termosIgnorados.some(t => idLower.includes(t) || placeLower.includes(t))) return false;
+
+            return true;
         },
-        restaurar: () => {
+
+        // 💾 Guarda apenas os textos que ficaram por terminar quando o utilizador sai da tela
+        salvarAoSair: () => {
+            try {
+                const inputs = document.querySelectorAll('textarea, [contenteditable="true"], input[type="text"]');
+                let rascunho = JSON.parse(sessionStorage.getItem('ws_rascunho_global') || '{}');
+
+                inputs.forEach(el => {
+                    if (!Workspace.Rascunho.ehCampoValido(el)) return;
+                    const valorAtual = el.isContentEditable ? el.innerHTML.trim() : el.value.trim();
+
+                    // Se o campo tiver texto escrito, guarda; se estiver vazio, apaga da memória!
+                    if (valorAtual && valorAtual !== '<br>') {
+                        rascunho[el.id] = {
+                            tipo: el.isContentEditable ? 'html' : 'text',
+                            valor: el.isContentEditable ? el.innerHTML : el.value
+                        };
+                    } else {
+                        delete rascunho[el.id];
+                    }
+                });
+
+                sessionStorage.setItem('ws_rascunho_global', JSON.stringify(rascunho));
+            } catch (e) {}
+        },
+
+        // 🔄 Restaura uma única vez em silêncio ao entrar na tela e consome o rascunho para não prender o campo
+        restaurarAoEntrar: () => {
             const salvo = sessionStorage.getItem('ws_rascunho_global');
             if (!salvo) return;
             try {
                 const rascunho = JSON.parse(salvo);
-                let restaurouAlgo = false;
+                let alterouMemoria = false;
+
                 for (const [id, dados] of Object.entries(rascunho)) {
                     const el = document.getElementById(id);
-                    if (el && dados.valor) {
-                        // Injeta apenas se o campo estiver vazio, para não apagar o que o aluno já começou a escrever pós-F5
-                        if (dados.tipo === 'html' && (el.innerHTML.trim() === '' || el.innerHTML === '<br>')) { el.innerHTML = dados.valor; restaurouAlgo = true; }
-                        else if (dados.tipo === 'check' && el.checked !== dados.valor) { el.checked = dados.valor; restaurouAlgo = true; }
-                        else if (dados.tipo === 'text' && el.value === '') { el.value = dados.valor; restaurouAlgo = true; }
+                    if (!el || !Workspace.Rascunho.ehCampoValido(el)) continue;
+                    // Nunca interfere se o utilizador já estiver com o cursor dentro do campo
+                    if (document.activeElement === el) continue;
+
+                    if (dados && dados.valor) {
+                        if (dados.tipo === 'html' && (el.innerHTML.trim() === '' || el.innerHTML === '<br>')) {
+                            el.innerHTML = dados.valor;
+                        } else if (dados.tipo === 'text' && el.value.trim() === '') {
+                            el.value = dados.valor;
+                        }
+                        // Remove da memória após devolver ao campo: se o utilizador apagar a palavra agora, ela não volta mais!
+                        delete rascunho[id];
+                        alterouMemoria = true;
                     }
                 }
-                if (restaurouAlgo && !Workspace._avisoRascunhoMostrado) {
-                    Workspace.mostrarAviso("Rascunho recuperado automaticamente! 📝", "info");
-                    Workspace._avisoRascunhoMostrado = true;
-                    setTimeout(() => { Workspace._avisoRascunhoMostrado = false; }, 4000);
+
+                if (alterouMemoria) {
+                    sessionStorage.setItem('ws_rascunho_global', JSON.stringify(rascunho));
                 }
-            } catch(e) {}
+            } catch (e) {}
         },
+
         init: () => {
-            document.addEventListener('input', Workspace.Rascunho.salvar);
-            const observer = new MutationObserver(() => Workspace.Rascunho.restaurar());
-            observer.observe(document.body, { childList: true, subtree: true });
+            // Se o utilizador apagar o texto todo enquanto digita, limpa imediatamente esse campo do rascunho
+            document.addEventListener('input', (e) => {
+                const el = e.target;
+                if (!el || !el.id) return;
+                const val = el.isContentEditable ? el.innerHTML.trim() : (el.value || '').trim();
+                if (!val || val === '<br>') {
+                    try {
+                        const rascunho = JSON.parse(sessionStorage.getItem('ws_rascunho_global') || '{}');
+                        if (rascunho[el.id]) {
+                            delete rascunho[el.id];
+                            sessionStorage.setItem('ws_rascunho_global', JSON.stringify(rascunho));
+                        }
+                    } catch (err) {}
+                }
+            });
+
+            // Guarda automaticamente apenas se o utilizador fechar/recarregar a página ou minimizar a aba
+            window.addEventListener('beforeunload', Workspace.Rascunho.salvarAoSair);
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'hidden') {
+                    Workspace.Rascunho.salvarAoSair();
+                }
+            });
+
+            // Restaura uma única vez no carregamento inicial (sem pop-ups)
+            setTimeout(Workspace.Rascunho.restaurarAoEntrar, 500);
         }
     },
 
@@ -556,6 +615,10 @@ Object.assign(Workspace, {
     // 🗺️ O NOVO ROTEADOR INTELIGENTE (Velocidade da Luz & Anti-Amnésia)
     // ============================================================================
     navegarPara: async (tela, registarNoHistorico = true, isInitialLoad = false) => {
+    // 💾 Guarda eventual texto inacabado antes de mudar de ecrã
+        if (!isInitialLoad && Workspace.Rascunho && typeof Workspace.Rascunho.salvarAoSair === 'function') {
+            Workspace.Rascunho.salvarAoSair();
+        }
         
         // 🚀 Salva o ecrã atual na memória global para resistir ao F5
         if (!isInitialLoad && tela !== 'perfil') {
@@ -696,7 +759,10 @@ Object.assign(Workspace, {
             ecraAtivo.style.animation = 'fadeIn 0.2s ease-out';
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
-
+        
+        if (Workspace.Rascunho && typeof Workspace.Rascunho.restaurarAoEntrar === 'function') {
+            setTimeout(Workspace.Rascunho.restaurarAoEntrar, 120);
+        }
         if (registarNoHistorico) history.pushState({ tela: tela }, '', `#${tela.replace('_', '-')}`);
 
         // 🚀 PASSO 2: PUXA OS DADOS EM SEGUNDO PLANO
