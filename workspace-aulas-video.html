@@ -438,7 +438,7 @@
 
   <script>
     const params = new URLSearchParams(window.location.search);
-   let ROLE = (params.get('role') || 'aluno').toLowerCase();
+    let ROLE = (params.get('role') || 'aluno').toLowerCase();
     let IS_GESTOR_OU_PROF = (ROLE === 'professor' || ROLE === 'gestor' || ROLE === 'secretaria');
     const USER_ID = params.get('userId') || '';
     const USER_NAME = params.get('userName') || 'Utilizador';
@@ -460,6 +460,17 @@
     let streamGravacaoAtiva = null;
     let recTimerInterval = null;
     let recSeconds = 0;
+
+    // Variáveis do Motor WebRTC Nativo (Livre de bloqueios CSP e sem limite de 4h)
+    let peerInstance = null;
+    let meuStreamLocal = null;
+    let streamTransmissaoAtual = null;
+    let conexoesAlunos = [];
+    let chamadasAtivas = {};
+    let micAtivo = true;
+    let camAtiva = true;
+    let modoMotorLive = 'nativo'; // 'nativo' (WebRTC Próprio) ou 'jitsi' (meet.jit.si)
+    let timerReconexaoAluno = null;
 
     // 🛡️ Mantém a sessão do WorkSpace principal acordada durante aulas longas (até 4 horas)
     setInterval(() => {
@@ -707,7 +718,7 @@
       renderizarComentariosPlayer();
       renderizarFilaSequenciaSidebar();
 
-     document.getElementById('btn-delete-video').style.display = IS_GESTOR_OU_PROF ? 'inline-flex' : 'none';
+      document.getElementById('btn-delete-video').style.display = IS_GESTOR_OU_PROF ? 'inline-flex' : 'none';
 
       // Regista visualização silenciosamente
       fetch(`/api/workspace/video-aulas/videos/${encodeURIComponent(video.id)}/interagir`, {
@@ -1054,7 +1065,46 @@
       }
     }
 
-   // 7. SALA AO VIVO (ATÉ 4H GRATUITAS + SEPARAÇÃO ALUNO VS PROFESSOR)
+    // 7. SALA AO VIVO (ESTÚDIO WEBRTC NATIVO SEM ERRO CSP + 4H GRATUITAS + SEPARAÇÃO ALUNO VS PROFESSOR)
+    function carregarPeerJS() {
+      return new Promise((resolve, reject) => {
+        if (window.Peer) return resolve(window.Peer);
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js';
+        script.onload = () => resolve(window.Peer);
+        script.onerror = () => reject(new Error('Falha ao carregar motor WebRTC.'));
+        document.head.appendChild(script);
+      });
+    }
+
+    function limparConexoesWebRTC() {
+      clearInterval(timerReconexaoAluno);
+      if (meuStreamLocal) {
+        meuStreamLocal.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        meuStreamLocal = null;
+      }
+      if (streamTransmissaoAtual && streamTransmissaoAtual !== meuStreamLocal) {
+        streamTransmissaoAtual.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+      }
+      streamTransmissaoAtual = null;
+      if (peerInstance) {
+        try { peerInstance.destroy(); } catch (e) {}
+        peerInstance = null;
+      }
+      conexoesAlunos = [];
+      chamadasAtivas = {};
+    }
+
+    function alternarMotorTransmissao(novoModo) {
+      modoMotorLive = novoModo;
+      const stage = document.getElementById('meet-stage-container');
+      if (stage) stage.dataset.salaMontada = '';
+      limparConexoesWebRTC();
+      if (liveAtivaObj && liveAtivaObj.ativa) {
+        montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
+      }
+    }
+
     function atualizarBannerLive() {
       const banner = document.getElementById('live-banner');
       const btnIniciar = document.getElementById('btn-iniciar-live');
@@ -1079,6 +1129,7 @@
           btnTabLive.innerHTML = IS_GESTOR_OU_PROF ? '🔴 Estúdio Ao Vivo (Criar Live)' : '🔴 Sala Ao Vivo';
           btnTabLive.classList.remove('danger');
         }
+        limparConexoesWebRTC();
         mostrarTelaEsperaLive();
       }
     }
@@ -1112,24 +1163,307 @@
       }
     }
 
-    function montarPalcoMeetAoVivo(codigoSala, tituloLive) {
+    async function montarPalcoMeetAoVivo(codigoSala, tituloLive) {
       const stage = document.getElementById('meet-stage-container');
-      if (!codigoSala || stage.dataset.salaMontada === codigoSala) return;
-      stage.dataset.salaMontada = codigoSala;
+      if (!codigoSala || stage.dataset.salaMontada === `${codigoSala}_${modoMotorLive}`) return;
+      stage.dataset.salaMontada = `${codigoSala}_${modoMotorLive}`;
 
-      // 🚀 Servidor comunitário Jitsi Open-Source (meet.ffmuc.net): 100% gratuito, sem login obrigatório e suporta 4h+ seguidas sem cortes!
-      const hashConfig = [
-        `userInfo.displayName="${encodeURIComponent(USER_NAME)}"`,
-        `config.prejoinPageEnabled=false`,
-        `config.disableDeepLinking=true`,
-        `config.startWithVideoMuted=${IS_GESTOR_OU_PROF ? 'false' : 'true'}`,
-        `config.subject="${encodeURIComponent(tituloLive || 'Aula Ao Vivo')}"`
-      ].join('&');
+      // MODO 2 (OPCIONAL): Jitsi Oficial (meet.jit.si permite iframe em qualquer domínio sem erro CSP)
+      if (modoMotorLive === 'jitsi') {
+        const hashConfig = [
+          `userInfo.displayName="${encodeURIComponent(USER_NAME)}"`,
+          `config.prejoinPageEnabled=false`,
+          `config.disableDeepLinking=true`
+        ].join('&');
+        const urlMeet = `https://meet.jit.si/${encodeURIComponent(codigoSala)}#${hashConfig}`;
+        stage.innerHTML = `
+          <div style="width:100%; height:100%; display:flex; flex-direction:column;">
+            <div style="background:#0f172a; padding:8px 14px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #334155;">
+              <span style="font-size:12px; color:#38bdf8; font-weight:700;">🌐 Modo Jitsi Externo • ${esc(tituloLive)}</span>
+              <button type="button" class="vc-btn primary" style="padding:4px 10px; font-size:11px;" onclick="alternarMotorTransmissao('nativo')">⚡ Voltar ao Estúdio Nativo (4h Sem Limite)</button>
+            </div>
+            <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay" style="width:100%; flex:1; border:none;"></iframe>
+          </div>
+        `;
+        return;
+      }
 
-      const urlMeet = `https://meet.ffmuc.net/${encodeURIComponent(codigoSala)}#${hashConfig}`;
+      // MODO 1 (PADRÃO): ESTÚDIO WEBRTC NATIVO DO WORKSPACE (Sem Iframe, Zero Erro CSP, 4h+ Ilimitado)
       stage.innerHTML = `
-        <iframe src="${urlMeet}" allow="camera; microphone; fullscreen; display-capture; autoplay; clipboard-read; clipboard-write" style="width:100%; height:100%; border:none;"></iframe>
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#090d16; position:relative;">
+          <!-- Barra de Topo da Sala Ao Vivo -->
+          <div style="padding:10px 16px; background:rgba(15,23,42,0.92); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:10;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="background:#dc2626; color:#fff; font-size:10.5px; font-weight:900; padding:3px 8px; border-radius:99px;">● AO VIVO (4H ILIMITADO)</span>
+              <strong style="font-size:13.5px; color:#fff;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
+            </div>
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="webrtc-status-badge" style="font-size:11.5px; color:#10b981; font-weight:700;">🔄 A conectar sala...</span>
+              <button type="button" class="vc-btn" style="padding:4px 10px; font-size:11px;" onclick="alternarMotorTransmissao('jitsi')" title="Alternar para o Jitsi caso deseje">🌐 Usar Jitsi</button>
+            </div>
+          </div>
+
+          <!-- Grelha de Vídeos (Palco do Professor + Participantes) -->
+          <div id="webrtc-video-grid" style="flex:1; display:grid; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:12px; padding:12px; overflow-y:auto; align-items:center; justify-items:center;">
+            <div id="card-video-principal" style="width:100%; height:100%; min-height:260px; background:#1e293b; border-radius:14px; overflow:hidden; position:relative; border:2px solid #3b82f6; display:flex; align-items:center; justify-content:center;">
+              <video id="video-prof-main" autoplay playsinline style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
+              <div style="position:absolute; bottom:10px; left:10px; background:rgba(15,23,42,0.85); color:#fff; padding:4px 10px; border-radius:8px; font-size:12px; font-weight:700;">
+                👨‍🏫 ${IS_GESTOR_OU_PROF ? `${esc(USER_NAME)} (Você - Professor)` : `Transmissão do Professor`}
+              </div>
+            </div>
+          </div>
+
+          <!-- Avisos de Mão Levantada -->
+          <div id="webrtc-hand-alerts" style="position:absolute; top:56px; right:16px; display:flex; flex-direction:column; gap:6px; z-index:20;"></div>
+
+          <!-- Barra de Controlo Inferior (Estilo Meet) -->
+          <div style="padding:12px 16px; background:rgba(15,23,42,0.95); border-top:1px solid #1e293b; display:flex; justify-content:center; align-items:center; gap:10px; flex-wrap:wrap; z-index:10;">
+            <button type="button" class="vc-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()">🎤 Microfone Ativo</button>
+            <button type="button" class="vc-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()">📷 Câmara Ativa</button>
+            ${IS_GESTOR_OU_PROF ? `
+              <button type="button" class="vc-btn success" onclick="partilharEcraNaLive()">🖥️ Partilhar Ecrã na Aula</button>
+            ` : `
+              <button type="button" class="vc-btn" style="background:#f59e0b; color:#0f172a;" onclick="levantarMaoNaAula()">✋ Levantar a Mão</button>
+            `}
+            <button type="button" class="vc-btn" onclick="telaCheiaPalco()">⛶ Tela Cheia</button>
+          </div>
+        </div>
       `;
+
+      iniciarConexaoWebRTCSala(codigoSala);
+    }
+
+    async function iniciarConexaoWebRTCSala(codigoSala) {
+      const statusEl = document.getElementById('webrtc-status-badge');
+      try {
+        await carregarPeerJS();
+        limparConexoesWebRTC();
+
+        const idSalaLimpo = String(codigoSala).replace(/[^a-zA-Z0-9]/g, '');
+        const idHostProf = `${idSalaLimpo}_HOST`;
+
+        // 1. Captura câmara e microfone
+        try {
+          meuStreamLocal = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          if (!IS_GESTOR_OU_PROF) {
+            // Aluno entra inicialmente com microfone mudo para evitar eco na sala
+            meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
+            micAtivo = false;
+            const btnMic = document.getElementById('btn-toggle-mic');
+            if (btnMic) { btnMic.innerText = '🔇 Microfone Mudo'; btnMic.classList.remove('primary'); }
+          }
+        } catch (errMedia) {
+          try {
+            meuStreamLocal = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
+          } catch (e) {
+            meuStreamLocal = null;
+          }
+        }
+
+        streamTransmissaoAtual = meuStreamLocal;
+
+        if (IS_GESTOR_OU_PROF) {
+          // 👨‍🏫 LÓGICA DO PROFESSOR (ANFITRIÃO DA SALA)
+          const videoMain = document.getElementById('video-prof-main');
+          if (videoMain && meuStreamLocal) {
+            videoMain.muted = true; // Impede eco no próprio computador do professor
+            videoMain.srcObject = meuStreamLocal;
+          }
+
+          peerInstance = new Peer(idHostProf);
+
+          peerInstance.on('open', () => {
+            if (statusEl) statusEl.innerText = '🟢 Transmissão Ao Vivo Ativa';
+          });
+
+          peerInstance.on('connection', (conn) => {
+            conn.on('data', (dados) => {
+              if (dados && dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
+                conexoesAlunos.push(conn);
+                mostrarToast(`👋 ${dados.nome} entrou na Aula Ao Vivo!`);
+                const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+                if (streamEnvio) {
+                  const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
+                  chamadasAtivas[dados.peerId] = call;
+                }
+              } else if (dados && dados.tipo === 'MAO_LEVANTADA') {
+                mostrarAlertaMaoLevantada(dados.nome);
+              }
+            });
+          });
+
+          peerInstance.on('call', (call) => {
+            const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+            call.answer(streamEnvio || undefined);
+            chamadasAtivas[call.peer] = call;
+            call.on('stream', (streamAluno) => {
+              adicionarVideoParticipanteNaGrelha(call.peer, call.metadata?.nome || 'Aluno', streamAluno);
+            });
+          });
+
+        } else {
+          // 👨‍🎓 LÓGICA DO ALUNO (CONECTA-SE À TRANSMISSÃO DO PROFESSOR)
+          if (meuStreamLocal) {
+            adicionarVideoParticipanteNaGrelha('meu_video_local', `${USER_NAME} (Você)`, meuStreamLocal, true);
+          }
+
+          const meuPeerId = `${idSalaLimpo}_AL_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+          peerInstance = new Peer(meuPeerId);
+
+          const conectarAoProfessor = (idGerado) => {
+            if (!peerInstance || peerInstance.destroyed) return;
+            const conn = peerInstance.connect(idHostProf);
+            window._conexaoComProf = conn;
+            conn.on('open', () => {
+              if (statusEl) statusEl.innerText = '🟢 Conectado à Sala do Professor';
+              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME });
+            });
+
+            if (meuStreamLocal) {
+              const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno' } });
+              if (callToProf) {
+                callToProf.on('stream', (streamProf) => {
+                  const videoMain = document.getElementById('video-prof-main');
+                  if (videoMain) {
+                    videoMain.srcObject = streamProf;
+                    videoMain.play().catch(() => {});
+                  }
+                });
+              }
+            }
+          };
+
+          peerInstance.on('open', (idGerado) => {
+            conectarAoProfessor(idGerado);
+            // Verifica a cada 6 segundos se o vídeo do professor já chegou; se ainda não, pede novamente
+            clearInterval(timerReconexaoAluno);
+            timerReconexaoAluno = setInterval(() => {
+              const videoMain = document.getElementById('video-prof-main');
+              if (videoMain && !videoMain.srcObject) {
+                conectarAoProfessor(idGerado);
+              }
+            }, 6000);
+          });
+
+          peerInstance.on('call', (call) => {
+            call.answer(meuStreamLocal || undefined);
+            call.on('stream', (streamProf) => {
+              if (statusEl) statusEl.innerText = '🟢 Recebendo Transmissão Ao Vivo';
+              const videoMain = document.getElementById('video-prof-main');
+              if (videoMain) {
+                videoMain.srcObject = streamProf;
+                videoMain.play().catch(() => {});
+              }
+            });
+          });
+        }
+      } catch (err) {
+        if (statusEl) statusEl.innerText = '⚠️ A reconectar...';
+      }
+    }
+
+    function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false) {
+      const grid = document.getElementById('webrtc-video-grid');
+      if (!grid) return;
+      let card = document.getElementById(`vid_card_${idCard}`);
+      if (!card) {
+        card = document.createElement('div');
+        card.id = `vid_card_${idCard}`;
+        card.style.cssText = 'width:100%; height:100%; min-height:200px; background:#1e293b; border-radius:14px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        card.innerHTML = `
+          <video autoplay playsinline ${isLocal ? 'muted' : ''} style="width:100%; height:100%; object-fit:cover; background:#000;"></video>
+          <div style="position:absolute; bottom:8px; left:8px; background:rgba(15,23,42,0.85); color:#fff; padding:3px 9px; border-radius:6px; font-size:11.5px; font-weight:700;">
+            👤 ${esc(nomePessoa)}
+          </div>
+        `;
+        grid.appendChild(card);
+      }
+      const v = card.querySelector('video');
+      if (v && v.srcObject !== stream) {
+        v.srcObject = stream;
+        v.play().catch(() => {});
+      }
+    }
+
+    function alternarMeuMicrofone() {
+      if (!meuStreamLocal) return;
+      micAtivo = !micAtivo;
+      meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
+      const btn = document.getElementById('btn-toggle-mic');
+      if (btn) {
+        btn.innerText = micAtivo ? '🎤 Microfone Ativo' : '🔇 Microfone Mudo';
+        btn.classList.toggle('primary', micAtivo);
+      }
+    }
+
+    function alternarMinhaCamara() {
+      if (!meuStreamLocal) return;
+      camAtiva = !camAtiva;
+      meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
+      const btn = document.getElementById('btn-toggle-cam');
+      if (btn) {
+        btn.innerText = camAtiva ? '📷 Câmara Ativa' : '🚫 Câmara Desligada';
+        btn.classList.toggle('primary', camAtiva);
+      }
+    }
+
+    async function partilharEcraNaLive() {
+      try {
+        const displayStream = await navigator.mediaDevices.getDisplayMedia({ video: true, audio: true });
+        const screenTrack = displayStream.getVideoTracks()[0];
+
+        // Mantém o áudio do microfone do professor junto com a imagem do ecrã partilhado
+        const tracksCombinadas = [screenTrack];
+        if (meuStreamLocal && meuStreamLocal.getAudioTracks().length > 0) {
+          tracksCombinadas.push(meuStreamLocal.getAudioTracks()[0]);
+        }
+        streamTransmissaoAtual = new MediaStream(tracksCombinadas);
+
+        const videoMain = document.getElementById('video-prof-main');
+        if (videoMain) videoMain.srcObject = displayStream;
+
+        Object.values(chamadasAtivas).forEach(call => {
+          const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
+          if (sender) sender.replaceTrack(screenTrack);
+        });
+
+        screenTrack.onended = () => {
+          streamTransmissaoAtual = meuStreamLocal;
+          if (meuStreamLocal) {
+            const camTrack = meuStreamLocal.getVideoTracks()[0];
+            if (videoMain) videoMain.srcObject = meuStreamLocal;
+            Object.values(chamadasAtivas).forEach(call => {
+              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
+              if (sender && camTrack) sender.replaceTrack(camTrack);
+            });
+          }
+        };
+      } catch (e) {}
+    }
+
+    function levantarMaoNaAula() {
+      if (window._conexaoComProf && window._conexaoComProf.open) {
+        window._conexaoComProf.send({ tipo: 'MAO_LEVANTADA', nome: USER_NAME });
+        mostrarToast('✋ Você levantou a mão! O professor foi avisado.');
+      }
+    }
+
+    function mostrarAlertaMaoLevantada(nomeAluno) {
+      const box = document.getElementById('webrtc-hand-alerts');
+      if (!box) return;
+      const item = document.createElement('div');
+      item.style.cssText = 'background:#f59e0b; color:#0f172a; padding:8px 14px; border-radius:10px; font-size:12.5px; font-weight:800; box-shadow:0 8px 20px rgba(0,0,0,0.4);';
+      item.innerText = `✋ ${nomeAluno} levantou a mão!`;
+      box.appendChild(item);
+      setTimeout(() => item.remove(), 6000);
+    }
+
+    function telaCheiaPalco() {
+      const stage = document.getElementById('meet-stage-container');
+      if (stage && stage.requestFullscreen) stage.requestFullscreen();
     }
 
     async function iniciarSalaAoVivo() {
@@ -1163,6 +1497,7 @@
 
     async function encerrarSalaAoVivo() {
       try {
+        limparConexoesWebRTC();
         await fetch('/api/workspace/video-aulas/live/encerrar', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -1170,9 +1505,6 @@
           body: JSON.stringify({ liveId: liveAtivaObj?.id, escolaId: ESCOLA_ID })
         });
         liveAtivaObj = null;
-        const stage = document.getElementById('meet-stage-container');
-        stage.dataset.salaMontada = '';
-        stage.innerHTML = `<div style="text-align:center; color:var(--text-muted); padding:30px;">Transmissão encerrada.</div>`;
         atualizarBannerLive();
         mostrarToast('⏹️ Transmissão ao vivo encerrada.');
       } catch (e) {}
