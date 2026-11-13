@@ -515,7 +515,17 @@ Object.assign(Workspace, {
                 }
             });
 
-            window.addEventListener('popstate', (e) => {
+        window.addEventListener('popstate', (e) => {
+                if (window.location.hash && window.location.hash.startsWith('#video-aula-')) {
+                    const vidAlvo = window.location.hash.replace('#video-aula-', '');
+                    Workspace.abrirPlataformaVideos(vidAlvo, '');
+                    return;
+                }
+                if (window.location.hash && window.location.hash.startsWith('#playlist-')) {
+                    const plAlvo = window.location.hash.replace('#playlist-', '');
+                    Workspace.abrirPlataformaVideos('', plAlvo);
+                    return;
+                }
                 if (e.state && e.state.tela) {
                     Workspace.navegarPara(e.state.tela, false, false); 
                 } else if (window.location.hash) {
@@ -567,9 +577,12 @@ Object.assign(Workspace, {
             } catch (e) {}
         });
         
-        // 🧹 2. FECHA MODAIS DE TELA CHEIA E DESTRAVA O SCROLL DO BODY
+       // 🧹 2. FECHA MODAIS DE TELA CHEIA E DESTRAVA O SCROLL DO BODY
         if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
             Workspace.Ingles.fecharJogo();
+        }
+        if (typeof Workspace.fecharPlataformaVideos === 'function') {
+            Workspace.fecharPlataformaVideos();
         }
         ['ws-imersao-modal', 'ws-imersao-musical-modal', 'ws-spotlight-overlay'].forEach(idModal => {
             const m = document.getElementById(idModal);

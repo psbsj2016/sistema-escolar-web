@@ -62,7 +62,7 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // Ignora qualquer ficheiro isolado maior que 3MB no precache
         importScripts: ['/push-sw.js'], 
         
-        // 🚀 O ESCUDO ANTI-SEQUESTRO
+        // 🚀 O ESCUDO ANTI-SEQUESTRO (Impede o PWA de jogar para o login principal)
         navigateFallbackDenylist: [
           /^\/api/,
           /version\.json/,
@@ -71,7 +71,8 @@ export default defineConfig({
           /matricula-online\.html/,
           /workspace\.html/,
           /admin\.html/,
-          /workspace-lousa\.html/
+          /workspace-lousa\.html/,
+          /workspace-aulas-video\.html/
         ] 
       }
     })
@@ -102,7 +103,8 @@ export default defineConfig({
         hub: resolve(__dirname, 'hub-matriculas.html'),
         online: resolve(__dirname, 'matricula-online.html'),
         workspace: resolve(__dirname, 'workspace.html'),
-        lousa: resolve(__dirname, 'workspace-lousa.html')
+        lousa: resolve(__dirname, 'workspace-lousa.html'),
+        videoAulas: resolve(__dirname, 'workspace-aulas-video.html')
       }
     }
   }
