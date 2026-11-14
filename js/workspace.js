@@ -507,15 +507,19 @@ Object.assign(Workspace, {
         let telaDestino = localStorage.getItem('ws_ultima_tela_global') || 'feed'; 
         let postAlvo = null;      
         
-       if (window.location.hash && window.location.hash !== '#') {
+      if (window.location.hash && window.location.hash !== '#') {
             if (window.location.hash.startsWith('#video-aula-')) {
                 telaDestino = 'sala_aula';
                 const vidAlvo = window.location.hash.replace('#video-aula-', '');
-                setTimeout(() => Workspace.abrirPlataformaVideos(vidAlvo, ''), 400);
+                setTimeout(() => Workspace.abrirPlataformaVideos(vidAlvo, '', ''), 350);
             } else if (window.location.hash.startsWith('#playlist-')) {
                 telaDestino = 'sala_aula';
                 const plAlvo = window.location.hash.replace('#playlist-', '');
-                setTimeout(() => Workspace.abrirPlataformaVideos('', plAlvo), 400);
+                setTimeout(() => Workspace.abrirPlataformaVideos('', plAlvo, ''), 350);
+            } else if (window.location.hash.startsWith('#live-')) {
+                telaDestino = 'sala_aula';
+                const liveToken = window.location.hash.replace('#live-', '');
+                setTimeout(() => Workspace.abrirPlataformaVideos('', '', liveToken), 350);
             } else if (window.location.hash.includes('post-')) {
                 telaDestino = 'feed'; 
                 postAlvo = window.location.hash.replace('#post-', ''); 
@@ -524,6 +528,16 @@ Object.assign(Workspace, {
             }
         }
         Workspace.navegarPara(telaDestino, true, true);
+
+        // 🔄 RESTAURO AUTOMÁTICO NO F5: Se o utilizador estava dentro da Plataforma de Vídeos/Live antes do F5, mantém lá!
+        try {
+            const estadoPlayClass = JSON.parse(localStorage.getItem('ws_playclass_estado') || 'null');
+            if (estadoPlayClass && estadoPlayClass.aberto && !window.location.hash.startsWith('#video-aula-') && !window.location.hash.startsWith('#playlist-') && !window.location.hash.startsWith('#live-')) {
+                setTimeout(() => {
+                    Workspace.abrirPlataformaVideos(estadoPlayClass.video || '', estadoPlayClass.playlist || '', estadoPlayClass.liveToken || '');
+                }, 250);
+            }
+        } catch (e) {}
 
         // 🚀 PASSO 3: CARREGA DADOS EM SEGUNDO PLANO
         if (Workspace.Feed) Workspace.Feed.init(); 
@@ -583,6 +597,11 @@ Object.assign(Workspace, {
                 if (window.location.hash && window.location.hash.startsWith('#playlist-')) {
                     const plAlvo = window.location.hash.replace('#playlist-', '');
                     Workspace.abrirPlataformaVideos('', plAlvo);
+                    return;
+                }
+                if (window.location.hash && window.location.hash.startsWith('#live-')) {
+                    const liveToken = window.location.hash.replace('#live-', '');
+                    Workspace.abrirPlataformaVideos('', '', liveToken);
                     return;
                 }
                 if (e.state && e.state.tela) {
@@ -1360,17 +1379,24 @@ Object.assign(Workspace, {
         else Workspace.navegarPara('materiais');
     },
 
-   abrirPlataformaVideos: (videoId = '', playlistSlug = '') => {
+  abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         if (!Workspace.usuario) return;
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal || !iframe) return;
 
-        // Se já estava minimizado em chamada, apenas restaura para tela inteira sem recarregar a chamada!
-        if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug) {
+        if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug && !liveToken) {
             Workspace.alternarMinimizarVideos(false);
             return;
         }
+
+        // Grava na memória para que se atualizar a página (F5) permaneça na plataforma!
+        localStorage.setItem('ws_playclass_estado', JSON.stringify({
+            aberto: true,
+            video: videoId || '',
+            playlist: playlistSlug || '',
+            liveToken: liveToken || ''
+        }));
 
         const role = Workspace.usuario.tipo === 'Aluno' ? 'aluno' : 'professor';
         const nome = Workspace.usuario.nome || Workspace.usuario.login || 'Utilizador';
@@ -1381,11 +1407,12 @@ Object.assign(Workspace, {
             escolaId: Workspace.usuario.escolaId || 'DEFAULT',
             alunoRefId: Workspace.usuario.alunoRefId || '',
             video: videoId || '',
-            playlist: playlistSlug || ''
+            playlist: playlistSlug || '',
+            live: liveToken || ''
         });
 
         Workspace.alternarMinimizarVideos(false);
-        if (!iframe.src || !iframe.src.includes('workspace-aulas-video.html') || videoId || playlistSlug) {
+        if (!iframe.src || !iframe.src.includes('workspace-aulas-video.html') || videoId || playlistSlug || liveToken) {
             iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
         }
         modal.style.display = 'flex';
@@ -1420,11 +1447,11 @@ Object.assign(Workspace, {
         }
     },
 
-    fecharPlataformaVideos: () => {
+   fecharPlataformaVideos: () => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
-        // Se estiver minimizado em chamada ao vivo, não destrói a chamada ao trocar de aba no Workspace
         if (modal && modal.dataset.minimizado === 'true') return;
+        localStorage.removeItem('ws_playclass_estado');
         if (iframe) iframe.src = '';
         if (modal) {
             modal.dataset.minimizado = 'false';
