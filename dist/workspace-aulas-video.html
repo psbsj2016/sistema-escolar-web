@@ -28,7 +28,7 @@
       overflow-x: hidden;
     }
 
-    /* BARRA DE NAVEGAÇÃO INTERNA */
+    /* BARRA DE NAVEGAÇÃO INTERNA (OCULTA AUTOMATICAMENTE QUANDO ENTRA NA AULA AO VIVO) */
     .vc-topbar {
       display: flex; align-items: center; justify-content: space-between;
       padding: 12px 20px; background: rgba(30, 41, 59, 0.95);
@@ -64,6 +64,12 @@
 
     @keyframes pulseRed { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.8; } }
     @keyframes fadeSlideUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes floatEmojiUp {
+      0% { opacity: 0; transform: translateY(20px) scale(0.6); }
+      15% { opacity: 1; transform: translateY(0) scale(1.15); }
+      80% { opacity: 1; transform: translateY(-170px) scale(1); }
+      100% { opacity: 0; transform: translateY(-230px) scale(0.8); }
+    }
 
     .live-banner-alert {
       display: none; background: linear-gradient(90deg, #991b1b, #dc2626);
@@ -73,6 +79,36 @@
 
     /* CONTEÚDO PRINCIPAL */
     .vc-container { max-width: 1380px; margin: 0 auto; padding: 20px; }
+
+    /* 🖥️ MODO ECRÃ INTEIRO REAL PARA A SALA AO VIVO (ESCONDE BARRA DE PESQUISA E CABEÇALHO SUPERIOR) */
+    body.modo-cinema-live { overflow: hidden !important; }
+    body.modo-cinema-live .vc-topbar,
+    body.modo-cinema-live #live-banner {
+      display: none !important;
+    }
+    body.modo-cinema-live .vc-container {
+      max-width: 100vw !important; width: 100vw !important;
+      height: 100dvh !important; margin: 0 !important; padding: 0 !important;
+    }
+    body.modo-cinema-live #view-live {
+      display: block !important; width: 100vw !important; height: 100dvh !important;
+    }
+    body.modo-cinema-live .live-grid {
+      display: flex !important; width: 100vw !important; height: 100dvh !important; gap: 0 !important;
+    }
+    body.modo-cinema-live .meet-frame-box {
+      flex: 1 !important; width: 100% !important; height: 100dvh !important;
+      min-height: 100dvh !important; border-radius: 0 !important; border: none !important;
+    }
+    body.modo-cinema-live #painel-lateral-transmissao {
+      width: 330px; height: 100dvh; border-radius: 0; border-top: none; border-bottom: none; border-right: none;
+      overflow-y: auto; flex-shrink: 0;
+    }
+    @media (max-width: 960px) {
+      body.modo-cinema-live .live-grid { flex-direction: column !important; overflow-y: auto !important; }
+      body.modo-cinema-live .meet-frame-box { min-height: 72dvh !important; height: 72dvh !important; }
+      body.modo-cinema-live #painel-lateral-transmissao { width: 100% !important; height: auto !important; }
+    }
 
     /* FILTROS DE ASSUNTOS / PLAYLISTS */
     .vc-subjects-bar {
@@ -164,22 +200,21 @@
     }
     .video-card-body { padding: 14px; display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-between; }
 
-    /* SALA AO VIVO (MEET + GRAVADOR SEM CORTES DE TELA) */
+    /* SALA AO VIVO */
     #view-live { display: none; }
     .live-grid { display: grid; grid-template-columns: 1fr 330px; gap: 18px; align-items: start; }
-    @media (max-width: 960px) { .live-grid { grid-template-columns: 1fr; } }
     .meet-frame-box {
       background: #000; border: 1px solid var(--border); border-radius: 16px;
-      height: 76vh; min-height: 480px; overflow: hidden; position: relative;
+      height: 100dvh; min-height: 480px; overflow: hidden; position: relative;
       display: flex; flex-direction: column;
     }
 
-    /* MENU DE TRÊS PONTOS (⋮) NO CANTO DIREITO */
+    /* MENU DE TRÊS PONTOS (⋮) E SELETOR DE REAÇÕES (😊) */
     .more-menu-wrapper { position: relative; display: inline-flex; }
     .more-dropdown-menu {
       display: none; position: absolute; bottom: calc(100% + 10px); right: 0;
       background: rgba(15, 23, 42, 0.98); border: 1px solid #475569;
-      border-radius: 14px; padding: 8px; min-width: 215px;
+      border-radius: 14px; padding: 8px; min-width: 220px;
       box-shadow: 0 18px 40px rgba(0,0,0,0.65); z-index: 60;
       flex-direction: column; gap: 4px; backdrop-filter: blur(14px);
       animation: fadeSlideUp 0.16s ease;
@@ -193,11 +228,38 @@
     }
     .more-menu-item:hover { background: rgba(59, 130, 246, 0.22); color: #60a5fa; }
 
+    /* BARRA DE EMOJIS DE REAÇÃO */
+    .reactions-popover {
+      display: none; position: absolute; bottom: calc(100% + 10px); right: 0;
+      background: rgba(15, 23, 42, 0.96); border: 1px solid #475569;
+      border-radius: 999px; padding: 6px 12px; gap: 8px;
+      box-shadow: 0 14px 32px rgba(0,0,0,0.6); z-index: 60;
+      align-items: center; backdrop-filter: blur(14px);
+      animation: fadeSlideUp 0.15s ease;
+    }
+    .reactions-popover.open { display: flex; }
+    .emoji-react-btn {
+      background: transparent; border: none; font-size: 22px; cursor: pointer;
+      padding: 4px; border-radius: 50%; transition: transform 0.15s; line-height: 1;
+    }
+    .emoji-react-btn:hover { transform: scale(1.3); background: rgba(255,255,255,0.08); }
+
+    /* CAMADA DE EMOJIS FLUTUANTES NA TELA */
+    #live-reactions-layer {
+      position: absolute; right: 28px; bottom: 78px; width: 160px; height: 260px;
+      pointer-events: none; z-index: 42; overflow: visible;
+    }
+    .floating-emoji-item {
+      position: absolute; bottom: 0; right: 10px;
+      display: flex; flex-direction: column; align-items: center;
+      animation: floatEmojiUp 2.8s ease-out forwards;
+    }
+
     /* MINI CHAT AO VIVO + MENSAGENS FLUTUANTES NA TELA */
     #live-minichat-drawer {
-      display: none; position: absolute; top: 50px; right: 12px; bottom: 68px;
+      display: none; position: absolute; top: 54px; right: 12px; bottom: 68px;
       width: 300px; max-width: calc(100% - 24px);
-      background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(14px);
+      background: rgba(15, 23, 42, 0.95); backdrop-filter: blur(14px);
       border: 1px solid #475569; border-radius: 14px; z-index: 45;
       flex-direction: column; overflow: hidden;
       box-shadow: 0 16px 40px rgba(0,0,0,0.6); animation: fadeSlideUp 0.18s ease;
@@ -209,7 +271,7 @@
       max-width: 65%; pointer-events: none;
     }
     .onscreen-chat-bubble {
-      background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(8px);
+      background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px);
       border-left: 3px solid #3b82f6; color: #fff;
       padding: 8px 14px; border-radius: 10px; font-size: 13px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: fadeSlideUp 0.22s ease;
@@ -238,7 +300,7 @@
     }
     body.modo-minimizado-pip #pip-restore-bar { display: flex !important; }
 
-    /* MODAL DE UPLOAD */
+    /* MODAIS (UPLOAD E CONFIGURAÇÕES DA CHAMADA) */
     .vc-modal {
       display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.8);
       backdrop-filter: blur(8px); z-index: 100; align-items: center; justify-content: center; padding: 16px;
@@ -264,7 +326,7 @@
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
-  <!-- BARRA SUPERIOR -->
+  <!-- BARRA SUPERIOR (CATÁLOGO) -->
   <header class="vc-topbar">
     <div class="vc-brand">
       <div class="vc-brand-badge">🎬</div>
@@ -330,7 +392,6 @@
 
             <p id="player-descricao" style="color: #cbd5e1; font-size: 13.5px; line-height: 1.5; margin: 14px 0 0 0; white-space: pre-wrap;"></p>
 
-            <!-- Comentários e Dúvidas da Aula -->
             <div style="margin-top: 22px; border-top: 1px solid var(--border); padding-top: 16px;">
               <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #e2e8f0;">💬 Dúvidas e Comentários da Aula</h4>
               <div style="display: flex; gap: 8px; margin-bottom: 16px;">
@@ -342,7 +403,6 @@
           </div>
         </div>
 
-        <!-- Coluna Direita: Sequência Completa do Assunto (Playlist) -->
         <aside class="playlist-sidebar">
           <div class="playlist-header">
             <div>
@@ -369,29 +429,21 @@
       </div>
 
       <div class="vc-subjects-bar" id="bar-assuntos"></div>
-
       <div id="catalogo-grid" class="videos-grid"></div>
     </section>
 
-    <!-- 3. SALA AO VIVO (ESTILO MEET / TEAMS) + GRAVADOR AUTOMÁTICO -->
+    <!-- 3. SALA AO VIVO EM ECRÃ INTEIRO -->
     <section id="view-live">
       <div class="live-grid">
-        <div class="meet-frame-box" id="meet-stage-container">
-          <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto;">
-            <div style="font-size: 54px; margin-bottom: 12px;">📹</div>
-            <h3 style="margin: 0 0 8px 0; font-size: 20px;">Estúdio de Aula Ao Vivo (Meet & Gravação)</h3>
-            <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
-              Inicie uma sala de videoconferência interativa com os alunos e use o <b>Gravador Integrado</b> para que a aula fique salva automaticamente no catálogo de vídeos!
-            </p>
-            <div id="live-waiting-msg" style="color: #f59e0b; font-size: 13px; font-weight: 700;">Nenhuma transmissão ao vivo aberta neste momento.</div>
+        <div class="meet-frame-box" id="meet-stage-container"></div>
+
+        <!-- Painel Lateral de Controlo (Apenas Professor/Gestor) -->
+        <div id="painel-lateral-transmissao" style="background: var(--bg-card); border-left: 1px solid var(--border); padding: 16px; display: flex; flex-direction: column; gap: 12px;">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; font-size: 15px; display: flex; align-items: center; gap: 6px;">🎛️ Estúdio do Professor</h3>
+            <button type="button" class="vc-btn" style="padding: 5px 10px; font-size: 11.5px;" onclick="alternarAba('catalogo')">⬅ Catálogo</button>
           </div>
-        </div>
 
-        <!-- Painel de Controlo Ao Vivo & Gravação -->
-        <div id="painel-lateral-transmissao" style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; padding: 18px; display: flex; flex-direction: column; gap: 14px;">
-          <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px;">🎛️ Controlo da Transmissão</h3>
-
-          <!-- Controlo exclusivo do Professor -->
           <div id="prof-live-controls" style="display: none; flex-direction: column; gap: 10px;">
             <div>
               <label class="vc-label" style="margin-top: 0;">Título da Aula Ao Vivo:</label>
@@ -408,37 +460,34 @@
               </select>
             </div>
 
-            <div style="display: flex; gap: 8px; margin-top: 6px;">
-              <button type="button" class="vc-btn success" style="flex: 1; justify-content: center; padding: 12px;" id="btn-iniciar-live" onclick="iniciarSalaAoVivo()">
+            <div style="display: flex; gap: 8px; margin-top: 4px;">
+              <button type="button" class="vc-btn success" style="flex: 1; justify-content: center; padding: 11px;" id="btn-iniciar-live" onclick="iniciarSalaAoVivo()">
                 🔴 Abrir Sala Ao Vivo
               </button>
-              <button type="button" class="vc-btn danger" style="flex: 1; justify-content: center; padding: 12px; display: none;" id="btn-encerrar-live" onclick="encerrarSalaAoVivo()">
+              <button type="button" class="vc-btn danger" style="flex: 1; justify-content: center; padding: 11px; display: none;" id="btn-encerrar-live" onclick="encerrarSalaAoVivo()">
                 ⏹️ Encerrar Sala
               </button>
             </div>
 
-            <div style="border-top: 1px solid var(--border); margin-top: 8px; padding-top: 12px;">
-              <div style="font-size: 12px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">⏺️ GRAVADOR AUTOMÁTICO DE AULA</div>
-              <p style="font-size: 11.5px; color: var(--text-muted); margin: 0 0 10px 0; line-height: 1.4;">
-                Grave o ecrã da sua aula (ou a sua câmara) com áudio. Ao parar, o vídeo será enviado e publicado automaticamente na sequência escolhida!
+            <div style="border-top: 1px solid var(--border); margin-top: 6px; padding-top: 10px;">
+              <div style="font-size: 11.5px; font-weight: 800; color: #38bdf8; margin-bottom: 5px;">⏺️ GRAVADOR AUTOMÁTICO DE AULA</div>
+              <p style="font-size: 11px; color: var(--text-muted); margin: 0 0 8px 0; line-height: 1.35;">
+                Grave o ecrã ou câmara com áudio para publicar automaticamente no catálogo ao terminar.
               </p>
-              <button type="button" class="vc-btn primary" style="width: 100%; justify-content: center; padding: 11px;" id="btn-record-screen" onclick="alternarGravacaoAula('screen')">
+              <button type="button" class="vc-btn primary" style="width: 100%; justify-content: center; padding: 10px;" id="btn-record-screen" onclick="alternarGravacaoAula('screen')">
                 🖥️ Gravar Ecrã + Voz da Aula
               </button>
-              <button type="button" class="vc-btn" style="width: 100%; justify-content: center; padding: 11px; margin-top: 8px;" id="btn-record-camera" onclick="alternarGravacaoAula('camera')">
+              <button type="button" class="vc-btn" style="width: 100%; justify-content: center; padding: 10px; margin-top: 6px;" id="btn-record-camera" onclick="alternarGravacaoAula('camera')">
                 📷 Gravar Câmara + Voz
               </button>
-              <div id="recording-status-box" style="display: none; margin-top: 10px; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; padding: 10px; border-radius: 10px; text-align: center;">
-                <div style="color: #fca5a5; font-weight: 800; font-size: 12.5px; margin-bottom: 6px;">🔴 GRAVANDO AULA: <span id="rec-timer">00:00</span></div>
-                <button type="button" class="vc-btn danger" style="width: 100%; justify-content: center;" onclick="pararGravacaoEPublicar()">⏹️ Parar e Publicar no Catálogo</button>
+              <div id="recording-status-box" style="display: none; margin-top: 8px; background: rgba(239,68,68,0.15); border: 1px solid #ef4444; padding: 10px; border-radius: 10px; text-align: center;">
+                <div style="color: #fca5a5; font-weight: 800; font-size: 12px; margin-bottom: 6px;">🔴 GRAVANDO AULA: <span id="rec-timer">00:00</span></div>
+                <button type="button" class="vc-btn danger" style="width: 100%; justify-content: center;" onclick="pararGravacaoEPublicar()">⏹️ Parar e Publicar</button>
               </div>
             </div>
           </div>
 
-          <!-- Visão do Aluno na Sala Ao Vivo -->
-          <div id="aluno-live-info" style="font-size: 13px; color: #cbd5e1; line-height: 1.5;">
-            Quando o professor iniciar uma transmissão ao vivo, a sala interativa abrirá automaticamente aqui ao lado. Todas as aulas gravadas ficam disponíveis na aba <b>📚 Catálogo & Assuntos</b>.
-          </div>
+          <div id="aluno-live-info" style="font-size: 13px; color: #cbd5e1; line-height: 1.5; display: none;"></div>
         </div>
       </div>
     </section>
@@ -481,7 +530,6 @@
       <label class="vc-label">OU 2. Colar Link Direto / YouTube (Opcional se enviar ficheiro acima)</label>
       <input type="url" id="up-url-direta" class="vc-input" placeholder="https://...">
 
-      <!-- Barra de Progresso de Upload -->
       <div id="up-progress-wrap" style="display: none; margin-top: 14px;">
         <div style="display: flex; justify-content: space-between; font-size: 12px; font-weight: 700; margin-bottom: 4px;">
           <span id="up-progress-label">A enviar vídeo para a nuvem...</span>
@@ -495,6 +543,28 @@
       <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
         <button type="button" class="vc-btn" onclick="fecharModalUpload()">Cancelar</button>
         <button type="button" class="vc-btn primary" id="btn-submit-video" onclick="salvarNovaVideoAula()">🚀 Publicar Vídeo-Aula</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ⚙️ MODAL DE CONFIGURAÇÕES DA CHAMADA (SOM DAS REAÇÕES) -->
+  <div class="vc-modal" id="modal-config-live">
+    <div class="vc-modal-card" style="max-width: 420px;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+        <h3 style="margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px;">⚙️ Configurações da Chamada</h3>
+        <button type="button" class="vc-btn" onclick="fecharModalConfigLive()">✕</button>
+      </div>
+
+      <div style="background: #0f172a; border: 1px solid #334155; border-radius: 14px; padding: 16px; display: flex; align-items: center; justify-content: space-between; gap: 12px;">
+        <div>
+          <div style="font-weight: 800; font-size: 14px; color: #f8fafc;">🔔 Som nas Reações (Emojis)</div>
+          <div style="font-size: 12px; color: #94a3b8; margin-top: 3px;">Tocar efeito sonoro quando alguém enviar uma reação ou levantar a mão na aula.</div>
+        </div>
+        <input type="checkbox" id="chk-som-reacoes" checked onchange="alternarConfigSomReacoes(this.checked)" style="width: 22px; height: 22px; accent-color: #3b82f6; cursor: pointer; flex-shrink: 0;">
+      </div>
+
+      <div style="display: flex; justify-content: flex-end; margin-top: 18px;">
+        <button type="button" class="vc-btn primary" onclick="fecharModalConfigLive()">Concluído</button>
       </div>
     </div>
   </div>
@@ -526,7 +596,7 @@
     let recTimerInterval = null;
     let recSeconds = 0;
 
-    // Variáveis do Motor WebRTC Nativo + Som + Lousa + Mini Chat
+    // Variáveis WebRTC + Som + Lousa + Reações + Microfones dos Alunos
     let peerInstance = null;
     let meuStreamLocal = null;
     let streamTransmissaoAtual = null;
@@ -534,12 +604,14 @@
     let chamadasAtivas = {};
     let micAtivo = true;
     let camAtiva = true;
-    let somSaidaAtivo = true; // 🔊 Controla o Viva-Voz / Saída de Som da chamada
+    let somSaidaAtivo = true;
     let lousaProjetadaAtiva = false;
     let modoMotorLive = 'nativo';
     let timerReconexaoAluno = null;
+    let somReacoesAtivo = localStorage.getItem('ws_live_som_reacoes') !== 'false';
+    const estadoMicsParticipantes = {}; // Guarda { nome: string, micAtivo: boolean }
 
-    // 🛡️ Mantém a sessão do WorkSpace principal acordada durante aulas longas (até 4 horas)
+    // 🛡️ Mantém a sessão do WorkSpace principal acordada durante aulas de até 4h
     setInterval(() => {
       try {
         if (window.parent && window.parent.Workspace && window.parent.Workspace.Sessao) {
@@ -548,14 +620,69 @@
       } catch (e) {}
     }, 45000);
 
-    // Fecha o menu de 3 pontos se clicar fora dele
+    // Fecha menus flutuantes (3 pontos e emojis) ao clicar fora
     document.addEventListener('click', (e) => {
-      const wrap = document.querySelector('.more-menu-wrapper');
-      const menu = document.getElementById('live-more-dropdown');
-      if (menu && wrap && !wrap.contains(e.target)) {
-        menu.classList.remove('open');
+      const wrapMore = document.querySelector('#wrap-menu-tres-pontos');
+      const menuMore = document.getElementById('live-more-dropdown');
+      if (menuMore && wrapMore && !wrapMore.contains(e.target)) {
+        menuMore.classList.remove('open');
+      }
+      const wrapReact = document.querySelector('#wrap-menu-reacoes');
+      const menuReact = document.getElementById('live-reactions-popover');
+      if (menuReact && wrapReact && !wrapReact.contains(e.target)) {
+        menuReact.classList.remove('open');
       }
     });
+
+    // 🎵 SINTETIZADOR DE ÁUDIO NATIVO PARA REAÇÕES E MÃOZINHA (Sem ficheiros externos)
+    function tocarSomReacao(tipo = 'emoji') {
+      if (!somReacoesAtivo) return;
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+
+        const agora = ctx.currentTime;
+        if (tipo === 'mao') {
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(523.25, agora); // Dó
+          osc.frequency.setValueAtTime(659.25, agora + 0.09); // Mi
+          gain.gain.setValueAtTime(0.18, agora);
+          gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.32);
+          osc.start(agora);
+          osc.stop(agora + 0.32);
+        } else {
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(587.33, agora);
+          osc.frequency.exponentialRampToValueAtTime(880, agora + 0.14);
+          gain.gain.setValueAtTime(0.14, agora);
+          gain.gain.exponentialRampToValueAtTime(0.001, agora + 0.22);
+          osc.start(agora);
+          osc.stop(agora + 0.22);
+        }
+      } catch (e) {}
+    }
+
+    function abrirModalConfigLive() {
+      const chk = document.getElementById('chk-som-reacoes');
+      if (chk) chk.checked = somReacoesAtivo;
+      document.getElementById('modal-config-live').style.display = 'flex';
+    }
+
+    function fecharModalConfigLive() {
+      document.getElementById('modal-config-live').style.display = 'none';
+    }
+
+    function alternarConfigSomReacoes(ativado) {
+      somReacoesAtivo = Boolean(ativado);
+      localStorage.setItem('ws_live_som_reacoes', somReacoesAtivo ? 'true' : 'false');
+      if (somReacoesAtivo) tocarSomReacao('emoji');
+      mostrarToast(somReacoesAtivo ? '🔔 Som das reações ativado!' : '🔕 Som das reações desativado.');
+    }
 
     function mostrarToast(msg, cor = '#10b981') {
       const t = document.getElementById('vc-toast');
@@ -580,22 +707,16 @@
     function aplicarPermissoesVisuaisCargo() {
       const btnUpload = document.getElementById('btn-open-upload');
       const painelProfLive = document.getElementById('prof-live-controls');
-      const boxAlunoInfo = document.getElementById('aluno-live-info');
-      const liveGrid = document.querySelector('.live-grid');
       const painelLateralCard = document.getElementById('painel-lateral-transmissao');
 
       if (IS_GESTOR_OU_PROF) {
         if (btnUpload) btnUpload.style.display = 'inline-flex';
         if (painelProfLive) painelProfLive.style.display = 'flex';
-        if (boxAlunoInfo) boxAlunoInfo.style.display = 'none';
         if (painelLateralCard) painelLateralCard.style.display = 'flex';
-        if (liveGrid) liveGrid.style.gridTemplateColumns = '';
       } else {
         if (btnUpload) btnUpload.style.display = 'none';
         if (painelProfLive) painelProfLive.style.display = 'none';
-        if (boxAlunoInfo) boxAlunoInfo.style.display = 'block';
         if (painelLateralCard) painelLateralCard.style.display = 'none';
-        if (liveGrid) liveGrid.style.gridTemplateColumns = '1fr';
       }
     }
 
@@ -754,6 +875,7 @@
       const video = catalogoVideos.find(v => v.id === videoId);
       if (!video) return;
 
+      document.body.classList.remove('modo-cinema-live');
       videoAtualObj = video;
       const seqObj = catalogoSequencias.find(s => s.slug === video.assuntoSlug);
       sequenciaAtualLista = seqObj ? seqObj.videos : [video];
@@ -1135,7 +1257,7 @@
     }
 
     // ============================================================================
-    // 7. SALA AO VIVO PRO (SEM CORTES DE TELA + SAÍDA DE SOM + MENU ⋮ + LOUSA + MINI CHAT)
+    // 7. SALA AO VIVO PRO (100% ECRÃ INTEIRO + STATUS MIC ALUNO + REAÇÕES COM SOM + SEM DUPLICAR CHAT)
     // ============================================================================
     function carregarPeerJS() {
       return new Promise((resolve, reject) => {
@@ -1174,7 +1296,9 @@
       const btnTabLive = document.getElementById('btn-tab-live');
 
       if (liveAtivaObj && liveAtivaObj.ativa) {
-        banner.style.display = 'flex';
+        if (!document.body.classList.contains('modo-cinema-live')) {
+          banner.style.display = 'flex';
+        }
         document.getElementById('live-banner-text').innerText = `🔴 AO VIVO AGORA: "${liveAtivaObj.titulo}" com ${liveAtivaObj.professorNome}`;
         if (btnIniciar) btnIniciar.style.display = 'none';
         if (btnEncerrar) btnEncerrar.style.display = 'inline-flex';
@@ -1211,7 +1335,7 @@
             <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
               Configure o título e a turma no painel à direita e clique em <b>🔴 Abrir Sala Ao Vivo</b>. Assim que abrir, os alunos serão avisados em tempo real e poderão entrar!
             </p>
-            <div style="color: #38bdf8; font-size: 12.5px; font-weight: 700;">💡 Transmissão 100% gratuita e ilimitada até 4h contínuas.</div>
+            <button type="button" class="vc-btn" onclick="alternarAba('catalogo')">⬅ Voltar para o Catálogo de Vídeos</button>
           </div>
         `;
       } else {
@@ -1222,7 +1346,7 @@
             <p style="color: var(--text-muted); font-size: 13.5px; line-height: 1.5; margin-bottom: 16px;">
               Nenhuma transmissão ao vivo está aberta neste momento. Assim que o professor iniciar a aula, a sala abrirá automaticamente aqui para você participar!
             </p>
-            <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">📚 Ver Vídeo-Aulas Gravadas</button>
+            <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">⬅ Voltar para Vídeo-Aulas Gravadas</button>
           </div>
         `;
       }
@@ -1233,17 +1357,29 @@
       if (!codigoSala || stage.dataset.salaMontada === `${codigoSala}_${modoMotorLive}`) return;
       stage.dataset.salaMontada = `${codigoSala}_${modoMotorLive}`;
 
+      // Na visão do Aluno, o item "Projetar Lousa" NUNCA aparece no menu ⋮
+      const itemLousaMenuHTML = IS_GESTOR_OU_PROF ? `
+        <button type="button" class="more-menu-item" id="menu-item-projetar-lousa" onclick="fecharMenuTresPontos(); alternarProjecaoLousaNaLive();">
+          <span>🖍️</span> <span id="label-projetar-lousa">Projetar Lousa</span>
+        </button>
+      ` : '';
+
       stage.innerHTML = `
         <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#050811; position:relative; overflow:hidden;">
-          <!-- Barra de Topo da Sala Ao Vivo -->
-          <div id="live-top-header" style="padding:10px 16px; background:rgba(15,23,42,0.94); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
-            <div style="display:flex; align-items:center; gap:8px;">
+          <!-- Barra de Topo Compacta da Chamada (Com botão Voltar ao Catálogo e Status dos Microfones) -->
+          <div id="live-top-header" style="padding:8px 14px; background:rgba(15,23,42,0.95); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+              <button type="button" class="vc-btn" style="padding:5px 10px; font-size:11.5px;" onclick="alternarAba('catalogo')" title="Sair do modo tela cheia da live e ver vídeos">⬅ Catálogo</button>
               <span style="background:#dc2626; color:#fff; font-size:10.5px; font-weight:900; padding:3px 8px; border-radius:99px;">● AO VIVO</span>
-              <strong style="font-size:13.5px; color:#fff;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
+              <strong style="font-size:13px; color:#fff;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
             </div>
-            <div style="display:flex; align-items:center; gap:10px;">
-              <span id="webrtc-status-badge" style="font-size:11.5px; color:#10b981; font-weight:700;">🔄 A conectar sala...</span>
-              ${!IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:4px 10px; font-size:11px; background:#f59e0b; color:#0f172a;" onclick="levantarMaoNaAula()">✋ Levantar Mão</button>` : ''}
+
+            <!-- Visor Rápido do Microfone dos Alunos -->
+            <div id="webrtc-mics-summary" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11px;"></div>
+
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span id="webrtc-status-badge" style="font-size:11.5px; color:#10b981; font-weight:700;">🔄 A conectar...</span>
+              ${!IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:4px 10px; font-size:11.5px; background:#f59e0b; color:#0f172a;" onclick="levantarMaoNaAula()">✋ Levantar Mão</button>` : ''}
             </div>
           </div>
 
@@ -1255,22 +1391,25 @@
                 👨‍🏫 ${IS_GESTOR_OU_PROF ? `${esc(USER_NAME)} (Você - Professor)` : `Tela Principal da Aula`}
               </div>
 
-              <!-- 🖍️ CAMADA DE PROJEÇÃO IMEDIATA DA LOUSA NA CHAMADA -->
+              <!-- 🖍️ CAMADA DE PROJEÇÃO DA LOUSA (Controlada pelo Professor, visível para a Turma) -->
               <div id="lousa-live-overlay-wrap" style="display:none; position:absolute; inset:0; z-index:25; background:#0f172a; flex-direction:column;">
                 <div style="height:36px; background:#0f172a; border-bottom:1px solid #334155; display:flex; align-items:center; justify-content:space-between; padding:0 12px; flex-shrink:0;">
                   <span style="font-size:12px; font-weight:800; color:#38bdf8;">🖍️ Lousa Projetada Ao Vivo na Chamada</span>
-                  ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn danger" style="padding:3px 10px; font-size:11px;" onclick="alternarProjecaoLousaNaLive(false)">✕ Fechar Projeção da Lousa</button>` : `<span style="font-size:11px; color:#10b981; font-weight:700;">📡 Sincronizado com o Professor</span>`}
+                  ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn danger" style="padding:3px 10px; font-size:11px;" onclick="alternarProjecaoLousaNaLive(false)">✕ Fechar Projeção da Lousa</button>` : `<span style="font-size:11px; color:#10b981; font-weight:700;">📡 Visualizando Lousa do Professor</span>`}
                 </div>
                 <iframe id="iframe-lousa-live" src="" style="flex:1; width:100%; height:100%; border:none; background:#fff;"></iframe>
               </div>
             </div>
 
-            <!-- Faixa Compacta de Participantes Conectados -->
-            <div id="webrtc-video-grid" style="display:none; height:105px; background:rgba(15,23,42,0.92); border-top:1px solid #1e293b; padding:6px 10px; gap:8px; overflow-x:auto; align-items:center; flex-shrink:0;"></div>
+            <!-- Faixa de Participantes com Indicador de Microfone Ativo / Silencioso -->
+            <div id="webrtc-video-grid" style="display:none; height:108px; background:rgba(15,23,42,0.94); border-top:1px solid #1e293b; padding:6px 10px; gap:8px; overflow-x:auto; align-items:center; flex-shrink:0;"></div>
           </div>
 
           <!-- 💬 MENSAGENS DO MINI CHAT EXIBIDAS DIRETAMENTE NA TELA -->
           <div id="live-onscreen-overlay"></div>
+
+          <!-- 🎉 CAMADA DE REAÇÕES (EMOJIS FLUTUANTES) -->
+          <div id="live-reactions-layer"></div>
 
           <!-- 💬 GAVETA DO MINI CHAT AO VIVO -->
           <div id="live-minichat-drawer">
@@ -1279,16 +1418,16 @@
               <button type="button" onclick="alternarMiniChatLive()" style="background:transparent; border:none; color:#94a3b8; cursor:pointer; font-size:15px; font-weight:bold;">✕</button>
             </div>
             <div id="live-minichat-messages" style="flex:1; padding:10px; overflow-y:auto; display:flex; flex-direction:column; gap:8px; font-size:12.5px;">
-              <div style="color:#64748b; text-align:center; font-size:11.5px; margin-top:10px;">As mensagens enviadas aqui aparecem na tela da chamada!</div>
+              <div style="color:#64748b; text-align:center; font-size:11.5px; margin-top:10px;">As mensagens enviadas aparecem na tela da chamada!</div>
             </div>
             <div style="padding:8px; background:#0f172a; border-top:1px solid #334155; display:flex; gap:6px;">
-              <input type="text" id="live-minichat-input" placeholder="Enviar mensagem na tela..." style="flex:1; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:8px; padding:8px 10px; font-size:12.5px; outline:none;" onkeydown="if(event.key==='Enter') enviarMensagemMiniChat()">
+              <input type="text" id="live-minichat-input" placeholder="Enviar mensagem na tela..." style="flex:1; background:#1e293b; border:1px solid #475569; color:#fff; border-radius:8px; padding:8px 10px; font-size:12.5px; outline:none;" onkeydown="if(event.key==='Enter') { event.preventDefault(); enviarMensagemMiniChat(); }">
               <button type="button" class="vc-btn primary" style="padding:8px 12px;" onclick="enviarMensagemMiniChat()">➤</button>
             </div>
           </div>
 
           <!-- Avisos de Mão Levantada -->
-          <div id="webrtc-hand-alerts" style="position:absolute; top:56px; left:16px; display:flex; flex-direction:column; gap:6px; z-index:35;"></div>
+          <div id="webrtc-hand-alerts" style="position:absolute; top:52px; left:16px; display:flex; flex-direction:column; gap:6px; z-index:35;"></div>
 
           <!-- Barra de Restauro quando está Minimizado (Picture-in-Picture) -->
           <div id="pip-restore-bar">
@@ -1296,22 +1435,33 @@
             <button type="button" class="vc-btn primary" style="pointer-events:auto; padding:6px 12px; font-size:11.5px;" onclick="maximizarChamadaAoVivo()">🗖 Voltar ao Tamanho Normal</button>
           </div>
 
-          <!-- 🎛️ BARRA FRONTAL LIMPA (APENAS MICROFONE, CÂMARA E SAÍDA DE SOM + CHAT E MENU ⋮ À DIREITA) -->
-          <div id="live-bottom-controls" style="padding:12px 18px; background:rgba(15,23,42,0.96); border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; z-index:30; flex-shrink:0;">
-            <div style="width:80px; display:none;"></div>
-
-            <!-- Centro: Apenas Microfone, Câmara e Saída de Som (Viva-Voz) -->
+          <!-- 🎛️ BARRA FRONTAL LIMPA (CENTRO: MICROFONE, CÂMARA, SAÍDA DE SOM | DIREITA: REAÇÕES, CHAT, MENU ⋮) -->
+          <div id="live-bottom-controls" style="padding:10px 18px; background:rgba(15,23,42,0.97); border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; z-index:30; flex-shrink:0;">
+            <!-- Centro: Apenas Microfone, Câmara e Saída de Som -->
             <div style="display:flex; align-items:center; justify-content:center; gap:10px; flex:1; flex-wrap:wrap;">
               <button type="button" class="vc-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()">🎤 Microfone</button>
               <button type="button" class="vc-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()">📷 Câmara</button>
               <button type="button" class="vc-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">🔊 Saída de Som</button>
             </div>
 
-            <!-- Canto Direito: Mini Chat + Menu de Três Pontos (⋮) -->
+            <!-- Canto Direito: Reações (😊) + Mini Chat (💬) + Menu de Três Pontos (⋮) -->
             <div style="display:flex; align-items:center; gap:8px;">
+              <!-- Seletor de Emojis de Reação -->
+              <div class="more-menu-wrapper" id="wrap-menu-reacoes">
+                <button type="button" class="vc-btn" onclick="alternarMenuReacoes(event)" title="Enviar Reação na Tela">😊 Reações</button>
+                <div id="live-reactions-popover" class="reactions-popover">
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👏')">👏</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('❤️')">❤️</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😂')">😂</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😮')">😮</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('🎉')">🎉</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👍')">👍</button>
+                </div>
+              </div>
+
               <button type="button" class="vc-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Abrir Mini Chat na Tela">💬 Chat</button>
 
-              <div class="more-menu-wrapper">
+              <div class="more-menu-wrapper" id="wrap-menu-tres-pontos">
                 <button type="button" class="vc-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" style="font-size:18px; padding:6px 13px; font-weight:900;" title="Mais Opções da Chamada">⋮</button>
                 <div id="live-more-dropdown" class="more-dropdown-menu">
                   <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
@@ -1323,8 +1473,9 @@
                   <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
                     <span>⛶</span> <span>Tela Cheia</span>
                   </button>
-                  <button type="button" class="more-menu-item" id="menu-item-projetar-lousa" onclick="fecharMenuTresPontos(); alternarProjecaoLousaNaLive();">
-                    <span>🖍️</span> <span id="label-projetar-lousa">Projetar Lousa</span>
+                  ${itemLousaMenuHTML}
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); abrirModalConfigLive();">
+                    <span>⚙️</span> <span>Configurações</span>
                   </button>
                 </div>
               </div>
@@ -1338,6 +1489,7 @@
 
     function alternarMenuTresPontos(e) {
       if (e) e.stopPropagation();
+      document.getElementById('live-reactions-popover')?.classList.remove('open');
       const menu = document.getElementById('live-more-dropdown');
       if (menu) menu.classList.toggle('open');
     }
@@ -1347,12 +1499,133 @@
       if (menu) menu.classList.remove('open');
     }
 
+    function alternarMenuReacoes(e) {
+      if (e) e.stopPropagation();
+      fecharMenuTresPontos();
+      const pop = document.getElementById('live-reactions-popover');
+      if (pop) pop.classList.toggle('open');
+    }
+
+    // 😊 ENVIAR E DESENHAR REAÇÕES COM SOM NA TELA
+    const reacoesProcessadas = new Set();
+    async function enviarReacaoLive(emoji) {
+      document.getElementById('live-reactions-popover')?.classList.remove('open');
+      const reactId = 'rx_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+      const payload = {
+        id: reactId,
+        tipo: 'REACAO_LIVE',
+        subtipo: 'REACAO',
+        salaCodigo: liveAtivaObj?.codigoSala || '',
+        escolaId: ESCOLA_ID,
+        autorNome: USER_NAME,
+        texto: emoji
+      };
+
+      desenharReacaoNaTela(payload);
+
+      conexoesAlunos.forEach(conn => {
+        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
+      });
+      if (window._conexaoComProf && window._conexaoComProf.open) {
+        try { window._conexaoComProf.send(payload); } catch (e) {}
+      }
+
+      try {
+        await fetch('/api/workspace/video-aulas/live/evento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    function desenharReacaoNaTela(dados) {
+      if (!dados || !dados.texto) return;
+      const chave = dados.id || `rx_${dados.autorNome}_${dados.texto}_${Math.floor(Date.now() / 1500)}`;
+      if (reacoesProcessadas.has(chave)) return;
+      reacoesProcessadas.add(chave);
+
+      tocarSomReacao('emoji');
+
+      const layer = document.getElementById('live-reactions-layer');
+      if (!layer) return;
+      const el = document.createElement('div');
+      el.className = 'floating-emoji-item';
+      el.style.right = `${Math.floor(Math.random() * 80) + 10}px`;
+      el.innerHTML = `
+        <div style="font-size:34px; filter:drop-shadow(0 4px 10px rgba(0,0,0,0.5));">${esc(dados.texto)}</div>
+        <span style="background:rgba(15,23,42,0.85); color:#fff; font-size:10px; font-weight:800; padding:2px 7px; border-radius:99px; white-space:nowrap;">${esc(dados.autorNome)}</span>
+      `;
+      layer.appendChild(el);
+      setTimeout(() => el.remove(), 2800);
+    }
+
+    // 🎤 SINCRONIZAÇÃO EM TEMPO REAL DO ESTADO DO MICROFONE DO ALUNO (ATIVO VS SILENCIOSO)
+    async function transmitirMeuStatusMicrofone() {
+      const payload = {
+        id: 'mic_' + Date.now(),
+        tipo: 'STATUS_MIC',
+        subtipo: 'STATUS_MIC',
+        salaCodigo: liveAtivaObj?.codigoSala || '',
+        escolaId: ESCOLA_ID,
+        autorNome: USER_NAME,
+        autorRole: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+        texto: micAtivo ? 'ATIVO' : 'MUDO'
+      };
+
+      atualizarIndicadorMicParticipante(USER_NAME, micAtivo, IS_GESTOR_OU_PROF ? 'professor' : 'aluno');
+
+      conexoesAlunos.forEach(conn => {
+        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
+      });
+      if (window._conexaoComProf && window._conexaoComProf.open) {
+        try { window._conexaoComProf.send(payload); } catch (e) {}
+      }
+
+      try {
+        await fetch('/api/workspace/video-aulas/live/evento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
+    }
+
+    function atualizarIndicadorMicParticipante(nomePessoa, isAtivo, rolePessoa = 'aluno') {
+      if (!nomePessoa || rolePessoa === 'professor') return;
+      const chaveNome = String(nomePessoa).trim();
+      estadoMicsParticipantes[chaveNome] = Boolean(isAtivo);
+
+      // 1. Atualiza o emblema dentro do cartão de vídeo do participante
+      document.querySelectorAll('[data-participante-nome]').forEach(badge => {
+        if (badge.getAttribute('data-participante-nome') === chaveNome) {
+          badge.style.background = isAtivo ? 'rgba(16, 185, 129, 0.92)' : 'rgba(239, 68, 68, 0.92)';
+          badge.innerHTML = isAtivo ? '🎤 Ativo' : '🔇 Silencioso';
+        }
+      });
+
+      // 2. Atualiza o resumo no topo da chamada para o professor e a turma verem claramente
+      const summary = document.getElementById('webrtc-mics-summary');
+      if (!summary) return;
+      const entradas = Object.entries(estadoMicsParticipantes);
+      if (entradas.length === 0) {
+        summary.innerHTML = '';
+        return;
+      }
+      summary.innerHTML = entradas.map(([nome, ativo]) => `
+        <span style="background:${ativo ? 'rgba(16,185,129,0.18)' : 'rgba(239,68,68,0.18)'}; border:1px solid ${ativo ? '#10b981' : '#ef4444'}; color:${ativo ? '#6ee7b7' : '#fca5a5'}; padding:2px 8px; border-radius:99px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+          ${ativo ? '🎤' : '🔇'} ${esc(nome)}: ${ativo ? 'Ativo' : 'Silencioso'}
+        </span>
+      `).join('');
+    }
+
     // 🔊 BLOQUEAR SAÍDA DE SOM / TIRAR VIVA-VOZ
     function alternarSaidaDeSom() {
       somSaidaAtivo = !somSaidaAtivo;
       const videoMain = document.getElementById('video-prof-main');
       if (videoMain) {
-        // O professor mantém o próprio retorno mudo para não dar microfonia; nos alunos controla o som da aula
         videoMain.muted = IS_GESTOR_OU_PROF ? true : !somSaidaAtivo;
       }
       document.querySelectorAll('.remote-participant-video').forEach(v => {
@@ -1368,7 +1641,7 @@
       mostrarToast(somSaidaAtivo ? '🔊 Saída de som ativada (Viva-voz ligado).' : '🔈 Saída de som bloqueada (Silenciado).', somSaidaAtivo ? '#10b981' : '#f59e0b');
     }
 
-    // 🗕 MINIMIZAR E MAXIMIZAR A CHAMADA (ESTILO MEET / TEAMS)
+    // 🗕 MINIMIZAR E MAXIMIZAR A CHAMADA
     function minimizarChamadaAoVivo() {
       document.body.classList.add('modo-minimizado-pip');
       if (window.parent && window.parent !== window) {
@@ -1383,12 +1656,12 @@
       }
     }
 
-    // 🖍️ PROJETAR LOUSA IMEDIATAMENTE NA TELA PARA TODOS NA CHAMADA
+    // 🖍️ PROJETAR LOUSA (EXCLUSIVO PARA O PROFESSOR ACIONAR)
     async function alternarProjecaoLousaNaLive(forcarEstado = null) {
+      if (!IS_GESTOR_OU_PROF) return;
       const novoEstado = forcarEstado !== null ? forcarEstado : !lousaProjetadaAtiva;
       aplicarProjecaoLousaVisual(novoEstado);
 
-      // Transmite para todos na sala via P2P e via Servidor SSE
       const payload = {
         tipo: 'PROJETAR_LOUSA',
         subtipo: 'PROJETAR_LOUSA',
@@ -1401,9 +1674,6 @@
       conexoesAlunos.forEach(conn => {
         try { if (conn && conn.open) conn.send(payload); } catch (e) {}
       });
-      if (window._conexaoComProf && window._conexaoComProf.open) {
-        try { window._conexaoComProf.send(payload); } catch (e) {}
-      }
 
       try {
         await fetch('/api/workspace/video-aulas/live/evento', {
@@ -1425,7 +1695,6 @@
 
       if (lousaProjetadaAtiva) {
         const salaLousaId = liveAtivaObj?.codigoSala || 'live_lousa_ativa';
-        // Abre com role=professor para saltar qualquer tela de espera e, se for aluno, bloqueia o ponteiro para apenas assistir ao vivo!
         const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}`;
         if (!iframe.src || !iframe.src.includes(salaLousaId)) {
           iframe.src = urlLousa;
@@ -1436,7 +1705,6 @@
             if (!docLousa) return;
             const appLousa = docLousa.getElementById('lousa-app');
             if (!IS_GESTOR_OU_PROF) {
-              // No ecrã do Aluno, esconde os menus da lousa para exibir o quadro 100% limpo e em tempo real
               if (appLousa) appLousa.classList.add('sidebar-collapsed');
               const qd = docLousa.getElementById('floating-quick-dock');
               const toast = docLousa.getElementById('smart-hand-toast');
@@ -1450,7 +1718,6 @@
         };
         wrap.style.display = 'flex';
         if (labelMenu) labelMenu.innerText = 'Fechar Lousa Projetada';
-        mostrarToast('🖍️ Lousa projetada na tela da chamada!');
       } else {
         wrap.style.display = 'none';
         iframe.src = '';
@@ -1458,7 +1725,7 @@
       }
     }
 
-    // 💬 MINI CHAT AO VIVO COM EXIBIÇÃO IMEDIATA NA TELA
+    // 💬 MINI CHAT AO VIVO (BLINDADO CONTRA DUPLICAÇÃO DE MENSAGENS)
     function alternarMiniChatLive() {
       const drawer = document.getElementById('live-minichat-drawer');
       if (!drawer) return;
@@ -1468,11 +1735,15 @@
       }
     }
 
+    let enviandoChatAgora = false;
     async function enviarMensagemMiniChat() {
+      if (enviandoChatAgora) return;
       const inp = document.getElementById('live-minichat-input');
       if (!inp) return;
       const texto = inp.value.trim();
       if (!texto) return;
+
+      enviandoChatAgora = true;
       inp.value = '';
 
       const msgId = 'msg_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
@@ -1487,15 +1758,8 @@
         texto: texto
       };
 
+      // Desenha localmente uma única vez
       desenharMensagemMiniChat(payload, true);
-
-      // Envia via P2P e via Servidor SSE para que todos na chamada vejam na tela
-      conexoesAlunos.forEach(conn => {
-        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
-      });
-      if (window._conexaoComProf && window._conexaoComProf.open) {
-        try { window._conexaoComProf.send(payload); } catch (e) {}
-      }
 
       try {
         await fetch('/api/workspace/video-aulas/live/evento', {
@@ -1504,17 +1768,34 @@
           credentials: 'include',
           body: JSON.stringify(payload)
         });
-      } catch (e) {}
+      } catch (e) {
+        // Fallback P2P apenas se o servidor falhar
+        conexoesAlunos.forEach(conn => {
+          try { if (conn && conn.open) conn.send(payload); } catch (err) {}
+        });
+        if (window._conexaoComProf && window._conexaoComProf.open) {
+          try { window._conexaoComProf.send(payload); } catch (err) {}
+        }
+      } finally {
+        setTimeout(() => { enviandoChatAgora = false; }, 250);
+      }
     }
 
-    const mensagensLiveProcessadas = new Set();
+    const mensagensLiveProcessadas = new Map();
     function desenharMensagemMiniChat(dados, isMinha = false) {
       if (!dados || !dados.texto) return;
-      const chaveUnica = dados.id || `${dados.autorNome}_${dados.texto}_${Math.floor(Date.now() / 2000)}`;
-      if (mensagensLiveProcessadas.has(chaveUnica)) return;
-      mensagensLiveProcessadas.add(chaveUnica);
 
-      // 1. Adiciona no histórico da gaveta do Mini Chat
+      // 🛡️ Se a mensagem veio da rede (SSE/P2P), mas o autor sou eu mesmo, ignora porque já foi desenhada no clique!
+      if (!isMinha && String(dados.autorNome || '').trim() === String(USER_NAME).trim()) {
+        return;
+      }
+
+      const agora = Date.now();
+      const assinaturaConteudo = `${String(dados.autorNome).trim()}_${String(dados.texto).trim()}`;
+      const ultimoTempo = mensagensLiveProcessadas.get(assinaturaConteudo) || 0;
+      if (agora - ultimoTempo < 4000) return;
+      mensagensLiveProcessadas.set(assinaturaConteudo, agora);
+
       const box = document.getElementById('live-minichat-messages');
       if (box) {
         const corNome = dados.autorRole === 'professor' ? '#f59e0b' : '#38bdf8';
@@ -1525,7 +1806,6 @@
         box.scrollTop = box.scrollHeight;
       }
 
-      // 2. Exibe flutuando diretamente na tela da chamada ao vivo!
       const overlay = document.getElementById('live-onscreen-overlay');
       if (overlay) {
         const bubble = document.createElement('div');
@@ -1559,7 +1839,11 @@
             meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
             micAtivo = false;
             const btnMic = document.getElementById('btn-toggle-mic');
-            if (btnMic) { btnMic.innerText = '🔇 Microfone'; btnMic.classList.remove('primary'); }
+            if (btnMic) {
+              btnMic.innerText = '🔇 Silencioso';
+              btnMic.classList.remove('primary');
+              btnMic.classList.add('danger');
+            }
           }
         } catch (errMedia) {
           try {
@@ -1590,6 +1874,7 @@
               if (!dados) return;
               if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
                 mostrarToast(`👋 ${dados.nome} entrou na Aula Ao Vivo!`);
+                atualizarIndicadorMicParticipante(dados.nome, Boolean(dados.micAtivo), 'aluno');
                 const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
                 if (streamEnvio) {
                   const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
@@ -1598,11 +1883,14 @@
                 if (lousaProjetadaAtiva) {
                   conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
                 }
+              } else if (dados.tipo === 'STATUS_MIC') {
+                atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO', dados.autorRole);
               } else if (dados.tipo === 'MAO_LEVANTADA') {
                 mostrarAlertaMaoLevantada(dados.nome);
+              } else if (dados.tipo === 'REACAO_LIVE') {
+                desenharReacaoNaTela(dados);
               } else if (dados.tipo === 'CHAT_LIVE') {
                 desenharMensagemMiniChat(dados, false);
-                conexoesAlunos.forEach(c => { if (c !== conn && c.open) c.send(dados); });
               } else if (dados.tipo === 'PROJETAR_LOUSA') {
                 aplicarProjecaoLousaVisual(dados.lousaAtiva);
               }
@@ -1614,13 +1902,15 @@
             call.answer(streamEnvio || undefined);
             chamadasAtivas[call.peer] = call;
             call.on('stream', (streamAluno) => {
-              adicionarVideoParticipanteNaGrelha(call.peer, call.metadata?.nome || 'Aluno', streamAluno);
+              const nomeAl = call.metadata?.nome || 'Aluno';
+              adicionarVideoParticipanteNaGrelha(call.peer, nomeAl, streamAluno, false, call.metadata?.micAtivo);
             });
           });
 
         } else {
           if (meuStreamLocal) {
-            adicionarVideoParticipanteNaGrelha('meu_video_local', `${USER_NAME} (Você)`, meuStreamLocal, true);
+            adicionarVideoParticipanteNaGrelha('meu_video_local', USER_NAME, meuStreamLocal, true, micAtivo);
+            atualizarIndicadorMicParticipante(USER_NAME, micAtivo, 'aluno');
           }
 
           const meuPeerId = `${idSalaLimpo}_AL_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
@@ -1632,16 +1922,18 @@
             window._conexaoComProf = conn;
             conn.on('open', () => {
               if (statusEl) statusEl.innerText = '🟢 Conectado à Sala do Professor';
-              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME });
+              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME, micAtivo: micAtivo });
+              transmitirMeuStatusMicrofone();
             });
             conn.on('data', (dados) => {
               if (!dados) return;
               if (dados.tipo === 'CHAT_LIVE') desenharMensagemMiniChat(dados, false);
+              else if (dados.tipo === 'REACAO_LIVE') desenharReacaoNaTela(dados);
               else if (dados.tipo === 'PROJETAR_LOUSA') aplicarProjecaoLousaVisual(dados.lousaAtiva);
             });
 
             if (meuStreamLocal) {
-              const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno' } });
+              const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno', micAtivo: micAtivo } });
               if (callToProf) {
                 callToProf.on('stream', (streamProf) => {
                   const videoMain = document.getElementById('video-prof-main');
@@ -1684,19 +1976,27 @@
       }
     }
 
-    function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false) {
+    function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false, micInicial = false) {
       const grid = document.getElementById('webrtc-video-grid');
       if (!grid) return;
       grid.style.display = 'flex';
+      const nomeLimpo = String(nomePessoa || 'Aluno').trim();
+      const estaAtivo = estadoMicsParticipantes[nomeLimpo] !== undefined ? estadoMicsParticipantes[nomeLimpo] : Boolean(micInicial);
+
       let card = document.getElementById(`vid_card_${idCard}`);
       if (!card) {
         card = document.createElement('div');
         card.id = `vid_card_${idCard}`;
-        card.style.cssText = 'width:150px; height:90px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        card.style.cssText = 'width:165px; height:94px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
           <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
-          <div style="position:absolute; bottom:4px; left:6px; background:rgba(15,23,42,0.85); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700;">
-            👤 ${esc(nomePessoa)}
+          <div style="position:absolute; bottom:4px; left:6px; right:6px; display:flex; justify-content:space-between; align-items:center; gap:4px; pointer-events:none;">
+            <span style="background:rgba(15,23,42,0.88); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+              👤 ${esc(nomeLimpo)}
+            </span>
+            <span data-participante-nome="${esc(nomeLimpo)}" style="background:${estaAtivo ? 'rgba(16,185,129,0.92)' : 'rgba(239,68,68,0.92)'}; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:800; flex-shrink:0;">
+              ${estaAtivo ? '🎤 Ativo' : '🔇 Silencioso'}
+            </span>
           </div>
         `;
         grid.appendChild(card);
@@ -1706,6 +2006,7 @@
         v.srcObject = stream;
         v.play().catch(() => {});
       }
+      atualizarIndicadorMicParticipante(nomeLimpo, estaAtivo, 'aluno');
     }
 
     function alternarMeuMicrofone() {
@@ -1714,9 +2015,11 @@
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
       const btn = document.getElementById('btn-toggle-mic');
       if (btn) {
-        btn.innerText = micAtivo ? '🎤 Microfone' : '🔇 Microfone';
+        btn.innerText = micAtivo ? '🎤 Microfone (Ativo)' : '🔇 Silencioso';
         btn.classList.toggle('primary', micAtivo);
+        btn.classList.toggle('danger', !micAtivo);
       }
+      transmitirMeuStatusMicrofone();
     }
 
     function alternarMinhaCamara() {
@@ -1730,7 +2033,6 @@
       }
     }
 
-    // 🖥️ PARTILHA DE TELA INTEIRA (100% ENQUADRADA E SEM CORTES)
     async function partilharEcraNaLive() {
       try {
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
@@ -1772,14 +2074,32 @@
       } catch (e) {}
     }
 
-    function levantarMaoNaAula() {
+    async function levantarMaoNaAula() {
+      const payload = {
+        id: 'mao_' + Date.now(),
+        tipo: 'MAO_LEVANTADA',
+        subtipo: 'MAO_LEVANTADA',
+        salaCodigo: liveAtivaObj?.codigoSala || '',
+        escolaId: ESCOLA_ID,
+        nome: USER_NAME,
+        autorNome: USER_NAME
+      };
+      mostrarAlertaMaoLevantada(USER_NAME);
       if (window._conexaoComProf && window._conexaoComProf.open) {
-        window._conexaoComProf.send({ tipo: 'MAO_LEVANTADA', nome: USER_NAME });
-        mostrarToast('✋ Você levantou a mão! O professor foi avisado.');
+        window._conexaoComProf.send(payload);
       }
+      try {
+        await fetch('/api/workspace/video-aulas/live/evento', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify(payload)
+        });
+      } catch (e) {}
     }
 
     function mostrarAlertaMaoLevantada(nomeAluno) {
+      tocarSomReacao('mao');
       const box = document.getElementById('webrtc-hand-alerts');
       if (!box) return;
       const item = document.createElement('div');
@@ -1948,15 +2268,19 @@
       }
     }
 
+    // 🖥️ ALTERNAR ABA (ATIVA MODO ECRÃ INTEIRO 100% QUANDO ENTRA NA AULA AO VIVO)
     function alternarAba(aba) {
       document.getElementById('btn-tab-catalogo').classList.toggle('active', aba === 'catalogo');
       document.getElementById('btn-tab-live').classList.toggle('active', aba === 'live');
       document.getElementById('view-player').style.display = 'none';
       document.getElementById('view-catalogo').style.display = aba === 'catalogo' ? 'block' : 'none';
       document.getElementById('view-live').style.display = aba === 'live' ? 'block' : 'none';
+
+      // Esconde cabeçalho superior e campo de pesquisa quando está na Sala Ao Vivo!
+      document.body.classList.toggle('modo-cinema-live', aba === 'live');
     }
 
-    // Escuta eventos em tempo real do servidor (SSE: Status da Live, Chat na Tela e Projeção de Lousa)
+    // Escuta eventos em tempo real do servidor (SSE: Live, Chat, Reações, Microfone e Lousa)
     try {
       const sse = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(ESCOLA_ID)}`);
       sse.onmessage = (ev) => {
@@ -1970,6 +2294,14 @@
           } else if (data.type === 'VIDEO_LIVE_EVENTO') {
             if (data.subtipo === 'CHAT') {
               desenharMensagemMiniChat(data, false);
+            } else if (data.subtipo === 'REACAO') {
+              desenharReacaoNaTela(data);
+            } else if (data.subtipo === 'STATUS_MIC') {
+              atualizarIndicadorMicParticipante(data.autorNome, data.texto === 'ATIVO', data.autorRole);
+            } else if (data.subtipo === 'MAO_LEVANTADA') {
+              if (String(data.autorNome).trim() !== String(USER_NAME).trim()) {
+                mostrarAlertaMaoLevantada(data.autorNome);
+              }
             } else if (data.subtipo === 'PROJETAR_LOUSA') {
               aplicarProjecaoLousaVisual(data.lousaAtiva);
             }
