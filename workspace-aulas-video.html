@@ -2235,6 +2235,29 @@
       }
     }
 
+   // Liberta a conexão imediatamente se o utilizador apertar F5 para não travar o ID da sala
+    window.addEventListener('beforeunload', () => {
+      limparConexoesWebRTC();
+    });
+
+    // Cria uma faixa de áudio silenciosa de reserva caso o aparelho não tenha microfone
+    function criarFaixaAudioSilenciosa() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        const ctx = new AudioCtx();
+        const osc = ctx.createOscillator();
+        const dst = ctx.createMediaStreamDestination();
+        const gain = ctx.createGain();
+        gain.gain.value = 0;
+        osc.connect(gain);
+        gain.connect(dst);
+        osc.start();
+        return dst.stream.getAudioTracks()[0];
+      } catch (e) {
+        return null;
+      }
+    }
+
     async function iniciarConexaoWebRTCSala(codigoSala) {
       const statusEl = document.getElementById('webrtc-status-badge');
       try {
@@ -2249,25 +2272,34 @@
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
           });
-          if (!IS_GESTOR_OU_PROF) {
-            meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
-            micAtivo = false;
-            const btnMic = document.getElementById('btn-toggle-mic');
-            const iconMic = document.getElementById('icon-toggle-mic');
-            const lblMic = document.getElementById('lbl-toggle-mic');
-            if (iconMic) iconMic.innerText = '🔇';
-            if (lblMic) lblMic.innerText = 'Silencioso';
-            if (btnMic) {
-              btnMic.classList.remove('primary');
-              btnMic.classList.add('danger');
-            }
-          }
         } catch (errMedia) {
           try {
             meuStreamLocal = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
           } catch (e) {
-            meuStreamLocal = null;
+            meuStreamLocal = new MediaStream();
           }
+        }
+
+        // Garante que existe sempre uma trilha de áudio no stream para podermos injetar o som da tela partilhada depois
+        if (meuStreamLocal.getAudioTracks().length === 0) {
+          const trilhaReserva = criarFaixaAudioSilenciosa();
+          if (trilhaReserva) meuStreamLocal.addTrack(trilhaReserva);
+        }
+
+        if (!IS_GESTOR_OU_PROF) {
+          meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
+          micAtivo = false;
+          const btnMic = document.getElementById('btn-toggle-mic');
+          const iconMic = document.getElementById('icon-toggle-mic');
+          const lblMic = document.getElementById('lbl-toggle-mic');
+          if (iconMic) iconMic.innerText = '🔇';
+          if (lblMic) lblMic.innerText = 'Silencioso';
+          if (btnMic) {
+            btnMic.classList.remove('primary');
+            btnMic.classList.add('danger');
+          }
+        } else {
+          meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
         }
 
         streamTransmissaoAtual = meuStreamLocal;
@@ -2279,50 +2311,78 @@
             videoMain.srcObject = meuStreamLocal;
           }
 
-          peerInstance = new Peer(idHostProf);
+          const criarPeerProfessor = () => {
+            if (peerInstance) {
+              try { peerInstance.destroy(); } catch (e) {}
+            }
+            peerInstance = new Peer(idHostProf);
 
-          peerInstance.on('open', () => {
-            if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
-          });
+            peerInstance.on('open', () => {
+              if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
+              // Avisa todos os alunos na sala para reconectarem imediatamente (caso o professor tenha atualizado a página com F5)
+              fetch('/api/workspace/video-aulas/live/evento', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',
+                body: JSON.stringify({
+                  subtipo: 'PROF_RECONECTOU',
+                  salaCodigo: codigoSala,
+                  escolaId: ESCOLA_ID,
+                  autorNome: USER_NAME
+                })
+              }).catch(() => {});
+            });
 
-          peerInstance.on('connection', (conn) => {
-            conexoesAlunos.push(conn);
-            conn.on('data', (dados) => {
-              if (!dados) return;
-              if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
-                mostrarToast(`👋 ${dados.nome} entrou na Aula Ao Vivo!`);
-                atualizarIndicadorMicParticipante(dados.nome, Boolean(dados.micAtivo), 'aluno');
-                const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
-                if (streamEnvio) {
-                  const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
-                  chamadasAtivas[dados.peerId] = call;
-                }
-                if (lousaProjetadaAtiva) {
-                  conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
-                }
-              } else if (dados.tipo === 'STATUS_MIC') {
-                atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole);
-              } else if (dados.tipo === 'MAO_LEVANTADA') {
-                mostrarAlertaMaoLevantada(dados.nome);
-              } else if (dados.tipo === 'REACAO_LIVE') {
-                desenharReacaoNaTela(dados, false);
-              } else if (dados.tipo === 'CHAT_LIVE') {
-                desenharMensagemMiniChat(dados, false);
-              } else if (dados.tipo === 'PROJETAR_LOUSA') {
-                aplicarProjecaoLousaVisual(dados.lousaAtiva);
+            // 🛡️ Recuperação automática caso o F5 tenha deixado o ID preso por 1 segundo no servidor PeerJS
+            peerInstance.on('error', (err) => {
+              if (err && (err.type === 'unavailable-id' || err.type === 'network' || err.type === 'server-error')) {
+                if (statusEl) statusEl.innerText = '🔄 Restaurando sala...';
+                setTimeout(() => {
+                  if (liveAtivaObj && liveAtivaObj.ativa) criarPeerProfessor();
+                }, 2200);
               }
             });
-          });
 
-          peerInstance.on('call', (call) => {
-            const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
-            call.answer(streamEnvio || undefined);
-            chamadasAtivas[call.peer] = call;
-            call.on('stream', (streamAluno) => {
-              const nomeAl = call.metadata?.nome || 'Aluno';
-              adicionarVideoParticipanteNaGrelha(call.peer, nomeAl, streamAluno, false, call.metadata?.micAtivo);
+            peerInstance.on('connection', (conn) => {
+              conexoesAlunos.push(conn);
+              conn.on('data', (dados) => {
+                if (!dados) return;
+                if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
+                  atualizarIndicadorMicParticipante(dados.nome, Boolean(dados.micAtivo), 'aluno');
+                  const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+                  if (streamEnvio) {
+                    const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
+                    chamadasAtivas[dados.peerId] = call;
+                  }
+                  if (lousaProjetadaAtiva) {
+                    conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
+                  }
+                } else if (dados.tipo === 'STATUS_MIC') {
+                  atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole);
+                } else if (dados.tipo === 'MAO_LEVANTADA') {
+                  mostrarAlertaMaoLevantada(dados.nome);
+                } else if (dados.tipo === 'REACAO_LIVE') {
+                  desenharReacaoNaTela(dados, false);
+                } else if (dados.tipo === 'CHAT_LIVE') {
+                  desenharMensagemMiniChat(dados, false);
+                } else if (dados.tipo === 'PROJETAR_LOUSA') {
+                  aplicarProjecaoLousaVisual(dados.lousaAtiva);
+                }
+              });
             });
-          });
+
+            peerInstance.on('call', (call) => {
+              const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+              call.answer(streamEnvio || undefined);
+              chamadasAtivas[call.peer] = call;
+              call.on('stream', (streamAluno) => {
+                const nomeAl = call.metadata?.nome || 'Aluno';
+                adicionarVideoParticipanteNaGrelha(call.peer, nomeAl, streamAluno, false, call.metadata?.micAtivo);
+              });
+            });
+          };
+
+          criarPeerProfessor();
 
         } else {
           if (meuStreamLocal) {
@@ -2335,11 +2395,14 @@
 
           const conectarAoProfessor = (idGerado) => {
             if (!peerInstance || peerInstance.destroyed) return;
+            const idFinal = idGerado || peerInstance.id;
+            if (!idFinal) return;
+
             const conn = peerInstance.connect(idHostProf);
             window._conexaoComProf = conn;
             conn.on('open', () => {
               if (statusEl) statusEl.innerText = '🟢 Conectado';
-              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME, micAtivo: micAtivo });
+              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idFinal, nome: USER_NAME, micAtivo: micAtivo });
               transmitirMeuStatusMicrofone();
             });
             conn.on('data', (dados) => {
@@ -2352,6 +2415,7 @@
             if (meuStreamLocal) {
               const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno', micAtivo: micAtivo } });
               if (callToProf) {
+                window._chamadaAtivaComProf = callToProf;
                 callToProf.on('stream', (streamProf) => {
                   const videoMain = document.getElementById('video-prof-main');
                   if (videoMain) {
@@ -2364,18 +2428,24 @@
             }
           };
 
+          window._reconectarAoProfessorLive = () => conectarAoProfessor(peerInstance?.id);
+
           peerInstance.on('open', (idGerado) => {
             conectarAoProfessor(idGerado);
             clearInterval(timerReconexaoAluno);
             timerReconexaoAluno = setInterval(() => {
               const videoMain = document.getElementById('video-prof-main');
-              if (videoMain && !videoMain.srcObject) {
+              const streamAtual = videoMain ? videoMain.srcObject : null;
+              const trilhaVideo = streamAtual && streamAtual.getVideoTracks ? streamAtual.getVideoTracks()[0] : null;
+              const conexaoCaiu = !streamAtual || !streamAtual.active || (trilhaVideo && trilhaVideo.readyState === 'ended');
+              if (conexaoCaiu) {
                 conectarAoProfessor(idGerado);
               }
-            }, 6000);
+            }, 5000);
           });
 
           peerInstance.on('call', (call) => {
+            window._chamadaAtivaComProf = call;
             call.answer(meuStreamLocal || undefined);
             call.on('stream', (streamProf) => {
               if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
@@ -2456,42 +2526,138 @@
       }
     }
 
+    let audioCtxMixEcra = null;
+
+    // 🔊 Combina o áudio da tela partilhada (sempre audível) com o microfone (respeitando se o mic está mudo ou ativo)
+    function criarFaixaAudioCombinadaTelaEMic(screenAudioTrack) {
+      const micTrack = (meuStreamLocal && meuStreamLocal.getAudioTracks().length > 0)
+        ? meuStreamLocal.getAudioTracks()[0]
+        : null;
+
+      if (!screenAudioTrack) return micTrack;
+
+      try {
+        if (audioCtxMixEcra) {
+          try { audioCtxMixEcra.close(); } catch (e) {}
+        }
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        audioCtxMixEcra = new AudioCtx();
+        if (audioCtxMixEcra.state === 'suspended') {
+          audioCtxMixEcra.resume().catch(() => {});
+        }
+
+        const destinoMix = audioCtxMixEcra.createMediaStreamDestination();
+
+        // 1. Canal de Áudio da Tela Partilhada (Passa sempre a 100%, mesmo com o microfone desligado!)
+        const streamSoTela = new MediaStream([screenAudioTrack]);
+        const fonteTela = audioCtxMixEcra.createMediaStreamSource(streamSoTela);
+        const ganhoTela = audioCtxMixEcra.createGain();
+        ganhoTela.gain.value = 1.0;
+        fonteTela.connect(ganhoTela);
+        ganhoTela.connect(destinoMix);
+
+        // 2. Canal do Microfone (Se o microfone estiver ativo, soma a voz; se estiver mudo, fica silencioso sem afetar a tela!)
+        if (micTrack) {
+          const streamSoMic = new MediaStream([micTrack]);
+          const fonteMic = audioCtxMixEcra.createMediaStreamSource(streamSoMic);
+          const ganhoMic = audioCtxMixEcra.createGain();
+          ganhoMic.gain.value = 1.0;
+          fonteMic.connect(ganhoMic);
+          ganhoMic.connect(destinoMix);
+        }
+
+        return destinoMix.stream.getAudioTracks()[0] || screenAudioTrack;
+      } catch (e) {
+        return screenAudioTrack;
+      }
+    }
+
     async function partilharEcraNaLive() {
       try {
         const displayStream = await navigator.mediaDevices.getDisplayMedia({
           video: { width: { ideal: 1920 }, height: { ideal: 1080 } },
-          audio: true
+          audio: {
+            echoCancellation: false,
+            noiseSuppression: false,
+            autoGainControl: false
+          }
         });
-        const screenTrack = displayStream.getVideoTracks()[0];
 
-        const tracksCombinadas = [screenTrack];
-        if (meuStreamLocal && meuStreamLocal.getAudioTracks().length > 0) {
-          tracksCombinadas.push(meuStreamLocal.getAudioTracks()[0]);
+        const screenVideoTrack = displayStream.getVideoTracks()[0];
+        const screenAudioTrack = displayStream.getAudioTracks()[0] || null;
+
+        // Cria a faixa de áudio final (Áudio da Tela + Microfone misturados, ou apenas Áudio da Tela se o Mic estiver mudo)
+        const trilhaAudioTransmissao = criarFaixaAudioCombinadaTelaEMic(screenAudioTrack);
+
+        const tracksCombinadas = [screenVideoTrack];
+        if (trilhaAudioTransmissao) {
+          tracksCombinadas.push(trilhaAudioTransmissao);
         }
         streamTransmissaoAtual = new MediaStream(tracksCombinadas);
 
         const videoMain = document.getElementById('video-prof-main');
         if (videoMain) {
           videoMain.style.objectFit = 'contain';
+          videoMain.muted = true; // Evita eco na própria máquina de quem está a partilhar
           videoMain.srcObject = displayStream;
         }
 
+        // Substitui TANTO o vídeo QUANTO o áudio em todas as conexões ativas com os alunos!
         Object.values(chamadasAtivas).forEach(call => {
-          const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
-          if (sender) sender.replaceTrack(screenTrack);
+          const senders = call.peerConnection?.getSenders() || [];
+          const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+          if (videoSender && screenVideoTrack) {
+            videoSender.replaceTrack(screenVideoTrack).catch(() => {});
+          }
+          const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+          if (audioSender && trilhaAudioTransmissao) {
+            audioSender.replaceTrack(trilhaAudioTransmissao).catch(() => {});
+          }
         });
 
-        mostrarToast('🖥️ Partilha de tela ativa (enquadramento 100% ajustado)!');
+        // Se for um aluno a partilhar a tela para o professor
+        if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
+          const sendersAl = window._chamadaAtivaComProf.peerConnection.getSenders() || [];
+          const vSender = sendersAl.find(s => s.track && s.track.kind === 'video');
+          if (vSender && screenVideoTrack) vSender.replaceTrack(screenVideoTrack).catch(() => {});
+          const aSender = sendersAl.find(s => s.track && s.track.kind === 'audio');
+          if (aSender && trilhaAudioTransmissao) aSender.replaceTrack(trilhaAudioTransmissao).catch(() => {});
+        }
 
-        screenTrack.onended = () => {
+        mostrarToast(screenAudioTrack
+          ? '🖥️🔊 Tela e Áudio do sistema partilhados com sucesso!'
+          : '🖥️ Partilha de tela ativa (sem áudio de aba selecionado).');
+
+        screenVideoTrack.onended = () => {
+          if (audioCtxMixEcra) {
+            try { audioCtxMixEcra.close(); } catch (e) {}
+            audioCtxMixEcra = null;
+          }
+          if (displayStream) {
+            displayStream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+          }
           streamTransmissaoAtual = meuStreamLocal;
+
           if (meuStreamLocal) {
             const camTrack = meuStreamLocal.getVideoTracks()[0];
+            const micTrackOriginal = meuStreamLocal.getAudioTracks()[0];
             if (videoMain) videoMain.srcObject = meuStreamLocal;
+
             Object.values(chamadasAtivas).forEach(call => {
-              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
-              if (sender && camTrack) sender.replaceTrack(camTrack);
+              const senders = call.peerConnection?.getSenders() || [];
+              const videoSender = senders.find(s => s.track && s.track.kind === 'video');
+              if (videoSender && camTrack) videoSender.replaceTrack(camTrack).catch(() => {});
+              const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
+              if (audioSender && micTrackOriginal) audioSender.replaceTrack(micTrackOriginal).catch(() => {});
             });
+
+            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
+              const sendersAl = window._chamadaAtivaComProf.peerConnection.getSenders() || [];
+              const vSender = sendersAl.find(s => s.track && s.track.kind === 'video');
+              if (vSender && camTrack) vSender.replaceTrack(camTrack).catch(() => {});
+              const aSender = sendersAl.find(s => s.track && s.track.kind === 'audio');
+              if (aSender && micTrackOriginal) aSender.replaceTrack(micTrackOriginal).catch(() => {});
+            }
           }
         };
       } catch (e) {}
@@ -2727,28 +2893,36 @@
       }
     }
 
-    // 🔄 VERIFICADOR AUTOMÁTICO DE NOVA ATUALIZAÇÃO (Garante que a versão nova chegue a todos os aparelhos)
+   // 🔄 VERIFICADOR DE NOVA ATUALIZAÇÃO (Nunca interrompe nem derruba uma chamada ao vivo em andamento!)
     let versaoConhecidaPlayClass = null;
+    let atualizacaoPendentePosLive = false;
+
     async function verificarAtualizacaoPlayClass() {
       try {
         const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         if (!data || !data.version) return;
+
         if (!versaoConhecidaPlayClass) {
           versaoConhecidaPlayClass = data.version;
         } else if (versaoConhecidaPlayClass !== data.version) {
-          // Só recarrega automaticamente se não estiver no meio de uma gravação ativa
-          if (!mediaRecorderLive || mediaRecorderLive.state !== 'recording') {
-            window.location.reload();
+          const emChamadaLiveAtiva = Boolean(liveAtivaObj && liveAtivaObj.ativa) || document.body.classList.contains('modo-cinema-live');
+          const gravandoAgora = Boolean(mediaRecorderLive && mediaRecorderLive.state === 'recording');
+
+          // Se estiver na Sala Ao Vivo ou a gravar, NÃO recarrega a página para não derrubar ninguém!
+          if (emChamadaLiveAtiva || gravandoAgora) {
+            atualizacaoPendentePosLive = true;
+            return;
           }
+          window.location.reload();
         }
       } catch (e) {}
     }
     setInterval(verificarAtualizacaoPlayClass, 60000);
     verificarAtualizacaoPlayClass();
 
-    // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma!)
+    // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma e Reconexão Instantânea no F5!)
     try {
       const sse = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(ESCOLA_ID)}`);
       sse.onmessage = (ev) => {
@@ -2760,13 +2934,23 @@
               liveAtivaObj = data.live;
             } else {
               liveAtivaObj = null;
+              // Se havia uma atualização de versão aguardando o fim da live, aplica agora que a live terminou
+              if (atualizacaoPendentePosLive) {
+                window.location.reload();
+                return;
+              }
             }
             atualizarBannerLive();
           } else if (data.type === 'VIDEO_AULA_NOVA') {
             carregarCatalogo(false);
           } else if (data.type === 'VIDEO_LIVE_EVENTO') {
             if (liveAtivaObj && data.salaCodigo && data.salaCodigo !== liveAtivaObj.codigoSala) return;
-            if (data.subtipo === 'CHAT') {
+            if (data.subtipo === 'PROF_RECONECTOU') {
+              // Se o professor atualizou a página (F5), todos os alunos reconectam automaticamente em 800ms!
+              if (!IS_GESTOR_OU_PROF && typeof window._reconectarAoProfessorLive === 'function') {
+                setTimeout(() => window._reconectarAoProfessorLive(), 800);
+              }
+            } else if (data.subtipo === 'CHAT') {
               desenharMensagemMiniChat(data, false);
             } else if (data.subtipo === 'REACAO') {
               desenharReacaoNaTela(data, false);
