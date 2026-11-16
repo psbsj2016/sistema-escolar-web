@@ -1,7 +1,7 @@
 {
   "headers": [
     {
-      "source": "/(version\\.json|sw\\.js|workbox-.*\\.js| registerSW\\.js|index\\.html|workspace\\.html|workspace-lousa\\.html|workspace-aulas-video\\.html)",
+      "source": "/(version\\.json|sw\\.js|workbox-.*\\.js|registerSW\\.js|index\\.html|workspace\\.html|workspace-lousa\\.html|workspace-aulas-video\\.html)",
       "headers": [
         {
           "key": "Cache-Control",
@@ -34,6 +34,10 @@
     {
       "source": "/workspace",
       "destination": "/workspace.html"
+    },
+    {
+      "source": "/workspace-lousa",
+      "destination": "/workspace-lousa.html"
     },
     {
       "source": "/workspace-aulas-video",

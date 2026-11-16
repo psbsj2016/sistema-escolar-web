@@ -2755,7 +2755,20 @@
         } catch (e) {}
       }
 
-      async function verificarStatusPermissoes() {
+     async function verificarStatusPermissoes() {
+        // 🎬 Se a lousa está a ser projetada dentro da Sala Ao Vivo (PlayClass), libera imediatamente sem tela de espera!
+        if (String(roomIdOriginal).startsWith('PlayClass_') || String(roomIdOriginal).startsWith('live_')) {
+          roomIdAtivo = roomIdOriginal;
+          isAllowed = true;
+          isReadonly = (role === 'aluno');
+          atualizarPermissoesUI();
+          if (!initialLoadDone) {
+            initialLoadDone = true;
+            await carregarDadosNuvem(roomIdAtivo);
+          }
+          return;
+        }
+
         try {
           const qs = role === 'professor'
             ? '?estrito=true'
@@ -2815,6 +2828,30 @@
             } catch (err) {}
           };
         } catch (e) {}
+      }
+
+      // 🔄 VERIFICADOR AUTOMÁTICO DE NOVA VERSÃO (Garante que atualizações cheguem a todos os aparelhos sem perder traços)
+      let versaoBuildLousa = null;
+      async function verificarAtualizacaoLousa() {
+        try {
+          const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data || !data.version) return;
+          if (!versaoBuildLousa) {
+            versaoBuildLousa = data.version;
+          } else if (versaoBuildLousa !== data.version && !isPointerDown && !isSaving) {
+            await salvarDadosNuvem();
+            window.location.reload();
+          }
+        } catch (e) {}
+      }
+      setInterval(verificarAtualizacaoLousa, 60000);
+      verificarAtualizacaoLousa();
+
+      // 📱 Em ecrãs de telemóvel, inicia com o menu lateral recolhido para dar 100% de espaço ao quadro
+      if (window.innerWidth <= 900) {
+        alternarMenuLateral(true);
       }
 
       // Inicialização
