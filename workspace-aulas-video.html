@@ -49,7 +49,7 @@
     }
     .vc-divider-v { width: 1px; height: 30px; background: rgba(255,255,255,0.2); }
     .vc-subtitle-box { display: flex; align-items: center; gap: 10px; }
-    .vc-search-wrap { flex: 1; max-width: 350px; min-width: 220px; position: relative; }
+    .vc-search-wrap { flex: 1; max-width: 350px; min-width: 200px; position: relative; }
     .vc-search-input {
       width: 100%; padding: 10px 16px 10px 38px; border-radius: 999px;
       border: 1px solid rgba(255,255,255,0.22); background: rgba(15, 23, 42, 0.55);
@@ -61,12 +61,12 @@
     /* SUB-BARRA DE ABAS CENTRALIZADAS */
     .vc-subnav {
       border-top: 1px solid rgba(255,255,255,0.08);
-      background: rgba(5, 14, 38, 0.45); padding: 9px 20px;
-      display: flex; align-items: center; justify-content: center; gap: 12px; flex-wrap: wrap;
+      background: rgba(5, 14, 38, 0.45); padding: 9px 16px;
+      display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
     }
     .vc-nav-tab {
       background: rgba(255,255,255,0.07); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12);
-      padding: 9px 18px; border-radius: 10px; font-size: 13px; font-weight: 700;
+      padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700;
       cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
     }
     .vc-nav-tab:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
@@ -95,7 +95,7 @@
       100% { opacity: 0; transform: translateY(-230px) scale(0.8); }
     }
 
-    /* FAIXA DE ALERTA AO VIVO IGUAL À IMAGEM */
+    /* FAIXA DE ALERTA AO VIVO */
     .vc-container { max-width: 1380px; margin: 0 auto; padding: 20px; }
     .live-banner-alert {
       display: none; background: linear-gradient(90deg, #ffe4e6 0%, #fecdd3 100%);
@@ -141,9 +141,9 @@
       box-shadow: 0 8px 22px rgba(29, 107, 243, 0.25); display: flex; flex-direction: column; justify-content: center;
     }
 
-    /* GRELHA DE VÍDEOS ESTILO YOUTUBE / PLAYCLASS */
+    /* GRELHA DE VÍDEOS */
     .videos-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(275px, 1fr)); gap: 18px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 18px;
     }
     .video-card {
       background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
@@ -223,7 +223,7 @@
     .hist-table th { background: #f1f5f9; color: #334155; padding: 12px 14px; font-weight: 800; border-bottom: 2px solid #cbd5e1; }
     .hist-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; color: #1e293b; vertical-align: middle; }
 
-    /* SALA AO VIVO EM ECRÃ INTEIRO REAL (OCULTA CABEÇALHO E OCULTA BARRA LATERAL QUANDO COMEÇA) */
+    /* SALA AO VIVO EM ECRÃ INTEIRO REAL */
     #view-live { display: none; }
     .live-grid { display: flex; width: 100%; height: 82vh; gap: 18px; }
     .meet-frame-box {
@@ -248,16 +248,53 @@
       width: 350px; height: 100dvh; border-radius: 0; overflow-y: auto; flex-shrink: 0;
       background: #0f172a; color: #fff; border-left: 1px solid #1e293b; padding: 20px;
     }
+    @media (max-width: 860px) {
+      body.modo-cinema-live .live-grid { flex-direction: column !important; overflow-y: auto !important; }
+      body.modo-cinema-live #painel-lateral-transmissao { width: 100% !important; height: auto !important; border-left: none; border-top: 1px solid #1e293b; }
+    }
 
-    /* BOTÕES CIRCULARES DA CHAMADA AO VIVO (ESTILO IMAGEM DE REFERÊNCIA) */
+    /* 📱 DOCA DE CONTROLO DA LIVE OTIMIZADA PARA TELEMÓVEL E PC */
+    .live-dock-bar {
+      padding: 10px 14px; background: rgba(11, 18, 34, 0.98); border-top: 1px solid #1e293b;
+      display: flex; justify-content: center; align-items: center; gap: 10px;
+      flex-wrap: nowrap; z-index: 30; flex-shrink: 0;
+    }
+    .meet-ctrl-btn {
+      height: 44px; padding: 0 16px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14); background: #1e293b; color: #fff;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+      transition: 0.2s; white-space: nowrap; flex-shrink: 0;
+    }
+    .meet-ctrl-btn:hover { background: #334155; transform: translateY(-1px); }
+    .meet-ctrl-btn.active, .meet-ctrl-btn.primary { background: var(--primary); border-color: #60a5fa; }
+    .meet-ctrl-btn.danger, .meet-ctrl-btn.hangup { background: #e11d48; border-color: #fb7185; }
+    .meet-ctrl-btn.hand-btn { background: #f59e0b; color: #0f172a; border-color: #fbbf24; font-weight: 800; }
+
     .meet-circle-btn {
-      width: 46px; height: 46px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14);
+      width: 44px; height: 44px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14);
       background: #1e293b; color: #fff; font-size: 18px; cursor: pointer;
-      display: inline-flex; align-items: center; justify-content: center; transition: 0.2s;
+      display: inline-flex; align-items: center; justify-content: center; transition: 0.2s; flex-shrink: 0;
     }
     .meet-circle-btn:hover { background: #334155; transform: scale(1.06); }
     .meet-circle-btn.active { background: var(--primary); border-color: #60a5fa; }
     .meet-circle-btn.muted, .meet-circle-btn.hangup { background: #e11d48; border-color: #fb7185; }
+
+    /* 📱 NO TELEMÓVEL: Transforma todos os botões da live em ícones circulares alinhados numa única linha perfeita! */
+    @media (max-width: 768px) {
+      .live-dock-bar {
+        padding: 8px 8px; gap: 7px; justify-content: space-evenly;
+      }
+      .meet-ctrl-btn {
+        width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 17px;
+      }
+      .meet-ctrl-btn .btn-text-label { display: none !important; }
+      .meet-circle-btn { width: 42px; height: 42px; font-size: 17px; }
+      #live-top-header { padding: 6px 10px !important; }
+      .vc-topbar { padding: 10px 14px; }
+      .vc-divider-v, .vc-subtitle-box { display: none; }
+      .catalog-shell-card { padding: 14px; }
+    }
 
     /* MENU DE TRÊS PONTOS (⋮) E REAÇÕES (😊) */
     .more-menu-wrapper { position: relative; display: inline-flex; }
@@ -279,7 +316,7 @@
     .more-menu-item:hover { background: rgba(59, 130, 246, 0.22); color: #60a5fa; }
 
     .reactions-popover {
-      display: none; position: absolute; bottom: calc(100% + 12px); right: 0;
+      display: none; position: absolute; bottom: calc(100% + 12px); right: -40px;
       background: rgba(15, 23, 42, 0.96); border: 1px solid #475569;
       border-radius: 999px; padding: 6px 12px; gap: 8px;
       box-shadow: 0 14px 32px rgba(0,0,0,0.6); z-index: 60;
@@ -294,7 +331,7 @@
     .emoji-react-btn:hover { transform: scale(1.3); background: rgba(255,255,255,0.08); }
 
     #live-reactions-layer {
-      position: absolute; right: 28px; bottom: 82px; width: 160px; height: 260px;
+      position: absolute; right: 24px; bottom: 78px; width: 150px; height: 250px;
       pointer-events: none; z-index: 42; overflow: visible;
     }
     .floating-emoji-item {
@@ -305,8 +342,8 @@
 
     /* MINI CHAT AO VIVO */
     #live-minichat-drawer {
-      display: none; position: absolute; top: 54px; right: 12px; bottom: 74px;
-      width: 300px; max-width: calc(100% - 24px);
+      display: none; position: absolute; top: 52px; right: 10px; bottom: 70px;
+      width: 300px; max-width: calc(100% - 20px);
       background: rgba(15, 23, 42, 0.96); backdrop-filter: blur(14px);
       border: 1px solid #475569; border-radius: 14px; z-index: 45;
       flex-direction: column; overflow: hidden;
@@ -314,13 +351,13 @@
     }
     #live-minichat-drawer.open { display: flex; }
     #live-onscreen-overlay {
-      position: absolute; left: 16px; bottom: 78px; z-index: 38;
-      display: flex; flex-direction: column; gap: 6px; max-width: 65%; pointer-events: none;
+      position: absolute; left: 12px; bottom: 74px; z-index: 38;
+      display: flex; flex-direction: column; gap: 6px; max-width: 75%; pointer-events: none;
     }
     .onscreen-chat-bubble {
       background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px);
       border-left: 3px solid #3b82f6; color: #fff;
-      padding: 8px 14px; border-radius: 10px; font-size: 13px;
+      padding: 8px 12px; border-radius: 10px; font-size: 12.5px;
       box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: fadeSlideUp 0.22s ease; word-break: break-word;
     }
 
@@ -370,7 +407,7 @@
 </head>
 <body>
 
-  <!-- CABEÇALHO SUPERIOR AZUL-MARINHO (ESTILO IMAGEM DE REFERÊNCIA) -->
+  <!-- CABEÇALHO SUPERIOR AZUL-MARINHO (ESTILO PLAYCLASS & MEET) -->
   <header class="vc-header-master">
     <div class="vc-topbar">
       <div class="vc-brand-group">
@@ -469,7 +506,7 @@
       </div>
     </section>
 
-    <!-- 2. CATÁLOGO DE VÍDEOS E SEQUÊNCIAS POR ASSUNTO (DESIGN DA IMAGEM DE REFERÊNCIA) -->
+    <!-- 2. CATÁLOGO DE VÍDEOS E SEQUÊNCIAS POR ASSUNTO -->
     <section id="view-catalogo">
       <div class="catalog-shell-card">
         <div class="catalog-hero-top">
@@ -540,7 +577,7 @@
         <div id="painel-lateral-transmissao" style="display: none; flex-direction: column; gap: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
             <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #fff;">📡 Estúdio do Professor</h3>
-            <button type="button" class="vc-btn" style="padding: 5px 10px; font-size: 11.5px;" onclick="alternarAba('catalogo')">⬅ Catálogo</button>
+            <button type="button" class="vc-btn" style="padding: 5px 12px; font-size: 11.5px; background: #e11d48; color: #fff; border: none;" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo</button>
           </div>
 
           <div id="prof-live-controls" style="display: none; flex-direction: column; gap: 10px;">
@@ -827,7 +864,6 @@
         if (btnUpload) btnUpload.style.display = 'inline-flex';
         if (btnHist) btnHist.style.display = 'inline-flex';
         if (painelProfLive) painelProfLive.style.display = 'flex';
-        // Quando a live começa, o painel lateral some automaticamente para limpar 100% o ecrã!
         if (painelLateralCard) {
           painelLateralCard.style.display = liveEmAndamento ? 'none' : 'flex';
         }
@@ -839,7 +875,6 @@
       }
     }
 
-    // 💾 Memória de Estado Interno para nunca sair da tela ao atualizar a página (F5)
     function salvarEstadoInternoPlayClass(aba, extra = {}) {
       try {
         const estadoAtual = {
@@ -868,8 +903,10 @@
         minhasTurmasNorm = Array.isArray(data.minhasTurmas) ? data.minhasTurmas : [];
         catalogoVideos = Array.isArray(data.videos) ? data.videos : [];
         catalogoSequencias = Array.isArray(data.sequencias) ? data.sequencias : [];
+        if (Array.isArray(data.historicoLives)) {
+          historicoLivesCache = data.historicoLives;
+        }
 
-        // Verifica rigorosamente se a live ativa é permitida para a turma deste aluno
         if (data.liveAtiva && itemPermitidoParaMinhaTurma(data.liveAtiva)) {
           liveAtivaObj = data.liveAtiva;
         } else {
@@ -888,17 +925,14 @@
         renderizarGrelhaCatalogo();
 
         if (abrirInicial) {
-          // 1. Se veio por Link Criptografado de Live (#live-TOKEN)
           if (INITIAL_LIVE_TOKEN) {
             await abrirLivePorTokenCriptografado(INITIAL_LIVE_TOKEN);
             return;
           }
-          // 2. Se veio por Link de Vídeo Individual
           if (INITIAL_VIDEO_ID) {
             const vEncontrado = catalogoVideos.find(v => v.id === INITIAL_VIDEO_ID);
             if (vEncontrado) { reproduzirVideo(vEncontrado.id); return; }
           }
-          // 3. Se veio por Link de Sequência (Playlist)
           if (INITIAL_PLAYLIST) {
             const seq = catalogoSequencias.find(s => s.slug === INITIAL_PLAYLIST || s.assunto.toLowerCase() === INITIAL_PLAYLIST.toLowerCase());
             if (seq && seq.videos.length > 0) {
@@ -907,7 +941,6 @@
               return;
             }
           }
-          // 4. Restauro automático após F5 (Atualizar Página)
           try {
             const salvoStr = localStorage.getItem('ws_playclass_estado_interno');
             if (salvoStr) {
@@ -944,7 +977,7 @@
       dl.innerHTML = catalogoSequencias.map(s => `<option value="${esc(s.assunto)}">`).join('');
     }
 
-    // 2. RENDERIZAR BARRA DE ASSUNTOS E GRELHA (ESTILO IMAGEM DE REFERÊNCIA)
+    // 2. RENDERIZAR BARRA DE ASSUNTOS E GRELHA
     function renderizarBarraAssuntos() {
       const bar = document.getElementById('bar-assuntos');
       const btnCopySeq = document.getElementById('btn-copy-active-subject');
@@ -1043,6 +1076,9 @@
       if (!video || !itemPermitidoParaMinhaTurma(video)) return;
 
       document.body.classList.remove('modo-cinema-live');
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'MODO_CINEMA_LIVE', ativo: false }, '*');
+      }
       videoAtualObj = video;
       salvarEstadoInternoPlayClass('player', { videoId: video.id });
 
@@ -1430,9 +1466,7 @@
       }
     }
 
-    // ============================================================================
-    // 7. GERAÇÃO DE LINK ÚNICO CRIPTOGRAFADO & HISTÓRICO DE LIVES (CRIAÇÃO, INÍCIO E TÉRMINO)
-    // ============================================================================
+    // 7. GERAÇÃO DE LINK ÚNICO CRIPTOGRAFADO & HISTÓRICO DE LIVES (ALINHADO COM videoAulasRoutes.js)
     async function gerarLinkUnicoAntesDaLive() {
       if (!IS_GESTOR_OU_PROF) return;
       const titulo = document.getElementById('live-titulo-input').value.trim() || `Aula Ao Vivo - ${new Date().toLocaleDateString('pt-BR')}`;
@@ -1442,7 +1476,7 @@
       const destinoNome = sel.options[sel.selectedIndex]?.getAttribute('data-nome') || 'Todas as Turmas';
 
       try {
-        const res = await fetch('/api/workspace/video-aulas/live/preparar-link', {
+        const res = await fetch('/api/workspace/video-aulas/live/gerar-link', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           credentials: 'include',
@@ -1522,7 +1556,10 @@
               <td style="font-family:monospace; font-size:12px; color:#be123c; font-weight:700;">${formatarDataHoraBR(item.encerradaEm)}</td>
               <td>${statusBadge}</td>
               <td style="text-align:right; white-space:nowrap;">
-                <button type="button" class="vc-btn primary" style="padding:6px 10px; font-size:11.5px;" onclick="copiarLinkDireto('live', '${esc(token)}')">🔐 Copiar Link</button>
+                <div style="display:inline-flex; gap:6px; align-items:center;">
+                  <button type="button" class="vc-btn primary" style="padding:6px 10px; font-size:11.5px;" onclick="copiarLinkDireto('live', '${esc(token)}')">🔐 Copiar Link</button>
+                  <button type="button" class="vc-btn danger" style="padding:6px 9px; font-size:11.5px;" onclick="excluirItemHistoricoLive('${esc(item.id)}')" title="Apagar registo">🗑️</button>
+                </div>
               </td>
             </tr>
           `;
@@ -1530,6 +1567,21 @@
       } catch (e) {
         tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:25px; color:#e11d48;">Falha de ligação ao buscar histórico.</td></tr>`;
       }
+    }
+
+    async function excluirItemHistoricoLive(id) {
+      if (!id || !confirm('Deseja remover este registo do histórico de lives?')) return;
+      try {
+        const res = await fetch(`/api/workspace/video-aulas/live/historico/${encodeURIComponent(id)}`, {
+          method: 'DELETE',
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          mostrarToast('🗑️ Registo removido do histórico.');
+          carregarHistoricoLives();
+        }
+      } catch (e) {}
     }
 
     async function abrirLivePorTokenCriptografado(token) {
@@ -1545,6 +1597,8 @@
         }
         if (data.live && data.live.ativa) {
           liveAtivaObj = data.live;
+        } else if (IS_GESTOR_OU_PROF && data.live) {
+          livePreviaGerada = data.live;
         }
         alternarAba('live');
         atualizarBannerLive();
@@ -1552,9 +1606,8 @@
         alternarAba('catalogo');
       }
     }
-
-    // ============================================================================
-    // 8. SALA AO VIVO PRO (100% TELA LIMPA + GRAVADOR NO MENU ⋮ + REAÇÕES SEM DUPLICAR)
+// ============================================================================
+    // 8. SALA AO VIVO PRO (DOCA MOBILE + MÃOZINHA PROF/ALUNO + SAÍDA INDIVIDUAL ALUNO)
     // ============================================================================
     function carregarPeerJS() {
       return new Promise((resolve, reject) => {
@@ -1590,7 +1643,7 @@
       const banner = document.getElementById('live-banner');
       const btnTabLive = document.getElementById('btn-tab-live');
 
-      // 🔒 Bloqueio Rigoroso no Frontend: se não for da turma do aluno, anula imediatamente!
+      // 🔒 Bloqueio Rigoroso por Turma no Frontend
       if (liveAtivaObj && !itemPermitidoParaMinhaTurma(liveAtivaObj)) {
         liveAtivaObj = null;
       }
@@ -1625,24 +1678,35 @@
       stage.dataset.salaMontada = '';
       if (IS_GESTOR_OU_PROF) {
         stage.innerHTML = `
-          <div style="text-align: center; padding: 30px; max-width: 480px; margin: auto; color: #fff;">
-            <div style="font-size: 56px; margin-bottom: 12px;">📡</div>
-            <h3 style="margin: 0 0 8px 0; font-size: 21px; font-weight: 900;">Estúdio Ao Vivo Pronto (Até 4h Seguidas)</h3>
-            <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.55; margin-bottom: 18px;">
-              Configure o título e a turma no painel à direita, gere o <b>Link Único Criptografado</b> se desejar e clique em <b>((•)) Iniciar Transmissão</b>. Assim que a aula começar, a barra lateral fechará automaticamente para limpar o ecrã!
-            </p>
-            <button type="button" class="vc-btn" onclick="alternarAba('catalogo')">⬅ Voltar ao Catálogo de Vídeos</button>
+          <div style="width:100%; height:100%; display:flex; flex-direction:column; position:relative;">
+            <div style="padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b;">
+              <span style="color:#93c5fd; font-size:13px; font-weight:800;">🎥 Pré-Visualização do Estúdio</span>
+              <button type="button" class="vc-btn danger" style="padding:6px 14px; font-size:12px;" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo</button>
+            </div>
+            <div style="text-align: center; padding: 30px; max-width: 480px; margin: auto; color: #fff;">
+              <div style="font-size: 56px; margin-bottom: 12px;">📡</div>
+              <h3 style="margin: 0 0 8px 0; font-size: 21px; font-weight: 900;">Estúdio Ao Vivo Pronto (Até 4h Seguidas)</h3>
+              <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.55; margin-bottom: 18px;">
+                Configure o título e a turma no painel ao lado, gere o <b>Link Único Criptografado</b> se desejar e clique em <b>((•)) Iniciar Transmissão</b>. Quando a aula começar, o painel lateral fechará sozinho!
+              </p>
+            </div>
           </div>
         `;
       } else {
         stage.innerHTML = `
-          <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto; color: #fff;">
-            <div style="font-size: 54px; margin-bottom: 12px;">⏳</div>
-            <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Aula Ao Vivo...</h3>
-            <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
-              Nenhuma transmissão ao vivo está aberta para a sua turma neste momento. Assim que o professor iniciar, a sala abrirá automaticamente aqui!
-            </p>
-            <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">⬅ Voltar para Vídeo-Aulas Gravadas</button>
+          <div style="width:100%; height:100%; display:flex; flex-direction:column; position:relative;">
+            <div style="padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b;">
+              <span style="color:#93c5fd; font-size:13px; font-weight:800;">🔴 Sala de Transmissão Ao Vivo</span>
+              <button type="button" class="vc-btn danger" style="padding:6px 14px; font-size:12px;" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo</button>
+            </div>
+            <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto; color: #fff;">
+              <div style="font-size: 54px; margin-bottom: 12px;">⏳</div>
+              <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Aula Ao Vivo...</h3>
+              <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
+                Nenhuma transmissão ao vivo está aberta para a sua turma neste momento. Assim que o professor iniciar, a sala abrirá automaticamente aqui!
+              </p>
+              <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo de Vídeos</button>
+            </div>
           </div>
         `;
       }
@@ -1653,7 +1717,7 @@
       if (!codigoSala || stage.dataset.salaMontada === `${codigoSala}_${modoMotorLive}`) return;
       stage.dataset.salaMontada = `${codigoSala}_${modoMotorLive}`;
 
-      // Na visão do Professor/Gestor: Projetar Lousa + Botões de Gravar Ecrã e Câmara logo abaixo no menu ⋮
+      // Exclusivo para o Professor/Gestor no Menu ⋯: Projetar Lousa + Gravar Ecrã e Câmara logo abaixo
       const itensExclusivosProfMenuHTML = IS_GESTOR_OU_PROF ? `
         <button type="button" class="more-menu-item" id="menu-item-projetar-lousa" onclick="fecharMenuTresPontos(); alternarProjecaoLousaNaLive();">
           <span>🖍️</span> <span id="label-projetar-lousa">Projetar Lousa</span>
@@ -1672,28 +1736,28 @@
 
       stage.innerHTML = `
         <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#050811; position:relative; overflow:hidden;">
-          <!-- Barra de Topo Compacta da Chamada -->
-          <div id="live-top-header" style="padding:8px 16px; background:rgba(15,23,42,0.96); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-              <button type="button" class="vc-btn" style="padding:5px 10px; font-size:11.5px; background:#1e293b; color:#fff; border-color:#334155;" onclick="alternarAba('catalogo')">⬅ Catálogo</button>
-              <span style="background:#e11d48; color:#fff; font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:99px;">● Sala Ao Vivo</span>
-              <strong style="font-size:13px; color:#fff;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
-              <span style="font-size:11px; color:#93c5fd; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:6px; font-weight:700;">🏫 ${esc(liveAtivaObj?.destinoNome || 'Turma')}</span>
+          <!-- Barra de Topo da Chamada (Com o botão Voltar ao Catálogo no canto direito, no lugar do X) -->
+          <div id="live-top-header" style="padding:8px 14px; background:rgba(15,23,42,0.96); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
+              <span style="background:#e11d48; color:#fff; font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:99px; flex-shrink:0;">● AO VIVO</span>
+              <strong style="font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
+              <span style="font-size:11px; color:#93c5fd; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:6px; font-weight:700; flex-shrink:0;">🏫 ${esc(liveAtivaObj?.destinoNome || 'Turma')}</span>
             </div>
 
-            <!-- Indicador de Gravação em Andamento (Quando o Professor aciona pelo Menu ⋮) -->
+            <!-- Indicador de Gravação em Andamento -->
             <div id="recording-status-box" style="display:none; align-items:center; gap:8px; background:rgba(225,29,72,0.22); border:1px solid #f43f5e; padding:4px 12px; border-radius:99px;">
               <span style="color:#fda4af; font-weight:800; font-size:11.5px;">🔴 GRAVANDO: <span id="rec-timer">00:00</span></span>
-              <button type="button" class="vc-btn danger" style="padding:3px 9px; font-size:11px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar e Publicar</button>
+              <button type="button" class="vc-btn danger" style="padding:3px 9px; font-size:11px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
             </div>
 
             <!-- Visor Rápido do Microfone dos Alunos -->
             <div id="webrtc-mics-summary" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11px;"></div>
 
-            <div style="display:flex; align-items:center; gap:8px;">
-              <span id="webrtc-status-badge" style="font-size:11.5px; color:#10b981; font-weight:700;">🔄 A conectar...</span>
-              ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:4px 10px; font-size:11px; background:#1e3a8a; color:#fff; border-color:#3b82f6;" onclick="copiarLinkDireto('live', '${esc(tokenLinkAtual)}')" title="Copiar Link Criptografado desta Live">🔐 Link da Live</button>` : ''}
-              ${!IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:4px 10px; font-size:11.5px; background:#f59e0b; color:#0f172a; border:none;" onclick="levantarMaoNaAula()">✋ Levantar Mão</button>` : ''}
+            <!-- Canto Superior Direito: Status + Link + Botão Voltar ao Catálogo (no lugar do X) -->
+            <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
+              <span id="webrtc-status-badge" style="font-size:11px; color:#10b981; font-weight:700;">🟢 Conectado</span>
+              ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:5px 10px; font-size:11px; background:#1e3a8a; color:#fff; border-color:#3b82f6;" onclick="copiarLinkDireto('live', '${esc(tokenLinkAtual)}')" title="Copiar Link Criptografado">🔐 Link</button>` : ''}
+              <button type="button" class="vc-btn danger" style="padding:6px 12px; font-size:11.5px; border-radius:8px;" onclick="alternarAba('catalogo')" title="Sair da tela cheia da live e voltar ao catálogo">↩ Voltar ao Catálogo</button>
             </div>
           </div>
 
@@ -1716,7 +1780,7 @@
             </div>
 
             <!-- Faixa de Participantes com Indicador de Microfone Ativo / Silencioso -->
-            <div id="webrtc-video-grid" style="display:none; height:108px; background:rgba(15,23,42,0.94); border-top:1px solid #1e293b; padding:6px 10px; gap:8px; overflow-x:auto; align-items:center; flex-shrink:0;"></div>
+            <div id="webrtc-video-grid" style="display:none; height:104px; background:rgba(15,23,42,0.94); border-top:1px solid #1e293b; padding:6px 10px; gap:8px; overflow-x:auto; align-items:center; flex-shrink:0;"></div>
           </div>
 
           <!-- 💬 MENSAGENS DO MINI CHAT EXIBIDAS DIRETAMENTE NA TELA -->
@@ -1749,59 +1813,78 @@
             <button type="button" class="vc-btn primary" style="pointer-events:auto; padding:6px 12px; font-size:11.5px;" onclick="maximizarChamadaAoVivo()">🗖 Voltar ao Tamanho Normal</button>
           </div>
 
-          <!-- 🎛️ BARRA INFERIOR ESTILO IMAGEM DE REFERÊNCIA (CENTRO: MIC, CÂMARA, SOM | DIREITA: REAÇÕES, CHAT, MENU ⋮ E ENCERRAR) -->
-          <div id="live-bottom-controls" style="padding:10px 20px; background:rgba(11,18,34,0.98); border-top:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; z-index:30; flex-shrink:0;">
-            <div style="display:flex; align-items:center; justify-content:center; gap:12px; flex:1; flex-wrap:wrap;">
-              <button type="button" class="vc-btn primary" id="btn-toggle-mic" style="border-radius:999px; padding:10px 18px;" onclick="alternarMeuMicrofone()">🎤 Microfone</button>
-              <button type="button" class="vc-btn primary" id="btn-toggle-cam" style="border-radius:999px; padding:10px 18px;" onclick="alternarMinhaCamara()">📷 Câmara</button>
-              <button type="button" class="vc-btn primary" id="btn-toggle-speaker" style="border-radius:999px; padding:10px 18px;" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">🔊 Saída de Som</button>
+          <!-- 📱 DOCA INFERIOR UNIFICADA (PERFEITA NO TELEMÓVEL E NO PC: MIC, CÂMARA, SOM, MÃOZINHA, EMOJIS, CHAT, MENU ⋯ E ENCERRAR 📞) -->
+          <div id="live-bottom-controls" class="live-dock-bar">
+            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()" title="Ativar / Silenciar Microfone">
+              <span id="icon-toggle-mic">🎤</span> <span class="btn-text-label" id="lbl-toggle-mic">Microfone</span>
+            </button>
+
+            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()" title="Ligar / Desligar Câmara">
+              <span id="icon-toggle-cam">📷</span> <span class="btn-text-label" id="lbl-toggle-cam">Câmara</span>
+            </button>
+
+            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">
+              <span id="icon-toggle-speaker">🔊</span> <span class="btn-text-label" id="lbl-toggle-speaker">Saída de Som</span>
+            </button>
+
+            <!-- Botão Levantar a Mão disponível tanto para o Aluno quanto para o Professor! -->
+            <button type="button" class="meet-ctrl-btn hand-btn" onclick="levantarMaoNaAula()" title="Levantar a Mão na Aula">
+              <span>✋</span> <span class="btn-text-label">Mão</span>
+            </button>
+
+            <!-- Seletor de Emojis de Reação -->
+            <div class="more-menu-wrapper" id="wrap-menu-reacoes">
+              <button type="button" class="meet-circle-btn" onclick="alternarMenuReacoes(event)" title="Reações na Tela">😊</button>
+              <div id="live-reactions-popover" class="reactions-popover">
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👏')">👏</button>
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('❤️')">❤️</button>
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😂')">😂</button>
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😮')">😮</button>
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('🎉')">🎉</button>
+                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👍')">👍</button>
+              </div>
             </div>
 
-            <div style="display:flex; align-items:center; gap:10px;">
-              <!-- Seletor de Emojis de Reação -->
-              <div class="more-menu-wrapper" id="wrap-menu-reacoes">
-                <button type="button" class="meet-circle-btn" onclick="alternarMenuReacoes(event)" title="Reações na Tela">😊</button>
-                <div id="live-reactions-popover" class="reactions-popover">
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👏')">👏</button>
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('❤️')">❤️</button>
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😂')">😂</button>
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😮')">😮</button>
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('🎉')">🎉</button>
-                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👍')">👍</button>
-                </div>
+            <!-- Botão Mini Chat -->
+            <button type="button" class="meet-circle-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Mini Chat na Tela">💬</button>
+
+            <!-- Menu de Três Pontos (⋯) -->
+            <div class="more-menu-wrapper" id="wrap-menu-tres-pontos">
+              <button type="button" class="meet-circle-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" title="Mais Opções">⋯</button>
+              <div id="live-more-dropdown" class="more-dropdown-menu">
+                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
+                  <span>🖥️</span> <span>Partilhar Tela</span>
+                </button>
+                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); minimizarChamadaAoVivo();">
+                  <span>🗕</span> <span>Minimizar</span>
+                </button>
+                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
+                  <span>⛶</span> <span>Tela Cheia</span>
+                </button>
+                ${itensExclusivosProfMenuHTML}
+                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); abrirModalConfigLive();">
+                  <span>⚙️</span> <span>Configurações</span>
+                </button>
               </div>
-
-              <button type="button" class="meet-circle-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Mini Chat na Tela">💬</button>
-
-              <!-- Menu de Três Pontos (⋮) com Partilhar Tela, Minimizar, Tela Cheia, Projetar Lousa, Gravar Ecrã/Câmara e Configurações -->
-              <div class="more-menu-wrapper" id="wrap-menu-tres-pontos">
-                <button type="button" class="meet-circle-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" title="Mais Opções">⋯</button>
-                <div id="live-more-dropdown" class="more-dropdown-menu">
-                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
-                    <span>🖥️</span> <span>Partilhar Tela</span>
-                  </button>
-                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); minimizarChamadaAoVivo();">
-                    <span>🗕</span> <span>Minimizar</span>
-                  </button>
-                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
-                    <span>⛶</span> <span>Tela Cheia</span>
-                  </button>
-                  ${itensExclusivosProfMenuHTML}
-                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); abrirModalConfigLive();">
-                    <span>⚙️</span> <span>Configurações</span>
-                  </button>
-                </div>
-              </div>
-
-              ${IS_GESTOR_OU_PROF ? `
-                <button type="button" class="meet-circle-btn hangup" onclick="encerrarSalaAoVivo()" title="Encerrar Transmissão Ao Vivo">📞</button>
-              ` : ''}
             </div>
+
+            <!-- Botão Vermelho de Encerrar (Professor encerra a sala; Aluno encerra apenas para si mesmo!) -->
+            <button type="button" class="meet-circle-btn hangup" onclick="${IS_GESTOR_OU_PROF ? 'encerrarSalaAoVivo()' : 'sairDaChamadaAluno()'}" title="${IS_GESTOR_OU_PROF ? 'Encerrar Transmissão para a Turma' : 'Sair da Chamada (Encerrar para mim)'}">📞</button>
           </div>
         </div>
       `;
 
       iniciarConexaoWebRTCSala(codigoSala);
+    }
+
+    // 📞 SAÍDA INDIVIDUAL DO ALUNO (Desliga apenas a chamada dele sem encerrar a live do professor!)
+    function sairDaChamadaAluno() {
+      maximizarChamadaAoVivo();
+      limparConexoesWebRTC();
+      const stage = document.getElementById('meet-stage-container');
+      if (stage) stage.dataset.salaMontada = '';
+      mostrarToast('📞 Você saiu da chamada ao vivo.');
+      alternarAba('catalogo');
     }
 
     function alternarMenuTresPontos(e) {
@@ -1840,10 +1923,10 @@
         salaCodigo: liveAtivaObj?.codigoSala || '',
         escolaId: ESCOLA_ID,
         autorNome: USER_NAME,
-        texto: emoji
+        texto: emoji,
+        emoji: emoji
       };
 
-      // Desenha imediatamente no próprio ecrã (isMinha = true)
       desenharReacaoNaTela(payload, true);
 
       try {
@@ -1869,7 +1952,6 @@
       const emojiTexto = dados?.texto || dados?.emoji;
       if (!dados || !emojiTexto) return;
 
-      // 🛡️ BLOQUEIO ANTI-DUPLICAÇÃO: Se o evento voltou pela rede (SSE/P2P), mas fui eu que enviei, ignora!
       if (!isMinha && String(dados.autorNome || '').trim() === String(USER_NAME).trim()) {
         return;
       }
@@ -1905,7 +1987,8 @@
         escolaId: ESCOLA_ID,
         autorNome: USER_NAME,
         autorRole: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
-        texto: micAtivo ? 'ATIVO' : 'MUDO'
+        texto: micAtivo ? 'ATIVO' : 'MUDO',
+        micAtivo: Boolean(micAtivo)
       };
 
       atualizarIndicadorMicParticipante(USER_NAME, micAtivo, IS_GESTOR_OU_PROF ? 'professor' : 'aluno');
@@ -1965,8 +2048,11 @@
       });
 
       const btn = document.getElementById('btn-toggle-speaker');
+      const icon = document.getElementById('icon-toggle-speaker');
+      const lbl = document.getElementById('lbl-toggle-speaker');
+      if (icon) icon.innerText = somSaidaAtivo ? '🔊' : '🔈';
+      if (lbl) lbl.innerText = somSaidaAtivo ? 'Saída de Som' : 'Som Bloqueado';
       if (btn) {
-        btn.innerText = somSaidaAtivo ? '🔊 Saída de Som' : '🔈 Som Bloqueado';
         btn.classList.toggle('primary', somSaidaAtivo);
         btn.classList.toggle('danger', !somSaidaAtivo);
       }
@@ -2167,8 +2253,11 @@
             meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
             micAtivo = false;
             const btnMic = document.getElementById('btn-toggle-mic');
+            const iconMic = document.getElementById('icon-toggle-mic');
+            const lblMic = document.getElementById('lbl-toggle-mic');
+            if (iconMic) iconMic.innerText = '🔇';
+            if (lblMic) lblMic.innerText = 'Silencioso';
             if (btnMic) {
-              btnMic.innerText = '🔇 Silencioso';
               btnMic.classList.remove('primary');
               btnMic.classList.add('danger');
             }
@@ -2193,7 +2282,7 @@
           peerInstance = new Peer(idHostProf);
 
           peerInstance.on('open', () => {
-            if (statusEl) statusEl.innerText = '🟢 Transmissão Ao Vivo Ativa';
+            if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
           });
 
           peerInstance.on('connection', (conn) => {
@@ -2212,7 +2301,7 @@
                   conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
                 }
               } else if (dados.tipo === 'STATUS_MIC') {
-                atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO', dados.autorRole);
+                atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole);
               } else if (dados.tipo === 'MAO_LEVANTADA') {
                 mostrarAlertaMaoLevantada(dados.nome);
               } else if (dados.tipo === 'REACAO_LIVE') {
@@ -2249,7 +2338,7 @@
             const conn = peerInstance.connect(idHostProf);
             window._conexaoComProf = conn;
             conn.on('open', () => {
-              if (statusEl) statusEl.innerText = '🟢 Conectado à Sala do Professor';
+              if (statusEl) statusEl.innerText = '🟢 Conectado';
               conn.send({ tipo: 'ENTROU_ALUNO', peerId: idGerado, nome: USER_NAME, micAtivo: micAtivo });
               transmitirMeuStatusMicrofone();
             });
@@ -2289,7 +2378,7 @@
           peerInstance.on('call', (call) => {
             call.answer(meuStreamLocal || undefined);
             call.on('stream', (streamProf) => {
-              if (statusEl) statusEl.innerText = '🟢 Recebendo Transmissão Ao Vivo';
+              if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
               const videoMain = document.getElementById('video-prof-main');
               if (videoMain) {
                 videoMain.muted = !somSaidaAtivo;
@@ -2315,7 +2404,7 @@
       if (!card) {
         card = document.createElement('div');
         card.id = `vid_card_${idCard}`;
-        card.style.cssText = 'width:165px; height:94px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        card.style.cssText = 'width:160px; height:92px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
           <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
           <div style="position:absolute; bottom:4px; left:6px; right:6px; display:flex; justify-content:space-between; align-items:center; gap:4px; pointer-events:none;">
@@ -2342,8 +2431,11 @@
       micAtivo = !micAtivo;
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
       const btn = document.getElementById('btn-toggle-mic');
+      const icon = document.getElementById('icon-toggle-mic');
+      const lbl = document.getElementById('lbl-toggle-mic');
+      if (icon) icon.innerText = micAtivo ? '🎤' : '🔇';
+      if (lbl) lbl.innerText = micAtivo ? 'Microfone' : 'Silencioso';
       if (btn) {
-        btn.innerText = micAtivo ? '🎤 Microfone (Ativo)' : '🔇 Silencioso';
         btn.classList.toggle('primary', micAtivo);
         btn.classList.toggle('danger', !micAtivo);
       }
@@ -2355,8 +2447,11 @@
       camAtiva = !camAtiva;
       meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
       const btn = document.getElementById('btn-toggle-cam');
+      const icon = document.getElementById('icon-toggle-cam');
+      const lbl = document.getElementById('lbl-toggle-cam');
+      if (icon) icon.innerText = camAtiva ? '📷' : '🚫';
+      if (lbl) lbl.innerText = camAtiva ? 'Câmara' : 'Desligada';
       if (btn) {
-        btn.innerText = camAtiva ? '📷 Câmara' : '🚫 Câmara';
         btn.classList.toggle('primary', camAtiva);
       }
     }
@@ -2402,17 +2497,22 @@
       } catch (e) {}
     }
 
+    // ✋ LEVANTAR A MÃO (FUNCIONA TANTO PARA O ALUNO QUANTO PARA O PROFESSOR!)
     async function levantarMaoNaAula() {
+      const rotuloPessoa = IS_GESTOR_OU_PROF ? `👨‍🏫 Prof. ${USER_NAME}` : USER_NAME;
       const payload = {
         id: 'mao_' + Date.now(),
         tipo: 'MAO_LEVANTADA',
         subtipo: 'MAO_LEVANTADA',
         salaCodigo: liveAtivaObj?.codigoSala || '',
         escolaId: ESCOLA_ID,
-        nome: USER_NAME,
-        autorNome: USER_NAME
+        nome: rotuloPessoa,
+        autorNome: rotuloPessoa
       };
-      mostrarAlertaMaoLevantada(USER_NAME);
+      mostrarAlertaMaoLevantada(rotuloPessoa);
+      conexoesAlunos.forEach(conn => {
+        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
+      });
       if (window._conexaoComProf && window._conexaoComProf.open) {
         window._conexaoComProf.send(payload);
       }
@@ -2426,13 +2526,13 @@
       } catch (e) {}
     }
 
-    function mostrarAlertaMaoLevantada(nomeAluno) {
+    function mostrarAlertaMaoLevantada(nomePessoa) {
       tocarSomReacao('mao');
       const box = document.getElementById('webrtc-hand-alerts');
       if (!box) return;
       const item = document.createElement('div');
       item.style.cssText = 'background:#f59e0b; color:#0f172a; padding:8px 14px; border-radius:10px; font-size:12.5px; font-weight:800; box-shadow:0 8px 20px rgba(0,0,0,0.4);';
-      item.innerText = `✋ ${nomeAluno} levantou a mão!`;
+      item.innerText = `✋ ${nomePessoa} levantou a mão!`;
       box.appendChild(item);
       setTimeout(() => item.remove(), 6000);
     }
@@ -2461,7 +2561,8 @@
           credentials: 'include',
           body: JSON.stringify({
             escolaId: ESCOLA_ID,
-            liveIdPrevia: livePreviaGerada?.id || null,
+            liveId: livePreviaGerada?.id || null,
+            tokenCriptografado: livePreviaGerada?.tokenCriptografado || null,
             titulo, assunto, destino, destinoNome,
             professorNome: USER_NAME,
             autorId: USER_ID
@@ -2491,11 +2592,11 @@
         });
         liveAtivaObj = null;
         atualizarBannerLive();
-        mostrarToast('⏹️ Transmissão ao vivo encerrada e registada no Histórico!');
+        mostrarToast('⏹️ Transmissão encerrada e horário de término salvo no Histórico!');
       } catch (e) {}
     }
 
-    // ⏺️ GRAVADOR AUTOMÁTICO DE AULA (ACIONADO PELO MENU ⋮ ABAIXO DE PROJETAR LOUSA)
+    // ⏺️ GRAVADOR AUTOMÁTICO DE AULA (ACIONADO PELO MENU ⋯ ABAIXO DE PROJETAR LOUSA)
     async function alternarGravacaoAula(modo) {
       if (mediaRecorderLive && mediaRecorderLive.state === 'recording') {
         pararGravacaoEPublicar();
@@ -2601,7 +2702,7 @@
       }
     }
 
-    // 🖥️ ALTERNAR ABA E GUARDAR NA MEMÓRIA PARA RESISTIR AO F5
+    // 🖥️ ALTERNAR ABA (OCULTA CABEÇALHO EXTERNO DO MODAL QUANDO ENTRA NA LIVE PARA O BOTÃO VOLTAR AO CATÁLOGO FICAR NO LUGAR DO X)
     function alternarAba(aba) {
       salvarEstadoInternoPlayClass(aba);
       document.getElementById('btn-tab-catalogo')?.classList.toggle('active', aba === 'catalogo');
@@ -2613,13 +2714,39 @@
       document.getElementById('view-historico').style.display = aba === 'historico' ? 'block' : 'none';
       document.getElementById('view-live').style.display = aba === 'live' ? 'block' : 'none';
 
-      document.body.classList.toggle('modo-cinema-live', aba === 'live');
+      const emModoLive = (aba === 'live');
+      document.body.classList.toggle('modo-cinema-live', emModoLive);
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'MODO_CINEMA_LIVE', ativo: emModoLive }, '*');
+      }
+
       aplicarPermissoesVisuaisCargo();
 
       if (aba === 'historico' && IS_GESTOR_OU_PROF) {
         carregarHistoricoLives();
       }
     }
+
+    // 🔄 VERIFICADOR AUTOMÁTICO DE NOVA ATUALIZAÇÃO (Garante que a versão nova chegue a todos os aparelhos)
+    let versaoConhecidaPlayClass = null;
+    async function verificarAtualizacaoPlayClass() {
+      try {
+        const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
+        if (!res.ok) return;
+        const data = await res.json();
+        if (!data || !data.version) return;
+        if (!versaoConhecidaPlayClass) {
+          versaoConhecidaPlayClass = data.version;
+        } else if (versaoConhecidaPlayClass !== data.version) {
+          // Só recarrega automaticamente se não estiver no meio de uma gravação ativa
+          if (!mediaRecorderLive || mediaRecorderLive.state !== 'recording') {
+            window.location.reload();
+          }
+        }
+      } catch (e) {}
+    }
+    setInterval(verificarAtualizacaoPlayClass, 60000);
+    verificarAtualizacaoPlayClass();
 
     // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma!)
     try {
@@ -2629,7 +2756,6 @@
           const data = JSON.parse(ev.data);
           if (data.type === 'VIDEO_LIVE_STATUS') {
             if (data.ativa && data.live) {
-              // 🔒 BLOQUEIO RIGOROSO: Se a live aberta for de outra turma, o aluno não recebe!
               if (!itemPermitidoParaMinhaTurma(data.live)) return;
               liveAtivaObj = data.live;
             } else {
@@ -2645,9 +2771,10 @@
             } else if (data.subtipo === 'REACAO') {
               desenharReacaoNaTela(data, false);
             } else if (data.subtipo === 'STATUS_MIC') {
-              atualizarIndicadorMicParticipante(data.autorNome, data.texto === 'ATIVO', data.autorRole);
+              atualizarIndicadorMicParticipante(data.autorNome, data.texto === 'ATIVO' || Boolean(data.micAtivo), data.autorRole);
             } else if (data.subtipo === 'MAO_LEVANTADA') {
-              if (String(data.autorNome).trim() !== String(USER_NAME).trim()) {
+              const meuRotulo = IS_GESTOR_OU_PROF ? `👨‍🏫 Prof. ${USER_NAME}` : USER_NAME;
+              if (String(data.autorNome).trim() !== String(meuRotulo).trim()) {
                 mostrarAlertaMaoLevantada(data.autorNome);
               }
             } else if (data.subtipo === 'PROJETAR_LOUSA') {

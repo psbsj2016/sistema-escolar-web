@@ -663,7 +663,7 @@ Object.assign(Workspace, {
         if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
             Workspace.Ingles.fecharJogo();
         }
-        if (typeof Workspace.fecharPlataformaVideos === 'function') {
+        if (!isInitialLoad && typeof Workspace.fecharPlataformaVideos === 'function') {
             Workspace.fecharPlataformaVideos();
         }
         ['ws-imersao-modal', 'ws-imersao-musical-modal', 'ws-spotlight-overlay'].forEach(idModal => {
@@ -1379,7 +1379,7 @@ Object.assign(Workspace, {
         else Workspace.navegarPara('materiais');
     },
 
-  abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
+ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         if (!Workspace.usuario) return;
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
@@ -1400,6 +1400,8 @@ Object.assign(Workspace, {
 
         const role = Workspace.usuario.tipo === 'Aluno' ? 'aluno' : 'professor';
         const nome = Workspace.usuario.nome || Workspace.usuario.login || 'Utilizador';
+        const versaoBuild = (typeof __APP_BUILD_VERSION__ !== 'undefined') ? __APP_BUILD_VERSION__ : String(Date.now()).slice(0, 8);
+
         const qs = new URLSearchParams({
             role: role,
             userId: Workspace.usuario.id || '',
@@ -1408,7 +1410,8 @@ Object.assign(Workspace, {
             alunoRefId: Workspace.usuario.alunoRefId || '',
             video: videoId || '',
             playlist: playlistSlug || '',
-            live: liveToken || ''
+            live: liveToken || '',
+            _v: versaoBuild
         });
 
         Workspace.alternarMinimizarVideos(false);
@@ -1423,6 +1426,13 @@ Object.assign(Workspace, {
                 if (!ev.data || typeof ev.data !== 'object') return;
                 if (ev.data.type === 'MINIMIZAR_VIDEO_AULAS') {
                     Workspace.alternarMinimizarVideos(Boolean(ev.data.minimizar));
+                } else if (ev.data.type === 'MODO_CINEMA_LIVE') {
+                    const headerModal = modal.firstElementChild;
+                    if (headerModal && modal.dataset.minimizado !== 'true') {
+                        headerModal.style.display = ev.data.ativo ? 'none' : 'flex';
+                    }
+                } else if (ev.data.type === 'FECHAR_VIDEO_AULAS') {
+                    Workspace.fecharPlataformaVideos();
                 }
             });
             Workspace._listenerMinimizarVideoAtivo = true;
@@ -1447,11 +1457,12 @@ Object.assign(Workspace, {
         }
     },
 
-   fecharPlataformaVideos: () => {
+    fecharPlataformaVideos: () => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (modal && modal.dataset.minimizado === 'true') return;
         localStorage.removeItem('ws_playclass_estado');
+        localStorage.removeItem('ws_playclass_estado_interno');
         if (iframe) iframe.src = '';
         if (modal) {
             modal.dataset.minimizado = 'false';
