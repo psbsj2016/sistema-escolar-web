@@ -2095,28 +2095,23 @@
 
       stage.innerHTML = `
         <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#050811; position:relative; overflow:hidden;">
-          <!-- Barra de Topo da Chamada (Com o botão Voltar ao Catálogo no canto direito, no lugar do X) -->
-          <div id="live-top-header" style="padding:8px 14px; background:rgba(15,23,42,0.96); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; z-index:20; flex-shrink:0;">
-            <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
-              <span style="background:#e11d48; color:#fff; font-size:10.5px; font-weight:900; padding:3px 9px; border-radius:99px; flex-shrink:0;">● AO VIVO</span>
-              <strong style="font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:240px;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
-              <span style="font-size:11px; color:#93c5fd; background:rgba(37,99,235,0.2); padding:2px 8px; border-radius:6px; font-weight:700; flex-shrink:0;">🏫 ${esc(liveAtivaObj?.destinoNome || 'Turma')}</span>
+<!-- Barra de Topo da Chamada em Linha Única (Status Verde + Título à Esquerda | Link + Voltar ao Catálogo à Direita) -->
+          <div id="live-top-header" style="padding:8px 12px; background:rgba(15,23,42,0.96); border-bottom:1px solid #1e293b; display:flex; justify-content:space-between; align-items:center; flex-wrap:nowrap; gap:10px; z-index:20; flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:8px; flex:1; min-width:0; overflow:hidden;">
+              <span id="webrtc-status-badge" style="background:rgba(16,185,129,0.16); border:1px solid rgba(16,185,129,0.4); color:#34d399; font-size:11px; font-weight:800; padding:4px 10px; border-radius:99px; flex-shrink:0; white-space:nowrap;">🟢 Ao Vivo</span>
+              <strong style="font-size:13px; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(tituloLive || 'Aula Ao Vivo')}</strong>
             </div>
 
-            <!-- Indicador de Gravação em Andamento -->
-            <div id="recording-status-box" style="display:none; align-items:center; gap:8px; background:rgba(225,29,72,0.22); border:1px solid #f43f5e; padding:4px 12px; border-radius:99px;">
-              <span style="color:#fda4af; font-weight:800; font-size:11.5px;">🔴 GRAVANDO: <span id="rec-timer">00:00</span></span>
-              <button type="button" class="vc-btn danger" style="padding:3px 9px; font-size:11px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
+            <!-- Indicador de Gravação em Andamento (Só aparece quando o Professor grava a aula) -->
+            <div id="recording-status-box" style="display:none; align-items:center; gap:6px; background:rgba(225,29,72,0.22); border:1px solid #f43f5e; padding:3px 10px; border-radius:99px; flex-shrink:0;">
+              <span style="color:#fda4af; font-weight:800; font-size:11px; white-space:nowrap;">🔴 <span id="rec-timer">00:00</span></span>
+              <button type="button" class="vc-btn danger" style="padding:2px 8px; font-size:10.5px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
             </div>
 
-            <!-- Visor Rápido do Microfone dos Alunos -->
-            <div id="webrtc-mics-summary" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap; font-size:11px;"></div>
-
-            <!-- Canto Superior Direito: Status + Link + Botão Voltar ao Catálogo (no lugar do X) -->
-            <div style="display:flex; align-items:center; gap:8px; margin-left:auto;">
-              <span id="webrtc-status-badge" style="font-size:11px; color:#10b981; font-weight:700;">🟢 Conectado</span>
-              ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:5px 10px; font-size:11px; background:#1e3a8a; color:#fff; border-color:#3b82f6;" onclick="copiarLinkDireto('live', '${esc(tokenLinkAtual)}')" title="Copiar Link Criptografado">🔐 Link</button>` : ''}
-              <button type="button" class="vc-btn danger" style="padding:6px 12px; font-size:11.5px; border-radius:8px;" onclick="alternarAba('catalogo')" title="Sair da tela cheia da live e voltar ao catálogo">↩ Voltar ao Catálogo</button>
+            <!-- Canto Direito: Botão Link (Professor) + Botão Voltar ao Catálogo (Professor e Aluno) -->
+            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
+              ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:6px 10px; font-size:11.5px; background:#1e3a8a; color:#fff; border-color:#3b82f6; border-radius:8px; white-space:nowrap;" onclick="copiarLinkDireto('live', '${esc(tokenLinkAtual)}')" title="Copiar Link Criptografado">🔐 Link</button>` : ''}
+              <button type="button" class="vc-btn danger" style="padding:6px 11px; font-size:11.5px; border-radius:8px; white-space:nowrap;" onclick="alternarAba('catalogo')" title="Minimizar chamada e voltar ao catálogo">↩ Voltar ao Catálogo</button>
             </div>
           </div>
 
