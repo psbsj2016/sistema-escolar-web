@@ -664,7 +664,21 @@ Object.assign(Workspace, {
             Workspace.Ingles.fecharJogo();
         }
         if (!isInitialLoad && typeof Workspace.fecharPlataformaVideos === 'function') {
-            Workspace.fecharPlataformaVideos();
+            const modalVid = document.getElementById('ws-modal-video-aulas');
+            const winVid = document.getElementById('iframeVideoAulas')?.contentWindow;
+            const emLiveAtiva = Boolean(
+                modalVid &&
+                modalVid.style.display !== 'none' &&
+                winVid && (
+                    winVid.document?.body?.classList?.contains('modo-cinema-live') ||
+                    (winVid.liveAtivaObj && winVid.liveAtivaObj.ativa)
+                )
+            );
+            if (emLiveAtiva) {
+                Workspace.alternarMinimizarVideos(true);
+            } else {
+                Workspace.fecharPlataformaVideos();
+            }
         }
         ['ws-imersao-modal', 'ws-imersao-musical-modal', 'ws-spotlight-overlay'].forEach(idModal => {
             const m = document.getElementById(idModal);
@@ -1385,18 +1399,40 @@ Object.assign(Workspace, {
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal || !iframe) return;
 
+        // Se o modal já estava minimizado e o utilizador clicou apenas para restaurar
         if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug && !liveToken) {
             Workspace.alternarMinimizarVideos(false);
             return;
         }
 
-        // Grava na memória para que se atualizar a página (F5) permaneça na plataforma!
         localStorage.setItem('ws_playclass_estado', JSON.stringify({
             aberto: true,
             video: videoId || '',
             playlist: playlistSlug || '',
             liveToken: liveToken || ''
         }));
+
+        Workspace.alternarMinimizarVideos(false);
+        modal.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+
+        // Se o iframe já estiver carregado e veio um clique do Sininho (videoId, playlistSlug ou liveToken), navega sem recarregar!
+        const jaCarregado = Boolean(iframe.src && iframe.src.includes('workspace-aulas-video.html') && iframe.contentWindow);
+        if (jaCarregado) {
+            if (videoId || playlistSlug || liveToken) {
+                try {
+                    iframe.contentWindow.postMessage({
+                        type: 'ABRIR_DESTINO_PLAYCLASS',
+                        videoId: videoId || '',
+                        playlistSlug: playlistSlug || '',
+                        liveToken: liveToken || ''
+                    }, '*');
+                    return;
+                } catch (e) {}
+            } else {
+                return;
+            }
+        }
 
         const role = Workspace.usuario.tipo === 'Aluno' ? 'aluno' : 'professor';
         const nome = Workspace.usuario.nome || Workspace.usuario.login || 'Utilizador';
@@ -1414,12 +1450,7 @@ Object.assign(Workspace, {
             _v: versaoBuild
         });
 
-        Workspace.alternarMinimizarVideos(false);
-        if (!iframe.src || !iframe.src.includes('workspace-aulas-video.html') || videoId || playlistSlug || liveToken) {
-            iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
-        }
-        modal.style.display = 'flex';
-        document.body.style.overflow = 'hidden';
+        iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
 
         if (!Workspace._listenerMinimizarVideoAtivo) {
             window.addEventListener('message', (ev) => {
@@ -1441,6 +1472,7 @@ Object.assign(Workspace, {
 
     alternarMinimizarVideos: (minimizar = true) => {
         const modal = document.getElementById('ws-modal-video-aulas');
+        const iframe = document.getElementById('iframeVideoAulas');
         if (!modal) return;
         const headerModal = modal.firstElementChild;
 
@@ -1452,9 +1484,17 @@ Object.assign(Workspace, {
         } else {
             modal.dataset.minimizado = 'false';
             modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
-            if (headerModal) headerModal.style.display = 'flex';
+            const emCinema = Boolean(iframe?.contentWindow?.document?.body?.classList?.contains('modo-cinema-live'));
+            if (headerModal) headerModal.style.display = emCinema ? 'none' : 'flex';
             document.body.style.overflow = 'hidden';
         }
+
+        // Avisa o iframe para exibir ou ocultar o botão "🗖 Voltar ao Tamanho Normal"
+        try {
+            if (iframe && iframe.contentWindow) {
+                iframe.contentWindow.postMessage({ type: 'ESTADO_PIP_EXTERNO', minimizado: Boolean(minimizar) }, '*');
+            }
+        } catch (e) {}
     },
 
    fecharPlataformaVideos: () => {

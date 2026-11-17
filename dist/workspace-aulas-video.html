@@ -1639,7 +1639,7 @@
       lousaProjetadaAtiva = false;
     }
 
-    function atualizarBannerLive() {
+   function atualizarBannerLive() {
       const banner = document.getElementById('live-banner');
       const btnTabLive = document.getElementById('btn-tab-live');
 
@@ -1647,6 +1647,7 @@
       if (liveAtivaObj && !itemPermitidoParaMinhaTurma(liveAtivaObj)) {
         liveAtivaObj = null;
       }
+      window.liveAtivaObj = liveAtivaObj;
 
       aplicarPermissoesVisuaisCargo();
 
@@ -2126,6 +2127,28 @@
         window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: false }, '*');
       }
     }
+
+    // 📡 Recebe comandos diretos do alertas.js e do workspace.js (Modo Minimizado, Clique no Sininho e Reanimação Silenciosa)
+    window.addEventListener('message', (ev) => {
+      const d = ev.data;
+      if (!d || typeof d !== 'object') return;
+
+      if (d.type === 'ESTADO_PIP_EXTERNO') {
+        document.body.classList.toggle('modo-minimizado-pip', Boolean(d.minimizado));
+      } else if (d.type === 'ABRIR_DESTINO_PLAYCLASS') {
+        document.body.classList.remove('modo-minimizado-pip');
+        if (d.liveToken) {
+          abrirLivePorTokenCriptografado(d.liveToken);
+        } else if (d.videoId) {
+          reproduzirVideo(d.videoId);
+        } else if (d.playlistSlug) {
+          filtrarPorAssunto(d.playlistSlug);
+        }
+      } else if (d.type === 'REANIMAR_CATALOGO_SILENCIOSO') {
+        const emLive = document.body.classList.contains('modo-cinema-live') || Boolean(liveAtivaObj && liveAtivaObj.ativa);
+        if (!emLive) carregarCatalogo(false);
+      }
+    });
 
     // 🖍️ PROJETAR LOUSA (EXCLUSIVO PARA O PROFESSOR ACIONAR)
     async function alternarProjecaoLousaNaLive(forcarEstado = null) {

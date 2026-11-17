@@ -8,6 +8,7 @@ Workspace.Alertas = {
     _usuarioIdAtivo: null,
     _usuarioTipoAtivo: null,
     inicioSessaoMs: Date.now(),
+    _ultimaLiveNotificadaId: null,
     
     // Variáveis de memória para o Detetive de Retorno e Radar
     conexaoSSE: null, 
@@ -21,6 +22,7 @@ Workspace.Alertas = {
         Workspace.Alertas.primeiraBuscaConcluida = false;
         Workspace.Alertas._usuarioIdAtivo = null;
         Workspace.Alertas._usuarioTipoAtivo = null;
+        Workspace.Alertas._ultimaLiveNotificadaId = null;
         Workspace.Alertas.inicioSessaoMs = Date.now();
 
         if (Workspace.Alertas.conexaoSSE) {
@@ -55,6 +57,47 @@ Workspace.Alertas = {
             }
         }
         return true;
+    },
+
+    // 🔒 Verifica se uma Live ou Vídeo-Aula do PlayClass pertence à turma do utilizador logado
+    itemVideoPermitidoParaUsuario: (item) => {
+        if (!item || !Workspace.usuario) return false;
+        const meuTipo = String(Workspace.usuario.tipo || 'Aluno').trim().toLowerCase();
+        if (meuTipo !== 'aluno') return true;
+
+        const d = String(item.destino || '').trim().toLowerCase();
+        const dn = String(item.destinoNome || '').trim().toLowerCase();
+        if (d === 'global' || d === 'todas as turmas' || d === 'publico geral' || dn === 'todas as turmas') {
+            return true;
+        }
+        if (typeof Workspace.verificarTurma === 'function') {
+            return Workspace.verificarTurma(Workspace.usuario, item.destino, item.destinoNome);
+        }
+        return false;
+    },
+
+    // 🛡️ Se o utilizador estiver numa chamada ao vivo e clicar numa notificação, minimiza a chamada em vez de a desligar!
+    protegerChamadaAoVivoAntesDeNavegar: () => {
+        try {
+            const modalVideo = document.getElementById('ws-modal-video-aulas');
+            const iframeVideo = document.getElementById('iframeVideoAulas');
+            if (!modalVideo || modalVideo.style.display === 'none' || !iframeVideo) return;
+
+            const win = iframeVideo.contentWindow;
+            const emChamadaAtiva = Boolean(
+                win && (
+                    win.document?.body?.classList?.contains('modo-cinema-live') ||
+                    (win.liveAtivaObj && win.liveAtivaObj.ativa)
+                )
+            );
+
+            if (emChamadaAtiva && typeof Workspace.alternarMinimizarVideos === 'function') {
+                Workspace.alternarMinimizarVideos(true);
+                if (win.document && win.document.body) {
+                    win.document.body.classList.add('modo-minimizado-pip');
+                }
+            }
+        } catch (e) {}
     },
 
     init: () => {
@@ -102,7 +145,6 @@ Workspace.Alertas = {
 
         let houveMudanca = false;
 
-        // 1. Atualiza o cache de avatares global se veio uma foto
         if (novoNome) {
             if (!Workspace.avatarsCache) Workspace.avatarsCache = {};
             if (avatarUrl) {
@@ -114,7 +156,6 @@ Workspace.Alertas = {
             }
         }
 
-        // 2. Atualiza os nomes dentro da lista de notificações em memória
         if (novoNome && Array.isArray(Workspace.Alertas.notificacoesAtuais)) {
             Workspace.Alertas.notificacoesAtuais.forEach(n => {
                 const remAtual = String(n.remetenteNome || '').trim().toLowerCase();
@@ -130,14 +171,13 @@ Workspace.Alertas = {
             });
         }
 
-        // 3. Re-renderiza o dropdown do sininho preservando a posição do scroll
         if (houveMudanca || avatarUrl !== undefined) {
             Workspace.Alertas.atualizarInterface();
         }
     },
 
     // ============================================================================
-    // 🩺 O DESFIBRILADOR: ACORDA O SITE APÓS MUITO TEMPO ADORMECIDO
+    // 🩺 DETETIVE DE RETORNO 100% SILENCIOSO (Sem pop-up "Atualizando ⏳" e sem piscar a tela)
     // ============================================================================
     iniciarDetetiveRetorno: () => {
         document.addEventListener('visibilitychange', () => {
@@ -149,11 +189,8 @@ Workspace.Alertas = {
                 if (Workspace.Alertas.momentoSaida) {
                     const tempoAusente = Date.now() - Workspace.Alertas.momentoSaida;
                     
+                    // Atualiza os dados em segundo plano de forma 100% invisível e silenciosa!
                     if (tempoAusente > 60000 && Workspace.usuario) {
-                        console.log("🔄 O aluno esteve ausente muito tempo. Reanimando o sistema...");
-                        if (window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("Atualizando ⏳", "info", 2000);
-                        }
                         Workspace.Alertas.reanimaSistema();
                     }
                     Workspace.Alertas.momentoSaida = null; 
@@ -163,27 +200,38 @@ Workspace.Alertas = {
     },
 
     reanimaSistema: async () => {
-        // 1. Reinicia o coração do site (Destrói a ligação velha e cria uma nova)
-        Workspace.Alertas.iniciarConexaoTempoReal();
+        // 1. Reconecta o canal SSE se tiver fechado durante a suspensão do telemóvel
+        if (!Workspace.Alertas.conexaoSSE || Workspace.Alertas.conexaoSSE.readyState === EventSource.CLOSED) {
+            Workspace.Alertas.iniciarConexaoTempoReal();
+        }
 
-        // 2. Manda cada departamento recarregar as suas listas em silêncio
+        // 2. Atualiza os módulos em silêncio absoluto (sem apagar o ecrã atual)
         if (window.Workspace) {
             if (typeof Workspace.atualizarCacheAvatares === 'function') {
                 await Workspace.atualizarCacheAvatares();
             }
-            if (Workspace.Alertas.buscarNotificacoes) Workspace.Alertas.buscarNotificacoes(true);
-            
-            if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) Workspace.Avaliacoes.carregarLobbies();
-            
+            if (Workspace.Alertas.buscarNotificacoes) {
+                Workspace.Alertas.buscarNotificacoes(true);
+            }
+            if (Workspace.Avaliacoes && Workspace.Avaliacoes.carregarLobbies) {
+                Workspace.Avaliacoes.carregarLobbies();
+            }
             if (Workspace.Sidebar && Workspace.Sidebar.turmaIdAberta) {
-                const elTitulo = document.getElementById('ws-chat-titulo');
-                const nomeChat = elTitulo ? elTitulo.innerText : 'Bate-papo';
-                Workspace.Sidebar.abrirChat(Workspace.Sidebar.turmaIdAberta, nomeChat);
+                const modalChatEl = document.getElementById('ws-chat-modal');
+                if (modalChatEl && modalChatEl.style.display !== 'none') {
+                    const elTitulo = document.getElementById('ws-chat-titulo');
+                    const nomeChat = elTitulo ? elTitulo.innerText : 'Bate-papo';
+                    Workspace.Sidebar.abrirChat(Workspace.Sidebar.turmaIdAberta, nomeChat);
+                }
             }
 
-            if (Workspace.Feed && Workspace.Feed.carregarPosts) {
-                Workspace.Feed.todosOsPosts = [];
-                Workspace.Feed.carregarPosts();
+            // Verifica silenciosamente se há novos posts sem zerar `todosOsPosts` para não piscar!
+            if (Workspace.Feed) {
+                if (typeof Workspace.Feed.verificarNovoPost === 'function') {
+                    Workspace.Feed.verificarNovoPost();
+                } else if (typeof Workspace.Feed.carregarPosts === 'function' && (!Workspace.Feed.todosOsPosts || Workspace.Feed.todosOsPosts.length === 0)) {
+                    Workspace.Feed.carregarPosts();
+                }
             }
             
             if (Workspace.Materiais && Workspace.Materiais.carregarMateriais) {
@@ -196,6 +244,19 @@ Workspace.Alertas = {
                     if (areaProf && areaProf.style.display !== 'none') Workspace.Materiais.renderizarProf();
                 }
             }
+
+            // 🎬 Sincroniza silenciosamente o catálogo do PlayClass (se estiver aberto e fora de chamada ao vivo)
+            try {
+                const modalVideo = document.getElementById('ws-modal-video-aulas');
+                const iframeVideo = document.getElementById('iframeVideoAulas');
+                if (modalVideo && modalVideo.style.display !== 'none' && iframeVideo && iframeVideo.contentWindow) {
+                    const win = iframeVideo.contentWindow;
+                    const emLive = win.document?.body?.classList?.contains('modo-cinema-live');
+                    if (!emLive && typeof win.carregarCatalogo === 'function') {
+                        win.carregarCatalogo(false);
+                    }
+                }
+            } catch (e) {}
         }
     },
 
@@ -210,7 +271,7 @@ Workspace.Alertas = {
         Workspace.Alertas.conexaoSSE = new EventSource(`/api/workspace/stream?escolaId=${escolaId}`);
         const sse = Workspace.Alertas.conexaoSSE; 
 
-       sse.onmessage = (event) => {
+        sse.onmessage = (event) => {
             const data = JSON.parse(event.data);
             
             // 📡 BARRAMENTO INTERNO UNIFICADO: Partilha o evento com Feed, Arena e Chat usando 1 única conexão SSE!
@@ -238,20 +299,121 @@ Workspace.Alertas = {
                 }
             }
             
-          if (data.type === 'NOVA_NOTIFICACAO' && Array.isArray(data.destinatarios)) {
+            // 🔔 NOVA NOTIFICAÇÃO (Blindada por Nome, Login, ID e alunoRefId!)
+            if (data.type === 'NOVA_NOTIFICACAO' && Array.isArray(data.destinatarios)) {
                 if (!Workspace.usuario) return;
                 const ehAluno = String(Workspace.usuario.tipo || 'Aluno').toLowerCase() === 'aluno';
                 if (ehAluno && data.destinatariosTipo && String(data.destinatariosTipo).toLowerCase() !== 'aluno') {
                     return;
                 }
-                const meuNome = (Workspace.usuario.nome ? Workspace.usuario.nome : '').trim().toLowerCase();
-                const meuLogin = (Workspace.usuario.login ? Workspace.usuario.login : '').trim().toLowerCase();
+                const meuNome = String(Workspace.usuario.nome || '').trim().toLowerCase();
+                const meuLogin = String(Workspace.usuario.login || '').trim().toLowerCase();
+                const meuId = String(Workspace.usuario.id || '').trim().toLowerCase();
+                const meuRefId = String(Workspace.usuario.alunoRefId || '').trim().toLowerCase();
+
                 const souDestinatario = data.destinatarios.some(d => {
-                    const destLimpo = String(d ? d : '').trim().toLowerCase();
-                    return destLimpo === 'todos' ? true : (destLimpo === meuNome ? true : destLimpo === meuLogin);
+                    const destLimpo = String(d || '').trim().toLowerCase();
+                    if (!destLimpo) return false;
+                    return destLimpo === 'todos' ||
+                           (meuNome && destLimpo === meuNome) ||
+                           (meuLogin && destLimpo === meuLogin) ||
+                           (meuId && destLimpo === meuId) ||
+                           (meuRefId && destLimpo === meuRefId);
                 });
                 if (souDestinatario) {
                     Workspace.Alertas.buscarNotificacoes(true); 
+                }
+            }
+
+            // 🔴 INTEGRAÇÃO COM PLAYCLASS & MEET: AULA AO VIVO INICIADA!
+            if (data.type === 'VIDEO_LIVE_STATUS' && data.ativa && data.live) {
+                const lv = data.live;
+                if (Workspace.Alertas.itemVideoPermitidoParaUsuario(lv)) {
+                    const meuId = String(Workspace.usuario?.id || '');
+                    const souAutorDaLive = lv.autorId && String(lv.autorId) === meuId;
+                    const tokenOuId = lv.tokenCriptografado || lv.codigoSala || lv.id;
+
+                    // Verifica se o aluno já está com a Sala Ao Vivo aberta no ecrã
+                    const modalVideo = document.getElementById('ws-modal-video-aulas');
+                    const iframeVideo = document.getElementById('iframeVideoAulas');
+                    const jaEstaNaSalaLive = Boolean(
+                        modalVideo &&
+                        modalVideo.style.display !== 'none' &&
+                        iframeVideo?.contentWindow?.document?.body?.classList?.contains('modo-cinema-live')
+                    );
+
+                    if (!souAutorDaLive && !jaEstaNaSalaLive && Workspace.Alertas._ultimaLiveNotificadaId !== lv.id) {
+                        Workspace.Alertas._ultimaLiveNotificadaId = lv.id;
+                        const idNotiLive = `alerta_local_live_${lv.id}`;
+
+                        if (!Workspace.Alertas.idsConhecidos.has(idNotiLive)) {
+                            const nomeProf = lv.professorNome || 'Professor';
+                            const tituloLive = lv.titulo || 'Aula Ao Vivo';
+                            const novaNotiLive = {
+                                id: idNotiLive,
+                                escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                                destinatarioNome: Workspace.usuario.nome || Workspace.usuario.login,
+                                remetenteNome: nomeProf,
+                                mensagem: `iniciou uma transmissão ao vivo agora: <strong>"${Workspace.escapeHTML(tituloLive)}"</strong>. Clique para entrar!`,
+                                origem: 'video_live',
+                                origemId: tokenOuId,
+                                destinoNome: lv.destinoNome || 'PlayClass & Meet',
+                                lida: false,
+                                data: new Date().toISOString()
+                            };
+
+                            Workspace.Alertas.notificacoesAtuais.unshift(novaNotiLive);
+                            Workspace.Alertas.idsConhecidos.add(idNotiLive);
+                            Workspace.Alertas.atualizarInterface();
+
+                            if (window.Toast && typeof Toast.showInterativo === 'function') {
+                                Toast.showInterativo({
+                                    remetenteNome: nomeProf,
+                                    subtitulo: `🔴 AO VIVO AGORA • ${lv.destinoNome || 'Sua Turma'}`,
+                                    mensagemCorpo: `A transmissão <strong>"${Workspace.escapeHTML(tituloLive)}"</strong> acabou de começar na PlayClass & Meet!`
+                                }, 'online', () => Workspace.Alertas.lerEIr(idNotiLive, 'video_live', tokenOuId, lv.destinoNome || ''));
+                            }
+                        }
+                    }
+                }
+            }
+
+            // 🎬 INTEGRAÇÃO COM PLAYCLASS & MEET: NOVA VÍDEO-AULA PUBLICADA!
+            if (data.type === 'VIDEO_AULA_NOVA' && data.video) {
+                const vid = data.video;
+                if (Workspace.Alertas.itemVideoPermitidoParaUsuario(vid)) {
+                    const meuId = String(Workspace.usuario?.id || '');
+                    const souAutorVideo = vid.autorId && String(vid.autorId) === meuId;
+                    const idNotiVid = `alerta_local_vid_${vid.id}`;
+
+                    if (!souAutorVideo && !Workspace.Alertas.idsConhecidos.has(idNotiVid)) {
+                        const nomeProf = vid.autorNome || 'PlayClass';
+                        const tituloVid = vid.titulo || 'Nova Vídeo-Aula';
+                        const novaNotiVid = {
+                            id: idNotiVid,
+                            escolaId: Workspace.usuario.escolaId || 'DEFAULT',
+                            destinatarioNome: Workspace.usuario.nome || Workspace.usuario.login,
+                            remetenteNome: nomeProf,
+                            mensagem: `publicou uma nova vídeo-aula: <strong>"${Workspace.escapeHTML(tituloVid)}"</strong>.`,
+                            origem: 'video_aula',
+                            origemId: vid.id,
+                            destinoNome: vid.destinoNome || 'PlayClass',
+                            lida: false,
+                            data: new Date().toISOString()
+                        };
+
+                        Workspace.Alertas.notificacoesAtuais.unshift(novaNotiVid);
+                        Workspace.Alertas.idsConhecidos.add(idNotiVid);
+                        Workspace.Alertas.atualizarInterface();
+
+                        if (window.Toast && typeof Toast.showInterativo === 'function') {
+                            Toast.showInterativo({
+                                remetenteNome: nomeProf,
+                                subtitulo: "🎬 Nova Vídeo-Aula no Catálogo",
+                                mensagemCorpo: `A aula <strong>"${Workspace.escapeHTML(tituloVid)}"</strong> já está disponível para assistir!`
+                            }, 'material', () => Workspace.Alertas.lerEIr(idNotiVid, 'video_aula', vid.id, vid.destinoNome || ''));
+                        }
+                    }
                 }
             }
 
@@ -382,6 +544,8 @@ Workspace.Alertas = {
                                 'pingpong',
                                 6000,
                                 () => {
+                                    // Protege a chamada ao vivo minimizando-a antes de abrir o chat do grupo!
+                                    Workspace.Alertas.protegerChamadaAoVivoAntesDeNavegar();
                                     if (Workspace.Sidebar && Workspace.Sidebar.abrirChat) {
                                         Workspace.Sidebar.abrirChat(data.turmaId, nomeTurma);
                                     }
@@ -394,7 +558,6 @@ Workspace.Alertas = {
         };
 
         sse.onerror = () => { 
-            console.log("Túnel tremendo. O navegador está a tentar recuperar..."); 
             if (sse.readyState === EventSource.CLOSED) {
                 setTimeout(() => {
                     if (Workspace.Alertas && Workspace.Alertas.iniciarConexaoTempoReal) {
@@ -478,7 +641,6 @@ Workspace.Alertas = {
                     const vaiAbrir = dropdown.style.display !== 'block';
                     dropdown.style.display = vaiAbrir ? 'block' : 'none';
                     if (vaiAbrir) {
-                        // Garante que as fotos e tempos relativos estejam frescos ao abrir a gaveta
                         Workspace.Alertas.atualizarInterface();
                     }
                     const perfilDropdown = document.getElementById('ws-perfil-dropdown');
@@ -495,12 +657,11 @@ Workspace.Alertas = {
         }
     },
 
-   buscarNotificacoes: async (isPollingSilencioso = false) => {
+    buscarNotificacoes: async (isPollingSilencioso = false) => {
         if (!Workspace.usuario) return;
         const telaLogin = document.getElementById('ws-login-screen');
         if (telaLogin && telaLogin.style.display !== 'none') return;
 
-        // 🛡️ Verifica se a conta ou o cargo mudou no mesmo navegador
         const idAtual = String(Workspace.usuario.id || '');
         const tipoAtual = String(Workspace.usuario.tipo || 'Aluno');
         if (Workspace.Alertas._usuarioIdAtivo !== idAtual || Workspace.Alertas._usuarioTipoAtivo !== tipoAtual) {
@@ -518,7 +679,6 @@ Workspace.Alertas = {
             const dataBruta = await Workspace.api(urlNoti);
             
             if (Array.isArray(dataBruta)) {
-                // Filtra rigorosamente qualquer notificação que não pertença ao perfil/cargo atual
                 const data = dataBruta.filter(n => Workspace.Alertas.ehNotificacaoPermitidaParaUsuario(n));
 
                 const assinaturaAntiga = Workspace.Alertas.notificacoesAtuais
@@ -532,17 +692,15 @@ Workspace.Alertas = {
                 
                 const idsAtuais = Workspace.Alertas.notificacoesAtuais.map(n => n.id);
                 const agoraMs = Date.now();
-                const JANELA_POPUP_MS = 120000; // 2 minutos: Só dispara pop-up se a notificação acabou mesmo de acontecer!
+                const JANELA_POPUP_MS = 120000;
 
                 const novas = data.filter(n => {
                     if (Workspace.Alertas.idsConhecidos.has(n.id)) return false;
                     const dataNotiMs = n.data ? new Date(n.data).getTime() : 0;
-                    // Impede enxurrada de notificações antigas quando o aluno volta da inatividade!
                     return dataNotiMs > 0 && (agoraMs - dataNotiMs) <= JANELA_POPUP_MS && dataNotiMs >= (Workspace.Alertas.inicioSessaoMs - 15000);
                 });
 
                 if (Workspace.Alertas.primeiraBuscaConcluida && novas.length > 0) {
-                    
                     novas.forEach((novaNoti, index) => {
                         setTimeout(async () => { 
                             const partesMsg = novaNoti.mensagem ? novaNoti.mensagem.split('"') : [];
@@ -557,30 +715,32 @@ Workspace.Alertas = {
                                 }, 'avaliacao', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
-                            // 2. AULAS ONLINE / SESSÕES AO VIVO
-                            else if (novaNoti.origem === 'online') {
+                            // 2. AULAS ONLINE / SESSÕES AO VIVO OU PLAYCLASS LIVE
+                            else if (novaNoti.origem === 'online' || novaNoti.origem === 'video_live') {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
-                                    subtitulo: "Sala de Aula Online",
-                                    mensagemCorpo: `Foi agendada a sessão: <strong>"${titulo}"</strong>.`
+                                    subtitulo: novaNoti.origem === 'video_live' ? "🔴 PlayClass & Meet Ao Vivo" : "Sala de Aula Online",
+                                    mensagemCorpo: `Foi iniciada/agendada a sessão: <strong>"${titulo}"</strong>.`
                                 }, 'online', async () => {
-                                    try {
-                                        let tempoLembrete;
-                                        if (novaNoti.dataEvento && novaNoti.dataEvento.includes('T')) {
-                                            const partes = novaNoti.dataEvento.split('T');
-                                            const dataPartes = partes[0].split('-');
-                                            const horaPartes = partes[1].split(':');
-                                            tempoLembrete = new Date(parseInt(dataPartes[0], 10), parseInt(dataPartes[1], 10) - 1, parseInt(dataPartes[2], 10), parseInt(horaPartes[0], 10), parseInt(horaPartes[1], 10));
-                                        } else {
-                                            tempoLembrete = new Date(); tempoLembrete.setHours(tempoLembrete.getHours() + 24);
-                                        }
-                                        const tempoDisparoMs = tempoLembrete.getTime();
-                                        const res = await Workspace.api('/workspace/bau/alarmes', 'POST', { usuarioId: Workspace.usuario.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs }); 
-                                        if (res && res.success && window.Workspace && Workspace.Bau) {
-                                            Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs, disparado: false });
-                                            Workspace.Bau.atualizarCalendarioVisual();
-                                        }
-                                    } catch (e) {}
+                                    if (novaNoti.origem === 'online') {
+                                        try {
+                                            let tempoLembrete;
+                                            if (novaNoti.dataEvento && novaNoti.dataEvento.includes('T')) {
+                                                const partes = novaNoti.dataEvento.split('T');
+                                                const dataPartes = partes[0].split('-');
+                                                const horaPartes = partes[1].split(':');
+                                                tempoLembrete = new Date(parseInt(dataPartes[0], 10), parseInt(dataPartes[1], 10) - 1, parseInt(dataPartes[2], 10), parseInt(horaPartes[0], 10), parseInt(horaPartes[1], 10));
+                                            } else {
+                                                tempoLembrete = new Date(); tempoLembrete.setHours(tempoLembrete.getHours() + 24);
+                                            }
+                                            const tempoDisparoMs = tempoLembrete.getTime();
+                                            const res = await Workspace.api('/workspace/bau/alarmes', 'POST', { usuarioId: Workspace.usuario.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs }); 
+                                            if (res && res.success && window.Workspace && Workspace.Bau) {
+                                                Workspace.Bau.alarmesAtivos.push({ id: res.id, mensagem: `Aula Online: ${titulo} (com ${novaNoti.remetenteNome})`, tempoDisparo: tempoDisparoMs, disparado: false });
+                                                Workspace.Bau.atualizarCalendarioVisual();
+                                            }
+                                        } catch (e) {}
+                                    }
                                     Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome);
                                 });
                             }
@@ -616,12 +776,12 @@ Workspace.Alertas = {
                                 }, 'tarefa', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
-                            // 4. MATERIAIS
-                            else if (novaNoti.origem === 'material') {
+                            // 4. MATERIAIS E VÍDEO-AULAS
+                            else if (novaNoti.origem === 'material' || novaNoti.origem === 'video_aula') {
                                 Toast.showInterativo({
                                     remetenteNome: novaNoti.remetenteNome,
-                                    subtitulo: "Estante Virtual",
-                                    mensagemCorpo: `Há um novo material na estante aguardando você: <strong>"${titulo}"</strong>.`
+                                    subtitulo: novaNoti.origem === 'video_aula' ? "🎬 Nova Vídeo-Aula" : "Estante Virtual",
+                                    mensagemCorpo: `Há um novo conteúdo disponível para você: <strong>"${titulo}"</strong>.`
                                 }, 'material', () => Workspace.Alertas.lerEIr(novaNoti.id, novaNoti.origem, novaNoti.origemId, novaNoti.destinoNome));
                             }
                             
@@ -670,11 +830,9 @@ Workspace.Alertas = {
                 const eraPrimeiraBusca = !Workspace.Alertas.primeiraBuscaConcluida;
                 Workspace.Alertas.primeiraBuscaConcluida = true;
                 
-                // Só reconstrói o HTML se houve alteração na lista ou se foi o primeiro carregamento
                 if (!isPollingSilencioso || eraPrimeiraBusca || assinaturaAntiga !== assinaturaNova) {
                     Workspace.Alertas.atualizarInterface();
                 } else {
-                    // Atualiza apenas os textos "Há X min" sem destruir o scroll!
                     document.querySelectorAll('#ws-lista-notificacoes .ws-time-ago').forEach(el => {
                         const t = el.getAttribute('data-time');
                         if (t) el.innerText = Workspace.Alertas.tempoRelativo(t);
@@ -701,7 +859,6 @@ Workspace.Alertas = {
         });
 
         if (dropdown) {
-            // Preserva a posição de rolagem atual caso a gaveta esteja aberta
             const listaAnterior = document.getElementById('ws-lista-notificacoes');
             const scrollSalvo = listaAnterior ? listaAnterior.scrollTop : 0;
 
@@ -805,6 +962,23 @@ Workspace.Alertas = {
                 Workspace.Alertas.atualizarInterface();
             } catch(e) {}
         }
+
+        // 🔴 1. Se a notificação for da Sala Ao Vivo ou Vídeo-Aula do PlayClass & Meet, abre diretamente a plataforma!
+        if (origem === 'video_live') {
+            if (typeof Workspace.abrirPlataformaVideos === 'function') {
+                Workspace.abrirPlataformaVideos('', '', origemId || '');
+            }
+            return;
+        }
+        if (origem === 'video_aula') {
+            if (typeof Workspace.abrirPlataformaVideos === 'function') {
+                Workspace.abrirPlataformaVideos(origemId || '', '', '');
+            }
+            return;
+        }
+
+        // 🛡️ 2. Se o utilizador estiver numa chamada ao vivo e clicou para ver um material, post ou chat, minimiza a chamada em vez de a fechar!
+        Workspace.Alertas.protegerChamadaAoVivoAntesDeNavegar();
 
         const modalChat = document.getElementById('ws-chat-modal');
         if (modalChat) modalChat.style.display = 'none';
