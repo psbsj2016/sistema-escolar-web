@@ -33,7 +33,8 @@ export default defineConfig({
   plugins: [
     geradorVersaoBuild(),
     VitePWA({
-      registerType: 'prompt', // 🚀 Espera pelo clique do utilizador no card de atualização
+      // 🚀 FORÇA ATUALIZAÇÃO AUTOMÁTICA IMEDIATA (Sem depender de clique manual!)
+      registerType: 'autoUpdate',
       includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
       
       manifest: {        
@@ -51,18 +52,18 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true, // 🧹 Apaga caches de versões antigas automaticamente
-        clientsClaim: true,
-        // 🚀 OTIMIZAÇÃO CRÍTICA: Faz precache apenas do código e estrutura leve (reduz de 409MB para ~3MB!)
+        skipWaiting: true,           // ⚡ Faz o novo Service Worker assumir na hora sem esperar fechar o app
+        clientsClaim: true,          // ⚡ Assume o controlo imediato de todas as abas e janelas instaladas
         globPatterns: ['**/*.{js,css,html,svg,ico}'],
         globIgnores: [
           '**/node_modules/**/*',
           '**/uploads/**/*',
           '**/*.{mp4,webm,avi,mov,pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx}'
         ],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024, // Ignora qualquer ficheiro isolado maior que 3MB no precache
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ['/push-sw.js'], 
         
-        // 🚀 O ESCUDO ANTI-SEQUESTRO (Impede o PWA de jogar para o login principal)
+        // 🚀 O ESCUDO ANTI-SEQUESTRO
         navigateFallbackDenylist: [
           /^\/api/,
           /version\.json/,
@@ -94,7 +95,7 @@ export default defineConfig({
   },
   build: {
     outDir: 'dist',
-    chunkSizeWarningLimit: 3000, // 🔇 Silencia o aviso amarelo de chunks maiores que 500kB
+    chunkSizeWarningLimit: 3000,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),

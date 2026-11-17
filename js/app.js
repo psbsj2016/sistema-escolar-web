@@ -2855,3 +2855,68 @@ document.addEventListener('DOMContentLoaded', () => {
         App.configurarPesquisaGlobal();
     }
 });
+
+// =========================================================
+// 🔄 ATUALIZADOR FORÇADO UNIVERSAL (ERP PRINCIPAL + PWA + TODOS OS NAVEGADORES)
+// =========================================================
+(function iniciarVerificadorVersaoAppPrincipal() {
+    const CHAVE_VERSAO = 'ptt_versao_build_instalada';
+    const CHAVE_RELOAD = 'ptt_reload_forcado_versao';
+    let atualizandoAgora = false;
+
+    async function checarVersaoRecente() {
+        if (atualizandoAgora) return;
+        try {
+            const res = await fetch(`/version.json?_t=${Date.now()}`, {
+                cache: 'no-store',
+                headers: { 'Cache-Control': 'no-cache, no-store, must-revalidate', 'Pragma': 'no-cache' }
+            });
+            if (!res.ok) return;
+            const data = await res.json();
+            if (!data || !data.version) return;
+
+            const vServidor = String(data.version).trim();
+            const vLocal = localStorage.getItem(CHAVE_VERSAO);
+
+            if (!vLocal) {
+                localStorage.setItem(CHAVE_VERSAO, vServidor);
+                return;
+            }
+
+            if (vServidor !== vLocal) {
+                if (sessionStorage.getItem(CHAVE_RELOAD) === vServidor) {
+                    localStorage.setItem(CHAVE_VERSAO, vServidor);
+                    return;
+                }
+                atualizandoAgora = true;
+                if (typeof App !== 'undefined' && typeof App.salvarRascunhoModal === 'function') {
+                    App.salvarRascunhoModal();
+                }
+                localStorage.setItem(CHAVE_VERSAO, vServidor);
+                sessionStorage.setItem(CHAVE_RELOAD, vServidor);
+
+                if ('caches' in window) {
+                    const keys = await caches.keys();
+                    await Promise.all(keys.map(k => caches.delete(k)));
+                }
+                if ('serviceWorker' in navigator) {
+                    const regs = await navigator.serviceWorker.getRegistrations();
+                    for (const r of regs) {
+                        if (r.waiting) r.waiting.postMessage({ type: 'SKIP_WAITING' });
+                        await r.update().catch(() => {});
+                    }
+                }
+                await fetch(window.location.href, { cache: 'reload' }).catch(() => {});
+                window.location.reload();
+            }
+        } catch (e) {}
+    }
+
+    setTimeout(checarVersaoRecente, 800);
+    window.addEventListener('focus', checarVersaoRecente);
+    window.addEventListener('pageshow', checarVersaoRecente);
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') checarVersaoRecente();
+    });
+    setInterval(checarVersaoRecente, 30000);
+})();
