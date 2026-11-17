@@ -476,15 +476,30 @@
     .meet-circle-btn.active { background: var(--primary); border-color: #60a5fa; }
     .meet-circle-btn.muted, .meet-circle-btn.hangup { background: #e11d48; border-color: #fb7185; }
 
+    /* Pílula Solta Flutuante para "Link da Sequência" abaixo de "Ver todas >" */
+    .playlist-floating-pill-wrap {
+      display: flex; justify-content: flex-end;
+      padding: 10px 14px 2px 14px; background: transparent;
+    }
+    .btn-seq-floating-pill {
+      background: #ffffff; color: #1d4ed8; border: 1.5px solid #bfdbfe;
+      padding: 6px 14px; border-radius: 999px; font-size: 12px; font-weight: 800;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      box-shadow: 0 4px 12px rgba(29, 125, 250, 0.14); transition: all 0.18s ease;
+    }
+    .btn-seq-floating-pill:hover {
+      background: #eff6ff; border-color: #60a5fa; transform: translateY(-1px);
+    }
+
     /* ==========================================================================
-       8. RESPONSIVIDADE MOBILE (PRIORIDADE TELEMÓVEL)
+       8. RESPONSIVIDADE MOBILE (PESQUISA SEMPRE VISÍVEL E ESPAÇAMENTO OTIMIZADO)
        ========================================================================== */
     @media (max-width: 768px) {
-      .vc-topbar { padding: 10px 12px; }
+      .vc-topbar { padding: 10px 12px 8px 12px; gap: 10px; }
       .vc-brand-title-main { font-size: 17px; }
       .vc-brand-subtitle { font-size: 11.5px; }
-      .vc-search-wrap.desktop-only { display: none; }
-      .vc-subnav { justify-content: flex-start; padding: 9px 12px; gap: 8px; }
+      .vc-search-wrap { width: 100% !important; max-width: 100% !important; order: 3; }
+      .vc-subnav { justify-content: flex-start; padding: 8px 12px; gap: 8px; }
       .vc-nav-tab { padding: 8px 13px; font-size: 12px; border-radius: 12px; min-height: 40px; }
       .vc-container { padding: 12px; }
       .catalog-shell-card { padding: 14px; border-radius: 16px; }
@@ -497,11 +512,6 @@
       .meet-ctrl-btn .btn-text-label { display: none !important; }
       .meet-circle-btn { width: 42px; height: 42px; font-size: 17px; }
       #live-top-header { padding: 6px 10px !important; }
-    }
-
-    @media (min-width: 769px) {
-      .mobile-search-trigger { display: none !important; }
-      .vc-mobile-search-drawer { display: none !important; }
     }
 
     /* MENU DE TRÊS PONTOS (⋮) E REAÇÕES (😊) */
@@ -615,7 +625,7 @@
 </head>
 <body>
 
- <!-- CABEÇALHO SUPERIOR AZUL-MARINHO (DESIGN PROFISSIONAL MOBILE-FIRST) -->
+<!-- CABEÇALHO SUPERIOR NO TOPO ABSOLUTO (COM PESQUISA SEMPRE VISÍVEL) -->
   <header class="vc-header-master">
     <div class="vc-topbar" style="flex-wrap: wrap;">
       <div class="vc-brand-group">
@@ -632,22 +642,17 @@
         </div>
       </div>
 
-      <div class="vc-header-actions">
-        <!-- Botão de Lupa no Telemóvel (Abre e fecha a pesquisa suavemente) -->
-        <button type="button" class="vc-icon-btn mobile-search-trigger" onclick="const w=document.getElementById('wrap-pesquisa-principal'); if(w){w.classList.toggle('desktop-only'); if(!w.classList.contains('desktop-only')){document.getElementById('input-search')?.focus();}}" title="Pesquisar aulas">
-          🔍
-        </button>
-
-        <!-- Botão de Opções Rápidas (⋮) no Topo Direito -->
-        <button type="button" class="vc-icon-btn" onclick="if(videoAtualObj){copiarLinkSequenciaAtual();}else if(assuntoFiltroAtual!=='TODOS'){copiarLinkAssuntoSelecionado();}else{mostrarToast('💡 Selecione uma aula ou assunto para copiar o link!');}" title="Copiar Link da Sequência">
-          ⋮
-        </button>
-      </div>
-
-      <!-- Barra de Pesquisa Unificada (Visível no PC e expansível no Telemóvel) -->
-      <div class="vc-search-wrap desktop-only" id="wrap-pesquisa-principal" style="width: 100%; max-width: 320px;">
+      <!-- Barra de Pesquisa Permanentemente Visível (no Telemóvel e no PC) -->
+      <div class="vc-search-wrap" id="wrap-pesquisa-principal" style="width: 100%; max-width: 320px;">
         <span style="position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #93c5fd; pointer-events: none;">🔍</span>
         <input type="text" id="input-search" class="vc-search-input" placeholder="Pesquisar aulas, assuntos..." oninput="if(document.getElementById('view-catalogo').style.display==='none'){fecharPlayerVoltarCatalogo();}">
+      </div>
+
+      <!-- Botão para Fechar e Voltar ao WorkSpace (Substitui a barra antiga que ficava acima) -->
+      <div class="vc-header-actions">
+        <button type="button" class="vc-icon-btn" style="background: rgba(225, 29, 72, 0.2); color: #fda4af; border: 1px solid rgba(244, 63, 94, 0.35); border-radius: 10px; font-size: 16px; font-weight: 800;" onclick="if(window.parent && window.parent !== window){window.parent.postMessage({type:'FECHAR_VIDEO_AULAS'},'*');}else{fecharPlayerVoltarCatalogo();}" title="Fechar e voltar ao WorkSpace">
+          ✕
+        </button>
       </div>
     </div>
 
@@ -692,27 +697,12 @@
 
   <!-- 1. REPRODUTOR DE VÍDEO + INFORMAÇÕES + COMENTÁRIOS + PRÓXIMAS AULAS -->
     <section id="view-player">
-      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <button type="button" class="vc-btn" style="border-radius: 999px; padding: 7px 14px; font-size: 12px;" onclick="fecharPlayerVoltarCatalogo()">↩ Voltar para o Catálogo</button>
-        <button type="button" class="vc-btn" style="border-radius: 999px; padding: 7px 14px; font-size: 12px;" onclick="copiarLinkVideoAtual()">🔗 Link deste Vídeo</button>
-      </div>
-
       <div class="player-layout">
         <div>
-          <!-- PALCO DE VÍDEO 16:9 COM ETIQUETAS FLUTUANTES IGUAIS À REFERÊNCIA -->
-          <div class="video-stage-box">
-            <div class="stage-overlay-pill-left">
-              <span class="stage-overlay-dot"></span>
-              <span id="stage-status-label">Aula em andamento</span>
-            </div>
-            <div class="stage-overlay-pill-right">
-              <span>👁</span>
-              <span id="stage-views-mirror">0 visualizações</span>
-            </div>
-            <div id="player-stage" style="width: 100%; height: 100%;"></div>
-          </div>
+          <!-- PALCO DE VÍDEO 16:9 100% LIMPO (SEM TEXTOS POR CIMA DO VÍDEO) -->
+          <div class="video-stage-box" id="player-stage"></div>
 
-          <!-- CARTÃO 1: INFORMAÇÕES E AÇÕES DA AULA -->
+          <!-- CARTÃO 1: INFORMAÇÕES E AÇÕES DA AULA (COM "LINK DESTE VÍDEO") -->
           <div class="video-info-card">
             <div class="info-card-top-row">
               <div class="info-badges-group">
@@ -720,9 +710,9 @@
                 <span id="player-ordem-badge" class="order-tag-chip">Aula 1 de 1</span>
                 <span id="player-views-badge" class="views-tag-inline">👁 0 visualizações</span>
               </div>
-              <button type="button" class="btn-seq-link-pill" onclick="copiarLinkSequenciaAtual()">
+              <button type="button" class="btn-seq-link-pill" onclick="copiarLinkVideoAtual()">
                 <span>🔗</span>
-                <span>Link da Sequência</span>
+                <span>Link deste Vídeo</span>
               </button>
             </div>
 
@@ -762,7 +752,7 @@
           </div>
         </div>
 
-        <!-- CARTÃO 3: PRÓXIMAS AULAS COM CABEÇALHO AZUL-MARINHO -->
+        <!-- CARTÃO 3: PRÓXIMAS AULAS + PÍLULA FLUTUANTE "LINK DA SEQUÊNCIA" ABAIXO DE "VER TODAS" -->
         <aside class="playlist-sidebar">
           <div class="playlist-header">
             <div class="playlist-header-left">
@@ -777,6 +767,15 @@
               <span>&gt;</span>
             </button>
           </div>
+
+          <!-- Pílula Solta Flutuante abaixo de "Ver todas >" que empurra as aulas para baixo -->
+          <div class="playlist-floating-pill-wrap">
+            <button type="button" class="btn-seq-floating-pill" onclick="copiarLinkSequenciaAtual()">
+              <span>🔗</span>
+              <span>Link da Sequência</span>
+            </button>
+          </div>
+
           <div class="playlist-items" id="playlist-sidebar-items"></div>
         </aside>
       </div>

@@ -1476,16 +1476,16 @@ Object.assign(Workspace, {
         if (!modal) return;
         const headerModal = modal.firstElementChild;
 
+        // Mantém a barra antiga ("Sala Virtual de Vídeo-Aulas...") sempre oculta para o cabeçalho PlayClass & Meet subir ao topo!
+        if (headerModal) headerModal.style.display = 'none';
+
         if (minimizar) {
             modal.dataset.minimizado = 'true';
             modal.style.cssText = 'display:flex; position:fixed; bottom:18px; right:18px; top:auto; left:auto; width:350px; height:230px; max-width:92vw; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.65); border:2px solid #3b82f6; transition:all 0.25s ease;';
-            if (headerModal) headerModal.style.display = 'none';
             document.body.style.overflow = '';
         } else {
             modal.dataset.minimizado = 'false';
             modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
-            const emCinema = Boolean(iframe?.contentWindow?.document?.body?.classList?.contains('modo-cinema-live'));
-            if (headerModal) headerModal.style.display = emCinema ? 'none' : 'flex';
             document.body.style.overflow = 'hidden';
         }
 
