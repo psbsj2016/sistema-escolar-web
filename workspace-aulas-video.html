@@ -736,8 +736,8 @@
     let streamTransmissaoAtual = null;
     let conexoesAlunos = [];
     let chamadasAtivas = {};
-    let micAtivo = true;
-    let camAtiva = true;
+    let micAtivo = false;
+    let camAtiva = false;
     let somSaidaAtivo = true;
     let lousaProjetadaAtiva = false;
     let modoMotorLive = 'nativo';
@@ -1815,12 +1815,12 @@
 
           <!-- 📱 DOCA INFERIOR UNIFICADA (PERFEITA NO TELEMÓVEL E NO PC: MIC, CÂMARA, SOM, MÃOZINHA, EMOJIS, CHAT, MENU ⋯ E ENCERRAR 📞) -->
           <div id="live-bottom-controls" class="live-dock-bar">
-            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-mic" onclick="alternarMeuMicrofone()" title="Ativar / Silenciar Microfone">
-              <span id="icon-toggle-mic">🎤</span> <span class="btn-text-label" id="lbl-toggle-mic">Microfone</span>
+           <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-mic" onclick="alternarMeuMicrofone()" title="Ativar / Silenciar Microfone">
+              <span id="icon-toggle-mic">🔇</span> <span class="btn-text-label" id="lbl-toggle-mic">Silencioso</span>
             </button>
 
-            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-cam" onclick="alternarMinhaCamara()" title="Ligar / Desligar Câmara">
-              <span id="icon-toggle-cam">📷</span> <span class="btn-text-label" id="lbl-toggle-cam">Câmara</span>
+            <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-cam" onclick="alternarMinhaCamara()" title="Ligar / Desligar Câmara">
+              <span id="icon-toggle-cam">🚫</span> <span class="btn-text-label" id="lbl-toggle-cam">Desligada</span>
             </button>
 
             <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">
@@ -1877,14 +1877,67 @@
       iniciarConexaoWebRTCSala(codigoSala);
     }
 
-    // 📞 SAÍDA INDIVIDUAL DO ALUNO (Desliga apenas a chamada dele sem encerrar a live do professor!)
-    function sairDaChamadaAluno() {
-      maximizarChamadaAoVivo();
+    // 🚪 Notifica a saída imediatamente (via P2P e via Servidor com keepalive) para apagar o ecrã do aluno na hora!
+    function notificarSaidaDaLiveELimpar() {
+      if (liveAtivaObj && liveAtivaObj.codigoSala) {
+        const payloadSaida = {
+          subtipo: 'SAIU_ALUNO',
+          tipo: 'SAIU_ALUNO',
+          salaCodigo: liveAtivaObj.codigoSala,
+          escolaId: ESCOLA_ID,
+          autorId: USER_ID,
+          autorNome: USER_NAME,
+          nome: USER_NAME
+        };
+        if (window._conexaoComProf && window._conexaoComProf.open) {
+          try { window._conexaoComProf.send(payloadSaida); } catch (e) {}
+        }
+        try {
+          fetch('/api/workspace/video-aulas/live/evento', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            keepalive: true,
+            body: JSON.stringify(payloadSaida)
+          }).catch(() => {});
+        } catch (e) {}
+      }
       limparConexoesWebRTC();
       const stage = document.getElementById('meet-stage-container');
       if (stage) stage.dataset.salaMontada = '';
+    }
+
+    // 📞 SAÍDA INDIVIDUAL DO ALUNO (Desliga apenas para ele e remove o quadrado dele da sala)
+    function sairDaChamadaAluno() {
+      maximizarChamadaAoVivo();
+      notificarSaidaDaLiveELimpar();
       mostrarToast('📞 Você saiu da chamada ao vivo.');
       alternarAba('catalogo');
+    }
+
+    // 🧹 Remove imediatamente o cartão de vídeo e o indicador de microfone de um aluno que saiu
+    function removerParticipanteDaGrelha(nomePessoa) {
+      if (!nomePessoa) return;
+      const nomeLimpo = String(nomePessoa).trim();
+      const chaveAluno = normalizarStr(nomeLimpo);
+
+      document.querySelectorAll(`[data-aluno-chave="${chaveAluno}"]`).forEach(el => el.remove());
+      delete estadoMicsParticipantes[nomeLimpo];
+
+      const summary = document.getElementById('webrtc-mics-summary');
+      if (summary) {
+        const entradas = Object.entries(estadoMicsParticipantes);
+        summary.innerHTML = entradas.map(([nome, ativo]) => `
+          <span style="background:${ativo ? 'rgba(16,185,129,0.18)' : 'rgba(225,29,72,0.18)'}; border:1px solid ${ativo ? '#10b981' : '#f43f5e'}; color:${ativo ? '#6ee7b7' : '#fda4af'}; padding:2px 8px; border-radius:99px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+            ${ativo ? '🎤' : '🔇'} ${esc(nome)}: ${ativo ? 'Ativo' : 'Silencioso'}
+          </span>
+        `).join('');
+      }
+
+      const grid = document.getElementById('webrtc-video-grid');
+      if (grid && grid.children.length === 0) {
+        grid.style.display = 'none';
+      }
     }
 
     function alternarMenuTresPontos(e) {
@@ -2235,12 +2288,15 @@
       }
     }
 
-   // Liberta a conexão imediatamente se o utilizador apertar F5 para não travar o ID da sala
+  // Se o utilizador fechar a aba, clicar no X ou atualizar (F5), avisa a sala e limpa os canais na hora!
     window.addEventListener('beforeunload', () => {
-      limparConexoesWebRTC();
+      notificarSaidaDaLiveELimpar();
+    });
+    window.addEventListener('pagehide', () => {
+      notificarSaidaDaLiveELimpar();
     });
 
-    // Cria uma faixa de áudio silenciosa de reserva caso o aparelho não tenha microfone
+    // Cria uma faixa de áudio silenciosa para manter a ligação ativa mesmo sem microfone permitido
     function criarFaixaAudioSilenciosa() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -2252,9 +2308,54 @@
         osc.connect(gain);
         gain.connect(dst);
         osc.start();
-        return dst.stream.getAudioTracks()[0];
+        const track = dst.stream.getAudioTracks()[0];
+        if (track) track._isFallbackTrack = true;
+        return track;
       } catch (e) {
         return null;
+      }
+    }
+
+    // Cria uma faixa de vídeo preta leve para iniciar com a câmara desligada ou caso o utilizador clique em "Não permitir"
+    function criarFaixaVideoPreta() {
+      try {
+        const c = document.createElement('canvas');
+        c.width = 640;
+        c.height = 360;
+        const cx = c.getContext('2d');
+        cx.fillStyle = '#050811';
+        cx.fillRect(0, 0, c.width, c.height);
+        const stream = c.captureStream(1);
+        const track = stream.getVideoTracks()[0];
+        if (track) {
+          track.enabled = false;
+          track._isFallbackTrack = true;
+        }
+        return track;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function sincronizarBotoesMicECamUI() {
+      const btnMic = document.getElementById('btn-toggle-mic');
+      const iconMic = document.getElementById('icon-toggle-mic');
+      const lblMic = document.getElementById('lbl-toggle-mic');
+      if (iconMic) iconMic.innerText = micAtivo ? '🎤' : '🔇';
+      if (lblMic) lblMic.innerText = micAtivo ? 'Microfone' : 'Silencioso';
+      if (btnMic) {
+        btnMic.classList.toggle('primary', micAtivo);
+        btnMic.classList.toggle('danger', !micAtivo);
+      }
+
+      const btnCam = document.getElementById('btn-toggle-cam');
+      const iconCam = document.getElementById('icon-toggle-cam');
+      const lblCam = document.getElementById('lbl-toggle-cam');
+      if (iconCam) iconCam.innerText = camAtiva ? '📷' : '🚫';
+      if (lblCam) lblCam.innerText = camAtiva ? 'Câmara' : 'Desligada';
+      if (btnCam) {
+        btnCam.classList.toggle('primary', camAtiva);
+        btnCam.classList.toggle('danger', !camAtiva);
       }
     }
 
@@ -2264,42 +2365,43 @@
         await carregarPeerJS();
         limparConexoesWebRTC();
 
+        // 🔒 Inicia SEMPRE com Microfone e Câmara DESLIGADOS para Professor e Aluno!
+        micAtivo = false;
+        camAtiva = false;
+        sincronizarBotoesMicECamUI();
+
         const idSalaLimpo = String(codigoSala).replace(/[^a-zA-Z0-9]/g, '');
         const idHostProf = `${idSalaLimpo}_HOST`;
 
+        // 1. Dispara o pedido nativo do navegador ("Permitir desta vez / Sempre / Não permitir")
         try {
           meuStreamLocal = await navigator.mediaDevices.getUserMedia({
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
           });
-        } catch (errMedia) {
+        } catch (err Ambos) {
           try {
-            meuStreamLocal = await navigator.mediaDevices.getUserMedia({ audio: true, video: false });
-          } catch (e) {
+            meuStreamLocal = await navigator.mediaDevices.getUserMedia({
+              audio: { echoCancellation: true, noiseSuppression: true },
+              video: false
+            });
+          } catch (errSoAudio) {
             meuStreamLocal = new MediaStream();
           }
         }
 
-        // Garante que existe sempre uma trilha de áudio no stream para podermos injetar o som da tela partilhada depois
-        if (meuStreamLocal.getAudioTracks().length === 0) {
-          const trilhaReserva = criarFaixaAudioSilenciosa();
-          if (trilhaReserva) meuStreamLocal.addTrack(trilhaReserva);
-        }
+        // 2. Desliga imediatamente as trilhas capturadas para que entrem 100% desligadas!
+        meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
+        meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = false; });
 
-        if (!IS_GESTOR_OU_PROF) {
-          meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
-          micAtivo = false;
-          const btnMic = document.getElementById('btn-toggle-mic');
-          const iconMic = document.getElementById('icon-toggle-mic');
-          const lblMic = document.getElementById('lbl-toggle-mic');
-          if (iconMic) iconMic.innerText = '🔇';
-          if (lblMic) lblMic.innerText = 'Silencioso';
-          if (btnMic) {
-            btnMic.classList.remove('primary');
-            btnMic.classList.add('danger');
-          }
-        } else {
-          meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
+        // Se o utilizador clicou em "Não permitir" ou não tem câmara/microfone, injeta trilhas de reserva para a chamada funcionar
+        if (meuStreamLocal.getAudioTracks().length === 0) {
+          const trilhaAudioRes = criarFaixaAudioSilenciosa();
+          if (trilhaAudioRes) meuStreamLocal.addTrack(trilhaAudioRes);
+        }
+        if (meuStreamLocal.getVideoTracks().length === 0) {
+          const trilhaVideoRes = criarFaixaVideoPreta();
+          if (trilhaVideoRes) meuStreamLocal.addTrack(trilhaVideoRes);
         }
 
         streamTransmissaoAtual = meuStreamLocal;
@@ -2319,7 +2421,6 @@
 
             peerInstance.on('open', () => {
               if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
-              // Avisa todos os alunos na sala para reconectarem imediatamente (caso o professor tenha atualizado a página com F5)
               fetch('/api/workspace/video-aulas/live/evento', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -2333,7 +2434,6 @@
               }).catch(() => {});
             });
 
-            // 🛡️ Recuperação automática caso o F5 tenha deixado o ID preso por 1 segundo no servidor PeerJS
             peerInstance.on('error', (err) => {
               if (err && (err.type === 'unavailable-id' || err.type === 'network' || err.type === 'server-error')) {
                 if (statusEl) statusEl.innerText = '🔄 Restaurando sala...';
@@ -2345,10 +2445,13 @@
 
             peerInstance.on('connection', (conn) => {
               conexoesAlunos.push(conn);
+              let nomeAlunoDestaConn = '';
+
               conn.on('data', (dados) => {
                 if (!dados) return;
                 if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
-                  atualizarIndicadorMicParticipante(dados.nome, Boolean(dados.micAtivo), 'aluno');
+                  nomeAlunoDestaConn = dados.nome || 'Aluno';
+                  atualizarIndicadorMicParticipante(nomeAlunoDestaConn, Boolean(dados.micAtivo), 'aluno');
                   const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
                   if (streamEnvio) {
                     const call = peerInstance.call(dados.peerId, streamEnvio, { metadata: { nome: USER_NAME, role: 'professor' } });
@@ -2357,6 +2460,8 @@
                   if (lousaProjetadaAtiva) {
                     conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
                   }
+                } else if (dados.tipo === 'SAIU_ALUNO') {
+                  removerParticipanteDaGrelha(dados.nome || nomeAlunoDestaConn);
                 } else if (dados.tipo === 'STATUS_MIC') {
                   atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole);
                 } else if (dados.tipo === 'MAO_LEVANTADA') {
@@ -2369,15 +2474,23 @@
                   aplicarProjecaoLousaVisual(dados.lousaAtiva);
                 }
               });
+
+              conn.on('close', () => {
+                if (nomeAlunoDestaConn) removerParticipanteDaGrelha(nomeAlunoDestaConn);
+              });
             });
 
             peerInstance.on('call', (call) => {
+              const nomeAl = call.metadata?.nome || 'Aluno';
               const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
               call.answer(streamEnvio || undefined);
               chamadasAtivas[call.peer] = call;
+
               call.on('stream', (streamAluno) => {
-                const nomeAl = call.metadata?.nome || 'Aluno';
                 adicionarVideoParticipanteNaGrelha(call.peer, nomeAl, streamAluno, false, call.metadata?.micAtivo);
+              });
+              call.on('close', () => {
+                removerParticipanteDaGrelha(nomeAl);
               });
             });
           };
@@ -2463,17 +2576,28 @@
       }
     }
 
+    // 🛡️ ANTI-DUPLICAÇÃO DE ECRÃ: Garante 1 único cartão por aluno (mesmo se sair e entrar várias vezes)
     function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false, micInicial = false) {
       const grid = document.getElementById('webrtc-video-grid');
       if (!grid) return;
       grid.style.display = 'flex';
       const nomeLimpo = String(nomePessoa || 'Aluno').trim();
+      const chaveAluno = normalizarStr(nomeLimpo);
       const estaAtivo = estadoMicsParticipantes[nomeLimpo] !== undefined ? estadoMicsParticipantes[nomeLimpo] : Boolean(micInicial);
 
-      let card = document.getElementById(`vid_card_${idCard}`);
+      // Se já existia um cartão deste mesmo aluno na grelha, reutiliza ou limpa duplicados antigos!
+      const cartoesExistentesDoAluno = grid.querySelectorAll(`[data-aluno-chave="${chaveAluno}"]`);
+      let card = cartoesExistentesDoAluno[0] || document.getElementById(`vid_card_${idCard}`);
+      if (cartoesExistentesDoAluno.length > 1) {
+        for (let i = 1; i < cartoesExistentesDoAluno.length; i++) {
+          cartoesExistentesDoAluno[i].remove();
+        }
+      }
+
       if (!card) {
         card = document.createElement('div');
-        card.id = `vid_card_${idCard}`;
+        card.id = `vid_card_${chaveAluno}`;
+        card.setAttribute('data-aluno-chave', chaveAluno);
         card.style.cssText = 'width:160px; height:92px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
           <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
@@ -2487,7 +2611,10 @@
           </div>
         `;
         grid.appendChild(card);
+      } else {
+        card.setAttribute('data-aluno-chave', chaveAluno);
       }
+
       const v = card.querySelector('video');
       if (v && v.srcObject !== stream) {
         v.srcObject = stream;
@@ -2496,34 +2623,81 @@
       atualizarIndicadorMicParticipante(nomeLimpo, estaAtivo, 'aluno');
     }
 
-    function alternarMeuMicrofone() {
+    // 🎤 LIGAR / DESLIGAR MICROFONE (Se não tiver dado permissão antes, pede ao navegador na hora!)
+    async function alternarMeuMicrofone() {
       if (!meuStreamLocal) return;
+      let audioTrack = meuStreamLocal.getAudioTracks()[0];
+
+      if (!micAtivo && (!audioTrack || audioTrack._isFallbackTrack || audioTrack.readyState === 'ended')) {
+        try {
+          const novoAudioStream = await navigator.mediaDevices.getUserMedia({
+            audio: { echoCancellation: true, noiseSuppression: true }
+          });
+          const novaTrilhaAudio = novoAudioStream.getAudioTracks()[0];
+          if (novaTrilhaAudio) {
+            if (audioTrack) {
+              meuStreamLocal.removeTrack(audioTrack);
+              try { audioTrack.stop(); } catch (e) {}
+            }
+            meuStreamLocal.addTrack(novaTrilhaAudio);
+            audioTrack = novaTrilhaAudio;
+
+            Object.values(chamadasAtivas).forEach(call => {
+              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'audio');
+              if (sender) sender.replaceTrack(novaTrilhaAudio).catch(() => {});
+            });
+            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
+              const senderAl = window._chamadaAtivaComProf.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
+              if (senderAl) senderAl.replaceTrack(novaTrilhaAudio).catch(() => {});
+            }
+          }
+        } catch (errPerm) {
+          mostrarToast('⚠️ Permissão de microfone negada no navegador. Autorize no ícone de cadeado da barra de endereço.', '#f59e0b');
+          return;
+        }
+      }
+
       micAtivo = !micAtivo;
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
-      const btn = document.getElementById('btn-toggle-mic');
-      const icon = document.getElementById('icon-toggle-mic');
-      const lbl = document.getElementById('lbl-toggle-mic');
-      if (icon) icon.innerText = micAtivo ? '🎤' : '🔇';
-      if (lbl) lbl.innerText = micAtivo ? 'Microfone' : 'Silencioso';
-      if (btn) {
-        btn.classList.toggle('primary', micAtivo);
-        btn.classList.toggle('danger', !micAtivo);
-      }
+      sincronizarBotoesMicECamUI();
       transmitirMeuStatusMicrofone();
     }
 
-    function alternarMinhaCamara() {
+    // 📷 LIGAR / DESLIGAR CÂMARA (Se não tiver dado permissão antes, pede ao navegador na hora!)
+    async function alternarMinhaCamara() {
       if (!meuStreamLocal) return;
+      let videoTrack = meuStreamLocal.getVideoTracks()[0];
+
+      if (!camAtiva && (!videoTrack || videoTrack._isFallbackTrack || videoTrack.readyState === 'ended')) {
+        try {
+          const novoVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const novaTrilhaVideo = novoVideoStream.getVideoTracks()[0];
+          if (novaTrilhaVideo) {
+            if (videoTrack) {
+              meuStreamLocal.removeTrack(videoTrack);
+              try { videoTrack.stop(); } catch (e) {}
+            }
+            meuStreamLocal.addTrack(novaTrilhaVideo);
+            videoTrack = novaTrilhaVideo;
+
+            Object.values(chamadasAtivas).forEach(call => {
+              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
+              if (sender) sender.replaceTrack(novaTrilhaVideo).catch(() => {});
+            });
+            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
+              const senderAl = window._chamadaAtivaComProf.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
+              if (senderAl) senderAl.replaceTrack(novaTrilhaVideo).catch(() => {});
+            }
+          }
+        } catch (errPerm) {
+          mostrarToast('⚠️ Permissão de câmara negada no navegador. Autorize no ícone de cadeado da barra de endereço.', '#f59e0b');
+          return;
+        }
+      }
+
       camAtiva = !camAtiva;
       meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
-      const btn = document.getElementById('btn-toggle-cam');
-      const icon = document.getElementById('icon-toggle-cam');
-      const lbl = document.getElementById('lbl-toggle-cam');
-      if (icon) icon.innerText = camAtiva ? '📷' : '🚫';
-      if (lbl) lbl.innerText = camAtiva ? 'Câmara' : 'Desligada';
-      if (btn) {
-        btn.classList.toggle('primary', camAtiva);
-      }
+      sincronizarBotoesMicECamUI();
     }
 
     let audioCtxMixEcra = null;
@@ -2869,7 +3043,11 @@
     }
 
     // 🖥️ ALTERNAR ABA (OCULTA CABEÇALHO EXTERNO DO MODAL QUANDO ENTRA NA LIVE PARA O BOTÃO VOLTAR AO CATÁLOGO FICAR NO LUGAR DO X)
-    function alternarAba(aba) {
+   function alternarAba(aba) {
+      // Se estava na Sala Ao Vivo e clicou para ir para outra aba (ex: Catálogo), desconecta para não duplicar!
+      if (aba !== 'live' && peerInstance) {
+        notificarSaidaDaLiveELimpar();
+      }
       salvarEstadoInternoPlayClass(aba);
       document.getElementById('btn-tab-catalogo')?.classList.toggle('active', aba === 'catalogo');
       document.getElementById('btn-tab-live')?.classList.toggle('active', aba === 'live');
@@ -2946,10 +3124,11 @@
           } else if (data.type === 'VIDEO_LIVE_EVENTO') {
             if (liveAtivaObj && data.salaCodigo && data.salaCodigo !== liveAtivaObj.codigoSala) return;
             if (data.subtipo === 'PROF_RECONECTOU') {
-              // Se o professor atualizou a página (F5), todos os alunos reconectam automaticamente em 800ms!
               if (!IS_GESTOR_OU_PROF && typeof window._reconectarAoProfessorLive === 'function') {
                 setTimeout(() => window._reconectarAoProfessorLive(), 800);
               }
+            } else if (data.subtipo === 'SAIU_ALUNO') {
+              removerParticipanteDaGrelha(data.autorNome || data.nome);
             } else if (data.subtipo === 'CHAT') {
               desenharMensagemMiniChat(data, false);
             } else if (data.subtipo === 'REACAO') {

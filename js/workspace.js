@@ -1457,10 +1457,18 @@ Object.assign(Workspace, {
         }
     },
 
-    fecharPlataformaVideos: () => {
+   fecharPlataformaVideos: () => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (modal && modal.dataset.minimizado === 'true') return;
+
+        // Avisa a Sala Ao Vivo para remover imediatamente o ecrã do participante antes de fechar o iframe!
+        try {
+            if (iframe && iframe.contentWindow && typeof iframe.contentWindow.notificarSaidaDaLiveELimpar === 'function') {
+                iframe.contentWindow.notificarSaidaDaLiveELimpar();
+            }
+        } catch (e) {}
+
         localStorage.removeItem('ws_playclass_estado');
         localStorage.removeItem('ws_playclass_estado_interno');
         if (iframe) iframe.src = '';
