@@ -8,82 +8,157 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <style>
     :root {
-      --navy-top: #071942;
-      --navy-mid: #0d2763;
-      --bg-page: #edf3fc;
+      --navy-top: #06163a;
+      --navy-mid: #0b2255;
+      --navy-pill: #0f2963;
+      --bg-page: #edf3fb;
       --bg-card: #ffffff;
       --text-dark: #0f172a;
       --text-muted: #64748b;
-      --border-light: #dbe6f7;
-      --primary: #1d6bf3;
-      --primary-hover: #1557cc;
+      --border-light: #dce6f5;
+      --primary: #1d7dfa;
+      --primary-dark: #1562cc;
       --danger: #e11d48;
+      --danger-soft: #ffe4e6;
       --success: #10b981;
       --warning: #f59e0b;
     }
     *, *::before, *::after { box-sizing: border-box; }
     html, body {
       margin: 0; padding: 0; width: 100%; height: 100%;
-      font-family: 'Inter', system-ui, sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
       background: var(--bg-page); color: var(--text-dark);
-      overflow-x: hidden;
+      overflow-x: hidden; -webkit-font-smoothing: antialiased;
     }
 
-    /* CABEÇALHO DUPLO INSPIRADO NA IMAGEM DE REFERÊNCIA */
+    /* ==========================================================================
+       1. CABEÇALHO COMPACTO AZUL-MARINHO (FIEL À IMAGEM DE REFERÊNCIA)
+       ========================================================================== */
     .vc-header-master {
-      background: linear-gradient(135deg, #061539 0%, #0d2868 55%, #081b47 100%);
+      background: linear-gradient(180deg, #061538 0%, #0a2154 100%);
       color: #fff; position: sticky; top: 0; z-index: 50;
-      box-shadow: 0 8px 25px rgba(6, 21, 57, 0.25);
+      box-shadow: 0 6px 22px rgba(6, 21, 56, 0.22);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
     }
     .vc-topbar {
-      max-width: 1400px; margin: 0 auto; padding: 14px 24px 10px 24px;
-      display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap;
+      max-width: 1380px; margin: 0 auto; padding: 12px 18px 10px 18px;
+      display: flex; align-items: center; justify-content: space-between; gap: 12px;
     }
-    .vc-brand-group { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
-    .vc-logo-main { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 22px; letter-spacing: -0.4px; }
+    .vc-brand-group {
+      display: flex; align-items: center; gap: 12px; min-width: 0; flex: 1;
+    }
+    .vc-icon-btn {
+      width: 38px; height: 38px; border-radius: 10px;
+      background: transparent; border: none; color: #e2e8f0;
+      font-size: 20px; cursor: pointer; display: inline-flex;
+      align-items: center; justify-content: center; flex-shrink: 0;
+      transition: background 0.2s;
+    }
+    .vc-icon-btn:hover { background: rgba(255, 255, 255, 0.1); color: #fff; }
+
+    .vc-logo-main {
+      display: flex; align-items: center; gap: 12px; min-width: 0;
+    }
     .vc-logo-icon {
-      width: 38px; height: 38px; border-radius: 11px;
-      background: linear-gradient(135deg, #2563eb, #38bdf8);
-      display: flex; align-items: center; justify-content: center; font-size: 18px;
-      box-shadow: 0 4px 14px rgba(56, 189, 248, 0.4);
+      width: 42px; height: 42px; border-radius: 12px;
+      background: linear-gradient(145deg, #2b8eff 0%, #1565d8 100%);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; flex-shrink: 0;
+      box-shadow: 0 4px 14px rgba(29, 125, 250, 0.45);
     }
-    .vc-divider-v { width: 1px; height: 30px; background: rgba(255,255,255,0.2); }
-    .vc-subtitle-box { display: flex; align-items: center; gap: 10px; }
-    .vc-search-wrap { flex: 1; max-width: 350px; min-width: 200px; position: relative; }
+    .vc-brand-titles {
+      display: flex; flex-direction: column; min-width: 0;
+    }
+    .vc-brand-title-main {
+      font-weight: 800; font-size: 19px; letter-spacing: -0.3px;
+      color: #ffffff; line-height: 1.15; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis;
+    }
+    .vc-brand-title-main span { color: #3898ff; font-weight: 800; }
+    .vc-brand-subtitle {
+      font-size: 12px; color: #cbd5e1; font-weight: 500;
+      margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+
+    .vc-header-actions {
+      display: flex; align-items: center; gap: 6px; flex-shrink: 0;
+    }
+    .vc-search-wrap {
+      position: relative; width: 280px; transition: all 0.22s ease;
+    }
     .vc-search-input {
-      width: 100%; padding: 10px 16px 10px 38px; border-radius: 999px;
-      border: 1px solid rgba(255,255,255,0.22); background: rgba(15, 23, 42, 0.55);
-      color: #fff; font-size: 13px; outline: none; transition: 0.2s;
+      width: 100%; padding: 9px 14px 9px 36px; border-radius: 999px;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      background: rgba(15, 29, 64, 0.75); color: #fff;
+      font-size: 13px; outline: none; transition: 0.2s;
     }
-    .vc-search-input::placeholder { color: #cbd5e1; }
-    .vc-search-input:focus { border-color: #60a5fa; background: rgba(15, 23, 42, 0.85); }
+    .vc-search-input::placeholder { color: #94a3b8; }
+    .vc-search-input:focus {
+      border-color: #3898ff; background: rgba(15, 29, 64, 0.95);
+    }
 
-    /* SUB-BARRA DE ABAS CENTRALIZADAS */
+    /* Barra de Pesquisa Retrátil no Telemóvel */
+    .vc-mobile-search-drawer {
+      display: none; padding: 0 16px 10px 16px;
+    }
+    .vc-mobile-search-drawer.open { display: block; }
+
+    /* ==========================================================================
+       2. NAVEGAÇÃO PRINCIPAL EM PÍLULAS HORIZONTAIS (SEM CORTAR NO TELEMÓVEL)
+       ========================================================================== */
     .vc-subnav {
-      border-top: 1px solid rgba(255,255,255,0.08);
-      background: rgba(5, 14, 38, 0.45); padding: 9px 16px;
-      display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(6, 18, 46, 0.55);
+      padding: 10px 16px;
+      display: flex; align-items: center; justify-content: center;
+      gap: 10px; overflow-x: auto; flex-wrap: nowrap;
+      scrollbar-width: none; -ms-overflow-style: none;
     }
+    .vc-subnav::-webkit-scrollbar { display: none; }
+
     .vc-nav-tab {
-      background: rgba(255,255,255,0.07); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.12);
-      padding: 9px 16px; border-radius: 10px; font-size: 13px; font-weight: 700;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 8px; transition: 0.2s;
+      background: rgba(16, 37, 82, 0.85); color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      padding: 9px 16px; border-radius: 14px;
+      font-size: 13px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 9px;
+      transition: all 0.2s ease; white-space: nowrap; flex-shrink: 0;
+      min-height: 44px; text-align: left; line-height: 1.2;
     }
-    .vc-nav-tab:hover { background: rgba(255,255,255,0.15); transform: translateY(-1px); }
+    .vc-nav-tab:hover {
+      background: rgba(29, 125, 250, 0.22); border-color: rgba(96, 165, 250, 0.45);
+    }
     .vc-nav-tab.active {
-      background: var(--primary); color: #fff; border-color: #60a5fa;
-      box-shadow: 0 4px 14px rgba(29, 107, 243, 0.45);
+      background: linear-gradient(135deg, #2584ff 0%, #1565d8 100%);
+      color: #ffffff; border-color: #60a5fa;
+      box-shadow: 0 4px 14px rgba(29, 125, 250, 0.42);
+    }
+    .vc-tab-dot-red {
+      width: 12px; height: 12px; border-radius: 50%;
+      background: #ef4444; display: inline-block; flex-shrink: 0;
+      box-shadow: 0 0 8px rgba(239, 68, 68, 0.7);
     }
 
-    /* BOTÕES GERAIS */
+    /* ==========================================================================
+       3. BOTÕES GERAIS E ANIMAÇÕES
+       ========================================================================== */
     .vc-btn {
-      background: #e2e8f0; color: #1e293b; border: 1px solid #cbd5e1;
-      padding: 8px 14px; border-radius: 10px; font-size: 12.5px; font-weight: 700;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
+      background: #eef2f8; color: #1e293b; border: 1px solid #d5e0f0;
+      padding: 9px 15px; border-radius: 11px; font-size: 13px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      gap: 7px; transition: all 0.18s ease; text-decoration: none;
     }
-    .vc-btn:hover { filter: brightness(0.96); transform: translateY(-1px); }
-    .vc-btn.primary { background: var(--primary); color: #fff; border-color: var(--primary); }
+    .vc-btn:hover { background: #e2e8f0; transform: translateY(-1px); }
+    .vc-btn.primary {
+      background: var(--primary); color: #fff; border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(29, 125, 250, 0.25);
+    }
+    .vc-btn.primary:hover { background: var(--primary-dark); }
     .vc-btn.danger { background: var(--danger); color: #fff; border-color: var(--danger); }
+    .vc-btn.danger-soft {
+      background: #ffe4e6; color: #e11d48; border-color: #fecdd3;
+    }
+    .vc-btn.danger-soft:hover { background: #fecdd3; }
     .vc-btn.success { background: var(--success); color: #fff; border-color: var(--success); }
 
     @keyframes pulseRed { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.06); opacity: 0.85; } }
@@ -95,12 +170,14 @@
       100% { opacity: 0; transform: translateY(-230px) scale(0.8); }
     }
 
-    /* FAIXA DE ALERTA AO VIVO */
-    .vc-container { max-width: 1380px; margin: 0 auto; padding: 20px; }
+    /* ==========================================================================
+       4. CONTENTOR PRINCIPAL E BANNER DE ALERTA AO VIVO
+       ========================================================================== */
+    .vc-container { max-width: 1340px; margin: 0 auto; padding: 16px; }
     .live-banner-alert {
       display: none; background: linear-gradient(90deg, #ffe4e6 0%, #fecdd3 100%);
-      border: 1px solid #fda4af; border-radius: 14px; padding: 12px 20px;
-      margin-bottom: 20px; align-items: center; justify-content: space-between;
+      border: 1px solid #fda4af; border-radius: 14px; padding: 12px 18px;
+      margin-bottom: 16px; align-items: center; justify-content: space-between;
       gap: 12px; flex-wrap: wrap; box-shadow: 0 6px 18px rgba(225, 29, 72, 0.1);
     }
     .live-pill-badge {
@@ -109,56 +186,216 @@
       animation: pulseRed 1.6s infinite; display: inline-flex; align-items: center; gap: 6px;
     }
 
-    /* SECÇÃO PRINCIPAL DO CATÁLOGO COM BANNER À DIREITA */
+    /* ==========================================================================
+       5. REPRODUTOR DE VÍDEO E CARTÕES DA AULA (ESTILO DA IMAGEM DE REFERÊNCIA)
+       ========================================================================== */
+    #view-player { display: none; margin-bottom: 28px; }
+    .player-layout {
+      display: grid; grid-template-columns: 1fr 370px; gap: 18px; align-items: start;
+    }
+    @media (max-width: 980px) {
+      .player-layout { grid-template-columns: 1fr; gap: 14px; }
+    }
+
+    /* Palco 16:9 com Etiquetas Superiores Flutuantes */
+    .video-stage-box {
+      background: #050b1a; border-radius: 18px; overflow: hidden;
+      border: 1px solid #cbd5e1; box-shadow: 0 10px 28px rgba(15, 23, 42, 0.16);
+      aspect-ratio: 16 / 9; width: 100%; position: relative;
+    }
+    .video-stage-box video, .video-stage-box iframe {
+      width: 100%; height: 100%; border: none; display: block; background: #000;
+    }
+    .stage-overlay-pill-left {
+      position: absolute; top: 12px; left: 12px; z-index: 6;
+      background: rgba(15, 23, 42, 0.76); backdrop-filter: blur(8px);
+      color: #ffffff; padding: 6px 13px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; display: inline-flex;
+      align-items: center; gap: 7px; pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+    .stage-overlay-dot {
+      width: 9px; height: 9px; border-radius: 50%; background: #22c55e;
+      box-shadow: 0 0 8px #22c55e;
+    }
+    .stage-overlay-pill-right {
+      position: absolute; top: 12px; right: 12px; z-index: 6;
+      background: rgba(15, 23, 42, 0.76); backdrop-filter: blur(8px);
+      color: #ffffff; padding: 6px 13px; border-radius: 999px;
+      font-size: 12px; font-weight: 700; display: inline-flex;
+      align-items: center; gap: 6px; pointer-events: none;
+      border: 1px solid rgba(255, 255, 255, 0.14);
+    }
+
+    /* Cartão Branco de Informações da Aula com Barra Lateral Azul */
+    .video-info-card {
+      background: #ffffff; border: 1px solid var(--border-light);
+      border-left: 5px solid var(--primary);
+      border-radius: 18px; padding: 18px 20px; margin-top: 14px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+    }
+    .info-card-top-row {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 10px; flex-wrap: wrap; margin-bottom: 10px;
+    }
+    .info-badges-group {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .subject-tag-chip {
+      display: inline-flex; align-items: center;
+      background: #dbeafe; color: #1d4ed8;
+      padding: 5px 13px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 800; width: fit-content;
+    }
+    .order-tag-chip {
+      display: inline-flex; align-items: center;
+      background: #f1f5f9; color: #334155;
+      padding: 5px 12px; border-radius: 999px;
+      font-size: 12.5px; font-weight: 700;
+    }
+    .views-tag-inline {
+      color: #64748b; font-size: 12.5px; font-weight: 600;
+      display: inline-flex; align-items: center; gap: 4px;
+    }
+    .btn-seq-link-pill {
+      background: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1;
+      padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 6px;
+      transition: 0.18s;
+    }
+    .btn-seq-link-pill:hover { background: #e2e8f0; border-color: #93c5fd; }
+
+    .info-actions-row {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-top: 14px;
+    }
+    .info-actions-row .vc-btn {
+      flex: 1; min-width: 115px; padding: 10px 14px; border-radius: 12px; font-size: 13px;
+    }
+
+    /* Cartão Independente de Dúvidas e Comentários */
+    .video-comments-card {
+      background: #ffffff; border: 1px solid var(--border-light);
+      border-radius: 18px; padding: 18px 20px; margin-top: 14px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.04);
+    }
+    .comments-input-row {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .comments-input-row .vc-input {
+      margin-top: 0; background: #f1f5f9; border-color: #e2e8f0;
+      border-radius: 12px; padding: 11px 14px; font-size: 13.5px;
+    }
+    .comments-input-row .vc-input:focus { background: #ffffff; border-color: var(--primary); }
+
+    /* Secção Próximas Aulas com Cabeçalho Azul-Marinho */
+    .playlist-sidebar {
+      background: #ffffff; border: 1px solid var(--border-light);
+      border-radius: 18px; overflow: hidden; display: flex;
+      flex-direction: column; max-height: 640px;
+      box-shadow: 0 6px 20px rgba(15, 23, 42, 0.05);
+    }
+    .playlist-header {
+      padding: 13px 16px;
+      background: linear-gradient(90deg, #071942 0%, #0d2868 100%);
+      color: #fff; display: flex; justify-content: space-between;
+      align-items: center; gap: 10px;
+    }
+    .playlist-header-left {
+      display: flex; align-items: center; gap: 10px; min-width: 0;
+    }
+    .btn-ver-todas-pill {
+      background: rgba(255, 255, 255, 0.12); color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 700;
+      cursor: pointer; white-space: nowrap; display: inline-flex;
+      align-items: center; gap: 5px; transition: 0.18s;
+    }
+    .btn-ver-todas-pill:hover { background: rgba(255, 255, 255, 0.22); }
+
+    .playlist-items {
+      overflow-y: auto; flex: 1; padding: 12px;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+    .playlist-item {
+      display: flex; align-items: center; gap: 12px; padding: 12px 14px;
+      border-radius: 14px; background: #f8fafc; border: 1px solid #e2e8f0;
+      cursor: pointer; transition: all 0.18s ease;
+    }
+    .playlist-item:hover { background: #eff6ff; border-color: #93c5fd; }
+    .playlist-item.playing {
+      background: #ebf3ff; border-color: #93c5fd;
+      box-shadow: 0 3px 10px rgba(29, 125, 250, 0.08);
+    }
+    .pl-num {
+      width: 36px; height: 36px; border-radius: 50%; background: #e2e8f0;
+      color: #334155; font-size: 13px; font-weight: 800;
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .playlist-item.playing .pl-num {
+      background: var(--primary); color: #fff;
+      box-shadow: 0 4px 10px rgba(29, 125, 250, 0.35);
+    }
+    .pl-status-right {
+      width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; flex-shrink: 0; color: #64748b;
+    }
+    .pl-status-right.done {
+      background: var(--primary); color: #ffffff;
+    }
+
+    /* ==========================================================================
+       6. CATÁLOGO DE VÍDEOS E ASSUNTOS
+       ========================================================================== */
     .catalog-shell-card {
       background: #ffffff; border: 1px solid var(--border-light); border-radius: 20px;
-      padding: 24px; box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+      padding: 20px; box-shadow: 0 8px 26px rgba(15, 23, 42, 0.04);
     }
     .catalog-hero-top {
-      display: grid; grid-template-columns: 1fr 340px; gap: 20px; align-items: center; margin-bottom: 22px;
+      display: grid; grid-template-columns: 1fr 320px; gap: 18px; align-items: center; margin-bottom: 20px;
     }
     @media (max-width: 980px) { .catalog-hero-top { grid-template-columns: 1fr; } }
 
     .section-title-bar {
-      border-left: 5px solid var(--primary); padding-left: 14px; margin-bottom: 16px;
+      border-left: 5px solid var(--primary); padding-left: 14px; margin-bottom: 14px;
     }
     .vc-subjects-bar {
-      display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: thin;
+      display: flex; align-items: center; gap: 8px; overflow-x: auto; padding-bottom: 6px; scrollbar-width: none;
     }
+    .vc-subjects-bar::-webkit-scrollbar { display: none; }
     .vc-subject-pill {
       background: #f1f5f9; color: #334155; border: 1px solid #cbd5e1;
-      padding: 8px 16px; border-radius: 999px; font-size: 13px; font-weight: 700;
+      padding: 8px 15px; border-radius: 999px; font-size: 13px; font-weight: 700;
       cursor: pointer; white-space: nowrap; display: inline-flex; align-items: center; gap: 6px; transition: 0.2s;
     }
     .vc-subject-pill.active {
       background: var(--primary); color: #fff; border-color: var(--primary);
-      box-shadow: 0 4px 12px rgba(29, 107, 243, 0.3);
+      box-shadow: 0 4px 12px rgba(29, 125, 250, 0.3);
     }
 
     .promo-banner-right {
-      background: linear-gradient(135deg, #0b358a 0%, #1d6bf3 60%, #38bdf8 100%);
-      border-radius: 16px; padding: 20px 22px; color: #fff; position: relative; overflow: hidden;
-      box-shadow: 0 8px 22px rgba(29, 107, 243, 0.25); display: flex; flex-direction: column; justify-content: center;
+      background: linear-gradient(135deg, #071942 0%, #1557cc 60%, #2584ff 100%);
+      border-radius: 16px; padding: 18px 20px; color: #fff; position: relative; overflow: hidden;
+      box-shadow: 0 8px 22px rgba(29, 107, 243, 0.22); display: flex; flex-direction: column; justify-content: center;
     }
 
-    /* GRELHA DE VÍDEOS */
     .videos-grid {
-      display: grid; grid-template-columns: repeat(auto-fill, minmax(270px, 1fr)); gap: 18px;
+      display: grid; grid-template-columns: repeat(auto-fill, minmax(265px, 1fr)); gap: 16px;
     }
     .video-card {
       background: #fff; border: 1px solid #e2e8f0; border-radius: 16px;
       overflow: hidden; display: flex; flex-direction: column; transition: 0.22s; cursor: pointer;
       box-shadow: 0 4px 14px rgba(15, 23, 42, 0.04);
     }
-    .video-card:hover { transform: translateY(-4px); border-color: #93c5fd; box-shadow: 0 14px 28px rgba(15, 23, 42, 0.1); }
+    .video-card:hover { transform: translateY(-3px); border-color: #93c5fd; box-shadow: 0 12px 24px rgba(15, 23, 42, 0.09); }
     .video-thumb {
-      width: 100%; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #0f172a, #1e3a8a);
+      width: 100%; aspect-ratio: 16 / 9; background: linear-gradient(135deg, #071942, #1e3a8a);
       position: relative; display: flex; align-items: center; justify-content: center; overflow: hidden;
     }
     .video-thumb img { width: 100%; height: 100%; object-fit: cover; }
     .thumb-play-icon {
-      width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 23, 42, 0.78);
-      color: #fff; display: flex; align-items: center; justify-content: center; font-size: 19px;
+      width: 48px; height: 48px; border-radius: 50%; background: rgba(15, 23, 42, 0.76);
+      color: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px;
       border: 2px solid rgba(255,255,255,0.85); box-shadow: 0 4px 15px rgba(0,0,0,0.4); z-index: 2;
     }
     .thumb-badge-duration {
@@ -174,56 +411,16 @@
       color: #fff; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-weight: 800; z-index: 2;
     }
     .video-card-body { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; flex: 1; justify-content: space-between; }
-    .subject-tag-chip {
-      display: inline-block; background: #e0ecff; color: #1d4ed8;
-      padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 800; width: fit-content;
-    }
 
-    /* REPRODUTOR DE VÍDEO-AULA */
-    #view-player { display: none; margin-bottom: 30px; }
-    .player-layout { display: grid; grid-template-columns: 1fr 350px; gap: 20px; align-items: start; }
-    @media (max-width: 960px) { .player-layout { grid-template-columns: 1fr; } }
-    .video-stage-box {
-      background: #000; border-radius: 16px; overflow: hidden;
-      border: 1px solid #cbd5e1; box-shadow: 0 12px 32px rgba(0,0,0,0.2);
-      aspect-ratio: 16 / 9; width: 100%; position: relative;
-    }
-    .video-stage-box video, .video-stage-box iframe { width: 100%; height: 100%; border: none; display: block; background: #000; }
-    .video-info-card {
-      background: #fff; border: 1px solid var(--border-light);
-      border-radius: 16px; padding: 20px; margin-top: 14px;
-    }
-    .playlist-sidebar {
-      background: #fff; border: 1px solid var(--border-light);
-      border-radius: 16px; overflow: hidden; display: flex; flex-direction: column; max-height: 640px;
-    }
-    .playlist-header {
-      padding: 14px 16px; background: #0b2255; color: #fff;
-      display: flex; justify-content: space-between; align-items: center; gap: 8px;
-    }
-    .playlist-items { overflow-y: auto; flex: 1; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-    .playlist-item {
-      display: flex; align-items: center; gap: 10px; padding: 10px;
-      border-radius: 10px; background: #f8fafc; border: 1px solid #e2e8f0;
-      cursor: pointer; transition: 0.18s;
-    }
-    .playlist-item:hover { background: #eff6ff; border-color: #93c5fd; }
-    .playlist-item.playing { background: #dbeafe; border-color: var(--primary); }
-    .pl-num {
-      width: 26px; height: 26px; border-radius: 6px; background: #e2e8f0;
-      color: #334155; font-size: 11.5px; font-weight: 800;
-      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
-    }
-    .playlist-item.playing .pl-num { background: var(--primary); color: #fff; }
-
-    /* HISTÓRICO DE LIVES E LINKS CRIPTOGRAFADOS */
+    /* ==========================================================================
+       7. HISTÓRICO E SALA AO VIVO (100% PRESERVADOS)
+       ========================================================================== */
     #view-historico { display: none; }
     .hist-table-wrap { overflow-x: auto; }
     .hist-table { width: 100%; border-collapse: collapse; font-size: 13px; text-align: left; }
     .hist-table th { background: #f1f5f9; color: #334155; padding: 12px 14px; font-weight: 800; border-bottom: 2px solid #cbd5e1; }
     .hist-table td { padding: 12px 14px; border-bottom: 1px solid #e2e8f0; color: #1e293b; vertical-align: middle; }
 
-    /* SALA AO VIVO EM ECRÃ INTEIRO REAL */
     #view-live { display: none; }
     .live-grid { display: flex; width: 100%; height: 82vh; gap: 18px; }
     .meet-frame-box {
@@ -253,7 +450,6 @@
       body.modo-cinema-live #painel-lateral-transmissao { width: 100% !important; height: auto !important; border-left: none; border-top: 1px solid #1e293b; }
     }
 
-    /* 📱 DOCA DE CONTROLO DA LIVE OTIMIZADA PARA TELEMÓVEL E PC */
     .live-dock-bar {
       padding: 10px 14px; background: rgba(11, 18, 34, 0.98); border-top: 1px solid #1e293b;
       display: flex; justify-content: center; align-items: center; gap: 10px;
@@ -280,20 +476,32 @@
     .meet-circle-btn.active { background: var(--primary); border-color: #60a5fa; }
     .meet-circle-btn.muted, .meet-circle-btn.hangup { background: #e11d48; border-color: #fb7185; }
 
-    /* 📱 NO TELEMÓVEL: Transforma todos os botões da live em ícones circulares alinhados numa única linha perfeita! */
+    /* ==========================================================================
+       8. RESPONSIVIDADE MOBILE (PRIORIDADE TELEMÓVEL)
+       ========================================================================== */
     @media (max-width: 768px) {
-      .live-dock-bar {
-        padding: 8px 8px; gap: 7px; justify-content: space-evenly;
-      }
-      .meet-ctrl-btn {
-        width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 17px;
-      }
+      .vc-topbar { padding: 10px 12px; }
+      .vc-brand-title-main { font-size: 17px; }
+      .vc-brand-subtitle { font-size: 11.5px; }
+      .vc-search-wrap.desktop-only { display: none; }
+      .vc-subnav { justify-content: flex-start; padding: 9px 12px; gap: 8px; }
+      .vc-nav-tab { padding: 8px 13px; font-size: 12px; border-radius: 12px; min-height: 40px; }
+      .vc-container { padding: 12px; }
+      .catalog-shell-card { padding: 14px; border-radius: 16px; }
+      .promo-banner-right { display: none; }
+      .video-info-card, .video-comments-card { padding: 15px; border-radius: 16px; }
+      .info-actions-row .vc-btn { padding: 9px 10px; font-size: 12px; min-width: 95px; }
+
+      .live-dock-bar { padding: 8px 8px; gap: 7px; justify-content: space-evenly; }
+      .meet-ctrl-btn { width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 17px; }
       .meet-ctrl-btn .btn-text-label { display: none !important; }
       .meet-circle-btn { width: 42px; height: 42px; font-size: 17px; }
       #live-top-header { padding: 6px 10px !important; }
-      .vc-topbar { padding: 10px 14px; }
-      .vc-divider-v, .vc-subtitle-box { display: none; }
-      .catalog-shell-card { padding: 14px; }
+    }
+
+    @media (min-width: 769px) {
+      .mobile-search-trigger { display: none !important; }
+      .vc-mobile-search-drawer { display: none !important; }
     }
 
     /* MENU DE TRÊS PONTOS (⋮) E REAÇÕES (😊) */
@@ -407,35 +615,68 @@
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
-  <!-- CABEÇALHO SUPERIOR AZUL-MARINHO (ESTILO PLAYCLASS & MEET) -->
+ <!-- CABEÇALHO SUPERIOR AZUL-MARINHO (DESIGN PROFISSIONAL MOBILE-FIRST) -->
   <header class="vc-header-master">
-    <div class="vc-topbar">
+    <div class="vc-topbar" style="flex-wrap: wrap;">
       <div class="vc-brand-group">
-        <div class="vc-logo-main">
+        <button type="button" class="vc-icon-btn" onclick="if(videoAtualObj){fecharPlayerVoltarCatalogo();}else{alternarAba('catalogo');}" title="Ir para o Catálogo Principal">
+          ☰
+        </button>
+
+        <div class="vc-logo-main" onclick="if(videoAtualObj){fecharPlayerVoltarCatalogo();}else{alternarAba('catalogo');}" style="cursor: pointer;">
           <div class="vc-logo-icon">▶</div>
-          <span>PlayClass <span style="color:#60a5fa; font-weight:700;">& Meet</span></span>
-        </div>
-        <div class="vc-divider-v"></div>
-        <div class="vc-subtitle-box">
-          <span style="font-size:22px;">🎬</span>
-          <div>
-            <div style="font-weight:800; font-size:14px;">Sala Virtual de Vídeo-Aulas & Transmissão Ao Vivo</div>
-            <div style="font-size:11px; color:#93c5fd;">Vídeo-Aulas, Sequências por Assunto & Sala Ao Vivo</div>
+          <div class="vc-brand-titles">
+            <div class="vc-brand-title-main">PlayClass <span>&amp; Meet</span></div>
+            <div class="vc-brand-subtitle">Sua sala de aprendizagem</div>
           </div>
         </div>
       </div>
 
-      <div class="vc-search-wrap">
-        <span style="position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #93c5fd;">🔍</span>
-        <input type="text" id="input-search" class="vc-search-input" placeholder="Pesquisar aulas, assuntos...">
+      <div class="vc-header-actions">
+        <!-- Botão de Lupa no Telemóvel (Abre e fecha a pesquisa suavemente) -->
+        <button type="button" class="vc-icon-btn mobile-search-trigger" onclick="const w=document.getElementById('wrap-pesquisa-principal'); if(w){w.classList.toggle('desktop-only'); if(!w.classList.contains('desktop-only')){document.getElementById('input-search')?.focus();}}" title="Pesquisar aulas">
+          🔍
+        </button>
+
+        <!-- Botão de Opções Rápidas (⋮) no Topo Direito -->
+        <button type="button" class="vc-icon-btn" onclick="if(videoAtualObj){copiarLinkSequenciaAtual();}else if(assuntoFiltroAtual!=='TODOS'){copiarLinkAssuntoSelecionado();}else{mostrarToast('💡 Selecione uma aula ou assunto para copiar o link!');}" title="Copiar Link da Sequência">
+          ⋮
+        </button>
+      </div>
+
+      <!-- Barra de Pesquisa Unificada (Visível no PC e expansível no Telemóvel) -->
+      <div class="vc-search-wrap desktop-only" id="wrap-pesquisa-principal" style="width: 100%; max-width: 320px;">
+        <span style="position: absolute; left: 13px; top: 50%; transform: translateY(-50%); font-size: 13px; color: #93c5fd; pointer-events: none;">🔍</span>
+        <input type="text" id="input-search" class="vc-search-input" placeholder="Pesquisar aulas, assuntos..." oninput="if(document.getElementById('view-catalogo').style.display==='none'){fecharPlayerVoltarCatalogo();}">
       </div>
     </div>
 
     <nav class="vc-subnav">
-      <button type="button" class="vc-nav-tab active" id="btn-tab-catalogo" onclick="alternarAba('catalogo')">📖 Catálogo & Assuntos</button>
-      <button type="button" class="vc-nav-tab" id="btn-tab-live" onclick="alternarAba('live')">🔴 Estúdio Ao Vivo (Criar Live)</button>
-      <button type="button" class="vc-nav-tab" id="btn-open-upload" style="display: none;" onclick="abrirModalUpload()">☁️ Enviar Vídeo-Aula</button>
-      <button type="button" class="vc-nav-tab" id="btn-tab-historico" style="display: none;" onclick="alternarAba('historico')">📜 Histórico de Lives & Links</button>
+      <button type="button" class="vc-nav-tab active" id="btn-tab-catalogo" onclick="alternarAba('catalogo')">
+        <span style="font-size: 15px;">📖</span>
+        <span>Catálogo &amp; Assuntos</span>
+      </button>
+
+      <button type="button" class="vc-nav-tab" id="btn-tab-live" onclick="alternarAba('live')">
+        <span class="vc-tab-dot-red"></span>
+        <span style="display: flex; flex-direction: column; line-height: 1.15;">
+          <span>Estúdio Ao Vivo</span>
+          <small style="font-size: 10.5px; font-weight: 600; opacity: 0.85;">(Criar Live)</small>
+        </span>
+      </button>
+
+      <button type="button" class="vc-nav-tab" id="btn-open-upload" style="display: none;" onclick="abrirModalUpload()">
+        <span style="font-size: 15px;">☁️</span>
+        <span>Enviar Vídeo-Aula</span>
+      </button>
+
+      <button type="button" class="vc-nav-tab" id="btn-tab-historico" style="display: none;" onclick="alternarAba('historico')">
+        <span style="font-size: 15px;">📜</span>
+        <span style="display: flex; flex-direction: column; line-height: 1.15;">
+          <span>Histórico de Lives</span>
+          <small style="font-size: 10.5px; font-weight: 600; opacity: 0.85;">&amp; Links</small>
+        </span>
+      </button>
     </nav>
   </header>
 
@@ -449,57 +690,92 @@
       <button type="button" class="vc-btn danger" style="border-radius: 999px; padding: 9px 18px;" onclick="alternarAba('live')">▶ Entrar na Sala Ao Vivo</button>
     </div>
 
-    <!-- 1. REPRODUTOR DE VÍDEO + FILA DE SEQUÊNCIA DO ASSUNTO -->
+  <!-- 1. REPRODUTOR DE VÍDEO + INFORMAÇÕES + COMENTÁRIOS + PRÓXIMAS AULAS -->
     <section id="view-player">
-      <div style="margin-bottom: 14px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
-        <button type="button" class="vc-btn" onclick="fecharPlayerVoltarCatalogo()">↩ Voltar para o Catálogo</button>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-          <button type="button" class="vc-btn" onclick="copiarLinkVideoAtual()">🔗 Link deste Vídeo</button>
-          <button type="button" class="vc-btn primary" onclick="copiarLinkSequenciaAtual()">📑 Link da Sequência (Assunto)</button>
-        </div>
+      <div style="margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px;">
+        <button type="button" class="vc-btn" style="border-radius: 999px; padding: 7px 14px; font-size: 12px;" onclick="fecharPlayerVoltarCatalogo()">↩ Voltar para o Catálogo</button>
+        <button type="button" class="vc-btn" style="border-radius: 999px; padding: 7px 14px; font-size: 12px;" onclick="copiarLinkVideoAtual()">🔗 Link deste Vídeo</button>
       </div>
 
       <div class="player-layout">
         <div>
-          <div class="video-stage-box" id="player-stage"></div>
+          <!-- PALCO DE VÍDEO 16:9 COM ETIQUETAS FLUTUANTES IGUAIS À REFERÊNCIA -->
+          <div class="video-stage-box">
+            <div class="stage-overlay-pill-left">
+              <span class="stage-overlay-dot"></span>
+              <span id="stage-status-label">Aula em andamento</span>
+            </div>
+            <div class="stage-overlay-pill-right">
+              <span>👁</span>
+              <span id="stage-views-mirror">0 visualizações</span>
+            </div>
+            <div id="player-stage" style="width: 100%; height: 100%;"></div>
+          </div>
+
+          <!-- CARTÃO 1: INFORMAÇÕES E AÇÕES DA AULA -->
           <div class="video-info-card">
-            <div style="display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; flex-wrap: wrap;">
-              <div>
-                <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px; flex-wrap: wrap;">
-                  <span id="player-assunto-badge" class="subject-tag-chip">Assunto</span>
-                  <span id="player-ordem-badge" style="background: #f1f5f9; color: #334155; padding: 4px 10px; border-radius: 6px; font-size: 11.5px; font-weight: 800;">Aula #1</span>
-                  <span id="player-views-badge" style="color: var(--text-muted); font-size: 12px; font-weight: 600;">▶ 0 visualizações</span>
-                </div>
-                <h2 id="player-titulo" style="margin: 0; font-size: 20px; color: #0f172a; font-weight: 800;">Título da Aula</h2>
+            <div class="info-card-top-row">
+              <div class="info-badges-group">
+                <span id="player-assunto-badge" class="subject-tag-chip">Assunto</span>
+                <span id="player-ordem-badge" class="order-tag-chip">Aula 1 de 1</span>
+                <span id="player-views-badge" class="views-tag-inline">👁 0 visualizações</span>
               </div>
-
-              <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-                <button type="button" class="vc-btn" id="btn-like-video" onclick="interagirVideoAtual('like')">👍 Curtir (<span id="count-likes">0</span>)</button>
-                <button type="button" class="vc-btn" id="btn-concluir-video" onclick="interagirVideoAtual('concluir')">✓ Concluir Aula</button>
-                <button type="button" class="vc-btn danger" id="btn-delete-video" style="display: none;" onclick="apagarVideoAtual()">🗑️ Excluir</button>
-              </div>
+              <button type="button" class="btn-seq-link-pill" onclick="copiarLinkSequenciaAtual()">
+                <span>🔗</span>
+                <span>Link da Sequência</span>
+              </button>
             </div>
 
-            <p id="player-descricao" style="color: #475569; font-size: 13.5px; line-height: 1.55; margin: 14px 0 0 0; white-space: pre-wrap;"></p>
+            <h2 id="player-titulo" style="margin: 6px 0 6px 0; font-size: 20px; color: #0f172a; font-weight: 800; letter-spacing: -0.3px;">Título da Aula</h2>
+            <p id="player-descricao" style="color: #475569; font-size: 13.5px; line-height: 1.55; margin: 0; white-space: pre-wrap;"></p>
 
-            <div style="margin-top: 22px; border-top: 1px solid #e2e8f0; padding-top: 16px;">
-              <h4 style="margin: 0 0 12px 0; font-size: 14px; color: #0f172a;">💬 Dúvidas e Comentários da Aula</h4>
-              <div style="display: flex; gap: 8px; margin-bottom: 16px;">
-                <input type="text" id="input-comentario-video" class="vc-input" style="margin-top: 0;" placeholder="Escreva uma dúvida ou anotação sobre esta aula..." onkeydown="if(event.key==='Enter') enviarComentarioVideo()">
-                <button type="button" class="vc-btn primary" onclick="enviarComentarioVideo()">Comentar</button>
-              </div>
-              <div id="lista-comentarios-video" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;"></div>
+            <div class="info-actions-row">
+              <button type="button" class="vc-btn primary" id="btn-like-video" onclick="interagirVideoAtual('like')">
+                <span>👍</span>
+                <span>Curtir ( <span id="count-likes">0</span> )</span>
+              </button>
+              <button type="button" class="vc-btn" id="btn-concluir-video" onclick="interagirVideoAtual('concluir')">
+                <span>✓</span>
+                <span>Concluir Aula</span>
+              </button>
+              <button type="button" class="vc-btn danger-soft" id="btn-delete-video" style="display: none;" onclick="apagarVideoAtual()">
+                <span>🗑️</span>
+                <span>Excluir</span>
+              </button>
             </div>
+          </div>
+
+          <!-- CARTÃO 2: DÚVIDAS E COMENTÁRIOS (SEÇÃO INDEPENDENTE) -->
+          <div class="video-comments-card">
+            <h4 style="margin: 0 0 12px 0; font-size: 15px; font-weight: 800; color: #0f172a; display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 17px;">💬</span>
+              <span>Dúvidas e Comentários da Aula</span>
+            </h4>
+            <div class="comments-input-row">
+              <input type="text" id="input-comentario-video" class="vc-input" placeholder="Escreva uma dúvida ou anotação sobre esta aula..." onkeydown="if(event.key==='Enter') enviarComentarioVideo()">
+              <button type="button" class="vc-btn primary" style="padding: 11px 18px; border-radius: 12px; flex-shrink: 0;" onclick="enviarComentarioVideo()">
+                <span>➤</span>
+                <span>Comentar</span>
+              </button>
+            </div>
+            <div id="lista-comentarios-video" style="display: flex; flex-direction: column; gap: 10px; max-height: 260px; overflow-y: auto;"></div>
           </div>
         </div>
 
+        <!-- CARTÃO 3: PRÓXIMAS AULAS COM CABEÇALHO AZUL-MARINHO -->
         <aside class="playlist-sidebar">
           <div class="playlist-header">
-            <div>
-              <div style="font-size: 10.5px; color: #93c5fd; font-weight: 800; text-transform: uppercase;">Próximas Aulas</div>
-              <div id="playlist-sidebar-title" style="font-size: 14px; font-weight: 800; color: #fff; margin-top: 2px;">Sequência</div>
+            <div class="playlist-header-left">
+              <span style="font-size: 17px; color: #93c5fd;">☰</span>
+              <div style="min-width: 0;">
+                <div style="font-size: 15px; font-weight: 800; color: #ffffff; line-height: 1.2;">Próximas Aulas</div>
+                <div id="playlist-sidebar-title" style="font-size: 11px; font-weight: 600; color: #93c5fd; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Sequência</div>
+              </div>
             </div>
-            <button type="button" class="vc-btn" style="padding: 5px 10px; font-size: 11px;" onclick="copiarLinkSequenciaAtual()">🔗 Link</button>
+            <button type="button" class="btn-ver-todas-pill" onclick="fecharPlayerVoltarCatalogo()" title="Voltar à lista completa de aulas">
+              <span>Ver todas</span>
+              <span>&gt;</span>
+            </button>
           </div>
           <div class="playlist-items" id="playlist-sidebar-items"></div>
         </aside>
@@ -1109,9 +1385,13 @@
         };
       }
 
+ const totalViewsAgora = (video.visualizacoes || 0) + 1;
       document.getElementById('player-assunto-badge').innerText = video.assunto;
-      document.getElementById('player-ordem-badge').innerText = `Aula #${video.ordem || 1} de ${sequenciaAtualLista.length}`;
-      document.getElementById('player-views-badge').innerText = `▶ ${(video.visualizacoes || 0) + 1} visualizações`;
+      document.getElementById('player-ordem-badge').innerText = `Aula ${video.ordem || 1} de ${sequenciaAtualLista.length}`;
+      document.getElementById('player-views-badge').innerText = `👁 ${totalViewsAgora} visualizações`;
+      const mirrorViews = document.getElementById('stage-views-mirror');
+      if (mirrorViews) mirrorViews.innerText = `${totalViewsAgora} visualizações`;
+
       document.getElementById('player-titulo').innerText = video.titulo;
       document.getElementById('player-descricao').innerText = video.descricao || 'Sem descrição adicional.';
 
@@ -1133,23 +1413,33 @@
 
     function renderizarFilaSequenciaSidebar() {
       if (!videoAtualObj) return;
-      document.getElementById('playlist-sidebar-title').innerText = `${videoAtualObj.assunto} (${sequenciaAtualLista.length} aulas)`;
+      document.getElementById('playlist-sidebar-title').innerText = `${videoAtualObj.assunto} • ${sequenciaAtualLista.length} aula(s)`;
       const container = document.getElementById('playlist-sidebar-items');
 
       container.innerHTML = sequenciaAtualLista.map((v, idx) => {
         const tocando = v.id === videoAtualObj.id;
         const concluido = Array.isArray(v.concluidosPor) && v.concluidosPor.includes(USER_ID);
+        const numeroAula = v.ordem || (idx + 1);
+        const subtituloItem = tocando
+          ? 'Aula atual'
+          : (concluido ? 'Aula concluída ✓' : 'Próxima aula');
+
+        const iconeDireita = (tocando || concluido)
+          ? `<div class="pl-status-right done">✓</div>`
+          : `<div class="pl-status-right">&gt;</div>`;
+
         return `
           <div class="playlist-item ${tocando ? 'playing' : ''}" onclick="reproduzirVideo('${esc(v.id)}')">
-            <div class="pl-num">${tocando ? '▶' : (idx + 1)}</div>
+            <div class="pl-num">${tocando ? '▶' : numeroAula}</div>
             <div style="flex: 1; min-width: 0;">
-              <div style="font-size: 13px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+              <div style="font-size: 14px; font-weight: 800; color: #0f172a; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
                 ${esc(v.titulo)}
               </div>
-              <div style="font-size: 11px; color: #64748b; margin-top: 2px; font-weight: 600;">
-                Aula #${v.ordem || (idx + 1)} ${concluido ? '• <span style="color:#10b981;">✓ Concluída</span>' : ''}
+              <div style="font-size: 12px; color: #64748b; margin-top: 2px; font-weight: 500;">
+                ${subtituloItem}
               </div>
             </div>
+            ${iconeDireita}
           </div>
         `;
       }).join('');
@@ -1209,12 +1499,18 @@
 
       document.getElementById('count-likes').innerText = likes.length;
       const btnLike = document.getElementById('btn-like-video');
-      btnLike.classList.toggle('primary', likes.includes(USER_ID));
+      if (btnLike) {
+        btnLike.classList.add('primary');
+      }
 
       const btnConc = document.getElementById('btn-concluir-video');
       const jaConcluiu = concluidos.includes(USER_ID);
-      btnConc.classList.toggle('success', jaConcluiu);
-      btnConc.innerText = jaConcluiu ? '✓ Aula Concluída' : '✓ Concluir Aula';
+      if (btnConc) {
+        btnConc.classList.toggle('success', jaConcluiu);
+        btnConc.innerHTML = jaConcluiu
+          ? '<span>✓</span> <span>Aula Concluída</span>'
+          : '<span>✓</span> <span>Concluir Aula</span>';
+      }
     }
 
     async function interagirVideoAtual(acao) {
