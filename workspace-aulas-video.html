@@ -2379,7 +2379,7 @@
             video: true,
             audio: { echoCancellation: true, noiseSuppression: true }
           });
-        } catch (err Ambos) {
+        } catch (errAmbos) {
           try {
             meuStreamLocal = await navigator.mediaDevices.getUserMedia({
               audio: { echoCancellation: true, noiseSuppression: true },
