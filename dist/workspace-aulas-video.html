@@ -579,25 +579,88 @@
       box-shadow: 0 6px 20px rgba(0,0,0,0.45); animation: fadeSlideUp 0.22s ease; word-break: break-word;
     }
 
-    /* MODO MINIMIZADO (PICTURE-IN-PICTURE) */
+    /* ==========================================================================
+       MODO PICTURE-IN-PICTURE ESTILO GOOGLE MEET (MÓVEL, REDIMENSIONÁVEL E COM CONTROLOS)
+       ========================================================================== */
+    /* 1. Quando minimizado para navegar em todo o WorkSpace */
     body.modo-minimizado-pip .vc-header-master,
     body.modo-minimizado-pip #live-banner,
     body.modo-minimizado-pip #view-catalogo,
     body.modo-minimizado-pip #view-player,
     body.modo-minimizado-pip #view-historico,
     body.modo-minimizado-pip #painel-lateral-transmissao,
-    body.modo-minimizado-pip #live-bottom-controls,
-    body.modo-minimizado-pip #live-top-header { display: none !important; }
+    body.modo-minimizado-pip #live-top-header,
+    body.modo-minimizado-pip #webrtc-video-grid,
+    body.modo-minimizado-pip #live-minichat-drawer { display: none !important; }
     body.modo-minimizado-pip .vc-container { padding: 0 !important; max-width: 100% !important; height: 100vh !important; }
     body.modo-minimizado-pip #view-live { display: block !important; height: 100vh !important; }
     body.modo-minimizado-pip .live-grid { display: block !important; height: 100vh !important; }
     body.modo-minimizado-pip .meet-frame-box { height: 100vh !important; min-height: 100vh !important; border-radius: 0 !important; border: none !important; }
-    #pip-restore-bar {
-      display: none; position: absolute; inset: 0; z-index: 80;
-      background: linear-gradient(to top, rgba(2,6,23,0.85) 0%, transparent 55%);
-      align-items: flex-end; justify-content: space-between; padding: 10px 12px; pointer-events: none;
+
+    /* 2. Quando minimizado internamente ao clicar em "Voltar ao Catálogo" */
+    body.modo-pip-interno #live-banner,
+    body.modo-pip-interno #painel-lateral-transmissao,
+    body.modo-pip-interno #live-top-header,
+    body.modo-pip-interno #webrtc-video-grid,
+    body.modo-pip-interno #live-minichat-drawer { display: none !important; }
+    body.modo-pip-interno #view-live {
+      display: block !important; position: fixed !important;
+      bottom: 18px; right: 18px; width: 340px; height: 225px;
+      min-width: 255px !important; min-height: 185px !important;
+      max-width: 94vw; max-height: 82vh; z-index: 95 !important;
+      border-radius: 16px !important; overflow: hidden !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.65) !important;
+      border: 2px solid #3b82f6 !important; background: #050811 !important;
     }
-    body.modo-minimizado-pip #pip-restore-bar { display: flex !important; }
+    body.modo-pip-interno .live-grid { width: 100% !important; height: 100% !important; gap: 0 !important; }
+    body.modo-pip-interno .meet-frame-box { width: 100% !important; height: 100% !important; border-radius: 0 !important; border: none !important; }
+
+    /* 3. Barra de Controlos Sempre Visível no Tamanho Mínimo (Microfone, Câmara, Reação e Sair) */
+    body.modo-minimizado-pip #live-bottom-controls,
+    body.modo-pip-interno #live-bottom-controls {
+      display: flex !important; padding: 6px 8px !important; gap: 8px !important;
+      justify-content: center !important; align-items: center !important;
+      background: rgba(11, 18, 34, 0.96) !important;
+    }
+    body.modo-minimizado-pip #live-bottom-controls .btn-text-label,
+    body.modo-pip-interno #live-bottom-controls .btn-text-label,
+    body.modo-minimizado-pip #btn-toggle-speaker,
+    body.modo-pip-interno #btn-toggle-speaker,
+    body.modo-minimizado-pip #live-bottom-controls .hand-btn,
+    body.modo-pip-interno #live-bottom-controls .hand-btn,
+    body.modo-minimizado-pip #btn-toggle-minichat,
+    body.modo-pip-interno #btn-toggle-minichat,
+    body.modo-minimizado-pip #wrap-menu-tres-pontos,
+    body.modo-pip-interno #wrap-menu-tres-pontos { display: none !important; }
+
+    body.modo-minimizado-pip .meet-ctrl-btn,
+    body.modo-pip-interno .meet-ctrl-btn,
+    body.modo-minimizado-pip .meet-circle-btn,
+    body.modo-pip-interno .meet-circle-btn {
+      width: 36px !important; height: 36px !important; min-width: 36px !important;
+      padding: 0 !important; border-radius: 50% !important; font-size: 15px !important;
+    }
+
+    /* 4. Barra Superior de Arraste e Maximização do PiP */
+    #pip-restore-bar {
+      display: none; position: absolute; top: 0; left: 0; right: 0; height: 36px; z-index: 80;
+      background: linear-gradient(to bottom, rgba(2, 6, 23, 0.92) 0%, rgba(2, 6, 23, 0.4) 80%, transparent 100%);
+      align-items: center; justify-content: space-between; padding: 6px 10px;
+      cursor: move; user-select: none; touch-action: none;
+    }
+    body.modo-minimizado-pip #pip-restore-bar,
+    body.modo-pip-interno #pip-restore-bar { display: flex !important; }
+
+    /* 5. Pega de Redimensionamento no Canto Inferior Direito */
+    #pip-resize-handle {
+      display: none; position: absolute; right: 2px; bottom: 2px;
+      width: 22px; height: 22px; z-index: 90; cursor: nwse-resize;
+      color: #93c5fd; font-size: 13px; font-weight: 900;
+      align-items: center; justify-content: center;
+      user-select: none; touch-action: none;
+      background: rgba(15, 23, 42, 0.75); border-radius: 6px 0 12px 0;
+    }
+    body.modo-pip-interno #pip-resize-handle { display: flex !important; }
 
     /* MODAIS */
     .vc-modal {
@@ -2060,7 +2123,7 @@
           <!-- Palco Principal de Vídeo (100% Sem Cortes com object-fit: contain) -->
           <div style="flex:1; width:100%; min-height:0; min-width:0; display:flex; flex-direction:column; position:relative; background:#000; overflow:hidden;">
             <div id="card-video-principal" style="flex:1; width:100%; height:100%; min-height:0; min-width:0; position:relative; display:flex; align-items:center; justify-content:center; background:#000; overflow:hidden;">
-              <video id="video-prof-main" autoplay playsinline style="max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain !important; background:#000;"></video>
+              <video id="video-prof-main" autoplay playsinline disablePictureInPicture controlsList="nodownload nofullscreen noremoteplayback" style="max-width:100%; max-height:100%; width:100%; height:100%; object-fit:contain !important; background:#000;"></video>
               <div style="position:absolute; bottom:10px; left:12px; background:rgba(15,23,42,0.82); color:#fff; padding:4px 10px; border-radius:8px; font-size:11.5px; font-weight:700; pointer-events:none; z-index:5;">
                 👨‍🏫 ${IS_GESTOR_OU_PROF ? `${esc(USER_NAME)} (Você - Professor)` : `Tela Principal da Aula`}
               </div>
@@ -2103,11 +2166,16 @@
           <!-- Avisos de Mão Levantada -->
           <div id="webrtc-hand-alerts" style="position:absolute; top:52px; left:16px; display:flex; flex-direction:column; gap:6px; z-index:35;"></div>
 
-          <!-- Barra de Restauro quando está Minimizado -->
-          <div id="pip-restore-bar">
-            <span style="font-size:11px; font-weight:800; color:#fff; background:rgba(220,38,38,0.9); padding:3px 8px; border-radius:6px;">● Ao Vivo</span>
-            <button type="button" class="vc-btn primary" style="pointer-events:auto; padding:6px 12px; font-size:11.5px;" onclick="maximizarChamadaAoVivo()">🗖 Voltar ao Tamanho Normal</button>
+        <!-- Barra de Topo do Modo Flutuante (Arraste para mover + Botão Maximizar) -->
+          <div id="pip-restore-bar" title="Arraste para mover a janela">
+            <span style="font-size:10.5px; font-weight:800; color:#fff; background:rgba(225,29,72,0.92); padding:3px 8px; border-radius:99px; display:inline-flex; align-items:center; gap:5px;">⠿ ● Ao Vivo</span>
+            <div style="display:flex; gap:5px; align-items:center;">
+              <button type="button" class="vc-btn primary" style="pointer-events:auto; padding:4px 10px; font-size:11px; border-radius:8px;" onclick="event.stopPropagation(); maximizarChamadaAoVivo();" title="Voltar à Tela Cheia">🗖 Maximizar</button>
+            </div>
           </div>
+
+          <!-- Pega para Ajustar o Tamanho da Janela (Redimensionar) -->
+          <div id="pip-resize-handle" title="Arraste para ajustar o tamanho da janela">⤡</div>
 
           <!-- 📱 DOCA INFERIOR UNIFICADA (PERFEITA NO TELEMÓVEL E NO PC: MIC, CÂMARA, SOM, MÃOZINHA, EMOJIS, CHAT, MENU ⋯ E ENCERRAR 📞) -->
           <div id="live-bottom-controls" class="live-dock-bar">
@@ -2408,8 +2476,9 @@
       mostrarToast(somSaidaAtivo ? '🔊 Saída de som ativada (Viva-voz ligado).' : '🔈 Saída de som bloqueada (Silenciado).', somSaidaAtivo ? '#10b981' : '#f59e0b');
     }
 
-    // 🗕 MINIMIZAR E MAXIMIZAR A CHAMADA
+ // 🗕 MINIMIZAR, MAXIMIZAR, MOVER E REDIMENSIONAR A CHAMADA (ESTILO GOOGLE MEET)
     function minimizarChamadaAoVivo() {
+      document.body.classList.remove('modo-pip-interno');
       document.body.classList.add('modo-minimizado-pip');
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true }, '*');
@@ -2417,11 +2486,97 @@
     }
 
     function maximizarChamadaAoVivo() {
-      document.body.classList.remove('modo-minimizado-pip');
+      const estavaPipInterno = document.body.classList.contains('modo-pip-interno');
+      document.body.classList.remove('modo-minimizado-pip', 'modo-pip-interno');
+
+      const viewLive = document.getElementById('view-live');
+      if (viewLive) {
+        viewLive.style.width = '';
+        viewLive.style.height = '';
+        viewLive.style.left = '';
+        viewLive.style.top = '';
+        viewLive.style.right = '';
+        viewLive.style.bottom = '';
+      }
+
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: false }, '*');
       }
+      if (estavaPipInterno) {
+        alternarAba('live');
+      }
     }
+
+    // 🖐️ Motor que permite Arrastar e Redimensionar a Janela PiP sobre o Catálogo (Com trava mínima de 255x185)
+    (function configurarInteracaoPipInterno() {
+      let arrastando = false, redimensionando = false;
+      let startX = 0, startY = 0, startLeft = 0, startTop = 0, startW = 0, startH = 0;
+
+      document.addEventListener('pointerdown', (e) => {
+        const viewLive = document.getElementById('view-live');
+        if (!viewLive) return;
+
+        // Se estiver minimizado no WorkSpace externo, encaminha o arraste para o modal pai
+        if (document.body.classList.contains('modo-minimizado-pip') && e.target.closest('#pip-restore-bar') && !e.target.closest('button')) {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'INICIAR_ARRASTE_PIP_EXTERNO' }, '*');
+          }
+          return;
+        }
+
+        if (!document.body.classList.contains('modo-pip-interno')) return;
+
+        if (e.target.closest('#pip-resize-handle')) {
+          redimensionando = true;
+          const rect = viewLive.getBoundingClientRect();
+          startX = e.clientX; startY = e.clientY;
+          startW = rect.width; startH = rect.height;
+          viewLive.style.left = rect.left + 'px';
+          viewLive.style.top = rect.top + 'px';
+          viewLive.style.right = 'auto';
+          viewLive.style.bottom = 'auto';
+          e.preventDefault();
+        } else if (e.target.closest('#pip-restore-bar') && !e.target.closest('button')) {
+          arrastando = true;
+          const rect = viewLive.getBoundingClientRect();
+          startX = e.clientX; startY = e.clientY;
+          startLeft = rect.left; startTop = rect.top;
+          viewLive.style.left = rect.left + 'px';
+          viewLive.style.top = rect.top + 'px';
+          viewLive.style.right = 'auto';
+          viewLive.style.bottom = 'auto';
+          e.preventDefault();
+        }
+      });
+
+      window.addEventListener('pointermove', (e) => {
+        if (!arrastando && !redimensionando) return;
+        const viewLive = document.getElementById('view-live');
+        if (!viewLive) return;
+
+        if (arrastando) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          const novoLeft = Math.max(6, Math.min(window.innerWidth - viewLive.offsetWidth - 6, startLeft + dx));
+          const novoTop = Math.max(6, Math.min(window.innerHeight - viewLive.offsetHeight - 6, startTop + dy));
+          viewLive.style.left = novoLeft + 'px';
+          viewLive.style.top = novoTop + 'px';
+        } else if (redimensionando) {
+          const dx = e.clientX - startX;
+          const dy = e.clientY - startY;
+          // 🔒 Trava mínima: nunca diminui além de 255px x 185px para manter Microfone, Câmara e Reação visíveis!
+          const novaW = Math.max(255, Math.min(window.innerWidth - 20, startW + dx));
+          const novaH = Math.max(185, Math.min(window.innerHeight - 20, startH + dy));
+          viewLive.style.width = novaW + 'px';
+          viewLive.style.height = novaH + 'px';
+        }
+      });
+
+      window.addEventListener('pointerup', () => {
+        arrastando = false;
+        redimensionando = false;
+      });
+    })();
 
     // 📡 Recebe comandos diretos do alertas.js e do workspace.js (Modo Minimizado, Clique no Sininho e Reanimação Silenciosa)
     window.addEventListener('message', (ev) => {
@@ -2918,7 +3073,7 @@
         card.setAttribute('data-aluno-chave', chaveAluno);
         card.style.cssText = 'width:160px; height:92px; flex-shrink:0; background:#1e293b; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
-          <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
+          <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline disablePictureInPicture ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="width:100%; height:100%; object-fit:contain; background:#000;"></video>
           <div style="position:absolute; bottom:4px; left:6px; right:6px; display:flex; justify-content:space-between; align-items:center; gap:4px; pointer-events:none;">
             <span style="background:rgba(15,23,42,0.88); color:#fff; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
               👤 ${esc(nomeLimpo)}
@@ -3362,24 +3517,33 @@
 
     // 🖥️ ALTERNAR ABA (OCULTA CABEÇALHO EXTERNO DO MODAL QUANDO ENTRA NA LIVE PARA O BOTÃO VOLTAR AO CATÁLOGO FICAR NO LUGAR DO X)
    function alternarAba(aba) {
-      // Se estava na Sala Ao Vivo e clicou para ir para outra aba (ex: Catálogo), desconecta para não duplicar!
-      if (aba !== 'live' && peerInstance) {
-        notificarSaidaDaLiveELimpar();
-      }
       salvarEstadoInternoPlayClass(aba);
       document.getElementById('btn-tab-catalogo')?.classList.toggle('active', aba === 'catalogo');
       document.getElementById('btn-tab-live')?.classList.toggle('active', aba === 'live');
       document.getElementById('btn-tab-historico')?.classList.toggle('active', aba === 'historico');
 
+      const chamadaEmAndamento = Boolean(peerInstance && liveAtivaObj && liveAtivaObj.ativa);
+
       document.getElementById('view-player').style.display = 'none';
       document.getElementById('view-catalogo').style.display = aba === 'catalogo' ? 'block' : 'none';
       document.getElementById('view-historico').style.display = aba === 'historico' ? 'block' : 'none';
-      document.getElementById('view-live').style.display = aba === 'live' ? 'block' : 'none';
 
-      const emModoLive = (aba === 'live');
-      document.body.classList.toggle('modo-cinema-live', emModoLive);
+      if (aba === 'live') {
+        document.body.classList.remove('modo-pip-interno');
+        document.getElementById('view-live').style.display = 'block';
+        document.body.classList.add('modo-cinema-live');
+      } else if (chamadaEmAndamento) {
+        // 🗕 Se a chamada está ativa e clicou em "Voltar ao Catálogo" (ou Histórico), minimiza em PiP automaticamente!
+        document.body.classList.remove('modo-cinema-live');
+        document.body.classList.add('modo-pip-interno');
+        document.getElementById('view-live').style.display = 'block';
+      } else {
+        document.body.classList.remove('modo-cinema-live', 'modo-pip-interno');
+        document.getElementById('view-live').style.display = 'none';
+      }
+
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'MODO_CINEMA_LIVE', ativo: emModoLive }, '*');
+        window.parent.postMessage({ type: 'MODO_CINEMA_LIVE', ativo: (aba === 'live') }, '*');
       }
 
       aplicarPermissoesVisuaisCargo();

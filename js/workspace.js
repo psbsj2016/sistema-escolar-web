@@ -1470,26 +1470,104 @@ Object.assign(Workspace, {
         }
     },
 
-    alternarMinimizarVideos: (minimizar = true) => {
+   alternarMinimizarVideos: (minimizar = true) => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal) return;
         const headerModal = modal.firstElementChild;
-
-        // Mantém a barra antiga ("Sala Virtual de Vídeo-Aulas...") sempre oculta para o cabeçalho PlayClass & Meet subir ao topo!
         if (headerModal) headerModal.style.display = 'none';
+
+        // Cria a barra de arraste e a pega de redimensionamento da janela PiP (estilo Google Meet)
+        let dragBar = document.getElementById('ws-pip-drag-handle');
+        let resizeCorner = document.getElementById('ws-pip-resize-handle');
+
+        if (!dragBar) {
+            dragBar = document.createElement('div');
+            dragBar.id = 'ws-pip-drag-handle';
+            dragBar.title = 'Arraste para mover a chamada pela tela';
+            dragBar.style.cssText = 'display:none; position:absolute; top:0; left:0; right:95px; height:36px; z-index:20; cursor:move; user-select:none; touch-action:none;';
+            modal.appendChild(dragBar);
+
+            resizeCorner = document.createElement('div');
+            resizeCorner.id = 'ws-pip-resize-handle';
+            resizeCorner.title = 'Arraste para ajustar o tamanho da janela';
+            resizeCorner.innerHTML = '⤡';
+            resizeCorner.style.cssText = 'display:none; position:absolute; right:0; bottom:0; width:24px; height:24px; z-index:25; cursor:nwse-resize; color:#93c5fd; font-size:13px; font-weight:900; align-items:center; justify-content:center; background:rgba(15,23,42,0.8); border-radius:8px 0 0 0; user-select:none; touch-action:none;';
+            modal.appendChild(resizeCorner);
+
+            // Motor de Arraste e Redimensionamento com trava mínima (255px x 185px)
+            let movendo = false, redimensionando = false;
+            let sx = 0, sy = 0, sl = 0, st = 0, sw = 0, sh = 0;
+
+            const bloquearIframeDuranteGesto = (bloq) => {
+                if (iframe) iframe.style.pointerEvents = bloq ? 'none' : 'auto';
+            };
+
+            dragBar.addEventListener('pointerdown', (e) => {
+                if (modal.dataset.minimizado !== 'true') return;
+                movendo = true;
+                bloquearIframeDuranteGesto(true);
+                const r = modal.getBoundingClientRect();
+                sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
+                modal.style.left = r.left + 'px';
+                modal.style.top = r.top + 'px';
+                modal.style.right = 'auto';
+                modal.style.bottom = 'auto';
+                e.preventDefault();
+            });
+
+            resizeCorner.addEventListener('pointerdown', (e) => {
+                if (modal.dataset.minimizado !== 'true') return;
+                redimensionando = true;
+                bloquearIframeDuranteGesto(true);
+                const r = modal.getBoundingClientRect();
+                sx = e.clientX; sy = e.clientY; sw = r.width; sh = r.height;
+                modal.style.left = r.left + 'px';
+                modal.style.top = r.top + 'px';
+                modal.style.right = 'auto';
+                modal.style.bottom = 'auto';
+                e.preventDefault();
+            });
+
+            window.addEventListener('pointermove', (e) => {
+                if (!movendo && !redimensionando) return;
+                if (movendo) {
+                    const nl = Math.max(6, Math.min(window.innerWidth - modal.offsetWidth - 6, sl + (e.clientX - sx)));
+                    const nt = Math.max(6, Math.min(window.innerHeight - modal.offsetHeight - 6, st + (e.clientY - sy)));
+                    modal.style.left = nl + 'px';
+                    modal.style.top = nt + 'px';
+                } else if (redimensionando) {
+                    // 🔒 Limite mínimo travado em 255px x 185px para manter Microfone, Câmara e Reação sempre visíveis!
+                    const nw = Math.max(255, Math.min(window.innerWidth - 16, sw + (e.clientX - sx)));
+                    const nh = Math.max(185, Math.min(window.innerHeight - 16, sh + (e.clientY - sy)));
+                    modal.style.width = nw + 'px';
+                    modal.style.height = nh + 'px';
+                }
+            });
+
+            window.addEventListener('pointerup', () => {
+                if (movendo || redimensionando) {
+                    movendo = false;
+                    redimensionando = false;
+                    bloquearIframeDuranteGesto(false);
+                }
+            });
+        }
 
         if (minimizar) {
             modal.dataset.minimizado = 'true';
-            modal.style.cssText = 'display:flex; position:fixed; bottom:18px; right:18px; top:auto; left:auto; width:350px; height:230px; max-width:92vw; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.65); border:2px solid #3b82f6; transition:all 0.25s ease;';
+            modal.style.cssText = 'display:flex; position:fixed; bottom:18px; right:18px; top:auto; left:auto; width:340px; height:225px; min-width:255px; min-height:185px; max-width:94vw; max-height:85vh; z-index:9999999; background:#050811; flex-direction:column; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.65); border:2px solid #3b82f6;';
+            if (dragBar) dragBar.style.display = 'block';
+            if (resizeCorner) resizeCorner.style.display = 'flex';
             document.body.style.overflow = '';
         } else {
             modal.dataset.minimizado = 'false';
             modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
+            if (dragBar) dragBar.style.display = 'none';
+            if (resizeCorner) resizeCorner.style.display = 'none';
             document.body.style.overflow = 'hidden';
         }
 
-        // Avisa o iframe para exibir ou ocultar o botão "🗖 Voltar ao Tamanho Normal"
         try {
             if (iframe && iframe.contentWindow) {
                 iframe.contentWindow.postMessage({ type: 'ESTADO_PIP_EXTERNO', minimizado: Boolean(minimizar) }, '*');
@@ -1497,12 +1575,31 @@ Object.assign(Workspace, {
         } catch (e) {}
     },
 
-   fecharPlataformaVideos: () => {
+    fecharPlataformaVideos: (forcarEncerramento = false) => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
-        if (modal && modal.dataset.minimizado === 'true') return;
+        if (!modal) return;
 
-        // Avisa a Sala Ao Vivo para remover imediatamente o ecrã do participante antes de fechar o iframe!
+        // 🛡️ Se o utilizador estiver numa chamada ao vivo ativa e clicar no X (ou mudar de área), minimiza em PiP em vez de desligar a chamada!
+        if (!forcarEncerramento) {
+            try {
+                const win = iframe ? iframe.contentWindow : null;
+                const emChamadaAtiva = Boolean(
+                    win && (
+                        win.document?.body?.classList?.contains('modo-cinema-live') ||
+                        win.document?.body?.classList?.contains('modo-pip-interno') ||
+                        (win.liveAtivaObj && win.liveAtivaObj.ativa)
+                    )
+                );
+                if (emChamadaAtiva) {
+                    Workspace.alternarMinimizarVideos(true);
+                    return;
+                }
+            } catch (e) {}
+        }
+
+        if (modal.dataset.minimizado === 'true' && !forcarEncerramento) return;
+
         try {
             if (iframe && iframe.contentWindow && typeof iframe.contentWindow.notificarSaidaDaLiveELimpar === 'function') {
                 iframe.contentWindow.notificarSaidaDaLiveELimpar();
@@ -1512,10 +1609,8 @@ Object.assign(Workspace, {
         localStorage.removeItem('ws_playclass_estado');
         localStorage.removeItem('ws_playclass_estado_interno');
         if (iframe) iframe.src = '';
-        if (modal) {
-            modal.dataset.minimizado = 'false';
-            modal.style.display = 'none';
-        }
+        modal.dataset.minimizado = 'false';
+        modal.style.display = 'none';
         document.body.style.overflow = '';
     },
 
