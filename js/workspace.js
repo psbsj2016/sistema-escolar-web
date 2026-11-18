@@ -1393,11 +1393,16 @@ Object.assign(Workspace, {
         else Workspace.navegarPara('materiais');
     },
 
- abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
+abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         if (!Workspace.usuario) return;
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal || !iframe) return;
+
+        // 🔓 Libera explicitamente Tela Cheia, Câmera, Microfone e Giro Paisagem dentro do iframe
+        iframe.setAttribute('allowfullscreen', 'true');
+        iframe.setAttribute('webkitallowfullscreen', 'true');
+        iframe.setAttribute('allow', 'camera; microphone; display-capture; fullscreen; autoplay; encrypted-media; picture-in-picture');
 
         // Se o modal já estava minimizado e o utilizador clicou apenas para restaurar
         if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug && !liveToken) {
@@ -1464,8 +1469,40 @@ Object.assign(Workspace, {
                     }
                 } else if (ev.data.type === 'FECHAR_VIDEO_AULAS') {
                     Workspace.fecharPlataformaVideos();
+                } else if (ev.data.type === 'SOLICITAR_TELA_CHEIA_VIDEO') {
+                    const ativar = Boolean(ev.data.ativar);
+                    if (ativar) {
+                        const reqFs = modal.requestFullscreen || modal.webkitRequestFullscreen || modal.msRequestFullscreen;
+                        if (reqFs) {
+                            Promise.resolve(reqFs.call(modal)).then(() => {
+                                if (screen.orientation && typeof screen.orientation.lock === 'function') {
+                                    screen.orientation.lock('landscape').catch(() => {});
+                                }
+                            }).catch(() => {});
+                        }
+                    } else {
+                        const exitFs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+                        if (exitFs && (document.fullscreenElement || document.webkitFullscreenElement)) {
+                            Promise.resolve(exitFs.call(document)).catch(() => {});
+                        }
+                        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                            try { screen.orientation.unlock(); } catch (e) {}
+                        }
+                    }
                 }
             });
+
+            // Destrava a rotação automaticamente se o usuário sair da tela cheia pelo botão Voltar ou ESC
+            const aoMudarTelaCheiaPai = () => {
+                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
+                    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
+                        try { screen.orientation.unlock(); } catch (e) {}
+                    }
+                }
+            };
+            document.addEventListener('fullscreenchange', aoMudarTelaCheiaPai);
+            document.addEventListener('webkitfullscreenchange', aoMudarTelaCheiaPai);
+
             Workspace._listenerMinimizarVideoAtivo = true;
         }
     },
