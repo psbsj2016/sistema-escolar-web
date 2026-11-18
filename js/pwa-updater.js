@@ -1,14 +1,16 @@
-// js/pwa-updater.js - Motor de Atualização Forçada Universal (PWA Instalado + Chrome, Edge, Firefox, Safari e Opera Mini)
+// js/pwa-updater.js - Motor de Atualização Forçada Universal com Blindagem Absoluta para Aulas Ao Vivo
 import { registerSW } from 'virtual:pwa-register';
 
 const CHAVE_VERSAO_LOCAL = 'ptt_versao_build_instalada';
 const CHAVE_TENTATIVA_RELOAD = 'ptt_reload_forcado_versao';
+const CHAVE_LOCK_LIVE = 'ws_live_em_andamento_lock';
 const VERSAO_DESTE_BUNDLE = typeof __APP_BUILD_VERSION__ !== 'undefined' ? String(__APP_BUILD_VERSION__) : null;
 
 let swRegistrationGlobal = null;
 let versaoRemotaDetetada = null;
 let atualizacaoEmCurso = false;
 let atualizacaoAguardandoFimDeAula = false;
+let sinalLiveRecebidoDoIframe = false;
 
 // 1. Grava a versão deste bundle JS caso ainda não exista no aparelho
 if (VERSAO_DESTE_BUNDLE) {
@@ -18,7 +20,7 @@ if (VERSAO_DESTE_BUNDLE) {
     }
 }
 
-// 🛡️ Verifica se o utilizador está no meio de uma Aula Ao Vivo ou Prova com Cronómetro para não o derrubar
+// 🛡️ DETETOR BLINDADO DE AULA AO VIVO OU PROVA (Nunca expulsa professor nem aluno!)
 function utilizadorEmAtividadeCriticaAoVivo() {
     try {
         // 1. Verifica se está em prova escrita ou teste oral ativo no WorkSpace
@@ -27,20 +29,77 @@ function utilizadorEmAtividadeCriticaAoVivo() {
                 return true;
             }
         }
-        // 2. Verifica se está dentro de uma Sala Ao Vivo ativa no PlayClass & Meet
+
+        // 2. Verifica o modal da plataforma PlayClass & Meet
         const modalVideo = document.getElementById('ws-modal-video-aulas');
         const iframeVideo = document.getElementById('iframeVideoAulas');
-        if (modalVideo && modalVideo.style.display !== 'none' && iframeVideo && iframeVideo.contentWindow) {
+        const modalAberto = Boolean(modalVideo && modalVideo.style.display !== 'none');
+
+        if (!modalAberto) {
+            sinalLiveRecebidoDoIframe = false;
+            return false;
+        }
+
+        // 2a. Se o modal estiver minimizado em PiP navegando pelo WorkSpace, há uma live ativa!
+        if (modalVideo.dataset.minimizado === 'true') {
+            return true;
+        }
+
+        // 2b. Se o iframe reportou recentemente via postMessage que há live/portaria/gravação ativa
+        if (sinalLiveRecebidoDoIframe) {
+            return true;
+        }
+
+        // 2c. Verifica o carimbo recente em sessionStorage (renovado a cada 2s durante a live)
+        const lockRaw = sessionStorage.getItem(CHAVE_LOCK_LIVE);
+        if (lockRaw) {
+            const lockData = JSON.parse(lockRaw);
+            if (lockData && lockData.ativa && (Date.now() - Number(lockData.ts || 0) < 12000)) {
+                return true;
+            }
+        }
+
+        // 2d. Inspeção direta dentro do iframe (tela cheia, PiP interno, PiP externo, Estúdio, WebRTC ou Gravação)
+        if (iframeVideo && iframeVideo.contentWindow) {
             const win = iframeVideo.contentWindow;
-            const emCinemaLive = win.document?.body?.classList?.contains('modo-cinema-live');
-            const temLiveAtiva = Boolean(win.liveAtivaObj && win.liveAtivaObj.ativa);
-            if (emCinemaLive || temLiveAtiva) {
+            const body = win.document?.body;
+            const viewLive = win.document?.getElementById('view-live');
+
+            const emModoLive = Boolean(
+                body?.classList?.contains('modo-cinema-live') ||
+                body?.classList?.contains('modo-minimizado-pip') ||
+                body?.classList?.contains('modo-pip-interno')
+            );
+            const abaLiveVisivel = Boolean(viewLive && viewLive.style.display === 'block');
+            const liveNoObjeto = Boolean(win.liveAtivaObj && win.liveAtivaObj.ativa);
+            const protecaoExplicita = Boolean(win.__liveProtegidaAtiva);
+
+            if (emModoLive || abaLiveVisivel || liveNoObjeto || protecaoExplicita) {
                 return true;
             }
         }
     } catch (e) {}
     return false;
 }
+
+// 📡 Escuta o iframe avisando quando a Live começa ou termina
+window.addEventListener('message', (ev) => {
+    const d = ev.data;
+    if (!d || typeof d !== 'object') return;
+
+    if (d.type === 'LIVE_PROTECAO_ATUALIZACAO') {
+        sinalLiveRecebidoDoIframe = Boolean(d.ativa);
+        // Assim que a Live terminar ou o aluno sair da chamada, aplica a atualização que ficou guardada!
+        if (!sinalLiveRecebidoDoIframe && atualizacaoAguardandoFimDeAula && !atualizacaoEmCurso) {
+            setTimeout(() => {
+                if (!utilizadorEmAtividadeCriticaAoVivo() && atualizacaoAguardandoFimDeAula) {
+                    atualizacaoAguardandoFimDeAula = false;
+                    dispararAtualizacaoForcadaImediata();
+                }
+            }, 1200);
+        }
+    }
+});
 
 // 💾 Salva qualquer texto que o utilizador estivesse a digitar antes de recarregar
 function salvarRascunhosAntesDeAtualizar() {
@@ -54,23 +113,25 @@ function salvarRascunhosAntesDeAtualizar() {
     } catch (e) {}
 }
 
-// 2. Quando o novo Service Worker assume o controlo, aplica a atualização imediatamente
+// 2. Quando um novo Service Worker assume o controlo, só recarrega se NÃO houver live ativa
 if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
-        if (atualizacaoEmCurso) return;
         if (utilizadorEmAtividadeCriticaAoVivo()) {
             atualizacaoAguardandoFimDeAula = true;
+            console.log("🛡️ Atualização segurada em segundo plano porque há uma Aula Ao Vivo ativa.");
             return;
         }
-        forcarRecarregamentoLimpo();
+        if (atualizacaoEmCurso) {
+            forcarRecarregamentoLimpo();
+        }
     });
 }
 
-// 🚀 3. Registo do PWA em modo Auto-Update
+// 🚀 3. Registo do PWA controlado 100% pelo nosso motor
 const updateSW = registerSW({
     immediate: true,
     onNeedRefresh() {
-        console.log("🔄 Nova versão detetada pelo Service Worker! Aplicando atualização forçada...");
+        console.log("🔄 Nova versão disponível em segundo plano!");
         dispararAtualizacaoForcadaImediata();
     },
     onOfflineReady() {
@@ -99,10 +160,10 @@ const updateSW = registerSW({
 async function verificarVersaoNoServidor() {
     if (atualizacaoEmCurso) return;
 
-    // Se havia uma atualização à espera de terminar a aula ao vivo e a aula já acabou, atualiza agora!
+    // Se havia atualização guardada e a aula ao vivo já acabou, aplica agora!
     if (atualizacaoAguardandoFimDeAula && !utilizadorEmAtividadeCriticaAoVivo()) {
         atualizacaoAguardandoFimDeAula = false;
-        executarAtualizacaoProfunda();
+        dispararAtualizacaoForcadaImediata();
         return;
     }
 
@@ -115,7 +176,6 @@ async function verificarVersaoNoServidor() {
             }
         }
 
-        // Busca direta com timestamp único e cabeçalhos que furam proxies como o do Opera Mini
         const res = await fetch(`/version.json?_t=${Date.now()}_${Math.random().toString(36).substring(2, 6)}`, {
             method: 'GET',
             cache: 'no-store',
@@ -145,28 +205,25 @@ async function verificarVersaoNoServidor() {
         const desatualizadoPeloStorage = versaoSalvaLocal && (versaoServidor !== String(versaoSalvaLocal).trim());
 
         if (desatualizadoPeloBundle || desatualizadoPeloStorage) {
-            // Evita loop infinito se o proxy da operadora/Opera Mini demorar alguns segundos a propagar o JS novo
             const ultimaTentativa = sessionStorage.getItem(CHAVE_TENTATIVA_RELOAD);
             if (ultimaTentativa === versaoServidor) {
                 localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoServidor);
                 return;
             }
-            console.log(`🚀 Atualizando aparelho automaticamente para a versão ${versaoServidor}...`);
             dispararAtualizacaoForcadaImediata();
         } else {
             localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoServidor);
             sessionStorage.removeItem(CHAVE_TENTATIVA_RELOAD);
         }
-    } catch (e) {
-        // Silencioso caso esteja sem internet no momento
-    }
+    } catch (e) {}
 }
 
-// ⚡ Decide se aplica imediatamente ou aguarda o término da chamada ao vivo
+// ⚡ Decide se aplica imediatamente ou segura silenciosamente até a Live acabar
 function dispararAtualizacaoForcadaImediata() {
     if (atualizacaoEmCurso) return;
     if (utilizadorEmAtividadeCriticaAoVivo()) {
         atualizacaoAguardandoFimDeAula = true;
+        console.log("🛡️ Nova versão detetada — aguardando o término da Aula Ao Vivo para aplicar sem expulsar ninguém.");
         return;
     }
     mostrarBannerAtualizacaoAutomatica();
@@ -175,7 +232,7 @@ function dispararAtualizacaoForcadaImediata() {
     }, 900);
 }
 
-// 📡 5. GATILHOS EM TEMPO REAL (Ao abrir o App, ao voltar para a aba, ao recuperar internet e a cada 25s)
+// 📡 5. GATILHOS DE VERIFICAÇÃO EM TEMPO REAL
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(verificarVersaoNoServidor, 200));
 } else {
@@ -195,10 +252,17 @@ setInterval(() => {
     }
 }, 25000);
 
-// 🔄 Recarregamento que fura o cache do Opera Mini, Android WebView, iOS Safari e Desktop
+// 🔄 Recarregamento limpo com última barreira anti-expulsão
 async function forcarRecarregamentoLimpo() {
+    if (utilizadorEmAtividadeCriticaAoVivo()) {
+        atualizacaoEmCurso = false;
+        atualizacaoAguardandoFimDeAula = true;
+        const banner = document.getElementById('global-pwa-update-prompt');
+        if (banner) banner.remove();
+        return;
+    }
+
     try {
-        // Pede ao navegador para revalidar o próprio HTML na rede antes do reload
         await fetch(window.location.href, {
             method: 'GET',
             cache: 'reload',
@@ -209,14 +273,27 @@ async function forcarRecarregamentoLimpo() {
         }).catch(() => {});
     } catch (e) {}
 
+    if (utilizadorEmAtividadeCriticaAoVivo()) {
+        atualizacaoEmCurso = false;
+        atualizacaoAguardandoFimDeAula = true;
+        return;
+    }
     window.location.reload();
 }
 
-// 🧹 6. EXECUTOR DE ATUALIZAÇÃO PROFUNDA FORÇADA
+// 🧹 6. EXECUTOR DE ATUALIZAÇÃO PROFUNDA (Apenas quando NÃO há Live ativa)
 async function executarAtualizacaoProfunda() {
     if (atualizacaoEmCurso) return;
-    atualizacaoEmCurso = true;
 
+    // 🛡️ Segunda barreira de segurança antes de limpar caches ou recarregar
+    if (utilizadorEmAtividadeCriticaAoVivo()) {
+        atualizacaoAguardandoFimDeAula = true;
+        const banner = document.getElementById('global-pwa-update-prompt');
+        if (banner) banner.remove();
+        return;
+    }
+
+    atualizacaoEmCurso = true;
     salvarRascunhosAntesDeAtualizar();
 
     try {
@@ -224,7 +301,7 @@ async function executarAtualizacaoProfunda() {
         localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoAlvo);
         sessionStorage.setItem(CHAVE_TENTATIVA_RELOAD, versaoAlvo);
 
-        // 1. Manda o Service Worker em espera assumir imediatamente
+        // 1. Manda o Service Worker em espera assumir agora que a aula não está ativa
         if (swRegistrationGlobal && swRegistrationGlobal.waiting) {
             swRegistrationGlobal.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
@@ -233,13 +310,13 @@ async function executarAtualizacaoProfunda() {
             updateSW(true);
         } catch (e) {}
 
-        // 2. Apaga TODAS as caches do CacheStorage (essencial para PWAs instalados e Chrome/Edge/Firefox)
+        // 2. Apaga caches antigas para garantir 100% os ficheiros novos
         if ('caches' in window) {
             const chavesCache = await caches.keys();
             await Promise.all(chavesCache.map(chave => caches.delete(chave)));
         }
 
-        // 3. Atualiza ou renova os Service Workers registados
+        // 3. Atualiza registos do Service Worker
         if ('serviceWorker' in navigator) {
             const regs = await navigator.serviceWorker.getRegistrations();
             for (const reg of regs) {
@@ -260,8 +337,8 @@ async function executarAtualizacaoProfunda() {
 
 window.atualizarApp = executarAtualizacaoProfunda;
 
-// Exibe uma faixa discreta informando que a atualização automática está a ser aplicada
 export function mostrarBannerAtualizacaoAutomatica() {
+    if (utilizadorEmAtividadeCriticaAoVivo()) return;
     if (document.getElementById('global-pwa-update-prompt')) return;
 
     const aviso = document.createElement('div');

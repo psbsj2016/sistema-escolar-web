@@ -33,8 +33,9 @@ export default defineConfig({
   plugins: [
     geradorVersaoBuild(),
     VitePWA({
-      // 🚀 FORÇA ATUALIZAÇÃO AUTOMÁTICA IMEDIATA (Sem depender de clique manual!)
-      registerType: 'autoUpdate',
+      // 🛡️ Modo 'prompt' + skipWaiting: false dá 100% do controlo ao nosso pwa-updater.js:
+      // Fora da live -> atualiza sozinho automaticamente; Durante a live -> baixa em segundo plano e JAMAIS expulsa ninguém!
+      registerType: 'prompt',
       includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
       
       manifest: {        
@@ -52,9 +53,9 @@ export default defineConfig({
         ]
       },
       workbox: {
-        cleanupOutdatedCaches: true, // 🧹 Apaga caches de versões antigas automaticamente
-        skipWaiting: true,           // ⚡ Faz o novo Service Worker assumir na hora sem esperar fechar o app
-        clientsClaim: true,          // ⚡ Assume o controlo imediato de todas as abas e janelas instaladas
+        cleanupOutdatedCaches: true, // 🧹 Apaga caches antigos automaticamente
+        skipWaiting: false,          // 🛡️ Impede o navegador de derrubar a Live no meio da aula
+        clientsClaim: true,
         globPatterns: ['**/*.{js,css,html,svg,ico}'],
         globIgnores: [
           '**/node_modules/**/*',

@@ -1481,7 +1481,7 @@
       circle.innerHTML = gerarHtmlAvatarCentro(nomeProf);
 
       if (label) {
-        label.textContent = mostrarVideoReal ? 'Câmara ativa' : `${nomeProf} • Câmara desligada`;
+        label.textContent = mostrarVideoReal ? 'Câmara ativa' : `${nomeProf}`;
       }
 
       // 🔑 A chave que elimina a tela preta: quando a câmara está desligada, o <video> fica transparente (opacity: 0) mantendo o áudio a tocar!
@@ -4451,9 +4451,57 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       }
     }
 
-   // 🔄 VERIFICADOR DE NOVA ATUALIZAÇÃO (Nunca interrompe nem derruba uma chamada ao vivo em andamento!)
+   // 🛡️ SINALIZADOR CONTÍNUO DE PROTEÇÃO ANTI-EXPULSÃO + VERIFICADOR DE VERSÃO
     let versaoConhecidaPlayClass = null;
     let atualizacaoPendentePosLive = false;
+    let ultimoEstadoProtecaoLive = null;
+
+    function estaEmLiveOuAtividadeCriticaPlayClass() {
+      const viewLiveVisivel = document.getElementById('view-live')?.style.display === 'block';
+      const temLiveAtiva = Boolean(liveAtivaObj && liveAtivaObj.ativa);
+      const temConexaoPeer = Boolean(peerInstance && !peerInstance.destroyed);
+      const emModoLiveOuPip = Boolean(
+        document.body.classList.contains('modo-cinema-live') ||
+        document.body.classList.contains('modo-pip-interno') ||
+        document.body.classList.contains('modo-minimizado-pip')
+      );
+      const gravandoAgora = Boolean(mediaRecorderLive && mediaRecorderLive.state === 'recording');
+      const aguardandoPortaria = (typeof statusPortariaAluno !== 'undefined' && statusPortariaAluno === 'aguardando');
+
+      return Boolean(temLiveAtiva || temConexaoPeer || emModoLiveOuPip || gravandoAgora || aguardandoPortaria || viewLiveVisivel);
+    }
+
+    function sincronizarProtecaoLiveComPai() {
+      const protegida = estaEmLiveOuAtividadeCriticaPlayClass();
+      window.__liveProtegidaAtiva = protegida;
+
+      try {
+        if (protegida) {
+          sessionStorage.setItem('ws_live_em_andamento_lock', JSON.stringify({ ativa: true, ts: Date.now() }));
+        } else {
+          sessionStorage.removeItem('ws_live_em_andamento_lock');
+        }
+      } catch (e) {}
+
+      if (ultimoEstadoProtecaoLive !== protegida) {
+        ultimoEstadoProtecaoLive = protegida;
+        try {
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'LIVE_PROTECAO_ATUALIZACAO', ativa: protegida }, '*');
+          }
+        } catch (e) {}
+
+        // Se a aula acabou de encerrar e havia uma atualização aguardando em segundo plano, aplica agora!
+        if (!protegida && atualizacaoPendentePosLive) {
+          atualizacaoPendentePosLive = false;
+          window.location.reload();
+        }
+      }
+    }
+
+    // Renova o sinal de proteção a cada 2 segundos enquanto a janela estiver aberta
+    setInterval(sincronizarProtecaoLiveComPai, 2000);
+    sincronizarProtecaoLiveComPai();
 
     async function verificarAtualizacaoPlayClass() {
       try {
@@ -4465,11 +4513,8 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         if (!versaoConhecidaPlayClass) {
           versaoConhecidaPlayClass = data.version;
         } else if (versaoConhecidaPlayClass !== data.version) {
-          const emChamadaLiveAtiva = Boolean(liveAtivaObj && liveAtivaObj.ativa) || document.body.classList.contains('modo-cinema-live');
-          const gravandoAgora = Boolean(mediaRecorderLive && mediaRecorderLive.state === 'recording');
-
-          // Se estiver na Sala Ao Vivo ou a gravar, NÃO recarrega a página para não derrubar ninguém!
-          if (emChamadaLiveAtiva || gravandoAgora) {
+          // 🛡️ Se estiver em Live (tela cheia, PiP, portaria, estúdio ou gravação), JAMAIS recarrega!
+          if (estaEmLiveOuAtividadeCriticaPlayClass()) {
             atualizacaoPendentePosLive = true;
             return;
           }
@@ -4477,7 +4522,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         }
       } catch (e) {}
     }
-    setInterval(verificarAtualizacaoPlayClass, 60000);
+    setInterval(verificarAtualizacaoPlayClass, 45000);
     verificarAtualizacaoPlayClass();
 
  // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma, Portaria de Aceite e Reconexão Instantânea no F5!)
