@@ -441,6 +441,42 @@ Object.assign(Workspace.Avaliacoes, {
         Workspace.Avaliacoes.abaOnline = aba; Workspace.Avaliacoes.renderizarLobbies(); 
     },
 
+   // 🔍 Identifica se o link pertence internamente à plataforma PlayClass & Meet (#live-lvk_..., #video-aula-..., #playlist-...)
+    extrairDestinoPlayClass: (link) => {
+        const str = String(link || '').trim();
+        if (!str) return null;
+        if (str.includes('#live-')) {
+            return { tipo: 'live', valor: str.split('#live-')[1].split(/[?&]/)[0].trim() };
+        }
+        if (str.startsWith('lvk_')) {
+            return { tipo: 'live', valor: str };
+        }
+        if (str.includes('#video-aula-')) {
+            return { tipo: 'video', valor: str.split('#video-aula-')[1].split(/[?&]/)[0].trim() };
+        }
+        if (str.includes('#playlist-')) {
+            return { tipo: 'playlist', valor: str.split('#playlist-')[1].split(/[?&]/)[0].trim() };
+        }
+        return null;
+    },
+
+    abrirLinkSessaoProf: (event, link) => {
+        if (event) {
+            event.preventDefault();
+            event.stopPropagation();
+        }
+        const destinoInterno = Workspace.Avaliacoes.extrairDestinoPlayClass(link);
+        if (destinoInterno && typeof Workspace.abrirPlataformaVideos === 'function') {
+            if (destinoInterno.tipo === 'live') Workspace.abrirPlataformaVideos('', '', destinoInterno.valor);
+            else if (destinoInterno.tipo === 'video') Workspace.abrirPlataformaVideos(destinoInterno.valor, '', '');
+            else if (destinoInterno.tipo === 'playlist') Workspace.abrirPlataformaVideos('', destinoInterno.valor, '');
+            return;
+        }
+        if (link && link !== '#') {
+            window.open(link, '_blank', 'noopener,noreferrer');
+        }
+    },
+
     registrarPresencaOnline: async (event, id, link) => {
         if (event) {
             event.preventDefault();
@@ -460,11 +496,18 @@ Object.assign(Workspace.Avaliacoes, {
             relatorioFraude: { fugas: 0, tempoFora: 0 }
         };
 
-        // 1. Dispara o registo direto para o servidor IMEDIATAMENTE antes da mudança de aba
+        // 1. Dispara o registo de presença imediatamente para o servidor
         const promessaRegisto = Workspace.api(`/workspace/avaliacoes/${id}/entregar`, 'POST', payloadPresenca);
 
-        // 2. Abre a sala de aula online numa nova aba
-        window.open(link, '_blank', 'noopener,noreferrer');
+        // 2. Se for um link criptografado da PlayClass & Meet (#live-lvk_...), abre direto na plataforma (Portaria de Aceite) sem duplicar aba!
+        const destinoInterno = Workspace.Avaliacoes.extrairDestinoPlayClass(link);
+        if (destinoInterno && typeof Workspace.abrirPlataformaVideos === 'function') {
+            if (destinoInterno.tipo === 'live') Workspace.abrirPlataformaVideos('', '', destinoInterno.valor);
+            else if (destinoInterno.tipo === 'video') Workspace.abrirPlataformaVideos(destinoInterno.valor, '', '');
+            else if (destinoInterno.tipo === 'playlist') Workspace.abrirPlataformaVideos('', destinoInterno.valor, '');
+        } else {
+            window.open(link, '_blank', 'noopener,noreferrer');
+        }
 
         // 3. Atualiza os lobbies locais assim que o servidor confirmar
         try {
@@ -1671,9 +1714,11 @@ Object.assign(Workspace.Avaliacoes, {
                     let btnCopiarLink = '';
                     let resumoLinkHtml = '';
                     if (a.tipo === 'online' && a.linkSala) {
-                        let linkFinal = a.linkSala.startsWith('http') ? a.linkSala : 'https://' + a.linkSala;
+                        let linkFinal = a.linkSala.startsWith('http') || a.linkSala.startsWith('#') || a.linkSala.startsWith('/')
+                            ? a.linkSala
+                            : 'https://' + a.linkSala;
                         const linkSeguroJS = linkFinal.replace(/'/g, "\\'");
-                        btnEntrarSala = `<a href="${linkFinal}" target="_blank" class="ws-btn" style="background: #8e44ad; color: white; text-decoration: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold;">🚀 Entrar na Sessão</a>`;
+                        btnEntrarSala = `<button type="button" class="ws-btn" style="background: #8e44ad; color: white; border: none; font-size: 12px; padding: 8px 15px; border-radius: 8px; text-align: center; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.abrirLinkSessaoProf(event, '${linkSeguroJS}')">🚀 Entrar na Sessão</button>`;
                         btnCopiarLink = `<button type="button" class="ws-btn" style="background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; font-size: 12px; padding: 8px 14px; border-radius: 8px; font-weight: bold; cursor: pointer;" onclick="Workspace.Avaliacoes.copiarLinkSala('${linkSeguroJS}')" title="${Workspace.escapeHTML(linkFinal)}">🔗 Copiar Link</button>`;
                         resumoLinkHtml = `<div style="font-size: 11px; color: #64748b; margin-top: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 480px;">🔗 <span style="font-family: monospace;">${Workspace.escapeHTML(a.linkSala)}</span></div>`;
                     }

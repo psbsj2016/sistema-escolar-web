@@ -911,7 +911,7 @@
       <div class="live-grid">
         <div class="meet-frame-box" id="meet-stage-container"></div>
 
-        <!-- Painel de Configuração Pré-Live (Oculta-se automaticamente assim que a Live começa!) -->
+       <!-- Painel de Configuração Pré-Live e Agendamento (Oculta-se automaticamente assim que a Live começa!) -->
         <div id="painel-lateral-transmissao" style="display: none; flex-direction: column; gap: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
             <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #fff;">📡 Estúdio do Professor</h3>
@@ -919,8 +919,16 @@
           </div>
 
           <div id="prof-live-controls" style="display: none; flex-direction: column; gap: 10px;">
+            <!-- Seletor Rápido para Retomar uma Aula Agendada Anteriormente -->
+            <div style="background: rgba(15, 23, 42, 0.75); border: 1px solid #334155; border-radius: 10px; padding: 10px;">
+              <label class="vc-label" style="color: #38bdf8; margin-top: 0;">📅 Retomar Aula Agendada (Opcional)</label>
+              <select id="live-agendada-select" class="vc-select" style="background:#1e293b; color:#fff; border-color:#334155; font-size:12.5px;" onchange="selecionarLiveAgendadaNoEstudio(this.value)">
+                <option value="">✨ Criar Nova Transmissão / Novo Link</option>
+              </select>
+            </div>
+
             <div>
-              <label class="vc-label" style="color: #cbd5e1; margin-top: 0;">Título da Live</label>
+              <label class="vc-label" style="color: #cbd5e1; margin-top: 0;">Título da Live *</label>
               <input type="text" id="live-titulo-input" class="vc-input" style="background:#1e293b; color:#fff; border-color:#334155;" placeholder="Ex: Aula de Inglês - Conversação Avançada">
             </div>
             <div>
@@ -933,27 +941,37 @@
                 <option value="global" data-nome="Todas as Turmas">🌍 Todas as Turmas</option>
               </select>
             </div>
+            <div>
+              <label class="vc-label" style="color: #cbd5e1;">Data e Hora do Agendamento (Para a Sala de Acessos)</label>
+              <input type="datetime-local" id="live-data-agendada-input" class="vc-input" style="background:#1e293b; color:#fff; border-color:#334155; color-scheme:dark;">
+            </div>
 
-            <!-- Caixa do Link Único Criptografado Gerado -->
+            <!-- Caixa do Link Único Criptografado e Agendamento -->
             <div style="background: rgba(30, 41, 59, 0.9); border: 1px solid #334155; border-radius: 12px; padding: 12px; margin-top: 4px;">
-              <div style="font-size: 11.5px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">🔐 LINK ÚNICO CRIPTOGRAFADO DA LIVE</div>
+              <div style="font-size: 11.5px; font-weight: 800; color: #38bdf8; margin-bottom: 6px;">🔐 LINK DA AULA AGENDADA / AO VIVO</div>
               <div style="display: flex; gap: 6px;">
-                <input type="text" id="live-crypto-link-input" class="vc-input" style="margin-top:0; background:#0f172a; color:#93c5fd; border-color:#334155; font-size:11.5px;" readonly placeholder="Clique em Gerar Link abaixo...">
+                <input type="text" id="live-crypto-link-input" class="vc-input" style="margin-top:0; background:#0f172a; color:#93c5fd; border-color:#334155; font-size:11.5px;" readonly placeholder="Gere ou selecione uma aula agendada...">
                 <button type="button" class="vc-btn" style="background:#334155; color:#fff; border:none; white-space:nowrap;" onclick="copiarLinkLiveCriptografado()">📋 Copiar</button>
               </div>
-              <button type="button" class="vc-btn" style="width:100%; justify-content:center; margin-top:8px; background:#1e3a8a; color:#fff; border:1px solid #3b82f6;" onclick="gerarLinkUnicoAntesDaLive()">
-                🔑 Gerar Link Criptografado & Salvar no Histórico
+
+              <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:11.5px; color:#e2e8f0; cursor:pointer; user-select:none;">
+                <input type="checkbox" id="chk-publicar-sala-acessos" checked style="width:16px; height:16px; accent-color:#3b82f6; cursor:pointer;">
+                <span>⚡ Criar também o cartão lá na <b>Sala de Acessos</b> automaticamente</span>
+              </label>
+
+              <button type="button" class="vc-btn" style="width:100%; justify-content:center; margin-top:10px; background:#1e3a8a; color:#fff; border:1px solid #3b82f6; padding:10px;" onclick="gerarLinkUnicoAntesDaLive()">
+                📅 Gerar Link de Agendamento &amp; Copiar
               </button>
             </div>
 
             <div style="display: flex; gap: 8px; margin-top: 6px;">
               <button type="button" class="vc-btn danger" style="flex: 1; justify-content: center; padding: 13px; font-size: 13.5px;" id="btn-iniciar-live" onclick="iniciarSalaAoVivo()">
-                ((•)) Iniciar Transmissão
+                ((•)) Iniciar Transmissão Agora
               </button>
             </div>
 
             <button type="button" class="vc-btn" style="width:100%; justify-content:center; background:transparent; color:#93c5fd; border:1px dashed #334155;" onclick="alternarAba('historico')">
-              📜 Ver Histórico de Lives e Horários
+              📜 Ver Histórico de Lives e Links Agendados
             </button>
           </div>
         </div>
@@ -1253,8 +1271,9 @@
 
         aplicarPermissoesVisuaisCargo();
 
-        if (IS_GESTOR_OU_PROF) {
+      if (IS_GESTOR_OU_PROF) {
           popularSeletoresTurmas(data.turmas || []);
+          popularSeletorLivesAgendadas();
         }
 
         popularDatalistAssuntos();
@@ -1824,7 +1843,71 @@
       }
     }
 
-    // 7. GERAÇÃO DE LINK ÚNICO CRIPTOGRAFADO & HISTÓRICO DE LIVES (ALINHADO COM videoAulasRoutes.js)
+   // 7. AGENDAMENTO DE LINK CRIPTOGRAFADO, INTEGRAÇÃO COM SALA DE ACESSOS & HISTÓRICO DE LIVES
+    function popularSeletorLivesAgendadas() {
+      const sel = document.getElementById('live-agendada-select');
+      if (!sel) return;
+
+      const inpData = document.getElementById('live-data-agendada-input');
+      if (inpData && !inpData.value) {
+        const agoraMais1h = new Date(Date.now() + 3600000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+        inpData.value = agoraMais1h;
+      }
+
+      const agendadas = (historicoLivesCache || []).filter(lv => !lv.ativa && !lv.encerradaEm);
+      let html = `<option value="">✨ Criar Nova Transmissão / Novo Link</option>`;
+      agendadas.forEach(lv => {
+        const dataFmt = lv.dataAgendada && lv.dataAgendada.includes('T')
+          ? lv.dataAgendada.split('T')[0].split('-').reverse().join('/') + ' ' + lv.dataAgendada.split('T')[1].slice(0, 5)
+          : formatarDataHoraBR(lv.criadaEm).slice(0, 16);
+        const selAttr = (livePreviaGerada && livePreviaGerada.id === lv.id) ? 'selected' : '';
+        html += `<option value="${esc(lv.id)}" ${selAttr}>📅 ${esc(lv.titulo)} (${esc(lv.destinoNome || 'Turma')} • ${esc(dataFmt)})</option>`;
+      });
+      sel.innerHTML = html;
+    }
+
+    function preencherEstudioComLiveAgendada(lv) {
+      if (!lv) return;
+      livePreviaGerada = lv;
+      const inpTit = document.getElementById('live-titulo-input');
+      const inpAss = document.getElementById('live-assunto-input');
+      const selDest = document.getElementById('live-destino-select');
+      const inpData = document.getElementById('live-data-agendada-input');
+      const inpLink = document.getElementById('live-crypto-link-input');
+      const selAg = document.getElementById('live-agendada-select');
+
+      if (inpTit) inpTit.value = lv.titulo || '';
+      if (inpAss) inpAss.value = lv.assunto || 'Aulas Ao Vivo Gravadas';
+      if (selDest && lv.destino) selDest.value = lv.destino;
+      if (inpData && lv.dataAgendada) inpData.value = String(lv.dataAgendada).slice(0, 16);
+      if (inpLink && lv.tokenCriptografado) {
+        inpLink.value = `${obterUrlBaseWorkspace()}#live-${lv.tokenCriptografado}`;
+      }
+      if (selAg) selAg.value = lv.id || '';
+    }
+
+    function selecionarLiveAgendadaNoEstudio(liveId) {
+      if (!liveId) {
+        livePreviaGerada = null;
+        const inpLink = document.getElementById('live-crypto-link-input');
+        if (inpLink) inpLink.value = '';
+        return;
+      }
+      const lv = (historicoLivesCache || []).find(x => x.id === liveId);
+      if (lv) {
+        preencherEstudioComLiveAgendada(lv);
+        mostrarToast(`📅 Aula agendada "${lv.titulo}" carregada no Estúdio! Clique em Iniciar Transmissão quando desejar.`);
+      }
+    }
+
+    function carregarAgendamentoDoHistoricoNoEstudio(liveId) {
+      const lv = (historicoLivesCache || []).find(x => x.id === liveId);
+      if (!lv) return;
+      preencherEstudioComLiveAgendada(lv);
+      alternarAba('live');
+      mostrarToast(`📡 Link agendado "${lv.titulo}" pronto para iniciar!`);
+    }
+
     async function gerarLinkUnicoAntesDaLive() {
       if (!IS_GESTOR_OU_PROF) return;
       const titulo = document.getElementById('live-titulo-input').value.trim() || `Aula Ao Vivo - ${new Date().toLocaleDateString('pt-BR')}`;
@@ -1832,6 +1915,8 @@
       const sel = document.getElementById('live-destino-select');
       const destino = sel.value || 'global';
       const destinoNome = sel.options[sel.selectedIndex]?.getAttribute('data-nome') || 'Todas as Turmas';
+      const dataAgendada = document.getElementById('live-data-agendada-input')?.value || '';
+      const publicarNaSalaAcessos = Boolean(document.getElementById('chk-publicar-sala-acessos')?.checked);
 
       try {
         const res = await fetch('/api/workspace/video-aulas/live/gerar-link', {
@@ -1841,6 +1926,7 @@
           body: JSON.stringify({
             escolaId: ESCOLA_ID,
             titulo, assunto, destino, destinoNome,
+            dataAgendada: dataAgendada || null,
             professorNome: USER_NAME,
             autorId: USER_ID
           })
@@ -1851,11 +1937,41 @@
         }
 
         livePreviaGerada = data.live;
+        historicoLivesCache.unshift(data.live);
+        popularSeletorLivesAgendadas();
+
         const linkCripto = `${obterUrlBaseWorkspace()}#live-${data.live.tokenCriptografado}`;
         const inputLink = document.getElementById('live-crypto-link-input');
         if (inputLink) inputLink.value = linkCripto;
 
-        copiarLinkDireto('live', data.live.tokenCriptografado);
+        // ⚡ SUGESTÃO 3: Se a opção estiver marcada, publica automaticamente o cartão na Sala de Acessos com o link exato!
+        if (publicarNaSalaAcessos) {
+          const dataHoraFinal = dataAgendada || new Date(Date.now() + 3600000 - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16);
+          await fetch('/api/workspace/avaliacoes', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({
+              titulo: titulo,
+              tipo: 'online',
+              dataAgendada: dataHoraFinal,
+              linkSala: linkCripto,
+              escolaId: ESCOLA_ID,
+              autorNome: USER_NAME,
+              destino: destino,
+              destinoNome: destinoNome,
+              status: 'ativa'
+            })
+          }).catch(() => {});
+        }
+
+        navigator.clipboard.writeText(linkCripto).then(() => {
+          mostrarToast(publicarNaSalaAcessos
+            ? '📅 Link copiado e sessão publicada automaticamente na Sala de Acessos!'
+            : '🔐 Link Criptografado agendado e copiado para a área de transferência!');
+        }).catch(() => {
+          prompt('Copie o link direto da aula agendada:', linkCripto);
+        });
       } catch (e) {
         mostrarToast(e.message || 'Falha ao gerar link criptografado.', '#e11d48');
       }
@@ -1889,6 +2005,8 @@
         }
 
         historicoLivesCache = data.historico;
+        popularSeletorLivesAgendadas();
+
         if (historicoLivesCache.length === 0) {
           tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Nenhuma live ou link criptografado gerado ainda.</td></tr>`;
           return;
@@ -1896,17 +2014,27 @@
 
         tbody.innerHTML = historicoLivesCache.map(item => {
           const token = item.tokenCriptografado || item.codigoSala || item.id;
+          const aguardandoInicio = !item.ativa && !item.encerradaEm;
+          const txtAgendamento = item.dataAgendada && item.dataAgendada.includes('T')
+            ? `<div style="font-size:11px; color:#0284c7; font-weight:700; margin-top:2px;">📅 Agendada: ${esc(item.dataAgendada.split('T')[0].split('-').reverse().join('/') + ' às ' + item.dataAgendada.split('T')[1].slice(0, 5))}</div>`
+            : '';
+
           const statusBadge = item.ativa
             ? `<span style="background:#dcfce7; color:#15803d; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:800;">🟢 Em Uso (Ao Vivo)</span>`
-            : (item.inicioUsoEm
+            : (item.inicioUsoEm || item.encerradaEm
                 ? `<span style="background:#f1f5f9; color:#475569; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:800;">⏹️ Concluída</span>`
-                : `<span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:800;">⏳ Link Criado (Aguardando Início)</span>`);
+                : `<span style="background:#fef3c7; color:#b45309; padding:4px 10px; border-radius:99px; font-size:11px; font-weight:800;">📅 Link Agendado</span>`);
+
+          const btnUsarEstudio = aguardandoInicio
+            ? `<button type="button" class="vc-btn success" style="padding:6px 10px; font-size:11.5px;" onclick="carregarAgendamentoDoHistoricoNoEstudio('${esc(item.id)}')" title="Carregar este link no Estúdio para iniciar a transmissão">📡 Iniciar</button>`
+            : '';
 
           return `
             <tr>
               <td>
                 <div style="font-weight:800; color:#0f172a;">${esc(item.titulo)}</div>
                 <div style="font-size:11.5px; color:#64748b;">📚 ${esc(item.assunto || 'Geral')} • 👨‍🏫 ${esc(item.professorNome || 'Professor')}</div>
+                ${txtAgendamento}
               </td>
               <td><span class="subject-tag-chip">🏫 ${esc(item.destinoNome || 'Todas as Turmas')}</span></td>
               <td style="font-family:monospace; font-size:12px;">${formatarDataHoraBR(item.criadaEm || item.iniciadaEm)}</td>
@@ -1915,6 +2043,7 @@
               <td>${statusBadge}</td>
               <td style="text-align:right; white-space:nowrap;">
                 <div style="display:inline-flex; gap:6px; align-items:center;">
+                  ${btnUsarEstudio}
                   <button type="button" class="vc-btn primary" style="padding:6px 10px; font-size:11.5px;" onclick="copiarLinkDireto('live', '${esc(token)}')">🔐 Copiar Link</button>
                   <button type="button" class="vc-btn danger" style="padding:6px 9px; font-size:11.5px;" onclick="excluirItemHistoricoLive('${esc(item.id)}')" title="Apagar registo">🗑️</button>
                 </div>
@@ -1956,7 +2085,7 @@
         if (data.live && data.live.ativa) {
           liveAtivaObj = data.live;
         } else if (IS_GESTOR_OU_PROF && data.live) {
-          livePreviaGerada = data.live;
+          preencherEstudioComLiveAgendada(data.live);
         }
         alternarAba('live');
         atualizarBannerLive();
@@ -1964,6 +2093,7 @@
         alternarAba('catalogo');
       }
     }
+
 // ============================================================================
     // 8. SALA AO VIVO PRO (DOCA MOBILE + MÃOZINHA PROF/ALUNO + SAÍDA INDIVIDUAL ALUNO)
     // ============================================================================
@@ -1997,7 +2127,17 @@
       lousaProjetadaAtiva = false;
     }
 
-   function atualizarBannerLive() {
+ let statusPortariaAluno = 'inicial'; // 'inicial' | 'aguardando' | 'recusado'
+
+    // 🛡️ Verifica se o utilizador é Professor ou se o Aluno já recebeu aceite (Passe Livre no F5!)
+    function alunoJaAutorizadoNaLive(live) {
+      if (IS_GESTOR_OU_PROF) return true;
+      if (!live) return false;
+      const lista = Array.isArray(live.alunosAutorizados) ? live.alunosAutorizados.map(String) : [];
+      return (USER_ID && lista.includes(String(USER_ID))) || (ALUNO_REF_ID && lista.includes(String(ALUNO_REF_ID)));
+    }
+
+    function atualizarBannerLive() {
       const banner = document.getElementById('live-banner');
       const btnTabLive = document.getElementById('btn-tab-live');
 
@@ -2010,18 +2150,29 @@
       aplicarPermissoesVisuaisCargo();
 
       if (liveAtivaObj && liveAtivaObj.ativa) {
-        if (!document.body.classList.contains('modo-cinema-live')) {
+        if (!document.body.classList.contains('modo-cinema-live') && !document.body.classList.contains('modo-pip-interno')) {
           banner.style.display = 'flex';
         }
         document.getElementById('live-banner-text').innerText = `${liveAtivaObj.titulo} • Turma: ${liveAtivaObj.destinoNome || 'Todas as Turmas'}`;
         if (btnTabLive) {
           btnTabLive.innerHTML = '🔴 Entrar na Sala Ao Vivo';
         }
-        montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
-        if (liveAtivaObj.lousaProjetada && !lousaProjetadaAtiva) {
-          aplicarProjecaoLousaVisual(true);
+
+        // 🚪 PORTARIA DA LIVE: Professor ou Aluno já autorizado entra direto; Aluno novo vai para a Sala de Solicitação!
+        if (alunoJaAutorizadoNaLive(liveAtivaObj)) {
+          montarPalcoMeetAoVivo(liveAtivaObj.codigoSala, liveAtivaObj.titulo);
+          if (IS_GESTOR_OU_PROF) {
+            renderizarPedidosEntradaProfessor();
+          }
+          if (liveAtivaObj.lousaProjetada && !lousaProjetadaAtiva) {
+            aplicarProjecaoLousaVisual(true);
+          }
+        } else {
+          limparConexoesWebRTC();
+          mostrarPortariaSolicitarEntrada();
         }
       } else {
+        statusPortariaAluno = 'inicial';
         banner.style.display = 'none';
         if (btnTabLive) {
           btnTabLive.innerHTML = IS_GESTOR_OU_PROF ? '🔴 Estúdio Ao Vivo (Criar Live)' : '🔴 Sala Ao Vivo';
@@ -2029,6 +2180,158 @@
         limparConexoesWebRTC();
         mostrarTelaEsperaLive();
       }
+    }
+
+    // 🙋‍♂️ TELA DE RECEÇÃO DO ALUNO (PEDIR PARA PARTICIPAR DA AULA)
+    function mostrarPortariaSolicitarEntrada() {
+      const stage = document.getElementById('meet-stage-container');
+      if (!stage || !liveAtivaObj) return;
+      stage.dataset.salaMontada = '';
+
+      const pedidos = Array.isArray(liveAtivaObj.pedidosEntrada) ? liveAtivaObj.pedidosEntrada : [];
+      if (pedidos.some(p => String(p.userId) === String(USER_ID)) && statusPortariaAluno !== 'recusado') {
+        statusPortariaAluno = 'aguardando';
+      }
+
+      let conteudoAcao = '';
+      if (statusPortariaAluno === 'aguardando') {
+        conteudoAcao = `
+          <div style="background:rgba(30,41,59,0.9); border:1px solid #3b82f6; border-radius:14px; padding:18px; margin-bottom:16px;">
+            <div style="font-size:28px; margin-bottom:8px;">⏳</div>
+            <div style="font-weight:800; font-size:15px; color:#60a5fa; margin-bottom:4px;">Solicitação enviada ao Professor!</div>
+            <div style="font-size:12.5px; color:#cbd5e1;">Aguarde um instante. A sala abrirá automaticamente assim que o professor aceitar a sua entrada.</div>
+          </div>
+          <button type="button" class="vc-btn" style="background:#334155; color:#fff; border:none;" onclick="solicitarEntradaNaLive()">🔄 Reenviar Solicitação</button>
+        `;
+      } else if (statusPortariaAluno === 'recusado') {
+        conteudoAcao = `
+          <div style="background:rgba(225,29,72,0.15); border:1px solid #f43f5e; border-radius:14px; padding:16px; margin-bottom:16px;">
+            <div style="font-weight:800; font-size:14px; color:#fda4af; margin-bottom:4px;">🚫 Entrada não autorizada</div>
+            <div style="font-size:12.5px; color:#fecdd3;">O professor não autorizou a sua entrada neste momento.</div>
+          </div>
+          <button type="button" class="vc-btn primary" style="padding:12px 24px; font-size:14px; border-radius:999px;" onclick="solicitarEntradaNaLive()">🙋‍♂️ Pedir para Participar Novamente</button>
+        `;
+      } else {
+        conteudoAcao = `
+          <button type="button" class="vc-btn primary" style="padding:14px 28px; font-size:15px; border-radius:999px; box-shadow:0 8px 25px rgba(29,125,250,0.45);" onclick="solicitarEntradaNaLive()">
+            🙋‍♂️ Pedir para Participar da Aula
+          </button>
+        `;
+      }
+
+      stage.innerHTML = `
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; position:relative; background:#050811;">
+          <div style="padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b;">
+            <span style="color:#34d399; font-size:13px; font-weight:800;">🟢 Aula Ao Vivo em Andamento</span>
+            <button type="button" class="vc-btn danger" style="padding:6px 14px; font-size:12px;" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo</button>
+          </div>
+          <div style="text-align:center; padding:30px 20px; max-width:460px; margin:auto; color:#fff;">
+            <div style="width:72px; height:72px; border-radius:50%; background:rgba(29,125,250,0.15); border:2px solid #3b82f6; display:flex; align-items:center; justify-content:center; font-size:34px; margin:0 auto 16px auto;">🔐</div>
+            <span style="background:rgba(56,189,248,0.15); color:#38bdf8; padding:4px 12px; border-radius:99px; font-size:11.5px; font-weight:800;">🏫 ${esc(liveAtivaObj.destinoNome || 'Sua Turma')}</span>
+            <h3 style="margin:12px 0 6px 0; font-size:22px; font-weight:900;">${esc(liveAtivaObj.titulo || 'Aula Ao Vivo')}</h3>
+            <p style="color:#94a3b8; font-size:13.5px; line-height:1.5; margin:0 0 22px 0;">
+              👨‍🏫 Professor(a): <strong style="color:#f8fafc;">${esc(liveAtivaObj.professorNome || 'Professor')}</strong><br>
+              Para entrar na transmissão ao vivo, solicite o aceite abaixo:
+            </p>
+            ${conteudoAcao}
+          </div>
+        </div>
+      `;
+    }
+
+    async function solicitarEntradaNaLive() {
+      if (!liveAtivaObj) return;
+      statusPortariaAluno = 'aguardando';
+      mostrarPortariaSolicitarEntrada();
+
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/pedir-entrada', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            liveId: liveAtivaObj.id,
+            codigoSala: liveAtivaObj.codigoSala,
+            userId: USER_ID,
+            alunoRefId: ALUNO_REF_ID,
+            userName: USER_NAME
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data || !data.success) {
+          statusPortariaAluno = 'inicial';
+          mostrarPortariaSolicitarEntrada();
+          mostrarToast(data?.error || 'Não foi possível enviar o pedido.', '#e11d48');
+          return;
+        }
+        if (data.status === 'autorizado') {
+          liveAtivaObj.alunosAutorizados = liveAtivaObj.alunosAutorizados || [];
+          liveAtivaObj.alunosAutorizados.push(String(USER_ID));
+          atualizarBannerLive();
+        }
+      } catch (e) {
+        mostrarToast('Falha de rede ao solicitar entrada.', '#e11d48');
+      }
+    }
+
+    // 👨‍🏫 PAINEL FLUTUANTE DO PROFESSOR PARA ACEITAR / RECUSAR / ACEITAR TODOS
+    function renderizarPedidosEntradaProfessor() {
+      if (!IS_GESTOR_OU_PROF) return;
+      const box = document.getElementById('webrtc-entry-requests');
+      if (!box) return;
+
+      const pedidos = Array.isArray(liveAtivaObj?.pedidosEntrada) ? liveAtivaObj.pedidosEntrada : [];
+      if (pedidos.length === 0) {
+        box.innerHTML = '';
+        return;
+      }
+
+      const btnAceitarTodosHtml = pedidos.length > 1 ? `
+        <div style="display:flex; justify-content:space-between; align-items:center; background:#0f172a; border:1px solid #3b82f6; padding:8px 12px; border-radius:12px; pointer-events:auto; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+          <span style="font-size:12px; font-weight:800; color:#93c5fd;">🔔 ${pedidos.length} alunos aguardando</span>
+          <button type="button" class="vc-btn success" style="padding:5px 12px; font-size:11.5px; border-radius:8px;" onclick="responderPedidoEntradaProf('aceitar_todos')">✅ Aceitar Todos (${pedidos.length})</button>
+        </div>
+      ` : '';
+
+      const listaHtml = pedidos.map(p => `
+        <div style="background:rgba(15,23,42,0.96); backdrop-filter:blur(12px); border:1px solid #475569; border-left:4px solid #f59e0b; border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px; pointer-events:auto; box-shadow:0 12px 30px rgba(0,0,0,0.55); animation:fadeSlideUp 0.18s ease;">
+          <div style="min-width:0; flex:1;">
+            <div style="font-size:12.5px; font-weight:800; color:#fff; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">🙋‍♂️ ${esc(p.userName || 'Aluno')}</div>
+            <div style="font-size:11px; color:#fcd34d; font-weight:600;">Pede para entrar na aula</div>
+          </div>
+          <div style="display:flex; gap:6px; flex-shrink:0;">
+            <button type="button" class="vc-btn success" style="padding:6px 11px; font-size:11.5px; border-radius:8px;" onclick="responderPedidoEntradaProf('aceitar', '${esc(p.userId)}')">✅ Aceitar</button>
+            <button type="button" class="vc-btn danger" style="padding:6px 9px; font-size:11.5px; border-radius:8px;" onclick="responderPedidoEntradaProf('recusar', '${esc(p.userId)}')" title="Recusar entrada">✕</button>
+          </div>
+        </div>
+      `).join('');
+
+      box.innerHTML = btnAceitarTodosHtml + listaHtml;
+    }
+
+    async function responderPedidoEntradaProf(acao, alunoId = null) {
+      if (!IS_GESTOR_OU_PROF || !liveAtivaObj) return;
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/responder-entrada', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            liveId: liveAtivaObj.id,
+            codigoSala: liveAtivaObj.codigoSala,
+            acao: acao,
+            alunoId: alunoId
+          })
+        });
+        const data = await res.json();
+        if (data && data.success) {
+          liveAtivaObj.alunosAutorizados = data.alunosAutorizados || [];
+          liveAtivaObj.pedidosEntrada = data.pedidosEntrada || [];
+          renderizarPedidosEntradaProfessor();
+          if (acao === 'aceitar_todos') mostrarToast('✅ Todos os alunos foram autorizados a entrar!');
+          else if (acao === 'aceitar') mostrarToast('✅ Entrada do aluno autorizada!');
+        }
+      } catch (e) {}
     }
 
     function mostrarTelaEsperaLive() {
@@ -2158,8 +2461,9 @@
             </div>
           </div>
 
-          <!-- Avisos de Mão Levantada -->
+        <!-- Avisos de Mão Levantada (Esquerda) e Portaria de Pedidos de Entrada na Aula (Direita) -->
           <div id="webrtc-hand-alerts" style="position:absolute; top:52px; left:16px; display:flex; flex-direction:column; gap:6px; z-index:35;"></div>
+          <div id="webrtc-entry-requests" style="position:absolute; top:52px; right:14px; display:flex; flex-direction:column; gap:8px; z-index:55; width:320px; max-width:calc(100% - 28px); pointer-events:none;"></div>
 
         <!-- Barra de Topo do Modo Flutuante (Arraste para mover + Botão Maximizar) -->
           <div id="pip-restore-bar" title="Arraste para mover a janela">
@@ -3577,7 +3881,7 @@
     setInterval(verificarAtualizacaoPlayClass, 60000);
     verificarAtualizacaoPlayClass();
 
-    // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma e Reconexão Instantânea no F5!)
+ // Escuta eventos em tempo real do servidor (Com Filtro Estrito de Turma, Portaria de Aceite e Reconexão Instantânea no F5!)
     try {
       const sse = new EventSource(`/api/workspace/stream?escolaId=${encodeURIComponent(ESCOLA_ID)}`);
       sse.onmessage = (ev) => {
@@ -3600,7 +3904,42 @@
             carregarCatalogo(false);
           } else if (data.type === 'VIDEO_LIVE_EVENTO') {
             if (liveAtivaObj && data.salaCodigo && data.salaCodigo !== liveAtivaObj.codigoSala) return;
-            if (data.subtipo === 'PROF_RECONECTOU') {
+
+            if (data.subtipo === 'PEDIDO_ENTRADA') {
+              if (liveAtivaObj) {
+                liveAtivaObj.pedidosEntrada = Array.isArray(data.pedidosEntrada) ? data.pedidosEntrada : [];
+              }
+              if (IS_GESTOR_OU_PROF) {
+                tocarSomReacao('mao');
+                renderizarPedidosEntradaProfessor();
+                const nomePedinte = data.pedido?.userName || 'Um aluno';
+                mostrarToast(`🙋‍♂️ ${nomePedinte} pede para entrar na aula ao vivo!`, '#f59e0b');
+              }
+            } else if (data.subtipo === 'RESPOSTA_ENTRADA') {
+              if (liveAtivaObj) {
+                liveAtivaObj.alunosAutorizados = Array.isArray(data.alunosAutorizados) ? data.alunosAutorizados : [];
+                liveAtivaObj.pedidosEntrada = Array.isArray(data.pedidosEntrada) ? data.pedidosEntrada : [];
+              }
+              if (IS_GESTOR_OU_PROF) {
+                renderizarPedidosEntradaProfessor();
+              } else {
+                const stage = document.getElementById('meet-stage-container');
+                const jaMontada = Boolean(stage && stage.dataset.salaMontada);
+
+                if (alunoJaAutorizadoNaLive(liveAtivaObj) && !jaMontada) {
+                  statusPortariaAluno = 'inicial';
+                  mostrarToast('✅ O professor aceitou a sua entrada! A conectar à aula...');
+                  atualizarBannerLive();
+                } else if (
+                  data.acao === 'recusar' &&
+                  (String(data.alunoId) === String(USER_ID) || (ALUNO_REF_ID && String(data.alunoId) === String(ALUNO_REF_ID)))
+                ) {
+                  statusPortariaAluno = 'recusado';
+                  mostrarPortariaSolicitarEntrada();
+                  mostrarToast('🚫 O professor não autorizou a sua entrada neste momento.', '#e11d48');
+                }
+              }
+            } else if (data.subtipo === 'PROF_RECONECTOU') {
               if (!IS_GESTOR_OU_PROF && typeof window._reconectarAoProfessorLive === 'function') {
                 setTimeout(() => window._reconectarAoProfessorLive(), 800);
               }
