@@ -1039,7 +1039,6 @@
         <div id="painel-lateral-transmissao" style="display: none; flex-direction: column; gap: 12px;">
           <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #1e293b; padding-bottom: 10px;">
             <h3 style="margin: 0; font-size: 16px; display: flex; align-items: center; gap: 8px; color: #fff;">📡 Estúdio do Professor</h3>
-            <button type="button" class="vc-btn" style="padding: 5px 12px; font-size: 11.5px; background: #e11d48; color: #fff; border: none;" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo</button>
           </div>
 
           <div id="prof-live-controls" style="display: none; flex-direction: column; gap: 10px;">
@@ -1066,7 +1065,7 @@
               </select>
             </div>
             <div>
-              <label class="vc-label" style="color: #cbd5e1;">Data e Hora do Agendamento (Para a Sala de Acessos)</label>
+              <label class="vc-label" style="color: #cbd5e1;">Data e Hora do Agendamento (Sala de Acessos)</label>
               <input type="datetime-local" id="live-data-agendada-input" class="vc-input" style="background:#1e293b; color:#fff; border-color:#334155; color-scheme:dark;">
             </div>
 
@@ -1080,7 +1079,7 @@
 
               <label style="display:flex; align-items:center; gap:8px; margin-top:10px; font-size:11.5px; color:#e2e8f0; cursor:pointer; user-select:none;">
                 <input type="checkbox" id="chk-publicar-sala-acessos" checked style="width:16px; height:16px; accent-color:#3b82f6; cursor:pointer;">
-                <span>⚡ Criar também o cartão lá na <b>Sala de Acessos</b> automaticamente</span>
+                <span>Criar também o cartão lá na <b>Sala de Acessos</b> automaticamente</span>
               </label>
 
               <button type="button" class="vc-btn" style="width:100%; justify-content:center; margin-top:10px; background:#1e3a8a; color:#fff; border:1px solid #3b82f6; padding:10px;" onclick="gerarLinkUnicoAntesDaLive()">
@@ -1095,7 +1094,7 @@
             </div>
 
             <button type="button" class="vc-btn" style="width:100%; justify-content:center; background:transparent; color:#93c5fd; border:1px dashed #334155;" onclick="alternarAba('historico')">
-              📜 Ver Histórico de Lives e Links Agendados
+              📜 Histórico de Lives e Links Agendados
             </button>
           </div>
         </div>
@@ -1107,7 +1106,7 @@
   <div class="vc-modal" id="modal-upload">
     <div class="vc-modal-card">
       <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-        <h3 style="margin: 0; font-size: 18px; color: #0f172a;">☁️ Publicar Vídeo-Aula</h3>
+        <h3 style="margin: 0; font-size: 18px; color: #0f172a;">☁️ Publicar Videoaula</h3>
         <button type="button" class="vc-btn" onclick="fecharModalUpload()">✕</button>
       </div>
 
@@ -2604,11 +2603,11 @@
             </div>
             <div style="text-align: center; padding: 30px; max-width: 440px; margin: auto; color: #fff;">
               <div style="font-size: 54px; margin-bottom: 12px;">⏳</div>
-              <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Aula Ao Vivo...</h3>
+              <h3 style="margin: 0 0 8px 0; font-size: 20px;">Aguardando o Professor iniciar a Live...</h3>
               <p style="color: #94a3b8; font-size: 13.5px; line-height: 1.5; margin-bottom: 18px;">
                 Nenhuma transmissão ao vivo está aberta para a sua turma neste momento. Assim que o professor iniciar, a sala abrirá automaticamente aqui!
               </p>
-              <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">↩ Voltar ao Catálogo de Vídeos</button>
+              <button type="button" class="vc-btn primary" onclick="alternarAba('catalogo')">↩ Assistir videoaula</button>
             </div>
           </div>
         `;
