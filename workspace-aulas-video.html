@@ -508,9 +508,9 @@
       .info-actions-row .vc-btn { padding: 9px 10px; font-size: 12px; min-width: 95px; }
 
       .live-dock-bar { padding: 8px 8px; gap: 7px; justify-content: space-evenly; }
-      .meet-ctrl-btn { width: 42px; height: 42px; padding: 0; border-radius: 50%; font-size: 17px; }
+      .meet-ctrl-btn { width: 38px; height: 38px; padding: 0; border-radius: 50%; font-size: 17px; }
       .meet-ctrl-btn .btn-text-label { display: none !important; }
-      .meet-circle-btn { width: 42px; height: 42px; font-size: 17px; }
+      .meet-circle-btn { width: 38px; height: 38px; font-size: 17px; }
       #live-top-header { padding: 6px 10px !important; }
     }
 
@@ -786,71 +786,172 @@
     }
     body.modo-pip-interno #pip-resize-handle { display: flex !important; }
 
-  /* ==========================================================================
-       9. MODO PAISAGEM (CELULAR DEITADO) E TELA CHEIA LIMPA (AO VIVO + GRAVADAS)
+ /* ==========================================================================
+       9. MENU HAMBÚRGUER DA LIVE, DUAS FILEIRAS LATERAIS E GRELHA GOOGLE MEET
        ========================================================================== */
-    @media (orientation: landscape) and (max-height: 540px) {
-      /* Na Aula Ao Vivo deitada: vídeo ocupa 100% da altura e alunos vão para uma coluna fina à direita */
-      body.modo-cinema-live #live-stage-body {
-        flex-direction: row !important;
-      }
-      body.modo-cinema-live #webrtc-video-grid {
-        width: 136px !important;
-        height: 100% !important;
-        flex-direction: column !important;
-        overflow-y: auto !important;
-        overflow-x: hidden !important;
-        border-top: none !important;
-        border-left: 1px solid #1e293b !important;
-        padding: 6px !important;
-        gap: 6px !important;
-      }
-      body.modo-cinema-live #webrtc-video-grid > div {
-        width: 100% !important;
-        height: 76px !important;
-      }
+    /* Menu Hambúrguer (☰) no Topo da Chamada */
+    .live-hamburger-wrap {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+    }
+    .live-hamburger-btn {
+      width: 36px; height: 36px; border-radius: 10px;
+      background: rgba(30, 41, 59, 0.95); color: #f8fafc;
+      border: 1px solid #334155; font-size: 18px; font-weight: 800;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      transition: all 0.18s ease;
+    }
+    .live-hamburger-btn:hover { background: #2563eb; border-color: #60a5fa; }
+    .live-hamburger-menu {
+      display: none; position: absolute; top: calc(100% + 8px); right: 0;
+      min-width: 220px; background: rgba(15, 23, 42, 0.98);
+      border: 1px solid #475569; border-radius: 14px; padding: 7px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.65); z-index: 75;
+      flex-direction: column; gap: 4px; backdrop-filter: blur(14px);
+      animation: fadeSlideUp 0.15s ease;
+    }
+    .live-hamburger-menu.open { display: flex; }
+
+    /* Grupos de Botões da Doca (Horizontal no PC/Retrato -> 2 Colunas Laterais no Celular Deitado) */
+    .dock-group-left, .dock-group-right {
+      display: flex; align-items: center; gap: 10px;
+    }
+    @media (max-width: 768px) {
+      .dock-group-left, .dock-group-right { gap: 5px; }
+    }
+    body.modo-minimizado-pip .dock-group-left,
+    body.modo-minimizado-pip .dock-group-right,
+    body.modo-pip-interno .dock-group-left,
+    body.modo-pip-interno .dock-group-right {
+      display: contents !important;
+    }
+
+    /* Grelha Inteligente de Alunos (Estilo Google Meet — encolhe automaticamente conforme entram mais alunos) */
+    #webrtc-video-grid {
+      transition: height 0.2s ease, max-height 0.2s ease;
+    }
+    #webrtc-video-grid .participant-tile {
+      width: 162px; height: 90px; flex-shrink: 0;
+      transition: width 0.2s ease, height 0.2s ease;
+    }
+    /* 3 a 5 alunos: reduz moderadamente */
+    #webrtc-video-grid.meet-grid-md { height: 86px !important; }
+    #webrtc-video-grid.meet-grid-md .participant-tile { width: 126px !important; height: 72px !important; }
+    #webrtc-video-grid.meet-grid-md .tile-avatar-circle { width: 34px !important; height: 34px !important; font-size: 13px !important; }
+    /* 6 ou mais alunos: modo compacto estilo Google Meet limitando o espaço vertical */
+    #webrtc-video-grid.meet-grid-lg { height: 74px !important; gap: 6px !important; }
+    #webrtc-video-grid.meet-grid-lg .participant-tile { width: 104px !important; height: 60px !important; }
+    #webrtc-video-grid.meet-grid-lg .tile-avatar-circle { width: 26px !important; height: 26px !important; font-size: 11px !important; }
+    #webrtc-video-grid.meet-grid-lg [data-participante-nome] { font-size: 8.5px !important; padding: 1px 4px !important; }
+
+    /* Modo Celular Deitado (Paisagem) / Tela Cheia: 2 Fileiras Laterais de Botões + Vídeo em 100% da Altura */
+    @media (orientation: landscape) and (max-height: 560px) {
       body.modo-cinema-live #live-top-header {
         padding: 4px 10px !important;
+        background: rgba(15, 23, 42, 0.86) !important;
       }
-      body.modo-cinema-live #live-bottom-controls {
-        padding: 4px 8px !important;
-        gap: 6px !important;
+
+      /* Libera 100% do espaço inferior para o vídeo, movendo os botões para as duas laterais */
+      body.modo-cinema-live:not(.modo-minimizado-pip):not(.modo-pip-interno) #live-bottom-controls {
+        position: static !important;
+        height: 0 !important;
+        padding: 0 !important;
+        border: none !important;
+        background: transparent !important;
+        overflow: visible !important;
+      }
+      body.modo-cinema-live:not(.modo-minimizado-pip):not(.modo-pip-interno) .dock-group-left,
+      body.modo-cinema-live:not(.modo-minimizado-pip):not(.modo-pip-interno) .dock-group-right {
+        position: absolute !important;
+        top: 52% !important;
+        transform: translateY(-50%) !important;
+        flex-direction: column !important;
+        gap: 8px !important;
+        padding: 8px 6px !important;
+        background: rgba(11, 18, 34, 0.8) !important;
+        backdrop-filter: blur(10px) !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 999px !important;
+        box-shadow: 0 10px 28px rgba(0, 0, 0, 0.5) !important;
+        z-index: 36 !important;
+      }
+      body.modo-cinema-live:not(.modo-minimizado-pip):not(.modo-pip-interno) .dock-group-left {
+        left: 10px !important;
+      }
+      body.modo-cinema-live:not(.modo-minimizado-pip):not(.modo-pip-interno) .dock-group-right {
+        right: 10px !important;
       }
       body.modo-cinema-live .meet-ctrl-btn,
       body.modo-cinema-live .meet-circle-btn {
-        width: 36px !important;
-        height: 36px !important;
+        width: 38px !important;
+        height: 38px !important;
+        min-width: 38px !important;
         padding: 0 !important;
-        font-size: 15px !important;
+        border-radius: 50% !important;
+        font-size: 16px !important;
       }
       body.modo-cinema-live .meet-ctrl-btn .btn-text-label {
         display: none !important;
       }
 
-      /* Nas Vídeo-Aulas gravadas deitadas: impede o player de ficar cortado na vertical */
-      body:not(.modo-cinema-live) .vc-header-master {
-        position: static !important;
+      /* Popovers abrem para dentro da tela sem cortar nas bordas */
+      body.modo-cinema-live #live-reactions-popover {
+        left: calc(100% + 10px) !important;
+        right: auto !important;
+        bottom: 0 !important;
       }
+      body.modo-cinema-live #live-more-dropdown {
+        right: calc(100% + 10px) !important;
+        left: auto !important;
+        bottom: 0 !important;
+      }
+
+      /* Faixa compacta de alunos no centro inferior, sem colidir com as colunas de botões */
+      body.modo-cinema-live #webrtc-video-grid {
+        position: absolute !important;
+        bottom: 8px !important;
+        left: 64px !important;
+        right: 64px !important;
+        height: auto !important;
+        max-height: 68px !important;
+        background: rgba(15, 23, 42, 0.78) !important;
+        border: 1px solid rgba(255, 255, 255, 0.14) !important;
+        border-radius: 12px !important;
+        padding: 4px 8px !important;
+        z-index: 22 !important;
+      }
+      body.modo-cinema-live #webrtc-video-grid .participant-tile {
+        width: 96px !important;
+        height: 54px !important;
+      }
+      body.modo-cinema-live #webrtc-video-grid.meet-grid-lg .participant-tile {
+        width: 78px !important;
+        height: 48px !important;
+      }
+      body.modo-cinema-live #webrtc-video-grid .tile-avatar-circle {
+        width: 24px !important;
+        height: 24px !important;
+        font-size: 10px !important;
+      }
+
+      /* Nas Vídeo-Aulas gravadas deitadas */
+      body:not(.modo-cinema-live) .vc-header-master { position: static !important; }
       #view-player .video-stage-box {
-        max-height: 88dvh !important;
-        width: auto !important;
-        max-width: 100% !important;
-        margin: 0 auto !important;
+        max-height: 88dvh !important; width: auto !important; max-width: 100% !important; margin: 0 auto !important;
       }
     }
 
-    /* Toque no vídeo em Paisagem/Tela Cheia oculta as barras para imagem 100% limpa */
+    /* Toque no vídeo em Paisagem/Tela Cheia oculta as barras e colunas para imagem 100% limpa */
     body.live-ui-oculta #live-top-header,
     body.live-ui-oculta #live-bottom-controls,
+    body.live-ui-oculta .dock-group-left,
+    body.live-ui-oculta .dock-group-right,
     body.live-ui-oculta #webrtc-video-grid {
       display: none !important;
     }
     body.modo-tela-cheia-fallback {
-      position: fixed !important;
-      inset: 0 !important;
-      width: 100vw !important;
-      height: 100dvh !important;
-      overflow: hidden !important;
+      position: fixed !important; inset: 0 !important; width: 100vw !important; height: 100dvh !important; overflow: hidden !important;
     }
 
     /* MODAIS */
@@ -1245,6 +1346,29 @@
     </div>
   </div>
 
+   <!-- ➕ MODAL DE CONVITE DIRETO DE ALUNOS PARA A LIVE (EXCLUSIVO PROFESSOR) -->
+  <div class="vc-modal" id="modal-convidar-aluno-live" style="z-index: 2147483647;">
+    <div class="vc-modal-card" style="max-width: 470px; background: #0f172a; color: #fff; border-color: #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; color: #fff;">➕ Adicionar Aluno à Live</h3>
+        <button type="button" class="vc-btn" style="background:#1e293b; color:#fff; border-color:#334155;" onclick="fecharModalConvidarAlunoLive()">✕</button>
+      </div>
+
+      <p style="margin: 0 0 12px 0; font-size: 12.5px; color: #94a3b8; line-height: 1.45;">
+        Convide qualquer aluno da escola (independente da turma). Se estiver <strong style="color:#34d399;">🟢 Online</strong>, ele receberá o convite em tela grande na hora para entrar direto!
+      </p>
+
+      <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+        <input type="text" id="input-busca-convidar-aluno" class="vc-input" style="margin-top:0; background:#1e293b; color:#fff; border-color:#334155;" placeholder="Pesquisar aluno por nome ou turma..." oninput="renderizarListaAlunosConvite()">
+        <button type="button" class="vc-btn primary" style="white-space:nowrap;" onclick="carregarAlunosParaConviteLive()" title="Atualizar quem está online">🔄</button>
+      </div>
+
+      <div id="lista-alunos-convidaveis" style="display: flex; flex-direction: column; gap: 8px; max-height: 52vh; overflow-y: auto; padding-right: 4px;">
+        <div style="text-align:center; padding:24px; color:#94a3b8; font-size:13px;">A verificar alunos online... ⏳</div>
+      </div>
+    </div>
+  </div>
+
   <div id="vc-toast"></div>
 
   <script>
@@ -1293,10 +1417,14 @@
 
     const normalizarStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
-    // 🔒 Verifica no Frontend se um vídeo ou Live pertence à turma do Aluno logado
+// 🔒 Verifica no Frontend se um vídeo ou Live pertence à turma do Aluno (ou se ele foi convidado diretamente!)
     function itemPermitidoParaMinhaTurma(item) {
       if (IS_GESTOR_OU_PROF) return true;
       if (!item) return false;
+      const convidados = Array.isArray(item.alunosConvidados) ? item.alunosConvidados.map(String) : [];
+      if ((USER_ID && convidados.includes(String(USER_ID))) || (ALUNO_REF_ID && convidados.includes(String(ALUNO_REF_ID)))) {
+        return true;
+      }
       const d = normalizarStr(item.destino || '');
       const dn = normalizarStr(item.destinoNome || '');
       if (d === 'global' || d === 'todas as turmas' || d === 'publico geral') return true;
@@ -1321,6 +1449,9 @@
       const wrapReact = document.querySelector('#wrap-menu-reacoes');
       const menuReact = document.getElementById('live-reactions-popover');
       if (menuReact && wrapReact && !wrapReact.contains(e.target)) menuReact.classList.remove('open');
+      const wrapHamb = document.querySelector('#wrap-menu-hamburguer-live');
+      const menuHamb = document.getElementById('live-hamburger-dropdown');
+      if (menuHamb && wrapHamb && !wrapHamb.contains(e.target)) menuHamb.classList.remove('open');
     });
 
     function tocarSomReacao(tipo = 'emoji') {
@@ -2861,10 +2992,23 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
               <button type="button" class="vc-btn danger" style="padding:2px 8px; font-size:10.5px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
             </div>
 
-            <!-- Canto Direito: Botão Link (Professor) + Botão Voltar ao Catálogo (Professor e Aluno) -->
-            <div style="display:flex; align-items:center; gap:6px; flex-shrink:0;">
-              ${IS_GESTOR_OU_PROF ? `<button type="button" class="vc-btn" style="padding:6px 10px; font-size:11.5px; background:#1e3a8a; color:#fff; border-color:#3b82f6; border-radius:8px; white-space:nowrap;" onclick="copiarLinkDireto('live', '${esc(tokenLinkAtual)}')" title="Copiar Link Criptografado">🔐 Link</button>` : ''}
-              <button type="button" class="vc-btn danger" style="padding:6px 11px; font-size:11.5px; border-radius:8px; white-space:nowrap;" onclick="alternarAba('catalogo')" title="Minimizar chamada e voltar ao catálogo">↩ Voltar ao Catálogo</button>
+          <!-- Canto Direito: Menu de Hambúrguer (☰) Limpo (Professor: Adicionar Aluno, Minimizar, Copiar Link | Aluno: Minimizar) -->
+            <div class="live-hamburger-wrap" id="wrap-menu-hamburguer-live" style="flex-shrink:0;">
+              <button type="button" class="live-hamburger-btn" id="btn-live-hamburger" onclick="alternarMenuHamburguerLive(event)" title="Menu da Sala Ao Vivo">☰</button>
+              <div id="live-hamburger-dropdown" class="live-hamburger-menu">
+                ${IS_GESTOR_OU_PROF ? `
+                  <button type="button" class="more-menu-item" onclick="fecharMenuHamburguerLive(); abrirModalConvidarAlunoLive();">
+                    <span>➕</span> <span>Adicionar Aluno</span>
+                  </button>
+                  <button type="button" class="more-menu-item" onclick="fecharMenuHamburguerLive(); copiarLinkDireto('live', '${esc(tokenLinkAtual)}');">
+                    <span>🔐</span> <span>Copiar Link</span>
+                  </button>
+                  <div style="height:1px; background:#334155; margin:4px 0;"></div>
+                ` : ''}
+                <button type="button" class="more-menu-item" onclick="fecharMenuHamburguerLive(); minimizarChamadaAoVivo();">
+                  <span>🗕</span> <span>Minimizar</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -2930,63 +3074,64 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           <!-- Pega para Ajustar o Tamanho da Janela (Redimensionar) -->
           <div id="pip-resize-handle" title="Arraste para ajustar o tamanho da janela">⤡</div>
 
-          <!-- 📱 DOCA INFERIOR UNIFICADA (PERFEITA NO TELEMÓVEL E NO PC: MIC, CÂMARA, SOM, MÃOZINHA, EMOJIS, CHAT, MENU ⋯ E ENCERRAR 📞) -->
+       <!-- 📱 DOCA INFERIOR / DUAS COLUNAS LATERAIS NO CELULAR DEITADO (ESQUERDA: MIC, CÂMARA, MÃO, EMOJIS | DIREITA: SOM, CHAT, ⋯, ENCERRAR) -->
           <div id="live-bottom-controls" class="live-dock-bar">
-           <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-mic" onclick="alternarMeuMicrofone()" title="Ativar / Silenciar Microfone">
-              <span id="icon-toggle-mic">🔇</span> <span class="btn-text-label" id="lbl-toggle-mic">Silencioso</span>
-            </button>
+            <!-- Fileira Esquerda (Em Tela Cheia / Paisagem) -->
+            <div class="dock-group-left">
+              <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-mic" onclick="alternarMeuMicrofone()" title="Ativar / Silenciar Microfone">
+                <span id="icon-toggle-mic">🔇</span> <span class="btn-text-label" id="lbl-toggle-mic">Silencioso</span>
+              </button>
 
-            <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-cam" onclick="alternarMinhaCamara()" title="Ligar / Desligar Câmara">
-              <span id="icon-toggle-cam">🚫</span> <span class="btn-text-label" id="lbl-toggle-cam">Desligada</span>
-            </button>
+              <button type="button" class="meet-ctrl-btn danger" id="btn-toggle-cam" onclick="alternarMinhaCamara()" title="Ligar / Desligar Câmara">
+                <span id="icon-toggle-cam">🚫</span> <span class="btn-text-label" id="lbl-toggle-cam">Desligada</span>
+              </button>
 
-            <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">
-              <span id="icon-toggle-speaker">🔊</span> <span class="btn-text-label" id="lbl-toggle-speaker">Saída de Som</span>
-            </button>
+              <button type="button" class="meet-ctrl-btn hand-btn" onclick="levantarMaoNaAula()" title="Levantar a Mão na Aula">
+                <span>✋</span> <span class="btn-text-label">Mão</span>
+              </button>
 
-            <!-- Botão Levantar a Mão disponível tanto para o Aluno quanto para o Professor! -->
-            <button type="button" class="meet-ctrl-btn hand-btn" onclick="levantarMaoNaAula()" title="Levantar a Mão na Aula">
-              <span>✋</span> <span class="btn-text-label">Mão</span>
-            </button>
-
-            <!-- Seletor de Emojis de Reação -->
-            <div class="more-menu-wrapper" id="wrap-menu-reacoes">
-              <button type="button" class="meet-circle-btn" onclick="alternarMenuReacoes(event)" title="Reações na Tela">😊</button>
-              <div id="live-reactions-popover" class="reactions-popover">
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👏')">👏</button>
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('❤️')">❤️</button>
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😂')">😂</button>
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😮')">😮</button>
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('🎉')">🎉</button>
-                <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👍')">👍</button>
+              <div class="more-menu-wrapper" id="wrap-menu-reacoes">
+                <button type="button" class="meet-circle-btn" onclick="alternarMenuReacoes(event)" title="Reações na Tela">😊</button>
+                <div id="live-reactions-popover" class="reactions-popover">
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👏')">👏</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('❤️')">❤️</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😂')">😂</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('😮')">😮</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('🎉')">🎉</button>
+                  <button type="button" class="emoji-react-btn" onclick="enviarReacaoLive('👍')">👍</button>
+                </div>
               </div>
             </div>
 
-            <!-- Botão Mini Chat -->
-            <button type="button" class="meet-circle-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Mini Chat na Tela">💬</button>
+            <!-- Fileira Direita (Em Tela Cheia / Paisagem) -->
+            <div class="dock-group-right">
+              <button type="button" class="meet-ctrl-btn primary" id="btn-toggle-speaker" onclick="alternarSaidaDeSom()" title="Bloquear saída de som / Tirar viva-voz">
+                <span id="icon-toggle-speaker">🔊</span> <span class="btn-text-label" id="lbl-toggle-speaker">Saída de Som</span>
+              </button>
 
-            <!-- Menu de Três Pontos (⋯) -->
-            <div class="more-menu-wrapper" id="wrap-menu-tres-pontos">
-              <button type="button" class="meet-circle-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" title="Mais Opções">⋯</button>
-              <div id="live-more-dropdown" class="more-dropdown-menu">
-                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
-                  <span>🖥️</span> <span>Partilhar Tela</span>
-                </button>
-                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); minimizarChamadaAoVivo();">
-                  <span>🗕</span> <span>Minimizar</span>
-                </button>
-                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
-                  <span>⛶</span> <span>Tela Cheia</span>
-                </button>
-                ${itensExclusivosProfMenuHTML}
-                <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); abrirModalConfigLive();">
-                  <span>⚙️</span> <span>Configurações</span>
-                </button>
+              <button type="button" class="meet-circle-btn" id="btn-toggle-minichat" onclick="alternarMiniChatLive()" title="Mini Chat na Tela">💬</button>
+
+              <div class="more-menu-wrapper" id="wrap-menu-tres-pontos">
+                <button type="button" class="meet-circle-btn" id="btn-live-more-menu" onclick="alternarMenuTresPontos(event)" title="Mais Opções">⋯</button>
+                <div id="live-more-dropdown" class="more-dropdown-menu">
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); partilharEcraNaLive();">
+                    <span>🖥️</span> <span>Partilhar Tela</span>
+                  </button>
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); minimizarChamadaAoVivo();">
+                    <span>🗕</span> <span>Minimizar</span>
+                  </button>
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); telaCheiaPalco();">
+                    <span>⛶</span> <span>Tela Cheia</span>
+                  </button>
+                  ${itensExclusivosProfMenuHTML}
+                  <button type="button" class="more-menu-item" onclick="fecharMenuTresPontos(); abrirModalConfigLive();">
+                    <span>⚙️</span> <span>Configurações</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <!-- Botão Vermelho de Encerrar (Professor encerra a sala; Aluno encerra apenas para si mesmo!) -->
-            <button type="button" class="meet-circle-btn hangup" onclick="${IS_GESTOR_OU_PROF ? 'encerrarSalaAoVivo()' : 'sairDaChamadaAluno()'}" title="${IS_GESTOR_OU_PROF ? 'Encerrar Transmissão para a Turma' : 'Sair da Chamada (Encerrar para mim)'}">📞</button>
+              <button type="button" class="meet-circle-btn hangup" onclick="${IS_GESTOR_OU_PROF ? 'encerrarSalaAoVivo()' : 'sairDaChamadaAluno()'}" title="${IS_GESTOR_OU_PROF ? 'Encerrar Transmissão para a Turma' : 'Sair da Chamada (Encerrar para mim)'}">📞</button>
+            </div>
           </div>
         </div>
       `;
@@ -3055,9 +3200,176 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         `).join('');
       }
 
-      const grid = document.getElementById('webrtc-video-grid');
+     const grid = document.getElementById('webrtc-video-grid');
       if (grid && grid.children.length === 0) {
         grid.style.display = 'none';
+      }
+      ajustarLayoutGrelhaParticipantes();
+    }
+
+    // ☰ MENU DE HAMBÚRGUER DA LIVE + CONVITE DIRETO DE ALUNOS ONLINE
+    let listaAlunosConvidaveisCache = [];
+
+    function alternarMenuHamburguerLive(e) {
+      if (e) e.stopPropagation();
+      fecharMenuTresPontos();
+      document.getElementById('live-reactions-popover')?.classList.remove('open');
+      const menu = document.getElementById('live-hamburger-dropdown');
+      if (menu) menu.classList.toggle('open');
+    }
+
+    function fecharMenuHamburguerLive() {
+      const menu = document.getElementById('live-hamburger-dropdown');
+      if (menu) menu.classList.remove('open');
+    }
+
+    function abrirModalConvidarAlunoLive() {
+      if (!IS_GESTOR_OU_PROF) return;
+      const modal = document.getElementById('modal-convidar-aluno-live');
+      if (!modal) return;
+      // Garante que abre sempre por cima da live (mesmo em Tela Cheia!)
+      const hospedeiro = document.fullscreenElement || document.getElementById('meet-stage-container') || document.body;
+      if (modal.parentElement !== hospedeiro) hospedeiro.appendChild(modal);
+      modal.style.zIndex = '2147483647';
+      modal.style.display = 'flex';
+      const inp = document.getElementById('input-busca-convidar-aluno');
+      if (inp) inp.value = '';
+      carregarAlunosParaConviteLive();
+    }
+
+    function fecharModalConvidarAlunoLive() {
+      const modal = document.getElementById('modal-convidar-aluno-live');
+      if (!modal) return;
+      modal.style.display = 'none';
+      if (modal.parentElement !== document.body) document.body.appendChild(modal);
+    }
+
+    async function carregarAlunosParaConviteLive() {
+      const box = document.getElementById('lista-alunos-convidaveis');
+      if (box) box.innerHTML = `<div style="text-align:center; padding:24px; color:#94a3b8; font-size:13px;">A verificar alunos online... ⏳</div>`;
+      try {
+        const res = await fetch(`/api/workspace/video-aulas/live/alunos-convidaveis?escolaId=${encodeURIComponent(ESCOLA_ID)}&userId=${encodeURIComponent(USER_ID)}&role=${encodeURIComponent(ROLE)}`, {
+          credentials: 'include'
+        });
+        const data = await res.json();
+        if (!data || !data.success || !Array.isArray(data.alunos)) {
+          if (box) box.innerHTML = `<div style="text-align:center; padding:20px; color:#fda4af; font-size:13px;">Não foi possível carregar a lista de alunos.</div>`;
+          return;
+        }
+        listaAlunosConvidaveisCache = data.alunos;
+        renderizarListaAlunosConvite();
+      } catch (e) {
+        if (box) box.innerHTML = `<div style="text-align:center; padding:20px; color:#fda4af; font-size:13px;">Erro de ligação ao buscar alunos.</div>`;
+      }
+    }
+
+    function renderizarListaAlunosConvite() {
+      const box = document.getElementById('lista-alunos-convidaveis');
+      if (!box) return;
+      const termo = normalizarStr(document.getElementById('input-busca-convidar-aluno')?.value || '');
+      const filtrados = (listaAlunosConvidaveisCache || []).filter(a =>
+        !termo || normalizarStr(a.nome).includes(termo) || normalizarStr(a.turma).includes(termo)
+      );
+
+      if (filtrados.length === 0) {
+        box.innerHTML = `<div style="text-align:center; padding:24px; color:#94a3b8; font-size:13px;">Nenhum aluno encontrado.</div>`;
+        return;
+      }
+
+      const jaConvidados = Array.isArray(liveAtivaObj?.alunosConvidados) ? liveAtivaObj.alunosConvidados.map(String) : [];
+
+      box.innerHTML = filtrados.map(a => {
+        const nomeEsc = esc(a.nome);
+        const nomeJs = String(a.nome || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
+        const inicial = esc((a.nome || 'A').charAt(0).toUpperCase());
+        const avatarHtml = a.avatar
+          ? `<img src="${esc(a.avatar)}" style="width:38px; height:38px; border-radius:50%; object-fit:cover; border:2px solid ${a.isOnline ? '#10b981' : '#475569'}; flex-shrink:0;">`
+          : `<div style="width:38px; height:38px; border-radius:50%; background:#1d4ed8; color:#fff; font-weight:800; font-size:14px; display:flex; align-items:center; justify-content:center; border:2px solid ${a.isOnline ? '#10b981' : '#475569'}; flex-shrink:0;">${inicial}</div>`;
+
+        const jaEnviou = (a.userId && jaConvidados.includes(String(a.userId))) || (a.alunoRefId && jaConvidados.includes(String(a.alunoRefId)));
+        const badgeStatus = a.isOnline
+          ? `<span style="color:#34d399; font-size:11px; font-weight:800;">🟢 Online agora</span>`
+          : `<span style="color:#94a3b8; font-size:11px; font-weight:600;">⚪ Offline</span>`;
+
+        return `
+          <div style="background:#1e293b; border:1px solid ${a.isOnline ? 'rgba(16,185,129,0.45)' : '#334155'}; border-radius:12px; padding:10px 12px; display:flex; align-items:center; justify-content:space-between; gap:10px;">
+            <div style="display:flex; align-items:center; gap:10px; min-width:0; flex:1;">
+              ${avatarHtml}
+              <div style="min-width:0; flex:1;">
+                <div style="font-size:13.5px; font-weight:800; color:#f8fafc; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${nomeEsc}</div>
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin-top:2px;">
+                  ${badgeStatus}
+                  <span style="font-size:11px; color:#93c5fd;">🏫 ${esc(a.turma || 'Aluno')}</span>
+                </div>
+              </div>
+            </div>
+            <button type="button" class="vc-btn ${jaEnviou ? 'success' : 'primary'}" style="padding:7px 12px; font-size:11.5px; border-radius:9px; white-space:nowrap; flex-shrink:0;" onclick="enviarConviteAlunoLive('${esc(a.userId)}', '${esc(a.alunoRefId)}', '${nomeJs}', this)">
+              ${jaEnviou ? '🔄 Chamar de novo' : '📡 Convidar'}
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function enviarConviteAlunoLive(alunoUserId, alunoRefId, alunoNome, btnEl) {
+      if (!liveAtivaObj || !liveAtivaObj.ativa) {
+        mostrarToast('⚠️ Inicie a transmissão antes de convidar alunos.', '#f59e0b');
+        return;
+      }
+      if (btnEl) {
+        btnEl.disabled = true;
+        btnEl.innerText = '⏳ Enviando...';
+      }
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/convidar-aluno', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            liveId: liveAtivaObj.id,
+            codigoSala: liveAtivaObj.codigoSala,
+            escolaId: ESCOLA_ID,
+            alunoUserId,
+            alunoRefId,
+            alunoNome,
+            professorNome: USER_NAME
+          })
+        });
+        const data = await res.json();
+        if (!res.ok || !data || !data.success) {
+          throw new Error(data?.error || 'Falha ao enviar convite.');
+        }
+        liveAtivaObj.alunosConvidados = data.alunosConvidados || [];
+        liveAtivaObj.alunosAutorizados = data.alunosAutorizados || [];
+        if (btnEl) {
+          btnEl.classList.remove('primary');
+          btnEl.classList.add('success');
+          btnEl.innerText = '✅ Convidado!';
+          btnEl.disabled = false;
+        }
+        mostrarToast(`📡 Convite em tela grande enviado para ${alunoNome}!`);
+      } catch (e) {
+        if (btnEl) {
+          btnEl.disabled = false;
+          btnEl.innerText = '📡 Convidar';
+        }
+        mostrarToast(e.message || 'Erro ao convidar aluno.', '#e11d48');
+      }
+    }
+
+    // 🧠 GRELHA INTELIGENTE DE PARTICIPANTES (ESTILO GOOGLE MEET)
+    function ajustarLayoutGrelhaParticipantes() {
+      const grid = document.getElementById('webrtc-video-grid');
+      if (!grid) return;
+      const total = grid.querySelectorAll('.participant-tile').length;
+
+      grid.classList.remove('meet-grid-sm', 'meet-grid-md', 'meet-grid-lg');
+      if (total <= 2) {
+        grid.classList.add('meet-grid-sm');
+      } else if (total <= 5) {
+        grid.classList.add('meet-grid-md');
+      } else {
+        grid.classList.add('meet-grid-lg');
       }
     }
 
@@ -3233,9 +3545,19 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       mostrarToast(somSaidaAtivo ? '🔊 Saída de som ativada (Viva-voz ligado).' : '🔈 Saída de som bloqueada (Silenciado).', somSaidaAtivo ? '#10b981' : '#f59e0b');
     }
 
- // 🗕 MINIMIZAR, MAXIMIZAR, MOVER E REDIMENSIONAR A CHAMADA (ESTILO GOOGLE MEET)
-    function minimizarChamadaAoVivo() {
-      document.body.classList.remove('modo-pip-interno');
+ function minimizarChamadaAoVivo() {
+      // Se estava em Tela Cheia, sai primeiro para a janela PiP aparecer livremente sobre o WorkSpace
+      document.body.classList.remove('modo-tela-cheia-fallback', 'live-ui-oculta', 'modo-pip-interno');
+      destravarOrientacaoTela();
+      const fsAtual = document.fullscreenElement || document.webkitFullscreenElement;
+      const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
+      if (fsAtual && exitFs) {
+        try { exitFs.call(document).catch(() => {}); } catch (e) {}
+      }
+      if (window.parent && window.parent !== window) {
+        window.parent.postMessage({ type: 'SOLICITAR_TELA_CHEIA_VIDEO', ativar: false }, '*');
+      }
+
       document.body.classList.add('modo-minimizado-pip');
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true }, '*');
@@ -3431,20 +3753,6 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       const drawer = document.getElementById('live-minichat-drawer');
       if (!drawer) return;
       drawer.classList.toggle('open');
-
-      const headerDrawer = drawer.firstElementChild;
-      if (headerDrawer && !document.getElementById('btn-fechar-chat-mobile')) {
-        const btnFechar = document.createElement('button');
-        btnFechar.type = 'button';
-        btnFechar.id = 'btn-fechar-chat-mobile';
-        btnFechar.title = 'Voltar para a live';
-        btnFechar.textContent = '✕';
-        btnFechar.style.cssText = 'background:#1e293b; border:1px solid #475569; color:#f8fafc; border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:13px; font-weight:800; display:inline-flex; align-items:center; justify-content:center;';
-        btnFechar.onclick = () => {
-          drawer.classList.remove('open');
-        };
-        headerDrawer.appendChild(btnFechar);
-      }
 
       if (drawer.classList.contains('open')) {
         setTimeout(() => document.getElementById('live-minichat-input')?.focus(), 80);
@@ -3868,10 +4176,11 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       }
 
       if (!card) {
-        card = document.createElement('div');
+       card = document.createElement('div');
         card.id = `vid_card_${chaveAluno}`;
+        card.className = 'participant-tile';
         card.setAttribute('data-aluno-chave', chaveAluno);
-        card.style.cssText = 'width:168px; height:94px; flex-shrink:0; background:#090d16; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        card.style.cssText = 'background:#090d16; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
         card.innerHTML = `
           <div class="camera-avatar-backdrop tile-avatar-backdrop" data-tile-avatar="${esc(nomeLimpo)}" style="display:${camEstaAtiva ? 'none' : 'flex'}; gap:0;">
             <div class="tile-avatar-circle">${gerarHtmlAvatarCentro(nomeLimpo)}</div>
@@ -3899,6 +4208,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       }
       atualizarIndicadorMicParticipante(nomeLimpo, estaAtivo, 'aluno');
       atualizarIndicadorCamParticipante(nomeLimpo, camEstaAtiva, 'aluno');
+      ajustarLayoutGrelhaParticipantes();
     }
 
     // 🎤 LIGAR / DESLIGAR MICROFONE (Se não tiver dado permissão antes, pede ao navegador na hora!)
@@ -4171,7 +4481,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         document.fullscreenElement ||
         document.webkitFullscreenElement ||
         document.body.classList.contains('modo-tela-cheia-fallback') ||
-        (window.innerWidth > window.innerHeight && window.innerHeight <= 540)
+        (window.innerWidth > window.innerHeight && window.innerHeight <= 560)
       );
       if (!emPaisagemOuTelaCheia) return;
       if (ev && ev.target && ev.target.closest('button, input, a, #lousa-live-overlay-wrap, #pip-restore-bar, #live-minichat-drawer, #webrtc-entry-requests')) {
@@ -4245,7 +4555,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
     // Restaura os botões automaticamente quando o usuário sair da tela cheia ou colocar o celular em pé novamente
     function sincronizarSaidaTelaCheiaEOrientacao() {
       const emTelaCheia = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
-      const emPaisagemPequena = (window.innerWidth > window.innerHeight && window.innerHeight <= 540);
+      const emPaisagemPequena = (window.innerWidth > window.innerHeight && window.innerHeight <= 560);
       if (!emTelaCheia && !document.body.classList.contains('modo-tela-cheia-fallback')) {
         destravarOrientacaoTela();
         if (!emPaisagemPequena) {

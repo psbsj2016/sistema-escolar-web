@@ -60,10 +60,18 @@ Workspace.Alertas = {
     },
 
     // 🔒 Verifica se uma Live ou Vídeo-Aula do PlayClass pertence à turma do utilizador logado
+  // 🔒 Verifica se uma Live ou Vídeo-Aula do PlayClass pertence à turma do utilizador logado (ou se ele foi convidado!)
     itemVideoPermitidoParaUsuario: (item) => {
         if (!item || !Workspace.usuario) return false;
         const meuTipo = String(Workspace.usuario.tipo || 'Aluno').trim().toLowerCase();
         if (meuTipo !== 'aluno') return true;
+
+        const convidados = Array.isArray(item.alunosConvidados) ? item.alunosConvidados.map(String) : [];
+        const meuId = String(Workspace.usuario.id || '');
+        const meuRefId = String(Workspace.usuario.alunoRefId || '');
+        if ((meuId && convidados.includes(meuId)) || (meuRefId && convidados.includes(meuRefId))) {
+            return true;
+        }
 
         const d = String(item.destino || '').trim().toLowerCase();
         const dn = String(item.destinoNome || '').trim().toLowerCase();
@@ -322,6 +330,26 @@ Workspace.Alertas = {
                 });
                 if (souDestinatario) {
                     Workspace.Alertas.buscarNotificacoes(true); 
+                }
+            }
+
+             // 🎟️ CONVITE DIRETO EM TELA GRANDE PARA ENTRAR NA LIVE (INDEPENDENTE DA TURMA)
+            if (data.type === 'CONVITE_LIVE_DIRETO' && Workspace.usuario) {
+                const meuId = String(Workspace.usuario.id || '').trim();
+                const meuRefId = String(Workspace.usuario.alunoRefId || '').trim();
+                const meuNome = String(Workspace.usuario.nome || '').trim().toLowerCase();
+                const meuLogin = String(Workspace.usuario.login || '').trim().toLowerCase();
+
+                const listaIds = Array.isArray(data.destinatarioIds) ? data.destinatarioIds.map(String) : [];
+                const destNome = String(data.destinatarioNome || '').trim().toLowerCase();
+
+                const souConvidado =
+                    (meuId && listaIds.includes(meuId)) ||
+                    (meuRefId && listaIds.includes(meuRefId)) ||
+                    (destNome && (destNome === meuNome || destNome === meuLogin));
+
+                if (souConvidado && typeof Workspace.Alertas.mostrarModalConviteLive === 'function') {
+                    Workspace.Alertas.mostrarModalConviteLive(data);
                 }
             }
 
@@ -1184,5 +1212,86 @@ Workspace.Alertas = {
         const d = Math.floor(h / 24);
         if (d === 1) return `Ontem`;
         return `Há ${d} dias`;
+    },
+
+    // 📡 MODAL EM TELA GRANDE DE CONVITE DIRETO PARA AULA AO VIVO
+    mostrarModalConviteLive: (convite) => {
+        if (!convite || !convite.tokenCriptografado) return;
+
+        // Toca aviso sonoro suave de chamada recebida
+        try {
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (AudioCtx) {
+                const ctx = new AudioCtx();
+                [523.25, 659.25, 783.99].forEach((freq, i) => {
+                    const osc = ctx.createOscillator();
+                    const gain = ctx.createGain();
+                    osc.type = 'sine';
+                    osc.frequency.setValueAtTime(freq, ctx.currentTime + i * 0.12);
+                    gain.gain.setValueAtTime(0.16, ctx.currentTime + i * 0.12);
+                    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.25);
+                    osc.connect(gain);
+                    gain.connect(ctx.destination);
+                    osc.start(ctx.currentTime + i * 0.12);
+                    osc.stop(ctx.currentTime + i * 0.12 + 0.25);
+                });
+            }
+        } catch (e) {}
+
+        const idModal = 'ws-modal-convite-live-direto';
+        const antigo = document.getElementById(idModal);
+        if (antigo) antigo.remove();
+
+        const nomeProf = convite.professorNome || 'Professor';
+        const tituloLive = convite.tituloLive || 'Aula Ao Vivo';
+        const avatarProf = typeof Workspace.renderizarAvatar === 'function'
+            ? Workspace.renderizarAvatar(nomeProf, 74)
+            : `<div style="width:74px; height:74px; border-radius:50%; background:#2563eb; color:#fff; display:flex; align-items:center; justify-content:center; font-size:28px; font-weight:800;">👨‍🏫</div>`;
+
+        const overlay = document.createElement('div');
+        overlay.id = idModal;
+        overlay.style.cssText = 'position:fixed; inset:0; width:100vw; height:100dvh; background:rgba(2, 6, 23, 0.88); backdrop-filter:blur(10px); z-index:2147483647; display:flex; align-items:center; justify-content:center; padding:20px; box-sizing:border-box; animation:fadeIn 0.22s ease;';
+
+        overlay.innerHTML = `
+            <div style="background:linear-gradient(160deg, #0f172a 0%, #172554 100%); border:2px solid #3b82f6; border-radius:24px; max-width:440px; width:100%; padding:30px 24px; text-align:center; color:#ffffff; box-shadow:0 25px 65px rgba(0,0,0,0.65); position:relative;">
+                <div style="display:inline-flex; align-items:center; gap:6px; background:rgba(16,185,129,0.2); border:1px solid #10b981; color:#34d399; padding:5px 14px; border-radius:999px; font-size:11.5px; font-weight:800; letter-spacing:0.4px; margin-bottom:18px;">
+                    <span>🟢</span> <span>CONVITE ESPECIAL • AO VIVO AGORA</span>
+                </div>
+
+                <div style="display:flex; justify-content:center; margin-bottom:14px;">
+                    ${avatarProf}
+                </div>
+
+                <h2 style="margin:0 0 8px 0; font-size:21px; font-weight:800; color:#ffffff; line-height:1.3;">
+                    ${Workspace.escapeHTML(nomeProf)} está te chamando!
+                </h2>
+                <p style="margin:0 0 22px 0; font-size:14px; color:#cbd5e1; line-height:1.5;">
+                    Você recebeu acesso direto para participar da aula:<br>
+                    <strong style="color:#60a5fa; font-size:15.5px;">"${Workspace.escapeHTML(tituloLive)}"</strong>
+                </p>
+
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button type="button" id="btn-aceitar-convite-live-direto" style="width:100%; padding:14px 18px; border:none; border-radius:14px; background:linear-gradient(135deg, #10b981 0%, #059669 100%); color:#ffffff; font-size:15px; font-weight:800; cursor:pointer; box-shadow:0 8px 22px rgba(16,185,129,0.4); display:flex; align-items:center; justify-content:center; gap:8px;">
+                        <span>🚀</span> <span>Entrar na Aula Agora</span>
+                    </button>
+                    <button type="button" id="btn-recusar-convite-live-direto" style="width:100%; padding:11px 16px; border:1px solid #334155; border-radius:12px; background:rgba(30,41,59,0.7); color:#cbd5e1; font-size:13.5px; font-weight:700; cursor:pointer;">
+                        ✕ Agora não
+                    </button>
+                </div>
+            </div>
+        `;
+
+        document.body.appendChild(overlay);
+
+        document.getElementById('btn-aceitar-convite-live-direto').onclick = () => {
+            overlay.remove();
+            if (typeof Workspace.abrirPlataformaVideos === 'function') {
+                Workspace.abrirPlataformaVideos('', '', convite.tokenCriptografado);
+            }
+        };
+
+        document.getElementById('btn-recusar-convite-live-direto').onclick = () => {
+            overlay.remove();
+        };
     }
 };
