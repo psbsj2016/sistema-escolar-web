@@ -1,4 +1,5 @@
 import { ES3DCameraUI } from './es3d-camera-ui.js';
+import { ES3DAmbiente } from './es3d-ambiente.js';
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
 
@@ -299,10 +300,11 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
     });
   }
 
-  garantirAudioAtivo() {
+garantirAudioAtivo() {
     try {
       if (!this.audioCtx) this.audioCtx = new (window.AudioContext || window.webkitAudioContext)();
       if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
+      this.ambientePro?.desbloquearAudioNoToque();
     } catch (e) {}
     return this.audioCtx;
   }
@@ -472,6 +474,8 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
               <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
+              <button type="button" class="es-top-btn" id="es-city-weather-btn" title="Change City Weather">☀️ Clear</button>
+              <button type="button" class="es-top-btn" id="es-city-audio3d-btn" title="Toggle 3D Spatial Audio">🔊 3D SFX</button>
               <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
               <button type="button" class="es-top-btn" id="es-city-home-btn" title="Teleport to My House Lot">🏡 My Lot</button>
               <button type="button" class="es-top-btn" id="es-city-bau-btn" title="Teleport to Guild Baú do Inglês">🧙‍♂️ Guild</button>
@@ -1345,6 +1349,8 @@ const greenMat = new THREE.MeshStandardMaterial({
   emissive: 0x00ff55,
   emissiveIntensity: 0.12
 });
+
+this.trafficLightMaterials = { redMat, yellowMat, greenMat };
 
 [-56, -24].forEach((zPos, index) => {
   [-1, 1].forEach(side => {
@@ -6554,9 +6560,12 @@ this.scene.add(facadeHeader);
       bubbleText: ''
     };
 
-    this.cameraUI = new ES3DCameraUI(this);
+  this.cameraUI = new ES3DCameraUI(this);
     this.cameraUI.init();
-   
+
+    this.ambientePro = new ES3DAmbiente(this);
+    this.ambientePro.init();
+
     this.iniciarLoopRenderizacao();
   }
 
@@ -7064,6 +7073,7 @@ if (this.torreAtual) {
       this.atualizarAnimais(delta);
       this.atualizarAvioes(delta);
       this.atualizarMusico();
+                this.ambientePro?.update(delta, this.modoInterior);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
       this.footprints = this.footprints.filter(f => {
@@ -7120,7 +7130,8 @@ if (this.torreAtual) {
       this.cars.forEach(car => {
         const distToPlayer = Math.hypot(car.position.x - p.x, car.position.z - p.z);
         const playerOnRoad = Math.abs(p.x - car.position.x) < 2.8 && Math.abs(car.position.z - p.z) < 6;
-        car.userData.stopped = playerOnRoad && distToPlayer < 5.5;
+        const pareSemaforo = this.ambientePro?.devePararNoSemaforo(car.position.z, car.userData.dir);
+                     car.userData.stopped = (playerOnRoad && distToPlayer < 5.5) || Boolean(pareSemaforo);
         if (!car.userData.stopped && !this.modoInterior) {
           car.position.z += car.userData.dir * car.userData.speed * delta;
           if (car.position.z > 18) car.position.z = -90;
@@ -7159,7 +7170,8 @@ if (this.torreAtual) {
     Math.abs(p.x - moto.position.x) < 2.2 &&
     Math.abs(moto.position.z - p.z) < 4.5;
 
-  moto.userData.stopped = playerOnRoad && distToPlayer < 4.5;
+  const pareSemaforoMoto = this.ambientePro?.devePararNoSemaforo(moto.position.z, moto.userData.dir);
+     moto.userData.stopped = (playerOnRoad && distToPlayer < 4.5) || Boolean(pareSemaforoMoto);
 
   if (!moto.userData.stopped && !this.modoInterior) {
     moto.position.z +=
@@ -7542,9 +7554,19 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       this.abrirModalGPS();
     });
 
-    document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
+document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.cameraUI?.alternarModoCamera();
+    });
+
+    document.getElementById('es-city-weather-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.ambientePro?.alternarClima();
+    });
+
+    document.getElementById('es-city-audio3d-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.ambientePro?.alternarAudioEspacial();
     });
 
     document.getElementById('es-city-tower-btn')?.addEventListener('click', () => {
@@ -7899,9 +7921,13 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       }).catch(() => {});
     }
 
-    if (this.cameraUI) {
+   if (this.cameraUI) {
       this.cameraUI.dispose();
       this.cameraUI = null;
+    }
+    if (this.ambientePro) {
+      this.ambientePro.dispose();
+      this.ambientePro = null;
     }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
