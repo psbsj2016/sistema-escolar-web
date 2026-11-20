@@ -1,6 +1,8 @@
 import { ES3DCameraUI } from './es3d-camera-ui.js';
 import { ES3DAmbiente } from './es3d-ambiente.js';
 import { ES3DInteracoes } from './es3d-interacoes.js';
+import { ES3DColisoes } from './es3d-colisoes.js';
+import { ES3DGameShowBuilder } from './es3d-gameshow-builder.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -476,6 +478,8 @@ garantirAudioAtivo() {
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
               <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
+              <button type="button" class="es-top-btn" id="es-city-gameshow-btn" title="Live English Game Show at Central Plaza">🎤 Game Show</button>
+              <button type="button" class="es-top-btn" id="es-city-decorate-btn" title="Decorate Your House or Apartment">🛋️ Decorate</button>
               <button type="button" class="es-top-btn" id="es-city-quest-btn" title="Daily Treasure Hunt in English">🎁 Quests 0/4</button>
               <button type="button" class="es-top-btn" id="es-city-emote-btn" title="Avatar Emotes">🎭 Emotes</button>
               <button type="button" class="es-top-btn" id="es-city-photo-btn" title="Take English City Postcard Photo">📸 Photo</button>
@@ -3062,6 +3066,7 @@ if (escolhido === 'bicycle') {
       }
     }
     if (newX < -75 || newX > 82 || newZ < -135 || newZ > 70) return false;
+    if (this.colisoesPro && !this.colisoesPro.podePassar(newX, newZ, oldX, oldZ)) return false;
     return true;
   }
 
@@ -6918,6 +6923,12 @@ this.scene.add(facadeHeader);
   this.interacoesPro = new ES3DInteracoes(this);
     this.interacoesPro.init();
 
+  this.colisoesPro = new ES3DColisoes(this);
+    this.colisoesPro.init();
+
+    this.gameShowBuilder = new ES3DGameShowBuilder(this);
+    this.gameShowBuilder.init();
+
     this.iniciarLoopRenderizacao();
   }
 
@@ -7383,6 +7394,14 @@ if (this.torreAtual) {
           p.z = Math.max(-135, Math.min(70, nextZ));
           p.rotY = Math.atan2(worldDirX, worldDirZ);
           estaAndando = true;
+        } else if (this.podeMoverPara(nextX, p.z, p.x, p.z)) {
+          p.x = Math.max(-75, Math.min(82, nextX));
+          p.rotY = Math.atan2(worldDirX, worldDirZ);
+          estaAndando = true;
+        } else if (this.podeMoverPara(p.x, nextZ, p.x, p.z)) {
+          p.z = Math.max(-135, Math.min(70, nextZ));
+          p.rotY = Math.atan2(worldDirX, worldDirZ);
+          estaAndando = true;
         }
       } else if (p.targetX !== null && p.targetZ !== null) {
         const dx = p.targetX - p.x; const dz = p.targetZ - p.z;
@@ -7426,6 +7445,8 @@ if (this.torreAtual) {
       this.atualizarAnimais(delta);
       this.atualizarAvioes(delta);
       this.atualizarMusico();
+                this.colisoesPro?.update(delta);
+                this.gameShowBuilder?.update(delta);
                 this.ambientePro?.update(delta, this.modoInterior);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
@@ -7912,6 +7933,16 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.cameraUI?.alternarModoCamera();
     });
 
+document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.gameShowBuilder?.irParaGameShowEIniciar();
+    });
+
+    document.getElementById('es-city-decorate-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.gameShowBuilder?.alternarModoConstrutor();
+    });
+
  document.getElementById('es-city-quest-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.interacoesPro?.abrirModalDailyQuests();
@@ -8013,6 +8044,7 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
           const ud = obj?.userData || hits[0].object.userData || {};
 
           if (this.interacoesPro?.aoClicarObjeto3D(ud, obj)) return;
+                           if (this.gameShowBuilder?.aoClicarObjeto3D(ud)) return;
           if (ud.isMage) { this.interagirComMestreMago(); return; }
           if (ud.isPortal) { this.abrirPortalBauIngles(); return; }
           if (ud.isLot) { this.abrirModalConstrucaoCasa(); return; }
@@ -8037,7 +8069,11 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
         }
 
         const intersectPt = new THREE.Vector3();
-        if (raycaster.ray.intersectPlane(planeY0, intersectPt)) {
+        const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(this.localPlayer.y || 0));
+        
+        if (raycaster.ray.intersectPlane(floorPlane, intersectPt)) {
+          if (this.gameShowBuilder?.aoClicarNoChao(intersectPt)) return;
+
           const tx = Math.max(-75, Math.min(82, intersectPt.x));
           const tz = Math.max(-135, Math.min(70, intersectPt.z));
           if (this.podeMoverPara(tx, tz, this.localPlayer.x, this.localPlayer.z)) {
@@ -8302,6 +8338,15 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.interacoesPro.dispose();
       this.interacoesPro = null;
     }   
+  if (this.gameShowBuilder) {
+      this.gameShowBuilder.dispose();
+      this.gameShowBuilder = null;
+    }
+    if (this.colisoesPro) {
+      this.colisoesPro.dispose();
+      this.colisoesPro = null;
+    }
+
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {
