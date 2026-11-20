@@ -7,6 +7,9 @@ import fs from 'fs';
 // 🚀 Carimbo único gerado a cada "npm run build"
 const BUILD_VERSION = String(Date.now());
 
+// ⚙️ PARÂMETRO AJUSTÁVEL: tempo máximo (segundos) aguardando rede antes de tentar cache em scripts
+const TIMEOUT_REDE_SEGUNDOS = 5;
+
 // Plugin que grava automaticamente o ficheiro dist/version.json em cada compilação
 function geradorVersaoBuild() {
   return {
@@ -66,7 +69,8 @@ export default defineConfig({
     geradorVersaoBuild(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['assets/icone.png', 'audios/*.mp3'],
+      // 🪶 Mantém apenas o ícone leve no precache (evita carregar centenas de MB no Service Worker)
+      includeAssets: ['assets/icone.png'],
 
       manifest: {
         id: "/",
@@ -85,48 +89,32 @@ export default defineConfig({
       },
       workbox: {
         cleanupOutdatedCaches: true, // 🧹 Apaga caches antigos automaticamente
-        skipWaiting: false,          // 🛡️ Impede o navegador de derrubar a Live no meio da aula
+        skipWaiting: false,          // 🛡️ Protege Aulas Ao Vivo (o pwa-updater.js libera fora da Live)
         clientsClaim: true,
-        globPatterns: ['**/*.{js,css,html,svg,ico}'],
-        globIgnores: [
-          '**/node_modules/**/*',
-          '**/uploads/**/*',
-          'workspace-lousa.html',
-          '**/workspace-lousa.html',
-          'workspace-aulas-video.html',
-          '**/workspace-aulas-video.html',
-          'version.json',
-          '**/version.json',
-          '**/*.{mp4,webm,avi,mov,pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx}'
-        ],
-        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
+        navigateFallback: null,      // 🚀 Deixa as rotas HTML 100% com a Vercel (nunca serve HTML velho do cache)
+
+        // 🪶 CORREÇÃO CRÍTICA: Em vez de precachear 1.770 arquivos (671 MB), precacheia só o manifesto!
+        globPatterns: ['manifest.webmanifest'],
         importScripts: ['/push-sw.js'],
 
-        // 🔄 Garante que a Lousa, a Sala de Vídeos e o version.json venham SEMPRE direto do servidor (sem cache!)
+        // 🔄 Garante que HTMLs, Lousa, Sala de Vídeos e version.json venham SEMPRE direto da rede
         runtimeCaching: [
           {
             urlPattern: /\/version\.json/,
             handler: 'NetworkOnly'
           },
           {
-            urlPattern: /\/(workspace-lousa|workspace-aulas-video)(\.html)?(\?.*)?$/,
+            urlPattern: /\/(index|workspace|workspace-lousa|workspace-aulas-video|admin)(\.html)?(\?.*)?$/,
             handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /\/assets\/.*\.(js|css)$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'workspace-bundles-v2',
+              networkTimeoutSeconds: TIMEOUT_REDE_SEGUNDOS
+            }
           }
-        ],
-
-        // 🚀 O ESCUDO ANTI-SEQUESTRO (Garante que cada domínio carregue o seu próprio HTML na raiz)
-        navigateFallbackDenylist: [
-          /^\/$/,
-          /^\/api/,
-          /^\/workspace/,
-          /version\.json/,
-          /hub-matriculas\.html/,
-          /matricula\.html/,
-          /matricula-online\.html/,
-          /workspace\.html/,
-          /admin\.html/,
-          /workspace-lousa\.html/,
-          /workspace-aulas-video\.html/
         ]
       }
     }),
