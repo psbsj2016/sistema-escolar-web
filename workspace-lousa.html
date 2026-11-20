@@ -3680,23 +3680,52 @@
         } catch (e) {}
       }
 
-      let versaoBuildLousa = null;
-      async function verificarAtualizacaoLousa() {
-        try {
-          const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
-          if (!res.ok) return;
-          const data = await res.json();
-          if (!data || !data.version) return;
-          if (!versaoBuildLousa) {
-            versaoBuildLousa = data.version;
-          } else if (versaoBuildLousa !== data.version && !isPointerDown && !isSaving) {
-            await salvarDadosNuvem();
-            window.location.reload();
-          }
-        } catch (e) {}
+      const CHAVE_VERSAO_LOUSA = 'ptt_versao_build_instalada';
+const CHAVE_RELOAD_LOUSA = 'ptt_reload_forcado_versao';
+
+async function verificarAtualizacaoLousa() {
+  try {
+    const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
+    if (!res.ok) return;
+    const data = await res.json();
+    if (!data || !data.version) return;
+
+    const versaoServidor = String(data.version).trim();
+    const versaoSalva = localStorage.getItem(CHAVE_VERSAO_LOUSA);
+
+    if (!versaoSalva) {
+      localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
+      return;
+    }
+    if (versaoServidor === versaoSalva) {
+      sessionStorage.removeItem(CHAVE_RELOAD_LOUSA);
+      return;
+    }
+    if (sessionStorage.getItem(CHAVE_RELOAD_LOUSA) === versaoServidor) {
+      localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
+      return;
+    }
+    if (isPointerDown || isSaving) return;
+
+    await salvarDadosNuvem();
+    localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
+    sessionStorage.setItem(CHAVE_RELOAD_LOUSA, versaoServidor);
+
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        for (const reg of regs) {
+          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
+          await reg.update().catch(() => {});
+        }
       }
-      setInterval(verificarAtualizacaoLousa, 60000);
-      verificarAtualizacaoLousa();
+    } catch (e) {}
+
+    setTimeout(() => window.location.reload(), 400);
+  } catch (e) {}
+}
+setInterval(verificarAtualizacaoLousa, 60000);
+verificarAtualizacaoLousa();
 
       if (window.innerWidth <= 900) {
         alternarMenuLateral(true);
