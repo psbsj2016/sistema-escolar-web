@@ -26,19 +26,34 @@ function geradorVersaoBuild() {
   };
 }
 
+// 🛡️ Impede que o VitePWA injete o manifesto do Gestão Escolar dentro do workspace.html
+function preservarManifestoWorkspace() {
+  return {
+    name: 'preservar-manifesto-workspace',
+    transformIndexHtml: {
+      order: 'post',
+      handler(html, ctx) {
+        if (ctx && ctx.filename && ctx.filename.includes('workspace.html')) {
+          return html.replace(/<link\s+rel=["']manifest["']\s+href=["'][^"']*manifest\.webmanifest["'][^>]*>/gi, '');
+        }
+        return html;
+      }
+    }
+  };
+}
+
 export default defineConfig({
   define: {
     __APP_BUILD_VERSION__: JSON.stringify(BUILD_VERSION)
   },
-  plugins: [
+ plugins: [
     geradorVersaoBuild(),
     VitePWA({
-      // 🛡️ Modo 'prompt' + skipWaiting: false dá 100% do controlo ao nosso pwa-updater.js:
-      // Fora da live -> atualiza sozinho automaticamente; Durante a live -> baixa em segundo plano e JAMAIS expulsa ninguém!
       registerType: 'prompt',
       includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
       
-      manifest: {        
+      manifest: {
+        id: "/",
         name: "Gestão Escolar SaaS",
         short_name: "Gestão Escolar",
         description: "Sistema completo de Gestão Escolar e Financeira",
@@ -78,7 +93,8 @@ export default defineConfig({
           /workspace-aulas-video\.html/
         ] 
       }
-    })
+    }),
+    preservarManifestoWorkspace()
   ],
   server: {
     proxy: {

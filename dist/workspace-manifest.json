@@ -1,19 +1,14 @@
 {
-  "name": "Workspace - Área do Aluno",
-  "short_name": "Workspace",
+  "id": "/workspace.html",
+  "name": "WorkSpace - Área do Aluno",
+  "short_name": "WorkSpace",
   "description": "Ambiente virtual de aprendizagem interativo da escola.",
-  "id": "/workspace",
-  
-  // 🚀 A CORREÇÃO: Coloque aqui o caminho EXATO para a página do seu Workspace
-  "start_url": "/workspace", 
-  
-  // 🚀 O ESCOPO: Impede que o aplicativo tente controlar o sistema principal
-  "scope": "/workspace",
-
+  "start_url": "/workspace.html",
+  "scope": "/",
   "display": "standalone",
   "background_color": "#f0f2f5",
-  "theme_color": "#3498db",
-  "orientation": "portrait",
+  "theme_color": "#1d4ed8",
+  "orientation": "any",
   "icons": [
     {
       "src": "/img/icons/workspace-logo-192.png",

@@ -223,6 +223,106 @@ Object.assign(Workspace, {
     avatarsCache: {}, 
     deferredPrompt: null,
 
+    // ============================================================================
+    // 📲 MOTOR DE INSTALAÇÃO NATIVA DO WORKSPACE (ANDROID, DESKTOP E IPHONE/IOS)
+    // ============================================================================
+    PWA: {
+        estaInstalado: () => {
+            return Boolean(
+                window.matchMedia('(display-mode: standalone)').matches ||
+                window.navigator.standalone === true ||
+                document.referrer.includes('android-app://')
+            );
+        },
+
+        ehIOS: () => {
+            const ua = window.navigator.userAgent || '';
+            const isAppleMobile = /iphone|ipad|ipod/i.test(ua);
+            const isIpadOS = navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1;
+            return isAppleMobile || isIpadOS;
+        },
+
+        atualizarVisibilidadeBotoes: () => {
+            const instalado = Workspace.PWA.estaInstalado();
+            const podeMostrar = !instalado && (Boolean(Workspace.deferredPrompt) || Workspace.PWA.ehIOS());
+
+            const btnLogin = document.getElementById('ws-btn-instalar-login');
+            const btnMenu = document.getElementById('ws-btn-instalar-menu');
+            const cardConfig = document.getElementById('ws-card-instalar-config');
+            const banner = document.getElementById('ws-pwa-install-banner');
+            const bannerBtn = document.getElementById('ws-pwa-banner-btn');
+
+            if (btnLogin) btnLogin.style.display = podeMostrar ? 'flex' : 'none';
+            if (btnMenu) btnMenu.style.display = podeMostrar ? 'flex' : 'none';
+            if (cardConfig) cardConfig.style.display = podeMostrar ? 'block' : 'none';
+
+            if (bannerBtn && Workspace.PWA.ehIOS() && !Workspace.deferredPrompt) {
+                bannerBtn.innerText = '🍎 Como Instalar';
+            }
+
+            if (banner) {
+                const jaDispensou = sessionStorage.getItem('ws_pwa_banner_dispensado') === '1';
+                // Evita mostrar o banner flutuante por cima da Tela de Login (lá já existe o botão próprio)
+                const telaLoginVisivel = document.getElementById('ws-login-screen')?.style.display !== 'none';
+                banner.style.display = (podeMostrar && !jaDispensou && !telaLoginVisivel) ? 'block' : 'none';
+            }
+        },
+
+        dispensarBanner: () => {
+            sessionStorage.setItem('ws_pwa_banner_dispensado', '1');
+            const banner = document.getElementById('ws-pwa-install-banner');
+            if (banner) banner.style.display = 'none';
+        },
+
+        instalar: async () => {
+            // 1. Android / Chrome / Edge / Desktop com instalação nativa pronta
+            if (Workspace.deferredPrompt) {
+                try {
+                    const promptEvent = Workspace.deferredPrompt;
+                    Workspace.deferredPrompt = null;
+                    promptEvent.prompt();
+                    const escolha = await promptEvent.userChoice;
+                    if (escolha && escolha.outcome === 'accepted') {
+                        Workspace.PWA.dispensarBanner();
+                        Workspace.mostrarAviso('🎉 Instalando o aplicativo WorkSpace no seu aparelho!', 'success');
+                    }
+                } catch (e) {}
+                Workspace.PWA.atualizarVisibilidadeBotoes();
+                return;
+            }
+
+            // 2. iPhone / iPad (iOS Safari) -> Abre o guia visual passo a passo
+            if (Workspace.PWA.ehIOS()) {
+                const modalIos = document.getElementById('ws-modal-guia-ios');
+                if (modalIos) modalIos.style.display = 'flex';
+                return;
+            }
+
+            // 3. Plano B caso o navegador não dispare beforeinstallprompt (ex: Firefox)
+            Workspace.mostrarAviso('Para instalar, abra o menu do navegador (⋮) e toque em "Instalar aplicativo" ou "Adicionar à tela inicial".', 'info', 6000);
+        },
+
+        init: () => {
+            if (Workspace.PWA._iniciado) return;
+            Workspace.PWA._iniciado = true;
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                Workspace.deferredPrompt = e;
+                Workspace.PWA.atualizarVisibilidadeBotoes();
+            });
+
+            window.addEventListener('appinstalled', () => {
+                Workspace.deferredPrompt = null;
+                Workspace.PWA.atualizarVisibilidadeBotoes();
+                Workspace.mostrarAviso('✅ WorkSpace instalado com sucesso na sua tela inicial!', 'success');
+            });
+
+            // Atualiza visibilidade inicial (para iOS aparecer logo na Tela de Login e após o Login)
+            setTimeout(() => Workspace.PWA.atualizarVisibilidadeBotoes(), 400);
+        }
+    },
+
     // 🚀 BOLINHA: Base de dados de quem está online
     usuariosOnline: new Set(), 
     radarOnlineTimer: null,
@@ -2568,7 +2668,11 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
 // 🚀 INICIALIZAÇÃO BLINDADA DO WORKSPACE
 // ============================================================================
 document.addEventListener('DOMContentLoaded', () => {
+    if (Workspace.PWA) Workspace.PWA.init();
     Workspace.init();
     // Liga o detetive invisível de Rascunhos!
     if (Workspace.Rascunho) Workspace.Rascunho.init();
+    setTimeout(() => {
+        if (Workspace.PWA) Workspace.PWA.atualizarVisibilidadeBotoes();
+    }, 900);
 });
