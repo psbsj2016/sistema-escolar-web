@@ -469,6 +469,7 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
             <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
             <div class="es-top-right-btns">
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
+              <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
               <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
               <button type="button" class="es-top-btn" id="es-city-home-btn" title="Teleport to My House Lot">🏡 My Lot</button>
               <button type="button" class="es-top-btn" id="es-city-bau-btn" title="Teleport to Guild Baú do Inglês">🧙‍♂️ Guild</button>
@@ -479,6 +480,7 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
           <div class="es-ref-proximity-wrap">
             <span id="es-city-proximity-badge">• Out of Range</span>
             <button type="button" id="es-city-work-btn">💼 Work Shift (+DRX)</button>
+            <button type="button" id="es-city-tower-btn" style="display:none; pointer-events:auto; background:linear-gradient(135deg,#2563eb,#7c3aed); color:#fff; border:none; padding:6px 14px; border-radius:999px; font-size:11.5px; font-weight:800; cursor:pointer; box-shadow:0 6px 16px rgba(37,99,235,0.4);">🏢 Enter Tower</button>
           </div>
         </div>
         <select id="es-city-teleport"><option value=""></option></select>
@@ -1450,13 +1452,18 @@ const greenMat = new THREE.MeshStandardMaterial({
     });
   }
 
-  // 🏘️ LOTEAMENTO RESIDENCIAL DOS ALUNOS (CONSTRUÇÃO EM 5 ETAPAS SALVA NO MONGODB)
+ // 🏘️ LOTEAMENTO RESIDENCIAL DOS ALUNOS (CONSTRUÇÃO EM 5 ETAPAS SALVA NO MONGODB)
   criarLoteamentoResidencial() {
     const THREE = window.THREE;
     if (!this.exteriorGroup) return;
     if (this.lotes && this.lotes.length > 0) {
-      this.lotes.forEach(l => this.exteriorGroup.remove(l));
+      this.lotes.forEach(l => {
+        this.exteriorGroup.remove(l);
+        const idx = this.clickableObjects.indexOf(l);
+        if (idx > -1) this.clickableObjects.splice(idx, 1);
+      });
     }
+    this.clickableObjects = this.clickableObjects.filter(obj => !obj?.userData?.isLot);
     this.lotes = [];
 
     const u = window.Workspace?.usuario || {};
@@ -2126,8 +2133,8 @@ if (escolhido === 'bicycle') {
     roughness: 0.8
   });
 
-  // Criador de tubos metálicos
-  const criarTubo = (a, b, raio, material) => {
+ // Criador de tubos metálicos (aceita alvo opcional para montar peças dentro da roda)
+  const criarTubo = (a, b, raio, material, alvo = vm) => {
     const inicio = new THREE.Vector3(...a);
     const fim = new THREE.Vector3(...b);
     const direcao = new THREE.Vector3().subVectors(fim, inicio);
@@ -2145,7 +2152,7 @@ if (escolhido === 'bicycle') {
       direcao.normalize()
     );
 
-    vm.add(tubo);
+    alvo.add(tubo);
   };
 
   // Rodas completas
@@ -2166,7 +2173,7 @@ if (escolhido === 'bicycle') {
     rim.rotation.y = Math.PI / 2;
     wheel.add(rim);
 
-    // Raios
+    // Raios fixados dentro de cada roda (wheel)
     for (let i = 0; i < 12; i++) {
       const angle = (i / 12) * Math.PI * 2;
       const y = Math.cos(angle) * 0.27;
@@ -2176,7 +2183,8 @@ if (escolhido === 'bicycle') {
         [0, 0, 0],
         [0, y, zOffset],
         0.008,
-        metalMat
+        metalMat,
+        wheel
       );
     }
 
@@ -2326,447 +2334,431 @@ if (escolhido === 'bicycle') {
     });
   }
 
-  // 👤 CONSTRUTOR DE BONECO HUMANO 3D (DIFERENCIAÇÃO REAL HOMEM vs MULHER)
+// 👤 CONSTRUTOR DE AVATAR HUMANO 3D REALISTA (PROPORÇÕES NATURAIS, ROSTO EXPRESSIVO, ROUPAS E TÊNIS ARTICULADOS)
   criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
     const THREE = window.THREE;
     const group = new THREE.Group();
+    const bodyRoot = new THREE.Group();
+    group.add(bodyRoot);
 
-    const matPele = new THREE.MeshStandardMaterial({ color: corPele, roughness: 0.55, metalness: 0.05 });
-    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.7, metalness: 0.08 });
-    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.8, metalness: 0.1 });
-    const matCabelo = new THREE.MeshStandardMaterial({ color: isFemale ? 0x5c2b0e : 0x1e1e22, roughness: 0.85 });
-    const matOlho = new THREE.MeshStandardMaterial({ color: 0x0a0a0a });
-    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xfffffe });
-    const matSapato = new THREE.MeshStandardMaterial({ color: 0x111111, roughness: 0.6 });
-    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xe11d48 : 0x8b4a3e });
-    const matSobrancelha = new THREE.MeshStandardMaterial({ color: 0x2b2b2b });
+    // ⚙️ PARÂMETROS VISUAIS DERIVADOS DA COR DA CAMISA (Mantém identidade única e estável para cada personagem)
+    const seed = Math.abs(Math.floor(Number(corCamisa) || 0));
+    const tonsPeleNaturais = [0xf6d0b1, 0xe8b996, 0xd8a079, 0xbf825b, 0x8d5524];
+    const corPeleFinal = corPele === 0xfde68a
+      ? tonsPeleNaturais[seed % tonsPeleNaturais.length]
+      : corPele;
 
-    const torsoW = isFemale ? 0.43 : 0.54;
-    const shoulderW = isFemale ? 0.24 : 0.34;
-    const hipW = isFemale ? 0.50 : 0.48;
+    const coresCabeloF = [0x3b2314, 0x1f1815, 0x6b3e1e, 0x8c5523, 0x2a1a14];
+    const coresCabeloM = [0x1c1917, 0x3b2718, 0x2b211c, 0x4a3321, 0x141414];
+    const corCabeloFinal = isFemale
+      ? coresCabeloF[seed % coresCabeloF.length]
+      : coresCabeloM[seed % coresCabeloM.length];
 
-    // Pés arredondados com formato anatômico
-const footGeo = new THREE.SphereGeometry(0.13, 18, 14);
-footGeo.scale(0.82, 0.58, 1.35);
-    const leftFoot = new THREE.Mesh(footGeo, matSapato); leftFoot.position.set(-0.13, 0.07, 0.05);
-    const rightFoot = new THREE.Mesh(footGeo, matSapato); rightFoot.position.set(0.13, 0.07, 0.05);
-    group.add(leftFoot, rightFoot);
+    const coresIris = [0x5c3a21, 0x2c5282, 0x2f6b4f, 0x3f2e21];
+    const corIrisFinal = coresIris[seed % coresIris.length];
 
-    const legGeo = new THREE.CylinderGeometry(0.1, 0.085, 0.82, 12); legGeo.translate(0, -0.41, 0);
-    const leftLeg = new THREE.Mesh(legGeo, matCalca); leftLeg.position.set(-0.13, 0.88, 0);
-    const rightLeg = new THREE.Mesh(legGeo, matCalca); rightLeg.position.set(0.13, 0.88, 0);
-    group.add(leftLeg, rightLeg);
+    // 🎨 Materiais com acabamento PBR realista
+    const matPele = new THREE.MeshStandardMaterial({ color: corPeleFinal, roughness: 0.62, metalness: 0.03 });
+    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.72, metalness: 0.06 });
+    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.82, metalness: 0.05 });
+    const matCabelo = new THREE.MeshStandardMaterial({ color: corCabeloFinal, roughness: 0.78, metalness: 0.08 });
+    const matSapato = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.55, metalness: 0.1 });
+    const matSola = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.85 });
+    const matCinto = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.55 });
+    const matMetal = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.82, roughness: 0.25 });
+    const matGola = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.75 });
+    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
+    const matIris = new THREE.MeshStandardMaterial({ color: corIrisFinal, roughness: 0.25 });
+    const matPupila = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.1 });
+    const matGlint = new THREE.MeshBasicMaterial({ color: 0xffffff });
+    const matSobrancelha = new THREE.MeshStandardMaterial({ color: corCabeloFinal, roughness: 0.9 });
+    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xd94662 : 0xa35a4e, roughness: 0.45 });
+    const matBochecha = new THREE.MeshStandardMaterial({
+      color: 0xf472b6,
+      transparent: true,
+      opacity: isFemale ? 0.24 : 0.1,
+      roughness: 0.9
+    });
 
-    // Quadril arredondado com volume mais natural
-const hipGeo = new THREE.SphereGeometry(0.5, 24, 18);
-hipGeo.scale(hipW, 0.20, 0.30);
+    const hipX = isFemale ? 0.112 : 0.125;
+    const shoulderX = isFemale ? 0.235 : 0.285;
+    const chestScaleX = isFemale ? 0.37 : 0.45;
+    const waistScaleX = isFemale ? 0.29 : 0.38;
 
-const hip = new THREE.Mesh(hipGeo, matCalca);
-hip.position.set(0, 0.9, 0);
-group.add(hip);
+    // 🦵 PERNAS ARTICULADAS COM TÊNIS ANEXADOS (Os sapatos acompanham os passos naturalmente!)
+    const criarPernaCompleta = (side) => {
+      const legPivot = new THREE.Group();
+      legPivot.position.set(side * hipX, 0.86, 0);
 
-    // Tronco arredondado, mantendo a silhueta masculina e feminina
-const torsoGeo = new THREE.SphereGeometry(0.5, 28, 22);
-torsoGeo.scale(torsoW, 0.70, 0.30);
+      // Coxa anatômica
+      const coxa = new THREE.Mesh(
+        new THREE.CylinderGeometry(isFemale ? 0.098 : 0.106, 0.082, 0.42, 14),
+        matCalca
+      );
+      coxa.position.set(0, -0.21, 0);
+      legPivot.add(coxa);
 
-const torso = new THREE.Mesh(torsoGeo, matCamisa);
-torso.position.set(0, 1.34, 0);
-group.add(torso);
+      // Joelho suave
+      const joelho = new THREE.Mesh(new THREE.SphereGeometry(0.082, 12, 12), matCalca);
+      joelho.position.set(0, -0.42, 0.01);
+      legPivot.add(joelho);
+
+      // Canela / Barra da calça
+      const canela = new THREE.Mesh(
+        new THREE.CylinderGeometry(0.078, 0.068, 0.36, 14),
+        matCalca
+      );
+      canela.position.set(0, -0.60, 0);
+      legPivot.add(canela);
+
+      // Tornozelo / Meia
+      const tornozelo = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.058, 0.07, 12), matSola);
+      tornozelo.position.set(0, -0.77, 0);
+      legPivot.add(tornozelo);
+
+      // 👟 Tênis detalhado (sola branca + cabedal colorido + biqueira)
+      const shoeGroup = new THREE.Group();
+      shoeGroup.position.set(0, -0.82, 0.045);
+
+      const sola = new THREE.Mesh(new THREE.BoxGeometry(0.135, 0.045, 0.27), matSola);
+      sola.position.set(0, -0.015, 0);
+
+      const cabedalGeo = new THREE.SphereGeometry(0.085, 16, 12);
+      cabedalGeo.scale(0.84, 0.62, 1.55);
+      const cabedal = new THREE.Mesh(cabedalGeo, matSapato);
+      cabedal.position.set(0, 0.032, 0.005);
+
+      const lingua = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.04, 0.07), matSola);
+      lingua.position.set(0, 0.062, 0.03);
+      lingua.rotation.x = 0.25;
+
+      shoeGroup.add(sola, cabedal, lingua);
+      legPivot.add(shoeGroup);
+      return legPivot;
+    };
+
+    const leftLeg = criarPernaCompleta(-1);
+    const rightLeg = criarPernaCompleta(1);
+    bodyRoot.add(leftLeg, rightLeg);
+
+    // 👖 QUADRIL, CINTURA E CINTO COM FIVELA
+    const pelvisGeo = new THREE.SphereGeometry(0.5, 20, 16);
+    pelvisGeo.scale(isFemale ? 0.44 : 0.43, 0.21, 0.28);
+    const pelvis = new THREE.Mesh(pelvisGeo, matCalca);
+    pelvis.position.set(0, 0.89, 0);
+    bodyRoot.add(pelvis);
 
     if (isFemale) {
-      const skirtGeo = new THREE.CylinderGeometry(0.22, 0.31, 0.34, 14);
-      const skirt = new THREE.Mesh(skirtGeo, matCalca); skirt.position.set(0, 0.86, 0);
-      const chestGeo = new THREE.SphereGeometry(0.12, 10, 10);
-      const chestL = new THREE.Mesh(chestGeo, matCamisa); chestL.position.set(-0.11, 1.43, 0.15); chestL.scale.set(1, 0.85, 0.55);
-      const chestR = new THREE.Mesh(chestGeo, matCamisa); chestR.position.set(0.11, 1.43, 0.15); chestR.scale.set(1, 0.85, 0.55);
-      group.add(skirt, chestL, chestR);
+      const saia = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.27, 0.34, 18), matCalca);
+      saia.position.set(0, 0.84, 0);
+      bodyRoot.add(saia);
     }
 
-  // 👔 DETALHES DE ROUPAS E ACESSÓRIOS
-const matAcessorio = new THREE.MeshStandardMaterial({
-  color: 0xd4af37,
-  metalness: 0.72,
-  roughness: 0.28
-});
+    // Cinto com fivela metálica
+    const cintoGeo = new THREE.CylinderGeometry(waistScaleX * 0.56, waistScaleX * 0.58, 0.065, 18);
+    cintoGeo.scale(1.0, 1.0, 0.72);
+    const cinto = new THREE.Mesh(cintoGeo, matCinto);
+    cinto.position.set(0, 0.985, 0);
+    const fivela = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.072, 0.035), matMetal);
+    fivela.position.set(0, 0.985, waistScaleX * 0.41);
+    bodyRoot.add(cinto, fivela);
 
-if (isFemale) {
-  // Colar delicado
-  const colar = new THREE.Mesh(
-    new THREE.TorusGeometry(0.13, 0.012, 8, 32),
-    matAcessorio
-  );
-  colar.rotation.x = Math.PI / 2;
-  colar.position.set(0, 1.62, 0.13);
-  group.add(colar);
-
-  // Pingente
-  const pingente = new THREE.Mesh(
-    new THREE.SphereGeometry(0.035, 12, 12),
-    matAcessorio
-  );
-  pingente.position.set(0, 1.48, 0.265);
-  group.add(pingente);
-
-} else {
-  // Gravata masculina
-  const matGravata = new THREE.MeshStandardMaterial({
-    color: 0x991b1b,
-    roughness: 0.65
-  });
-
-  const gravata = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.025, 0.065, 0.34, 8),
-    matGravata
-  );
-  gravata.position.set(0, 1.39, 0.285);
-  group.add(gravata);
-
-  // Nó da gravata
-  const noGravata = new THREE.Mesh(
-    new THREE.SphereGeometry(0.045, 12, 10),
-    matGravata
-  );
-  noGravata.position.set(0, 1.57, 0.29);
-  group.add(noGravata);
-}
-
-  // 👕 VARIEDADE DE ESTILOS NAS ROUPAS
-// O estilo é definido pela cor da camisa e permanece estável.
-const estiloVisualRoupa = Math.abs(Math.floor(corCamisa)) % 4;
-
-const matDetalheRoupa = new THREE.MeshStandardMaterial({
-  color: 0x263244,
-  roughness: 0.72
-});
-
-const matBotaoRoupa = new THREE.MeshStandardMaterial({
-  color: 0xd4af37,
-  metalness: 0.55,
-  roughness: 0.35
-});
-
-// Variação 1: camisa com bolso
-if (estiloVisualRoupa === 0) {
-  const bolso = new THREE.Mesh(
-    new THREE.BoxGeometry(0.13, 0.13, 0.025),
-    matDetalheRoupa
-  );
-  bolso.position.set(-torsoW * 0.27, 1.43, 0.155);
-  group.add(bolso);
-
-  const abaBolso = new THREE.Mesh(
-    new THREE.BoxGeometry(0.14, 0.035, 0.03),
-    matCamisa
-  );
-  abaBolso.position.set(-torsoW * 0.27, 1.50, 0.17);
-  group.add(abaBolso);
-}
-
-// Variação 2: camisa com botões
-else if (estiloVisualRoupa === 1) {
-  for (let i = 0; i < 3; i++) {
-    const botao = new THREE.Mesh(
-      new THREE.SphereGeometry(0.018, 10, 10),
-      matBotaoRoupa
+    // 👕 TRONCO ANATÔMICO (PEITORAL, CINTURA, GOLA E ACABAMENTO DE ROUPA)
+    const torsoLower = new THREE.Mesh(
+      new THREE.CylinderGeometry(chestScaleX * 0.52, waistScaleX * 0.56, 0.34, 18),
+      matCamisa
     );
-    botao.position.set(0, 1.48 - i * 0.12, 0.17);
-    group.add(botao);
-  }
-}
+    torsoLower.scale.set(1, 1, 0.68);
+    torsoLower.position.set(0, 1.18, 0);
 
-// Variação 3: faixa decorativa no peito
-else if (estiloVisualRoupa === 2) {
-  const faixa = new THREE.Mesh(
-    new THREE.BoxGeometry(torsoW * 0.78, 0.045, 0.018),
-    matDetalheRoupa
-  );
-  faixa.position.set(0, 1.48, 0.155);
-  group.add(faixa);
-}
+    const torsoUpperGeo = new THREE.SphereGeometry(0.5, 22, 18);
+    torsoUpperGeo.scale(chestScaleX, 0.42, 0.28);
+    const torsoUpper = new THREE.Mesh(torsoUpperGeo, matCamisa);
+    torsoUpper.position.set(0, 1.43, 0);
+    bodyRoot.add(torsoLower, torsoUpper);
 
-// Variação 4: acabamento na parte superior
-else {
-  const acabamento = new THREE.Mesh(
-    new THREE.BoxGeometry(torsoW * 0.72, 0.035, 0.018),
-    matBotaoRoupa
-  );
-  acabamento.position.set(0, 1.59, 0.155);
-  group.add(acabamento);
-}
+    if (isFemale) {
+      const bustGeo = new THREE.SphereGeometry(0.095, 14, 12);
+      const bustL = new THREE.Mesh(bustGeo, matCamisa);
+      bustL.scale.set(1.0, 0.88, 0.68);
+      bustL.position.set(-0.085, 1.39, 0.115);
+      const bustR = bustL.clone();
+      bustR.position.x = 0.085;
+      bodyRoot.add(bustL, bustR);
 
-    const shoulderGeo = new THREE.SphereGeometry(0.105, 10, 10);
-    const leftShoulder = new THREE.Mesh(shoulderGeo, matCamisa); leftShoulder.position.set(-shoulderW, 1.62, 0);
-    const rightShoulder = new THREE.Mesh(shoulderGeo, matCamisa); rightShoulder.position.set(shoulderW, 1.62, 0);
-    group.add(leftShoulder, rightShoulder);
+      // Colar delicado com pingente
+      const colar = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.008, 8, 24), matMetal);
+      colar.rotation.x = Math.PI / 2 + 0.25;
+      colar.position.set(0, 1.56, 0.03);
+      const pingente = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), matMetal);
+      pingente.position.set(0, 1.515, 0.125);
+      bodyRoot.add(colar, pingente);
+    } else {
+      // Gola camisa social / polo
+      const gola = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.022, 10, 20), matGola);
+      gola.rotation.x = Math.PI / 2 + 0.15;
+      gola.position.set(0, 1.585, 0.01);
+      bodyRoot.add(gola);
 
-    const armGeo = new THREE.CylinderGeometry(0.07, 0.06, 0.62, 10); armGeo.translate(0, -0.31, 0);
-    const leftArm = new THREE.Mesh(armGeo, matPele); leftArm.position.set(-shoulderW, 1.62, 0);
-    const rightArm = new THREE.Mesh(armGeo, matPele); rightArm.position.set(shoulderW, 1.62, 0);
-    group.add(leftArm, rightArm);
+      // Detalhe sutil de estilo (botões ou bolso discreto)
+      const estilo = seed % 3;
+      if (estilo === 0) {
+        for (let i = 0; i < 3; i++) {
+          const bot = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), matGola);
+          bot.position.set(0, 1.47 - i * 0.11, 0.145);
+          bodyRoot.add(bot);
+        }
+      } else if (estilo === 1) {
+        const bolso = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.095, 0.016), matCalca);
+        bolso.position.set(-0.11, 1.41, 0.135);
+        bodyRoot.add(bolso);
+      }
+    }
 
- // ✋ MÃOS HUMANIZADAS COM DEDOS
-const criarMao = (braco) => {
-  const mao = new THREE.Group();
+    // 💪 BRAÇOS ARTICULADOS (OMBRO + MANGA + ANTEBRAÇO + MÃO COM DEDOS)
+    const criarBracoCompleto = (side) => {
+      const armPivot = new THREE.Group();
+      armPivot.position.set(side * shoulderX, 1.53, 0);
 
-  const palma = new THREE.Mesh(
-    new THREE.SphereGeometry(0.105, 16, 14),
-    matPele
-  );
-  palma.scale.set(0.88, 1.12, 0.62);
-  mao.add(palma);
-
-  // Quatro dedos arredondados
-  for (let i = 0; i < 4; i++) {
-    const dedo = new THREE.Mesh(
-      new THREE.SphereGeometry(0.032, 10, 10),
-      matPele
-    );
-
-    dedo.scale.set(0.85, 1.7, 0.85);
-    dedo.position.set(-0.065 + i * 0.043, -0.105, 0.015);
-    mao.add(dedo);
-  }
-
-  // Polegar
-  const polegar = new THREE.Mesh(
-    new THREE.SphereGeometry(0.04, 12, 12),
-    matPele
-  );
-  polegar.scale.set(0.8, 1.5, 0.9);
-  polegar.position.set(0.105, -0.005, 0.025);
-  polegar.rotation.z = -0.55;
-  mao.add(polegar);
-
-  mao.position.set(0, -0.62, 0);
-  braco.add(mao);
-
-  return mao;
-};
-
-const leftHand = criarMao(leftArm);
-const rightHand = criarMao(rightArm);
-
-    const headGroup = new THREE.Group(); headGroup.position.set(0, 1.96, 0);
-    // Pescoço com acabamento anatômico
-const neck = new THREE.Mesh(
-  new THREE.CylinderGeometry(0.105, 0.12, 0.28, 16),
-  matPele
-);
-neck.position.set(0, -0.27, 0.015);
-headGroup.add(neck);
-
-// Orelhas tridimensionais
-const earGeo = new THREE.SphereGeometry(0.065, 14, 12);
-const leftEar = new THREE.Mesh(earGeo, matPele);
-const rightEar = new THREE.Mesh(earGeo, matPele);
-
-leftEar.position.set(-0.255, 0, 0.015);
-rightEar.position.set(0.255, 0, 0.015);
-
-leftEar.scale.set(0.65, 1.1, 0.65);
-rightEar.scale.set(0.65, 1.1, 0.65);
-
-headGroup.add(leftEar, rightEar);
-     // ✨ BRINCOS FEMININOS
-if (isFemale) {
-  const criarBrinco = (lado) => {
-    const brinco = new THREE.Mesh(
-      new THREE.SphereGeometry(0.035, 12, 12),
-      new THREE.MeshStandardMaterial({
-        color: 0xfacc15,
-        metalness: 0.75,
-        roughness: 0.25
-      })
-    );
-
-    brinco.position.set(lado * 0.26, -0.075, 0.055);
-    headGroup.add(brinco);
-  };
-
-  criarBrinco(-1);
-  criarBrinco(1);
-}
-    const headMesh = new THREE.Mesh(new THREE.SphereGeometry(0.27, 18, 18), matPele);
-    const noseGeo = new THREE.SphereGeometry(0.025, 6, 6); noseGeo.scale(1, 1.2, 1.5);
-    const noseMesh = new THREE.Mesh(noseGeo, matPele); noseMesh.position.set(0, -0.02, 0.27);
-
-   // 💇 CABELOS COM ESTILOS VARIADOS
-let hairMesh;
-const hairExtras = [];
-
-// A cor da camisa determina um estilo consistente para cada avatar
-const hairStyle = Math.abs((Number(corCamisa) || 0) % 3);
-
-if (isFemale) {
-
-  // Base arredondada do cabelo feminino
-  const hairTopGeo = new THREE.SphereGeometry(
-    0.305, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.85
-  );
-
-  hairMesh = new THREE.Mesh(hairTopGeo, matCabelo);
-  hairMesh.position.set(0, 0.02, -0.02);
-
-  if (hairStyle === 0) {
-    // Rabo de cavalo
-    const ponytail = new THREE.Mesh(
-      new THREE.SphereGeometry(0.11, 16, 14),
-      matCabelo
-    );
-    ponytail.scale.set(0.85, 1.8, 0.9);
-    ponytail.position.set(0, -0.22, -0.27);
-    hairExtras.push(ponytail);
-
-  } else if (hairStyle === 1) {
-    // Coque arredondado
-    const bun = new THREE.Mesh(
-      new THREE.SphereGeometry(0.13, 18, 16),
-      matCabelo
-    );
-    bun.position.set(0, 0.19, -0.24);
-    hairExtras.push(bun);
-
-    // Mechas laterais
-    for (const lado of [-1, 1]) {
-      const mecha = new THREE.Mesh(
-        new THREE.SphereGeometry(0.09, 14, 12),
-        matCabelo
+      // Ombro + Manga curta da camisa
+      const ombro = new THREE.Mesh(new THREE.SphereGeometry(isFemale ? 0.082 : 0.095, 14, 12), matCamisa);
+      const manga = new THREE.Mesh(
+        new THREE.CylinderGeometry(isFemale ? 0.072 : 0.084, isFemale ? 0.064 : 0.074, 0.24, 14),
+        matCamisa
       );
-      mecha.scale.set(0.8, 2.2, 0.9);
-      mecha.position.set(lado * 0.23, -0.12, -0.03);
-      hairExtras.push(mecha);
-    }
+      manga.position.set(0, -0.12, 0);
 
-  } else {
-    // Cabelo comprido com duas mechas laterais
-    for (const lado of [-1, 1]) {
-      const mecha = new THREE.Mesh(
-        new THREE.SphereGeometry(0.105, 16, 14),
-        matCabelo
+      // Braço + Cotovelo + Antebraço
+      const antebraco = new THREE.Mesh(
+        new THREE.CylinderGeometry(isFemale ? 0.056 : 0.064, isFemale ? 0.044 : 0.052, 0.36, 12),
+        matPele
       );
-      mecha.scale.set(0.85, 2.5, 1);
-      mecha.position.set(lado * 0.23, -0.19, -0.06);
-      hairExtras.push(mecha);
+      antebraco.position.set(0, -0.40, 0.015);
+
+      // Mão humanizada
+      const mao = new THREE.Group();
+      mao.position.set(0, -0.60, 0.02);
+      const palma = new THREE.Mesh(new THREE.SphereGeometry(0.058, 12, 10), matPele);
+      palma.scale.set(0.82, 1.15, 0.58);
+      mao.add(palma);
+
+      for (let i = 0; i < 4; i++) {
+        const dedo = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), matPele);
+        dedo.scale.set(0.85, 1.75, 0.85);
+        dedo.position.set((-0.036 + i * 0.024), -0.062, 0.008);
+        mao.add(dedo);
+      }
+      const polegar = new THREE.Mesh(new THREE.SphereGeometry(0.021, 8, 8), matPele);
+      polegar.scale.set(0.8, 1.5, 0.9);
+      polegar.position.set(-side * 0.052, -0.015, 0.02);
+      polegar.rotation.z = side * 0.55;
+      mao.add(polegar);
+
+      armPivot.add(ombro, manga, antebraco, mao);
+      return armPivot;
+    };
+
+    const leftArm = criarBracoCompleto(-1);
+    const rightArm = criarBracoCompleto(1);
+    bodyRoot.add(leftArm, rightArm);
+
+    // 😊 CABEÇA E ROSTO REALISTA (headGroup na altura ideal para chapéus/acessórios)
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 1.84, 0);
+
+    // Pescoço natural
+    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.088, 0.24, 14), matPele);
+    neck.position.set(0, -0.21, 0);
+    headGroup.add(neck);
+
+    // Crânio ligeiramente oval (anatomia humana real)
+    const headGeo = new THREE.SphereGeometry(0.215, 24, 22);
+    headGeo.scale(0.92, 1.07, 0.96);
+    const headMesh = new THREE.Mesh(headGeo, matPele);
+    headGroup.add(headMesh);
+
+    // Orelhas proporcionais (+ brincos para avatar feminino)
+    [-1, 1].forEach(side => {
+      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 10), matPele);
+      ear.scale.set(0.5, 1.15, 0.72);
+      ear.position.set(side * 0.195, -0.01, -0.005);
+      headGroup.add(ear);
+
+      if (isFemale) {
+        const brinco = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 10), matMetal);
+        brinco.position.set(side * 0.20, -0.058, 0.012);
+        headGroup.add(brinco);
+      }
+    });
+
+    // Nariz modelado (ponte + ponta suave)
+    const noseBridge = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.022, 0.065, 10), matPele);
+    noseBridge.position.set(0, -0.015, 0.205);
+    noseBridge.rotation.x = -0.18;
+    const noseTip = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 10), matPele);
+    noseTip.scale.set(1.1, 0.85, 0.95);
+    noseTip.position.set(0, -0.045, 0.218);
+    headGroup.add(noseBridge, noseTip);
+
+    // Olhos expressivos com íris, pupila, brilho e sobrancelhas arqueadas
+    [-1, 1].forEach(side => {
+      const ex = side * 0.072;
+      const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.036, 14, 14), matBrancoOlho);
+      eyeWhite.scale.set(1.05, 0.88, 0.65);
+      eyeWhite.position.set(ex, 0.032, 0.182);
+
+      const iris = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), matIris);
+      iris.scale.set(1, 1, 0.5);
+      iris.position.set(ex, 0.032, 0.202);
+
+      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 10), matPupila);
+      pupil.position.set(ex, 0.032, 0.211);
+
+      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.0045, 8, 8), matGlint);
+      glint.position.set(ex + 0.007, 0.041, 0.216);
+
+      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.072, isFemale ? 0.012 : 0.018, 0.014), matSobrancelha);
+      brow.position.set(ex, 0.082, 0.194);
+      brow.rotation.z = side * -0.09;
+
+      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.042, 10, 10), matBochecha);
+      cheek.scale.set(1.1, 0.65, 0.35);
+      cheek.position.set(side * 0.108, -0.032, 0.172);
+
+      headGroup.add(eyeWhite, iris, pupil, glint, brow, cheek);
+
+      if (isFemale) {
+        const lash = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.008, 0.012), matPupila);
+        lash.position.set(ex, 0.056, 0.202);
+        lash.rotation.z = side * -0.08;
+        headGroup.add(lash);
+      }
+    });
+
+    // Sorriso natural curvo (Torus parcial em vez de retângulo duro)
+    const smile = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.009, 8, 16, Math.PI), matBoca);
+    smile.rotation.z = Math.PI;
+    smile.position.set(0, -0.085, 0.196);
+    headGroup.add(smile);
+
+    // 💇 CABELOS EM CAMADAS REALISTAS (3 estilos femininos e 3 masculinos)
+    const hairStyle = seed % 3;
+    const hairGroup = new THREE.Group();
+
+    if (isFemale) {
+      const capGeo = new THREE.SphereGeometry(0.232, 22, 18, 0, Math.PI * 2, 0, Math.PI * 0.72);
+      capGeo.scale(0.95, 1.04, 1.0);
+      const cap = new THREE.Mesh(capGeo, matCabelo);
+      cap.position.set(0, 0.025, -0.012);
+      hairGroup.add(cap);
+
+      // Franja lateral suave
+      const franja = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 12), matCabelo);
+      franja.scale.set(1.45, 0.48, 0.62);
+      franja.position.set(-0.04, 0.145, 0.155);
+      franja.rotation.z = 0.22;
+      hairGroup.add(franja);
+
+      if (hairStyle === 0) {
+        // Cabelo longo em ondas atrás e nas laterais
+        const backHair = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.21, 0.44, 16), matCabelo);
+        backHair.scale.set(1.0, 1.0, 0.52);
+        backHair.position.set(0, -0.18, -0.125);
+        hairGroup.add(backHair);
+        [-1, 1].forEach(side => {
+          const strand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), matCabelo);
+          strand.scale.set(0.75, 2.7, 0.85);
+          strand.position.set(side * 0.178, -0.14, -0.02);
+          hairGroup.add(strand);
+        });
+      } else if (hairStyle === 1) {
+        // Rabo de cavalo elegante com elástico
+        const tie = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.014, 8, 16), matCamisa);
+        tie.position.set(0, 0.04, -0.225);
+        const pony = new THREE.Mesh(new THREE.SphereGeometry(0.095, 14, 12), matCabelo);
+        pony.scale.set(0.85, 2.1, 0.85);
+        pony.position.set(0, -0.14, -0.255);
+        pony.rotation.x = 0.22;
+        hairGroup.add(tie, pony);
+      } else {
+        // Coque moderno alto + mechas emoldurando o rosto
+        const bun = new THREE.Mesh(new THREE.SphereGeometry(0.105, 16, 14), matCabelo);
+        bun.position.set(0, 0.23, -0.08);
+        hairGroup.add(bun);
+        [-1, 1].forEach(side => {
+          const lock = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), matCabelo);
+          lock.scale.set(0.68, 2.0, 0.72);
+          lock.position.set(side * 0.175, -0.05, 0.04);
+          hairGroup.add(lock);
+        });
+      }
+    } else {
+      const capGeo = new THREE.SphereGeometry(0.226, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.58);
+      capGeo.scale(0.95, 1.05, 0.99);
+      const cap = new THREE.Mesh(capGeo, matCabelo);
+      cap.position.set(0, 0.045, -0.008);
+      hairGroup.add(cap);
+
+      if (hairStyle === 0) {
+        // Topete moderno penteado
+        const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 12), matCabelo);
+        quiff.scale.set(1.25, 0.58, 0.95);
+        quiff.position.set(0.02, 0.20, 0.09);
+        quiff.rotation.z = -0.15;
+        hairGroup.add(quiff);
+      } else if (hairStyle === 1) {
+        // Cachos volumosos texturizados
+        for (let i = 0; i < 6; i++) {
+          const curl = new THREE.Mesh(new THREE.SphereGeometry(0.072, 10, 10), matCabelo);
+          curl.position.set(-0.14 + i * 0.056, 0.21 + (i % 2) * 0.02, 0.06 + (i % 2) * 0.03);
+          hairGroup.add(curl);
+        }
+      } else {
+        // Corte social com franja lateral
+        const sweep = new THREE.Mesh(new THREE.SphereGeometry(0.125, 14, 12), matCabelo);
+        sweep.scale.set(1.38, 0.45, 0.72);
+        sweep.position.set(-0.02, 0.16, 0.145);
+        hairGroup.add(sweep);
+      }
     }
-  }
 
-} else {
+    headGroup.add(hairGroup);
+    bodyRoot.add(headGroup);
 
-  if (hairStyle === 0) {
-    // Cabelo masculino curto
-    const hairGeo = new THREE.SphereGeometry(
-      0.285, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.62
-    );
-    hairMesh = new THREE.Mesh(hairGeo, matCabelo);
-    hairMesh.position.set(0, 0.07, 0);
-
-  } else if (hairStyle === 1) {
-    // Cabelo ondulado com volume
-    hairMesh = new THREE.Mesh(
-      new THREE.SphereGeometry(0.29, 20, 18),
-      matCabelo
-    );
-    hairMesh.scale.set(1, 0.75, 0.95);
-    hairMesh.position.set(0, 0.12, -0.015);
-
-    // Pequenas mechas arredondadas
-    for (let i = 0; i < 5; i++) {
-      const curl = new THREE.Mesh(
-        new THREE.SphereGeometry(0.09, 12, 12),
-        matCabelo
-      );
-      curl.position.set(-0.20 + i * 0.10, 0.22, 0.08);
-      hairExtras.push(curl);
-    }
-
-  } else {
-    // Cabelo com franja
-    const hairGeo = new THREE.SphereGeometry(
-      0.285, 20, 18, 0, Math.PI * 2, 0, Math.PI * 0.65
-    );
-    hairMesh = new THREE.Mesh(hairGeo, matCabelo);
-    hairMesh.position.set(0, 0.07, 0);
-
-    const fringe = new THREE.Mesh(
-      new THREE.SphereGeometry(0.16, 16, 14),
-      matCabelo
-    );
-    fringe.scale.set(1.5, 0.55, 0.7);
-    fringe.position.set(0, 0.13, 0.22);
-    hairExtras.push(fringe);
-  }
-}
-
-   // Olhos com íris, pupilas e reflexos
-const eyeWhiteGeo = new THREE.SphereGeometry(0.052, 14, 14);
-const eyeIrisGeo = new THREE.SphereGeometry(0.031, 14, 14);
-const eyePupilGeo = new THREE.SphereGeometry(0.015, 12, 12);
-const eyeGlintGeo = new THREE.SphereGeometry(0.006, 8, 8);
-
-const matIris = new THREE.MeshStandardMaterial({
-  color: 0x704323,
-  roughness: 0.38
-});
-
-const matGlint = new THREE.MeshBasicMaterial({
-  color: 0xffffff
-});
-
-const leftEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho);
-leftEyeWhite.position.set(-0.09, 0.06, 0.22);
-
-const rightEyeWhite = new THREE.Mesh(eyeWhiteGeo, matBrancoOlho);
-rightEyeWhite.position.set(0.09, 0.06, 0.22);
-
-const leftIris = new THREE.Mesh(eyeIrisGeo, matIris);
-leftIris.position.set(-0.09, 0.06, 0.267);
-
-const rightIris = new THREE.Mesh(eyeIrisGeo, matIris);
-rightIris.position.set(0.09, 0.06, 0.267);
-
-const leftEyePupil = new THREE.Mesh(eyePupilGeo, matOlho);
-leftEyePupil.position.set(-0.09, 0.06, 0.291);
-
-const rightEyePupil = new THREE.Mesh(eyePupilGeo, matOlho);
-rightEyePupil.position.set(0.09, 0.06, 0.291);
-
-const leftGlint = new THREE.Mesh(eyeGlintGeo, matGlint);
-leftGlint.position.set(-0.098, 0.071, 0.304);
-
-const rightGlint = new THREE.Mesh(eyeGlintGeo, matGlint);
-rightGlint.position.set(0.082, 0.071, 0.304);
-
-    const browGeo = new THREE.BoxGeometry(0.09, 0.015, 0.01);
-    const leftBrow = new THREE.Mesh(browGeo, matSobrancelha); leftBrow.position.set(-0.09, 0.12, 0.235);
-    const rightBrow = new THREE.Mesh(browGeo, matSobrancelha); rightBrow.position.set(0.09, 0.12, 0.235);
-    const mouthMesh = new THREE.Mesh(new THREE.BoxGeometry(isFemale ? 0.075 : 0.06, 0.02, 0.01), matBoca);
-    mouthMesh.position.set(0, -0.11, 0.25);
-
-    headGroup.add(
-  headMesh,
-  hairMesh,
-  ...hairExtras,
-  noseMesh,
-  leftEyeWhite,
-  rightEyeWhite,
-  leftIris,
-  rightIris,
-  leftEyePupil,
-  rightEyePupil,
-  leftGlint,
-  rightGlint,
-  leftBrow,
-  rightBrow,
-  mouthMesh
-);
-    group.add(headGroup);
-
-    const ringGeo = new THREE.RingGeometry(0.65, 0.82, 24); ringGeo.rotateX(-Math.PI / 2);
+    // 🟢 Anel de proximidade fixo no chão (fora do bodyRoot para não pular ao caminhar)
+    const ringGeo = new THREE.RingGeometry(0.65, 0.82, 28);
+    ringGeo.rotateX(-Math.PI / 2);
     const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat); ringMesh.position.y = 0.03; ringMesh.userData.isRing = true;
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.position.y = 0.03;
+    ringMesh.userData.isRing = true;
     group.add(ringMesh);
 
-    group.userData = { leftLeg, rightLeg, leftArm, rightArm, headGroup, ringMat, matCamisa, matCalca, matSapato, walkPhase: 0, emotePhase: 0, isEmoting: false, isFemale };
+    // Sombras suaves em todas as partes do corpo
+    bodyRoot.traverse(obj => {
+      if (obj.isMesh) {
+        obj.castShadow = true;
+        obj.receiveShadow = true;
+      }
+    });
+
+    group.userData = {
+      bodyRoot,
+      leftLeg,
+      rightLeg,
+      leftArm,
+      rightArm,
+      headGroup,
+      ringMat,
+      matCamisa,
+      matCalca,
+      matSapato,
+      walkPhase: 0,
+      idlePhase: Math.random() * Math.PI * 2,
+      emotePhase: 0,
+      isEmoting: false,
+      isFemale
+    };
     return group;
   }
 
@@ -2915,31 +2907,60 @@ rightGlint.position.set(0.082, 0.071, 0.304);
   }
 
   animarPassosBoneco(meshGroup, estaAndando, delta) {
-    const ud = meshGroup?.userData; if (!ud || !ud.leftLeg) return;
+    const ud = meshGroup?.userData;
+    if (!ud || !ud.leftLeg) return;
+
     if (ud.isEmoting) {
-      ud.emotePhase += delta * 6;
-      const wave = Math.sin(ud.emotePhase) * 1.2;
-      if (ud.rightArm && ud.rightArm.rotation) { ud.rightArm.rotation.x = -1.8 + wave * 0.3; ud.rightArm.rotation.z = -0.3; }
+      ud.emotePhase += delta * 6.5;
+      const wave = Math.sin(ud.emotePhase) * 1.1;
+      if (ud.rightArm && ud.rightArm.rotation) {
+        ud.rightArm.rotation.x = -2.0 + wave * 0.25;
+        ud.rightArm.rotation.z = -0.35 + wave * 0.18;
+      }
       if (ud.emotePhase > Math.PI * 2) {
-        ud.isEmoting = false; ud.emotePhase = 0;
-        if (ud.rightArm && ud.rightArm.rotation) ud.rightArm.rotation.z = 0;
+        ud.isEmoting = false;
+        ud.emotePhase = 0;
+        if (ud.rightArm && ud.rightArm.rotation) {
+          ud.rightArm.rotation.z = 0;
+          ud.rightArm.rotation.x = 0;
+        }
       }
       return;
     }
+
     if (estaAndando) {
-      ud.walkPhase += delta * 10;
-      const ang = Math.sin(ud.walkPhase) * 0.55;
-      if (ud.leftLeg.rotation) {
-        ud.leftLeg.rotation.x = ang;
-        ud.rightLeg.rotation.x = -ang;
-        ud.leftArm.rotation.x = -ang * 0.8;
-        ud.rightArm.rotation.x = ang * 0.8;
+      ud.walkPhase += delta * 10.5;
+      const ang = Math.sin(ud.walkPhase) * 0.52;
+      ud.leftLeg.rotation.x = ang;
+      ud.rightLeg.rotation.x = -ang;
+      ud.leftArm.rotation.x = -ang * 0.72;
+      ud.rightArm.rotation.x = ang * 0.72;
+      ud.leftArm.rotation.z = 0.05;
+      ud.rightArm.rotation.z = -0.05;
+
+      // Balanço vertical natural de cada passo (sem mexer na altura do elevador)
+      if (ud.bodyRoot) {
+        ud.bodyRoot.position.y = Math.abs(Math.sin(ud.walkPhase)) * 0.045;
       }
-    } else if (ud.leftLeg.rotation) {
-      ud.leftLeg.rotation.x *= 0.85;
-      ud.rightLeg.rotation.x *= 0.85;
-      ud.leftArm.rotation.x *= 0.85;
-      ud.rightArm.rotation.x *= 0.85;
+      if (ud.headGroup) {
+        ud.headGroup.rotation.y *= 0.85;
+      }
+    } else {
+      ud.idlePhase = (ud.idlePhase || 0) + delta * 2.2;
+      ud.leftLeg.rotation.x *= 0.82;
+      ud.rightLeg.rotation.x *= 0.82;
+      ud.leftArm.rotation.x *= 0.82;
+      ud.rightArm.rotation.x *= 0.82;
+      ud.leftArm.rotation.z = 0.04;
+      ud.rightArm.rotation.z = -0.04;
+
+      // Respiração suave e movimento sutil de cabeça quando parado
+      if (ud.bodyRoot) {
+        ud.bodyRoot.position.y = Math.sin(ud.idlePhase) * 0.012;
+      }
+      if (ud.headGroup) {
+        ud.headGroup.rotation.y = Math.sin(ud.idlePhase * 0.45) * 0.06;
+      }
     }
   }
 
@@ -5788,8 +5809,6 @@ criarVitrinesVivas() {
 
       base.position.set(frente, 0.42, z);
       this.exteriorGroup.add(base);
-
-      this.vitrines.push({ mesh: glass });
     });
 
     // Mantém o manequim original da loja
@@ -6645,156 +6664,260 @@ this.scene.add(facadeHeader);
     this.enviarMinhaPosicaoServidor();
   }
 
-  // 🏢 ENTRADA E SAÍDA DAS TORRES RESIDENCIAIS
-interagirTorreResidencial() {
-  const p = this.localPlayer;
-  if (!p || !this.torresResidenciais || !this.torresInterioresGroup) return;
-  if (this.modoInterior) return;
+ // 🛡️ SAÍDA UNIFICADA SEGURA: Fecha qualquer loja ou torre residencial e reseta a altura antes de teleportar!
+  sairDeQualquerAmbienteFechado() {
+    if (this.modoInterior) {
+      this.sairModoInterior();
+    }
+    if (this.torreAtual) {
+      const torre = this.torresResidenciais?.get(this.torreAtual);
+      if (torre?.grupoInterior) torre.grupoInterior.visible = false;
+      if (this.torresInterioresGroup) this.torresInterioresGroup.visible = false;
 
-  // SAIR DA TORRE ATUAL
-  if (this.torreAtual) {
-    const torre = this.torresResidenciais.get(this.torreAtual);
+      this.torreAtual = null;
+      this.andarTorreAtual = 0;
+      this.transicaoVerticalTorre = null;
+      this.posicaoExteriorTorre = null;
 
-    if (torre?.grupoInterior) {
-      torre.grupoInterior.visible = false;
+      if (this.localPlayer) {
+        this.localPlayer.y = 0;
+      }
+
+      const painelElevador = document.getElementById('es-city-elevator-controls');
+      if (painelElevador) painelElevador.style.display = 'none';
+      const towerBtn = document.getElementById('es-city-tower-btn');
+      if (towerBtn) towerBtn.style.display = 'none';
+
+      this.currentZoneId = 'street';
+      this.atualizarHudZonaLocal('street');
+    }
+  }
+
+  // 🗺️ GPS / MAPA RÁPIDO DA CIDADE 3D (24 PRÉDIOS + 3 TORRES + LOTEAMENTO + PRAÇA)
+  abrirModalGPS() {
+    document.getElementById('es-gps-modal')?.remove();
+
+    const destinosEspeciais = [
+      { key: 'lot',    icon: '🏡', nome: 'My House Lot',     sub: 'Residential District' },
+      { key: 'plaza',  icon: '⛲', nome: 'Central Plaza',    sub: 'Park & Fountain' },
+      ...CITY_TOWERS_LAYOUT.map(t => ({
+        key: `tower:${t.id}`,
+        icon: '🏢',
+        nome: t.name,
+        sub: `${t.floors} Floors • Elevator`
+      }))
+    ];
+
+    const listaPredios = (this.buildingsMeta || []).map(b => ({
+      key: `building:${b.id}`,
+      icon: b.space?.emoji || '🏪',
+      nome: b.space?.name || b.id.toUpperCase(),
+      sub: b.space?.npcName || 'Establishment'
+    }));
+
+    const todosDestinos = [...destinosEspeciais, ...listaPredios];
+
+    const html = `
+      <div id="es-gps-modal" style="position:fixed; inset:0; z-index:1000240; background:rgba(5,7,14,0.82); backdrop-filter:blur(8px); display:flex; align-items:center; justify-content:center; padding:16px; font-family:Inter,sans-serif;">
+        <div style="background:#0f172a; border:2px solid #3b82f6; border-radius:22px; padding:20px; width:100%; max-width:520px; max-height:82dvh; display:flex; flex-direction:column; gap:12px; color:#fff; box-shadow:0 25px 60px rgba(0,0,0,0.75);">
+          <div style="display:flex; justify-content:space-between; align-items:center;">
+            <h3 style="margin:0; font-size:18px; color:#93c5fd;">🗺️ English City Quick GPS</h3>
+            <button type="button" id="es-gps-close" style="background:#1e293b; color:#cbd5e1; border:none; width:34px; height:34px; border-radius:50%; font-weight:800; cursor:pointer;">✕</button>
+          </div>
+          <input type="text" id="es-gps-search" placeholder="🔍 Search place (Coffee, Airport, Guild, Tower...)" autocomplete="off" style="width:100%; padding:11px 14px; border-radius:12px; border:1px solid #334155; background:#1e293b; color:#fff; font-size:13.5px; outline:none; box-sizing:border-box;" />
+          <div id="es-gps-list" style="overflow-y:auto; flex:1; display:grid; grid-template-columns:repeat(auto-fill, minmax(210px, 1fr)); gap:8px; padding-right:4px;"></div>
+        </div>
+      </div>
+    `;
+    document.body.insertAdjacentHTML('beforeend', html);
+
+    const listEl = document.getElementById('es-gps-list');
+    const searchEl = document.getElementById('es-gps-search');
+
+    const teleportarParaDestino = (key) => {
+      if (!this.localPlayer) return;
+      document.getElementById('es-gps-modal')?.remove();
+      this.sairDeQualquerAmbienteFechado();
+
+      if (key === 'lot') {
+        this.localPlayer.x = -27;
+        this.localPlayer.z = 26;
+      } else if (key === 'plaza') {
+        this.localPlayer.x = 18;
+        this.localPlayer.z = -95.5;
+      } else if (key.startsWith('tower:')) {
+        const tId = key.replace('tower:', '');
+        const torre = this.torresResidenciais?.get(tId);
+        if (torre) {
+          this.localPlayer.x = torre.x;
+          this.localPlayer.z = torre.z + torre.profundidade / 2 + 2.2;
+        }
+      } else if (key.startsWith('building:')) {
+        const bId = key.replace('building:', '');
+        const b = this.buildingsMeta.find(x => x.id === bId);
+        if (b) {
+          this.localPlayer.x = b.frontX - b.col * 2.4;
+          this.localPlayer.z = b.centerZ;
+        }
+      }
+
+      this.localPlayer.y = 0;
+      this.localPlayer.targetX = null;
+      this.localPlayer.targetZ = null;
+      this.enviarMinhaPosicaoServidor();
+
+      const alvo = todosDestinos.find(d => d.key === key);
+      if (window.Workspace?.mostrarAviso && alvo) {
+        window.Workspace.mostrarAviso(`🗺️ Teleported to ${alvo.icon} ${alvo.nome}!`, 'success', 2600);
+      }
+    };
+
+    const renderizarLista = (filtro = '') => {
+      const q = String(filtro).toLowerCase().trim();
+      const itens = todosDestinos.filter(d =>
+        !q || d.nome.toLowerCase().includes(q) || d.sub.toLowerCase().includes(q)
+      );
+      if (!listEl) return;
+      listEl.innerHTML = itens.map(d => `
+        <button type="button" data-gps-key="${d.key}" style="background:#1e293b; border:1px solid #334155; border-radius:12px; padding:10px 12px; color:#f8fafc; text-align:left; cursor:pointer; display:flex; align-items:center; gap:10px; transition:0.15s;" onmouseover="this.style.borderColor='#60a5fa';this.style.background='#273549'" onmouseout="this.style.borderColor='#334155';this.style.background='#1e293b'">
+          <span style="font-size:22px; flex-shrink:0;">${d.icon}</span>
+          <div style="min-width:0;">
+            <div style="font-size:12.5px; font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.nome}</div>
+            <div style="font-size:10.5px; color:#94a3b8; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${d.sub}</div>
+          </div>
+        </button>
+      `).join('');
+
+      listEl.querySelectorAll('[data-gps-key]').forEach(btn => {
+        btn.addEventListener('click', () => teleportarParaDestino(btn.dataset.gpsKey));
+      });
+    };
+
+    renderizarLista('');
+    searchEl?.addEventListener('input', (e) => renderizarLista(e.target.value));
+    document.getElementById('es-gps-close')?.addEventListener('click', () => document.getElementById('es-gps-modal')?.remove());
+    document.getElementById('es-gps-modal')?.addEventListener('click', (e) => {
+      if (e.target.id === 'es-gps-modal') e.target.remove();
+    });
+  }
+
+  // 🏢 ENTRADA E SAÍDA DAS TORRES RESIDENCIAIS (COMPATÍVEL COM TECLA E + BOTÃO NA TELA DO CELULAR)
+  interagirTorreResidencial() {
+    const p = this.localPlayer;
+    if (!p || !this.torresResidenciais || !this.torresInterioresGroup) return;
+    if (this.modoInterior) return;
+
+    // SAIR DA TORRE ATUAL
+    if (this.torreAtual) {
+      const posVolta = this.posicaoExteriorTorre ? { ...this.posicaoExteriorTorre } : null;
+      this.sairDeQualquerAmbienteFechado();
+
+      if (posVolta) {
+        p.x = posVolta.x;
+        p.z = posVolta.z;
+      }
+      p.targetX = null;
+      p.targetZ = null;
+      this.enviarMinhaPosicaoServidor();
+
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('Você saiu da torre residencial.', 'info');
+      }
+      return;
     }
 
-    this.torresInterioresGroup.visible = false;
+    // PROCURAR A TORRE MAIS PRÓXIMA
+    let torreProxima = null;
+    let menorDistancia = Infinity;
 
-    this.torreAtual = null;
-    this.andarTorreAtual = 0;
+    this.torresResidenciais.forEach(torre => {
+      const entradaZ = torre.z + torre.profundidade / 2 + 1.8;
+      const distancia = Math.hypot(p.x - torre.x, p.z - entradaZ);
+      if (distancia < menorDistancia) {
+        menorDistancia = distancia;
+        torreProxima = torre;
+      }
+    });
+
+    if (!torreProxima || menorDistancia > 4.0) {
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('Aproxime-se da entrada de uma torre residencial.', 'info');
+      }
+      return;
+    }
+
+    // Desmonta veículo antes de entrar no saguão da torre
+    if (this.currentVehicle) this.desmontarVeiculo();
+
+    this.posicaoExteriorTorre = { x: p.x, z: p.z };
+    this.torreAtual = torreProxima.id;
+    this.andarTorreAtual = 1;
     this.transicaoVerticalTorre = null;
 
-    p.y = 0;
+    this.torresResidenciais.forEach(torre => {
+      if (torre.grupoInterior) torre.grupoInterior.visible = false;
+    });
 
-    if (this.posicaoExteriorTorre) {
-      p.x = this.posicaoExteriorTorre.x;
-      p.z = this.posicaoExteriorTorre.z;
+    this.torresInterioresGroup.visible = true;
+    if (torreProxima.grupoInterior) {
+      torreProxima.grupoInterior.visible = true;
     }
 
+    // 🛗 Reinicia o elevador no térreo com as portas prontas para abrir
+    const cabineInicial = torreProxima.grupoInterior?.userData?.elevadorCabine;
+    if (cabineInicial) {
+      cabineInicial.position.y = 0;
+      cabineInicial.userData.aberturaDesejada = 1;
+    }
+
+    p.x = torreProxima.x;
+    p.z = torreProxima.z + torreProxima.profundidade / 2 - 2;
+    p.y = 0;
     p.targetX = null;
     p.targetZ = null;
-    this.posicaoExteriorTorre = null;
+
+    const badge = document.getElementById('es-city-zone-badge');
+    if (badge) badge.innerHTML = `🏢 ${torreProxima.nome} • Floor 1/${torreProxima.totalAndares}`;
 
     this.enviarMinhaPosicaoServidor();
 
     if (window.Workspace?.mostrarAviso) {
-      window.Workspace.mostrarAviso('Você saiu da torre residencial.', 'info');
+      window.Workspace.mostrarAviso(`Bem-vindo ao ${torreProxima.nome}!`, 'success');
+    }
+  }
+
+  // 🏢 MOVIMENTAÇÃO VERTICAL NAS TORRES (FECHA PORTAS AO PARTIR E ABRE AO CHEGAR)
+  iniciarTransicaoVerticalTorre(andarDestino) {
+    const torre = this.torreAtual ? this.torresResidenciais.get(this.torreAtual) : null;
+    if (!torre || !this.localPlayer) return;
+    if (this.transicaoVerticalTorre) return;
+
+    if (!Number.isInteger(andarDestino) || andarDestino < 1 || andarDestino > torre.totalAndares) return;
+    if (andarDestino === this.andarTorreAtual) return;
+
+    // Fecha as portas da cabine durante o deslocamento
+    const cabine = torre.grupoInterior?.userData?.elevadorCabine;
+    if (cabine?.userData) {
+      cabine.userData.aberturaDesejada = 0;
     }
 
-    return;
+    // Posiciona o jogador dentro da cabine
+    this.localPlayer.x = torre.x;
+    this.localPlayer.z = torre.z;
+    this.localPlayer.targetX = null;
+    this.localPlayer.targetZ = null;
+
+    const alturaInicial = this.localPlayer.y || 0;
+    const alturaFinal = (andarDestino - 1) * torre.alturaAndar;
+
+    this.transicaoVerticalTorre = {
+      andarDestino,
+      alturaInicial,
+      alturaFinal,
+      progresso: 0,
+      duracao: Math.max(1, Math.abs(alturaFinal - alturaInicial) / 2.5)
+    };
   }
-
-  // PROCURAR A TORRE MAIS PRÓXIMA
-  let torreProxima = null;
-  let menorDistancia = Infinity;
-
-  this.torresResidenciais.forEach(torre => {
-    const entradaZ = torre.z + torre.profundidade / 2 + 1.8;
-    const distancia = Math.hypot(
-      p.x - torre.x,
-      p.z - entradaZ
-    );
-
-    if (distancia < menorDistancia) {
-      menorDistancia = distancia;
-      torreProxima = torre;
-    }
-  });
-
-  if (!torreProxima || menorDistancia > 3.5) {
-    if (window.Workspace?.mostrarAviso) {
-      window.Workspace.mostrarAviso(
-        'Aproxime-se da entrada de uma torre residencial.',
-        'info'
-      );
-    }
-    return;
-  }
-
-  // ENTRAR NA TORRE
-  this.posicaoExteriorTorre = {
-    x: p.x,
-    z: p.z
-  };
-
-  this.torreAtual = torreProxima.id;
-  this.andarTorreAtual = 1;
-  this.transicaoVerticalTorre = null;
-
-  this.torresResidenciais.forEach(torre => {
-    if (torre.grupoInterior) {
-      torre.grupoInterior.visible = false;
-    }
-  });
-
-  this.torresInterioresGroup.visible = true;
-
-  if (torreProxima.grupoInterior) {
-    torreProxima.grupoInterior.visible = true;
-  }
-
-   // 🛗 Reinicia o elevador no térreo ao entrar
-  const cabineInicial =
-    torreProxima.grupoInterior?.userData?.elevadorCabine;
-
-  if (cabineInicial) {
-    cabineInicial.position.y = 0;
-  }
-
-  p.x = torreProxima.x;
-  p.z = torreProxima.z + torreProxima.profundidade / 2 - 2;
-  p.y = 0;
-  p.targetX = null;
-  p.targetZ = null;
-
-  this.enviarMinhaPosicaoServidor();
-
-  if (window.Workspace?.mostrarAviso) {
-    window.Workspace.mostrarAviso(
-      `Bem-vindo ao ${torreProxima.nome}!`,
-      'success'
-    );
-  }
-}
-
- // 🏢 MOVIMENTAÇÃO VERTICAL NAS TORRES
-iniciarTransicaoVerticalTorre(andarDestino) {
-  const torre = this.torreAtual
-    ? this.torresResidenciais.get(this.torreAtual)
-    : null;
-
-  if (!torre || !this.localPlayer) return;
-  if (this.transicaoVerticalTorre) return;
-
-  if (
-    !Number.isInteger(andarDestino) ||
-    andarDestino < 1 ||
-    andarDestino > torre.totalAndares
-  ) return;
-
-   if (andarDestino === this.andarTorreAtual) return;
-
-  // 🛗 Posiciona o jogador dentro da cabine
-  this.localPlayer.x = torre.x;
-  this.localPlayer.z = torre.z;
-  this.localPlayer.targetX = null;
-  this.localPlayer.targetZ = null;
-
-  const alturaInicial = this.localPlayer.y || 0;
-  const alturaFinal = (andarDestino - 1) * torre.alturaAndar;
-
-  this.transicaoVerticalTorre = {
-    andarDestino,
-    alturaInicial,
-    alturaFinal,
-    progresso: 0,
-    duracao: Math.max(
-      1,
-      Math.abs(alturaFinal - alturaInicial) / 2.5
-    )
-  };
-}
 
   iniciarLoopRenderizacao() {
     const viewport = document.getElementById('es-city-viewport');
@@ -6805,58 +6928,54 @@ iniciarTransicaoVerticalTorre(andarDestino) {
       const delta = Math.min(this.clock.getDelta(), 0.1);
       const p = this.localPlayer;
       if (!p) return;
-      // 🏢 Atualiza transição vertical da torre
-if (this.transicaoVerticalTorre) {
-  const transicao = this.transicaoVerticalTorre;
+     // 🏢 Atualiza transição vertical da torre
+      if (this.transicaoVerticalTorre) {
+        const transicao = this.transicaoVerticalTorre;
+        transicao.progresso = Math.min(1, transicao.progresso + delta / transicao.duracao);
+        const t = transicao.progresso;
+        const suavizado = t * t * (3 - 2 * t);
 
-  transicao.progresso = Math.min(
-    1,
-    transicao.progresso + delta / transicao.duracao
-  );
+        p.y = transicao.alturaInicial + (transicao.alturaFinal - transicao.alturaInicial) * suavizado;
 
-  const t = transicao.progresso;
-  const suavizado = t * t * (3 - 2 * t);
+        if (t >= 1) {
+          p.y = transicao.alturaFinal;
+          this.andarTorreAtual = transicao.andarDestino;
+          this.transicaoVerticalTorre = null;
 
-  p.y = transicao.alturaInicial +
-    (transicao.alturaFinal - transicao.alturaInicial) * suavizado;
+          const torreAtualObj = this.torresResidenciais?.get(this.torreAtual);
+          const badge = document.getElementById('es-city-zone-badge');
+          if (badge && torreAtualObj) {
+            badge.innerHTML = `🏢 ${torreAtualObj.nome} • Floor ${this.andarTorreAtual}/${torreAtualObj.totalAndares}`;
+          }
+          this.enviarMinhaPosicaoServidor();
+        }
+      }
 
-  if (t >= 1) {
-    p.y = transicao.alturaFinal;
-    this.andarTorreAtual = transicao.andarDestino;
-    this.transicaoVerticalTorre = null;
-    this.enviarMinhaPosicaoServidor();
-  }
-}
+      // 🛗 PORTAS AUTOMÁTICAS DO ELEVADOR (Abrem ao aproximar/chegar e fecham em movimento!)
+      if (this.torreAtual) {
+        const torre = this.torresResidenciais.get(this.torreAtual);
+        const cabine = torre?.grupoInterior?.userData?.elevadorCabine;
 
- // 🛗 ANIMAÇÃO SUAVE DAS PORTAS DO ELEVADOR
-if (this.torreAtual) {
-  const torre = this.torresResidenciais.get(this.torreAtual);
-  const cabine = torre?.grupoInterior?.userData?.elevadorCabine;
+        if (cabine?.userData?.portas) {
+          const distCabine = Math.hypot(p.x - torre.x, p.z - torre.z);
+          cabine.userData.aberturaDesejada = (!this.transicaoVerticalTorre && distCabine <= 3.2) ? 1 : 0;
 
-  if (cabine?.userData?.portas) {
-    const aberturaAtual = cabine.userData.aberturaPortas || 0;
-    const aberturaAlvo = cabine.userData.aberturaDesejada || 0;
+          const aberturaAtual = cabine.userData.aberturaPortas || 0;
+          const aberturaAlvo = cabine.userData.aberturaDesejada || 0;
+          const velocidadePortas = Math.min(1, delta * 5.5);
 
-    const velocidadePortas = Math.min(1, delta * 5);
+          cabine.userData.aberturaPortas += (aberturaAlvo - aberturaAtual) * velocidadePortas;
+          const abertura = cabine.userData.aberturaPortas;
 
-    cabine.userData.aberturaPortas +=
-      (aberturaAlvo - aberturaAtual) * velocidadePortas;
+          cabine.userData.portas.forEach(porta => {
+            porta.position.x = porta.userData.posicaoFechada + (porta.userData.posicaoAberta - porta.userData.posicaoFechada) * abertura;
+          });
 
-    const abertura = cabine.userData.aberturaPortas;
-
-    cabine.userData.portas.forEach(porta => {
-      const lado = porta.userData.lado;
-
-   porta.position.x =
-  porta.userData.posicaoFechada +
-  (porta.userData.posicaoAberta - porta.userData.posicaoFechada) * abertura;
-    });
-
-    if (Math.abs(aberturaAlvo - abertura) < 0.01) {
-      cabine.userData.aberturaPortas = aberturaAlvo;
-    }
-  }
-}
+          if (Math.abs(aberturaAlvo - abertura) < 0.01) {
+            cabine.userData.aberturaPortas = aberturaAlvo;
+          }
+        }
+      }
 
 // 🛗 Sincroniza a cabine com a altura do jogador
 if (this.torreAtual) {
@@ -7127,7 +7246,38 @@ const elevadorDisponivel =
     : 'none';
 }
 
-this.atualizarBadgeProximidade();
+// 🏢 BOTÃO CONTEXTUAL DE TORRE (Permite entrar e sair das torres pelo toque no celular!)
+      const towerBtn = document.getElementById('es-city-tower-btn');
+      if (towerBtn) {
+        if (this.torreAtual) {
+          const torreObj = this.torresResidenciais?.get(this.torreAtual);
+          towerBtn.style.display = 'inline-flex';
+          towerBtn.innerHTML = torreObj
+            ? `🚪 Exit Tower (Floor ${this.andarTorreAtual}/${torreObj.totalAndares})`
+            : '🚪 Exit Tower';
+        } else if (!this.modoInterior && this.torresResidenciais?.size) {
+          let torrePerto = null;
+          let menorDistTorre = Infinity;
+          this.torresResidenciais.forEach(tObj => {
+            const entradaZ = tObj.z + tObj.profundidade / 2 + 1.8;
+            const dTorre = Math.hypot(p.x - tObj.x, p.z - entradaZ);
+            if (dTorre < menorDistTorre) {
+              menorDistTorre = dTorre;
+              torrePerto = tObj;
+            }
+          });
+          if (torrePerto && menorDistTorre <= 3.8) {
+            towerBtn.style.display = 'inline-flex';
+            towerBtn.innerHTML = `🏢 Enter ${torrePerto.nome}`;
+          } else {
+            towerBtn.style.display = 'none';
+          }
+        } else {
+          towerBtn.style.display = 'none';
+        }
+      }
+
+      this.atualizarBadgeProximidade();
 
       if (estaAndando && Date.now() - this.lastSyncTime > 260) {
         this.lastSyncTime = Date.now();
@@ -7229,7 +7379,7 @@ this.atualizarBadgeProximidade();
     if (lower.includes('take me to') || lower.includes('go to')) {
       const taxiTarget = this.buildingsMeta.find(b => lower.includes(b.id) || lower.includes(b.space.name.toLowerCase()));
       if (taxiTarget) {
-        if (this.modoInterior) this.sairModoInterior();
+        this.sairDeQualquerAmbienteFechado();
         this.localPlayer.x = taxiTarget.frontX - taxiTarget.col * 2.5;
         this.localPlayer.z = taxiTarget.centerZ;
         this.localPlayer.targetX = null;
@@ -7390,11 +7540,22 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       this.alternarOuMontarVeiculo();
     });
 
+    document.getElementById('es-city-gps-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.abrirModalGPS();
+    });
+
+    document.getElementById('es-city-tower-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.interagirTorreResidencial();
+    });
+
     document.getElementById('es-city-home-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
-      if (this.modoInterior) this.sairModoInterior();
+      this.sairDeQualquerAmbienteFechado();
       this.localPlayer.x = -27;
       this.localPlayer.z = 26;
+      this.localPlayer.y = 0;
       this.localPlayer.targetX = null;
       this.localPlayer.targetZ = null;
       this.abrirModalConstrucaoCasa();
@@ -7404,9 +7565,10 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       this.garantirAudioAtivo();
       const bGuild = this.buildingsMeta.find(b => b.id === 'guild_bau');
       if (bGuild) {
-        if (this.modoInterior) this.sairModoInterior();
+        this.sairDeQualquerAmbienteFechado();
         this.localPlayer.x = bGuild.frontX - bGuild.col * 2.2;
         this.localPlayer.z = bGuild.centerZ;
+        this.localPlayer.y = 0;
         this.localPlayer.targetX = null;
         this.localPlayer.targetZ = null;
         if (window.Workspace?.mostrarAviso) {
@@ -7691,17 +7853,26 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
     document.addEventListener('visibilitychange', this._onVisibilityChange);
   }
 
-  fecharCidade3D() {
+ fecharCidade3D() {
     this.active = false;
+    this.modoInterior = false;
+    this.predioAtual = null;
+    this.torreAtual = null;
+    this.andarTorreAtual = 0;
+    this.transicaoVerticalTorre = null;
+    this.posicaoExteriorTorre = null;
+
     document.body.style.overflow = '';
-    ['shop-modal', 'es-sticky-modal', 'es-sticky-view-modal', 'es-mage-dialog', 'es-house-modal', 'job-modal', 'blitz-modal'].forEach(id => {
+    ['shop-modal', 'es-sticky-modal', 'es-sticky-view-modal', 'es-mage-dialog', 'es-house-modal', 'job-modal', 'blitz-modal', 'es-gps-modal'].forEach(id => {
       document.getElementById(id)?.remove();
     });
+
     if (this.animFrame) cancelAnimationFrame(this.animFrame);
     if (this.pollInterval) clearInterval(this.pollInterval);
     if (this.dayNightInterval) clearInterval(this.dayNightInterval);
     if (this.flightBoardInterval) clearInterval(this.flightBoardInterval);
     clearTimeout(this._sseRetryTimer);
+
     if (this.audioCtx) {
       try { this.audioCtx.close(); } catch (e) {}
       this.audioCtx = null;
@@ -7716,6 +7887,7 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
     window.removeEventListener('resize', this._onResize);
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup', this._onKeyUp);
+
     if (this.localPlayer) {
       fetch('/api/workspace/english-spaces/world/leave', {
         method: 'POST',
@@ -7724,6 +7896,53 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
         body: JSON.stringify({ userId: this.localPlayer.userId })
       }).catch(() => {});
     }
+
+    // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
+    if (this.scene) {
+      this.scene.traverse(obj => {
+        if (obj.geometry) {
+          try { obj.geometry.dispose(); } catch (e) {}
+        }
+        if (obj.material) {
+          const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+          mats.forEach(m => {
+            if (m && m.map) {
+              try { m.map.dispose(); } catch (e) {}
+            }
+            if (m && typeof m.dispose === 'function') {
+              try { m.dispose(); } catch (e) {}
+            }
+          });
+        }
+      });
+    }
+    if (this.renderer) {
+      try {
+        this.renderer.dispose();
+        if (this.renderer.domElement && this.renderer.domElement.parentNode) {
+          this.renderer.domElement.parentNode.removeChild(this.renderer.domElement);
+        }
+      } catch (e) {}
+    }
+
+    this.scene = null;
+    this.camera = null;
+    this.renderer = null;
+    this.clickableObjects = [];
+    this.lotes = [];
+    this.vitrines = [];
+    this.cars = [];
+    this.motos = [];
+    this.ciclistas = [];
+    this.avioes = [];
+    this.pedestrians = [];
+    this.otherPlayers3D.clear();
+    this.npcs3D.clear();
+    this.torresResidenciais.clear();
+    this.doors.clear();
+    this.interiorGroups.clear();
+    this.buildingMeshes.clear();
+
     if (this.parentManager) this.parentManager.navigate('home');
   }
 }
