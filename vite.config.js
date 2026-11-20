@@ -80,9 +80,11 @@ export default defineConfig({
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ['/push-sw.js'], 
         
-        // 🚀 O ESCUDO ANTI-SEQUESTRO
+      // 🚀 O ESCUDO ANTI-SEQUESTRO (Garante que cada domínio carregue o seu próprio HTML na raiz)
         navigateFallbackDenylist: [
+          /^\/$/,
           /^\/api/,
+          /^\/workspace/,
           /version\.json/,
           /hub-matriculas\.html/,
           /matricula\.html/,
@@ -91,7 +93,7 @@ export default defineConfig({
           /admin\.html/,
           /workspace-lousa\.html/,
           /workspace-aulas-video\.html/
-        ] 
+        ]
       }
     }),
     preservarManifestoWorkspace()

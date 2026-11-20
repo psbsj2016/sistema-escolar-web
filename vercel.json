@@ -1,60 +1,57 @@
 {
-  "headers": [
+  "routes": [
     {
-      "source": "/(version\\.json|sw\\.js|workbox-.*\\.js|registerSW\\.js|workspace-manifest\\.json|index\\.html|workspace\\.html|workspace-lousa\\.html|workspace-aulas-video\\.html)",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache, no-store, must-revalidate"
-        }
-      ]
-    }
-  ],
-  "redirects": [
-    {
-      "source": "/",
+      "src": "^/$",
       "has": [
         {
           "type": "host",
           "value": "workspace.sistemaptt.com.br"
         }
       ],
-      "destination": "/workspace",
-      "permanent": false
-    }
-  ],
-  "rewrites": [
-    {
-      "source": "/api/:path*",
-      "destination": "https://api.sistemaptt.com.br/:path*"
+      "dest": "/workspace.html",
+      "continue": true
     },
     {
-      "source": "/admin",
-      "destination": "/admin.html"
+      "src": "^/(|version\\.json|sw\\.js|workbox-.*\\.js|registerSW\\.js|workspace-manifest\\.json|index\\.html|workspace\\.html|workspace-lousa\\.html|workspace-aulas-video\\.html)$",
+      "headers": {
+        "Cache-Control": "no-cache, no-store, must-revalidate"
+      },
+      "continue": true
     },
     {
-      "source": "/matricula",
-      "destination": "/matricula.html"
+      "src": "^/api/(.*)$",
+      "dest": "https://api.sistemaptt.com.br/$1"
     },
     {
-      "source": "/hub-matriculas",
-      "destination": "/hub-matriculas.html"
+      "handle": "filesystem"
     },
     {
-      "source": "/matricula-online",
-      "destination": "/matricula-online.html"
+      "src": "^/admin/?$",
+      "dest": "/admin.html"
     },
     {
-      "source": "/workspace",
-      "destination": "/workspace.html"
+      "src": "^/matricula/?$",
+      "dest": "/matricula.html"
     },
     {
-      "source": "/workspace-lousa",
-      "destination": "/workspace-lousa.html"
+      "src": "^/hub-matriculas/?$",
+      "dest": "/hub-matriculas.html"
     },
     {
-      "source": "/workspace-aulas-video",
-      "destination": "/workspace-aulas-video.html"
+      "src": "^/matricula-online/?$",
+      "dest": "/matricula-online.html"
+    },
+    {
+      "src": "^/workspace/?$",
+      "dest": "/workspace.html"
+    },
+    {
+      "src": "^/workspace-lousa/?$",
+      "dest": "/workspace-lousa.html"
+    },
+    {
+      "src": "^/workspace-aulas-video/?$",
+      "dest": "/workspace-aulas-video.html"
     }
   ]
 }
