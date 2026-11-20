@@ -578,8 +578,9 @@ Workspace.Feed = {
         let texto = Workspace.Feed.limparTexto(textoOriginal).replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>').replace(/\*(.*?)\*/g, '<strong>$1</strong>').replace(/_(.*?)_/g, '<em>$1</em>').replace(/\n/g, '<br>');
         const embeds = [];
         
+       const origemYoutube = encodeURIComponent(window.location.origin);
         texto = texto.replace(/(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})(?:\S+)?/ig, (match, id) => {
-            embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; break-inside: avoid; column-span: all;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
+            embeds.push(`<div style="margin-top: 15px; position: relative; padding-bottom: 56.25%; height: 0; overflow: hidden; border-radius: 12px; border: 1px solid #eee; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: #000; break-inside: avoid; column-span: all;"><iframe loading="lazy" class="ws-video-embed" src="https://www.youtube.com/embed/${id}?enablejsapi=1&rel=0&origin=${origemYoutube}" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; border: 0;" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>`);
             return ''; 
         });
 
@@ -802,14 +803,46 @@ Workspace.Feed = {
         }
     },
  
+   // 🔇 Envia comando de pausa ao YouTube somente quando o player já terminou de inicializar
+    _pausarYoutubeSeguro: (iframe) => {
+        try {
+            if (!iframe || !iframe.contentWindow) return;
+            if (iframe.dataset.ytReady !== '1') return;
+
+            const srcAtual = iframe.getAttribute('src') || '';
+            if (!srcAtual.includes('youtube.com/embed/') || !srcAtual.includes('enablejsapi=1')) return;
+
+            const targetOrigin = srcAtual.includes('youtube-nocookie.com')
+                ? 'https://www.youtube-nocookie.com'
+                : 'https://www.youtube.com';
+
+            iframe.contentWindow.postMessage(JSON.stringify({
+                event: 'command',
+                func: 'pauseVideo',
+                args: []
+            }), targetOrigin);
+        } catch (e) {}
+    },
+
     iniciarMotorDeVideos: () => {
+        // ⚙️ PARÂMETRO AJUSTÁVEL: tempo (ms) após o load do iframe para o player interno do YouTube ficar pronto
+        const DELAY_PRONTO_YT_MS = 800;
+
+        document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+            if (iframe.dataset.ytListenerConfigurado === '1') return;
+            iframe.dataset.ytListenerConfigurado = '1';
+            iframe.addEventListener('load', () => {
+                setTimeout(() => {
+                    iframe.dataset.ytReady = '1';
+                }, DELAY_PRONTO_YT_MS);
+            });
+        });
+
         document.querySelectorAll('.ws-feed-video').forEach(video => {
             video.onplay = function() {
                 document.querySelectorAll('.ws-feed-video').forEach(v => { if (v !== this && !v.paused) v.pause(); });
                 document.querySelectorAll('.ws-video-embed').forEach(iframe => {
-                    if (iframe && iframe.contentWindow) {
-                        iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                    }
+                    Workspace.Feed._pausarYoutubeSeguro(iframe);
                 });
             };
         });
@@ -818,12 +851,15 @@ Workspace.Feed = {
         
         Workspace.Feed.videoObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
-                if (!entry.isIntersecting) {
-                    const el = entry.target;
-                    if (el.tagName === 'VIDEO' && !el.paused) el.pause(); 
-                    else if (el.tagName === 'IFRAME') {
-                        if (el && el.contentWindow) el.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                    }
+                const el = entry.target;
+                if (entry.isIntersecting) {
+                    el.dataset.foiVisivel = '1';
+                    return;
+                }
+                if (el.tagName === 'VIDEO' && !el.paused) {
+                    el.pause();
+                } else if (el.tagName === 'IFRAME' && el.dataset.foiVisivel === '1') {
+                    Workspace.Feed._pausarYoutubeSeguro(el);
                 }
             });
         }, { threshold: 0.2 }); 
