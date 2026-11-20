@@ -1,3 +1,4 @@
+import { ES3DCameraUI } from './es3d-camera-ui.js';
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
 
@@ -470,6 +471,7 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
             <div class="es-top-right-btns">
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
               <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
+              <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
               <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
               <button type="button" class="es-top-btn" id="es-city-home-btn" title="Teleport to My House Lot">🏡 My Lot</button>
               <button type="button" class="es-top-btn" id="es-city-bau-btn" title="Teleport to Guild Baú do Inglês">🧙‍♂️ Guild</button>
@@ -2641,88 +2643,92 @@ if (escolhido === 'bicycle') {
     smile.position.set(0, -0.085, 0.196);
     headGroup.add(smile);
 
-    // 💇 CABELOS EM CAMADAS REALISTAS (3 estilos femininos e 3 masculinos)
-    const hairStyle = seed % 3;
-    const hairGroup = new THREE.Group();
+ // 💇 CABELOS EM CAMADAS REALISTAS (RECUADOS ACIMA DA TESTA — OLHOS E SOBRANCELHAS 100% LIVRES)
+ const hairStyle = seed % 3;
+ const hairGroup = new THREE.Group();
 
-    if (isFemale) {
-      const capGeo = new THREE.SphereGeometry(0.232, 22, 18, 0, Math.PI * 2, 0, Math.PI * 0.72);
-      capGeo.scale(0.95, 1.04, 1.0);
-      const cap = new THREE.Mesh(capGeo, matCabelo);
-      cap.position.set(0, 0.025, -0.012);
-      hairGroup.add(cap);
+ if (isFemale) {
+   // Abertura reduzida (0.43 * PI) e inclinada para trás (-0.25 rad) para liberar olhos e sobrancelhas
+   const capGeo = new THREE.SphereGeometry(0.226, 22, 18, 0, Math.PI * 2, 0, Math.PI * 0.43);
+   capGeo.scale(0.95, 1.04, 1.0);
+   const cap = new THREE.Mesh(capGeo, matCabelo);
+   cap.position.set(0, 0.032, -0.02);
+   cap.rotation.x = -0.25;
+   hairGroup.add(cap);
 
-      // Franja lateral suave
-      const franja = new THREE.Mesh(new THREE.SphereGeometry(0.115, 14, 12), matCabelo);
-      franja.scale.set(1.45, 0.48, 0.62);
-      franja.position.set(-0.04, 0.145, 0.155);
-      franja.rotation.z = 0.22;
-      hairGroup.add(franja);
+   // Franja lateral alta (fica na testa, bem acima das sobrancelhas)
+   const franja = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 12), matCabelo);
+   franja.scale.set(1.35, 0.36, 0.45);
+   franja.position.set(-0.045, 0.178, 0.145);
+   franja.rotation.z = 0.20;
+   hairGroup.add(franja);
 
-      if (hairStyle === 0) {
-        // Cabelo longo em ondas atrás e nas laterais
-        const backHair = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.21, 0.44, 16), matCabelo);
-        backHair.scale.set(1.0, 1.0, 0.52);
-        backHair.position.set(0, -0.18, -0.125);
-        hairGroup.add(backHair);
-        [-1, 1].forEach(side => {
-          const strand = new THREE.Mesh(new THREE.SphereGeometry(0.075, 14, 12), matCabelo);
-          strand.scale.set(0.75, 2.7, 0.85);
-          strand.position.set(side * 0.178, -0.14, -0.02);
-          hairGroup.add(strand);
-        });
-      } else if (hairStyle === 1) {
-        // Rabo de cavalo elegante com elástico
-        const tie = new THREE.Mesh(new THREE.TorusGeometry(0.052, 0.014, 8, 16), matCamisa);
-        tie.position.set(0, 0.04, -0.225);
-        const pony = new THREE.Mesh(new THREE.SphereGeometry(0.095, 14, 12), matCabelo);
-        pony.scale.set(0.85, 2.1, 0.85);
-        pony.position.set(0, -0.14, -0.255);
-        pony.rotation.x = 0.22;
-        hairGroup.add(tie, pony);
-      } else {
-        // Coque moderno alto + mechas emoldurando o rosto
-        const bun = new THREE.Mesh(new THREE.SphereGeometry(0.105, 16, 14), matCabelo);
-        bun.position.set(0, 0.23, -0.08);
-        hairGroup.add(bun);
-        [-1, 1].forEach(side => {
-          const lock = new THREE.Mesh(new THREE.SphereGeometry(0.055, 12, 10), matCabelo);
-          lock.scale.set(0.68, 2.0, 0.72);
-          lock.position.set(side * 0.175, -0.05, 0.04);
-          hairGroup.add(lock);
-        });
-      }
-    } else {
-      const capGeo = new THREE.SphereGeometry(0.226, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.58);
-      capGeo.scale(0.95, 1.05, 0.99);
-      const cap = new THREE.Mesh(capGeo, matCabelo);
-      cap.position.set(0, 0.045, -0.008);
-      hairGroup.add(cap);
+   if (hairStyle === 0) {
+     // Cabelo longo atrás e mechas laterais atrás das bochechas
+     const backHair = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.205, 0.44, 16), matCabelo);
+     backHair.scale.set(1.0, 1.0, 0.50);
+     backHair.position.set(0, -0.17, -0.135);
+     hairGroup.add(backHair);
+     [-1, 1].forEach(side => {
+       const strand = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 12), matCabelo);
+       strand.scale.set(0.72, 2.6, 0.80);
+       strand.position.set(side * 0.185, -0.14, -0.055);
+       hairGroup.add(strand);
+     });
+   } else if (hairStyle === 1) {
+     // Rabo de cavalo elegante atrás da cabeça
+     const tie = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.013, 8, 16), matCamisa);
+     tie.position.set(0, 0.045, -0.225);
+     const pony = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 12), matCabelo);
+     pony.scale.set(0.85, 2.0, 0.85);
+     pony.position.set(0, -0.135, -0.255);
+     pony.rotation.x = 0.22;
+     hairGroup.add(tie, pony);
+   } else {
+     // Coque alto + mechas finas laterais atrás das orelhas
+     const bun = new THREE.Mesh(new THREE.SphereGeometry(0.10, 16, 14), matCabelo);
+     bun.position.set(0, 0.235, -0.085);
+     hairGroup.add(bun);
+     [-1, 1].forEach(side => {
+       const lock = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 10), matCabelo);
+       lock.scale.set(0.65, 1.85, 0.68);
+       lock.position.set(side * 0.185, -0.05, -0.03);
+       hairGroup.add(lock);
+     });
+   }
+ } else {
+   // Corte masculino com abertura 0.41 * PI e recuo traseiro (-0.27 rad)
+   const capGeo = new THREE.SphereGeometry(0.223, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.41);
+   capGeo.scale(0.95, 1.04, 0.99);
+   const cap = new THREE.Mesh(capGeo, matCabelo);
+   cap.position.set(0, 0.038, -0.022);
+   cap.rotation.x = -0.27;
+   hairGroup.add(cap);
 
-      if (hairStyle === 0) {
-        // Topete moderno penteado
-        const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.13, 14, 12), matCabelo);
-        quiff.scale.set(1.25, 0.58, 0.95);
-        quiff.position.set(0.02, 0.20, 0.09);
-        quiff.rotation.z = -0.15;
-        hairGroup.add(quiff);
-      } else if (hairStyle === 1) {
-        // Cachos volumosos texturizados
-        for (let i = 0; i < 6; i++) {
-          const curl = new THREE.Mesh(new THREE.SphereGeometry(0.072, 10, 10), matCabelo);
-          curl.position.set(-0.14 + i * 0.056, 0.21 + (i % 2) * 0.02, 0.06 + (i % 2) * 0.03);
-          hairGroup.add(curl);
-        }
-      } else {
-        // Corte social com franja lateral
-        const sweep = new THREE.Mesh(new THREE.SphereGeometry(0.125, 14, 12), matCabelo);
-        sweep.scale.set(1.38, 0.45, 0.72);
-        sweep.position.set(-0.02, 0.16, 0.145);
-        hairGroup.add(sweep);
-      }
-    }
+   if (hairStyle === 0) {
+     // Topete moderno alto no topo da cabeça
+     const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.10, 14, 12), matCabelo);
+     quiff.scale.set(1.18, 0.46, 0.72);
+     quiff.position.set(0.015, 0.218, 0.075);
+     quiff.rotation.z = -0.14;
+     hairGroup.add(quiff);
+   } else if (hairStyle === 1) {
+     // Cachos texturizados no topo (sem cair sobre os olhos)
+     for (let i = 0; i < 6; i++) {
+       const curl = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), matCabelo);
+       curl.position.set(-0.125 + i * 0.05, 0.218 + (i % 2) * 0.015, 0.02 + (i % 2) * 0.03);
+       hairGroup.add(curl);
+     }
+   } else {
+     // Corte social com franja leve acima da testa
+     const sweep = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 12), matCabelo);
+     sweep.scale.set(1.28, 0.35, 0.52);
+     sweep.position.set(-0.015, 0.19, 0.12);
+     hairGroup.add(sweep);
+   }
+ }
 
-    headGroup.add(hairGroup);
+ headGroup.add(hairGroup);
     bodyRoot.add(headGroup);
 
     // 🟢 Anel de proximidade fixo no chão (fora do bodyRoot para não pular ao caminhar)
@@ -2780,6 +2786,7 @@ if (escolhido === 'bicycle') {
     this.scene.remove(oldMesh);
     this.scene.add(newMesh);
     this.localPlayer.mesh = newMesh;
+    this.cameraUI?.sincronizarVisibilidadeAvatar();
 
     await fetch('/api/workspace/english-spaces/progress/customization', {
       method: 'PUT',
@@ -6547,6 +6554,9 @@ this.scene.add(facadeHeader);
       bubbleText: ''
     };
 
+    this.cameraUI = new ES3DCameraUI(this);
+    this.cameraUI.init();
+   
     this.iniciarLoopRenderizacao();
   }
 
@@ -7045,29 +7055,10 @@ if (this.torreAtual) {
         });
       }
 
-     const yaw = this.cameraYaw;
-  const pitch = this.cameraPitch;
-
-// Reconhece interiores de prédios e torres residenciais
-  const dentroAmbiente = this.modoInterior || !!this.torreAtual;
-
-// Câmera mais próxima dentro dos ambientes
-  const distBase = dentroAmbiente ? 3.2 : 8.4;
-  const dist = distBase + pitch * 0.35;
-
-  const camHeight = (dentroAmbiente ? 2.9 : 4.8) - pitch * 1.8;
-      const camOffsetX = Math.sin(yaw) * dist;
-      const camOffsetZ = Math.cos(yaw) * dist;
-      this.camera.position.set(
-  p.x + camOffsetX,
-  Math.max(0.8, camHeight + (p.y || 0)),
-  p.z + camOffsetZ
-);
-
-      const lookAtY = (p.y || 0) + 1.4 + pitch * 10;
-      const lookAtX = p.x - Math.sin(yaw) * pitch * 1.2;
-      const lookAtZ = p.z - Math.cos(yaw) * pitch * 1.2;
-      this.camera.lookAt(lookAtX, lookAtY, lookAtZ);
+  if (this.cameraUI) {
+     this.cameraUI.atualizarCamera(delta);
+     this.cameraUI.atualizarMinimapa();
+   }
 
       this.atualizarPortas();
       this.atualizarAnimais(delta);
@@ -7453,10 +7444,16 @@ const elevadorDisponivel =
       if (['es-city-chat-input', 'es-sticky-text', 'job-answer'].includes(document.activeElement?.id)) return;
       this.keys[e.code] = true;
       this.keys[e.key] = true;
-       // 🏢 Interação com torres residenciais
-if (e.code === 'KeyE' && !e.repeat) {
-  this.interagirTorreResidencial();
-}     
+// 🏢 Interação com torres residenciais (tecla E)
+      if (e.code === 'KeyE' && !e.repeat) {
+        this.interagirTorreResidencial();
+      }
+
+      // 🎥 Alternar câmera 3ª ↔ 1ª Pessoa (tecla V)
+      if (e.code === 'KeyV' && !e.repeat) {
+        this.cameraUI?.alternarModoCamera();
+      }    
+
 
   // 🛗 CONTROLE DO ELEVADOR
 if (
@@ -7540,9 +7537,14 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       this.alternarOuMontarVeiculo();
     });
 
-    document.getElementById('es-city-gps-btn')?.addEventListener('click', () => {
+   document.getElementById('es-city-gps-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.abrirModalGPS();
+    });
+
+    document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.cameraUI?.alternarModoCamera();
     });
 
     document.getElementById('es-city-tower-btn')?.addEventListener('click', () => {
@@ -7895,6 +7897,11 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
         credentials: 'include',
         body: JSON.stringify({ userId: this.localPlayer.userId })
       }).catch(() => {});
+    }
+
+    if (this.cameraUI) {
+      this.cameraUI.dispose();
+      this.cameraUI = null;
     }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
