@@ -1458,47 +1458,77 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         iframe.src = `/workspace-aulas-video.html?${qs.toString()}`;
 
         if (!Workspace._listenerMinimizarVideoAtivo) {
+            // 🔄 Função auxiliar para controlar a orientação de tela a partir da janela principal
+            const aplicarOrientacaoNoPai = (modo) => {
+                try {
+                    if (!screen.orientation) return;
+                    if (modo === 'unlock') {
+                        if (typeof screen.orientation.unlock === 'function') {
+                            screen.orientation.unlock();
+                        }
+                    } else if ((modo === 'landscape' || modo === 'portrait') && typeof screen.orientation.lock === 'function') {
+                        screen.orientation.lock(modo).catch(() => {});
+                    }
+                } catch (e) {}
+            };
+
             window.addEventListener('message', (ev) => {
                 if (!ev.data || typeof ev.data !== 'object') return;
+                const modalAtual = document.getElementById('ws-modal-video-aulas');
+
                 if (ev.data.type === 'MINIMIZAR_VIDEO_AULAS') {
                     Workspace.alternarMinimizarVideos(Boolean(ev.data.minimizar));
                 } else if (ev.data.type === 'MODO_CINEMA_LIVE') {
-                    const headerModal = modal.firstElementChild;
-                    if (headerModal && modal.dataset.minimizado !== 'true') {
+                    const headerModal = modalAtual ? modalAtual.firstElementChild : null;
+                    if (headerModal && modalAtual.dataset.minimizado !== 'true') {
                         headerModal.style.display = ev.data.ativo ? 'none' : 'flex';
                     }
                 } else if (ev.data.type === 'FECHAR_VIDEO_AULAS') {
                     Workspace.fecharPlataformaVideos();
+                } else if (ev.data.type === 'SOLICITAR_ORIENTACAO_VIDEO') {
+                    // 📱 Usado pelo Chat Mobile (força 'portrait' ao abrir e devolve 'landscape' ao fechar no X)
+                    aplicarOrientacaoNoPai(ev.data.modo || 'unlock');
                 } else if (ev.data.type === 'SOLICITAR_TELA_CHEIA_VIDEO') {
                     const ativar = Boolean(ev.data.ativar);
-                    if (ativar) {
-                        const reqFs = modal.requestFullscreen || modal.webkitRequestFullscreen || modal.msRequestFullscreen;
+                    const orientacaoAlvo = ev.data.orientacao || (ativar ? 'landscape' : 'unlock');
+
+                    if (ativar && modalAtual) {
+                        const reqFs = modalAtual.requestFullscreen || modalAtual.webkitRequestFullscreen || modalAtual.msRequestFullscreen;
                         if (reqFs) {
-                            Promise.resolve(reqFs.call(modal)).then(() => {
-                                if (screen.orientation && typeof screen.orientation.lock === 'function') {
-                                    screen.orientation.lock('landscape').catch(() => {});
-                                }
-                            }).catch(() => {});
+                            Promise.resolve(reqFs.call(modalAtual))
+                                .then(() => aplicarOrientacaoNoPai(orientacaoAlvo))
+                                .catch(() => aplicarOrientacaoNoPai(orientacaoAlvo));
+                        } else {
+                            aplicarOrientacaoNoPai(orientacaoAlvo);
                         }
                     } else {
                         const exitFs = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
                         if (exitFs && (document.fullscreenElement || document.webkitFullscreenElement)) {
-                            Promise.resolve(exitFs.call(document)).catch(() => {});
-                        }
-                        if (screen.orientation && typeof screen.orientation.unlock === 'function') {
-                            try { screen.orientation.unlock(); } catch (e) {}
+                            Promise.resolve(exitFs.call(document))
+                                .then(() => aplicarOrientacaoNoPai(orientacaoAlvo))
+                                .catch(() => aplicarOrientacaoNoPai(orientacaoAlvo));
+                        } else {
+                            aplicarOrientacaoNoPai(orientacaoAlvo);
                         }
                     }
                 }
             });
 
-            // Destrava a rotação automaticamente se o usuário sair da tela cheia pelo botão Voltar ou ESC
+            // 📡 Sincroniza a saída ou entrada de Tela Cheia com o iframe (atualiza o botão "Tela Cheia / Tela Vertical")
             const aoMudarTelaCheiaPai = () => {
-                if (!document.fullscreenElement && !document.webkitFullscreenElement) {
-                    if (screen.orientation && typeof screen.orientation.unlock === 'function') {
-                        try { screen.orientation.unlock(); } catch (e) {}
-                    }
+                const emFsPai = Boolean(document.fullscreenElement || document.webkitFullscreenElement);
+                if (!emFsPai) {
+                    aplicarOrientacaoNoPai('unlock');
                 }
+                try {
+                    const iframeAtual = document.getElementById('iframeVideoAulas');
+                    if (iframeAtual && iframeAtual.contentWindow) {
+                        iframeAtual.contentWindow.postMessage({
+                            type: 'ESTADO_TELA_CHEIA_PAI',
+                            ativo: emFsPai
+                        }, '*');
+                    }
+                } catch (e) {}
             };
             document.addEventListener('fullscreenchange', aoMudarTelaCheiaPai);
             document.addEventListener('webkitfullscreenchange', aoMudarTelaCheiaPai);
