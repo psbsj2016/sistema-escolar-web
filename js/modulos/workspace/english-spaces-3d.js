@@ -1,5 +1,7 @@
 import { ES3DCameraUI } from './es3d-camera-ui.js';
 import { ES3DAmbiente } from './es3d-ambiente.js';
+import { ES3DInteracoes } from './es3d-interacoes.js';
+
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
 
@@ -474,6 +476,9 @@ garantirAudioAtivo() {
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
               <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
+              <button type="button" class="es-top-btn" id="es-city-quest-btn" title="Daily Treasure Hunt in English">🎁 Quests 0/4</button>
+              <button type="button" class="es-top-btn" id="es-city-emote-btn" title="Avatar Emotes">🎭 Emotes</button>
+              <button type="button" class="es-top-btn" id="es-city-photo-btn" title="Take English City Postcard Photo">📸 Photo</button>
               <button type="button" class="es-top-btn" id="es-city-weather-btn" title="Change City Weather">☀️ Clear</button>
               <button type="button" class="es-top-btn" id="es-city-audio3d-btn" title="Toggle 3D Spatial Audio">🔊 3D SFX</button>
               <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
@@ -6039,103 +6044,447 @@ criarVitrinesVivas() {
     } catch (e) {}
   }
 
-  criarAnimaisRua() {
+ criarAnimaisRua() {
     this.animais.caes = [];
     this.animais.gatos = [];
     this.animais.passaros = [];
+
     for (let i = 0; i < 2; i++) {
-      const dog = this.criarCachorro3D();
+      const dog = this.criarCachorro3D(i === 0 ? 0xb4773e : 0x5c3a21);
       dog.position.set(-9 + i * 18, 0, -14 - i * 18);
       this.exteriorGroup.add(dog);
-      this.animais.caes.push({ mesh: dog, dir: 1, speed: 1.1, x: dog.position.x, z: dog.position.z, walkPhase: 0 });
+      this.animais.caes.push({
+        mesh: dog,
+        dir: i === 0 ? 1 : -1,
+        speed: 1.5 + i * 0.25,
+        x: dog.position.x,
+        z: dog.position.z
+      });
     }
+
     for (let i = 0; i < 2; i++) {
-      const cat = this.criarGato3D();
-      cat.position.set(8.8, 0, -24 - i * 16);
+      const cat = this.criarGato3D(i === 0 ? 0xd97706 : 0x64748b);
+      cat.position.set(i === 0 ? 8.6 : -8.6, 0, -26 - i * 20);
       this.exteriorGroup.add(cat);
-      this.animais.gatos.push({ mesh: cat, dir: 1, speed: 0.7, x: cat.position.x, z: cat.position.z, idleTime: 0 });
+      this.animais.gatos.push({
+        mesh: cat,
+        dir: i === 0 ? -1 : 1,
+        speed: 1.05,
+        x: cat.position.x,
+        z: cat.position.z
+      });
     }
+
     const THREE = window.THREE;
     this.animais.passarosGroup = new THREE.Group();
     for (let i = 0; i < 8; i++) {
       const bird = this.criarPassaro3D();
       bird.position.set((Math.random() - 0.5) * 70, 15 + Math.random() * 6, -35 + (Math.random() - 0.5) * 70);
-      bird.userData = { speed: 2.5 + Math.random() * 1.5, angle: Math.random() * Math.PI * 2 };
+      bird.userData.speed = 2.6 + Math.random() * 1.6;
+      bird.userData.angle = Math.random() * Math.PI * 2;
       this.animais.passarosGroup.add(bird);
       this.animais.passaros.push(bird);
     }
     this.scene.add(this.animais.passarosGroup);
   }
 
-  criarCachorro3D() {
+  // 🐶 CACHORRO 3D REALISTA (ORIENTADO PARA +Z, PATAS ARTICULADAS, ORELHAS, COLEIRA E CAUDA ABANANDO)
+  criarCachorro3D(corPelo = 0xc68642) {
     const THREE = window.THREE;
     const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x8b5a2b, roughness: 0.8 });
-    const headMat = new THREE.MeshStandardMaterial({ color: 0x6b4423, roughness: 0.8 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.65, 0.32, 0.42), bodyMat); body.position.set(0, 0.28, 0);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.22, 10, 10), headMat); head.position.set(0.42, 0.42, 0);
-    const snout = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.12, 0.16), new THREE.MeshStandardMaterial({ color: 0x2b1d12 })); snout.position.set(0.62, 0.38, 0);
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.02, 0.28, 6), bodyMat); tail.position.set(-0.38, 0.38, 0); tail.rotation.z = 0.8;
-    group.add(body, head, snout, tail);
-    for (let i = 0; i < 4; i++) {
-      const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.04, 0.28, 6), bodyMat);
-      leg.position.set((i < 2 ? 0.22 : -0.22), 0.14, (i % 2 === 0 ? 0.14 : -0.14));
-      group.add(leg);
-    }
+    const bodyRoot = new THREE.Group();
+    group.add(bodyRoot);
+
+    const matPelo = new THREE.MeshStandardMaterial({ color: corPelo, roughness: 0.78 });
+    const matBarriga = new THREE.MeshStandardMaterial({ color: 0xf3d5b5, roughness: 0.85 });
+    const matOrelha = new THREE.MeshStandardMaterial({ color: 0x5c381a, roughness: 0.85 });
+    const matFocinho = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.35 });
+    const matColeira = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.5 });
+    const matTag = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.25 });
+    const matOlho = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.15 });
+    const matGlint = new THREE.MeshBasicMaterial({ color: 0xffffff });
+
+    // Tronco arredondado anatômico (eixo Z = frente)
+    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 14), matPelo);
+    torso.scale.set(0.86, 0.88, 1.55);
+    torso.position.set(0, 0.36, 0);
+
+    const peito = new THREE.Mesh(new THREE.SphereGeometry(0.20, 14, 12), matBarriga);
+    peito.scale.set(0.85, 0.9, 0.95);
+    peito.position.set(0, 0.37, 0.22);
+
+    // Pescoço e coleira com pingente dourado
+    const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.22, 12), matPelo);
+    pescoco.position.set(0, 0.49, 0.28);
+    pescoco.rotation.x = 0.35;
+
+    const coleira = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.022, 8, 18), matColeira);
+    coleira.position.set(0, 0.48, 0.29);
+    coleira.rotation.x = Math.PI / 2 - 0.35;
+
+    const tag = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), matTag);
+    tag.position.set(0, 0.40, 0.40);
+
+    // Cabeça esculpida voltada para +Z
+    const head = new THREE.Group();
+    head.position.set(0, 0.59, 0.36);
+
+    const cranio = new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 14), matPelo);
+    cranio.scale.set(0.95, 0.96, 1.05);
+
+    const focinho = new THREE.Mesh(new THREE.SphereGeometry(0.088, 12, 10), matBarriga);
+    focinho.scale.set(0.95, 0.78, 1.35);
+    focinho.position.set(0, -0.045, 0.155);
+
+    const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.036, 10, 10), matFocinho);
+    nariz.scale.set(1.1, 0.8, 0.8);
+    nariz.position.set(0, -0.02, 0.255);
+
+    const lingua = new THREE.Mesh(
+      new THREE.SphereGeometry(0.028, 8, 8),
+      new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.4 })
+    );
+    lingua.scale.set(0.85, 0.4, 1.2);
+    lingua.position.set(0, -0.092, 0.205);
+
+    // Olhos expressivos + Orelhas caídas naturais
+    [-1, 1].forEach(side => {
+      const olho = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 10), matOlho);
+      olho.position.set(side * 0.068, 0.035, 0.135);
+      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), matGlint);
+      glint.position.set(side * 0.068 + 0.006, 0.044, 0.155);
+
+      const orelha = new THREE.Mesh(new THREE.SphereGeometry(0.068, 10, 10), matOrelha);
+      orelha.scale.set(0.45, 1.55, 0.85);
+      orelha.position.set(side * 0.145, -0.015, -0.01);
+      orelha.rotation.z = side * 0.22;
+
+      head.add(olho, glint, orelha);
+    });
+
+    head.add(cranio, focinho, nariz, lingua);
+
+    // Cauda articulada (para abanar de alegria!)
+    const tailPivot = new THREE.Group();
+    tailPivot.position.set(0, 0.42, -0.34);
+    const tailMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.045, 0.28, 10), matPelo);
+    tailMesh.position.set(0, 0.11, -0.07);
+    tailMesh.rotation.x = -0.65;
+    tailPivot.add(tailMesh);
+
+    // 4 Patas articuladas com patinhas claras
+    const legs = [];
+    const posPatas = [
+      [-0.125, 0.26,  0.22], // Frente Esq
+      [ 0.125, 0.26,  0.22], // Frente Dir
+      [-0.125, 0.26, -0.22], // Trás Esq
+      [ 0.125, 0.26, -0.22]  // Trás Dir
+    ];
+    posPatas.forEach(([lx, ly, lz]) => {
+      const pivot = new THREE.Group();
+      pivot.position.set(lx, ly, lz);
+      const perna = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.038, 0.24, 10), matPelo);
+      perna.position.y = -0.12;
+      const pata = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 8), matBarriga);
+      pata.scale.set(0.95, 0.62, 1.25);
+      pata.position.set(0, -0.24, 0.02);
+      pivot.add(perna, pata);
+      bodyRoot.add(pivot);
+      legs.push(pivot);
+    });
+
+    bodyRoot.add(torso, peito, pescoco, coleira, tag, head, tailPivot);
+    bodyRoot.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+    group.userData = {
+      isPetModel: true,
+      bodyRoot,
+      legs,
+      tailPivot,
+      head,
+      walkPhase: Math.random() * Math.PI * 2,
+      tailPhase: Math.random() * Math.PI * 2
+    };
     return group;
   }
 
-  criarGato3D() {
+  // 🐱 GATO 3D REALISTA (ORIENTADO PARA +Z, SILHUETA FELINA, OLHOS VERDES, BIGODES E CAUDA ELEGANTE)
+  criarGato3D(corPelo = 0x9ca3af) {
     const THREE = window.THREE;
     const group = new THREE.Group();
-    const bodyMat = new THREE.MeshStandardMaterial({ color: 0x9ca3af, roughness: 0.7 });
-    const body = new THREE.Mesh(new THREE.BoxGeometry(0.48, 0.22, 0.32), bodyMat); body.position.set(0, 0.22, 0);
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.18, 10, 10), bodyMat); head.position.set(0.32, 0.38, 0);
-    const earGeo = new THREE.ConeGeometry(0.06, 0.12, 4);
-    const ear1 = new THREE.Mesh(earGeo, bodyMat); ear1.position.set(0.32, 0.54, 0.08);
-    const ear2 = new THREE.Mesh(earGeo, bodyMat); ear2.position.set(0.32, 0.54, -0.08);
-    const tail = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.015, 0.42, 6), bodyMat); tail.position.set(-0.32, 0.32, 0); tail.rotation.z = 1.1;
-    group.add(body, head, ear1, ear2, tail);
+    const bodyRoot = new THREE.Group();
+    group.add(bodyRoot);
+
+    const matPelo = new THREE.MeshStandardMaterial({ color: corPelo, roughness: 0.72 });
+    const matClaro = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
+    const matRosa = new THREE.MeshStandardMaterial({ color: 0xf9a8d4, roughness: 0.55 });
+    const matOlho = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2 });
+    const matPupila = new THREE.MeshStandardMaterial({ color: 0x09090b });
+    const matColeira = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.45 });
+    const matSino = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.2 });
+
+    // Corpo felino esguio
+    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 14), matPelo);
+    torso.scale.set(0.78, 0.82, 1.55);
+    torso.position.set(0, 0.29, 0);
+
+    const peito = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), matClaro);
+    peito.position.set(0, 0.30, 0.18);
+
+    const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.16, 12), matPelo);
+    pescoco.position.set(0, 0.40, 0.22);
+    pescoco.rotation.x = 0.25;
+
+    const coleira = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.016, 8, 16), matColeira);
+    coleira.position.set(0, 0.39, 0.23);
+    coleira.rotation.x = Math.PI / 2 - 0.25;
+
+    const sino = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), matSino);
+    sino.position.set(0, 0.33, 0.32);
+
+    // Cabeça felina voltada para +Z
+    const head = new THREE.Group();
+    head.position.set(0, 0.49, 0.28);
+
+    const cranio = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 14), matPelo);
+    cranio.scale.set(1.06, 0.94, 0.96);
+
+    const focinho = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), matClaro);
+    focinho.scale.set(1.15, 0.78, 0.9);
+    focinho.position.set(0, -0.032, 0.115);
+
+    const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), matRosa);
+    nariz.position.set(0, -0.018, 0.158);
+
+    [-1, 1].forEach(side => {
+      // Orelhas pontudas com parte interna rosada
+      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.12, 6), matPelo);
+      ear.position.set(side * 0.082, 0.135, 0.0);
+      ear.rotation.z = side * -0.22;
+
+      const innerEar = new THREE.Mesh(new THREE.ConeGeometry(0.030, 0.08, 6), matRosa);
+      innerEar.position.set(side * 0.082, 0.13, 0.022);
+      innerEar.rotation.z = side * -0.22;
+
+      // Olhos verdes felinos com pupila vertical
+      const olho = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 10), matOlho);
+      olho.position.set(side * 0.055, 0.02, 0.112);
+
+      const pupila = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.034, 0.012), matPupila);
+      pupila.position.set(side * 0.055, 0.02, 0.133);
+
+      // Bigodes delicados
+      const whisker = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.004, 0.004), matClaro);
+      whisker.position.set(side * 0.095, -0.035, 0.13);
+      whisker.rotation.y = side * -0.25;
+
+      head.add(ear, innerEar, olho, pupila, whisker);
+    });
+    head.add(cranio, focinho, nariz);
+
+    // Cauda felina elegante erguida
+    const tailPivot = new THREE.Group();
+    tailPivot.position.set(0, 0.34, -0.26);
+    const tail1 = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.026, 0.24, 8), matPelo);
+    tail1.position.set(0, 0.11, -0.05);
+    tail1.rotation.x = -0.35;
+    const tail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.020, 0.18, 8), matClaro);
+    tail2.position.set(0, 0.28, -0.07);
+    tail2.rotation.x = 0.25;
+    tailPivot.add(tail1, tail2);
+
+    // 4 Patas finas articuladas
+    const legs = [];
+    const posPatas = [
+      [-0.095, 0.22,  0.17],
+      [ 0.095, 0.22,  0.17],
+      [-0.095, 0.22, -0.17],
+      [ 0.095, 0.22, -0.17]
+    ];
+    posPatas.forEach(([lx, ly, lz]) => {
+      const pivot = new THREE.Group();
+      pivot.position.set(lx, ly, lz);
+      const perna = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.20, 10), matPelo);
+      perna.position.y = -0.10;
+      const pata = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), matClaro);
+      pata.scale.set(0.9, 0.6, 1.2);
+      pata.position.set(0, -0.20, 0.015);
+      pivot.add(perna, pata);
+      bodyRoot.add(pivot);
+      legs.push(pivot);
+    });
+
+    bodyRoot.add(torso, peito, pescoco, coleira, sino, head, tailPivot);
+    bodyRoot.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+    group.userData = {
+      isPetModel: true,
+      bodyRoot,
+      legs,
+      tailPivot,
+      head,
+      walkPhase: Math.random() * Math.PI * 2,
+      tailPhase: Math.random() * Math.PI * 2
+    };
     return group;
   }
 
+  // 🐦 PÁSSARO 3D REALISTA (CORPO AERODINÂMICO, BICO, CAUDA E ASAS ARTICULADAS)
   criarPassaro3D() {
     const THREE = window.THREE;
     const group = new THREE.Group();
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6), new THREE.MeshStandardMaterial({ color: 0x1f2937 }));
-    const wingGeo = new THREE.PlaneGeometry(0.22, 0.06);
-    const wingMat = new THREE.MeshBasicMaterial({ color: 0x111827, side: THREE.DoubleSide });
-    const wingL = new THREE.Mesh(wingGeo, wingMat); wingL.position.set(0, 0.04, 0.12);
-    const wingR = new THREE.Mesh(wingGeo, wingMat); wingR.position.set(0, 0.04, -0.12);
-    group.add(body, wingL, wingR);
-    group.userData = { wingL, wingR };
+
+    const matCorpo = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
+    const matPeito = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7 });
+    const matBico = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
+
+    const body = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), matCorpo);
+    body.scale.set(0.85, 0.8, 1.65);
+
+    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), matPeito);
+    belly.scale.set(0.8, 0.65, 1.3);
+    belly.position.set(0, -0.03, 0.02);
+
+    const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), matCorpo);
+    head.position.set(0, 0.055, 0.16);
+
+    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.09, 6), matBico);
+    beak.rotation.x = Math.PI / 2;
+    beak.position.set(0, 0.045, 0.25);
+
+    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.16), matCorpo);
+    tail.position.set(0, 0.02, -0.22);
+    tail.rotation.x = 0.18;
+
+    // Asas articuladas presas pelos ombros para bater de forma realista
+    const wingGeo = new THREE.BoxGeometry(0.30, 0.018, 0.14);
+    const wingL = new THREE.Group();
+    wingL.position.set(-0.08, 0.04, 0.0);
+    const meshWL = new THREE.Mesh(wingGeo, matCorpo);
+    meshWL.position.x = -0.14;
+    wingL.add(meshWL);
+
+    const wingR = new THREE.Group();
+    wingR.position.set(0.08, 0.04, 0.0);
+    const meshWR = new THREE.Mesh(wingGeo, matCorpo);
+    meshWR.position.x = 0.14;
+    wingR.add(meshWR);
+
+    group.add(body, belly, head, beak, tail, wingL, wingR);
+    group.userData = { wingL, wingR, flapPhase: Math.random() * Math.PI * 2 };
     return group;
   }
 
+  // 🐾 ANIMAÇÃO UNIFICADA DE PATAS, CAUDA E RESPIRAÇÃO PARA CÃES E GATOS
+  animarQuadrúpede(mesh, andando, delta) {
+    const ud = mesh?.userData;
+    if (!ud || !ud.legs) return;
+
+    ud.tailPhase = (ud.tailPhase || 0) + delta * (andando ? 12 : 6);
+    if (ud.tailPivot) {
+      ud.tailPivot.rotation.z = Math.sin(ud.tailPhase) * (andando ? 0.55 : 0.35);
+    }
+
+    if (andando) {
+      ud.walkPhase = (ud.walkPhase || 0) + delta * 13;
+      const a = Math.sin(ud.walkPhase) * 0.62;
+      // Marcha cruzada natural (frente esq + trás dir juntas)
+      if (ud.legs[0]) ud.legs[0].rotation.x = a;
+      if (ud.legs[3]) ud.legs[3].rotation.x = a;
+      if (ud.legs[1]) ud.legs[1].rotation.x = -a;
+      if (ud.legs[2]) ud.legs[2].rotation.x = -a;
+      if (ud.bodyRoot) ud.bodyRoot.position.y = Math.abs(Math.sin(ud.walkPhase)) * 0.035;
+    } else {
+      ud.legs.forEach(leg => { leg.rotation.x *= 0.82; });
+      if (ud.bodyRoot) ud.bodyRoot.position.y = Math.sin(ud.tailPhase * 0.5) * 0.008;
+    }
+  }
+
+  // 🐕 SEGUIMENTO SUAVE E CORRIGIDO DO PET ADOTADO + ANIMAIS DE RUA
   atualizarAnimais(delta) {
     if (this.adoptedPet && this.localPlayer) {
-      const targetX = this.localPlayer.x - Math.sin(this.localPlayer.rotY) * 1.2;
-      const targetZ = this.localPlayer.z - Math.cos(this.localPlayer.rotY) * 1.2;
-      this.adoptedPet.position.x += (targetX - this.adoptedPet.position.x) * 0.08;
-      this.adoptedPet.position.z += (targetZ - this.adoptedPet.position.z) * 0.08;
-      this.adoptedPet.rotation.y = this.localPlayer.rotY + Math.PI / 2;
+      const p = this.localPlayer;
+      const pet = this.adoptedPet;
+
+      // Posição alvo confortável: levemente atrás e ao lado direito do dono
+      const sinR = Math.sin(p.rotY || 0);
+      const cosR = Math.cos(p.rotY || 0);
+      const alvoX = p.x - sinR * 1.15 + cosR * 0.72;
+      const alvoZ = p.z - cosR * 1.15 - sinR * 0.72;
+      const alvoY = p.y || 0;
+
+      const dx = alvoX - pet.position.x;
+      const dz = alvoZ - pet.position.z;
+      const dist = Math.hypot(dx, dz);
+
+      let petAndando = false;
+
+      if (dist > 14.0) {
+        // Se o dono usou GPS ou teleporte, o pet acompanha instantaneamente ao lado dele
+        pet.position.set(alvoX, alvoY, alvoZ);
+        pet.rotation.y = p.rotY || 0;
+      } else if (dist > 0.35) {
+        // Velocidade adaptativa: trota normal perto, corre se ficar mais para trás
+        const velPet = dist > 3.2 ? 9.5 : 6.2;
+        const passo = Math.min(dist, velPet * delta);
+        pet.position.x += (dx / dist) * passo;
+        pet.position.z += (dz / dist) * passo;
+
+        // Rotação suave pelo menor arco para a direção real do movimento (nunca gira errado!)
+        const angAlvo = Math.atan2(dx, dz);
+        let diff = angAlvo - pet.rotation.y;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        pet.rotation.y += diff * Math.min(1, delta * 9.5);
+
+        petAndando = dist > 0.45;
+      } else {
+        // Quando parado ao lado do dono, alinha suavemente para olhar na mesma direção
+        let diff = (p.rotY || 0) - pet.rotation.y;
+        while (diff > Math.PI) diff -= Math.PI * 2;
+        while (diff < -Math.PI) diff += Math.PI * 2;
+        pet.rotation.y += diff * Math.min(1, delta * 4.0);
+      }
+
+      // Acompanha suavemente a altura do elevador nas torres residenciais!
+      pet.position.y += (alvoY - pet.position.y) * Math.min(1, delta * 12);
+      this.animarQuadrúpede(pet, petAndando, delta);
     }
+
     if (this.modoInterior) return;
+
+    // Cães de rua caminhando na calçada olhando para frente
     this.animais.caes.forEach(dogData => {
-      dogData.walkPhase += delta * 6;
-      dogData.mesh.position.z += dogData.dir * dogData.speed * delta * 0.5;
-      if (dogData.mesh.position.z > 8) dogData.mesh.position.z = -82;
-      if (dogData.mesh.position.z < -82) dogData.mesh.position.z = 8;
+      dogData.mesh.position.z += dogData.dir * dogData.speed * delta;
+      dogData.mesh.rotation.y = dogData.dir > 0 ? 0 : Math.PI;
+      if (dogData.mesh.position.z > 10) dogData.mesh.position.z = -84;
+      if (dogData.mesh.position.z < -84) dogData.mesh.position.z = 10;
+      this.animarQuadrúpede(dogData.mesh, true, delta);
     });
+
+    // Gatos de rua passeando suavemente pelas calçadas
+    this.animais.gatos.forEach(catData => {
+      catData.mesh.position.z += catData.dir * catData.speed * delta;
+      catData.mesh.rotation.y = catData.dir > 0 ? 0 : Math.PI;
+      if (catData.mesh.position.z > 10) catData.mesh.position.z = -84;
+      if (catData.mesh.position.z < -84) catData.mesh.position.z = 10;
+      this.animarQuadrúpede(catData.mesh, true, delta);
+    });
+
+    // Pássaros voando em círculos suaves no céu
     this.animais.passaros.forEach(bird => {
-      bird.userData.angle += delta * 0.25;
-      bird.position.x += Math.cos(bird.userData.angle) * delta * bird.userData.speed;
-      bird.position.z += Math.sin(bird.userData.angle) * delta * bird.userData.speed;
-      bird.rotation.y = bird.userData.angle;
+      bird.userData.angle += delta * 0.28;
+      const vx = Math.cos(bird.userData.angle) * bird.userData.speed;
+      const vz = Math.sin(bird.userData.angle) * bird.userData.speed;
+      bird.position.x += vx * delta;
+      bird.position.z += vz * delta;
+      bird.rotation.y = Math.atan2(vx, vz);
+
       if (bird.userData.wingL) {
-        const flap = Math.sin(Date.now() * 0.02) * 0.65;
-        bird.userData.wingL.rotation.z = 0.2 + flap;
-        bird.userData.wingR.rotation.z = -0.2 - flap;
+        bird.userData.flapPhase = (bird.userData.flapPhase || 0) + delta * 14;
+        const flap = Math.sin(bird.userData.flapPhase) * 0.65;
+        bird.userData.wingL.rotation.z = flap;
+        bird.userData.wingR.rotation.z = -flap;
       }
     });
   }
@@ -6565,6 +6914,9 @@ this.scene.add(facadeHeader);
 
     this.ambientePro = new ES3DAmbiente(this);
     this.ambientePro.init();
+
+  this.interacoesPro = new ES3DInteracoes(this);
+    this.interacoesPro.init();
 
     this.iniciarLoopRenderizacao();
   }
@@ -7048,7 +7400,8 @@ if (this.torreAtual) {
       p.mesh.position.set(p.x, p.y || 0, p.z);
       p.mesh.rotation.y = p.rotY;
       this.animarPassosBoneco(p.mesh, estaAndando, delta);
-
+      this.interacoesPro?.update(delta, estaAndando);
+      
       if (this.vehicleMesh) {
         this.vehicleMesh.position.set(p.x, 0.05, p.z);
         this.vehicleMesh.rotation.y = p.rotY;
@@ -7559,6 +7912,21 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.cameraUI?.alternarModoCamera();
     });
 
+ document.getElementById('es-city-quest-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.interacoesPro?.abrirModalDailyQuests();
+    });
+
+    document.getElementById('es-city-emote-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.interacoesPro?.alternarBarraEmotes();
+    });
+
+    document.getElementById('es-city-photo-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.interacoesPro?.tirarFotoPostal();
+    });
+
     document.getElementById('es-city-weather-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.ambientePro?.alternarClima();
@@ -7644,6 +8012,7 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
           while (obj && !obj.userData?.clickable && obj.parent) obj = obj.parent;
           const ud = obj?.userData || hits[0].object.userData || {};
 
+          if (this.interacoesPro?.aoClicarObjeto3D(ud, obj)) return;
           if (ud.isMage) { this.interagirComMestreMago(); return; }
           if (ud.isPortal) { this.abrirPortalBauIngles(); return; }
           if (ud.isLot) { this.abrirModalConstrucaoCasa(); return; }
@@ -7921,7 +8290,7 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       }).catch(() => {});
     }
 
-   if (this.cameraUI) {
+  if (this.cameraUI) {
       this.cameraUI.dispose();
       this.cameraUI = null;
     }
@@ -7929,6 +8298,10 @@ document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.ambientePro.dispose();
       this.ambientePro = null;
     }
+  if (this.interacoesPro) {
+      this.interacoesPro.dispose();
+      this.interacoesPro = null;
+    }   
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {
