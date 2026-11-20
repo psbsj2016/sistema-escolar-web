@@ -204,9 +204,12 @@ async function verificarVersaoNoServidor() {
         const desatualizadoPeloBundle = VERSAO_DESTE_BUNDLE && (versaoServidor !== String(VERSAO_DESTE_BUNDLE).trim());
         const desatualizadoPeloStorage = versaoSalvaLocal && (versaoServidor !== String(versaoSalvaLocal).trim());
 
-        if (desatualizadoPeloBundle || desatualizadoPeloStorage) {
-            const ultimaTentativa = sessionStorage.getItem(CHAVE_TENTATIVA_RELOAD);
-            if (ultimaTentativa === versaoServidor) {
+       if (desatualizadoPeloBundle || desatualizadoPeloStorage) {
+            const tentativaRaw = sessionStorage.getItem(CHAVE_TENTATIVA_RELOAD) || '';
+            const [verTentada, qtdStr] = tentativaRaw.split('|');
+            const qtdTentativas = verTentada === versaoServidor ? (parseInt(qtdStr, 10) || 0) : 0;
+
+            if (qtdTentativas >= 2) {
                 localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoServidor);
                 return;
             }
@@ -298,8 +301,11 @@ async function executarAtualizacaoProfunda() {
 
     try {
         const versaoAlvo = versaoRemotaDetetada || VERSAO_DESTE_BUNDLE || String(Date.now());
+        const tentativaAnterior = sessionStorage.getItem(CHAVE_TENTATIVA_RELOAD) || '';
+        const [verAnt, qtdAnt] = tentativaAnterior.split('|');
+        const proxTentativa = verAnt === versaoAlvo ? ((parseInt(qtdAnt, 10) || 0) + 1) : 1;
         localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoAlvo);
-        sessionStorage.setItem(CHAVE_TENTATIVA_RELOAD, versaoAlvo);
+        sessionStorage.setItem(CHAVE_TENTATIVA_RELOAD, `${versaoAlvo}|${proxTentativa}`);
 
         // 1. Manda o Service Worker em espera assumir agora que a aula não está ativa
         if (swRegistrationGlobal && swRegistrationGlobal.waiting) {

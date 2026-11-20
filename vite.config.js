@@ -26,6 +26,21 @@ function geradorVersaoBuild() {
   };
 }
 
+// 🏷️ Injeta a versão exata da compilação em TODOS os HTMLs (inclusive Lousa e Sala de Vídeos)
+function injetarVersaoNosHtmls() {
+  return {
+    name: 'injetar-versao-nos-htmls',
+    transformIndexHtml: {
+      order: 'pre',
+      handler(html) {
+        const metaTag = `<meta name="app-build-version" content="${BUILD_VERSION}">`;
+        if (html.includes('name="app-build-version"')) return html;
+        return html.replace('</head>', `  ${metaTag}\n</head>`);
+      }
+    }
+  };
+}
+
 // 🛡️ Impede que o VitePWA injete o manifesto do Gestão Escolar dentro do workspace.html
 function preservarManifestoWorkspace() {
   return {
@@ -46,12 +61,13 @@ export default defineConfig({
   define: {
     __APP_BUILD_VERSION__: JSON.stringify(BUILD_VERSION)
   },
- plugins: [
+  plugins: [
+    injetarVersaoNosHtmls(),
     geradorVersaoBuild(),
     VitePWA({
       registerType: 'prompt',
-      includeAssets: ['assets/icone.png', 'audios/*.mp3'], 
-      
+      includeAssets: ['assets/icone.png', 'audios/*.mp3'],
+
       manifest: {
         id: "/",
         name: "Gestão Escolar SaaS",
@@ -75,12 +91,31 @@ export default defineConfig({
         globIgnores: [
           '**/node_modules/**/*',
           '**/uploads/**/*',
+          '**/workspace-lousa.html',
+          '**/workspace-aulas-video.html',
+          '**/version.json',
           '**/*.{mp4,webm,avi,mov,pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx}'
         ],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
-        importScripts: ['/push-sw.js'], 
-        
-      // 🚀 O ESCUDO ANTI-SEQUESTRO (Garante que cada domínio carregue o seu próprio HTML na raiz)
+        importScripts: ['/push-sw.js'],
+
+        // 🔄 Garante que a Lousa, a Sala de Vídeos e o version.json venham SEMPRE da rede primeiro!
+        runtimeCaching: [
+          {
+            urlPattern: /\/version\.json/,
+            handler: 'NetworkOnly'
+          },
+          {
+            urlPattern: /\/(workspace-lousa|workspace-aulas-video)(\.html)?(\?.*)?$/,
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'workspace-modulos-dinamicos',
+              networkTimeoutSeconds: 5
+            }
+          }
+        ],
+
+        // 🚀 O ESCUDO ANTI-SEQUESTRO (Garante que cada domínio carregue o seu próprio HTML na raiz)
         navigateFallbackDenylist: [
           /^\/$/,
           /^\/api/,

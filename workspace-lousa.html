@@ -3680,52 +3680,49 @@
         } catch (e) {}
       }
 
-      const CHAVE_VERSAO_LOUSA = 'ptt_versao_build_instalada';
-const CHAVE_RELOAD_LOUSA = 'ptt_reload_forcado_versao';
+      // 🔄 VERIFICADOR DE VERSÃO DA LOUSA (Lê a versão gravada no HTML no build para nunca ficar presa em cache!)
+      const metaVersaoLousa = document.querySelector('meta[name="app-build-version"]');
+      let versaoBuildLousa = metaVersaoLousa ? String(metaVersaoLousa.getAttribute('content') || '').trim() : null;
+      const CHAVE_RELOAD_LOUSA = 'ws_lousa_reload_versao';
 
-async function verificarAtualizacaoLousa() {
-  try {
-    const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
-    if (!res.ok) return;
-    const data = await res.json();
-    if (!data || !data.version) return;
+      async function verificarAtualizacaoLousa() {
+        try {
+          const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
+          if (!res.ok) return;
+          const data = await res.json();
+          if (!data || !data.version) return;
 
-    const versaoServidor = String(data.version).trim();
-    const versaoSalva = localStorage.getItem(CHAVE_VERSAO_LOUSA);
+          const versaoServidor = String(data.version).trim();
+          if (!versaoBuildLousa) {
+            versaoBuildLousa = versaoServidor;
+            return;
+          }
 
-    if (!versaoSalva) {
-      localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
-      return;
-    }
-    if (versaoServidor === versaoSalva) {
-      sessionStorage.removeItem(CHAVE_RELOAD_LOUSA);
-      return;
-    }
-    if (sessionStorage.getItem(CHAVE_RELOAD_LOUSA) === versaoServidor) {
-      localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
-      return;
-    }
-    if (isPointerDown || isSaving) return;
+          if (versaoBuildLousa !== versaoServidor && !isPointerDown && !isSaving) {
+            const ultimaTentativa = sessionStorage.getItem(CHAVE_RELOAD_LOUSA);
+            if (ultimaTentativa === versaoServidor) return;
+            sessionStorage.setItem(CHAVE_RELOAD_LOUSA, versaoServidor);
 
-    await salvarDadosNuvem();
-    localStorage.setItem(CHAVE_VERSAO_LOUSA, versaoServidor);
-    sessionStorage.setItem(CHAVE_RELOAD_LOUSA, versaoServidor);
-
-    try {
-      if ('serviceWorker' in navigator) {
-        const regs = await navigator.serviceWorker.getRegistrations();
-        for (const reg of regs) {
-          if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-          await reg.update().catch(() => {});
-        }
+            await salvarDadosNuvem();
+            if ('caches' in window) {
+              const chaves = await caches.keys();
+              await Promise.all(chaves.map(k => caches.delete(k)));
+            }
+            const urlAtual = new URL(window.location.href);
+            urlAtual.searchParams.set('_v', versaoServidor);
+            urlAtual.searchParams.set('_t', String(Date.now()));
+            window.location.replace(urlAtual.toString());
+          } else if (versaoBuildLousa === versaoServidor) {
+            sessionStorage.removeItem(CHAVE_RELOAD_LOUSA);
+          }
+        } catch (e) {}
       }
-    } catch (e) {}
 
-    setTimeout(() => window.location.reload(), 400);
-  } catch (e) {}
-}
-setInterval(verificarAtualizacaoLousa, 60000);
-verificarAtualizacaoLousa();
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') verificarAtualizacaoLousa();
+      });
+      setInterval(verificarAtualizacaoLousa, 25000);
+      verificarAtualizacaoLousa();
 
       if (window.innerWidth <= 900) {
         alternarMenuLateral(true);

@@ -3531,7 +3531,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
             document.body.style.overflow = 'hidden';
         }
         if (iframe) {
-            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=nenhuma&_t=${Date.now()}`);
+            const vBuild = typeof __APP_BUILD_VERSION__ !== 'undefined' ? __APP_BUILD_VERSION__ : Date.now();
+            iframe.setAttribute('src', `/workspace-lousa.html?role=professor&room=nenhuma&_v=${encodeURIComponent(vBuild)}&_t=${Date.now()}`);
         }
 
         await Workspace.Avaliacoes.carregarTurmasLousaProf();
@@ -3754,7 +3755,8 @@ abrirModalAcessos: async (avaliacaoId, destinoId, isSilent = false) => {
         } catch(e) {}
 
         const iframe = document.getElementById('iframeLousaAluno');
-        const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&userId=${encodeURIComponent(userId)}&alunoRefId=${encodeURIComponent(alunoRefId)}&_t=${Date.now()}`;
+        const vBuild = typeof __APP_BUILD_VERSION__ !== 'undefined' ? __APP_BUILD_VERSION__ : Date.now();
+        const urlMagica = `/workspace-lousa.html?role=aluno&room=${encodeURIComponent(turmaId)}&userId=${encodeURIComponent(userId)}&alunoRefId=${encodeURIComponent(alunoRefId)}&_v=${encodeURIComponent(vBuild)}&_t=${Date.now()}`;
         if (iframe) {
             iframe.setAttribute('src', urlMagica);
         }
