@@ -6,7 +6,8 @@ const COLISAO_CONFIG = {
   RAIO_JOGADOR: 0.36,           // Espessura física do corpo do avatar
   RAIO_PESSOA: 0.42,            // Raio sólido de NPCs, pedestres e outros jogadores
   DIST_ABRIR_PORTA_CASA: 2.8,   // Distância para abrir a porta da tua casa residencial
-  FOLGA_MOVEL_INTERIOR: 0.08    // Pequena folga nos móveis das lojas para corredores livres
+  FOLGA_MOVEL_INTERIOR: 0.08,   // Pequena folga nos móveis das lojas para corredores livres
+  MARGEM_PAREDE_MOVEL: 0.05     // Folga mínima entre um móvel decorativo e a parede interna
 };
 
 export class ES3DColisoes {
@@ -214,7 +215,69 @@ export class ES3DColisoes {
   }
 
   // ============================================================================
-  // 4. 📐 TESTES MATEMÁTICOS DE COLISÃO (COM REGRA ANTI-TRAVAMENTO!)
+  // 4. 🛋️ LIMITADOR FÍSICO DE MÓVEIS CONTRA PAREDES E OBSTÁCULOS DO CÔMODO
+  // ============================================================================
+  calcularDimensoesRotacionadas(cfg, rotY = 0) {
+    const w = Number(cfg?.w) || 0.8;
+    const d = Number(cfg?.d) || 0.8;
+    const cos = Math.abs(Math.cos(rotY));
+    const sin = Math.abs(Math.sin(rotY));
+    return {
+      halfW: (w * cos + d * sin) * 0.5,
+      halfD: (w * sin + d * cos) * 0.5
+    };
+  }
+
+  ajustarPosicaoMovelNoComodo(zona, rawX, rawZ, cfg, rotY = 0) {
+    if (!zona) return { x: rawX, z: rawZ, colidiuParede: false };
+
+    const { halfW, halfD } = this.calcularDimensoesRotacionadas(cfg, rotY);
+    const margem = COLISAO_CONFIG.MARGEM_PAREDE_MOVEL;
+
+    const limMinX = zona.minX + halfW + margem;
+    const limMaxX = zona.maxX - halfW - margem;
+    const limMinZ = zona.minZ + halfD + margem;
+    const limMaxZ = zona.maxZ - halfD - margem;
+
+    let x = limMinX <= limMaxX ? Math.max(limMinX, Math.min(limMaxX, rawX)) : (zona.minX + zona.maxX) * 0.5;
+    let z = limMinZ <= limMaxZ ? Math.max(limMinZ, Math.min(limMaxZ, rawZ)) : (zona.minZ + zona.maxZ) * 0.5;
+
+    let colidiuParede = (Math.abs(x - rawX) > 0.002) || (Math.abs(z - rawZ) > 0.002);
+
+    // Em apartamentos de torre, impede colocar móveis dentro do poço do elevador ou sobre as escadas
+    if (Array.isArray(zona.obstacles) && zona.obstacles.length > 0) {
+      for (const obs of zona.obstacles) {
+        const expMinX = obs.minX - halfW - margem;
+        const expMaxX = obs.maxX + halfW + margem;
+        const expMinZ = obs.minZ - halfD - margem;
+        const expMaxZ = obs.maxZ + halfD + margem;
+
+        if (x > expMinX && x < expMaxX && z > expMinZ && z < expMaxZ) {
+          const penEsq = Math.abs(x - expMinX);
+          const penDir = Math.abs(expMaxX - x);
+          const penNorte = Math.abs(z - expMinZ);
+          const penSul = Math.abs(expMaxZ - z);
+          const menor = Math.min(penEsq, penDir, penNorte, penSul);
+
+          if (menor === penEsq) x = expMinX;
+          else if (menor === penDir) x = expMaxX;
+          else if (menor === penNorte) z = expMinZ;
+          else z = expMaxZ;
+
+          colidiuParede = true;
+        }
+      }
+
+      // Garante novamente os limites externos das paredes após desviar de obstáculos internos
+      x = limMinX <= limMaxX ? Math.max(limMinX, Math.min(limMaxX, x)) : (zona.minX + zona.maxX) * 0.5;
+      z = limMinZ <= limMaxZ ? Math.max(limMinZ, Math.min(limMaxZ, z)) : (zona.minZ + zona.maxZ) * 0.5;
+    }
+
+    return { x, z, halfW, halfD, colidiuParede };
+  }
+
+  // ============================================================================
+  // 5. 📐 TESTES MATEMÁTICOS DE COLISÃO (COM REGRA ANTI-TRAVAMENTO!)
   // ============================================================================
   colideComCaixa(x, z, r, box) {
     const closestX = Math.max(box.minX, Math.min(x, box.maxX));
@@ -250,7 +313,7 @@ export class ES3DColisoes {
   }
 
   // ============================================================================
-  // 5. 🚦 VERIFICAÇÃO GLOBAL (CHAMADA PELO podeMoverPara DO JOGO)
+  // 6. 🚦 VERIFICAÇÃO GLOBAL (CHAMADA PELO podeMoverPara DO JOGO)
   // ============================================================================
   podePassar(newX, newZ, oldX, oldZ) {
     const r = COLISAO_CONFIG.RAIO_JOGADOR;
@@ -324,7 +387,7 @@ export class ES3DColisoes {
       if (this.bloquearCaixaComEscape(newX, newZ, oldX, oldZ, r, wall)) return false;
     }
 
-    // Telão do Game Show na Praça Central + Móveis decorativos do Lote
+    // Telão do Game Show na Praça Central + Móveis decorativos da Casa
     const colisoresBuilder = w.gameShowBuilder?.obterColisoresMoveisAtivos() || [];
     for (const box of colisoresBuilder) {
       if (this.bloquearCaixaComEscape(newX, newZ, oldX, oldZ, r, box)) return false;

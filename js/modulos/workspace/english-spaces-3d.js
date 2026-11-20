@@ -2048,6 +2048,7 @@ if (stage >= 2) {
       this.exteriorGroup.add(lotGroup);
       this.lotes.push(lotGroup);
     }
+    this.colisoesPro?.reconstruirColisoresLotes();
   }
 
   abrirModalConstrucaoCasa() {
@@ -8043,8 +8044,8 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
           while (obj && !obj.userData?.clickable && obj.parent) obj = obj.parent;
           const ud = obj?.userData || hits[0].object.userData || {};
 
-          if (this.interacoesPro?.aoClicarObjeto3D(ud, obj)) return;
-                           if (this.gameShowBuilder?.aoClicarObjeto3D(ud)) return;
+          if (this.gameShowBuilder?.aoClicarObjeto3D(ud)) return;
+                          if (this.interacoesPro?.aoClicarObjeto3D(ud, obj)) return;
           if (ud.isMage) { this.interagirComMestreMago(); return; }
           if (ud.isPortal) { this.abrirPortalBauIngles(); return; }
           if (ud.isLot) { this.abrirModalConstrucaoCasa(); return; }
@@ -8069,7 +8070,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
         }
 
         const intersectPt = new THREE.Vector3();
-        const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -(this.localPlayer.y || 0));
+        const alturaPiso = this.gameShowBuilder?.builderActive
+          ? (this.gameShowBuilder.obterAlturaPisoAtual?.() ?? (this.localPlayer.y || 0))
+          : (this.localPlayer.y || 0);
+        const floorPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -alturaPiso);
         
         if (raycaster.ray.intersectPlane(floorPlane, intersectPt)) {
           if (this.gameShowBuilder?.aoClicarNoChao(intersectPt)) return;
