@@ -1129,6 +1129,7 @@
       box-shadow: 0 10px 25px rgba(0,0,0,0.4); z-index: 200; display: none;
     }
   </style>
+  <meta name="app-build-version" content="1795159546015">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
@@ -1295,7 +1296,7 @@
           <div>
             <div class="section-title-bar">
               <h2 style="margin: 0; font-size: 22px; font-weight: 900; color: #0f172a;">Sequências por Assunto (Playlists)</h2>
-              <p style="margin: 4px 0 0 0; font-size: 13.5px; color: var(--text-muted);">Explore as nossas vídeo-aulas organizadas por assunto e módulo.</p>
+              <p style="margin: 4px 0 0 0; font-size: 13.5px; color: var(--text-muted);">Explore as nossas videoaulas organizadas por assunto e módulo.</p>
             </div>
             <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
               <div class="vc-subjects-bar" id="bar-assuntos" style="flex: 1;"></div>
@@ -1568,11 +1569,33 @@
     let recTimerInterval = null;
     let recSeconds = 0;
 
-    // Variáveis WebRTC + Som + Lousa + Reações + Microfones dos Alunos
+   // Variáveis WebRTC (Malha Única Estilo Meet) + Som + Lousa + Reações + Presença
+    // ⚙️ PARÂMETROS AJUSTÁVEIS DE REDE E QUALIDADE
+    const PEER_CONFIG_ICE = {
+      debug: 0,
+      config: {
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+          { urls: 'stun:stun2.l.google.com:19302' },
+          { urls: 'stun:stun3.l.google.com:19302' },
+          { urls: 'stun:stun4.l.google.com:19302' }
+          // Dica: se algum dia precisar atravessar redes 4G corporativas muito fechadas,
+          // adicione aqui um servidor TURN gratuito (ex: Metered.ca).
+        ]
+      }
+    };
+    const INTERVALO_HEARTBEAT_PRESENCA_MS = 20000; // Renova presença no servidor a cada 20s
+    const INTERVALO_MONITOR_MALHA_MS = 8000;       // Verifica e repara ligações pendentes a cada 8s
+
     let peerInstance = null;
+    let meuPeerIdAtual = '';
     let meuStreamLocal = null;
     let streamTransmissaoAtual = null;
+    let telaPartilhadaAudioTrackAtual = null;
     let conexoesAlunos = [];
+    const conexoesDadosMap = new Map();
+    const participantesSalaMap = new Map(); // userId/peerId -> dados do participante
     let chamadasAtivas = {};
     let micAtivo = false;
     let camAtiva = false;
@@ -1580,11 +1603,16 @@
     let lousaProjetadaAtiva = false;
     let modoMotorLive = 'nativo';
     let timerReconexaoAluno = null;
- let somReacoesAtivo = localStorage.getItem('ws_live_som_reacoes') !== 'false';
+    let timerHeartbeatPresenca = null;
+    let somReacoesAtivo = localStorage.getItem('ws_live_som_reacoes') !== 'false';
     let pipNativoAtivo = localStorage.getItem('ws_live_pip_nativo') !== 'false';
     let chatVeioDaHorizontal = false;
     let estadoTelaCheiaPaiAtivo = false;
     const estadoMicsParticipantes = {};
+    const estadoMicsPorId = {};
+    const estadoCamsPorId = {};
+    let professorPrincipalPeerId = null;
+    let professorPrincipalNome = '';
 
     const normalizarStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -1772,6 +1800,25 @@
       });
     }
 
+ function limparIdDom(valor) {
+      return String(valor || 'id').replace(/[^a-zA-Z0-9_-]/g, '_');
+    }
+
+    function obterMeuParticipantId() {
+      return String(USER_ID || meuPeerIdAtual || normalizarStr(USER_NAME));
+    }
+
+    function enviarDadosParaTodosPeers(payload) {
+      conexoesDadosMap.forEach((conn, peerKey) => {
+        if (conn && conn.open) {
+          try { conn.send(payload); } catch (e) {}
+        } else {
+          conexoesDadosMap.delete(peerKey);
+        }
+      });
+      conexoesAlunos = Array.from(conexoesDadosMap.values());
+    }
+
     function atualizarFundoCamaraPrincipal() {
       const layer = document.getElementById('main-camera-avatar-layer');
       const circle = document.getElementById('main-camera-avatar-circle');
@@ -1779,7 +1826,9 @@
       const videoMain = document.getElementById('video-prof-main');
       if (!layer || !circle) return;
 
-      const nomeProf = IS_GESTOR_OU_PROF ? USER_NAME : (liveAtivaObj?.professorNome || 'Professor');
+      const nomeProf = IS_GESTOR_OU_PROF
+        ? USER_NAME
+        : (professorPrincipalNome || liveAtivaObj?.professorNome || 'Professor');
       const mostrarVideoReal = IS_GESTOR_OU_PROF
         ? Boolean(camAtiva || profTelaPartilhadaAtiva)
         : Boolean(profCamAtiva);
@@ -1790,28 +1839,47 @@
         label.textContent = mostrarVideoReal ? 'Câmara ativa' : `${nomeProf}`;
       }
 
-      // 🔑 A chave que elimina a tela preta: quando a câmara está desligada, o <video> fica transparente (opacity: 0) mantendo o áudio a tocar!
       layer.style.display = mostrarVideoReal ? 'none' : 'flex';
       if (videoMain) {
+        // 🔇 Blindagem anti-eco: se sou o professor, meu vídeo principal fica SEMPRE mudo para mim!
+        if (IS_GESTOR_OU_PROF) {
+          videoMain.muted = true;
+          videoMain.volume = 0;
+        }
         videoMain.style.opacity = mostrarVideoReal ? '1' : '0';
         videoMain.style.transition = 'opacity 0.2s ease';
       }
     }
 
-    function atualizarIndicadorCamParticipante(nomePessoa, isCamLigada, rolePessoa = 'aluno') {
-      if (!nomePessoa) return;
+    function atualizarIndicadorCamParticipante(nomePessoa, isCamLigada, rolePessoa = 'aluno', participantId = '') {
       const ligado = Boolean(isCamLigada);
 
       if (rolePessoa === 'professor') {
         profCamAtiva = ligado;
+        if (nomePessoa) professorPrincipalNome = nomePessoa;
         atualizarFundoCamaraPrincipal();
         return;
       }
 
-      const chaveAluno = normalizarStr(nomePessoa);
-      estadoCamsParticipantes[chaveAluno] = ligado;
+      if (participantId) {
+        estadoCamsPorId[String(participantId)] = ligado;
+      }
+      const chaveAluno = nomePessoa ? normalizarStr(nomePessoa) : '';
+      if (chaveAluno) {
+        estadoCamsParticipantes[chaveAluno] = ligado;
+      }
 
-      document.querySelectorAll(`[data-aluno-chave="${chaveAluno}"]`).forEach(card => {
+      const seletor = participantId
+        ? `[data-participant-id="${CSS.escape(String(participantId))}"]`
+        : (chaveAluno ? `[data-aluno-chave="${CSS.escape(chaveAluno)}"]` : '');
+      if (!seletor) return;
+
+      let cartoes = document.querySelectorAll(seletor);
+      if (cartoes.length === 0 && chaveAluno) {
+        cartoes = document.querySelectorAll(`[data-aluno-chave="${CSS.escape(chaveAluno)}"]`);
+      }
+
+      cartoes.forEach(card => {
         const v = card.querySelector('video');
         const backdrop = card.querySelector('.tile-avatar-backdrop');
         if (v) v.style.opacity = ligado ? '1' : '0';
@@ -1825,26 +1893,23 @@
         : Boolean(camAtiva || (IS_GESTOR_OU_PROF && profTelaPartilhadaAtiva));
 
       const meuCargo = IS_GESTOR_OU_PROF ? 'professor' : 'aluno';
+      const meuId = obterMeuParticipantId();
       const payload = {
         id: 'cam_' + Date.now(),
         tipo: 'STATUS_CAM',
         subtipo: 'STATUS_CAM',
         salaCodigo: liveAtivaObj?.codigoSala || '',
         escolaId: ESCOLA_ID,
+        autorId: meuId,
+        peerId: meuPeerIdAtual,
         autorNome: USER_NAME,
         autorRole: meuCargo,
         texto: estadoAtual ? 'ATIVA' : 'DESLIGADA',
         camAtiva: estadoAtual
       };
 
-      atualizarIndicadorCamParticipante(USER_NAME, estadoAtual, meuCargo);
-
-      conexoesAlunos.forEach(conn => {
-        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
-      });
-      if (window._conexaoComProf && window._conexaoComProf.open) {
-        try { window._conexaoComProf.send(payload); } catch (e) {}
-      }
+      atualizarIndicadorCamParticipante(USER_NAME, estadoAtual, meuCargo, meuId);
+      enviarDadosParaTodosPeers(payload);
 
       try {
         await fetch('/api/workspace/video-aulas/live/evento', {
@@ -2935,6 +3000,28 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
    function limparConexoesWebRTC(manterCronometro = false) {
       clearInterval(timerReconexaoAluno);
+      clearInterval(timerHeartbeatPresenca);
+      timerReconexaoAluno = null;
+      timerHeartbeatPresenca = null;
+
+      Object.values(chamadasAtivas).forEach(call => {
+        try { if (call) call.close(); } catch (e) {}
+      });
+      chamadasAtivas = {};
+
+      conexoesDadosMap.forEach(conn => {
+        try { if (conn) conn.close(); } catch (e) {}
+      });
+      conexoesDadosMap.clear();
+      conexoesAlunos = [];
+      participantesSalaMap.clear();
+
+      if (audioCtxMixEcra) {
+        try { audioCtxMixEcra.close(); } catch (e) {}
+        audioCtxMixEcra = null;
+      }
+      telaPartilhadaAudioTrackAtual = null;
+
       if (meuStreamLocal) {
         meuStreamLocal.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
         meuStreamLocal = null;
@@ -2943,12 +3030,14 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         streamTransmissaoAtual.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
       }
       streamTransmissaoAtual = null;
+
       if (peerInstance) {
         try { peerInstance.destroy(); } catch (e) {}
         peerInstance = null;
       }
-      conexoesAlunos = [];
-      chamadasAtivas = {};
+      meuPeerIdAtual = '';
+      professorPrincipalPeerId = null;
+      professorPrincipalNome = '';
       lousaProjetadaAtiva = false;
       profCamAtiva = false;
       profTelaPartilhadaAtiva = false;
@@ -3426,28 +3515,38 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       iniciarConexaoWebRTCSala(codigoSala);
     }
 
-    // 🚪 Notifica a saída imediatamente (via P2P e via Servidor com keepalive) para apagar o ecrã do aluno na hora!
+    // 🚪 Notifica a saída imediatamente (via P2P + Presença oficial no Servidor com keepalive)
     function notificarSaidaDaLiveELimpar() {
       if (liveAtivaObj && liveAtivaObj.codigoSala) {
+        const meuId = obterMeuParticipantId();
         const payloadSaida = {
           subtipo: 'SAIU_ALUNO',
           tipo: 'SAIU_ALUNO',
           salaCodigo: liveAtivaObj.codigoSala,
           escolaId: ESCOLA_ID,
-          autorId: USER_ID,
+          autorId: meuId,
+          peerId: meuPeerIdAtual,
           autorNome: USER_NAME,
           nome: USER_NAME
         };
-        if (window._conexaoComProf && window._conexaoComProf.open) {
-          try { window._conexaoComProf.send(payloadSaida); } catch (e) {}
-        }
+        enviarDadosParaTodosPeers(payloadSaida);
+
         try {
-          fetch('/api/workspace/video-aulas/live/evento', {
+          fetch('/api/workspace/video-aulas/live/presenca', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             credentials: 'include',
             keepalive: true,
-            body: JSON.stringify(payloadSaida)
+            body: JSON.stringify({
+              acao: 'sair',
+              liveId: liveAtivaObj.id,
+              codigoSala: liveAtivaObj.codigoSala,
+              escolaId: ESCOLA_ID,
+              userId: meuId,
+              peerId: meuPeerIdAtual,
+              nome: USER_NAME,
+              role: IS_GESTOR_OU_PROF ? 'professor' : 'aluno'
+            })
           }).catch(() => {});
         } catch (e) {}
       }
@@ -3464,14 +3563,25 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       alternarAba('catalogo');
     }
 
-    // 🧹 Remove imediatamente o cartão de vídeo e o indicador de microfone de um aluno que saiu
-    function removerParticipanteDaGrelha(nomePessoa) {
-      if (!nomePessoa) return;
-      const nomeLimpo = String(nomePessoa).trim();
-      const chaveAluno = normalizarStr(nomeLimpo);
+    // 🧹 Remove imediatamente o cartão de vídeo e o indicador de microfone de quem saiu (por ID único ou nome)
+    function removerParticipanteDaGrelha(nomePessoa, participantId = '') {
+      const idLimpo = String(participantId || '').trim();
+      const nomeLimpo = String(nomePessoa || '').trim();
+      const chaveAluno = nomeLimpo ? normalizarStr(nomeLimpo) : '';
 
-      document.querySelectorAll(`[data-aluno-chave="${chaveAluno}"]`).forEach(el => el.remove());
-      delete estadoMicsParticipantes[nomeLimpo];
+      let removidos = 0;
+      if (idLimpo) {
+        document.querySelectorAll(`[data-participant-id="${CSS.escape(idLimpo)}"]`).forEach(el => {
+          el.remove();
+          removidos++;
+        });
+        delete estadoMicsPorId[idLimpo];
+        delete estadoCamsPorId[idLimpo];
+      }
+      if (removidos === 0 && chaveAluno) {
+        document.querySelectorAll(`[data-aluno-chave="${CSS.escape(chaveAluno)}"]`).forEach(el => el.remove());
+      }
+      if (nomeLimpo) delete estadoMicsParticipantes[nomeLimpo];
 
       const summary = document.getElementById('webrtc-mics-summary');
       if (summary) {
@@ -3483,7 +3593,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         `).join('');
       }
 
-     const grid = document.getElementById('webrtc-video-grid');
+      const grid = document.getElementById('webrtc-video-grid');
       if (grid && grid.children.length === 0) {
         grid.style.display = 'none';
       }
@@ -3828,28 +3938,26 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       setTimeout(() => el.remove(), 2800);
     }
 
-    // 🎤 SINCRONIZAÇÃO EM TEMPO REAL DO ESTADO DO MICROFONE DO ALUNO
+    // 🎤 SINCRONIZAÇÃO EM TEMPO REAL DO ESTADO DO MICROFONE (POR ID ÚNICO)
     async function transmitirMeuStatusMicrofone() {
+      const meuId = obterMeuParticipantId();
+      const meuCargo = IS_GESTOR_OU_PROF ? 'professor' : 'aluno';
       const payload = {
         id: 'mic_' + Date.now(),
         tipo: 'STATUS_MIC',
         subtipo: 'STATUS_MIC',
         salaCodigo: liveAtivaObj?.codigoSala || '',
         escolaId: ESCOLA_ID,
+        autorId: meuId,
+        peerId: meuPeerIdAtual,
         autorNome: USER_NAME,
-        autorRole: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+        autorRole: meuCargo,
         texto: micAtivo ? 'ATIVO' : 'MUDO',
         micAtivo: Boolean(micAtivo)
       };
 
-      atualizarIndicadorMicParticipante(USER_NAME, micAtivo, IS_GESTOR_OU_PROF ? 'professor' : 'aluno');
-
-      conexoesAlunos.forEach(conn => {
-        try { if (conn && conn.open) conn.send(payload); } catch (e) {}
-      });
-      if (window._conexaoComProf && window._conexaoComProf.open) {
-        try { window._conexaoComProf.send(payload); } catch (e) {}
-      }
+      atualizarIndicadorMicParticipante(USER_NAME, micAtivo, meuCargo, meuId);
+      enviarDadosParaTodosPeers(payload);
 
       try {
         await fetch('/api/workspace/video-aulas/live/evento', {
@@ -3861,16 +3969,28 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       } catch (e) {}
     }
 
-    function atualizarIndicadorMicParticipante(nomePessoa, isAtivo, rolePessoa = 'aluno') {
-      if (!nomePessoa || rolePessoa === 'professor') return;
-      const chaveNome = String(nomePessoa).trim();
-      estadoMicsParticipantes[chaveNome] = Boolean(isAtivo);
+    function atualizarIndicadorMicParticipante(nomePessoa, isAtivo, rolePessoa = 'aluno', participantId = '') {
+      if (rolePessoa === 'professor') return;
+      const ativo = Boolean(isAtivo);
+      const idLimpo = String(participantId || '').trim();
+      const chaveNome = String(nomePessoa || '').trim();
 
-      document.querySelectorAll('[data-participante-nome]').forEach(badge => {
-        if (badge.getAttribute('data-participante-nome') === chaveNome) {
-          badge.style.background = isAtivo ? 'rgba(16, 185, 129, 0.92)' : 'rgba(225, 29, 72, 0.92)';
-          badge.innerHTML = isAtivo ? '🎤 Ativo' : '🔇 Silencioso';
-        }
+      if (idLimpo) estadoMicsPorId[idLimpo] = ativo;
+      if (chaveNome) estadoMicsParticipantes[chaveNome] = ativo;
+
+      let badges = [];
+      if (idLimpo) {
+        badges = Array.from(document.querySelectorAll(`[data-participant-id="${CSS.escape(idLimpo)}"] [data-participante-nome]`));
+      }
+      if (badges.length === 0 && chaveNome) {
+        badges = Array.from(document.querySelectorAll('[data-participante-nome]')).filter(
+          b => b.getAttribute('data-participante-nome') === chaveNome
+        );
+      }
+
+      badges.forEach(badge => {
+        badge.style.background = ativo ? 'rgba(16, 185, 129, 0.92)' : 'rgba(225, 29, 72, 0.92)';
+        badge.innerHTML = ativo ? '🎤 Ativo' : '🔇 Silencioso';
       });
 
       const summary = document.getElementById('webrtc-mics-summary');
@@ -3880,22 +4000,38 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         summary.innerHTML = '';
         return;
       }
-      summary.innerHTML = entradas.map(([nome, ativo]) => `
-        <span style="background:${ativo ? 'rgba(16,185,129,0.18)' : 'rgba(225,29,72,0.18)'}; border:1px solid ${ativo ? '#10b981' : '#f43f5e'}; color:${ativo ? '#6ee7b7' : '#fda4af'}; padding:2px 8px; border-radius:99px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
-          ${ativo ? '🎤' : '🔇'} ${esc(nome)}: ${ativo ? 'Ativo' : 'Silencioso'}
+      summary.innerHTML = entradas.map(([nome, st]) => `
+        <span style="background:${st ? 'rgba(16,185,129,0.18)' : 'rgba(225,29,72,0.18)'}; border:1px solid ${st ? '#10b981' : '#f43f5e'}; color:${st ? '#6ee7b7' : '#fda4af'}; padding:2px 8px; border-radius:99px; font-weight:800; display:inline-flex; align-items:center; gap:4px;">
+          ${st ? '🎤' : '🔇'} ${esc(nome)}: ${st ? 'Ativo' : 'Silencioso'}
         </span>
       `).join('');
     }
 
-    // 🔊 BLOQUEAR SAÍDA DE SOM / TIRAR VIVA-VOZ
+    // 🔊 BLOQUEAR SAÍDA DE SOM / TIRAR VIVA-VOZ (NUNCA TIRA O MUDO DO PRÓPRIO VÍDEO LOCAL!)
     function alternarSaidaDeSom() {
       somSaidaAtivo = !somSaidaAtivo;
       const videoMain = document.getElementById('video-prof-main');
       if (videoMain) {
-        videoMain.muted = IS_GESTOR_OU_PROF ? true : !somSaidaAtivo;
+        if (IS_GESTOR_OU_PROF) {
+          videoMain.muted = true;
+          videoMain.volume = 0;
+        } else {
+          videoMain.muted = !somSaidaAtivo;
+          videoMain.volume = somSaidaAtivo ? 1 : 0;
+          if (somSaidaAtivo) videoMain.play().catch(() => {});
+        }
       }
+
       document.querySelectorAll('.remote-participant-video').forEach(v => {
         v.muted = !somSaidaAtivo;
+        v.volume = somSaidaAtivo ? 1 : 0;
+        if (somSaidaAtivo) v.play().catch(() => {});
+      });
+
+      // Garantia extra anti-eco: cartão local sempre mudo
+      document.querySelectorAll('.local-participant-video').forEach(v => {
+        v.muted = true;
+        v.volume = 0;
       });
 
       const btn = document.getElementById('btn-toggle-speaker');
@@ -4103,7 +4239,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
       if (lousaProjetadaAtiva) {
         const salaLousaId = liveAtivaObj?.codigoSala || 'live_lousa_ativa';
-        const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}`;
+        const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}&_t=${Date.now()}`;
         if (!iframe.src || !iframe.src.includes(salaLousaId)) {
           iframe.src = urlLousa;
         }
@@ -4275,7 +4411,51 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       notificarSaidaDaLiveELimpar();
     });
 
-    // Cria uma faixa de áudio silenciosa para manter a ligação ativa mesmo sem microfone permitido
+  // 🔓 Desbloqueia reprodução de áudio remoto em celulares assim que o usuário tocar na tela
+    (function configurarDesbloqueioAudioMobile() {
+      const desbloquear = () => {
+        if (!somSaidaAtivo) return;
+        const videoMain = document.getElementById('video-prof-main');
+        if (videoMain && !IS_GESTOR_OU_PROF && videoMain.srcObject && videoMain.paused) {
+          videoMain.muted = false;
+          videoMain.volume = 1;
+          videoMain.play().catch(() => {});
+        }
+        document.querySelectorAll('.remote-participant-video').forEach(v => {
+          if (v.srcObject && v.paused) {
+            v.muted = false;
+            v.volume = 1;
+            v.play().catch(() => {});
+          }
+        });
+      };
+      document.addEventListener('pointerdown', desbloquear, { passive: true });
+      document.addEventListener('click', desbloquear, { passive: true });
+    })();
+
+    // ⚙️ Configurações de Áudio (Anti-Eco e Anti-Microfonia) e Vídeo (Leve para vários alunos)
+    const OPCOES_AUDIO_ANTI_ECO = {
+      echoCancellation: { ideal: true },
+      noiseSuppression: { ideal: true },
+      autoGainControl: { ideal: true },
+      channelCount: { ideal: 1 }
+    };
+
+    function obterOpcoesVideoLocal() {
+      if (IS_GESTOR_OU_PROF) {
+        return ehDispositivoMobile()
+          ? { width: { ideal: 640, max: 960 }, height: { ideal: 360, max: 540 }, frameRate: { ideal: 20, max: 24 } }
+          : { width: { ideal: 1280, max: 1280 }, height: { ideal: 720, max: 720 }, frameRate: { ideal: 24, max: 30 } };
+      }
+      // Alunos transmitem em resolução leve de miniatura para suportar vários participantes sem travar celulares
+      return {
+        width: { ideal: 320, max: 480 },
+        height: { ideal: 240, max: 360 },
+        frameRate: { ideal: 15, max: 20 }
+      };
+    }
+
+    // Cria uma faixa de áudio silenciosa para manter o canal SDP de áudio aberto mesmo antes da permissão
     function criarFaixaAudioSilenciosa() {
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -4288,19 +4468,22 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         gain.connect(dst);
         osc.start();
         const track = dst.stream.getAudioTracks()[0];
-        if (track) track._isFallbackTrack = true;
+        if (track) {
+          track.enabled = false;
+          track._isFallbackTrack = true;
+        }
         return track;
       } catch (e) {
         return null;
       }
     }
 
-    // Cria uma faixa de vídeo preta leve para iniciar com a câmara desligada ou caso o utilizador clique em "Não permitir"
+    // Cria uma faixa de vídeo preta leve para manter o canal SDP de vídeo aberto com a câmara desligada
     function criarFaixaVideoPreta() {
       try {
         const c = document.createElement('canvas');
-        c.width = 640;
-        c.height = 360;
+        c.width = 320;
+        c.height = 180;
         const cx = c.getContext('2d');
         cx.fillStyle = '#050811';
         cx.fillRect(0, 0, c.width, c.height);
@@ -4338,13 +4521,370 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       }
     }
 
-  async function iniciarConexaoWebRTCSala(codigoSala) {
+    function atualizarPreviewVideoLocal() {
+      const streamPreview = streamTransmissaoAtual || meuStreamLocal;
+      if (!streamPreview) return;
+
+      if (IS_GESTOR_OU_PROF) {
+        const videoMain = document.getElementById('video-prof-main');
+        if (videoMain) {
+          videoMain.muted = true;
+          videoMain.volume = 0;
+          videoMain.srcObject = null;
+          videoMain.srcObject = streamPreview;
+          videoMain.play().catch(() => {});
+        }
+        atualizarFundoCamaraPrincipal();
+      } else {
+        const meuId = obterMeuParticipantId();
+        const cardLocal = document.querySelector(`[data-participant-id="${CSS.escape(meuId)}"]`);
+        const vLocal = cardLocal ? cardLocal.querySelector('video') : null;
+        if (vLocal) {
+          vLocal.muted = true;
+          vLocal.volume = 0;
+          vLocal.srcObject = null;
+          vLocal.srcObject = streamPreview;
+          vLocal.play().catch(() => {});
+        }
+      }
+    }
+
+    // 🔎 Localiza o canal (RTCRtpSender) de 'audio' ou 'video' mesmo quando track está vazio (null)
+    function obterSenderPorTipo(pc, tipo) {
+      if (!pc) return null;
+      const senders = pc.getSenders ? pc.getSenders() : [];
+      const direto = senders.find(s => s.track && s.track.kind === tipo);
+      if (direto) return direto;
+
+      if (typeof pc.getTransceivers === 'function') {
+        const tr = pc.getTransceivers().find(t =>
+          t.sender && (
+            (t.sender.track && t.sender.track.kind === tipo) ||
+            (t.receiver && t.receiver.track && t.receiver.track.kind === tipo)
+          )
+        );
+        if (tr && tr.sender) return tr.sender;
+      }
+      return null;
+    }
+
+    // 🔄 Troca a trilha de áudio/vídeo em TODAS as ligações ativas; se alguma não tiver canal negociado, renegocia automaticamente!
+    async function substituirTrilhaEmTodasChamadas(tipo, novaTrilha) {
+      if (!novaTrilha) return;
+      const peerIds = Object.keys(chamadasAtivas);
+
+      for (const pId of peerIds) {
+        const call = chamadasAtivas[pId];
+        if (!call) continue;
+        const pc = call.peerConnection;
+        const sender = obterSenderPorTipo(pc, tipo);
+
+        if (sender && typeof sender.replaceTrack === 'function') {
+          try {
+            await sender.replaceTrack(novaTrilha);
+            continue;
+          } catch (e) {}
+        }
+
+        // Plano B garantido: se a ligação antiga subiu sem esse canal (ex: negou permissão antes), refaz a chamada com o stream completo!
+        renegociarChamadaComPeer(pId);
+      }
+    }
+
+    function renegociarChamadaComPeer(targetPeerId) {
+      if (!peerInstance || peerInstance.destroyed || !targetPeerId || targetPeerId === meuPeerIdAtual) return;
+      const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+      if (!streamEnvio) return;
+
+      const chamadaAntiga = chamadasAtivas[targetPeerId];
+      if (chamadaAntiga) {
+        try { chamadaAntiga.close(); } catch (e) {}
+        delete chamadasAtivas[targetPeerId];
+      }
+
+      const dadosAlvo = Array.from(participantesSalaMap.values()).find(p => p.peerId === targetPeerId);
+      const novaCall = peerInstance.call(targetPeerId, streamEnvio, {
+        metadata: {
+          userId: obterMeuParticipantId(),
+          nome: USER_NAME,
+          role: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+          micAtivo: Boolean(micAtivo),
+          camAtiva: Boolean(camAtiva || (IS_GESTOR_OU_PROF && profTelaPartilhadaAtiva)),
+          renegociacao: true
+        }
+      });
+      if (novaCall) {
+        registrarEventosChamadaMidia(novaCall, dadosAlvo || { peerId: targetPeerId, userId: targetPeerId, nome: 'Participante', role: 'aluno' });
+      }
+    }
+
+    // 📡 Registra entrada / heartbeat / saída na lista oficial de participantes do Servidor
+    async function registrarPresencaNaLive(acao = 'entrar') {
+      if (!liveAtivaObj || !liveAtivaObj.ativa || !meuPeerIdAtual) return;
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/presenca', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            acao: acao,
+            liveId: liveAtivaObj.id,
+            codigoSala: liveAtivaObj.codigoSala,
+            escolaId: ESCOLA_ID,
+            userId: obterMeuParticipantId(),
+            peerId: meuPeerIdAtual,
+            nome: USER_NAME,
+            role: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+            micAtivo: Boolean(micAtivo),
+            camAtiva: Boolean(camAtiva || (IS_GESTOR_OU_PROF && profTelaPartilhadaAtiva))
+          })
+        });
+        const data = await res.json().catch(() => null);
+        if (data && data.success && Array.isArray(data.participantes)) {
+          sincronizarListaParticipantes(data.participantes);
+        }
+      } catch (e) {}
+    }
+
+    // 📺 Anexa o stream de áudio/vídeo recebido no lugar certo (Palco Principal se for o Professor; Grelha se for Aluno)
+    function anexarStreamRemoto(remotePeerId, remoteStream, infoPessoa) {
+      if (!remoteStream) return;
+      const pId = String(infoPessoa?.userId || remotePeerId);
+      const nomePessoa = String(infoPessoa?.nome || 'Participante').trim();
+      const cargoPessoa = String(infoPessoa?.role || 'aluno').toLowerCase();
+
+      // Se sou aluno e recebi o stream do Professor -> vai para o Palco Principal!
+      if (!IS_GESTOR_OU_PROF && cargoPessoa === 'professor') {
+        professorPrincipalPeerId = remotePeerId;
+        professorPrincipalNome = nomePessoa;
+        const videoMain = document.getElementById('video-prof-main');
+        if (videoMain) {
+          videoMain.muted = !somSaidaAtivo;
+          videoMain.volume = somSaidaAtivo ? 1 : 0;
+          if (videoMain.srcObject !== remoteStream) {
+            videoMain.srcObject = remoteStream;
+          }
+          videoMain.play().catch(() => {});
+        }
+        atualizarFundoCamaraPrincipal();
+        return;
+      }
+
+      // Todos os demais participantes (alunos vendo colegas + professor vendo alunos) vão para a Grelha Inteligente!
+      const micSt = estadoMicsPorId[pId] !== undefined ? estadoMicsPorId[pId] : Boolean(infoPessoa?.micAtivo);
+      const camSt = estadoCamsPorId[pId] !== undefined ? estadoCamsPorId[pId] : Boolean(infoPessoa?.camAtiva);
+      adicionarVideoParticipanteNaGrelha(pId, nomePessoa, remoteStream, false, micSt, camSt);
+    }
+
+    function registrarEventosConexaoDados(conn) {
+      if (!conn || !conn.peer) return;
+      const peerKey = conn.peer;
+      conexoesDadosMap.set(peerKey, conn);
+      conexoesAlunos = Array.from(conexoesDadosMap.values());
+
+      conn.on('open', () => {
+        if (IS_GESTOR_OU_PROF && lousaProjetadaAtiva) {
+          try { conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true }); } catch (e) {}
+        }
+      });
+
+      conn.on('data', (dados) => {
+        if (!dados) return;
+        const autorId = dados.autorId || dados.peerId || '';
+        if (dados.tipo === 'STATUS_MIC') {
+          atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole, autorId);
+        } else if (dados.tipo === 'STATUS_CAM') {
+          atualizarIndicadorCamParticipante(dados.autorNome, dados.texto === 'ATIVA' || Boolean(dados.camAtiva), dados.autorRole, autorId);
+        } else if (dados.tipo === 'MAO_LEVANTADA') {
+          mostrarAlertaMaoLevantada(dados.nome || dados.autorNome);
+        } else if (dados.tipo === 'REACAO_LIVE') {
+          desenharReacaoNaTela(dados, false);
+        } else if (dados.tipo === 'CHAT_LIVE') {
+          desenharMensagemMiniChat(dados, false);
+        } else if (dados.tipo === 'PROJETAR_LOUSA') {
+          aplicarProjecaoLousaVisual(dados.lousaAtiva);
+        } else if (dados.tipo === 'SAIU_ALUNO') {
+          removerParticipanteDaGrelha(dados.nome || dados.autorNome, autorId);
+        }
+      });
+
+      const limparEstaConn = () => {
+        if (conexoesDadosMap.get(peerKey) === conn) {
+          conexoesDadosMap.delete(peerKey);
+          conexoesAlunos = Array.from(conexoesDadosMap.values());
+        }
+      };
+      conn.on('close', limparEstaConn);
+      conn.on('error', limparEstaConn);
+    }
+
+    function registrarEventosChamadaMidia(call, infoPessoa) {
+      if (!call || !call.peer) return;
+      const remotePeerId = call.peer;
+
+      // Se já existia uma chamada antiga para o mesmo peer, fecha antes de substituir (evita conexões duplicadas!)
+      const antiga = chamadasAtivas[remotePeerId];
+      if (antiga && antiga !== call) {
+        try { antiga.close(); } catch (e) {}
+      }
+      chamadasAtivas[remotePeerId] = call;
+
+      const dadosMeta = {
+        userId: call.metadata?.userId || infoPessoa?.userId || remotePeerId,
+        nome: call.metadata?.nome || infoPessoa?.nome || 'Participante',
+        role: call.metadata?.role || infoPessoa?.role || 'aluno',
+        micAtivo: call.metadata?.micAtivo !== undefined ? Boolean(call.metadata.micAtivo) : Boolean(infoPessoa?.micAtivo),
+        camAtiva: call.metadata?.camAtiva !== undefined ? Boolean(call.metadata.camAtiva) : Boolean(infoPessoa?.camAtiva)
+      };
+
+      if (dadosMeta.role === 'professor' && !IS_GESTOR_OU_PROF) {
+        profCamAtiva = dadosMeta.camAtiva;
+        professorPrincipalNome = dadosMeta.nome;
+      }
+
+      call.on('stream', (remoteStream) => {
+        const statusEl = document.getElementById('webrtc-status-badge');
+        if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
+        // Busca os dados mais recentes do participante na lista oficial da sala
+        const maisRecente = Array.from(participantesSalaMap.values()).find(p => p.peerId === remotePeerId) || dadosMeta;
+        anexarStreamRemoto(remotePeerId, remoteStream, maisRecente);
+      });
+
+      const limparEstaCall = () => {
+        if (chamadasAtivas[remotePeerId] === call) {
+          delete chamadasAtivas[remotePeerId];
+        }
+      };
+      call.on('close', limparEstaCall);
+      call.on('error', limparEstaCall);
+    }
+
+    // 🤝 REGRA DE LIGAÇÃO ÚNICA (FIM DA CHAMADA DUPLA): Apenas o lado com peerId maior inicia a ligação!
+    function conectarSeEuForIniciador(participante) {
+      if (!peerInstance || peerInstance.destroyed || !meuPeerIdAtual) return;
+      if (!participante || !participante.peerId || participante.peerId === meuPeerIdAtual) return;
+
+      const targetPeerId = String(participante.peerId);
+      const souIniciador = String(meuPeerIdAtual) > targetPeerId;
+      if (!souIniciador) return;
+
+      // 1. Canal de Dados (1 por par)
+      if (!conexoesDadosMap.has(targetPeerId)) {
+        try {
+          const conn = peerInstance.connect(targetPeerId, { reliable: true });
+          if (conn) registrarEventosConexaoDados(conn);
+        } catch (e) {}
+      }
+
+      // 2. Canal de Áudio + Vídeo (1 único por par!)
+      const callExistente = chamadasAtivas[targetPeerId];
+      const pcEstado = callExistente?.peerConnection?.connectionState || '';
+      const precisaLigar = !callExistente || pcEstado === 'failed' || pcEstado === 'closed' || pcEstado === 'disconnected';
+
+      if (precisaLigar) {
+        const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+        if (!streamEnvio) return;
+        try {
+          const call = peerInstance.call(targetPeerId, streamEnvio, {
+            metadata: {
+              userId: obterMeuParticipantId(),
+              nome: USER_NAME,
+              role: IS_GESTOR_OU_PROF ? 'professor' : 'aluno',
+              micAtivo: Boolean(micAtivo),
+              camAtiva: Boolean(camAtiva || (IS_GESTOR_OU_PROF && profTelaPartilhadaAtiva))
+            }
+          });
+          if (call) registrarEventosChamadaMidia(call, participante);
+        } catch (e) {}
+      }
+    }
+
+    // 👥 SINCRONIZA A TELA DE TODOS (PROFESSOR E ALUNOS VEEM QUEM ESTÁ NA LIVE EM TEMPO REAL!)
+    function sincronizarListaParticipantes(listaParticipantes) {
+      if (!Array.isArray(listaParticipantes)) return;
+
+      const meuId = obterMeuParticipantId();
+      const idsAtuaisNaSala = new Set();
+      const peerIdsAtuaisNaSala = new Set();
+
+      listaParticipantes.forEach(p => {
+        if (!p || !p.peerId) return;
+        const pId = String(p.userId || p.peerId);
+        idsAtuaisNaSala.add(pId);
+        peerIdsAtuaisNaSala.add(String(p.peerId));
+
+        // Se o participante reconectou com um novo peerId (F5), fecha a ligação antiga dele
+        const anterior = participantesSalaMap.get(pId);
+        if (anterior && anterior.peerId !== p.peerId) {
+          if (chamadasAtivas[anterior.peerId]) {
+            try { chamadasAtivas[anterior.peerId].close(); } catch (e) {}
+            delete chamadasAtivas[anterior.peerId];
+          }
+          if (conexoesDadosMap.has(anterior.peerId)) {
+            try { conexoesDadosMap.get(anterior.peerId).close(); } catch (e) {}
+            conexoesDadosMap.delete(anterior.peerId);
+          }
+        }
+
+        participantesSalaMap.set(pId, p);
+
+        // Ignora a mim mesmo para ligações remotas, mas garante meu cartão local se sou aluno
+        if (pId === meuId || p.peerId === meuPeerIdAtual) {
+          return;
+        }
+
+        // Atualiza nome/câmara do Professor no palco principal para os alunos
+        if (!IS_GESTOR_OU_PROF && p.role === 'professor') {
+          professorPrincipalNome = p.nome || liveAtivaObj?.professorNome || 'Professor';
+          professorPrincipalPeerId = p.peerId;
+          profCamAtiva = Boolean(p.camAtiva);
+          atualizarFundoCamaraPrincipal();
+        } else {
+          // Desenha imediatamente o cartão de cada aluno/colega na grelha (mesmo antes do vídeo chegar!)
+          adicionarVideoParticipanteNaGrelha(pId, p.nome, null, false, Boolean(p.micAtivo), Boolean(p.camAtiva));
+        }
+
+        // Inicia a ligação única determinística se eu for o lado iniciador
+        conectarSeEuForIniciador(p);
+      });
+
+      // Remove quem saiu da sala (limpa cartões, chamadas e conexões fantasmas)
+      Array.from(participantesSalaMap.entries()).forEach(([pId, dadosAntigos]) => {
+        if (!idsAtuaisNaSala.has(pId)) {
+          participantesSalaMap.delete(pId);
+          if (dadosAntigos?.peerId) {
+            if (chamadasAtivas[dadosAntigos.peerId]) {
+              try { chamadasAtivas[dadosAntigos.peerId].close(); } catch (e) {}
+              delete chamadasAtivas[dadosAntigos.peerId];
+            }
+            if (conexoesDadosMap.has(dadosAntigos.peerId)) {
+              try { conexoesDadosMap.get(dadosAntigos.peerId).close(); } catch (e) {}
+              conexoesDadosMap.delete(dadosAntigos.peerId);
+            }
+          }
+          if (pId !== meuId) {
+            removerParticipanteDaGrelha(dadosAntigos?.nome, pId);
+          }
+        }
+      });
+
+      // Limpa também qualquer chamada órfã cujo peerId não está mais na lista
+      Object.keys(chamadasAtivas).forEach(peerKey => {
+        if (!peerIdsAtuaisNaSala.has(peerKey)) {
+          try { chamadasAtivas[peerKey].close(); } catch (e) {}
+          delete chamadasAtivas[peerKey];
+        }
+      });
+      conexoesAlunos = Array.from(conexoesDadosMap.values());
+    }
+
+    async function iniciarConexaoWebRTCSala(codigoSala) {
       const statusEl = document.getElementById('webrtc-status-badge');
       try {
         await carregarPeerJS();
         limparConexoesWebRTC(true); // ⏱️ Mantém o cronómetro a correr sem interrupção!
 
-        // 🔒 Inicia SEMPRE com Microfone e Câmara DESLIGADOS para Professor e Aluno!
+        // 🔒 Inicia SEMPRE com Microfone e Câmara DESLIGADOS (evita ruído e microfonia na entrada)
         micAtivo = false;
         camAtiva = false;
         profCamAtiva = false;
@@ -4353,19 +4893,16 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         atualizarFundoCamaraPrincipal();
         iniciarCronometroDuracaoLive();
 
-        const idSalaLimpo = String(codigoSala).replace(/[^a-zA-Z0-9]/g, '');
-        const idHostProf = `${idSalaLimpo}_HOST`;
-
-        // 1. Dispara o pedido nativo do navegador ("Permitir desta vez / Sempre / Não permitir")
+        // 1. Tenta pedir permissão inicial com filtros anti-eco e resolução leve
         try {
           meuStreamLocal = await navigator.mediaDevices.getUserMedia({
-            video: true,
-            audio: { echoCancellation: true, noiseSuppression: true }
+            video: obterOpcoesVideoLocal(),
+            audio: OPCOES_AUDIO_ANTI_ECO
           });
         } catch (errAmbos) {
           try {
             meuStreamLocal = await navigator.mediaDevices.getUserMedia({
-              audio: { echoCancellation: true, noiseSuppression: true },
+              audio: OPCOES_AUDIO_ANTI_ECO,
               video: false
             });
           } catch (errSoAudio) {
@@ -4373,7 +4910,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           }
         }
 
-        // 2. Desliga imediatamente as trilhas capturadas para que entrem 100% desligadas!
+        // 2. Desliga as trilhas capturadas para entrar mudo e sem câmara, garantindo reservas SDP
         meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
         meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = false; });
 
@@ -4388,234 +4925,119 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
         streamTransmissaoAtual = meuStreamLocal;
 
+        // 3. Configura o palco/cartão local sempre mudo (blindagem anti-eco!)
         if (IS_GESTOR_OU_PROF) {
-          const videoMain = document.getElementById('video-prof-main');
-          if (videoMain && meuStreamLocal) {
-            videoMain.muted = true;
-            videoMain.srcObject = meuStreamLocal;
-          }
-          atualizarFundoCamaraPrincipal();
-
-          const criarPeerProfessor = () => {
-            if (peerInstance) {
-              try { peerInstance.destroy(); } catch (e) {}
-            }
-            peerInstance = new Peer(idHostProf);
-
-            peerInstance.on('open', () => {
-              if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
-              fetch('/api/workspace/video-aulas/live/evento', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                credentials: 'include',
-                body: JSON.stringify({
-                  subtipo: 'PROF_RECONECTOU',
-                  salaCodigo: codigoSala,
-                  escolaId: ESCOLA_ID,
-                  autorNome: USER_NAME
-                })
-              }).catch(() => {});
-            });
-
-            peerInstance.on('error', (err) => {
-              if (err && (err.type === 'unavailable-id' || err.type === 'network' || err.type === 'server-error')) {
-                if (statusEl) statusEl.innerText = '🔄 Restaurando sala...';
-                setTimeout(() => {
-                  if (liveAtivaObj && liveAtivaObj.ativa) criarPeerProfessor();
-                }, 2200);
-              }
-            });
-
-            peerInstance.on('connection', (conn) => {
-              conexoesAlunos.push(conn);
-              let nomeAlunoDestaConn = '';
-
-              conn.on('data', (dados) => {
-                if (!dados) return;
-                if (dados.tipo === 'ENTROU_ALUNO' && dados.peerId) {
-                  nomeAlunoDestaConn = dados.nome || 'Aluno';
-                  const profMostrandoVideo = Boolean(camAtiva || profTelaPartilhadaAtiva);
-                  atualizarIndicadorMicParticipante(nomeAlunoDestaConn, Boolean(dados.micAtivo), 'aluno');
-                  atualizarIndicadorCamParticipante(nomeAlunoDestaConn, Boolean(dados.camAtivo), 'aluno');
-
-                  const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
-                  if (streamEnvio) {
-                    const call = peerInstance.call(dados.peerId, streamEnvio, {
-                      metadata: { nome: USER_NAME, role: 'professor', camAtiva: profMostrandoVideo }
-                    });
-                    chamadasAtivas[dados.peerId] = call;
-                  }
-                  // Envia ao aluno o estado atual da câmara do professor
-                  try {
-                    conn.send({
-                      tipo: 'STATUS_CAM',
-                      autorNome: USER_NAME,
-                      autorRole: 'professor',
-                      texto: profMostrandoVideo ? 'ATIVA' : 'DESLIGADA',
-                      camAtiva: profMostrandoVideo
-                    });
-                  } catch (e) {}
-                  if (lousaProjetadaAtiva) {
-                    conn.send({ tipo: 'PROJETAR_LOUSA', lousaAtiva: true });
-                  }
-                } else if (dados.tipo === 'SAIU_ALUNO') {
-                  removerParticipanteDaGrelha(dados.nome || nomeAlunoDestaConn);
-                } else if (dados.tipo === 'STATUS_MIC') {
-                  atualizarIndicadorMicParticipante(dados.autorNome, dados.texto === 'ATIVO' || Boolean(dados.micAtivo), dados.autorRole);
-                } else if (dados.tipo === 'STATUS_CAM') {
-                  atualizarIndicadorCamParticipante(dados.autorNome, dados.texto === 'ATIVA' || Boolean(dados.camAtiva), dados.autorRole);
-                } else if (dados.tipo === 'MAO_LEVANTADA') {
-                  mostrarAlertaMaoLevantada(dados.nome);
-                } else if (dados.tipo === 'REACAO_LIVE') {
-                  desenharReacaoNaTela(dados, false);
-                } else if (dados.tipo === 'CHAT_LIVE') {
-                  desenharMensagemMiniChat(dados, false);
-                } else if (dados.tipo === 'PROJETAR_LOUSA') {
-                  aplicarProjecaoLousaVisual(dados.lousaAtiva);
-                }
-              });
-
-              conn.on('close', () => {
-                if (nomeAlunoDestaConn) removerParticipanteDaGrelha(nomeAlunoDestaConn);
-              });
-            });
-
-            peerInstance.on('call', (call) => {
-              const nomeAl = call.metadata?.nome || 'Aluno';
-              const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
-              call.answer(streamEnvio || undefined);
-              chamadasAtivas[call.peer] = call;
-
-              call.on('stream', (streamAluno) => {
-                adicionarVideoParticipanteNaGrelha(call.peer, nomeAl, streamAluno, false, call.metadata?.micAtivo, Boolean(call.metadata?.camAtiva));
-              });
-              call.on('close', () => {
-                removerParticipanteDaGrelha(nomeAl);
-              });
-            });
-          };
-
-          criarPeerProfessor();
-
+          atualizarPreviewVideoLocal();
         } else {
-          if (meuStreamLocal) {
-            adicionarVideoParticipanteNaGrelha('meu_video_local', USER_NAME, meuStreamLocal, true, micAtivo, camAtiva);
-            atualizarIndicadorMicParticipante(USER_NAME, micAtivo, 'aluno');
+          const meuId = obterMeuParticipantId();
+          adicionarVideoParticipanteNaGrelha(meuId, USER_NAME, meuStreamLocal, true, micAtivo, camAtiva);
+          atualizarIndicadorMicParticipante(USER_NAME, micAtivo, 'aluno', meuId);
+        }
+
+        // 4. Cria um Peer ID único para esta sessão (elimina erro unavailable-id no F5!)
+        const idSalaLimpo = String(codigoSala).replace(/[^a-zA-Z0-9]/g, '').slice(-14);
+        const prefixoCargo = IS_GESTOR_OU_PROF ? 'PROF' : 'AL';
+        const sufixoUnico = `${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
+        meuPeerIdAtual = `PC_${idSalaLimpo}_${prefixoCargo}_${sufixoUnico}`;
+
+        const iniciarInstanciaPeer = () => {
+          if (peerInstance) {
+            try { peerInstance.destroy(); } catch (e) {}
           }
+          peerInstance = new Peer(meuPeerIdAtual, PEER_CONFIG_ICE);
 
-          const meuPeerId = `${idSalaLimpo}_AL_${Date.now().toString(36)}_${Math.random().toString(36).substring(2, 6)}`;
-          peerInstance = new Peer(meuPeerId);
+          peerInstance.on('open', async (idConfirmado) => {
+            meuPeerIdAtual = idConfirmado;
+            if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
 
-          const conectarAoProfessor = (idGerado) => {
-            if (!peerInstance || peerInstance.destroyed) return;
-            const idFinal = idGerado || peerInstance.id;
-            if (!idFinal) return;
+            // Registra presença oficial na sala e já recebe a lista de todos os colegas/professor online!
+            await registrarPresencaNaLive('entrar');
 
-            const conn = peerInstance.connect(idHostProf);
-            window._conexaoComProf = conn;
-            conn.on('open', () => {
-              if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
-              conn.send({ tipo: 'ENTROU_ALUNO', peerId: idFinal, nome: USER_NAME, micAtivo: micAtivo, camAtiva: camAtiva });
-              transmitirMeuStatusMicrofone();
-              transmitirMeuStatusCamara(camAtiva);
-            });
-            conn.on('data', (dados) => {
-              if (!dados) return;
-              if (dados.tipo === 'CHAT_LIVE') desenharMensagemMiniChat(dados, false);
-              else if (dados.tipo === 'REACAO_LIVE') desenharReacaoNaTela(dados, false);
-              else if (dados.tipo === 'STATUS_CAM') atualizarIndicadorCamParticipante(dados.autorNome, dados.texto === 'ATIVA' || Boolean(dados.camAtiva), dados.autorRole);
-              else if (dados.tipo === 'PROJETAR_LOUSA') aplicarProjecaoLousaVisual(dados.lousaAtiva);
-            });
-
-            if (meuStreamLocal) {
-              const callToProf = peerInstance.call(idHostProf, meuStreamLocal, { metadata: { nome: USER_NAME, role: 'aluno', micAtivo: micAtivo, camAtiva: camAtiva } });
-              if (callToProf) {
-                window._chamadaAtivaComProf = callToProf;
-                callToProf.on('stream', (streamProf) => {
-                  const videoMain = document.getElementById('video-prof-main');
-                  if (videoMain) {
-                    videoMain.muted = !somSaidaAtivo;
-                    videoMain.srcObject = streamProf;
-                    videoMain.play().catch(() => {});
-                  }
-                  atualizarFundoCamaraPrincipal();
-                });
+            // Heartbeat de presença a cada 20s
+            clearInterval(timerHeartbeatPresenca);
+            timerHeartbeatPresenca = setInterval(() => {
+              if (liveAtivaObj && liveAtivaObj.ativa && peerInstance && !peerInstance.destroyed) {
+                registrarPresencaNaLive('heartbeat');
               }
-            }
-          };
+            }, INTERVALO_HEARTBEAT_PRESENCA_MS);
 
-          window._reconectarAoProfessorLive = () => conectarAoProfessor(peerInstance?.id);
-
-          peerInstance.on('open', (idGerado) => {
-            conectarAoProfessor(idGerado);
+            // Monitor suave da malha a cada 8s (repara apenas ligações que falharam, nunca duplica!)
             clearInterval(timerReconexaoAluno);
             timerReconexaoAluno = setInterval(() => {
-              const videoMain = document.getElementById('video-prof-main');
-              const streamAtual = videoMain ? videoMain.srcObject : null;
-              const trilhaVideo = streamAtual && streamAtual.getVideoTracks ? streamAtual.getVideoTracks()[0] : null;
-              const conexaoCaiu = !streamAtual || !streamAtual.active || (trilhaVideo && trilhaVideo.readyState === 'ended');
-              if (conexaoCaiu) {
-                conectarAoProfessor(idGerado);
-              }
-            }, 5000);
+              if (!liveAtivaObj || !liveAtivaObj.ativa || !peerInstance || peerInstance.destroyed) return;
+              participantesSalaMap.forEach(p => conectarSeEuForIniciador(p));
+            }, INTERVALO_MONITOR_MALHA_MS);
+          });
+
+          peerInstance.on('connection', (conn) => {
+            registrarEventosConexaoDados(conn);
           });
 
           peerInstance.on('call', (call) => {
-            window._chamadaAtivaComProf = call;
-            if (call.metadata && typeof call.metadata.camAtiva === 'boolean') {
-              profCamAtiva = call.metadata.camAtiva;
-            }
-            call.answer(meuStreamLocal || undefined);
-            call.on('stream', (streamProf) => {
-              if (statusEl) statusEl.innerText = '🟢 Ao Vivo';
-              const videoMain = document.getElementById('video-prof-main');
-              if (videoMain) {
-                videoMain.muted = !somSaidaAtivo;
-                videoMain.srcObject = streamProf;
-                videoMain.play().catch(() => {});
-              }
-              atualizarFundoCamaraPrincipal();
-            });
+            const streamEnvio = streamTransmissaoAtual || meuStreamLocal;
+            call.answer(streamEnvio || undefined);
+            const infoExistente = Array.from(participantesSalaMap.values()).find(p => p.peerId === call.peer);
+            registrarEventosChamadaMidia(call, infoExistente || call.metadata || { peerId: call.peer, userId: call.peer, nome: 'Participante', role: 'aluno' });
           });
-        }
+
+          peerInstance.on('disconnected', () => {
+            if (peerInstance && !peerInstance.destroyed) {
+              try { peerInstance.reconnect(); } catch (e) {}
+            }
+          });
+
+          peerInstance.on('error', (err) => {
+            if (err && (err.type === 'network' || err.type === 'server-error' || err.type === 'disconnected')) {
+              if (statusEl) statusEl.innerText = '🔄 Reconectando...';
+              setTimeout(() => {
+                if (liveAtivaObj && liveAtivaObj.ativa && peerInstance && !peerInstance.destroyed) {
+                  try { peerInstance.reconnect(); } catch (e) {}
+                }
+              }, 2500);
+            }
+          });
+        };
+
+        iniciarInstanciaPeer();
       } catch (err) {
         if (statusEl) statusEl.innerText = '⚠️ A reconectar...';
       }
     }
 
-  // 🛡️ ANTI-DUPLICAÇÃO DE ECRÃ: Garante 1 único cartão por aluno (com Foto Central quando câmara desligada + Mini-Foto no nome!)
-    function adicionarVideoParticipanteNaGrelha(idCard, nomePessoa, stream, isLocal = false, micInicial = false, camInicial = false) {
+    // 🛡️ CARTÃO DE PARTICIPANTE POR ID ÚNICO (Permite alunos homônimos + Mostra todos na tela de todos!)
+    function adicionarVideoParticipanteNaGrelha(participantId, nomePessoa, stream, isLocal = false, micInicial = false, camInicial = false) {
       const grid = document.getElementById('webrtc-video-grid');
       if (!grid) return;
       grid.style.display = 'flex';
+
+      const idUnico = String(participantId || normalizarStr(nomePessoa) || ('p_' + Date.now())).trim();
+      const idDom = limparIdDom(idUnico);
       const nomeLimpo = String(nomePessoa || 'Aluno').trim();
       const chaveAluno = normalizarStr(nomeLimpo);
-      const estaAtivo = estadoMicsParticipantes[nomeLimpo] !== undefined ? estadoMicsParticipantes[nomeLimpo] : Boolean(micInicial);
-      const camEstaAtiva = estadoCamsParticipantes[chaveAluno] !== undefined ? estadoCamsParticipantes[chaveAluno] : Boolean(camInicial);
 
-      const cartoesExistentesDoAluno = grid.querySelectorAll(`[data-aluno-chave="${chaveAluno}"]`);
-      let card = cartoesExistentesDoAluno[0] || document.getElementById(`vid_card_${idCard}`);
-      if (cartoesExistentesDoAluno.length > 1) {
-        for (let i = 1; i < cartoesExistentesDoAluno.length; i++) {
-          cartoesExistentesDoAluno[i].remove();
-        }
-      }
+      const estaAtivo = estadoMicsPorId[idUnico] !== undefined ? estadoMicsPorId[idUnico] : Boolean(micInicial);
+      const camEstaAtiva = estadoCamsPorId[idUnico] !== undefined ? estadoCamsPorId[idUnico] : Boolean(camInicial);
+
+      let card = grid.querySelector(`[data-participant-id="${CSS.escape(idUnico)}"]`);
 
       if (!card) {
-       card = document.createElement('div');
-        card.id = `vid_card_${chaveAluno}`;
+        card = document.createElement('div');
+        card.id = `vid_card_${idDom}`;
         card.className = 'participant-tile';
+        card.setAttribute('data-participant-id', idUnico);
         card.setAttribute('data-aluno-chave', chaveAluno);
         card.style.cssText = 'background:#090d16; border-radius:10px; overflow:hidden; position:relative; border:1px solid #334155; display:flex; align-items:center; justify-content:center;';
+        const rotuloExibido = isLocal ? `${nomeLimpo} (Você)` : nomeLimpo;
+
         card.innerHTML = `
           <div class="camera-avatar-backdrop tile-avatar-backdrop" data-tile-avatar="${esc(nomeLimpo)}" style="display:${camEstaAtiva ? 'none' : 'flex'}; gap:0;">
             <div class="tile-avatar-circle">${gerarHtmlAvatarCentro(nomeLimpo)}</div>
           </div>
-          <video class="${isLocal ? '' : 'remote-participant-video'}" autoplay playsinline disablePictureInPicture ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="position:relative; z-index:2; width:100%; height:100%; object-fit:contain; background:transparent; opacity:${camEstaAtiva ? '1' : '0'}; transition:opacity 0.2s ease;"></video>
+          <video class="${isLocal ? 'local-participant-video' : 'remote-participant-video'}" autoplay playsinline disablePictureInPicture ${isLocal || !somSaidaAtivo ? 'muted' : ''} style="position:relative; z-index:2; width:100%; height:100%; object-fit:contain; background:transparent; opacity:${camEstaAtiva ? '1' : '0'}; transition:opacity 0.2s ease;"></video>
           <div style="position:absolute; bottom:4px; left:6px; right:6px; z-index:4; display:flex; justify-content:space-between; align-items:center; gap:4px; pointer-events:none;">
             <span data-chip-nome="${esc(nomeLimpo)}" style="background:rgba(15,23,42,0.88); color:#fff; padding:2px 6px; border-radius:6px; font-size:10px; font-weight:700; display:inline-flex; align-items:center; gap:4px; min-width:0; max-width:96px; overflow:hidden;">
               ${gerarHtmlAvatarPequeno(nomeLimpo)}
-              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(nomeLimpo)}</span>
+              <span style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${esc(rotuloExibido)}</span>
             </span>
             <span data-participante-nome="${esc(nomeLimpo)}" style="background:${estaAtivo ? 'rgba(16,185,129,0.92)' : 'rgba(225,29,72,0.92)'}; color:#fff; padding:2px 6px; border-radius:4px; font-size:9.5px; font-weight:800; flex-shrink:0;">
               ${estaAtivo ? '🎤 Ativo' : '🔇 Silencioso'}
@@ -4623,29 +5045,41 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           </div>
         `;
         grid.appendChild(card);
-      } else {
-        card.setAttribute('data-aluno-chave', chaveAluno);
       }
 
       const v = card.querySelector('video');
-      if (v && v.srcObject !== stream) {
-        v.srcObject = stream;
-        v.play().catch(() => {});
+      if (v) {
+        if (isLocal) {
+          v.muted = true;
+          v.volume = 0;
+        } else {
+          v.muted = !somSaidaAtivo;
+          v.volume = somSaidaAtivo ? 1 : 0;
+        }
+        if (stream && v.srcObject !== stream) {
+          v.srcObject = stream;
+          v.play().catch(() => {});
+        }
       }
-      atualizarIndicadorMicParticipante(nomeLimpo, estaAtivo, 'aluno');
-      atualizarIndicadorCamParticipante(nomeLimpo, camEstaAtiva, 'aluno');
+
+      atualizarIndicadorMicParticipante(nomeLimpo, estaAtivo, 'aluno', idUnico);
+      atualizarIndicadorCamParticipante(nomeLimpo, camEstaAtiva, 'aluno', idUnico);
       ajustarLayoutGrelhaParticipantes();
     }
 
-    // 🎤 LIGAR / DESLIGAR MICROFONE (Se não tiver dado permissão antes, pede ao navegador na hora!)
+    // 🎤 LIGAR / DESLIGAR MICROFONE (COM CANCELAMENTO DE ECO + TROCA GARANTIDA EM TODAS AS CONEXÕES!)
     async function alternarMeuMicrofone() {
-      if (!meuStreamLocal) return;
+      if (!meuStreamLocal) {
+        meuStreamLocal = new MediaStream();
+        if (!streamTransmissaoAtual) streamTransmissaoAtual = meuStreamLocal;
+      }
+
       let audioTrack = meuStreamLocal.getAudioTracks()[0];
 
       if (!micAtivo && (!audioTrack || audioTrack._isFallbackTrack || audioTrack.readyState === 'ended')) {
         try {
           const novoAudioStream = await navigator.mediaDevices.getUserMedia({
-            audio: { echoCancellation: true, noiseSuppression: true }
+            audio: OPCOES_AUDIO_ANTI_ECO
           });
           const novaTrilhaAudio = novoAudioStream.getAudioTracks()[0];
           if (novaTrilhaAudio) {
@@ -4653,16 +5087,16 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
               meuStreamLocal.removeTrack(audioTrack);
               try { audioTrack.stop(); } catch (e) {}
             }
+            novaTrilhaAudio.enabled = true;
             meuStreamLocal.addTrack(novaTrilhaAudio);
             audioTrack = novaTrilhaAudio;
 
-            Object.values(chamadasAtivas).forEach(call => {
-              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'audio');
-              if (sender) sender.replaceTrack(novaTrilhaAudio).catch(() => {});
-            });
-            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
-              const senderAl = window._chamadaAtivaComProf.peerConnection.getSenders().find(s => s.track && s.track.kind === 'audio');
-              if (senderAl) senderAl.replaceTrack(novaTrilhaAudio).catch(() => {});
+            // Se houver partilha de tela com áudio ativa, remistura o novo microfone com o som da tela
+            if (telaPartilhadaAudioTrackAtual && telaPartilhadaAudioTrackAtual.readyState === 'live') {
+              const mixAtualizado = criarFaixaAudioCombinadaTelaEMic(telaPartilhadaAudioTrackAtual);
+              await substituirTrilhaEmTodasChamadas('audio', mixAtualizado || novaTrilhaAudio);
+            } else {
+              await substituirTrilhaEmTodasChamadas('audio', novaTrilhaAudio);
             }
           }
         } catch (errPerm) {
@@ -4673,34 +5107,48 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
       micAtivo = !micAtivo;
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
+
+      // Garante que todos os colegas e o professor estejam recebendo a trilha real do microfone
+      if (micAtivo && audioTrack && !audioTrack._isFallbackTrack) {
+        if (telaPartilhadaAudioTrackAtual && telaPartilhadaAudioTrackAtual.readyState === 'live') {
+          const mix = criarFaixaAudioCombinadaTelaEMic(telaPartilhadaAudioTrackAtual);
+          await substituirTrilhaEmTodasChamadas('audio', mix || audioTrack);
+        } else {
+          await substituirTrilhaEmTodasChamadas('audio', audioTrack);
+        }
+      }
+
       sincronizarBotoesMicECamUI();
       transmitirMeuStatusMicrofone();
     }
 
-    // 📷 LIGAR / DESLIGAR CÂMARA (Se não tiver dado permissão antes, pede ao navegador na hora!)
+    // 📷 LIGAR / DESLIGAR CÂMARA (COM RESOLUÇÃO LEVE + TROCA GARANTIDA EM TODAS AS CONEXÕES!)
     async function alternarMinhaCamara() {
-      if (!meuStreamLocal) return;
+      if (!meuStreamLocal) {
+        meuStreamLocal = new MediaStream();
+        if (!streamTransmissaoAtual) streamTransmissaoAtual = meuStreamLocal;
+      }
+
       let videoTrack = meuStreamLocal.getVideoTracks()[0];
 
       if (!camAtiva && (!videoTrack || videoTrack._isFallbackTrack || videoTrack.readyState === 'ended')) {
         try {
-          const novoVideoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+          const novoVideoStream = await navigator.mediaDevices.getUserMedia({
+            video: obterOpcoesVideoLocal()
+          });
           const novaTrilhaVideo = novoVideoStream.getVideoTracks()[0];
           if (novaTrilhaVideo) {
             if (videoTrack) {
               meuStreamLocal.removeTrack(videoTrack);
               try { videoTrack.stop(); } catch (e) {}
             }
+            novaTrilhaVideo.enabled = true;
             meuStreamLocal.addTrack(novaTrilhaVideo);
             videoTrack = novaTrilhaVideo;
 
-            Object.values(chamadasAtivas).forEach(call => {
-              const sender = call.peerConnection?.getSenders().find(s => s.track && s.track.kind === 'video');
-              if (sender) sender.replaceTrack(novaTrilhaVideo).catch(() => {});
-            });
-            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
-              const senderAl = window._chamadaAtivaComProf.peerConnection.getSenders().find(s => s.track && s.track.kind === 'video');
-              if (senderAl) senderAl.replaceTrack(novaTrilhaVideo).catch(() => {});
+            if (!profTelaPartilhadaAtiva) {
+              streamTransmissaoAtual = meuStreamLocal;
+              await substituirTrilhaEmTodasChamadas('video', novaTrilhaVideo);
             }
           }
         } catch (errPerm) {
@@ -4711,6 +5159,13 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
       camAtiva = !camAtiva;
       meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
+
+      if (camAtiva && videoTrack && !videoTrack._isFallbackTrack && !profTelaPartilhadaAtiva) {
+        streamTransmissaoAtual = meuStreamLocal;
+        await substituirTrilhaEmTodasChamadas('video', videoTrack);
+      }
+
+      atualizarPreviewVideoLocal();
       sincronizarBotoesMicECamUI();
       transmitirMeuStatusCamara(camAtiva);
     }
@@ -4737,7 +5192,6 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
         const destinoMix = audioCtxMixEcra.createMediaStreamDestination();
 
-        // 1. Canal de Áudio da Tela Partilhada (Passa sempre a 100%, mesmo com o microfone desligado!)
         const streamSoTela = new MediaStream([screenAudioTrack]);
         const fonteTela = audioCtxMixEcra.createMediaStreamSource(streamSoTela);
         const ganhoTela = audioCtxMixEcra.createGain();
@@ -4745,7 +5199,6 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         fonteTela.connect(ganhoTela);
         ganhoTela.connect(destinoMix);
 
-        // 2. Canal do Microfone (Se o microfone estiver ativo, soma a voz; se estiver mudo, fica silencioso sem afetar a tela!)
         if (micTrack) {
           const streamSoMic = new MediaStream([micTrack]);
           const fonteMic = audioCtxMixEcra.createMediaStreamSource(streamSoMic);
@@ -4774,57 +5227,43 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
         const screenVideoTrack = displayStream.getVideoTracks()[0];
         const screenAudioTrack = displayStream.getAudioTracks()[0] || null;
+        telaPartilhadaAudioTrackAtual = screenAudioTrack;
 
-        // Cria a faixa de áudio final (Áudio da Tela + Microfone misturados, ou apenas Áudio da Tela se o Mic estiver mudo)
         const trilhaAudioTransmissao = criarFaixaAudioCombinadaTelaEMic(screenAudioTrack);
-
         const tracksCombinadas = [screenVideoTrack];
-        if (trilhaAudioTransmissao) {
-          tracksCombinadas.push(trilhaAudioTransmissao);
-        }
+        if (trilhaAudioTransmissao) tracksCombinadas.push(trilhaAudioTransmissao);
         streamTransmissaoAtual = new MediaStream(tracksCombinadas);
 
-        const videoMain = document.getElementById('video-prof-main');
-        if (videoMain) {
-          videoMain.style.objectFit = 'contain';
-          videoMain.muted = true; // Evita eco na própria máquina de quem está a partilhar
-          videoMain.srcObject = displayStream;
-        }
-   
-   if (IS_GESTOR_OU_PROF) {
+        if (IS_GESTOR_OU_PROF) {
+          const videoMain = document.getElementById('video-prof-main');
+          if (videoMain) {
+            videoMain.style.objectFit = 'contain';
+            videoMain.muted = true;
+            videoMain.volume = 0;
+            videoMain.srcObject = displayStream;
+            videoMain.play().catch(() => {});
+          }
           profTelaPartilhadaAtiva = true;
+          transmitirMeuStatusCamara(true);
+        } else {
+          atualizarPreviewVideoLocal();
           transmitirMeuStatusCamara(true);
         }
 
-        // Substitui TANTO o vídeo QUANTO o áudio em todas as conexões ativas com os alunos!
-        Object.values(chamadasAtivas).forEach(call => {
-          const senders = call.peerConnection?.getSenders() || [];
-          const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-          if (videoSender && screenVideoTrack) {
-            videoSender.replaceTrack(screenVideoTrack).catch(() => {});
-          }
-          const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-          if (audioSender && trilhaAudioTransmissao) {
-            audioSender.replaceTrack(trilhaAudioTransmissao).catch(() => {});
-          }
-        });
-
-        // Se for um aluno a partilhar a tela para o professor
-        if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
-          const sendersAl = window._chamadaAtivaComProf.peerConnection.getSenders() || [];
-          const vSender = sendersAl.find(s => s.track && s.track.kind === 'video');
-          if (vSender && screenVideoTrack) vSender.replaceTrack(screenVideoTrack).catch(() => {});
-          const aSender = sendersAl.find(s => s.track && s.track.kind === 'audio');
-          if (aSender && trilhaAudioTransmissao) aSender.replaceTrack(trilhaAudioTransmissao).catch(() => {});
-        }
+        // Atualiza vídeo e áudio em TODAS as conexões da malha (professor e colegas!)
+        if (screenVideoTrack) await substituirTrilhaEmTodasChamadas('video', screenVideoTrack);
+        if (trilhaAudioTransmissao) await substituirTrilhaEmTodasChamadas('audio', trilhaAudioTransmissao);
 
         mostrarToast(screenAudioTrack
           ? '🖥️🔊 Tela e Áudio do sistema partilhados com sucesso!'
           : '🖥️ Partilha de tela ativa (sem áudio de aba selecionado).');
 
-        screenVideoTrack.onended = () => {
-           if (IS_GESTOR_OU_PROF) {
+        screenVideoTrack.onended = async () => {
+          telaPartilhadaAudioTrackAtual = null;
+          if (IS_GESTOR_OU_PROF) {
             profTelaPartilhadaAtiva = false;
+            transmitirMeuStatusCamara(camAtiva);
+          } else {
             transmitirMeuStatusCamara(camAtiva);
           }
           if (audioCtxMixEcra) {
@@ -4839,23 +5278,9 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           if (meuStreamLocal) {
             const camTrack = meuStreamLocal.getVideoTracks()[0];
             const micTrackOriginal = meuStreamLocal.getAudioTracks()[0];
-            if (videoMain) videoMain.srcObject = meuStreamLocal;
-
-            Object.values(chamadasAtivas).forEach(call => {
-              const senders = call.peerConnection?.getSenders() || [];
-              const videoSender = senders.find(s => s.track && s.track.kind === 'video');
-              if (videoSender && camTrack) videoSender.replaceTrack(camTrack).catch(() => {});
-              const audioSender = senders.find(s => s.track && s.track.kind === 'audio');
-              if (audioSender && micTrackOriginal) audioSender.replaceTrack(micTrackOriginal).catch(() => {});
-            });
-
-            if (window._chamadaAtivaComProf && window._chamadaAtivaComProf.peerConnection) {
-              const sendersAl = window._chamadaAtivaComProf.peerConnection.getSenders() || [];
-              const vSender = sendersAl.find(s => s.track && s.track.kind === 'video');
-              if (vSender && camTrack) vSender.replaceTrack(camTrack).catch(() => {});
-              const aSender = sendersAl.find(s => s.track && s.track.kind === 'audio');
-              if (aSender && micTrackOriginal) aSender.replaceTrack(micTrackOriginal).catch(() => {});
-            }
+            atualizarPreviewVideoLocal();
+            if (camTrack) await substituirTrilhaEmTodasChamadas('video', camTrack);
+            if (micTrackOriginal) await substituirTrilhaEmTodasChamadas('audio', micTrackOriginal);
           }
         };
       } catch (e) {}
@@ -5332,20 +5757,20 @@ function estaEmModoTelaCheiaOuHorizontal() {
                   mostrarToast('🚫 O professor não autorizou a sua entrada neste momento.', '#e11d48');
                 }
               }
-            } else if (data.subtipo === 'PROF_RECONECTOU') {
-              if (!IS_GESTOR_OU_PROF && typeof window._reconectarAoProfessorLive === 'function') {
-                setTimeout(() => window._reconectarAoProfessorLive(), 800);
+           } else if (data.subtipo === 'LISTA_PARTICIPANTES') {
+              if (Array.isArray(data.participantes)) {
+                sincronizarListaParticipantes(data.participantes);
               }
             } else if (data.subtipo === 'SAIU_ALUNO') {
-              removerParticipanteDaGrelha(data.autorNome || data.nome);
+              removerParticipanteDaGrelha(data.autorNome || data.nome, data.autorId || data.peerId);
             } else if (data.subtipo === 'CHAT') {
               desenharMensagemMiniChat(data, false);
             } else if (data.subtipo === 'REACAO') {
               desenharReacaoNaTela(data, false);
-           } else if (data.subtipo === 'STATUS_MIC') {
-              atualizarIndicadorMicParticipante(data.autorNome, data.texto === 'ATIVO' || Boolean(data.micAtivo), data.autorRole);
+            } else if (data.subtipo === 'STATUS_MIC') {
+              atualizarIndicadorMicParticipante(data.autorNome, data.texto === 'ATIVO' || Boolean(data.micAtivo), data.autorRole, data.autorId || data.peerId);
             } else if (data.subtipo === 'STATUS_CAM') {
-              atualizarIndicadorCamParticipante(data.autorNome, data.texto === 'ATIVA' || Boolean(data.camAtiva), data.autorRole);
+              atualizarIndicadorCamParticipante(data.autorNome, data.texto === 'ATIVA' || Boolean(data.camAtiva), data.autorRole, data.autorId || data.peerId);
             } else if (data.subtipo === 'MAO_LEVANTADA') {
               const meuRotulo = IS_GESTOR_OU_PROF ? `👨‍🏫 Prof. ${USER_NAME}` : USER_NAME;
               if (String(data.autorNome).trim() !== String(meuRotulo).trim()) {

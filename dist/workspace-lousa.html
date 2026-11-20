@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="google" content="notranslate">
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-  <title>Lousa Digital Interativa • Pro</title>
+  <title>Lousa Digital Interativa</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
@@ -25,15 +25,27 @@
       --blue-600: #2563eb;
       --blue-500: #3b82f6;
       --blue-50: #eff6ff;
-      --sidebar-w: 300px;
+      /* ⚙️ PARÂMETRO AJUSTÁVEL: largura do menu lateral (274px libera mais espaço para a lousa) */
+      --sidebar-w: 274px;
     }
     *, *::before, *::after { box-sizing: border-box; }
     * { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
-    html, body { width: 100%; height: 100%; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; overflow: hidden; background: var(--bg-soft); overscroll-behavior: none; touch-action: none; user-select: none; -webkit-user-select: none; }
+    html, body {
+      width: 100%; height: 100%; margin: 0; padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      overflow: hidden; background: var(--bg-soft);
+      overscroll-behavior: none; touch-action: none;
+      user-select: none; -webkit-user-select: none;
+    }
 
-    #lousa-app { position: relative; width: 100vw; height: 100vh; height: 100dvh; overflow: hidden; display: flex; flex-direction: row; align-items: stretch; background: #eef2f7; }
+    /* ⚙️ PARÂMETRO AJUSTÁVEL: use "row-reverse" no lugar de "row" caso queira o menu fixo no lado direito */
+    #lousa-app {
+      position: relative; width: 100vw; height: 100vh; height: 100dvh;
+      overflow: hidden; display: flex; flex-direction: row; align-items: stretch;
+      background: #eef2f7;
+    }
 
-    /* ===== SIDEBAR RETRÁTIL COMPACTA ===== */
+    /* ===== MENU LATERAL RETRÁTIL E ORGANIZADO (SEM "LOUSA PRO", SEM "AUTO-ARRASTE" E SEM POST-IT) ===== */
     .sidebar-left {
       width: var(--sidebar-w);
       min-width: var(--sidebar-w);
@@ -45,9 +57,9 @@
       flex-direction: column;
       overflow: hidden;
       flex-shrink: 0;
-      box-shadow: 4px 0 24px rgba(15,23,42,0.05);
+      box-shadow: 4px 0 22px rgba(15,23,42,0.06);
       z-index: 35;
-      transition: margin-left 0.26s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+      transition: margin-left 0.24s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.18s ease;
     }
     #lousa-app.sidebar-collapsed .sidebar-left {
       margin-left: calc(var(--sidebar-w) * -1);
@@ -55,23 +67,22 @@
       pointer-events: none;
     }
 
-    .sidebar-brand {
+    .sidebar-top-minimal {
       flex: 0 0 auto;
-      display: flex; align-items: center; justify-content: space-between; gap: 10px;
-      padding: 12px 14px;
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+      padding: 10px 12px;
       border-bottom: 1px solid #f1f5f9;
       background: #ffffff;
     }
-    .sidebar-brand-left { display: flex; align-items: center; gap: 10px; }
-    .sidebar-brand-icon { width: 34px; height: 34px; border-radius: 10px; background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 17px; box-shadow: 0 3px 10px rgba(15,23,42,0.16); }
-    .sidebar-brand-text { display: flex; flex-direction: column; line-height: 1.15; }
-    .sidebar-brand-text b { font-size: 14px; font-weight: 800; color: #0f172a; }
-    .sidebar-brand-text span { font-size: 10px; font-weight: 700; color: #10b981; text-transform: uppercase; letter-spacing: 0.04em; }
-
+    .sidebar-top-label {
+      font-size: 11.5px; font-weight: 800; color: #475569;
+      text-transform: uppercase; letter-spacing: 0.06em;
+      display: inline-flex; align-items: center; gap: 6px;
+    }
     .btn-collapse-sidebar {
       background: #f1f5f9; border: 1px solid #e2e8f0; color: #334155;
-      height: 32px; padding: 0 10px; border-radius: 9px; font-size: 11.5px; font-weight: 800;
-      cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.18s;
+      height: 30px; padding: 0 10px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
+      cursor: pointer; display: inline-flex; align-items: center; gap: 5px; transition: all 0.16s;
     }
     .btn-collapse-sidebar:hover { background: #0f172a; color: #ffffff; border-color: #0f172a; }
 
@@ -79,6 +90,7 @@
       flex: 1;
       overflow-y: auto;
       overflow-x: hidden;
+      touch-action: pan-y;
       display: flex;
       flex-direction: column;
       gap: 10px;
@@ -92,11 +104,10 @@
       padding: 10px; display: flex; flex-direction: column; gap: 8px; width: 100%;
     }
     .sidebar-section-title {
-      font-size: 10.5px; font-weight: 800; letter-spacing: 0.05em; text-transform: uppercase;
+      font-size: 10px; font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
       color: #64748b; margin: 0; display: flex; align-items: center; justify-content: space-between;
     }
 
-    /* Ferramentas em Grelha 2x2 Compacta (Sem precisar rolar!) */
     .tools-grid-compact {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
@@ -105,12 +116,12 @@
     }
     .tool-btn {
       background: #ffffff; border: 1.5px solid #e2e8f0; color: #334155;
-      height: 38px; padding: 0 10px; border-radius: 10px; font-size: 12px; font-weight: 700;
-      display: inline-flex; align-items: center; justify-content: flex-start; gap: 7px;
+      height: 36px; padding: 0 9px; border-radius: 9px; font-size: 12px; font-weight: 700;
+      display: inline-flex; align-items: center; justify-content: flex-start; gap: 6px;
       cursor: pointer; transition: all 0.15s ease; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
     }
-    .tool-btn:hover { background: #f8fafc; border-color: #cbd5e1; color: #0f172a; transform: translateY(-1px); }
-    .tool-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; box-shadow: 0 4px 12px rgba(15,23,42,0.18); }
+    .tool-btn:hover { background: #f1f5f9; border-color: #cbd5e1; color: #0f172a; }
+    .tool-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; box-shadow: 0 4px 10px rgba(15,23,42,0.16); }
     .tool-btn.full-row { grid-column: span 2; justify-content: center; }
 
     /* Telas da Aula */
@@ -128,99 +139,175 @@
     .screen-nav-btn.del { background: #fff1f2; border-color: #fecdd3; color: #e11d48; }
     #select-screen-number {
       background: #ffffff; color: #0f172a; border: 1px solid #cbd5e1; border-radius: 8px;
-      height: 30px; padding: 0 8px; font-size: 12px; font-weight: 700; cursor: pointer; outline: none; flex: 1; min-width: 110px;
+      height: 30px; padding: 0 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; outline: none; flex: 1; min-width: 105px;
     }
 
     /* Aparência e Ações */
     .picker-trigger-btn {
       background: #ffffff; border: 1.5px solid #e2e8f0; color: #0f172a;
-      height: 36px; padding: 0 10px; border-radius: 10px; font-size: 12px; font-weight: 700;
+      height: 34px; padding: 0 10px; border-radius: 9px; font-size: 12px; font-weight: 700;
       cursor: pointer; display: flex; align-items: center; justify-content: space-between; width: 100%;
     }
-    .color-preview-circle { width: 18px; height: 18px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; display: inline-block; }
+    .picker-trigger-btn:hover { border-color: #94a3b8; }
+    .color-preview-circle { width: 17px; height: 17px; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 0 0 1px #cbd5e1; display: inline-block; flex-shrink: 0; }
     .size-btn {
       background: #ffffff; border: 1px solid #e2e8f0; color: #475569;
-      height: 32px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; flex: 1;
+      height: 31px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700; cursor: pointer; flex: 1;
     }
     .size-btn.active { background: #0f172a; color: #ffffff; border-color: #0f172a; }
     #select-fundo {
-      height: 34px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 10px;
+      height: 33px; border: 1px solid #e2e8f0; border-radius: 9px; padding: 0 10px;
       font-size: 12px; font-weight: 700; color: #334155; background: #ffffff; cursor: pointer; outline: none; width: 100%;
     }
     .action-pill {
       background: #ffffff; border: 1px solid #e2e8f0; color: #334155;
-      height: 32px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
+      height: 31px; padding: 0 8px; border-radius: 8px; font-size: 11.5px; font-weight: 700;
       cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 4px; flex: 1; white-space: nowrap;
     }
     .action-pill:hover { background: #f1f5f9; border-color: #cbd5e1; }
     .action-pill.danger { color: #dc2626; background: #fff5f5; border-color: #fecaca; }
 
-    /* ===== PALCO DA LOUSA E BARRA FLUTUANTE (QUICK-DOCK) ===== */
+    /* ===== PALCO DA LOUSA + BARRA DE ATALHOS COMPACTA E ESTRATÉGICA ===== */
     #canvas-stage {
       position: relative; flex: 1; width: 100%; height: 100dvh; min-height: 0; overflow: hidden;
       background: radial-gradient(rgba(148,163,184,0.22) 1.2px, transparent 1.2px) 0 0 / 22px 22px, linear-gradient(180deg, #f8fafc 0%, #eef2ff 100%);
-      display: flex; align-items: center; justify-content: center; padding: 12px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 46px 10px 10px 10px;
     }
     #lousa-canvas {
       position: relative; display: block; z-index: 2; touch-action: none; background: #ffffff;
-      border-radius: 16px; border: 1px solid rgba(203,213,225,0.9);
-      box-shadow: 0 4px 12px rgba(15,23,42,0.06), 0 20px 48px rgba(15,23,42,0.10);
+      border-radius: 14px; border: 1px solid rgba(203,213,225,0.9);
+      box-shadow: 0 4px 12px rgba(15,23,42,0.06), 0 18px 42px rgba(15,23,42,0.09);
     }
 
-    /* Botão Flutuante para Expandir Menu + Quick-Dock de Acesso Rápido */
+    /* Barra Compacta no Topo (Acima do Quadro — NÃO tapa o desenho!) */
     #floating-quick-dock {
-      position: absolute; top: 14px; left: 14px; z-index: 40;
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(15, 23, 42, 0.92); backdrop-filter: blur(14px);
-      padding: 6px 10px; border-radius: 14px; border: 1px solid rgba(255,255,255,0.14);
-      box-shadow: 0 12px 32px rgba(15,23,42,0.25);
-      transition: all 0.22s ease;
+      position: absolute; top: 6px; left: 50%; transform: translateX(-50%); z-index: 40;
+      display: flex; align-items: center; gap: 4px;
+      background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(12px);
+      padding: 4px 8px; border-radius: 12px; border: 1px solid #cbd5e1;
+      box-shadow: 0 6px 20px rgba(15,23,42,0.10);
+      max-width: calc(100% - 16px);
+      overflow-x: auto; scrollbar-width: none;
     }
-    .qd-btn {
-      background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.1);
-      color: #f8fafc; height: 34px; min-width: 34px; padding: 0 9px; border-radius: 9px;
-      font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 5px;
-      transition: all 0.15s;
-    }
-    .qd-btn:hover { background: rgba(255,255,255,0.18); }
-    .qd-btn.active { background: #3b82f6; border-color: #60a5fa; color: #fff; }
-    .qd-divider { width: 1px; height: 20px; background: rgba(255,255,255,0.18); margin: 0 2px; }
+    #floating-quick-dock::-webkit-scrollbar { display: none; }
 
-    /* Indicador de Mãozinha Automática & Dicas de Objeto */
-    #smart-hand-toast {
-      position: absolute; top: 14px; right: 16px; z-index: 38;
-      background: rgba(15, 23, 42, 0.86); backdrop-filter: blur(10px);
-      color: #e2e8f0; padding: 7px 14px; border-radius: 999px; font-size: 11.5px; font-weight: 700;
-      border: 1px solid rgba(255,255,255,0.12); pointer-events: none;
-      display: flex; align-items: center; gap: 8px; box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+    .qd-btn {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      color: #1e293b; height: 30px; min-width: 32px; padding: 0 7px; border-radius: 8px;
+      font-size: 13.5px; font-weight: 700; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+      transition: all 0.14s ease; flex-shrink: 0; white-space: nowrap;
+    }
+    .qd-btn:hover { background: #eff6ff; border-color: #93c5fd; color: #1d4ed8; }
+    .qd-btn.active { background: #0f172a; border-color: #0f172a; color: #ffffff; box-shadow: 0 2px 8px rgba(15,23,42,0.25); }
+    .qd-btn.qd-menu-btn { background: #2563eb; border-color: #2563eb; color: #ffffff; font-size: 11.5px; padding: 0 9px; }
+    .qd-btn.qd-menu-btn:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; }
+    .qd-btn.qd-danger { color: #dc2626; background: #fff5f5; border-color: #fecaca; }
+    .qd-btn.qd-danger:hover { background: #fee2e2; border-color: #fca5a5; }
+    .qd-divider { width: 1px; height: 18px; background: #cbd5e1; margin: 0 2px; flex-shrink: 0; }
+    .qd-color-dot {
+      width: 15px; height: 15px; border-radius: 50%;
+      border: 2px solid #ffffff; box-shadow: 0 0 0 1.5px #64748b;
+      display: inline-block;
     }
 
     @keyframes popIn { from { opacity:0; transform: translateY(8px) scale(.96); } to { opacity:1; transform: translateY(0) scale(1); } }
-    .floating-popover { display: none; position: fixed; z-index: 60; background: rgba(255,255,255,0.98); backdrop-filter: blur(22px); border: 1px solid #cbd5e1; border-radius: 18px; padding: 14px; box-shadow: 0 24px 64px rgba(15,23,42,0.22); flex-direction: column; gap: 12px; min-width: 260px; animation: popIn .18s ease; }
+    .floating-popover { display: none; position: fixed; z-index: 60; background: rgba(255,255,255,0.98); backdrop-filter: blur(22px); border: 1px solid #cbd5e1; border-radius: 16px; padding: 13px; box-shadow: 0 24px 64px rgba(15,23,42,0.22); flex-direction: column; gap: 10px; min-width: 256px; animation: popIn .16s ease; }
     .color-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; }
-    .color-swatch { width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 3px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1; transition: all .15s ease; }
+    .color-swatch { width: 32px; height: 32px; border-radius: 50%; cursor: pointer; border: 3px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1; transition: all .15s ease; }
     .color-swatch.active { box-shadow: 0 0 0 2.5px #0f172a, 0 0 0 5px rgba(37,99,235,0.2); transform: scale(1.08); }
     .shape-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 7px; }
-    .shape-option-btn { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; padding: 9px 10px; border-radius: 10px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .shape-option-btn { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; padding: 8px 10px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .shape-option-btn:hover { background: #eff6ff; border-color: #93c5fd; }
 
-    #text-editor-box { display: none; position: fixed; z-index: 65; background: rgba(255, 255, 255, 0.99); border: 1.5px solid #3b82f6; border-radius: 16px; padding: 12px; box-shadow: 0 24px 64px rgba(15,23,42,0.24); flex-direction: column; gap: 10px; width: 350px; max-width: 94vw; }
-    .fmt-toolbar { display: flex; align-items: center; gap: 5px; flex-wrap: wrap; background: #f8fafc; padding: 6px; border-radius: 10px; border: 1px solid #e2e8f0; }
-    .fmt-btn { background: #ffffff; border: 1px solid #e2e8f0; color: #334155; width: 30px; height: 30px; border-radius: 8px; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    /* ===== CAIXA DE TEXTO RICA, EXPANSÍVEL PARA TODOS OS LADOS E EM TEMPO REAL ===== */
+    #text-editor-box {
+      display: none; position: fixed; z-index: 68;
+      background: rgba(255, 255, 255, 0.99);
+      border: 2px solid #2563eb; border-radius: 14px;
+      padding: 8px 10px 10px 10px;
+      box-shadow: 0 20px 56px rgba(15,23,42,0.24);
+      flex-direction: column; gap: 8px;
+      width: 390px; min-width: 240px; max-width: 94vw;
+      height: 225px; min-height: 155px; max-height: 82vh;
+      touch-action: auto;
+    }
+    .text-box-drag-header {
+      display: flex; align-items: center; justify-content: space-between;
+      cursor: move; padding: 2px 2px 4px 2px; border-bottom: 1px solid #e2e8f0;
+      font-size: 11px; font-weight: 800; color: #475569;
+    }
+    .fmt-toolbar {
+      display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+      background: #f8fafc; padding: 5px; border-radius: 9px; border: 1px solid #e2e8f0;
+    }
+    .fmt-btn {
+      background: #ffffff; border: 1px solid #e2e8f0; color: #334155;
+      width: 28px; height: 28px; border-radius: 7px; font-size: 12.5px; cursor: pointer;
+      display: inline-flex; align-items: center; justify-content: center; transition: 0.12s;
+    }
+    .fmt-btn:hover { background: #eff6ff; border-color: #93c5fd; }
     .fmt-btn.active { background: var(--slate-900); color: #ffffff; border-color: var(--slate-900); }
-    #text-font-select { flex: 1; min-width: 130px; height: 30px; padding: 0 8px; border-radius: 8px; border: 1px solid #e2e8f0; font-size: 12px; font-weight: 600; color: #334155; outline: none; background: #fff; cursor: pointer; }
-    #text-editor-input { border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px; font-family: 'Inter', sans-serif; font-size: 15px; line-height: 1.45; font-weight: 500; outline: none; resize: vertical; width: 100%; min-height: 80px; background: #ffffff; }
+    .fmt-color-wrap {
+      display: inline-flex; align-items: center; gap: 3px;
+      padding: 2px 5px; border-radius: 7px; background: #ffffff; border: 1px solid #e2e8f0;
+    }
+    .fmt-color-dot {
+      width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+      border: 1.5px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
+      transition: transform 0.12s;
+    }
+    .fmt-color-dot:hover { transform: scale(1.18); }
+    #text-color-input {
+      width: 22px; height: 22px; border: none; padding: 0; background: transparent; cursor: pointer;
+    }
+    #text-font-select {
+      flex: 1; min-width: 115px; height: 28px; padding: 0 6px;
+      border-radius: 7px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 600;
+      color: #334155; outline: none; background: #fff; cursor: pointer;
+    }
+
+    /* Área contenteditable: permite selecionar palavras e ver cor/negrito/fonte em tempo real! */
+    #text-editor-input {
+      flex: 1; min-height: 60px; width: 100%; overflow-y: auto;
+      border: 1.5px dashed #93c5fd; border-radius: 10px; padding: 8px 10px;
+      font-family: 'Segoe UI', sans-serif; font-size: 20px; line-height: 1.3;
+      color: #0f172a; background: #ffffff; outline: none;
+      white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
+      user-select: text !important; -webkit-user-select: text !important;
+      touch-action: auto !important; cursor: text;
+    }
+    #text-editor-input:empty::before {
+      content: attr(data-placeholder);
+      color: #94a3b8; font-weight: 500; font-style: normal; pointer-events: none;
+    }
+
+    /* 8 Alças invisíveis nas bordas e cantos para expandir a caixa para QUALQUER lado! */
+    .txt-resize-handle { position: absolute; z-index: 5; touch-action: none; }
+    .txt-resize-handle.n  { top: -5px; left: 10px; right: 10px; height: 10px; cursor: ns-resize; }
+    .txt-resize-handle.s  { bottom: -5px; left: 10px; right: 10px; height: 10px; cursor: ns-resize; }
+    .txt-resize-handle.e  { right: -5px; top: 10px; bottom: 10px; width: 10px; cursor: ew-resize; }
+    .txt-resize-handle.w  { left: -5px; top: 10px; bottom: 10px; width: 10px; cursor: ew-resize; }
+    .txt-resize-handle.nw { top: -6px; left: -6px; width: 14px; height: 14px; cursor: nwse-resize; }
+    .txt-resize-handle.ne { top: -6px; right: -6px; width: 14px; height: 14px; cursor: nesw-resize; }
+    .txt-resize-handle.sw { bottom: -6px; left: -6px; width: 14px; height: 14px; cursor: nesw-resize; }
+    .txt-resize-handle.se {
+      bottom: -5px; right: -5px; width: 16px; height: 16px; cursor: nwse-resize;
+      background: #2563eb; border-radius: 4px 0 10px 0;
+      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 900;
+    }
 
     .studio-modal { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.64); backdrop-filter: blur(12px); z-index: 75; align-items: center; justify-content: center; padding: 16px; }
     .info-modal-card { background: #ffffff; width: 100%; max-width: 740px; max-height: 90vh; border-radius: 22px; border: 1px solid #e2e8f0; box-shadow: 0 32px 80px rgba(0,0,0,0.28); display: flex; flex-direction: column; overflow: hidden; animation: popIn .22s ease; }
     .info-type-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(155px, 1fr)); gap: 8px; margin-bottom: 14px; }
     .info-type-btn { background: #f8fafc; border: 1.5px solid #e2e8f0; border-radius: 12px; padding: 10px; text-align: left; cursor: pointer; transition: all .15s ease; display: flex; flex-direction: column; gap: 3px; }
     .info-type-btn.active { border-color: #2563eb; background: linear-gradient(180deg, #eff6ff 0%, #dbeafe 100%); box-shadow: 0 0 0 3px rgba(37,99,235,0.14); }
-    .info-input { width: 100%; height: 38px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 13px; font-family: inherit; font-weight: 500; outline: none; background: #fff; }
+    .info-input { width: 100%; height: 38px; padding: 0 12px; border: 1px solid #cbd5e1; border-radius: 9px; font-size: 13px; font-family: inherit; font-weight: 500; outline: none; background: #fff; user-select: text !important; -webkit-user-select: text !important; }
 
     #tela-espera-aluno { display: none; position: fixed; inset: 0; background: radial-gradient(800px 500px at 30% 20%, rgba(37,99,235,0.18) 0%, transparent 60%), linear-gradient(180deg, #0f172a 0%, #020617 100%); color: #fff; align-items: center; justify-content: center; flex-direction: column; gap: 20px; text-align: center; padding: 28px; z-index: 90; }
     @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.98)} }
-    #badge-somente-leitura { display: none; position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); color: #f1f5f9; padding: 8px 16px; border-radius: 999px; font-size: 12px; font-weight: 700; z-index: 30; border: 1px solid rgba(255,255,255,0.12); white-space: nowrap; pointer-events: none; }
+    #badge-somente-leitura { display: none; position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%); background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(12px); color: #f1f5f9; padding: 7px 15px; border-radius: 999px; font-size: 12px; font-weight: 700; z-index: 30; border: 1px solid rgba(255,255,255,0.12); white-space: nowrap; pointer-events: none; }
 
     /* Responsividade Mobile / Tablet */
     @media (max-width: 900px) {
@@ -228,56 +315,59 @@
         position: fixed; left: 0; top: 0; bottom: 0; z-index: 55;
         box-shadow: 12px 0 36px rgba(15,23,42,0.28);
       }
-      #smart-hand-toast { display: none !important; }
+      #canvas-stage { padding: 44px 6px 8px 6px; }
       #floating-quick-dock {
-        left: 8px; right: 8px; top: 8px; overflow-x: auto; justify-content: flex-start;
+        left: 6px; right: 6px; transform: none; width: calc(100% - 12px);
+        max-width: none; justify-content: flex-start;
       }
     }
   </style>
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
   <div id="lousa-app">
-    <!-- SIDEBAR ESQUERDA RETRÁTIL E SEM ROLAGEM DESNECESSÁRIA -->
+    <!-- MENU LATERAL RETRÁTIL E LIMPO -->
     <div class="sidebar-left" id="sidebar-left">
-      <div class="sidebar-brand">
-        <div class="sidebar-brand-left">
-          <div class="sidebar-brand-icon">🎓</div>
-          <div class="sidebar-brand-text"><b>Lousa Pro</b><span>✋ Mão Automática Ativa</span></div>
-        </div>
-        <button type="button" class="btn-collapse-sidebar" id="btn-collapse-sidebar" title="Recolher Menu Lateral (Atalho: Tab)">
+      <div class="sidebar-top-minimal">
+        <span class="sidebar-top-label">🧰 Painel de Recursos</span>
+        <button type="button" class="btn-collapse-sidebar" id="btn-collapse-sidebar" title="Recolher Menu (Atalho: Tab)">
           ◀ Recolher
         </button>
       </div>
 
       <div class="sidebar-scroll">
-        <!-- 1. FERRAMENTAS PRINCIPAIS NO TOPO (ACESSO IMEDIATO SEM ROLAR!) -->
+        <!-- 1. DESENHO E ESCRITA -->
         <div id="ui-bottom-bar" class="sidebar-section">
           <div class="sidebar-section-title">
-            <span>✏️ Ferramentas de Aula</span>
-            <span style="font-size:9.5px; color:#10b981; font-weight:700;">Auto-Arraste ✋</span>
+            <span>✏️ Desenho &amp; Escrita</span>
           </div>
           <div class="tools-grid-compact">
-            <button class="tool-btn active" data-tool="pen" title="Caneta / Lápis (Passe sobre objetos para arrastar naturalmente!)">✏️ Lápis</button>
-            <button class="tool-btn" data-tool="highlighter" title="Marca-Texto">🖍️ Marcador</button>
-            <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico (Duplo clique para editar)">🔤 Texto</button>
-            <button class="tool-btn" id="btn-add-postit" title="Inserir Cartão Adesivo / Post-it de Vocabulário">📌 Post-it</button>
-            <button class="tool-btn" data-tool="eraser" title="Borracha (Clique ou arraste para apagar)">🧽 Borracha</button>
-            <button class="tool-btn" data-tool="laser" title="Seta Laser Ao Vivo">🔦 Laser</button>
+            <button class="tool-btn active" data-tool="pen" title="Caneta / Lápis">✏️ Lápis</button>
+            <button class="tool-btn" data-tool="highlighter" title="Marca-Texto Retangular Inteligente">🖍️ Marcador</button>
+            <button class="tool-btn" data-tool="text" title="Caixa de Texto Rico Expansível">🔤 Texto</button>
+            <button class="tool-btn" data-tool="eraser" title="Borracha Real (Apaga apenas o desenho)">🧽 Borracha</button>
+            <button class="tool-btn" data-tool="laser" title="Ponteiro Laser Automático">🔴 Laser</button>
             <button class="tool-btn" id="btn-open-shapes-popover" title="Escolher Figura Geométrica">
               <span id="shapes-btn-label">📐 Formas ▾</span>
             </button>
-            <button class="tool-btn" data-tool="pan" title="Arrastar a Tela com Zoom (ou segure Barra de Espaço)">🖐️ Panorâmica</button>
+            <button class="tool-btn full-row" data-tool="pan" title="Arrastar a Tela (ou segure Barra de Espaço)">🖐️ Arrastar a Tela</button>
+          </div>
+        </div>
+
+        <!-- 2. QUADROS PEDAGÓGICOS -->
+        <div class="sidebar-section" id="ui-studio-bar">
+          <div class="sidebar-section-title">🧩 Quadros Pedagógicos</div>
+          <div class="tools-grid-compact">
             <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos)">📊 Infográfico</button>
             <button class="tool-btn" id="btn-open-mindmap" title="Criar Mapa Mental (8 Modelos)">🧠 Mapa Mental</button>
           </div>
         </div>
 
-        <!-- 2. COR, TRAÇO E FUNDO -->
+        <!-- 3. COR, TRAÇO E FUNDO + TELAS + ZOOM E AÇÕES -->
         <div id="ui-top-bar" style="display:flex; flex-direction:column; gap:10px;">
           <div class="sidebar-section">
-            <div class="sidebar-section-title">🎨 Cor, Traço & Fundo</div>
+            <div class="sidebar-section-title">🎨 Estilo &amp; Fundo</div>
             <button type="button" class="picker-trigger-btn" id="btn-open-color-popover" title="Escolher ou Personalizar Cor">
-              <span style="display:flex; align-items:center; gap:8px;"><span id="current-color-circle" class="color-preview-circle" style="background:#0f172a;"></span> Cor do Traço / Objeto</span>
+              <span style="display:flex; align-items:center; gap:8px;"><span id="current-color-circle" class="color-preview-circle" style="background:#0f172a;"></span> Cor Ativa</span>
               <span>▾</span>
             </button>
             <div style="display:flex; gap:5px; width:100%;">
@@ -293,15 +383,14 @@
             </select>
           </div>
 
-          <!-- 3. TELAS DA AULA -->
           <div class="sidebar-section">
             <div class="sidebar-section-title">🖥️ Telas da Aula</div>
             <div id="ui-screens-dock" class="screens-group">
-              <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀️</button>
+              <button class="screen-nav-btn" id="btn-prev-screen" title="Tela Anterior">◀</button>
               <select id="select-screen-number" title="Escolher Tela Numerada">
                 <option value="0">🖥️ Tela 1 / 1</option>
               </select>
-              <button class="screen-nav-btn" id="btn-next-screen" title="Próxima Tela">▶️</button>
+              <button class="screen-nav-btn" id="btn-next-screen" title="Próxima Tela">▶</button>
               <button class="screen-nav-btn add" id="btn-new-screen" title="Criar Nova Tela">➕ Nova</button>
               <button class="screen-nav-btn" id="btn-copy-screen" title="Copiar esta Tela">📋</button>
               <button class="screen-nav-btn" id="btn-paste-screen" title="Colar Tela copiada" style="display:none;">📥</button>
@@ -309,20 +398,19 @@
             </div>
           </div>
 
-          <!-- 4. ZOOM, HISTÓRICO E EXPORTAÇÃO -->
           <div class="sidebar-section">
             <div class="sidebar-section-title">
-              <span>🔍 Zoom & Ações</span>
+              <span>🔍 Zoom &amp; Ações</span>
               <span id="zoom-percent-badge" style="color:#2563eb; font-weight:800;">100%</span>
             </div>
             <div style="display:flex; gap:5px; width:100%;">
               <button class="action-pill" id="btn-zoom-out" title="Diminuir Zoom">🔍−</button>
-              <button class="action-pill" id="btn-center" title="Resetar Zoom e Centralizar (100%)">🎯 100%</button>
+              <button class="action-pill" id="btn-center" title="Resetar Zoom (100%)">🎯 100%</button>
               <button class="action-pill" id="btn-zoom-in" title="Aumentar Zoom">🔍+</button>
             </div>
             <div style="display:flex; gap:5px; width:100%;">
-              <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩️ Desfazer</button>
-              <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪️ Refazer</button>
+              <button class="action-pill" id="btn-undo" title="Desfazer (Ctrl+Z)">↩ Desfazer</button>
+              <button class="action-pill" id="btn-redo" title="Refazer (Ctrl+Y)">↪ Refazer</button>
             </div>
             <div style="display:flex; gap:5px; width:100%;">
               <button class="action-pill" id="btn-download" title="Baixar Imagem da Tela (PNG)">💾 PNG</button>
@@ -333,34 +421,34 @@
       </div>
     </div>
 
-    <!-- PALCO DA LOUSA (OCUPA 100% QUANDO O MENU RETRAI) -->
+    <!-- PALCO DA LOUSA -->
     <div id="canvas-stage">
-      <!-- BARRA FLUTUANTE DE ACESSO RÁPIDO (SEMPRE À MÃO QUANDO O MENU ESTÁ RECOLHIDO) -->
+      <!-- BARRA DE ATALHOS COMPACTA E ESTRATÉGICA (LIBERA 100% DA ÁREA DO QUADRO) -->
       <div id="floating-quick-dock">
-        <button type="button" class="qd-btn" id="btn-expand-sidebar" title="Mostrar / Esconder Menu Lateral (Tab)" style="background:#2563eb; border-color:#60a5fa;">
+        <button type="button" class="qd-btn qd-menu-btn" id="btn-expand-sidebar" title="Abrir / Ocultar Menu Lateral (Tab)">
           ☰ Menu
         </button>
         <div class="qd-divider"></div>
         <button type="button" class="qd-btn active" data-qd-tool="pen" title="Lápis">✏️</button>
-        <button type="button" class="qd-btn" data-qd-tool="highlighter" title="Marcador">🖍️</button>
-        <button type="button" class="qd-btn" data-qd-tool="text" title="Texto">🔤</button>
-        <button type="button" class="qd-btn" id="qd-btn-postit" title="Novo Post-it">📌</button>
+        <button type="button" class="qd-btn" id="qd-btn-color" title="Cor do Traço / Objeto">
+          <span id="qd-color-dot" class="qd-color-dot" style="background:#0f172a;"></span>
+        </button>
+        <button type="button" class="qd-btn" data-qd-tool="text" title="Texto Rico">🔤</button>
         <button type="button" class="qd-btn" data-qd-tool="eraser" title="Borracha">🧽</button>
-        <button type="button" class="qd-btn" data-qd-tool="laser" title="Laser">🔦</button>
-        <button type="button" class="qd-btn" data-qd-tool="pan" title="Arrastar Tela (ou Barra de Espaço)">🖐️</button>
+        <button type="button" class="qd-btn" data-qd-tool="laser" title="Laser Ao Vivo">🔴</button>
+        <button type="button" class="qd-btn" data-qd-tool="pan" title="Arrastar a Tela">🖐️</button>
+        <button type="button" class="qd-btn" id="qd-btn-shapes" title="Figuras Geométricas">📐</button>
         <div class="qd-divider"></div>
-        <button type="button" class="qd-btn" id="qd-zoom-out" title="Diminuir Zoom">−</button>
-        <button type="button" class="qd-btn" id="qd-zoom-reset" title="Voltar a 100%" style="font-size:11px;">100%</button>
-        <button type="button" class="qd-btn" id="qd-zoom-in" title="Aumentar Zoom">+</button>
-        <div class="qd-divider"></div>
-        <button type="button" class="qd-btn" id="qd-undo" title="Desfazer (Ctrl+Z)">↩️</button>
+        <button type="button" class="qd-btn" id="qd-undo" title="Desfazer (Ctrl+Z)">↩</button>
+        <button type="button" class="qd-btn" id="qd-redo" title="Refazer (Ctrl+Y)">↪</button>
+        <button type="button" class="qd-btn qd-danger" id="qd-clear" title="Limpar Tela">🧹</button>
       </div>
 
       <canvas id="lousa-canvas" width="1280" height="720"></canvas>
       <div id="badge-somente-leitura">📡 Ao Vivo • 🖥️ Tela 1 de 1</div>
     </div>
 
-    <!-- POPOVERS E MODAIS -->
+    <!-- POPOVERS FLUTUANTES -->
     <div id="color-popover" class="floating-popover">
       <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">🎨 Paleta de Cores</div>
       <div class="color-grid">
@@ -387,7 +475,7 @@
       <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">📐 Figuras Geométricas</div>
       <div class="shape-grid">
         <button type="button" class="shape-option-btn" data-shape-tool="line" data-shape-label="📏 Linha">📏 Linha Reta</button>
-        <button type="button" class="shape-option-btn" data-shape-tool="arrow" data-shape-label="↗️ Seta">↗️ Seta</button>
+        <button type="button" class="shape-option-btn" data-shape-tool="arrow" data-shape-label="↗ Seta">↗ Seta</button>
         <button type="button" class="shape-option-btn" data-shape-tool="rect" data-shape-label="▭ Retângulo">▭ Retângulo</button>
         <button type="button" class="shape-option-btn" data-shape-tool="circle" data-shape-label="⭕ Círculo">⭕ Círculo</button>
         <button type="button" class="shape-option-btn" data-shape-tool="triangle" data-shape-label="△ Triângulo">△ Triângulo</button>
@@ -396,31 +484,59 @@
       </div>
     </div>
 
+    <!-- CAIXA DE TEXTO RICA (EXPANSÍVEL PELOS 8 LADOS + COR INTERNA + TEMPO REAL) -->
     <div id="text-editor-box">
+      <div class="txt-resize-handle n"  data-resize-dir="n"></div>
+      <div class="txt-resize-handle s"  data-resize-dir="s"></div>
+      <div class="txt-resize-handle e"  data-resize-dir="e"></div>
+      <div class="txt-resize-handle w"  data-resize-dir="w"></div>
+      <div class="txt-resize-handle nw" data-resize-dir="nw"></div>
+      <div class="txt-resize-handle ne" data-resize-dir="ne"></div>
+      <div class="txt-resize-handle sw" data-resize-dir="sw"></div>
+      <div class="txt-resize-handle se" data-resize-dir="se">⤡</div>
+
+      <div class="text-box-drag-header" id="text-box-drag-header">
+        <span>⠿ Caixa de Texto (Arraste bordas para moldar)</span>
+        <span style="font-size:10px; color:#2563eb;">Tempo real</span>
+      </div>
+
       <div class="fmt-toolbar">
-        <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
-        <button type="button" class="fmt-btn" id="fmt-italic" title="Itálico"><i>I</i></button>
-        <button type="button" class="fmt-btn" id="fmt-underline" title="Sublinhar"><u>U</u></button>
-        <button type="button" class="fmt-btn" id="fmt-strike" title="Riscar"><s>S</s></button>
-        <select id="text-font-select" title="Escolher Tipo de Letra (10 Opções)">
-          <option value="'Segoe UI', sans-serif">1. Segoe UI (Moderna)</option>
-          <option value="Arial, Helvetica, sans-serif">2. Arial (Clássica)</option>
-          <option value="Georgia, serif">3. Georgia (Editorial)</option>
-          <option value="'Times New Roman', Times, serif">4. Times New Roman</option>
-          <option value="'Courier New', Courier, monospace">5. Courier (Máquina)</option>
-          <option value="'Comic Sans MS', cursive, sans-serif">6. Comic Sans (Didática)</option>
-          <option value="Impact, Charcoal, sans-serif">7. Impact (Destaque)</option>
-          <option value="'Trebuchet MS', sans-serif">8. Trebuchet (Humanista)</option>
-          <option value="'Palatino Linotype', 'Book Antiqua', serif">9. Palatino (Literária)</option>
-          <option value="'Lucida Console', Monaco, monospace">10. Lucida Console</option>
+        <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito (na seleção ou ao digitar)"><b>B</b></button>
+        <button type="button" class="fmt-btn" id="fmt-italic" title="Itálico (na seleção ou ao digitar)"><i>I</i></button>
+        <button type="button" class="fmt-btn" id="fmt-underline" title="Sublinhar (na seleção ou ao digitar)"><u>U</u></button>
+        <button type="button" class="fmt-btn" id="fmt-strike" title="Riscar (na seleção ou ao digitar)"><s>S</s></button>
+
+        <!-- 🎨 Cor dentro da caixa de texto (cores rápidas + seletor livre) -->
+        <div class="fmt-color-wrap" title="Cor do texto (muda a seleção ou o que você digitar)">
+          <span class="fmt-color-dot" data-text-color="#0f172a" style="background:#0f172a;"></span>
+          <span class="fmt-color-dot" data-text-color="#2563eb" style="background:#2563eb;"></span>
+          <span class="fmt-color-dot" data-text-color="#dc2626" style="background:#dc2626;"></span>
+          <span class="fmt-color-dot" data-text-color="#16a34a" style="background:#16a34a;"></span>
+          <span class="fmt-color-dot" data-text-color="#d97706" style="background:#d97706;"></span>
+          <input type="color" id="text-color-input" value="#0f172a" title="Escolher qualquer cor">
+        </div>
+
+        <select id="text-font-select" title="Tipo de Letra (10 Opções)">
+          <option value="'Segoe UI', sans-serif">Segoe UI</option>
+          <option value="Arial, Helvetica, sans-serif">Arial</option>
+          <option value="Georgia, serif">Georgia</option>
+          <option value="'Times New Roman', Times, serif">Times New Roman</option>
+          <option value="'Courier New', Courier, monospace">Courier</option>
+          <option value="'Comic Sans MS', cursive, sans-serif">Comic Sans</option>
+          <option value="Impact, Charcoal, sans-serif">Impact</option>
+          <option value="'Trebuchet MS', sans-serif">Trebuchet</option>
+          <option value="'Palatino Linotype', 'Book Antiqua', serif">Palatino</option>
+          <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
         </select>
       </div>
-      <textarea id="text-editor-input" rows="3" placeholder="Digite o texto aqui..."></textarea>
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px;">
-        <span style="font-size:10.5px; color:#64748b;">💡 Duplo clique no texto p/ reeditar</span>
+
+      <div id="text-editor-input" contenteditable="true" spellcheck="true" data-placeholder="Digite aqui... Selecione palavras para formatar ou mude a cor antes de escrever."></div>
+
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-shrink:0;">
+        <span style="font-size:10.5px; color:#64748b;">💡 Duplo clique no quadro p/ reeditar</span>
         <div style="display:flex; gap:6px;">
-          <button type="button" id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:6px 12px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
-          <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:700; cursor:pointer;">✔ Salvar no Quadro</button>
+          <button type="button" id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:6px 11px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
+          <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 13px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer;">✔ Salvar no Quadro</button>
         </div>
       </div>
     </div>
@@ -448,7 +564,7 @@
           </div>
         </div>
         <div style="padding:10px 18px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <span style="font-size:11px; color:#64748b;">💡 Passe o cursor sobre o cartão na lousa para arrastar naturalmente com a mãozinha!</span>
+          <span style="font-size:11px; color:#64748b;">💡 Passe o cursor sobre o cartão na lousa para arrastar ou redimensionar.</span>
           <div style="display:flex; gap:8px;">
             <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
             <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:7px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
@@ -465,7 +581,7 @@
     </div>
   </div>
 
-  <script>
+<script>
     (function() {
       const CLIENT_ID = 'lousa_ptt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 8);
       const params = new URLSearchParams(window.location.search);
@@ -477,6 +593,11 @@
       let isAllowed = (role !== 'aluno');
       let isReadonly = (role === 'aluno');
       let initialLoadDone = false;
+
+      // ⚙️ PARÂMETROS AJUSTÁVEIS DA LOUSA
+      const LASER_TRAIL_LIFE_MS = 480;   // Tempo (ms) que o rastro do laser leva para sumir
+      const ERASER_SIZE_MULTIPLIER = 3.8; // Multiplicador do diâmetro da borracha (Fino/Médio/Grosso)
+      const HIGHLIGHTER_DEFAULT_H = 26;   // Altura retangular padrão do marca-texto fora de textos
 
       // 📑 SISTEMA DE MULTI-TELAS NUMERADAS
       let screens = [
@@ -496,22 +617,27 @@
       let lastFocusPoint = null;
       let editingShapeId = null;
 
-      // ✋ ESTADO DA MÃOZINHA NATURAL AUTOMÁTICA E PANORÂMICA
+      // ✋ ESTADO DE INTERAÇÃO, ARRASTE, BORRACHA, MARCADOR E LASER
       let hoveredShape = null;
-      let hoveredHandle = null; // 'resize' | 'delete' | 'move'
+      let hoveredHandle = null; // 'resize' | 'move' | 'info_add' | 'info_edit'
       let isSpacePressed = false;
       let isPanningBoard = false;
       let panStartScreenPt = null;
       let panStartCam = null;
+      let eraserHoverPt = null;
+      let highlighterHoverSnap = null;
       const imageCache = {};
 
       let textStyle = {
-        bold: true,
+        bold: false,
         italic: false,
         underline: false,
         strike: false,
+        color: '#0f172a',
         fontFamily: "'Segoe UI', sans-serif"
       };
+      let savedTextRange = null;
+
       let isPointerDown = false;
       let activeShape = null;
       let movingShape = null;
@@ -520,9 +646,10 @@
       let resizeStartScale = 1;
       let resizeCenterPt = null;
       let moveLastPt = null;
+
       let laserHead = null;
-      let laserTrail = [];
-      let laserFadeTimer = null;
+      let laserTrail = []; // [{ x, y, t }]
+      let laserAnimFrame = null;
       let lastLiveStreamTime = 0;
       let pendingRemoteRecords = null;
       let isSaving = false;
@@ -531,27 +658,42 @@
       const appEl = document.getElementById('lousa-app');
       const sidebarEl = document.getElementById('sidebar-left');
       const quickDockEl = document.getElementById('floating-quick-dock');
-      const smartHandToast = document.getElementById('smart-hand-toast');
       const stageEl = document.getElementById('canvas-stage');
       const canvas = document.getElementById('lousa-canvas');
       const ctx = canvas.getContext('2d');
       window.ctx = ctx;
       window.context = ctx;
 
+      // 🧽 CAMADA DE TINTA SEPARADA (Permite que a borracha apague SOMENTE os desenhos sem manchar o fundo!)
+      const inkCanvas = document.createElement('canvas');
+      const inkCtx = inkCanvas.getContext('2d');
+
       const telaEspera = document.getElementById('tela-espera-aluno');
       const badgeLeitura = document.getElementById('badge-somente-leitura');
       const uiTopBar = document.getElementById('ui-top-bar');
       const uiBottomBar = document.getElementById('ui-bottom-bar');
+      const uiStudioBar = document.getElementById('ui-studio-bar');
       const selectFundo = document.getElementById('select-fundo');
       const selectScreenNumber = document.getElementById('select-screen-number');
       const btnPasteScreen = document.getElementById('btn-paste-screen');
       const zoomBadge = document.getElementById('zoom-percent-badge');
-      const qdZoomReset = document.getElementById('qd-zoom-reset');
 
-      // ✏️ Cursor de Lápis Real (SVG)
+      // ✏️ Cursores SVG personalizados (Lápis, Borracha Real e Marca-Texto)
       const svgLapisUri = "data:image/svg+xml;utf8," + encodeURIComponent(`
-        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" fill="#ffffff"></path>
+        </svg>
+      `);
+      const svgBorrachaUri = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none">
+          <path d="M15.2 3.8a2.2 2.2 0 0 1 3.1 0l2.9 2.9a2.2 2.2 0 0 1 0 3.1L11.6 19.4a2.2 2.2 0 0 1-1.55.64H6.2a2.2 2.2 0 0 1-1.55-.64l-1.85-1.85a2.2 2.2 0 0 1 0-3.1L15.2 3.8z" fill="#fda4af" stroke="#0f172a" stroke-width="1.8"/>
+          <path d="M9.5 9.5l5.5 5.5-3.4 3.4a2 2 0 0 1-1.4.6H6.3a2 2 0 0 1-1.4-.6l-1.5-1.5a2 2 0 0 1 0-2.8l6.1-4.6z" fill="#ffffff" stroke="#0f172a" stroke-width="1.6"/>
+        </svg>
+      `);
+      const svgMarcadorUri = "data:image/svg+xml;utf8," + encodeURIComponent(`
+        <svg xmlns="http://www.w3.org/2000/svg" width="26" height="26" viewBox="0 0 24 24" fill="none">
+          <path d="M15 4l5 5-9.5 9.5-5.5 1.5 1.5-5.5L15 4z" fill="#fde047" stroke="#0f172a" stroke-width="1.8" stroke-linejoin="round"/>
+          <path d="M13 6l5 5" stroke="#0f172a" stroke-width="1.8"/>
         </svg>
       `);
 
@@ -561,11 +703,10 @@
         appEl.classList.toggle('sidebar-collapsed', vaiColapsar);
         const btnExpand = document.getElementById('btn-expand-sidebar');
         if (btnExpand) {
-          btnExpand.innerHTML = vaiColapsar ? '☰ Abrir Menu' : '◀ Ocultar Menu';
-          btnExpand.style.background = vaiColapsar ? '#2563eb' : 'rgba(255,255,255,0.14)';
+          btnExpand.innerHTML = vaiColapsar ? '☰ Menu' : '◀ Ocultar';
         }
         setTimeout(ajustarTamanhoCanvas, 40);
-        setTimeout(ajustarTamanhoCanvas, 280);
+        setTimeout(ajustarTamanhoCanvas, 260);
       }
 
       document.getElementById('btn-collapse-sidebar').onclick = () => alternarMenuLateral(true);
@@ -592,17 +733,20 @@
           canvas.style.cursor = 'nwse-resize';
           return;
         }
-        // ✋ MÃOZINHA NATURAL AUTOMÁTICA: Aparece sozinha ao passar sobre objetos arrastáveis!
-        if (hoveredShape && currentTool !== 'eraser' && currentTool !== 'laser') {
+        if (hoveredShape && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           canvas.style.cursor = 'grab';
           return;
         }
-        if (currentTool === 'pen' || currentTool === 'highlighter') {
+        if (currentTool === 'pen') {
           canvas.style.cursor = `url("${svgLapisUri}") 2 24, crosshair`;
-        } else if (currentTool === 'move') {
-          canvas.style.cursor = 'grab';
+        } else if (currentTool === 'highlighter') {
+          canvas.style.cursor = `url("${svgMarcadorUri}") 4 22, crosshair`;
+        } else if (currentTool === 'eraser') {
+          canvas.style.cursor = `url("${svgBorrachaUri}") 6 22, cell`;
         } else if (currentTool === 'laser') {
           canvas.style.cursor = 'none';
+        } else if (currentTool === 'text') {
+          canvas.style.cursor = 'text';
         } else {
           canvas.style.cursor = 'crosshair';
         }
@@ -611,7 +755,6 @@
       function atualizarVisorZoom() {
         const pct = Math.round((camera.zoom || 1) * 100) + '%';
         if (zoomBadge) zoomBadge.innerText = pct;
-        if (qdZoomReset) qdZoomReset.innerText = pct;
       }
 
       function verificarClipboardTela() {
@@ -654,9 +797,7 @@
         hoveredShape = null;
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
-        if (dispararSave) {
-          agendarSalvamentoNuvem(10);
-        }
+        if (dispararSave) agendarSalvamentoNuvem(10);
       }
 
       function validarCameraSegura() {
@@ -675,12 +816,12 @@
         }
         telaEspera.style.display = 'none';
         const bloquearFerramentas = (role === 'aluno' && isReadonly);
-        // Esconde toda a sidebar e quick-dock quando o aluno está apenas a assistir!
         if (sidebarEl) sidebarEl.style.display = bloquearFerramentas ? 'none' : 'flex';
         if (quickDockEl) quickDockEl.style.display = bloquearFerramentas ? 'none' : 'flex';
-        if (smartHandToast) smartHandToast.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiTopBar.style.display = bloquearFerramentas ? 'none' : 'flex';
-        uiBottomBar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        if (uiTopBar) uiTopBar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        if (uiBottomBar) uiBottomBar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        if (uiStudioBar) uiStudioBar.style.display = bloquearFerramentas ? 'none' : 'flex';
+        if (stageEl) stageEl.style.paddingTop = bloquearFerramentas ? '10px' : '46px';
         badgeLeitura.style.display = bloquearFerramentas ? 'block' : 'none';
         atualizarCursorCanvas();
         atualizarBarraNumeracaoTelas();
@@ -754,17 +895,25 @@
 
       function ajustarTamanhoCanvas() {
         const dpr = window.devicePixelRatio || 1;
-        const stageW = Math.max(100, (stageEl.clientWidth || window.innerWidth) - 20);
-        const stageH = Math.max(100, (stageEl.clientHeight || window.innerHeight) - 20);
+        const padTop = (role === 'aluno' && isReadonly) ? 16 : 54;
+        const stageW = Math.max(100, (stageEl.clientWidth || window.innerWidth) - 18);
+        const stageH = Math.max(100, (stageEl.clientHeight || window.innerHeight) - padTop);
 
         const escalaFit = Math.min(stageW / 1280, stageH / 720);
         const cssW = Math.floor(1280 * escalaFit);
         const cssH = Math.floor(720 * escalaFit);
         canvas.style.width = cssW + 'px';
         canvas.style.height = cssH + 'px';
-        canvas.width = Math.max(1, Math.floor(1280 * dpr));
-        canvas.height = Math.max(1, Math.floor(720 * dpr));
+
+        const physW = Math.max(1, Math.floor(1280 * dpr));
+        const physH = Math.max(1, Math.floor(720 * dpr));
+        canvas.width = physW;
+        canvas.height = physH;
+        inkCanvas.width = physW;
+        inkCanvas.height = physH;
+
         ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        inkCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
         desenharQuadro();
       }
 
@@ -774,8 +923,6 @@
         ro.observe(stageEl);
       }
 
-      // 🎯 CONVERSÃO MATEMÁTICA PERFEITA COM ZOOM E PAN!
-      // Converte o clique na tela para a coordenada real do mundo da lousa (descontando camera.x, camera.y e dividindo por camera.zoom)
       function telaParaQuadro(clientX, clientY) {
         validarCameraSegura();
         const rect = canvas.getBoundingClientRect();
@@ -789,11 +936,9 @@
 
       function desenharFundoCanvas(c, width, height) {
         c.save();
-        // Preenche o fundo base
         c.fillStyle = currentBg === 'bg-pauta' ? '#fffef7' : '#ffffff';
         c.fillRect(0, 0, width, height);
 
-        // Desenha a grelha/pauta acompanhando o Zoom e Pan para referência visual perfeita
         c.save();
         c.translate(camera.x, camera.y);
         c.scale(camera.zoom, camera.zoom);
@@ -842,11 +987,11 @@
         }
         c.restore();
 
-        c.fillStyle = 'rgba(100, 116, 139, 0.75)';
-        c.font = '800 13px "Segoe UI", sans-serif';
+        c.fillStyle = 'rgba(100, 116, 139, 0.72)';
+        c.font = '800 12.5px "Segoe UI", sans-serif';
         c.textAlign = 'left';
         c.textBaseline = 'bottom';
-        c.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length} • Zoom ${Math.round(camera.zoom * 100)}%`, 16, height - 12);
+        c.fillText(`🖥️ Tela ${activeScreenIndex + 1} de ${screens.length} • Zoom ${Math.round(camera.zoom * 100)}%`, 16, height - 10);
         c.restore();
       }
 
@@ -932,18 +1077,197 @@
         c.restore();
       }
 
-      // 📐 Calcula a caixa delimitadora (Bounding Box) exata de qualquer objeto para a Mãozinha Automática e Redimensionamento
+      // =========================================================================
+      // 🔤 MOTOR DE TEXTO RICO (ESTILOS PARCIAIS POR PALAVRA + QUEBRA DE LINHA REAL)
+      // =========================================================================
+      function montarFonteRun(run, fontSize) {
+        const it = run.italic ? 'italic ' : '';
+        const bd = run.bold ? '700 ' : '400 ';
+        const fam = run.fontFamily || "'Segoe UI', sans-serif";
+        return `${it}${bd}${fontSize}px ${fam}`;
+      }
+
+      function obterRunsDoTexto(s) {
+        if (Array.isArray(s.runs) && s.runs.length > 0) {
+          return s.runs;
+        }
+        return [{
+          text: String(s.text || ''),
+          bold: s.bold !== false,
+          italic: !!s.italic,
+          underline: !!s.underline,
+          strike: !!s.strike,
+          color: s.color || '#0f172a',
+          fontFamily: s.fontFamily || "'Segoe UI', sans-serif"
+        }];
+      }
+
+      function calcularLayoutTextoRico(c, s) {
+        const scale = s.scale || 1;
+        const baseFontSize = s.fontSize || Math.max(20, (s.size || 6) * 3.8);
+        const fontSize = baseFontSize * scale;
+        const lineHeight = fontSize * 1.3;
+        const temLarguraMoldada = Number.isFinite(s.boxWidth) && s.boxWidth > 40;
+        const maxW = temLarguraMoldada ? (s.boxWidth * scale) : 960;
+        const runs = obterRunsDoTexto(s);
+
+        c.save();
+        const lines = [];
+        let curSegments = [];
+        let curX = 0;
+
+        const fecharLinha = () => {
+          lines.push({
+            y: lines.length * lineHeight,
+            height: lineHeight,
+            width: curX,
+            segments: curSegments
+          });
+          curSegments = [];
+          curX = 0;
+        };
+
+        runs.forEach(run => {
+          const textoRun = String(run.text || '').replace(/\r/g, '');
+          const partesLinha = textoRun.split('\n');
+          c.font = montarFonteRun(run, fontSize);
+
+          partesLinha.forEach((parte, pIdx) => {
+            if (pIdx > 0) fecharLinha();
+            if (!parte) return;
+
+            const tokens = parte.match(/\S+|\s+/g) || [parte];
+            tokens.forEach(tok => {
+              const tokW = c.measureText(tok).width;
+
+              // Se o token é só espaço no início da linha após quebra automática, pula
+              if (/^\s+$/.test(tok) && curX === 0 && curSegments.length === 0) {
+                return;
+              }
+
+              // Se couber na linha atual, adiciona
+              if (curX + tokW <= maxW || !temLarguraMoldada) {
+                curSegments.push({ text: tok, x: curX, width: tokW, style: run });
+                curX += tokW;
+                return;
+              }
+
+              // Se não couber e já há conteúdo na linha, quebra linha
+              if (curX > 0 && !/^\s+$/.test(tok)) {
+                fecharLinha();
+              }
+
+              // Se uma palavra única for maior que a largura da caixa, quebra por caracteres
+              if (tokW > maxW) {
+                let pedaco = '';
+                for (const ch of tok) {
+                  const testeW = c.measureText(pedaco + ch).width;
+                  if (curX + testeW > maxW && pedaco.length > 0) {
+                    const pw = c.measureText(pedaco).width;
+                    curSegments.push({ text: pedaco, x: curX, width: pw, style: run });
+                    curX += pw;
+                    fecharLinha();
+                    pedaco = ch;
+                  } else {
+                    pedaco += ch;
+                  }
+                }
+                if (pedaco) {
+                  const pw = c.measureText(pedaco).width;
+                  curSegments.push({ text: pedaco, x: curX, width: pw, style: run });
+                  curX += pw;
+                }
+              } else {
+                curSegments.push({ text: tok, x: curX, width: tokW, style: run });
+                curX += tokW;
+              }
+            });
+          });
+        });
+
+        fecharLinha();
+        c.restore();
+
+        const maxLineW = Math.max(...lines.map(l => l.width), 36);
+        const boxFinalW = temLarguraMoldada ? Math.max(maxW, maxLineW) : (maxLineW + 14);
+        const totalH = Math.max(lineHeight, lines.length * lineHeight);
+        return { lines, boxWidth: boxFinalW, totalHeight: totalH, fontSize, lineHeight };
+      }
+
+      function desenharTextoRico(c, s) {
+        const layout = calcularLayoutTextoRico(c, s);
+        c.save();
+        c.textBaseline = 'top';
+        c.textAlign = 'left';
+
+        layout.lines.forEach(line => {
+          const ly = s.y + line.y;
+          line.segments.forEach(seg => {
+            const st = seg.style || {};
+            const sx = s.x + seg.x;
+            c.font = montarFonteRun(st, layout.fontSize);
+            c.fillStyle = st.color || s.color || '#0f172a';
+            c.strokeStyle = c.fillStyle;
+            c.fillText(seg.text, sx, ly);
+
+            if (st.underline) {
+              c.beginPath();
+              c.lineWidth = Math.max(1.4, layout.fontSize * 0.065);
+              c.moveTo(sx, ly + layout.fontSize * 1.06);
+              c.lineTo(sx + seg.width, ly + layout.fontSize * 1.06);
+              c.stroke();
+            }
+            if (st.strike) {
+              c.beginPath();
+              c.lineWidth = Math.max(1.4, layout.fontSize * 0.065);
+              c.moveTo(sx, ly + layout.fontSize * 0.56);
+              c.lineTo(sx + seg.width, ly + layout.fontSize * 0.56);
+              c.stroke();
+            }
+          });
+        });
+
+        c.restore();
+      }
+
+      // 🖍️ DETETOR INTELIGENTE DO MARCA-TEXTO: Encontra a linha exata de texto sob o cursor!
+      function encontrarLinhaTextoNoPonto(pt) {
+        for (let i = shapes.length - 1; i >= 0; i--) {
+          const s = shapes[i];
+          if (!s || s.tool !== 'text') continue;
+          const layout = calcularLayoutTextoRico(ctx, s);
+          if (
+            pt.x >= s.x - 14 &&
+            pt.x <= s.x + layout.boxWidth + 14 &&
+            pt.y >= s.y - 6 &&
+            pt.y <= s.y + layout.totalHeight + 6
+          ) {
+            let linhaAlvo = layout.lines[0];
+            for (const ln of layout.lines) {
+              const absY = s.y + ln.y;
+              if (pt.y >= absY - 4 && pt.y <= absY + ln.height + 4) {
+                linhaAlvo = ln;
+                break;
+              }
+            }
+            if (linhaAlvo) {
+              return {
+                y: s.y + linhaAlvo.y + linhaAlvo.height * 0.05,
+                h: Math.max(14, linhaAlvo.height * 0.88),
+                textShape: s
+              };
+            }
+          }
+        }
+        return null;
+      }
+
+      // 📐 Calcula a caixa delimitadora (Bounding Box) exata de qualquer objeto
       function obterCaixaElemento(item) {
         if (!item || item.tool === 'meta_bg') return null;
         if (item.tool === 'infographic') {
           const { w, h, scale } = calcularDimensoesInfografico(item);
           return { x: item.x, y: item.y, w: w * scale, h: h * scale, baseW: w, baseH: h, scale };
-        }
-        if (item.tool === 'postit') {
-          const scale = item.scale || 1;
-          const baseW = item.w || 220;
-          const baseH = item.h || 160;
-          return { x: item.x, y: item.y, w: baseW * scale, h: baseH * scale, baseW, baseH, scale };
         }
         if (item.tool === 'image') {
           const scale = item.scale || 1;
@@ -953,16 +1277,9 @@
         }
         if (item.tool === 'text') {
           const scale = item.scale || 1;
-          const fontSize = Math.max(18, (item.size || 6) * 4) * scale;
-          const styleItalic = item.italic ? 'italic ' : '';
-          const styleBold = item.bold !== false ? '700 ' : '400 ';
-          const family = item.fontFamily || "'Segoe UI', sans-serif";
-          ctx.save();
-          ctx.font = `${styleItalic}${styleBold}${fontSize}px ${family}`;
-          const linhas = String(item.text || '').split('\n');
-          const larg = Math.max(...linhas.map(l => ctx.measureText(l).width), 40) + 16;
-          ctx.restore();
-          const alt = linhas.length * (fontSize * 1.25) + 8;
+          const layout = calcularLayoutTextoRico(ctx, item);
+          const larg = layout.boxWidth + 12;
+          const alt = layout.totalHeight + 8;
           return { x: item.x - 6, y: item.y - 4, w: larg, h: alt, baseW: larg / scale, baseH: alt / scale, scale };
         }
         if (['line', 'arrow', 'rect', 'circle', 'triangle', 'diamond', 'hexagon'].includes(item.tool)) {
@@ -1016,53 +1333,6 @@
         item.w = baseW;
         item.h = baseH;
         return { w: baseW, h: baseH, scale: item.scale || 1 };
-      }
-
-      function desenharPostit(c, item) {
-        const scale = item.scale || 1;
-        const w = item.w || 220;
-        const h = item.h || 160;
-        const bg = item.bgColor || '#fef08a';
-        const border = item.color || '#eab308';
-        c.save();
-        c.translate(item.x || 120, item.y || 120);
-        c.scale(scale, scale);
-        c.shadowColor = 'rgba(15, 23, 42, 0.14)';
-        c.shadowBlur = 14;
-        c.shadowOffsetY = 5;
-        c.fillStyle = bg;
-        roundRect(c, 0, 0, w, h, 12);
-        c.fill();
-        c.shadowColor = 'transparent';
-        c.strokeStyle = border;
-        c.lineWidth = 2;
-        c.stroke();
-
-        // Faixa superior do Post-it
-        c.fillStyle = 'rgba(0,0,0,0.06)';
-        roundRect(c, 0, 0, w, 28, 12);
-        c.fill();
-        c.fillStyle = '#475569';
-        c.font = '800 10.5px "Segoe UI", sans-serif';
-        c.textAlign = 'left';
-        c.textBaseline = 'middle';
-        c.fillText('📌 NOTA / VOCABULÁRIO', 10, 14);
-
-        desenharTextoAjustado(c, item.text || 'Duplo clique para editar...', 12, 34, w - 24, h - 46, {
-          weight: '700', maxFont: 15, minFont: 10, color: '#0f172a', align: 'center', vAlign: 'middle'
-        });
-
-        if (!(role === 'aluno' && isReadonly)) {
-          c.fillStyle = border;
-          roundRect(c, w - 22, h - 22, 20, 20, 5);
-          c.fill();
-          c.fillStyle = '#fff';
-          c.font = '900 11px "Segoe UI", sans-serif';
-          c.textAlign = 'center';
-          c.textBaseline = 'middle';
-          c.fillText('⤡', w - 12, h - 12);
-        }
-        c.restore();
       }
 
       function desenharInfografico(c, item) {
@@ -1139,8 +1409,7 @@
               weight: '800', maxFont: 12.5, minFont: 10, color: '#0f172a', align: 'right', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'informativo' || t === 'mm_texto') {
+        } else if (t === 'informativo' || t === 'mm_texto') {
           const topicos = d.topics || ['Tópico 1'];
           const rowH = bodyH / topicos.length;
           topicos.forEach((topico, idx) => {
@@ -1164,8 +1433,7 @@
               weight: '600', maxFont: 13.5, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'comparativo') {
+        } else if (t === 'comparativo') {
           const colW = (w - 44) / 2;
           const itemsA = d.itemsA || [];
           const itemsB = d.itemsB || [];
@@ -1194,8 +1462,7 @@
               weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'processos' || t === 'mm_fluxo') {
+        } else if (t === 'processos' || t === 'mm_fluxo') {
           const steps = d.steps || ['Passo 1'];
           const cols = Math.min(4, steps.length);
           const rows = Math.ceil(steps.length / cols);
@@ -1233,8 +1500,7 @@
               c.fillText('➔', sx + stepW - 3, sy + boxH / 2);
             }
           });
-        }
-        else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
+        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
           const events = d.events || [{ time: '2020', label: 'Marco' }];
           const midY = bodyY + bodyH / 2;
           c.strokeStyle = cor;
@@ -1272,8 +1538,7 @@
               });
             }
           });
-        }
-        else if (t === 'espaco_tempo') {
+        } else if (t === 'espaco_tempo') {
           const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
           const cols = Math.min(3, stages.length);
           const rows = Math.ceil(stages.length / cols);
@@ -1299,8 +1564,7 @@
               weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'left', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos') {
+        } else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
           const centerText = d.center || 'Tema Central';
@@ -1341,8 +1605,7 @@
           desenharTextoAjustado(c, centerText, cx - 68, cy - 22, 136, 44, {
             weight: '800', maxFont: 13.5, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
           });
-        }
-        else if (t === 'mm_ciclo') {
+        } else if (t === 'mm_ciclo') {
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
           const nodes = d.nodes || ['Fase 1', 'Fase 2', 'Fase 3', 'Fase 4'];
@@ -1369,8 +1632,7 @@
               weight: '700', maxFont: 11.5, minFont: 8.5, color: '#0f172a', align: 'center', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'mm_arvore' || t === 'mm_organograma') {
+        } else if (t === 'mm_arvore' || t === 'mm_organograma') {
           const rootText = d.center || titulo;
           const nodes = d.nodes || ['Ramo 1', 'Ramo 2', 'Ramo 3'];
           const topY = bodyY + 10;
@@ -1414,8 +1676,7 @@
               weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
             });
           });
-        }
-        else if (t === 'interativo') {
+        } else if (t === 'interativo') {
           const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta' }];
           const cols = Math.min(3, cards.length);
           const rows = Math.ceil(cards.length / cols);
@@ -1448,7 +1709,6 @@
           });
         }
 
-        // Pega de redimensionamento no canto inferior direito
         if (!(role === 'aluno' && isReadonly)) {
           c.fillStyle = cor;
           roundRect(c, w - 24, h - 24, 22, 22, 6);
@@ -1477,14 +1737,11 @@
         c.fill();
       }
 
+      // 🎨 RENDERIZADOR DE CADA ELEMENTO SOBRE A CAMADA DE TINTA (inkCtx)
       function desenharForma(c, s) {
         if (!s || s.tool === 'meta_bg') return;
         if (s.tool === 'infographic') {
           desenharInfografico(c, s);
-          return;
-        }
-        if (s.tool === 'postit') {
-          desenharPostit(c, s);
           return;
         }
         if (s.tool === 'image' && s.dataUrl) {
@@ -1506,6 +1763,78 @@
           return;
         }
 
+        // 🔤 Texto Rico (com quebra de linha preservada e formatação parcial por palavra!)
+        if (s.tool === 'text' && (s.text || (Array.isArray(s.runs) && s.runs.length > 0))) {
+          desenharTextoRico(c, s);
+          return;
+        }
+
+        // 🖍️ MARCA-TEXTO RETANGULAR INTELIGENTE
+        if (s.tool === 'highlighter') {
+          c.save();
+          c.globalAlpha = 0.36;
+          c.fillStyle = s.color || '#facc15';
+          c.strokeStyle = s.color || '#facc15';
+
+          // Caso 1: Encaixado automaticamente na altura exata do texto!
+          if (s.rectMode && Number.isFinite(s.rectY) && Number.isFinite(s.rectH)) {
+            const xMin = Math.min(s.x1, s.x2);
+            const larg = Math.max(12, Math.abs(s.x2 - s.x1));
+            c.fillRect(xMin, s.rectY, larg, s.rectH);
+            c.restore();
+            return;
+          }
+
+          // Caso 2: Área livre sem texto -> formato retangular padrão (pontas retas 'butt')
+          const alturaPadrao = s.rectH || Math.max(HIGHLIGHTER_DEFAULT_H, (s.size || 6) * 4.2);
+          c.lineCap = 'butt';
+          c.lineJoin = 'bevel';
+          c.lineWidth = alturaPadrao;
+          const pts = s.points || [];
+          if (pts.length === 1) {
+            c.fillRect(pts[0].x - alturaPadrao * 0.4, pts[0].y - alturaPadrao / 2, alturaPadrao * 0.8, alturaPadrao);
+          } else if (pts.length > 1) {
+            c.beginPath();
+            c.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length; i++) {
+              c.lineTo(pts[i].x, pts[i].y);
+            }
+            c.stroke();
+          }
+          c.restore();
+          return;
+        }
+
+        // 🧽 BORRACHA REAL: Apaga apenas a tinta (destination-out), NUNCA pinta de branco nem borra o fundo!
+        if (s.tool === 'eraser') {
+          c.save();
+          c.globalCompositeOperation = 'destination-out';
+          c.lineCap = 'round';
+          c.lineJoin = 'round';
+          c.strokeStyle = 'rgba(0,0,0,1)';
+          c.fillStyle = 'rgba(0,0,0,1)';
+          c.lineWidth = (s.size || 6) * ERASER_SIZE_MULTIPLIER;
+          const pts = s.points || [];
+          if (pts.length === 1) {
+            c.beginPath();
+            c.arc(pts[0].x, pts[0].y, c.lineWidth / 2, 0, Math.PI * 2);
+            c.fill();
+          } else if (pts.length > 1) {
+            c.beginPath();
+            c.moveTo(pts[0].x, pts[0].y);
+            for (let i = 1; i < pts.length - 1; i++) {
+              const mx = (pts[i].x + pts[i + 1].x) / 2;
+              const my = (pts[i].y + pts[i + 1].y) / 2;
+              c.quadraticCurveTo(pts[i].x, pts[i].y, mx, my);
+            }
+            c.lineTo(pts[pts.length - 1].x, pts[pts.length - 1].y);
+            c.stroke();
+          }
+          c.restore();
+          return;
+        }
+
+        // ✏️ Lápis e Figuras Geométricas
         c.save();
         c.lineCap = 'round';
         c.lineJoin = 'round';
@@ -1513,15 +1842,7 @@
         c.fillStyle = s.color || '#0f172a';
         c.lineWidth = s.size || 6;
 
-        if (s.tool === 'highlighter') {
-          c.globalAlpha = 0.34;
-          c.lineWidth = (s.size || 6) * 2.8;
-        } else if (s.tool === 'eraser') {
-          c.strokeStyle = currentBg === 'bg-pauta' ? '#fffef7' : '#ffffff';
-          c.lineWidth = (s.size || 6) * 3.5;
-        }
-
-        if (s.tool === 'pen' || s.tool === 'highlighter' || s.tool === 'eraser') {
+        if (s.tool === 'pen') {
           const pts = s.points || [];
           if (pts.length === 1) {
             c.beginPath();
@@ -1585,65 +1906,34 @@
           c.lineTo(s.x1, s.y1 + h * 0.5);
           c.closePath();
           c.stroke();
-        } else if (s.tool === 'text' && s.text) {
-          const scale = s.scale || 1;
-          const fontSize = Math.max(18, (s.size || 6) * 4) * scale;
-          const styleItalic = s.italic ? 'italic ' : '';
-          const styleBold = s.bold !== false ? '700 ' : '400 ';
-          const family = s.fontFamily || "'Segoe UI', sans-serif";
-          c.font = `${styleItalic}${styleBold}${fontSize}px ${family}`;
-          c.textBaseline = 'top';
-          const linhas = String(s.text).split('\n');
-          const lineH = fontSize * 1.25;
-          linhas.forEach((linha, idx) => {
-            const ly = s.y + idx * lineH;
-            c.fillText(linha, s.x, ly);
-            const tw = c.measureText(linha).width;
-            if (s.underline) {
-              c.beginPath();
-              c.lineWidth = Math.max(1.5, fontSize * 0.06);
-              c.moveTo(s.x, ly + fontSize * 1.05);
-              c.lineTo(s.x + tw, ly + fontSize * 1.05);
-              c.stroke();
-            }
-            if (s.strike) {
-              c.beginPath();
-              c.lineWidth = Math.max(1.5, fontSize * 0.06);
-              c.moveTo(s.x, ly + fontSize * 0.55);
-              c.lineTo(s.x + tw, ly + fontSize * 0.55);
-              c.stroke();
-            }
-          });
         }
         c.restore();
       }
 
-      // ✋ Desenha a moldura inteligente quando o utilizador passa o cursor por cima de um objeto arrastável
+      // ✋ Moldura de seleção ao passar o cursor sobre um objeto arrastável
       function desenharDestaqueObjetoHover(c, item) {
         if (!item || (role === 'aluno' && isReadonly)) return;
         const box = obterCaixaElemento(item);
         if (!box) return;
         c.save();
         c.strokeStyle = '#2563eb';
-        c.lineWidth = 1.8 / camera.zoom;
+        c.lineWidth = 1.6 / camera.zoom;
         c.setLineDash([6 / camera.zoom, 4 / camera.zoom]);
         roundRect(c, box.x - 4, box.y - 4, box.w + 8, box.h + 8, 8);
         c.stroke();
         c.setLineDash([]);
 
-        // Etiqueta superior "✋ Arraste | Duplo clique edita"
-        const badgeW = 158 / camera.zoom;
-        const badgeH = 22 / camera.zoom;
+        const badgeW = 148 / camera.zoom;
+        const badgeH = 21 / camera.zoom;
         c.fillStyle = '#0f172a';
         roundRect(c, box.x - 2, box.y - badgeH - 6, badgeW, badgeH, 6 / camera.zoom);
         c.fill();
         c.fillStyle = '#ffffff';
-        c.font = `700 ${10.5 / camera.zoom}px "Inter", sans-serif`;
+        c.font = `700 ${10 / camera.zoom}px "Inter", sans-serif`;
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillText('✋ Arraste • 2x clique edita', box.x + 6 / camera.zoom, box.y - badgeH / 2 - 6);
+        c.fillText('Arraste • 2x clique edita', box.x + 7 / camera.zoom, box.y - badgeH / 2 - 6);
 
-        // Pega de redimensionamento (canto inferior direito) para textos e figuras
         if (item.tool === 'text' || item.tool === 'image') {
           const hs = 20 / camera.zoom;
           c.fillStyle = '#2563eb';
@@ -1658,51 +1948,135 @@
         c.restore();
       }
 
+      // 🔴 MOTOR DE ANIMAÇÃO CONTÍNUA DO LASER (Bolinha vermelha + rastro que desaparece suavemente!)
+      function atualizarLaserNoPonto(pt) {
+        const agora = performance.now();
+        laserHead = { x: pt.x, y: pt.y };
+        laserTrail.push({ x: pt.x, y: pt.y, t: agora });
+        if (laserTrail.length > 36) laserTrail.shift();
+        iniciarAnimacaoLaser();
+        desenharQuadro();
+      }
+
+      function iniciarAnimacaoLaser() {
+        if (laserAnimFrame) return;
+        const passo = () => {
+          const agora = performance.now();
+          laserTrail = laserTrail.filter(p => !p.t || (agora - p.t) < LASER_TRAIL_LIFE_MS);
+          desenharQuadro();
+          if (laserTrail.length > 0) {
+            laserAnimFrame = requestAnimationFrame(passo);
+          } else {
+            laserAnimFrame = null;
+          }
+        };
+        laserAnimFrame = requestAnimationFrame(passo);
+      }
+
+      // 🖼️ RENDERIZAÇÃO PRINCIPAL EM 3 CAMADAS (1. Fundo -> 2. Tinta/Borracha -> 3. Guias e Laser)
       function desenharQuadro() {
         validarCameraSegura();
-        ctx.save();
+
+        // CAMADA 1: Fundo limpo (Grade, Pauta, Pontilhado ou Branco)
         desenharFundoCanvas(ctx, 1280, 720);
 
-        // Aplica o Zoom e Panorâmica com precisão matemática
+        // CAMADA 2: Tinta e Objetos na camada transparente (inkCanvas)
+        inkCtx.save();
+        inkCtx.setTransform(1, 0, 0, 1, 0, 0);
+        inkCtx.clearRect(0, 0, inkCanvas.width, inkCanvas.height);
+        inkCtx.restore();
+
+        inkCtx.save();
+        inkCtx.translate(camera.x, camera.y);
+        inkCtx.scale(camera.zoom, camera.zoom);
+
+        for (let i = 0; i < shapes.length; i++) {
+          desenharForma(inkCtx, shapes[i]);
+        }
+        if (activeShape) {
+          desenharForma(inkCtx, activeShape);
+        }
+        inkCtx.restore();
+
+        // Composição 1:1 da camada de tinta sobre o fundo intacto
+        ctx.save();
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.drawImage(inkCanvas, 0, 0);
+        ctx.restore();
+
+        // CAMADA 3: Guias de interação, prévia da borracha e Laser
+        ctx.save();
         ctx.translate(camera.x, camera.y);
         ctx.scale(camera.zoom, camera.zoom);
 
-        for (let i = 0; i < shapes.length; i++) {
-          desenharForma(ctx, shapes[i]);
-        }
-        if (activeShape) {
-          desenharForma(ctx, activeShape);
-        }
-
-        // Destaque visual da Mãozinha Automática
         const alvoDestaque = movingShape || resizingShape || hoveredShape;
-        if (alvoDestaque && currentTool !== 'eraser' && currentTool !== 'laser') {
+        if (alvoDestaque && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           desenharDestaqueObjetoHover(ctx, alvoDestaque);
         }
 
-        // Rastro do Laser
-        if (laserTrail.length > 1) {
+        // Guia visual do Marca-Texto ao passar sobre uma linha de texto
+        if (currentTool === 'highlighter' && !isPointerDown && highlighterHoverSnap) {
           ctx.save();
-          ctx.strokeStyle = '#ef4444';
-          ctx.lineWidth = 4 / camera.zoom;
-          ctx.lineCap = 'round';
-          ctx.shadowColor = '#ef4444';
-          ctx.shadowBlur = 12;
+          ctx.strokeStyle = currentColor === '#0f172a' ? '#f59e0b' : currentColor;
+          ctx.lineWidth = 1.5 / camera.zoom;
+          ctx.setLineDash([4 / camera.zoom, 3 / camera.zoom]);
+          ctx.strokeRect(
+            highlighterHoverSnap.x - 4,
+            highlighterHoverSnap.y,
+            8,
+            highlighterHoverSnap.h
+          );
+          ctx.restore();
+        }
+
+        // Prévia circular da Borracha seguindo o cursor
+        if (currentTool === 'eraser' && eraserHoverPt && !(role === 'aluno' && isReadonly)) {
+          const raio = ((currentSize || 6) * ERASER_SIZE_MULTIPLIER) / 2;
+          ctx.save();
           ctx.beginPath();
-          ctx.moveTo(laserTrail[0].x, laserTrail[0].y);
-          for (let i = 1; i < laserTrail.length; i++) {
-            ctx.lineTo(laserTrail[i].x, laserTrail[i].y);
-          }
+          ctx.arc(eraserHoverPt.x, eraserHoverPt.y, raio, 0, Math.PI * 2);
+          ctx.fillStyle = 'rgba(244, 63, 94, 0.12)';
+          ctx.fill();
+          ctx.lineWidth = 1.6 / camera.zoom;
+          ctx.strokeStyle = '#e11d48';
           ctx.stroke();
           ctx.restore();
         }
+
+        // Rastro do Laser com desaparecimento suave
+        if (laserTrail.length > 1) {
+          const agora = performance.now();
+          ctx.save();
+          ctx.lineCap = 'round';
+          for (let i = 1; i < laserTrail.length; i++) {
+            const p0 = laserTrail[i - 1];
+            const p1 = laserTrail[i];
+            const idade = p1.t ? Math.min(1, (agora - p1.t) / LASER_TRAIL_LIFE_MS) : (1 - i / laserTrail.length);
+            const alpha = Math.max(0, 1 - idade);
+            if (alpha <= 0.02) continue;
+            ctx.beginPath();
+            ctx.strokeStyle = `rgba(239, 68, 68, ${alpha.toFixed(3)})`;
+            ctx.lineWidth = Math.max(1.5, (5.5 * alpha) / camera.zoom);
+            ctx.moveTo(p0.x, p0.y);
+            ctx.lineTo(p1.x, p1.y);
+            ctx.stroke();
+          }
+          ctx.restore();
+        }
+
+        // Bolinha vermelha brilhante do Laser (visível imediatamente ao mover!)
         if (laserHead) {
           ctx.save();
-          ctx.fillStyle = '#ef4444';
           ctx.shadowColor = '#ef4444';
           ctx.shadowBlur = 16;
+          ctx.fillStyle = '#ef4444';
           ctx.beginPath();
           ctx.arc(laserHead.x, laserHead.y, 7 / camera.zoom, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.shadowBlur = 0;
+          ctx.fillStyle = '#fecaca';
+          ctx.beginPath();
+          ctx.arc(laserHead.x, laserHead.y, 2.8 / camera.zoom, 0, Math.PI * 2);
           ctx.fill();
           ctx.restore();
         }
@@ -1710,7 +2084,7 @@
         ctx.restore();
       }
 
-      // 🔍 DETETOR INTELIGENTE DE OBJETOS NO QUADRO (MÃOZINHA AUTOMÁTICA)
+      // 🔍 DETETOR INTELIGENTE DE OBJETOS NO QUADRO
       function encontrarElementoNoPonto(pt) {
         for (let i = shapes.length - 1; i >= 0; i--) {
           const s = shapes[i];
@@ -1718,7 +2092,6 @@
           const box = obterCaixaElemento(s);
           if (!box) continue;
 
-          // Verifica botões do cabeçalho de Infográficos (➕ e ✏️)
           if (s.tool === 'infographic') {
             const localX = (pt.x - s.x) / (box.scale || 1);
             const localY = (pt.y - s.y) / (box.scale || 1);
@@ -1732,7 +2105,6 @@
             }
           }
 
-          // Verifica pega de redimensionamento (⤡) no canto inferior direito
           const margemResize = 26 / camera.zoom;
           if (
             pt.x >= box.x + box.w - margemResize &&
@@ -1743,7 +2115,6 @@
             return { shape: s, action: 'resize', box };
           }
 
-          // Verifica corpo do objeto (arrastar com a mãozinha)
           if (pt.x >= box.x - 6 && pt.x <= box.x + box.w + 6 && pt.y >= box.y - 6 && pt.y <= box.y + box.h + 6) {
             return { shape: s, action: 'move', box };
           }
@@ -1757,7 +2128,14 @@
         return (txtBox && txtBox.style.display === 'flex') || (infoModal && infoModal.style.display === 'flex');
       }
 
-      // 🖱️ EVENTOS DE PONTEIRO (DESENHO + ARRASTE AUTOMÁTICO + ZOOM)
+      // ====== FIM DA ETAPA 2 — COLE A ETAPA 3 LOGO ABAIXO DESTA LINHA ======
+
+// =========================================================================
+      // 🖱️ EVENTOS DE PONTEIRO (LASER SEM CLIQUE + BORRACHA REAL + MARCADOR INTELIGENTE)
+      // =========================================================================
+      let eraserDownPt = null;
+      let eraserMoved = false;
+
       canvas.addEventListener('pointerdown', (e) => {
         if ((role === 'aluno' && isReadonly) || !isAllowed) return;
         fecharPopoversFlutuantes();
@@ -1765,7 +2143,7 @@
         const pt = telaParaQuadro(e.clientX, e.clientY);
         lastFocusPoint = pt;
 
-        // 1. Modo Panorâmica (Arrastar a tela com Zoom usando botão Pan, Barra de Espaço ou botão do meio do rato)
+        // 1. Modo Panorâmica (Arrastar a Tela)
         if (currentTool === 'pan' || isSpacePressed || e.button === 1) {
           isPanningBoard = true;
           panStartScreenPt = { x: e.clientX, y: e.clientY };
@@ -1774,8 +2152,8 @@
           return;
         }
 
-        // 2. Mãozinha Automática: Se clicou sobre um objeto existente (e não está com borracha/laser nem a digitar)
-        if (!editorOuModalAberto() && currentTool !== 'eraser' && currentTool !== 'laser') {
+        // 2. Arraste e Redimensionamento Automático de Objetos (Textos, Formas, Infográficos)
+        if (!editorOuModalAberto() && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           const hit = encontrarElementoNoPonto(pt);
           if (hit) {
             if (hit.action === 'info_add') {
@@ -1806,41 +2184,76 @@
           }
         }
 
-        // 3. Ferramenta de Texto: Clicar num local vazio abre a caixa de digitação naquele ponto
+        // 3. Ferramenta Texto: abre a caixa rica expansível no local clicado
         if (currentTool === 'text') {
           abrirEditorTextoNoPonto(pt, e.clientX, e.clientY, null);
           return;
         }
 
-        // 4. Ferramenta de Borracha: Se clicar em cima de um objeto (texto, post-it, infográfico ou forma), apaga-o; se arrastar, apaga traços!
-        if (currentTool === 'eraser') {
-          const hitApagar = encontrarElementoNoPonto(pt);
-          if (hitApagar && hitApagar.shape) {
-            shapes = shapes.filter(item => item !== hitApagar.shape);
-            hoveredShape = null;
-            desenharQuadro();
-            agendarSalvamentoNuvem(30);
-            return;
-          }
-        }
-
-        // 5. Ferramenta Laser Ao Vivo
+        // 4. Ferramenta Laser (funciona também em toque no celular/tablet)
         if (currentTool === 'laser') {
           isPointerDown = true;
-          laserHead = pt;
-          laserTrail = [pt];
-          desenharQuadro();
+          atualizarLaserNoPonto(pt);
           transmitirQuadroAoVivo();
           return;
         }
 
-        // 6. Desenho normal (Lápis, Marcador, Borracha de traço ou Formas Geométricas)
+        // 5. Ferramenta Borracha Real
+        if (currentTool === 'eraser') {
+          isPointerDown = true;
+          redoStack = [];
+          eraserDownPt = pt;
+          eraserMoved = false;
+          eraserHoverPt = pt;
+          activeShape = {
+            id: 'er_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+            tool: 'eraser',
+            size: currentSize,
+            points: [pt]
+          };
+          desenharQuadro();
+          return;
+        }
+
+        // 6. Ferramenta Marca-Texto Retangular Inteligente
+        if (currentTool === 'highlighter') {
+          isPointerDown = true;
+          redoStack = [];
+          const snapTexto = encontrarLinhaTextoNoPonto(pt);
+          if (snapTexto) {
+            activeShape = {
+              id: 'hl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+              tool: 'highlighter',
+              color: currentColor,
+              size: currentSize,
+              rectMode: true,
+              rectY: snapTexto.y,
+              rectH: snapTexto.h,
+              x1: pt.x,
+              x2: pt.x
+            };
+          } else {
+            activeShape = {
+              id: 'hl_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+              tool: 'highlighter',
+              color: currentColor,
+              size: currentSize,
+              rectMode: false,
+              rectH: Math.max(HIGHLIGHTER_DEFAULT_H, (currentSize || 6) * 4.2),
+              points: [pt]
+            };
+          }
+          desenharQuadro();
+          return;
+        }
+
+        // 7. Lápis e Figuras Geométricas
         isPointerDown = true;
         redoStack = [];
-        if (currentTool === 'pen' || currentTool === 'highlighter' || currentTool === 'eraser') {
+        if (currentTool === 'pen') {
           activeShape = {
             id: 'sh_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-            tool: currentTool,
+            tool: 'pen',
             color: currentColor,
             size: currentSize,
             points: [pt]
@@ -1863,7 +2276,7 @@
       window.addEventListener('pointermove', (e) => {
         if ((role === 'aluno' && isReadonly) || !isAllowed) return;
 
-        // 1. Panorâmica da tela (Arrastar quadro com Zoom)
+        // 1. Panorâmica da tela
         if (isPanningBoard && panStartScreenPt && panStartCam) {
           const rect = canvas.getBoundingClientRect();
           const fatorX = 1280 / Math.max(1, rect.width);
@@ -1877,7 +2290,7 @@
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
 
-        // 2. A redimensionar objeto pelo canto ⤡
+        // 2. Redimensionamento pelo canto ⤡
         if (isPointerDown && resizingShape && resizeCenterPt) {
           const distAtual = Math.max(20, Math.hypot(pt.x - resizeCenterPt.x, pt.y - resizeCenterPt.y));
           const novoScale = Math.max(0.45, Math.min(2.6, resizeStartScale * (distAtual / resizeStartDist)));
@@ -1887,7 +2300,7 @@
           return;
         }
 
-        // 3. A arrastar objeto com a Mãozinha Automática
+        // 3. Arrastar objeto
         if (isPointerDown && movingShape && moveLastPt) {
           const dx = pt.x - moveLastPt.x;
           const dy = pt.y - moveLastPt.y;
@@ -1907,21 +2320,26 @@
           return;
         }
 
-        // 4. Laser ativo
-        if (isPointerDown && currentTool === 'laser') {
-          laserHead = pt;
-          laserTrail.push(pt);
-          if (laserTrail.length > 28) laserTrail.shift();
+        // 4. 🔴 LASER AUTOMÁTICO: Aparece a bolinha vermelha e cria o rastro SEM precisar segurar o clique!
+        if (currentTool === 'laser' && !editorOuModalAberto() && (e.target === canvas || isPointerDown)) {
           lastFocusPoint = pt;
-          desenharQuadro();
+          atualizarLaserNoPonto(pt);
           transmitirQuadroAoVivo();
           return;
         }
 
-        // 5. Desenho ativo (Lápis, Marcador, Formas)
+        // 5. Desenho ativo (Lápis, Borracha, Marca-Texto, Formas)
         if (isPointerDown && activeShape) {
           lastFocusPoint = pt;
-          if (activeShape.points) {
+          if (activeShape.tool === 'eraser') {
+            eraserHoverPt = pt;
+            if (eraserDownPt && Math.hypot(pt.x - eraserDownPt.x, pt.y - eraserDownPt.y) > 4) {
+              eraserMoved = true;
+            }
+            activeShape.points.push(pt);
+          } else if (activeShape.tool === 'highlighter' && activeShape.rectMode) {
+            activeShape.x2 = pt.x;
+          } else if (activeShape.points) {
             activeShape.points.push(pt);
           } else {
             activeShape.x2 = pt.x;
@@ -1932,8 +2350,23 @@
           return;
         }
 
-        // 6. Deteta passagem do cursor sobre objetos para ativar a Mãozinha Naturalmente!
+        // 6. Prévia visual da Borracha e guia inteligente do Marca-Texto ao mover sem clicar
         if (!isPointerDown && !editorOuModalAberto() && e.target === canvas) {
+          if (currentTool === 'eraser') {
+            eraserHoverPt = pt;
+            highlighterHoverSnap = null;
+            desenharQuadro();
+            return;
+          }
+          if (currentTool === 'highlighter') {
+            const snap = encontrarLinhaTextoNoPonto(pt);
+            highlighterHoverSnap = snap ? { x: pt.x, y: snap.y, h: snap.h } : null;
+            eraserHoverPt = null;
+            desenharQuadro();
+            return;
+          }
+
+          // Hover para arraste de objetos
           const hit = encontrarElementoNoPonto(pt);
           const novoHover = hit ? hit.shape : null;
           const novoHandle = hit ? hit.action : null;
@@ -1944,6 +2377,19 @@
             desenharQuadro();
           }
         }
+      });
+
+      canvas.addEventListener('pointerleave', () => {
+        let precisaRedesenhar = false;
+        if (eraserHoverPt) { eraserHoverPt = null; precisaRedesenhar = true; }
+        if (highlighterHoverSnap) { highlighterHoverSnap = null; precisaRedesenhar = true; }
+        if (currentTool === 'laser' && laserHead) {
+          laserHead = null;
+          iniciarAnimacaoLaser();
+          agendarSalvamentoNuvem(120);
+          precisaRedesenhar = true;
+        }
+        if (precisaRedesenhar) desenharQuadro();
       });
 
       window.addEventListener('pointerup', () => {
@@ -1966,16 +2412,27 @@
         }
         if (currentTool === 'laser' && isPointerDown) {
           isPointerDown = false;
-          clearTimeout(laserFadeTimer);
-          laserFadeTimer = setTimeout(() => {
-            laserHead = null;
-            laserTrail = [];
-            desenharQuadro();
-            agendarSalvamentoNuvem(50);
-          }, 450);
+          iniciarAnimacaoLaser();
+          agendarSalvamentoNuvem(80);
           return;
         }
         if (isPointerDown && activeShape) {
+          // 🧽 Se deu um clique curto com a borracha diretamente sobre um objeto, apaga o objeto inteiro
+          if (activeShape.tool === 'eraser' && !eraserMoved && eraserDownPt) {
+            const hitApagar = encontrarElementoNoPonto(eraserDownPt);
+            if (hitApagar && hitApagar.shape) {
+              shapes = shapes.filter(item => item !== hitApagar.shape);
+              hoveredShape = null;
+              activeShape = null;
+              isPointerDown = false;
+              guardarEstadoNaTelaAtual();
+              atualizarBarraNumeracaoTelas();
+              desenharQuadro();
+              agendarSalvamentoNuvem(30);
+              return;
+            }
+          }
+
           shapes.push(activeShape);
           activeShape = null;
           isPointerDown = false;
@@ -1985,22 +2442,28 @@
           agendarSalvamentoNuvem(30);
         }
         isPointerDown = false;
+
+        if (pendingRemoteRecords) {
+          const pendentes = pendingRemoteRecords;
+          pendingRemoteRecords = null;
+          aplicarRecordsRecebidos(pendentes);
+        }
       });
 
-      // 🖱️ DUPLO CLIQUE: Edita rapidamente qualquer Texto, Post-it ou Infográfico!
+      // 🖱️ DUPLO CLIQUE: Reabre a Caixa de Texto ou o Editor de Infográficos
       canvas.addEventListener('dblclick', (e) => {
         if ((role === 'aluno' && isReadonly) || !isAllowed) return;
         const pt = telaParaQuadro(e.clientX, e.clientY);
         const hit = encontrarElementoNoPonto(pt);
         if (!hit || !hit.shape) return;
-        if (hit.shape.tool === 'text' || hit.shape.tool === 'postit') {
+        if (hit.shape.tool === 'text') {
           abrirEditorTextoNoPonto({ x: hit.shape.x, y: hit.shape.y }, e.clientX, e.clientY, hit.shape);
         } else if (hit.shape.tool === 'infographic') {
           abrirModalEdicaoInfografico(hit.shape);
         }
       });
 
-      // 🔍 RODA DO RATO (SCROLL / CTRL+WHEEL) PARA ZOOM CENTRADO NO CURSOR
+      // 🔍 ZOOM COM A RODA DO RATO
       canvas.addEventListener('wheel', (e) => {
         e.preventDefault();
         if (role === 'aluno' && isReadonly) return;
@@ -2034,17 +2497,61 @@
         agendarSalvamentoNuvem(60);
       }
 
-      // 🧰 CONTROLO DE FERRAMENTAS (SIDEBAR + QUICK-DOCK SINCRONIZADOS)
+      // =========================================================================
+      // 🧰 FERRAMENTAS, CORES E POPOVERS (MENU LATERAL + BARRA DE ATALHOS SINCRONIZADOS)
+      // =========================================================================
+      const colorPopover = document.getElementById('color-popover');
+      const shapesPopover = document.getElementById('shapes-popover');
+      const FORMAS_GEOMETRICAS = ['line', 'arrow', 'rect', 'circle', 'triangle', 'diamond', 'hexagon'];
+
+      function fecharPopoversFlutuantes() {
+        if (colorPopover) colorPopover.style.display = 'none';
+        if (shapesPopover) shapesPopover.style.display = 'none';
+      }
+
+      function aplicarCorAtivaGlobal(novaCor) {
+        currentColor = novaCor;
+        const circleSidebar = document.getElementById('current-color-circle');
+        const dotDock = document.getElementById('qd-color-dot');
+        const customInp = document.getElementById('custom-color-input');
+        if (circleSidebar) circleSidebar.style.background = currentColor;
+        if (dotDock) dotDock.style.background = currentColor;
+        if (customInp && /^#[0-9a-f]{6}$/i.test(currentColor)) customInp.value = currentColor;
+        document.querySelectorAll('.color-swatch').forEach(s => {
+          s.classList.toggle('active', s.dataset.color?.toLowerCase() === currentColor.toLowerCase());
+        });
+      }
+
       function selecionarFerramenta(novaTool) {
+        // Se saiu do laser, limpa a bolinha vermelha
+        if (currentTool === 'laser' && novaTool !== 'laser') {
+          laserHead = null;
+          laserTrail = [];
+          agendarSalvamentoNuvem(60);
+        }
+        if (novaTool !== 'eraser') eraserHoverPt = null;
+        if (novaTool !== 'highlighter') highlighterHoverSnap = null;
+
+        // Se ativou o marca-texto estando com a cor preta padrão, muda para amarelo vivo de marca-texto!
+        if (novaTool === 'highlighter' && currentColor.toLowerCase() === '#0f172a') {
+          aplicarCorAtivaGlobal('#f59e0b');
+        }
+
         currentTool = novaTool;
+        const ehForma = FORMAS_GEOMETRICAS.includes(novaTool);
+
         document.querySelectorAll('.tool-btn[data-tool]').forEach(b => {
           b.classList.toggle('active', b.dataset.tool === novaTool);
         });
         document.querySelectorAll('.qd-btn[data-qd-tool]').forEach(b => {
           b.classList.toggle('active', b.dataset.qdTool === novaTool);
         });
+        document.getElementById('btn-open-shapes-popover')?.classList.toggle('active', ehForma);
+        document.getElementById('qd-btn-shapes')?.classList.toggle('active', ehForma);
+
         fecharPopoversFlutuantes();
         atualizarCursorCanvas();
+        desenharQuadro();
       }
 
       document.querySelectorAll('.tool-btn[data-tool]').forEach(btn => {
@@ -2054,68 +2561,50 @@
         btn.onclick = () => selecionarFerramenta(btn.dataset.qdTool);
       });
 
-      // 📌 CRIAR POST-IT RÁPIDO DE AULA
-      function inserirNovoPostit() {
-        const centro = telaParaQuadro(window.innerWidth / 2, window.innerHeight / 2);
-        const coresPostit = [
-          { bg: '#fef08a', border: '#eab308' },
-          { bg: '#bbf7d0', border: '#16a34a' },
-          { bg: '#bfdbfe', border: '#2563eb' },
-          { bg: '#fbcfe8', border: '#db2777' }
-        ];
-        const paleta = coresPostit[shapes.filter(s => s.tool === 'postit').length % coresPostit.length];
-        const novo = {
-          id: 'postit_' + Date.now(),
-          tool: 'postit',
-          x: Math.round(centro.x - 110 + (Math.random() * 40 - 20)),
-          y: Math.round(centro.y - 80 + (Math.random() * 40 - 20)),
-          w: 230,
-          h: 165,
-          scale: 1,
-          bgColor: paleta.bg,
-          color: paleta.border,
-          text: 'Novo vocabulário / nota...'
-        };
-        shapes.push(novo);
-        guardarEstadoNaTelaAtual();
-        desenharQuadro();
-        agendarSalvamentoNuvem(30);
-        abrirEditorTextoNoPonto({ x: novo.x, y: novo.y }, window.innerWidth / 2, window.innerHeight / 2, novo);
-      }
-
-      document.getElementById('btn-add-postit').onclick = inserirNovoPostit;
-      document.getElementById('qd-btn-postit').onclick = inserirNovoPostit;
-
-      // 🎨 POPOVER DE CORES E ESPESSURA
-      const colorPopover = document.getElementById('color-popover');
-      const shapesPopover = document.getElementById('shapes-popover');
-
-      function fecharPopoversFlutuantes() {
-        if (colorPopover) colorPopover.style.display = 'none';
-        if (shapesPopover) shapesPopover.style.display = 'none';
+      function abrirPopoverAncorado(popoverEl, outroPopoverEl, anchorBtn) {
+        if (!popoverEl || !anchorBtn) return;
+        const r = anchorBtn.getBoundingClientRect();
+        if (outroPopoverEl) outroPopoverEl.style.display = 'none';
+        const abrir = popoverEl.style.display !== 'flex';
+        popoverEl.style.display = abrir ? 'flex' : 'none';
+        if (abrir) {
+          popoverEl.style.left = Math.min(window.innerWidth - 275, Math.max(10, r.left)) + 'px';
+          popoverEl.style.top = Math.min(window.innerHeight - 250, r.bottom + 8) + 'px';
+        }
       }
 
       document.getElementById('btn-open-color-popover').onclick = (e) => {
         e.stopPropagation();
-        const r = e.currentTarget.getBoundingClientRect();
-        shapesPopover.style.display = 'none';
-        colorPopover.style.display = colorPopover.style.display === 'flex' ? 'none' : 'flex';
-        colorPopover.style.left = Math.min(window.innerWidth - 280, Math.max(12, r.left)) + 'px';
-        colorPopover.style.top = Math.min(window.innerHeight - 220, r.bottom + 6) + 'px';
+        abrirPopoverAncorado(colorPopover, shapesPopover, e.currentTarget);
       };
+      document.getElementById('qd-btn-color').onclick = (e) => {
+        e.stopPropagation();
+        abrirPopoverAncorado(colorPopover, shapesPopover, e.currentTarget);
+      };
+
+      document.getElementById('btn-open-shapes-popover').onclick = (e) => {
+        e.stopPropagation();
+        abrirPopoverAncorado(shapesPopover, colorPopover, e.currentTarget);
+      };
+      document.getElementById('qd-btn-shapes').onclick = (e) => {
+        e.stopPropagation();
+        abrirPopoverAncorado(shapesPopover, colorPopover, e.currentTarget);
+      };
+
+      document.addEventListener('click', (e) => {
+        const emPopover = e.target.closest('#color-popover, #shapes-popover, #btn-open-color-popover, #qd-btn-color, #btn-open-shapes-popover, #qd-btn-shapes');
+        if (!emPopover) fecharPopoversFlutuantes();
+      });
 
       document.querySelectorAll('.color-swatch').forEach(sw => {
         sw.onclick = () => {
-          currentColor = sw.dataset.color;
-          document.getElementById('current-color-circle').style.background = currentColor;
-          document.querySelectorAll('.color-swatch').forEach(s => s.classList.toggle('active', s === sw));
+          aplicarCorAtivaGlobal(sw.dataset.color);
           colorPopover.style.display = 'none';
         };
       });
 
       document.getElementById('custom-color-input').oninput = (e) => {
-        currentColor = e.target.value;
-        document.getElementById('current-color-circle').style.background = currentColor;
+        aplicarCorAtivaGlobal(e.target.value);
       };
 
       document.querySelectorAll('.size-btn').forEach(btn => {
@@ -2125,65 +2614,417 @@
         };
       });
 
-      // 📐 POPOVER DE FORMAS GEOMÉTRICAS
-      document.getElementById('btn-open-shapes-popover').onclick = (e) => {
-        e.stopPropagation();
-        const r = e.currentTarget.getBoundingClientRect();
-        colorPopover.style.display = 'none';
-        shapesPopover.style.display = shapesPopover.style.display === 'flex' ? 'none' : 'flex';
-        shapesPopover.style.left = Math.min(window.innerWidth - 280, Math.max(12, r.left)) + 'px';
-        shapesPopover.style.top = Math.min(window.innerHeight - 260, r.bottom + 6) + 'px';
-      };
-
       document.querySelectorAll('.shape-option-btn').forEach(btn => {
         btn.onclick = () => {
           const st = btn.dataset.shapeTool;
-          document.getElementById('shapes-btn-label').innerText = btn.dataset.shapeLabel + ' ▾';
+          const lbl = document.getElementById('shapes-btn-label');
+          if (lbl) lbl.innerText = btn.dataset.shapeLabel + ' ▾';
           selecionarFerramenta(st);
-          document.getElementById('btn-open-shapes-popover').classList.add('active');
         };
       });
 
-      // 🔤 CAIXA DE TEXTO RICO
+      // =========================================================================
+      // 🔤 CAIXA DE TEXTO RICA, EXPANSÍVEL PELOS 8 LADOS E FORMATAÇÃO EM TEMPO REAL
+      // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
       const textEditorInput = document.getElementById('text-editor-input');
+      const textColorInput = document.getElementById('text-color-input');
+      const textFontSelect = document.getElementById('text-font-select');
       let pendingTextWorldPt = { x: 200, y: 200 };
+      let activeTextBaseFontSize = 24;
+
+      function rgbParaHex(corStr) {
+        if (!corStr) return '#0f172a';
+        if (corStr.startsWith('#')) return corStr;
+        const m = corStr.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)/i);
+        if (!m) return '#0f172a';
+        const toHex = (n) => Math.max(0, Math.min(255, parseInt(n, 10))).toString(16).padStart(2, '0');
+        return `#${toHex(m[1])}${toHex(m[2])}${toHex(m[3])}`;
+      }
+
+      function escaparHtmlTexto(str) {
+        return String(str || '').replace(/[&<>"']/g, ch => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[ch]));
+      }
+
+      function salvarSelecaoEditorTexto() {
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && textEditorInput.contains(sel.anchorNode)) {
+          savedTextRange = sel.getRangeAt(0).cloneRange();
+        }
+      }
+
+      function restaurarSelecaoEditorTexto() {
+        textEditorInput.focus();
+        if (savedTextRange) {
+          const sel = window.getSelection();
+          sel.removeAllRanges();
+          try {
+            sel.addRange(savedTextRange);
+          } catch (e) {}
+        }
+      }
+
+      function sincronizarBotoesBarraTexto() {
+        try {
+          const sel = window.getSelection();
+          const dentro = sel && sel.rangeCount > 0 && textEditorInput.contains(sel.anchorNode);
+          if (dentro) {
+            textStyle.bold = document.queryCommandState('bold');
+            textStyle.italic = document.queryCommandState('italic');
+            textStyle.underline = document.queryCommandState('underline');
+            textStyle.strike = document.queryCommandState('strikeThrough');
+            const corVal = document.queryCommandValue('foreColor');
+            if (corVal) {
+              const hex = rgbParaHex(corVal);
+              textStyle.color = hex;
+              if (textColorInput) textColorInput.value = hex;
+            }
+          }
+        } catch (e) {}
+
+        document.getElementById('fmt-bold')?.classList.toggle('active', !!textStyle.bold);
+        document.getElementById('fmt-italic')?.classList.toggle('active', !!textStyle.italic);
+        document.getElementById('fmt-underline')?.classList.toggle('active', !!textStyle.underline);
+        document.getElementById('fmt-strike')?.classList.toggle('active', !!textStyle.strike);
+      }
+
+      // Converte runs salvos em HTML fiel para reedição (duplo clique)
+      function montarHtmlDeRuns(runs) {
+        return (runs || []).map(r => {
+          const deco = [r.underline ? 'underline' : '', r.strike ? 'line-through' : ''].filter(Boolean).join(' ') || 'none';
+          const estilo = [
+            `color:${r.color || '#0f172a'}`,
+            `font-family:${r.fontFamily || "'Segoe UI', sans-serif"}`,
+            `font-weight:${r.bold ? '700' : '400'}`,
+            `font-style:${r.italic ? 'italic' : 'normal'}`,
+            `text-decoration:${deco}`
+          ].join(';');
+          const htmlTexto = escaparHtmlTexto(r.text || '').replace(/\n/g, '<br>');
+          return `<span style="${estilo}">${htmlTexto}</span>`;
+        }).join('');
+      }
+
+      // Extrai o conteúdo formatado do editor em trechos estilizados (runs) para desenhar no canvas
+      function extrairRunsDoEditor(rootEl) {
+        const runsBrutos = [];
+        const estiloBase = {
+          bold: false,
+          italic: false,
+          underline: false,
+          strike: false,
+          color: rgbParaHex(rootEl.style.color || textStyle.color || currentColor),
+          fontFamily: rootEl.style.fontFamily || textStyle.fontFamily || "'Segoe UI', sans-serif"
+        };
+
+        const caminhar = (node, herdado) => {
+          if (node.nodeType === Node.TEXT_NODE) {
+            const val = node.nodeValue || '';
+            if (val.length > 0) {
+              runsBrutos.push({ text: val, ...herdado });
+            }
+            return;
+          }
+          if (node.nodeType !== Node.ELEMENT_NODE) return;
+          const tag = node.tagName.toUpperCase();
+
+          if (tag === 'BR') {
+            runsBrutos.push({ text: '\n', ...herdado });
+            return;
+          }
+
+          const prox = { ...herdado };
+          if (tag === 'B' || tag === 'STRONG') prox.bold = true;
+          if (tag === 'I' || tag === 'EM') prox.italic = true;
+          if (tag === 'U') prox.underline = true;
+          if (tag === 'S' || tag === 'STRIKE' || tag === 'DEL') prox.strike = true;
+          if (tag === 'FONT') {
+            if (node.getAttribute('color')) prox.color = rgbParaHex(node.getAttribute('color'));
+            if (node.getAttribute('face')) prox.fontFamily = node.getAttribute('face');
+          }
+
+          const st = node.style;
+          if (st) {
+            if (st.fontWeight) {
+              const fw = String(st.fontWeight).toLowerCase();
+              prox.bold = (fw === 'bold' || fw === 'bolder' || parseInt(fw, 10) >= 600);
+            }
+            if (st.fontStyle) prox.italic = (st.fontStyle === 'italic' || st.fontStyle === 'oblique');
+            const td = (st.textDecorationLine || st.textDecoration || '').toLowerCase();
+            if (td) {
+              if (td.includes('underline')) prox.underline = true;
+              if (td.includes('line-through')) prox.strike = true;
+              if (td === 'none') { prox.underline = false; prox.strike = false; }
+            }
+            if (st.color) prox.color = rgbParaHex(st.color);
+            if (st.fontFamily) prox.fontFamily = st.fontFamily;
+          }
+
+          const ehBloco = (tag === 'DIV' || tag === 'P');
+          if (ehBloco && runsBrutos.length > 0) {
+            const ultimo = runsBrutos[runsBrutos.length - 1];
+            if (!ultimo.text.endsWith('\n')) {
+              runsBrutos.push({ text: '\n', ...herdado });
+            }
+          }
+
+          const filhos = Array.from(node.childNodes);
+          filhos.forEach((filho, idx) => {
+            // Ignora <br> fantasma no final de uma div vazia que já adicionou quebra de linha
+            if (ehBloco && filho.nodeName === 'BR' && idx === filhos.length - 1 && filhos.length > 1) return;
+            caminhar(filho, prox);
+          });
+        };
+
+        caminhar(rootEl, estiloBase);
+
+        // Agrupa trechos vizinhos com o mesmo estilo para deixar o salvamento leve
+        const compactados = [];
+        runsBrutos.forEach(r => {
+          const prev = compactados[compactados.length - 1];
+          if (
+            prev &&
+            prev.bold === r.bold &&
+            prev.italic === r.italic &&
+            prev.underline === r.underline &&
+            prev.strike === r.strike &&
+            prev.color === r.color &&
+            prev.fontFamily === r.fontFamily
+          ) {
+            prev.text += r.text;
+          } else {
+            compactados.push({ ...r });
+          }
+        });
+
+        // Remove quebras de linha vazias sobrando no fim
+        while (compactados.length > 0 && compactados[compactados.length - 1].text === '\n') {
+          compactados.pop();
+        }
+        return compactados;
+      }
+
+      function obterFatorTelaPorMundo() {
+        const rect = canvas.getBoundingClientRect();
+        return (Math.max(1, rect.width) / 1280) * (camera.zoom || 1);
+      }
 
       function abrirEditorTextoNoPonto(worldPt, clientX, clientY, shapeExistente = null) {
         pendingTextWorldPt = worldPt;
         editingShapeId = shapeExistente ? shapeExistente.id : null;
+        savedTextRange = null;
+
+        const escalaTela = obterFatorTelaPorMundo();
+        activeTextBaseFontSize = shapeExistente?.fontSize || Math.max(20, (shapeExistente?.size || currentSize || 6) * 3.8);
+        const fontPxVisual = Math.max(14, Math.min(48, Math.round(activeTextBaseFontSize * (shapeExistente?.scale || 1) * escalaTela)));
+
         if (shapeExistente) {
-          textEditorInput.value = shapeExistente.text || '';
-          if (shapeExistente.tool === 'text') {
-            textStyle.bold = shapeExistente.bold !== false;
-            textStyle.italic = !!shapeExistente.italic;
-            textStyle.underline = !!shapeExistente.underline;
-            textStyle.strike = !!shapeExistente.strike;
-            textStyle.fontFamily = shapeExistente.fontFamily || "'Segoe UI', sans-serif";
-          }
+          const runsAntigos = obterRunsDoTexto(shapeExistente);
+          const primeiro = runsAntigos[0] || {};
+          textStyle = {
+            bold: !!primeiro.bold,
+            italic: !!primeiro.italic,
+            underline: !!primeiro.underline,
+            strike: !!primeiro.strike,
+            color: primeiro.color || shapeExistente.color || currentColor,
+            fontFamily: primeiro.fontFamily || shapeExistente.fontFamily || "'Segoe UI', sans-serif"
+          };
+          textEditorInput.innerHTML = montarHtmlDeRuns(runsAntigos);
+          const largSalvaTela = Number.isFinite(shapeExistente.boxWidth)
+            ? Math.round(shapeExistente.boxWidth * (shapeExistente.scale || 1) * escalaTela + 44)
+            : 390;
+          textEditorBox.style.width = Math.max(250, Math.min(window.innerWidth - 24, largSalvaTela)) + 'px';
+          textEditorBox.style.height = '230px';
         } else {
-          textEditorInput.value = '';
+          textStyle = {
+            bold: false,
+            italic: false,
+            underline: false,
+            strike: false,
+            color: currentColor,
+            fontFamily: textFontSelect?.value || "'Segoe UI', sans-serif"
+          };
+          textEditorInput.innerHTML = '';
+          textEditorBox.style.width = '390px';
+          textEditorBox.style.height = '225px';
         }
-        atualizarBotoesFormatacaoTexto();
+
+        textEditorInput.style.fontSize = fontPxVisual + 'px';
+        textEditorInput.style.color = textStyle.color;
+        textEditorInput.style.fontFamily = textStyle.fontFamily;
+        if (textColorInput) textColorInput.value = rgbParaHex(textStyle.color);
+        if (textFontSelect) textFontSelect.value = textStyle.fontFamily;
+
         textEditorBox.style.display = 'flex';
-        textEditorBox.style.left = Math.min(window.innerWidth - 365, Math.max(12, clientX - 40)) + 'px';
-        textEditorBox.style.top = Math.min(window.innerHeight - 230, Math.max(12, clientY - 30)) + 'px';
-        setTimeout(() => textEditorInput.focus(), 30);
+        const boxW = parseFloat(textEditorBox.style.width) || 390;
+        const boxH = parseFloat(textEditorBox.style.height) || 225;
+        textEditorBox.style.left = Math.max(10, Math.min(window.innerWidth - boxW - 10, clientX - 30)) + 'px';
+        textEditorBox.style.top = Math.max(10, Math.min(window.innerHeight - boxH - 10, clientY - 70)) + 'px';
+
+        sincronizarBotoesBarraTexto();
+        setTimeout(() => {
+          textEditorInput.focus();
+          try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
+          // Coloca o cursor no final ao reeditar
+          if (shapeExistente) {
+            const range = document.createRange();
+            range.selectNodeContents(textEditorInput);
+            range.collapse(false);
+            const sel = window.getSelection();
+            sel.removeAllRanges();
+            sel.addRange(range);
+          }
+          salvarSelecaoEditorTexto();
+        }, 30);
       }
 
-      function atualizarBotoesFormatacaoTexto() {
-        document.getElementById('fmt-bold').classList.toggle('active', textStyle.bold);
-        document.getElementById('fmt-italic').classList.toggle('active', textStyle.italic);
-        document.getElementById('fmt-underline').classList.toggle('active', textStyle.underline);
-        document.getElementById('fmt-strike').classList.toggle('active', textStyle.strike);
-        document.getElementById('text-font-select').value = textStyle.fontFamily;
+      // ⚡ Comandos de formatação parcial em tempo real (B, I, U, S, Cor e Fonte)
+      function executarComandoTexto(comando, valor = null) {
+        restaurarSelecaoEditorTexto();
+        try {
+          document.execCommand('styleWithCSS', false, true);
+          document.execCommand(comando, false, valor);
+        } catch (e) {}
+        salvarSelecaoEditorTexto();
+        sincronizarBotoesBarraTexto();
       }
 
-      document.getElementById('fmt-bold').onclick = () => { textStyle.bold = !textStyle.bold; atualizarBotoesFormatacaoTexto(); };
-      document.getElementById('fmt-italic').onclick = () => { textStyle.italic = !textStyle.italic; atualizarBotoesFormatacaoTexto(); };
-      document.getElementById('fmt-underline').onclick = () => { textStyle.underline = !textStyle.underline; atualizarBotoesFormatacaoTexto(); };
-      document.getElementById('fmt-strike').onclick = () => { textStyle.strike = !textStyle.strike; atualizarBotoesFormatacaoTexto(); };
-      document.getElementById('text-font-select').onchange = (e) => { textStyle.fontFamily = e.target.value; };
+      function aplicarCorNoEditorTexto(novaCor) {
+        textStyle.color = novaCor;
+        if (textColorInput) textColorInput.value = rgbParaHex(novaCor);
+        restaurarSelecaoEditorTexto();
+
+        // Se ainda não digitou nada, muda a cor base da caixa; se já tem texto, aplica na seleção ou a partir do cursor!
+        if (textEditorInput.innerText.replace(/\u200B/g, '').trim() === '') {
+          textEditorInput.style.color = novaCor;
+        }
+        try {
+          document.execCommand('styleWithCSS', false, true);
+          document.execCommand('foreColor', false, novaCor);
+        } catch (e) {}
+        salvarSelecaoEditorTexto();
+        sincronizarBotoesBarraTexto();
+      }
+
+      function aplicarFonteNoEditorTexto(novaFonte) {
+        textStyle.fontFamily = novaFonte;
+        restaurarSelecaoEditorTexto();
+
+        if (textEditorInput.innerText.replace(/\u200B/g, '').trim() === '') {
+          textEditorInput.style.fontFamily = novaFonte;
+        }
+        const sel = window.getSelection();
+        if (sel && sel.rangeCount > 0 && !sel.isCollapsed && textEditorInput.contains(sel.anchorNode)) {
+          try {
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('fontName', false, novaFonte);
+          } catch (e) {}
+        } else {
+          // Aplica para o texto que será digitado a partir do cursor
+          try {
+            document.execCommand('styleWithCSS', false, true);
+            document.execCommand('fontName', false, novaFonte);
+          } catch (e) {}
+        }
+        salvarSelecaoEditorTexto();
+        sincronizarBotoesBarraTexto();
+      }
+
+      // Evita perder a seleção ao clicar nos botões B, I, U, S e nas bolinhas de cor
+      ['fmt-bold', 'fmt-italic', 'fmt-underline', 'fmt-strike'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.addEventListener('mousedown', (e) => e.preventDefault());
+      });
+      document.querySelectorAll('.fmt-color-dot').forEach(dot => {
+        dot.addEventListener('mousedown', (e) => e.preventDefault());
+        dot.onclick = () => aplicarCorNoEditorTexto(dot.dataset.textColor);
+      });
+
+      document.getElementById('fmt-bold').onclick = () => executarComandoTexto('bold');
+      document.getElementById('fmt-italic').onclick = () => executarComandoTexto('italic');
+      document.getElementById('fmt-underline').onclick = () => executarComandoTexto('underline');
+      document.getElementById('fmt-strike').onclick = () => executarComandoTexto('strikeThrough');
+
+      textColorInput.addEventListener('pointerdown', salvarSelecaoEditorTexto);
+      textColorInput.oninput = (e) => aplicarCorNoEditorTexto(e.target.value);
+
+      textFontSelect.addEventListener('mousedown', salvarSelecaoEditorTexto);
+      textFontSelect.onchange = (e) => aplicarFonteNoEditorTexto(e.target.value);
+
+      textEditorInput.addEventListener('keyup', () => { salvarSelecaoEditorTexto(); sincronizarBotoesBarraTexto(); });
+      textEditorInput.addEventListener('mouseup', () => { salvarSelecaoEditorTexto(); sincronizarBotoesBarraTexto(); });
+      textEditorInput.addEventListener('blur', salvarSelecaoEditorTexto);
+
+      // Cola texto limpo (sem estilos quebrados de sites externos)
+      textEditorInput.addEventListener('paste', (e) => {
+        e.preventDefault();
+        const textoPuro = (e.clipboardData || window.clipboardData).getData('text/plain');
+        document.execCommand('insertText', false, textoPuro);
+      });
+
+      // 📐 EXPANSÃO DA CAIXA DE TEXTO PARA TODOS OS 8 LADOS + ARRASTE PELO CABEÇALHO
+      (function configurarMovimentoEExpansaoCaixaTexto() {
+        let modoCaixa = null; // 'drag' ou direção ('n','s','e','w','nw','ne','sw','se')
+        let sx = 0, sy = 0, sLeft = 0, sTop = 0, sW = 0, sH = 0;
+
+        const header = document.getElementById('text-box-drag-header');
+        if (header) {
+          header.addEventListener('pointerdown', (e) => {
+            modoCaixa = 'drag';
+            const r = textEditorBox.getBoundingClientRect();
+            sx = e.clientX; sy = e.clientY;
+            sLeft = r.left; sTop = r.top;
+            e.preventDefault();
+          });
+        }
+
+        textEditorBox.querySelectorAll('.txt-resize-handle').forEach(handle => {
+          handle.addEventListener('pointerdown', (e) => {
+            modoCaixa = handle.dataset.resizeDir;
+            const r = textEditorBox.getBoundingClientRect();
+            sx = e.clientX; sy = e.clientY;
+            sLeft = r.left; sTop = r.top; sW = r.width; sH = r.height;
+            e.preventDefault();
+            e.stopPropagation();
+          });
+        });
+
+        window.addEventListener('pointermove', (e) => {
+          if (!modoCaixa) return;
+          const dx = e.clientX - sx;
+          const dy = e.clientY - sy;
+
+          if (modoCaixa === 'drag') {
+            const nl = Math.max(6, Math.min(window.innerWidth - textEditorBox.offsetWidth - 6, sLeft + dx));
+            const nt = Math.max(6, Math.min(window.innerHeight - textEditorBox.offsetHeight - 6, sTop + dy));
+            textEditorBox.style.left = nl + 'px';
+            textEditorBox.style.top = nt + 'px';
+            return;
+          }
+
+          let nl = sLeft, nt = sTop, nw = sW, nh = sH;
+          if (modoCaixa.includes('e')) nw = Math.max(240, Math.min(window.innerWidth - sLeft - 8, sW + dx));
+          if (modoCaixa.includes('s')) nh = Math.max(155, Math.min(window.innerHeight - sTop - 8, sH + dy));
+          if (modoCaixa.includes('w')) {
+            const tentativaW = Math.max(240, Math.min(sLeft + sW - 8, sW - dx));
+            nl = sLeft + (sW - tentativaW);
+            nw = tentativaW;
+          }
+          if (modoCaixa.includes('n')) {
+            const tentativaH = Math.max(155, Math.min(sTop + sH - 8, sH - dy));
+            nt = sTop + (sH - tentativaH);
+            nh = tentativaH;
+          }
+
+          textEditorBox.style.left = nl + 'px';
+          textEditorBox.style.top = nt + 'px';
+          textEditorBox.style.width = nw + 'px';
+          textEditorBox.style.height = nh + 'px';
+        });
+
+        window.addEventListener('pointerup', () => {
+          modoCaixa = null;
+        });
+      })();
 
       document.getElementById('btn-text-cancel').onclick = () => {
         textEditorBox.style.display = 'none';
@@ -2191,49 +3032,56 @@
       };
 
       document.getElementById('btn-text-confirm').onclick = () => {
-        const val = textEditorInput.value.trim();
-        if (val) {
+        const runs = extrairRunsDoEditor(textEditorInput);
+        const textoPlano = runs.map(r => r.text).join('').trim();
+
+        if (textoPlano) {
+          const escalaTela = Math.max(0.1, obterFatorTelaPorMundo());
+          const inputRect = textEditorInput.getBoundingClientRect();
+          const ptMundoFinal = telaParaQuadro(inputRect.left + 10, inputRect.top + 8);
+          const larguraMoldadaMundo = Math.max(90, Math.round((inputRect.width - 20) / escalaTela));
+
           if (editingShapeId) {
             const alvo = shapes.find(s => s.id === editingShapeId);
             if (alvo) {
-              alvo.text = val;
-              if (alvo.tool === 'text') {
-                alvo.bold = textStyle.bold;
-                alvo.italic = textStyle.italic;
-                alvo.underline = textStyle.underline;
-                alvo.strike = textStyle.strike;
-                alvo.fontFamily = textStyle.fontFamily;
-                alvo.color = currentColor;
-              }
+              const sc = alvo.scale || 1;
+              alvo.text = textoPlano;
+              alvo.runs = runs;
+              alvo.boxWidth = Math.max(80, Math.round(larguraMoldadaMundo / sc));
+              alvo.fontSize = activeTextBaseFontSize;
+              alvo.color = runs[0]?.color || currentColor;
+              alvo.fontFamily = runs[0]?.fontFamily || textStyle.fontFamily;
             }
           } else {
             shapes.push({
               id: 'txt_' + Date.now(),
               tool: 'text',
-              x: pendingTextWorldPt.x,
-              y: pendingTextWorldPt.y,
-              text: val,
-              color: currentColor,
+              x: Math.round(ptMundoFinal.x),
+              y: Math.round(ptMundoFinal.y),
+              text: textoPlano,
+              runs: runs,
+              boxWidth: larguraMoldadaMundo,
+              fontSize: activeTextBaseFontSize,
+              color: runs[0]?.color || currentColor,
               size: currentSize,
               scale: 1,
-              bold: textStyle.bold,
-              italic: textStyle.italic,
-              underline: textStyle.underline,
-              strike: textStyle.strike,
-              fontFamily: textStyle.fontFamily
+              fontFamily: runs[0]?.fontFamily || textStyle.fontFamily
             });
           }
           guardarEstadoNaTelaAtual();
+          atualizarBarraNumeracaoTelas();
           desenharQuadro();
           agendarSalvamentoNuvem(30);
         }
+
         textEditorBox.style.display = 'none';
         editingShapeId = null;
-        // Volta automaticamente para o Lápis após confirmar o texto para fluidez total!
         selecionarFerramenta('pen');
       };
 
-      // 📊 ESTÚDIO DE INFOGRÁFICOS E MAPAS MENTAIS (16 MODELOS)
+      // =========================================================================
+      // 📊 ESTÚDIO DE INFOGRÁFICOS E MAPAS MENTAIS (16 MODELOS PRESERVADOS)
+      // =========================================================================
       const CATALOGO_STUDIO = {
         infographic: [
           { id: 'comparativo', nome: '⚖️ Comparativo A vs B', desc: 'Duas colunas lado a lado' },
@@ -2271,12 +3119,7 @@
           : 'Construtor de Infográficos Pedagógicos (8 Modelos)';
 
         const listaModelos = CATALOGO_STUDIO[modo];
-        if (shapeParaEditar && shapeParaEditar.infoType) {
-          selectedInfoType = shapeParaEditar.infoType;
-        } else {
-          selectedInfoType = listaModelos[0].id;
-        }
-
+        selectedInfoType = (shapeParaEditar && shapeParaEditar.infoType) ? shapeParaEditar.infoType : listaModelos[0].id;
         renderizarGrelhaModelosStudio();
         renderizarCamposDinamicosStudio(shapeParaEditar ? shapeParaEditar.infoData : null, shapeParaEditar ? shapeParaEditar.title : null);
         modal.style.display = 'flex';
@@ -2387,7 +3230,6 @@
             `);
           });
         } else {
-          // Modelos baseados em lista de nós/passos/tópicos
           const listaPadrao = dadosExistentes?.nodes || dadosExistentes?.steps || dadosExistentes?.topics || [
             '1. Affirmative form & examples',
             '2. Negative contractions (don\'t / doesn\'t)',
@@ -2395,9 +3237,7 @@
             '4. Common time expressions'
           ];
           listaPadrao.forEach((txt, i) => {
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <input type="text" class="info-input inp-single" value="${txt}" placeholder="Opção ${i + 1}">
-            `);
+            fieldsBox.insertAdjacentHTML('beforeend', `<input type="text" class="info-input inp-single" value="${txt}" placeholder="Opção ${i + 1}">`);
           });
         }
       }
@@ -2410,7 +3250,7 @@
         } else if (t === 'estatistico') {
           fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-stat" style="display:flex; gap:8px;"><input type="text" class="info-input inp-label" placeholder="Nova métrica" style="flex:2;"><input type="number" class="info-input inp-val" value="80" style="flex:1;"></div>`);
         } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-ev" style="display:flex; gap:8px;"><input type="text" class="info-input inp-time" placeholder="Marco" style="flex:1;"><input type="text" class="info-input inp-label" placeholder=" Detalhe" style="flex:2.2;"></div>`);
+          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-ev" style="display:flex; gap:8px;"><input type="text" class="info-input inp-time" placeholder="Marco" style="flex:1;"><input type="text" class="info-input inp-label" placeholder="Detalhe" style="flex:2.2;"></div>`);
         } else if (t === 'espaco_tempo') {
           fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-st" style="display:flex; gap:8px;"><input type="text" class="info-input inp-place" placeholder="Lugar" style="flex:1;"><input type="text" class="info-input inp-desc" placeholder="Exemplo" style="flex:2;"></div>`);
         } else if (t === 'interativo') {
@@ -2511,7 +3351,9 @@
       document.getElementById('btn-close-info-modal').onclick = () => { document.getElementById('infographic-modal').style.display = 'none'; };
       document.getElementById('btn-cancel-info').onclick = () => { document.getElementById('infographic-modal').style.display = 'none'; };
 
-      // 🖥️ NAVEGAÇÃO ENTRE TELAS NUMERADAS E FUNDO
+      // =========================================================================
+      // 🖥️ NAVEGAÇÃO ENTRE TELAS, ZOOM, HISTÓRICO, LIMPAR E ATALHOS
+      // =========================================================================
       selectFundo.onchange = (e) => {
         currentBg = e.target.value;
         guardarEstadoNaTelaAtual();
@@ -2574,12 +3416,12 @@
         agendarSalvamentoNuvem(20);
       };
 
-      // 🔍 BOTÕES DE ZOOM, DESFAZER, REFAZER, LIMPAR E DOWNLOAD
       function executarUndo() {
         if (shapes.length === 0) return;
         redoStack.push(shapes.pop());
         hoveredShape = null;
         guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem(30);
       }
@@ -2588,31 +3430,33 @@
         if (redoStack.length === 0) return;
         shapes.push(redoStack.pop());
         guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem(30);
       }
 
-      document.getElementById('btn-zoom-in').onclick = () => aplicarZoomNoPonto(1.18);
-      document.getElementById('btn-zoom-out').onclick = () => aplicarZoomNoPonto(0.84);
-      document.getElementById('btn-center').onclick = resetarZoom100;
-      document.getElementById('qd-zoom-in').onclick = () => aplicarZoomNoPonto(1.18);
-      document.getElementById('qd-zoom-out').onclick = () => aplicarZoomNoPonto(0.84);
-      document.getElementById('qd-zoom-reset').onclick = resetarZoom100;
-
-      document.getElementById('btn-undo').onclick = executarUndo;
-      document.getElementById('qd-undo').onclick = executarUndo;
-      document.getElementById('btn-redo').onclick = executarRedo;
-
-      document.getElementById('btn-clear').onclick = () => {
+      function executarLimparTela() {
         if (shapes.length === 0) return;
         if (!confirm('Deseja limpar todos os desenhos desta tela?')) return;
         shapes = [];
         redoStack = [];
         hoveredShape = null;
         guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
         desenharQuadro();
         agendarSalvamentoNuvem(20);
-      };
+      }
+
+      document.getElementById('btn-zoom-in').onclick = () => aplicarZoomNoPonto(1.18);
+      document.getElementById('btn-zoom-out').onclick = () => aplicarZoomNoPonto(0.84);
+      document.getElementById('btn-center').onclick = resetarZoom100;
+
+      document.getElementById('btn-undo').onclick = executarUndo;
+      document.getElementById('qd-undo').onclick = executarUndo;
+      document.getElementById('btn-redo').onclick = executarRedo;
+      document.getElementById('qd-redo').onclick = executarRedo;
+      document.getElementById('btn-clear').onclick = executarLimparTela;
+      document.getElementById('qd-clear').onclick = executarLimparTela;
 
       document.getElementById('btn-download').onclick = () => {
         const link = document.createElement('a');
@@ -2621,9 +3465,18 @@
         link.click();
       };
 
-      // ⌨️ ATALHOS DE TECLADO (Barra de Espaço p/ Arrastar Quadro, Tab p/ Recolher Menu, Ctrl+Z/Y)
       window.addEventListener('keydown', (e) => {
-        if (editorOuModalAberto() || ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName)) return;
+        if (e.key === 'Escape') {
+          fecharPopoversFlutuantes();
+          if (textEditorBox.style.display === 'flex') {
+            textEditorBox.style.display = 'none';
+            editingShapeId = null;
+          }
+          return;
+        }
+        const emCampo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
+        if (editorOuModalAberto() || emCampo) return;
+
         if (e.code === 'Space' && !isSpacePressed) {
           e.preventDefault();
           isSpacePressed = true;
@@ -2648,9 +3501,12 @@
         }
       });
 
+      // =========================================================================
       // ☁️ SINCRONIZAÇÃO EM TEMPO REAL COM O BACKEND DO WORKSPACE
+      // =========================================================================
       function empacotarRecordsParaServidor() {
         guardarEstadoNaTelaAtual();
+        const trailLimpo = laserTrail.map(p => ({ x: Math.round(p.x * 10) / 10, y: Math.round(p.y * 10) / 10 }));
         const metaRecord = {
           id: 'shape:meta_multitelas_v6',
           typeName: 'shape',
@@ -2659,8 +3515,8 @@
           activeScreenIndex: activeScreenIndex,
           screens: screens,
           profView: role === 'professor' ? obterEstadoCameraProfessor() : null,
-          laserHead: laserHead,
-          laserTrail: laserTrail
+          laserHead: laserHead ? { x: Math.round(laserHead.x * 10) / 10, y: Math.round(laserHead.y * 10) / 10 } : null,
+          laserTrail: trailLimpo
         };
         const shapesAtuais = screens[activeScreenIndex]?.shapes || [];
         return [
@@ -2751,8 +3607,7 @@
         } catch (e) {}
       }
 
-     async function verificarStatusPermissoes() {
-        // 🎬 Se a lousa está a ser projetada dentro da Sala Ao Vivo (PlayClass), libera imediatamente sem tela de espera!
+      async function verificarStatusPermissoes() {
         if (String(roomIdOriginal).startsWith('PlayClass_') || String(roomIdOriginal).startsWith('live_')) {
           roomIdAtivo = roomIdOriginal;
           isAllowed = true;
@@ -2793,7 +3648,6 @@
         } catch (e) {}
       }
 
-      // 📡 Escuta mensagens do Modal Pai (mudança de turma pelo Professor) e eventos SSE em tempo real
       window.addEventListener('message', async (e) => {
         const msg = e.data;
         if (!msg || typeof msg !== 'object') return;
@@ -2826,31 +3680,54 @@
         } catch (e) {}
       }
 
-      // 🔄 VERIFICADOR AUTOMÁTICO DE NOVA VERSÃO (Garante que atualizações cheguem a todos os aparelhos sem perder traços)
-      let versaoBuildLousa = null;
+      // 🔄 VERIFICADOR DE VERSÃO DA LOUSA (Lê a versão gravada no HTML no build para nunca ficar presa em cache!)
+      const metaVersaoLousa = document.querySelector('meta[name="app-build-version"]');
+      let versaoBuildLousa = metaVersaoLousa ? String(metaVersaoLousa.getAttribute('content') || '').trim() : null;
+      const CHAVE_RELOAD_LOUSA = 'ws_lousa_reload_versao';
+
       async function verificarAtualizacaoLousa() {
         try {
           const res = await fetch(`/version.json?_t=${Date.now()}`, { cache: 'no-store' });
           if (!res.ok) return;
           const data = await res.json();
           if (!data || !data.version) return;
+
+          const versaoServidor = String(data.version).trim();
           if (!versaoBuildLousa) {
-            versaoBuildLousa = data.version;
-          } else if (versaoBuildLousa !== data.version && !isPointerDown && !isSaving) {
+            versaoBuildLousa = versaoServidor;
+            return;
+          }
+
+          if (versaoBuildLousa !== versaoServidor && !isPointerDown && !isSaving) {
+            const ultimaTentativa = sessionStorage.getItem(CHAVE_RELOAD_LOUSA);
+            if (ultimaTentativa === versaoServidor) return;
+            sessionStorage.setItem(CHAVE_RELOAD_LOUSA, versaoServidor);
+
             await salvarDadosNuvem();
-            window.location.reload();
+            if ('caches' in window) {
+              const chaves = await caches.keys();
+              await Promise.all(chaves.map(k => caches.delete(k)));
+            }
+            const urlAtual = new URL(window.location.href);
+            urlAtual.searchParams.set('_v', versaoServidor);
+            urlAtual.searchParams.set('_t', String(Date.now()));
+            window.location.replace(urlAtual.toString());
+          } else if (versaoBuildLousa === versaoServidor) {
+            sessionStorage.removeItem(CHAVE_RELOAD_LOUSA);
           }
         } catch (e) {}
       }
-      setInterval(verificarAtualizacaoLousa, 60000);
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') verificarAtualizacaoLousa();
+      });
+      setInterval(verificarAtualizacaoLousa, 25000);
       verificarAtualizacaoLousa();
 
-      // 📱 Em ecrãs de telemóvel, inicia com o menu lateral recolhido para dar 100% de espaço ao quadro
       if (window.innerWidth <= 900) {
         alternarMenuLateral(true);
       }
 
-      // Inicialização
       ajustarTamanhoCanvas();
       atualizarPermissoesUI();
       verificarStatusPermissoes();

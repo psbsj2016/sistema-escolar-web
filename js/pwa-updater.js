@@ -322,13 +322,13 @@ async function executarAtualizacaoProfunda() {
             await Promise.all(chavesCache.map(chave => caches.delete(chave)));
         }
 
-        // 3. Atualiza registos do Service Worker
+       // 3. Remove o Service Worker antigo para que o reload puxe 100% os ficheiros novos (o novo SW re-registra ao abrir!)
         if ('serviceWorker' in navigator) {
             const regs = await navigator.serviceWorker.getRegistrations();
             for (const reg of regs) {
                 try {
                     if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
-                    await reg.update();
+                    await reg.unregister();
                 } catch (e) {}
             }
         }

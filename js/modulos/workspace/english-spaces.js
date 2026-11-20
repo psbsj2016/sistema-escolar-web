@@ -907,12 +907,20 @@ export const SPACES_REGISTRY = {
           { label: 'A', text: 'Hi Hank! I am building and furnishing my new house in the city!', next: 'tool', missionId: 'm1', keywords: ['building', 'house', 'fixing', 'project'] }
         ]
       },
-      tool: {
+    tool: {
         name: 'Hank (Handyman)',
         text: 'That is awesome! Every good builder needs a Power Hammer and an Electric Drill. Which one do you need?',
         translation: 'Isso é excelente! Todo bom construtor precisa de um Martelo e de uma Furadeira Elétrica. De qual precisa?',
         options: [
-          { label: 'A', text: 'I need both the Power Hammer and the Electric Drill, please!', next: 'end', missionId: 'm2', keywords: ['hammer', 'drill', 'wrench', 'both'] }
+          { label: 'A', text: 'I need both the Power Hammer and the Electric Drill, please!', next: 'checkout', missionId: 'm2', keywords: ['hammer', 'drill', 'wrench', 'both'] }
+        ]
+      },
+      checkout: {
+        name: 'Hank (Handyman)',
+        text: 'Great picks! Your total is 130 DRX. Ready to complete your tool purchase?',
+        translation: 'Ótimas escolhas! O total fica 130 DRX. Pronto para finalizar a compra das ferramentas?',
+        options: [
+          { label: 'A', text: 'Yes! I will pay with my DOVRYX now. Thanks for your help!', next: 'end', missionId: 'm3', keywords: ['yes', 'pay', 'buy', 'drx', 'purchase', 'thanks'] }
         ]
       },
       end: {
@@ -955,12 +963,20 @@ export const SPACES_REGISTRY = {
           { label: 'A', text: 'Hi Daisy! I would love to adopt a pet to walk with me in the city!', next: 'care', missionId: 'm1', keywords: ['adopt', 'puppy', 'dog', 'cat', 'pet'] }
         ]
       },
-      care: {
+    care: {
         name: 'Daisy (Vet)',
         text: 'Wonderful! Remember to give your pet fresh water, love, and healthy pet treats every day.',
         translation: 'Maravilhoso! Lembre-se de dar água fresca, carinho e petiscos saudáveis ao seu animal todos os dias.',
         options: [
-          { label: 'A', text: 'I promise to take great care of my pet and buy some treats too!', next: 'end', missionId: 'm2', keywords: ['care', 'treats', 'promise', 'feed'] }
+          { label: 'A', text: 'I promise to take great care of my pet and buy some treats too!', next: 'adopt', missionId: 'm2', keywords: ['care', 'treats', 'promise', 'feed'] }
+        ]
+      },
+      adopt: {
+        name: 'Daisy (Vet)',
+        text: 'You will be a wonderful owner! Which companion would you like to officially adopt today: a puppy or a kitten?',
+        translation: 'Você será um ótimo tutor! Qual companheiro gostaria de adotar oficialmente hoje: um cachorrinho ou um gatinho?',
+        options: [
+          { label: 'A', text: 'I would like to adopt the puppy right now, please!', next: 'end', missionId: 'm3', keywords: ['puppy', 'dog', 'kitten', 'cat', 'adopt'] }
         ]
       },
       end: {
@@ -1003,18 +1019,26 @@ export const SPACES_REGISTRY = {
           { label: 'A', text: 'Hi Noah! Which aisle has fresh milk and organic apples?', next: 'bakery', missionId: 'm1', keywords: ['aisle', 'milk', 'apples', 'fruit'] }
         ]
       },
-      bakery: {
+    bakery: {
         name: 'Noah (Cashier)',
         text: 'Dairy and fruit are right in Aisle 2! We also have warm bread straight from the bakery.',
         translation: 'Laticínios e frutas ficam no Corredor 2! Também temos pão quentinho saído da padaria.',
         options: [
-          { label: 'A', text: 'Awesome! I will take a loaf of bakery bread, milk, and apples.', next: 'end', missionId: 'm2', keywords: ['bread', 'bakery', 'take', 'milk'] }
+          { label: 'A', text: 'Awesome! I will take a loaf of bakery bread, milk, and apples.', next: 'checkout', missionId: 'm2', keywords: ['bread', 'bakery', 'take', 'milk'] }
+        ]
+      },
+      checkout: {
+        name: 'Noah (Cashier)',
+        text: 'Everything is scanned at the checkout! Your total is 90 DRX. Would you like a bag and how will you pay?',
+        translation: 'Tudo registado no caixa! O total deu 90 DRX. Gostaria de sacola e como prefere pagar?',
+        options: [
+          { label: 'A', text: 'Yes, one bag please! I will pay with my DOVRYX card.', next: 'end', missionId: 'm3', keywords: ['bag', 'pay', 'card', 'drx', 'dovryx', 'cash'] }
         ]
       },
       end: {
         name: 'Noah (Cashier)',
-        text: 'All scanned! Thank you for shopping at Fresh Mart! 🛒🍎',
-        translation: 'Tudo registado! Obrigado por comprar no Fresh Mart! 🛒🍎',
+        text: 'All paid! Thank you for shopping at Fresh Mart! 🛒🍎',
+        translation: 'Tudo pago! Obrigado por comprar no Fresh Mart! 🛒🍎',
         options: []
       }
     }
@@ -1309,7 +1333,7 @@ class EnglishSpacesManager {
     this.progressData = {
       visited: [],
       missionsCompleted: 0,
-      xp: 1250,
+      xp: 0, // Saldo sincronizado diretamente com o MongoDB (sem valor fixo artificial)
       vocab: [],
       unlocked: Object.keys(SPACES_REGISTRY)
     };
@@ -1324,15 +1348,44 @@ class EnglishSpacesManager {
       aiCustomReply: null,
       aiCustomTranslation: null,
       aiGrammarTip: null,
-      liveSession: null
+      liveSession: null,
+      // Novos estados para filtro, busca, histórico de diálogo e pontuação real
+      searchQuery: '',
+      categoryFilter: 'ALL',
+      chatHistory: [],
+      sessionDRX: 0,
+      speakingTurns: 0,
+      grammarTipsCount: 0,
+      vocabDiscoveredSession: 0
     };
     this.recognition = null;
+    this.isListening = false;
     this._statsAlunoCache = null;
+    this._srsCache = null;
+    this._sincronizadoNuvem = false;
     this.initSpeech();
   }
 
   getSpacesRegistry() {
     return SPACES_REGISTRY;
+  }
+
+  escapeHtml(str) {
+    return String(str || '').replace(/[&<>"']/g, ch => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    }[ch]));
+  }
+
+  obterCategoriaGrupo(typeStr) {
+    const t = String(typeStr || '').toLowerCase();
+    if (t.includes('life rpg') || t.includes('style') || t.includes('guild') || t.includes('finance')) return 'Life RPG';
+    if (t.includes('daily')) return 'Daily Life';
+    if (t.includes('travel')) return 'Travel';
+    if (t.includes('academic')) return 'Academic';
+    if (t.includes('career') || t.includes('business')) return 'Career';
+    if (t.includes('health')) return 'Health';
+    if (t.includes('leisure')) return 'Leisure';
+    return 'Daily Life';
   }
 
   init() {
@@ -1347,6 +1400,7 @@ class EnglishSpacesManager {
       this.recognition = new SR();
       this.recognition.lang = 'en-US';
       this.recognition.interimResults = false;
+      this.recognition.maxAlternatives = 1;
     }
   }
 
@@ -1360,24 +1414,66 @@ class EnglishSpacesManager {
     }
   }
 
-  ouvirMicrofone(callback) {
-    if (this.recognition) {
-      try {
-        this.recognition.onresult = (e) => {
-          const transcript = e.results[0][0].transcript;
-          if (callback) callback(transcript);
-        };
-        this.recognition.start();
-        if (window.Workspace?.mostrarAviso) {
-          window.Workspace.mostrarAviso("🎤 Ouvindo em Inglês... Fale agora!", "info", 2500);
-        }
-      } catch (err) {
-        const fallback = prompt('🎤 Digite ou fale a sua resposta em Inglês:');
-        if (fallback && callback) callback(fallback);
-      }
+  atualizarBotaoMicrofoneUI(ouvindo) {
+    const btn = document.getElementById('es-speak-btn');
+    if (!btn) return;
+    if (ouvindo) {
+      btn.textContent = '🔴 Listening...';
+      btn.classList.add('listening');
     } else {
+      btn.textContent = '🎤 Speak';
+      btn.classList.remove('listening');
+    }
+  }
+
+  // 🎤 Microfone blindado contra duplo clique + feedback visual "🔴 Listening..."
+  ouvirMicrofone(callback) {
+    if (!this.recognition) {
       const fallback = prompt('🎤 Digite a sua resposta em Inglês:');
       if (fallback && callback) callback(fallback);
+      return;
+    }
+
+    if (this.isListening) {
+      try { this.recognition.stop(); } catch (e) {}
+      this.isListening = false;
+      this.atualizarBotaoMicrofoneUI(false);
+      return;
+    }
+
+    this.isListening = true;
+    this.atualizarBotaoMicrofoneUI(true);
+
+    this.recognition.onresult = (e) => {
+      const transcript = e.results?.[0]?.[0]?.transcript || '';
+      this.isListening = false;
+      this.atualizarBotaoMicrofoneUI(false);
+      if (transcript && callback) callback(transcript);
+    };
+
+    this.recognition.onerror = (ev) => {
+      this.isListening = false;
+      this.atualizarBotaoMicrofoneUI(false);
+      if (ev?.error === 'not-allowed' || ev?.error === 'service-not-allowed') {
+        if (window.Workspace?.mostrarAviso) {
+          window.Workspace.mostrarAviso('⚠️ Permissão de microfone negada. Digite sua resposta ou autorize o microfone no navegador.', 'warning', 4000);
+        }
+      }
+    };
+
+    this.recognition.onend = () => {
+      this.isListening = false;
+      this.atualizarBotaoMicrofoneUI(false);
+    };
+
+    try {
+      this.recognition.start();
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('🎤 Ouvindo em Inglês... Fale agora!', 'info', 2500);
+      }
+    } catch (err) {
+      this.isListening = false;
+      this.atualizarBotaoMicrofoneUI(false);
     }
   }
 
@@ -1394,7 +1490,7 @@ class EnglishSpacesManager {
     return true;
   }
 
-  // ☁️ Sincroniza 100% com o MongoDB (/english-spaces/progress e /workspace/ingles/dados)
+  // ☁️ Sincroniza com o MongoDB usando o saldo oficial do servidor (sem Math.max que desfazia compras)
   async sincronizarProgressoNuvem() {
     const u = window.Workspace?.usuario;
     if (!u || !u.id || !window.Workspace?.api) return;
@@ -1403,7 +1499,9 @@ class EnglishSpacesManager {
       const escolaId = u.escolaId || 'DEFAULT';
       const [resDados, resSpaces] = await Promise.all([
         window.Workspace.api(`/workspace/ingles/dados?escolaId=${encodeURIComponent(escolaId)}&userId=${encodeURIComponent(u.id)}`, 'GET').catch(() => null),
-        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(u.id)}`, { credentials: 'include' }).then(r => r.json()).catch(() => null)
+        fetch(`/api/workspace/english-spaces/progress?userId=${encodeURIComponent(u.id)}&_t=${Date.now()}`, { credentials: 'include' })
+          .then(r => r.json())
+          .catch(() => null)
       ]);
 
       if (resDados && resDados.success && resDados.dados) {
@@ -1411,28 +1509,42 @@ class EnglishSpacesManager {
         this._srsCache = resDados.dados.srs || {};
       }
 
-      const drxBau = Number(this._statsAlunoCache?.coins?.bronze) || 0;
-      const drxSpaces = Number(resSpaces?.compatibility?.dovryx ?? resSpaces?.compatibility?.xp) || 0;
-      const saldoUnificado = Math.max(this.progressData.xp || 0, drxBau, drxSpaces, 500);
+      const saldoSpacesValido = typeof resSpaces?.compatibility?.dovryx === 'number'
+        ? resSpaces.compatibility.dovryx
+        : (typeof resSpaces?.compatibility?.xp === 'number' ? resSpaces.compatibility.xp : null);
+      const saldoBauValido = typeof this._statsAlunoCache?.coins?.bronze === 'number'
+        ? this._statsAlunoCache.coins.bronze
+        : null;
+
+      // Prioriza o saldo unificado já resolvido por timestamp na Etapa 1 do servidor
+      const saldoOficial = saldoSpacesValido !== null
+        ? saldoSpacesValido
+        : (saldoBauValido !== null ? saldoBauValido : (this.progressData.xp || 0));
 
       const visitadosNuvem = Array.isArray(resSpaces?.compatibility?.visited) ? resSpaces.compatibility.visited : [];
       const vocabNuvem = Array.isArray(resSpaces?.compatibility?.vocab) ? resSpaces.compatibility.vocab : [];
 
       this.progressData = {
-        xp: saldoUnificado,
+        xp: Math.max(0, Math.round(saldoOficial)),
         visited: Array.from(new Set([...(this.progressData.visited || []), ...visitadosNuvem])),
         missionsCompleted: Math.max(this.progressData.missionsCompleted || 0, Number(resSpaces?.compatibility?.missionsCompleted) || 0),
         vocab: Array.from(new Set([...(this.progressData.vocab || []), ...vocabNuvem])),
         unlocked: Object.keys(SPACES_REGISTRY)
       };
 
-      if (window.DOVRYX) window.DOVRYX.setBalance(saldoUnificado);
+      this._sincronizadoNuvem = true;
+      if (window.DOVRYX) window.DOVRYX.setBalance(this.progressData.xp);
       this.atualizarResumoNoBannerFeed();
+
+      // Atualiza o HUD caso o painel 2D já esteja aberto na tela
+      if (this.container && this.state.view === 'home') {
+        this.renderHome();
+      }
     } catch (e) {}
   }
 
-  // 💎 Grava o saldo DOVRYX (DRX) diretamente no MongoDB (/workspace/ingles/xp)
-  async salvarProgressoNaRotaOficial(drxAdicional = 0) {
+  // 💎 Grava o saldo DOVRYX (DRX) no MongoDB (/workspace/ingles/xp)
+  async salvarProgressoNaRotaOficial() {
     this.atualizarResumoNoBannerFeed();
 
     const u = window.Workspace?.usuario;
@@ -1440,7 +1552,7 @@ class EnglishSpacesManager {
 
     try {
       const stats = this._statsAlunoCache || {};
-      const novoSaldoDRX = Math.max(0, Number(this.progressData.xp) || 0);
+      const novoSaldoDRX = Math.max(0, Math.round(Number(this.progressData.xp) || 0));
       const novasCoins = {
         ...(stats.coins || { bronze: 0, prata: 0, ouro: 0 }),
         bronze: novoSaldoDRX
@@ -1468,34 +1580,49 @@ class EnglishSpacesManager {
 
   async registarMissaoConcluida(spaceId, missionId, drxAmount) {
     const ganho = Number(drxAmount) || 0;
+    const jaVisitou = (this.progressData.visited || []).includes(spaceId);
+
+    // Evita farmar +10 DRX toda vez que entra na mesma loja já visitada
+    if (missionId === 'visit' && jaVisitou) {
+      return;
+    }
+
     this.progressData.xp = (this.progressData.xp || 0) + ganho;
+    this.state.sessionDRX = (this.state.sessionDRX || 0) + ganho;
+
     if (missionId !== 'visit') {
       this.progressData.missionsCompleted = (this.progressData.missionsCompleted || 0) + 1;
     }
-    if (!this.progressData.visited.includes(spaceId)) {
+    if (!jaVisitou) {
       this.progressData.visited.push(spaceId);
     }
 
     const u = window.Workspace?.usuario;
     if (u?.id) {
-      fetch('/api/workspace/english-spaces/progress/mission', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        credentials: 'include',
-        body: JSON.stringify({
-          userId: u.id,
-          escolaId: u.escolaId || 'DEFAULT',
-          nomeAluno: u.nome || u.login || 'Aluno',
-          spaceId,
-          level: this.state.level || 'B1',
-          missionId,
-          xp: ganho
-        })
-      }).catch(() => {});
+      try {
+        const res = await fetch('/api/workspace/english-spaces/progress/mission', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            userId: u.id,
+            escolaId: u.escolaId || 'DEFAULT',
+            nomeAluno: u.nome || u.login || 'Aluno',
+            spaceId,
+            level: this.state.level || 'B1',
+            missionId,
+            xp: ganho
+          })
+        }).then(r => r.json()).catch(() => null);
+
+        if (res && res.success && typeof res.data?.dovryx === 'number') {
+          this.progressData.xp = res.data.dovryx;
+        }
+      } catch (e) {}
     }
 
-    this.mostrarAnimacaoXP(ganho);
-    await this.salvarProgressoNaRotaOficial(ganho);
+    if (ganho > 0) this.mostrarAnimacaoXP(ganho);
+    await this.salvarProgressoNaRotaOficial();
   }
 
   mostrarAnimacaoXP(amount) {
@@ -1537,10 +1664,10 @@ class EnglishSpacesManager {
                 ✨ 3D LIFE RPG SIMULATOR • ${totalSpacesCount} SCENARIOS
               </div>
               <h3 style="margin:0 0 5px 0; font-size:20px; font-weight:800; color:#ffffff; display:flex; align-items:center; gap:8px;">
-                🌎 English Spaces & 3D City
+                🌎 English Spaces &amp; 3D City
               </h3>
               <p style="margin:0; font-size:13px; color:#cbd5e1; line-height:1.4;">
-                Practice English in 24 real places, earn DOVRYX (DRX), build your house, drive vehicles & visit the Guild!
+                Practice English in ${totalSpacesCount} real places, earn DOVRYX (DRX), build your house, drive vehicles &amp; visit the Guild!
               </p>
               <div id="ws-es-feed-stats" style="display:flex; gap:12px; margin-top:10px; font-size:11.5px; font-weight:800; color:#fde047;">
                 <span>💎 ${(this.progressData.xp || 0).toLocaleString('pt-BR')} DRX</span>
@@ -1606,13 +1733,18 @@ class EnglishSpacesManager {
     }
     this.container = document.getElementById('english-spaces-root');
     this.state.view = 'home';
-    this.sincronizarProgressoNuvem();
     this.render();
+    this.sincronizarProgressoNuvem();
   }
 
   navigate(view, spaceId = null) {
     this.container = document.getElementById('english-spaces-root');
     if (!this.container) return;
+
+    if (this.isListening && this.recognition) {
+      try { this.recognition.stop(); } catch (e) {}
+      this.isListening = false;
+    }
 
     if (view === 'space' && spaceId) {
       const alvo = SPACES_REGISTRY[spaceId];
@@ -1628,9 +1760,14 @@ class EnglishSpacesManager {
         this.state.aiCustomReply = null;
         this.state.aiCustomTranslation = null;
         this.state.aiGrammarTip = null;
+        this.state.chatHistory = [];
+        this.state.sessionDRX = 0;
+        this.state.speakingTurns = 0;
+        this.state.grammarTipsCount = 0;
+        this.state.vocabDiscoveredSession = 0;
         this.registarMissaoConcluida(spaceId, 'visit', 10);
         this.render();
-      }, 650);
+      }, 550);
     } else {
       this.state.view = view;
       this.render();
@@ -1647,9 +1784,57 @@ class EnglishSpacesManager {
     else if (this.state.view === 'complete') this.renderComplete();
   }
 
+  obterSpacesFiltrados() {
+    const q = String(this.state.searchQuery || '').toLowerCase().trim();
+    const cat = this.state.categoryFilter || 'ALL';
+    return Object.values(SPACES_REGISTRY).filter(space => {
+      const matchCat = (cat === 'ALL') || (this.obterCategoriaGrupo(space.type) === cat);
+      const matchQ = !q ||
+        space.name.toLowerCase().includes(q) ||
+        space.description.toLowerCase().includes(q) ||
+        space.type.toLowerCase().includes(q) ||
+        (space.npcName && space.npcName.toLowerCase().includes(q));
+      return matchCat && matchQ;
+    });
+  }
+
+  atualizarApenasGridHome() {
+    const grid = this.container?.querySelector('#es-spaces-grid-root');
+    if (!grid) return;
+    const filtrados = this.obterSpacesFiltrados();
+    if (filtrados.length === 0) {
+      grid.innerHTML = `
+        <div style="grid-column:1/-1; text-align:center; padding:42px 20px; background:#11111a; border:1px dashed rgba(255,255,255,0.16); border-radius:18px; color:#a1a1aa;">
+          <div style="font-size:38px; margin-bottom:8px;">🔎</div>
+          <div style="font-weight:700; color:#e4e4e7;">No scenarios found for "${this.escapeHtml(this.state.searchQuery)}"</div>
+          <div style="font-size:12.5px; margin-top:4px;">Try another keyword or switch back to "All".</div>
+        </div>
+      `;
+      return;
+    }
+    grid.innerHTML = filtrados.map(space => this.renderCard(space)).join('');
+    grid.querySelectorAll('[data-enter]').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const id = e.currentTarget.dataset.enter;
+        this.navigate('space', id);
+      });
+    });
+  }
+
   renderHome() {
     const p = this.progressData;
     const totalSpacesCount = Object.keys(SPACES_REGISTRY).length;
+    const categorias = [
+      { id: 'ALL', label: `🌎 All (${totalSpacesCount})` },
+      { id: 'Daily Life', label: '☕ Daily Life' },
+      { id: 'Travel', label: '✈️ Travel' },
+      { id: 'Life RPG', label: '🏙️ Life RPG' },
+      { id: 'Academic', label: '🏫 Academic' },
+      { id: 'Career', label: '💼 Career' },
+      { id: 'Health', label: '🏥 Health' },
+      { id: 'Leisure', label: '🎬 Leisure' }
+    ];
+
     this.container.innerHTML = `
       <div class="es-top-nav">
         <button type="button" class="es-back-btn" id="es-btn-voltar-feed">↩ Voltar ao Feed Principal</button>
@@ -1667,21 +1852,33 @@ class EnglishSpacesManager {
       </div>
 
       <div class="es-home-hero">
-        <h1 class="es-display">🌎 ENGLISH SPACES & 3D LIFE RPG</h1>
-        <p style="font-size:16px; color:#d4d4d8; margin:6px 0;">Explore 24 real-world establishments, earn DOVRYX (DRX), and build your life in English!</p>
-        <span style="font-size:13px; color:#a1a1aa;">Choose any establishment below to practice dialogues or enter the 3D Multiplayer City!</span>
+        <h1 class="es-display">🌎 ENGLISH SPACES &amp; 3D LIFE RPG</h1>
+        <p style="font-size:16px; color:#d4d4d8; margin:6px 0;">Explore ${totalSpacesCount} real-world establishments, earn DOVRYX (DRX), and build your life in English!</p>
         <div class="es-stats-bar">
           <span class="es-stat-pill" style="border-color:#facc15; color:#fef08a;">💎 ${(p.xp || 0).toLocaleString('pt-BR')} DRX</span>
           <span class="es-stat-pill">🌍 ${(p.visited || []).length}/${totalSpacesCount} Spaces Visited</span>
           <span class="es-stat-pill">🎯 ${p.missionsCompleted || 0} Missions Completed</span>
           <span class="es-stat-pill">📖 ${(p.vocab || []).length} Words Discovered</span>
         </div>
+
+        <!-- 🔎 Barra de Busca e Filtro por Categoria -->
+        <div class="es-filter-bar">
+          <div class="es-search-box">
+            <span>🔍</span>
+            <input type="text" id="es-home-search" value="${this.escapeHtml(this.state.searchQuery)}" placeholder="Search places, topics or characters (ex: Airport, Coffee, Bank)..." autocomplete="off" />
+          </div>
+          <div class="es-cat-pills">
+            ${categorias.map(c => `
+              <button type="button" class="es-cat-btn ${this.state.categoryFilter === c.id ? 'active' : ''}" data-cat-filter="${c.id}">${c.label}</button>
+            `).join('')}
+          </div>
+        </div>
       </div>
 
-      <div class="es-spaces-grid">
-        ${Object.values(SPACES_REGISTRY).map(space => this.renderCard(space)).join('')}
-      </div>
+      <div class="es-spaces-grid" id="es-spaces-grid-root"></div>
     `;
+
+    this.atualizarApenasGridHome();
 
     this.container.querySelector('#es-btn-voltar-feed')?.addEventListener('click', () => {
       if (window.Workspace?.voltarAoFeed) window.Workspace.voltarAoFeed();
@@ -1700,10 +1897,19 @@ class EnglishSpacesManager {
       });
     });
 
-    this.container.querySelectorAll('[data-enter]').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const id = e.currentTarget.dataset.enter;
-        this.navigate('space', id);
+    const searchInp = this.container.querySelector('#es-home-search');
+    searchInp?.addEventListener('input', (e) => {
+      this.state.searchQuery = e.target.value;
+      this.atualizarApenasGridHome();
+    });
+
+    this.container.querySelectorAll('[data-cat-filter]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        this.state.categoryFilter = btn.dataset.catFilter;
+        this.container.querySelectorAll('[data-cat-filter]').forEach(b => {
+          b.classList.toggle('active', b.dataset.catFilter === this.state.categoryFilter);
+        });
+        this.atualizarApenasGridHome();
       });
     });
   }
@@ -1722,7 +1928,7 @@ class EnglishSpacesManager {
         <div class="es-card-body">
           <div style="display:flex; justify-content:space-between; align-items:center;">
             <h3 style="margin:0; font-size:18px; color:#fff;">${space.name}</h3>
-            <span style="font-size:11px; color:#a78bfa; font-weight:700;">🟢 ${space.liveCount} online</span>
+            <span style="font-size:11px; color:#a78bfa; font-weight:700;">🎯 ${(space.missions || []).length} missions</span>
           </div>
           <p style="font-size:13px; color:#a1a1aa; margin:8px 0 14px 0; line-height:1.45; min-height:38px;">${space.description}</p>
           <div style="display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;">
@@ -1751,9 +1957,26 @@ class EnglishSpacesManager {
     const space = this.state.currentSpace;
     const node = space.dialogues[this.state.dialogueState] || space.dialogues.start;
     const missions = space.missions || [];
+    const todasMissoesFeitas = missions.length > 0 && this.state.missionsDone.length >= missions.length;
 
     const textoExibido = this.state.aiCustomReply || node.text;
     const traducaoExibida = this.state.aiCustomTranslation !== null ? this.state.aiCustomTranslation : (node.translation || '');
+
+    // Últimas 4 falas do histórico da conversa para o aluno revisar o que praticou
+    const ultimasFalas = (this.state.chatHistory || []).slice(-4);
+    const historicoHTML = ultimasFalas.length > 0 ? `
+      <div class="es-history-box">
+        <div style="font-size:11px; font-weight:800; color:#a1a1aa; text-transform:uppercase; margin-bottom:8px;">💬 Conversation History</div>
+        <div style="display:flex; flex-direction:column; gap:6px;">
+          ${ultimasFalas.map(item => `
+            <div class="es-hist-line ${item.who === 'student' ? 'student' : 'npc'}">
+              <strong style="color:${item.who === 'student' ? '#c084fc' : '#34d399'};">${this.escapeHtml(item.name)}:</strong>
+              <span>${this.escapeHtml(item.text)}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    ` : '';
 
     this.container.innerHTML = `
       <div class="es-top-nav">
@@ -1771,37 +1994,44 @@ class EnglishSpacesManager {
 
       <div class="es-space-layout">
         <div class="es-space-main">
+          ${historicoHTML}
+
           <div class="es-npc-bubble ${space.gradient}">
             <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
               <strong style="font-size:15px; color:#f4f4f5; display:flex; align-items:center; gap:8px;">
-                <span style="font-size:22px;">${space.emoji}</span> ${node.name || space.npcName}
+                <span style="font-size:22px;">${space.emoji}</span> ${this.escapeHtml(node.name || space.npcName)}
               </strong>
               <button type="button" class="es-audio-btn" id="es-btn-listen-npc" title="Ouvir pronúncia">🔊 Listen</button>
             </div>
-            <p id="es-npc-text" style="font-size:17px; line-height:1.55; color:#ffffff; margin:0; font-weight:600;">"${textoExibido}"</p>
+            <p id="es-npc-text" style="font-size:17px; line-height:1.55; color:#ffffff; margin:0; font-weight:600;">"${this.escapeHtml(textoExibido)}"</p>
             ${!this.state.immersion && traducaoExibida ? `
               <div style="margin-top:10px; padding-top:8px; border-top:1px dashed rgba(255,255,255,0.2); font-size:13px; color:#fde047;">
-                🇧🇷 ${traducaoExibida}
+                🇧🇷 ${this.escapeHtml(traducaoExibida)}
               </div>
             ` : ''}
             ${this.state.aiGrammarTip ? `
               <div style="margin-top:10px; background:rgba(16,185,129,0.2); border:1px solid #10b981; padding:8px 12px; border-radius:10px; font-size:12.5px; color:#a7f3d0;">
-                💡 <strong>Coach Tip:</strong> ${this.state.aiGrammarTip}
+                💡 <strong>Coach Tip:</strong> ${this.escapeHtml(this.state.aiGrammarTip)}
               </div>
             ` : ''}
           </div>
 
           <div class="es-options-list">
             ${(node.options || []).map(opt => `
-              <button type="button" class="es-option-btn" data-next="${opt.next}" data-mission="${opt.missionId || ''}">
+              <button type="button" class="es-option-btn" data-next="${opt.next}" data-mission="${opt.missionId || ''}" data-opt-text="${this.escapeHtml(opt.text)}">
                 <span class="es-opt-badge">${opt.label}</span>
-                <span>${opt.text}</span>
+                <span>${this.escapeHtml(opt.text)}</span>
               </button>
             `).join('')}
+            ${todasMissoesFeitas ? `
+              <button type="button" class="es-btn-primary" id="es-btn-finish-now" style="background:linear-gradient(90deg,#10b981,#059669); color:#fff; margin-top:4px;">
+                🏆 All Missions Done! Finish &amp; View Score →
+              </button>
+            ` : ''}
           </div>
 
           <div class="es-free-input-box">
-            <input type="text" id="es-free-text" placeholder="Type your own response in English (AI Roleplay)..." autocomplete="off" />
+            <input type="text" id="es-free-text" placeholder="Type your own response in English (AI Coach Roleplay)..." autocomplete="off" />
             <button type="button" class="es-send-btn" id="es-send-free">Send ➤</button>
             <button type="button" class="es-speak-btn" id="es-speak-btn">🎤 Speak</button>
           </div>
@@ -1875,6 +2105,11 @@ class EnglishSpacesManager {
       this.falarTexto(txt);
     });
 
+    this.container.querySelector('#es-btn-finish-now')?.addEventListener('click', () => {
+      this.state.view = 'complete';
+      this.render();
+    });
+
     this.container.querySelectorAll('[data-space-level]').forEach(btn => {
       btn.addEventListener('click', () => {
         this.state.level = btn.dataset.spaceLevel;
@@ -1893,6 +2128,11 @@ class EnglishSpacesManager {
       btn.addEventListener('click', () => {
         const next = btn.dataset.next;
         const missionId = btn.dataset.mission;
+        const chosenText = btn.dataset.optText || btn.textContent.trim();
+
+        this.state.chatHistory.push({ who: 'npc', name: node.name || space.npcName, text: this.state.aiCustomReply || node.text });
+        this.state.chatHistory.push({ who: 'student', name: 'You', text: chosenText });
+
         this.state.aiCustomReply = null;
         this.state.aiCustomTranslation = null;
         this.state.aiGrammarTip = null;
@@ -1941,11 +2181,15 @@ class EnglishSpacesManager {
     const freeInput = this.container.querySelector('#es-free-text');
     const sendBtn = this.container.querySelector('#es-send-free');
 
+    // 🤖 ROTA OFICIAL DA IA (/api/workspace/english-spaces/ai/chat) COM TRADUÇÃO, COACH TIP E MISSÃO AUTOMÁTICA
     const processarRespostaLivre = async () => {
       const texto = (freeInput?.value || '').trim();
       if (!texto) return;
+
+      this.state.speakingTurns = (this.state.speakingTurns || 0) + 1;
       const lower = texto.toLowerCase();
 
+      // Verifica se bateu direto com alguma opção guiada por palavra-chave
       let matchedOpt = null;
       for (const opt of (node.options || [])) {
         if (opt.keywords && opt.keywords.some(kw => lower.includes(kw.toLowerCase()))) {
@@ -1954,6 +2198,60 @@ class EnglishSpacesManager {
         }
       }
 
+      if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳...'; }
+
+      // Registra no histórico a fala atual antes de chamar a IA
+      this.state.chatHistory.push({ who: 'npc', name: node.name || space.npcName, text: this.state.aiCustomReply || node.text });
+      this.state.chatHistory.push({ who: 'student', name: 'You', text: texto });
+
+      try {
+        const missoesPendentes = (space.missions || []).filter(m => !this.state.missionsDone.includes(m.id));
+        const res = await fetch('/api/workspace/english-spaces/ai/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          credentials: 'include',
+          body: JSON.stringify({
+            message: texto,
+            spaceName: space.name,
+            npcName: node.name || space.npcName,
+            npcRole: space.roles[1] || 'Staff',
+            studentRole: this.state.role || space.roles[0] || 'Student',
+            level: this.state.level || 'B1',
+            missions: missoesPendentes
+          })
+        }).then(r => r.json()).catch(() => null);
+
+        if (res && res.success && res.reply) {
+          this.state.aiCustomReply = res.reply;
+          this.state.aiCustomTranslation = res.translation || '';
+          this.state.aiGrammarTip = res.grammarTip || null;
+
+          if (res.grammarTip) {
+            this.state.grammarTipsCount = (this.state.grammarTipsCount || 0) + 1;
+          }
+
+          // Prioriza o ID de missão validado pela IA; se não vier, usa o da opção compatível
+          const missaoIdDetectada = res.completedMissionId || matchedOpt?.missionId || null;
+          if (missaoIdDetectada && !this.state.missionsDone.includes(missaoIdDetectada)) {
+            const mObj = (space.missions || []).find(x => x.id === missaoIdDetectada);
+            if (mObj) {
+              this.state.missionsDone.push(missaoIdDetectada);
+              this.registarMissaoConcluida(space.id, missaoIdDetectada, mObj.xp || 70);
+            }
+          }
+
+          // Avança o nó de sugestões se houve correspondência de caminho
+          if (matchedOpt && matchedOpt.next && matchedOpt.next !== 'end') {
+            this.state.dialogueState = matchedOpt.next;
+          }
+
+          this.falarTexto(res.reply);
+          this.renderSpace();
+          return;
+        }
+      } catch (e) {}
+
+      // Plano B: se a IA estiver indisponível mas a resposta bateu com opção local, avança normalmente
       if (matchedOpt) {
         this.state.aiCustomReply = null;
         this.state.aiCustomTranslation = null;
@@ -1973,37 +2271,9 @@ class EnglishSpacesManager {
         return;
       }
 
-      if (sendBtn) { sendBtn.disabled = true; sendBtn.textContent = '⏳...'; }
-      try {
-        const promptContextual = `[Scenario: ${space.name} | Your Role: ${node.name || space.npcName} | Student Role: ${this.state.role} | Level: ${this.state.level}]. Reply in character in 1-2 short sentences to what the student just said: "${texto}"`;
-        const res = await window.Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', {
-          mensagem: promptContextual,
-          historico: []
-        });
-
-        if (res && res.success && res.resposta) {
-          this.state.aiCustomReply = res.resposta;
-          this.state.aiCustomTranslation = '';
-          this.state.aiGrammarTip = null;
-
-          const missaoPendente = (space.missions || []).find(m => !this.state.missionsDone.includes(m.id));
-          if (missaoPendente && texto.split(/\s+/).length >= 3) {
-            this.state.missionsDone.push(missaoPendente.id);
-            this.registarMissaoConcluida(space.id, missaoPendente.id, missaoPendente.xp || 70);
-          }
-
-          this.falarTexto(res.resposta);
-          this.renderSpace();
-        } else {
-          const pEl = this.container.querySelector('#es-npc-text');
-          if (pEl) pEl.textContent = node.fallback || "Could you say that again in another way?";
-          if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send ➤'; }
-        }
-      } catch (e) {
-        const pEl = this.container.querySelector('#es-npc-text');
-        if (pEl) pEl.textContent = node.fallback || "Could you say that again in another way?";
-        if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send ➤'; }
-      }
+      const pEl = this.container.querySelector('#es-npc-text');
+      if (pEl) pEl.textContent = `"${node.fallback || 'Could you say that again in another way?'}"`;
+      if (sendBtn) { sendBtn.disabled = false; sendBtn.textContent = 'Send ➤'; }
     };
 
     sendBtn?.addEventListener('click', processarRespostaLivre);
@@ -2023,11 +2293,14 @@ class EnglishSpacesManager {
     const slot = this.container.querySelector('#es-modal-slot');
     if (!slot) return;
 
+    this.state.vocabDiscoveredSession = (this.state.vocabDiscoveredSession || 0) + 1;
+
     if (!this.progressData.vocab.includes(item.word)) {
       this.progressData.vocab.push(item.word);
       this.progressData.xp = (this.progressData.xp || 0) + 15;
+      this.state.sessionDRX = (this.state.sessionDRX || 0) + 15;
       this.mostrarAnimacaoXP(15);
-      this.salvarProgressoNaRotaOficial(15);
+      this.salvarProgressoNaRotaOficial();
 
       const u = window.Workspace?.usuario;
       if (u?.id) {
@@ -2071,8 +2344,8 @@ class EnglishSpacesManager {
           <div style="display:flex; flex-direction:column; gap:8px; text-align:left; margin-bottom:16px;">
             ${(space.expressions || []).map(exp => `
               <div style="background:rgba(255,255,255,0.06); padding:10px 14px; border-radius:10px; display:flex; justify-content:space-between; align-items:center; gap:10px;">
-                <span style="font-size:13.5px; color:#f4f4f5;">"${exp}"</span>
-                <button type="button" class="es-audio-btn" data-say-exp="${exp.replace(/"/g, '&quot;')}">🔊</button>
+                <span style="font-size:13.5px; color:#f4f4f5;">"${this.escapeHtml(exp)}"</span>
+                <button type="button" class="es-audio-btn" data-say-exp="${this.escapeHtml(exp)}">🔊</button>
               </div>
             `).join('')}
           </div>
@@ -2087,21 +2360,36 @@ class EnglishSpacesManager {
     slot.querySelector('#es-btn-fechar-h')?.addEventListener('click', () => { slot.innerHTML = ''; });
   }
 
+  // 🏆 Tela final com métricas REAIS da sessão (em vez de números fixos)
   renderComplete() {
     const sp = this.state.currentSpace;
-    const drxTotal = Math.max(70, this.state.missionsDone.length * 75);
+    const totalMissoes = Math.max(1, (sp?.missions || []).length);
+    const feitas = Math.min(totalMissoes, (this.state.missionsDone || []).length);
+    const pctMissoes = Math.round((feitas / totalMissoes) * 100);
+
+    const totalVocabSpace = Math.max(1, (sp?.vocab || []).length);
+    const vocabExplorado = Math.min(totalVocabSpace, (this.state.vocabDiscoveredSession || 0) + (sp?.vocab || []).filter(v => (this.progressData.vocab || []).includes(v.word)).length);
+    const scoreVocab = Math.min(100, Math.max(60, Math.round(60 + (vocabExplorado / totalVocabSpace) * 40)));
+
+    const bonusLivre = Math.min(15, (this.state.speakingTurns || 0) * 5);
+    const penalidadeDicas = Math.min(18, (this.state.grammarTipsCount || 0) * 6);
+    const scoreComm = Math.min(100, Math.max(55, Math.round(65 + (pctMissoes * 0.25) + bonusLivre - penalidadeDicas * 0.5)));
+    const scoreFluency = Math.min(100, Math.max(55, Math.round(70 + (this.state.immersion ? 12 : 0) + bonusLivre - penalidadeDicas)));
+
+    const drxSessao = this.state.sessionDRX || (feitas * 70);
+
     this.container.innerHTML = `
       <div class="es-complete-card">
         <div style="font-size:60px; margin-bottom:10px;">🎉</div>
         <h1 class="es-display" style="margin:0 0 8px 0;">EXPERIENCE COMPLETE!</h1>
-        <p style="color:#a1a1aa; margin:0 0 20px 0;">You mastered the <strong>${sp ? sp.name : 'English Space'}</strong> scenario!</p>
+        <p style="color:#a1a1aa; margin:0 0 20px 0;">You practiced the <strong>${sp ? sp.name : 'English Space'}</strong> scenario (Level ${this.state.level})!</p>
         <div class="es-scores-grid">
-          <div class="es-score-box"><span>Communication</span><strong>94/100</strong></div>
-          <div class="es-score-box"><span>Vocabulary</span><strong>90/100</strong></div>
-          <div class="es-score-box"><span>Fluency</span><strong>92/100</strong></div>
-          <div class="es-score-box"><span>Missions</span><strong>100%</strong></div>
+          <div class="es-score-box"><span>Communication</span><strong>${scoreComm}/100</strong></div>
+          <div class="es-score-box"><span>Vocabulary</span><strong>${scoreVocab}/100</strong></div>
+          <div class="es-score-box"><span>Fluency</span><strong>${scoreFluency}/100</strong></div>
+          <div class="es-score-box"><span>Missions</span><strong>${pctMissoes}% (${feitas}/${totalMissoes})</strong></div>
         </div>
-        <div style="font-size:32px; font-weight:900; color:#facc15; margin:20px 0;">💎 +${drxTotal} DRX Earned</div>
+        <div style="font-size:32px; font-weight:900; color:#facc15; margin:20px 0;">💎 +${drxSessao} DRX Earned</div>
         <div style="display:flex; gap:12px; justify-content:center; flex-wrap:wrap;">
           <button type="button" class="es-btn-primary" id="es-btn-enter-3d-complete" style="padding:0 24px; max-width:240px; background:linear-gradient(90deg,#10b981,#059669); color:#fff;">🏙️ Visit ${sp ? sp.name : 'City'} in 3D</button>
           <button type="button" class="es-btn-primary" id="es-btn-again" style="padding:0 24px; max-width:200px;">🔄 Practice Again</button>
@@ -2145,15 +2433,35 @@ class EnglishSpacesManager {
         padding: 5px 12px; border-radius: 999px; font-weight: 700; font-size: 12px; cursor: pointer;
       }
       #ws-english-spaces-container .es-lvl-btn.active { background: #8b5cf6; color: #fff; border-color: #a78bfa; }
-      #ws-english-spaces-container .es-home-hero { text-align: center; padding: 12px 0 24px 0; }
+      #ws-english-spaces-container .es-home-hero { text-align: center; padding: 10px 0 20px 0; }
       #ws-english-spaces-container .es-home-hero h1 { font-size: 32px; margin: 0; color: #fff; }
       #ws-english-spaces-container .es-stats-bar {
-        display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 16px;
+        display: flex; justify-content: center; flex-wrap: wrap; gap: 10px; margin-top: 14px;
       }
       #ws-english-spaces-container .es-stat-pill {
         background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.35);
         color: #ddd6fe; padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
       }
+      #ws-english-spaces-container .es-filter-bar {
+        margin-top: 18px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+      }
+      #ws-english-spaces-container .es-search-box {
+        display: flex; align-items: center; gap: 8px; width: 100%; max-width: 520px;
+        background: #141420; border: 1px solid rgba(255,255,255,0.14); border-radius: 999px;
+        padding: 8px 16px;
+      }
+      #ws-english-spaces-container .es-search-box input {
+        flex: 1; background: transparent; border: none; color: #fff; font-size: 13.5px; outline: none;
+      }
+      #ws-english-spaces-container .es-cat-pills {
+        display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+      }
+      #ws-english-spaces-container .es-cat-btn {
+        background: rgba(255,255,255,0.06); color: #cbd5e1; border: 1px solid rgba(255,255,255,0.12);
+        padding: 6px 13px; border-radius: 999px; font-size: 12px; font-weight: 700; cursor: pointer; transition: 0.16s;
+      }
+      #ws-english-spaces-container .es-cat-btn:hover { background: rgba(139,92,246,0.2); color: #fff; }
+      #ws-english-spaces-container .es-cat-btn.active { background: #8b5cf6; border-color: #a78bfa; color: #fff; }
       #ws-english-spaces-container .es-spaces-grid {
         display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 18px;
       }
@@ -2196,6 +2504,13 @@ class EnglishSpacesManager {
       #ws-english-spaces-container .es-space-layout {
         display: grid; grid-template-columns: 1.35fr 1fr; gap: 20px; align-items: start;
       }
+      #ws-english-spaces-container .es-history-box {
+        background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
+        border-radius: 14px; padding: 12px 14px; margin-bottom: 12px;
+      }
+      #ws-english-spaces-container .es-hist-line {
+        font-size: 12.5px; line-height: 1.4; color: #d4d4d8;
+      }
       #ws-english-spaces-container .es-npc-bubble {
         padding: 22px; border-radius: 20px; border: 1px solid rgba(255,255,255,0.14); margin-bottom: 16px;
       }
@@ -2228,7 +2543,10 @@ class EnglishSpacesManager {
         background: #8b5cf6; color: #fff; border: none; padding: 8px 16px; border-radius: 10px; font-weight: 700; cursor: pointer;
       }
       #ws-english-spaces-container .es-speak-btn {
-        background: #10b981; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer;
+        background: #10b981; color: #fff; border: none; padding: 8px 14px; border-radius: 10px; font-weight: 700; cursor: pointer; transition: 0.2s;
+      }
+      #ws-english-spaces-container .es-speak-btn.listening {
+        background: #ef4444; animation: esPulse 1s infinite;
       }
       #ws-english-spaces-container .es-panel {
         background: #12121c; border: 1px solid rgba(255,255,255,0.08); border-radius: 16px;
@@ -2266,7 +2584,7 @@ class EnglishSpacesManager {
         background: #141420; border: 1px solid rgba(139,92,246,0.4); border-radius: 20px;
         padding: 24px; max-width: 440px; width: 100%; text-align: center;
       }
-      @keyframes esPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.08); } }
+      @keyframes esPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
       @media (max-width: 820px) {
         #ws-english-spaces-container .es-space-layout { grid-template-columns: 1fr !important; }
       }

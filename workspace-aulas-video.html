@@ -4238,7 +4238,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
       if (lousaProjetadaAtiva) {
         const salaLousaId = liveAtivaObj?.codigoSala || 'live_lousa_ativa';
-        const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}`;
+        const urlLousa = `/workspace-lousa.html?role=professor&room=${encodeURIComponent(salaLousaId)}&userId=${encodeURIComponent(USER_ID)}&_t=${Date.now()}`;
         if (!iframe.src || !iframe.src.includes(salaLousaId)) {
           iframe.src = urlLousa;
         }

@@ -91,15 +91,18 @@ export default defineConfig({
         globIgnores: [
           '**/node_modules/**/*',
           '**/uploads/**/*',
+          'workspace-lousa.html',
           '**/workspace-lousa.html',
+          'workspace-aulas-video.html',
           '**/workspace-aulas-video.html',
+          'version.json',
           '**/version.json',
           '**/*.{mp4,webm,avi,mov,pdf,zip,rar,doc,docx,ppt,pptx,xls,xlsx}'
         ],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ['/push-sw.js'],
 
-        // 🔄 Garante que a Lousa, a Sala de Vídeos e o version.json venham SEMPRE da rede primeiro!
+        // 🔄 Garante que a Lousa, a Sala de Vídeos e o version.json venham SEMPRE direto do servidor (sem cache!)
         runtimeCaching: [
           {
             urlPattern: /\/version\.json/,
@@ -107,11 +110,7 @@ export default defineConfig({
           },
           {
             urlPattern: /\/(workspace-lousa|workspace-aulas-video)(\.html)?(\?.*)?$/,
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'workspace-modulos-dinamicos',
-              networkTimeoutSeconds: 5
-            }
+            handler: 'NetworkOnly'
           }
         ],
 

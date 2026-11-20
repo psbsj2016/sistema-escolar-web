@@ -751,13 +751,29 @@ Object.assign(Workspace, {
         document.querySelectorAll('video, audio').forEach(media => {
             try { if (!media.paused) media.pause(); } catch (e) {}
         });
-        document.querySelectorAll('.ws-video-embed').forEach(iframe => {
-            try {
-                if (iframe && iframe.contentWindow) {
-                    iframe.contentWindow.postMessage('{"event":"command","func":"pauseVideo","args":""}', '*');
-                }
-            } catch (e) {}
-        });
+       // 🔇 Só envia comando de pausa ao YouTube após o carregamento inicial e com o formato oficial da API
+        if (!isInitialLoad) {
+            document.querySelectorAll('.ws-video-embed').forEach(iframe => {
+                try {
+                    const srcAtual = iframe?.getAttribute('src') || '';
+                    const ehYoutubeApi = srcAtual.includes('youtube.com/embed/') && srcAtual.includes('enablejsapi=1');
+
+                    if (ehYoutubeApi && iframe.contentWindow) {
+                        const targetOrigin = srcAtual.includes('youtube-nocookie.com')
+                            ? 'https://www.youtube-nocookie.com'
+                            : 'https://www.youtube.com';
+
+                        const comandoPausa = JSON.stringify({
+                            event: 'command',
+                            func: 'pauseVideo',
+                            args: []
+                        });
+
+                        iframe.contentWindow.postMessage(comandoPausa, targetOrigin);
+                    }
+                } catch (e) {}
+            });
+        }
         
        // 🧹 2. FECHA MODAIS DE TELA CHEIA E DESTRAVA O SCROLL DO BODY
         if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
