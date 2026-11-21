@@ -4,6 +4,7 @@ import { ES3DInteracoes } from './es3d-interacoes.js';
 import { ES3DColisoes } from './es3d-colisoes.js';
 import { ES3DGameShowBuilder } from './es3d-gameshow-builder.js';
 import { ES3DMultiplayerTour } from './es3d-multiplayer-tour.js';
+import { ES3DPersonagens } from './es3d-personagens.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -2489,436 +2490,8 @@ if (escolhido === 'bicycle') {
     });
   }
 
-// 👤 CONSTRUTOR DE AVATAR HUMANO 3D REALISTA (PROPORÇÕES NATURAIS, ROSTO EXPRESSIVO, ROUPAS E TÊNIS ARTICULADOS)
-  criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-    const bodyRoot = new THREE.Group();
-    group.add(bodyRoot);
-
-    // ⚙️ PARÂMETROS VISUAIS DERIVADOS DA COR DA CAMISA (Mantém identidade única e estável para cada personagem)
-    const seed = Math.abs(Math.floor(Number(corCamisa) || 0));
-    const tonsPeleNaturais = [0xf6d0b1, 0xe8b996, 0xd8a079, 0xbf825b, 0x8d5524];
-    const corPeleFinal = corPele === 0xfde68a
-      ? tonsPeleNaturais[seed % tonsPeleNaturais.length]
-      : corPele;
-
-    const coresCabeloF = [0x3b2314, 0x1f1815, 0x6b3e1e, 0x8c5523, 0x2a1a14];
-    const coresCabeloM = [0x1c1917, 0x3b2718, 0x2b211c, 0x4a3321, 0x141414];
-    const corCabeloFinal = isFemale
-      ? coresCabeloF[seed % coresCabeloF.length]
-      : coresCabeloM[seed % coresCabeloM.length];
-
-    const coresIris = [0x5c3a21, 0x2c5282, 0x2f6b4f, 0x3f2e21];
-    const corIrisFinal = coresIris[seed % coresIris.length];
-
-    // 🎨 Materiais com acabamento PBR realista
-    const matPele = new THREE.MeshStandardMaterial({ color: corPeleFinal, roughness: 0.62, metalness: 0.03 });
-    const matCamisa = new THREE.MeshStandardMaterial({ color: corCamisa, roughness: 0.72, metalness: 0.06 });
-    const matCalca = new THREE.MeshStandardMaterial({ color: corCalca, roughness: 0.82, metalness: 0.05 });
-    const matCabelo = new THREE.MeshStandardMaterial({ color: corCabeloFinal, roughness: 0.78, metalness: 0.08 });
-    const matSapato = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.55, metalness: 0.1 });
-    const matSola = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.85 });
-    const matCinto = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.55 });
-    const matMetal = new THREE.MeshStandardMaterial({ color: 0xeab308, metalness: 0.82, roughness: 0.25 });
-    const matGola = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.75 });
-    const matBrancoOlho = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25 });
-    const matIris = new THREE.MeshStandardMaterial({ color: corIrisFinal, roughness: 0.25 });
-    const matPupila = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.1 });
-    const matGlint = new THREE.MeshBasicMaterial({ color: 0xffffff });
-    const matSobrancelha = new THREE.MeshStandardMaterial({ color: corCabeloFinal, roughness: 0.9 });
-    const matBoca = new THREE.MeshStandardMaterial({ color: isFemale ? 0xd94662 : 0xa35a4e, roughness: 0.45 });
-    const matBochecha = new THREE.MeshStandardMaterial({
-      color: 0xf472b6,
-      transparent: true,
-      opacity: isFemale ? 0.24 : 0.1,
-      roughness: 0.9
-    });
-
-    const hipX = isFemale ? 0.112 : 0.125;
-    const shoulderX = isFemale ? 0.235 : 0.285;
-    const chestScaleX = isFemale ? 0.37 : 0.45;
-    const waistScaleX = isFemale ? 0.29 : 0.38;
-
-    // 🦵 PERNAS ARTICULADAS COM TÊNIS ANEXADOS (Os sapatos acompanham os passos naturalmente!)
-    const criarPernaCompleta = (side) => {
-      const legPivot = new THREE.Group();
-      legPivot.position.set(side * hipX, 0.86, 0);
-
-      // Coxa anatômica
-      const coxa = new THREE.Mesh(
-        new THREE.CylinderGeometry(isFemale ? 0.098 : 0.106, 0.082, 0.42, 14),
-        matCalca
-      );
-      coxa.position.set(0, -0.21, 0);
-      legPivot.add(coxa);
-
-      // Joelho suave
-      const joelho = new THREE.Mesh(new THREE.SphereGeometry(0.082, 12, 12), matCalca);
-      joelho.position.set(0, -0.42, 0.01);
-      legPivot.add(joelho);
-
-      // Canela / Barra da calça
-      const canela = new THREE.Mesh(
-        new THREE.CylinderGeometry(0.078, 0.068, 0.36, 14),
-        matCalca
-      );
-      canela.position.set(0, -0.60, 0);
-      legPivot.add(canela);
-
-      // Tornozelo / Meia
-      const tornozelo = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.058, 0.07, 12), matSola);
-      tornozelo.position.set(0, -0.77, 0);
-      legPivot.add(tornozelo);
-
-      // 👟 Tênis detalhado (sola branca + cabedal colorido + biqueira)
-      const shoeGroup = new THREE.Group();
-      shoeGroup.position.set(0, -0.82, 0.045);
-
-      const sola = new THREE.Mesh(new THREE.BoxGeometry(0.135, 0.045, 0.27), matSola);
-      sola.position.set(0, -0.015, 0);
-
-      const cabedalGeo = new THREE.SphereGeometry(0.085, 16, 12);
-      cabedalGeo.scale(0.84, 0.62, 1.55);
-      const cabedal = new THREE.Mesh(cabedalGeo, matSapato);
-      cabedal.position.set(0, 0.032, 0.005);
-
-      const lingua = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.04, 0.07), matSola);
-      lingua.position.set(0, 0.062, 0.03);
-      lingua.rotation.x = 0.25;
-
-      shoeGroup.add(sola, cabedal, lingua);
-      legPivot.add(shoeGroup);
-      return legPivot;
-    };
-
-    const leftLeg = criarPernaCompleta(-1);
-    const rightLeg = criarPernaCompleta(1);
-    bodyRoot.add(leftLeg, rightLeg);
-
-    // 👖 QUADRIL, CINTURA E CINTO COM FIVELA
-    const pelvisGeo = new THREE.SphereGeometry(0.5, 20, 16);
-    pelvisGeo.scale(isFemale ? 0.44 : 0.43, 0.21, 0.28);
-    const pelvis = new THREE.Mesh(pelvisGeo, matCalca);
-    pelvis.position.set(0, 0.89, 0);
-    bodyRoot.add(pelvis);
-
-    if (isFemale) {
-      const saia = new THREE.Mesh(new THREE.CylinderGeometry(0.19, 0.27, 0.34, 18), matCalca);
-      saia.position.set(0, 0.84, 0);
-      bodyRoot.add(saia);
-    }
-
-    // Cinto com fivela metálica
-    const cintoGeo = new THREE.CylinderGeometry(waistScaleX * 0.56, waistScaleX * 0.58, 0.065, 18);
-    cintoGeo.scale(1.0, 1.0, 0.72);
-    const cinto = new THREE.Mesh(cintoGeo, matCinto);
-    cinto.position.set(0, 0.985, 0);
-    const fivela = new THREE.Mesh(new THREE.BoxGeometry(0.085, 0.072, 0.035), matMetal);
-    fivela.position.set(0, 0.985, waistScaleX * 0.41);
-    bodyRoot.add(cinto, fivela);
-
-    // 👕 TRONCO ANATÔMICO (PEITORAL, CINTURA, GOLA E ACABAMENTO DE ROUPA)
-    const torsoLower = new THREE.Mesh(
-      new THREE.CylinderGeometry(chestScaleX * 0.52, waistScaleX * 0.56, 0.34, 18),
-      matCamisa
-    );
-    torsoLower.scale.set(1, 1, 0.68);
-    torsoLower.position.set(0, 1.18, 0);
-
-    const torsoUpperGeo = new THREE.SphereGeometry(0.5, 22, 18);
-    torsoUpperGeo.scale(chestScaleX, 0.42, 0.28);
-    const torsoUpper = new THREE.Mesh(torsoUpperGeo, matCamisa);
-    torsoUpper.position.set(0, 1.43, 0);
-    bodyRoot.add(torsoLower, torsoUpper);
-
-    if (isFemale) {
-      const bustGeo = new THREE.SphereGeometry(0.095, 14, 12);
-      const bustL = new THREE.Mesh(bustGeo, matCamisa);
-      bustL.scale.set(1.0, 0.88, 0.68);
-      bustL.position.set(-0.085, 1.39, 0.115);
-      const bustR = bustL.clone();
-      bustR.position.x = 0.085;
-      bodyRoot.add(bustL, bustR);
-
-      // Colar delicado com pingente
-      const colar = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.008, 8, 24), matMetal);
-      colar.rotation.x = Math.PI / 2 + 0.25;
-      colar.position.set(0, 1.56, 0.03);
-      const pingente = new THREE.Mesh(new THREE.SphereGeometry(0.022, 10, 10), matMetal);
-      pingente.position.set(0, 1.515, 0.125);
-      bodyRoot.add(colar, pingente);
-    } else {
-      // Gola camisa social / polo
-      const gola = new THREE.Mesh(new THREE.TorusGeometry(0.105, 0.022, 10, 20), matGola);
-      gola.rotation.x = Math.PI / 2 + 0.15;
-      gola.position.set(0, 1.585, 0.01);
-      bodyRoot.add(gola);
-
-      // Detalhe sutil de estilo (botões ou bolso discreto)
-      const estilo = seed % 3;
-      if (estilo === 0) {
-        for (let i = 0; i < 3; i++) {
-          const bot = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), matGola);
-          bot.position.set(0, 1.47 - i * 0.11, 0.145);
-          bodyRoot.add(bot);
-        }
-      } else if (estilo === 1) {
-        const bolso = new THREE.Mesh(new THREE.BoxGeometry(0.095, 0.095, 0.016), matCalca);
-        bolso.position.set(-0.11, 1.41, 0.135);
-        bodyRoot.add(bolso);
-      }
-    }
-
-    // 💪 BRAÇOS ARTICULADOS (OMBRO + MANGA + ANTEBRAÇO + MÃO COM DEDOS)
-    const criarBracoCompleto = (side) => {
-      const armPivot = new THREE.Group();
-      armPivot.position.set(side * shoulderX, 1.53, 0);
-
-      // Ombro + Manga curta da camisa
-      const ombro = new THREE.Mesh(new THREE.SphereGeometry(isFemale ? 0.082 : 0.095, 14, 12), matCamisa);
-      const manga = new THREE.Mesh(
-        new THREE.CylinderGeometry(isFemale ? 0.072 : 0.084, isFemale ? 0.064 : 0.074, 0.24, 14),
-        matCamisa
-      );
-      manga.position.set(0, -0.12, 0);
-
-      // Braço + Cotovelo + Antebraço
-      const antebraco = new THREE.Mesh(
-        new THREE.CylinderGeometry(isFemale ? 0.056 : 0.064, isFemale ? 0.044 : 0.052, 0.36, 12),
-        matPele
-      );
-      antebraco.position.set(0, -0.40, 0.015);
-
-      // Mão humanizada
-      const mao = new THREE.Group();
-      mao.position.set(0, -0.60, 0.02);
-      const palma = new THREE.Mesh(new THREE.SphereGeometry(0.058, 12, 10), matPele);
-      palma.scale.set(0.82, 1.15, 0.58);
-      mao.add(palma);
-
-      for (let i = 0; i < 4; i++) {
-        const dedo = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), matPele);
-        dedo.scale.set(0.85, 1.75, 0.85);
-        dedo.position.set((-0.036 + i * 0.024), -0.062, 0.008);
-        mao.add(dedo);
-      }
-      const polegar = new THREE.Mesh(new THREE.SphereGeometry(0.021, 8, 8), matPele);
-      polegar.scale.set(0.8, 1.5, 0.9);
-      polegar.position.set(-side * 0.052, -0.015, 0.02);
-      polegar.rotation.z = side * 0.55;
-      mao.add(polegar);
-
-      armPivot.add(ombro, manga, antebraco, mao);
-      return armPivot;
-    };
-
-    const leftArm = criarBracoCompleto(-1);
-    const rightArm = criarBracoCompleto(1);
-    bodyRoot.add(leftArm, rightArm);
-
-    // 😊 CABEÇA E ROSTO REALISTA (headGroup na altura ideal para chapéus/acessórios)
-    const headGroup = new THREE.Group();
-    headGroup.position.set(0, 1.84, 0);
-
-    // Pescoço natural
-    const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.072, 0.088, 0.24, 14), matPele);
-    neck.position.set(0, -0.21, 0);
-    headGroup.add(neck);
-
-    // Crânio ligeiramente oval (anatomia humana real)
-    const headGeo = new THREE.SphereGeometry(0.215, 24, 22);
-    headGeo.scale(0.92, 1.07, 0.96);
-    const headMesh = new THREE.Mesh(headGeo, matPele);
-    headGroup.add(headMesh);
-
-    // Orelhas proporcionais (+ brincos para avatar feminino)
-    [-1, 1].forEach(side => {
-      const ear = new THREE.Mesh(new THREE.SphereGeometry(0.045, 12, 10), matPele);
-      ear.scale.set(0.5, 1.15, 0.72);
-      ear.position.set(side * 0.195, -0.01, -0.005);
-      headGroup.add(ear);
-
-      if (isFemale) {
-        const brinco = new THREE.Mesh(new THREE.SphereGeometry(0.018, 10, 10), matMetal);
-        brinco.position.set(side * 0.20, -0.058, 0.012);
-        headGroup.add(brinco);
-      }
-    });
-
-    // Nariz modelado (ponte + ponta suave)
-    const noseBridge = new THREE.Mesh(new THREE.CylinderGeometry(0.014, 0.022, 0.065, 10), matPele);
-    noseBridge.position.set(0, -0.015, 0.205);
-    noseBridge.rotation.x = -0.18;
-    const noseTip = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 10), matPele);
-    noseTip.scale.set(1.1, 0.85, 0.95);
-    noseTip.position.set(0, -0.045, 0.218);
-    headGroup.add(noseBridge, noseTip);
-
-    // Olhos expressivos com íris, pupila, brilho e sobrancelhas arqueadas
-    [-1, 1].forEach(side => {
-      const ex = side * 0.072;
-      const eyeWhite = new THREE.Mesh(new THREE.SphereGeometry(0.036, 14, 14), matBrancoOlho);
-      eyeWhite.scale.set(1.05, 0.88, 0.65);
-      eyeWhite.position.set(ex, 0.032, 0.182);
-
-      const iris = new THREE.Mesh(new THREE.SphereGeometry(0.022, 12, 12), matIris);
-      iris.scale.set(1, 1, 0.5);
-      iris.position.set(ex, 0.032, 0.202);
-
-      const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.011, 10, 10), matPupila);
-      pupil.position.set(ex, 0.032, 0.211);
-
-      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.0045, 8, 8), matGlint);
-      glint.position.set(ex + 0.007, 0.041, 0.216);
-
-      const brow = new THREE.Mesh(new THREE.BoxGeometry(0.072, isFemale ? 0.012 : 0.018, 0.014), matSobrancelha);
-      brow.position.set(ex, 0.082, 0.194);
-      brow.rotation.z = side * -0.09;
-
-      const cheek = new THREE.Mesh(new THREE.SphereGeometry(0.042, 10, 10), matBochecha);
-      cheek.scale.set(1.1, 0.65, 0.35);
-      cheek.position.set(side * 0.108, -0.032, 0.172);
-
-      headGroup.add(eyeWhite, iris, pupil, glint, brow, cheek);
-
-      if (isFemale) {
-        const lash = new THREE.Mesh(new THREE.BoxGeometry(0.064, 0.008, 0.012), matPupila);
-        lash.position.set(ex, 0.056, 0.202);
-        lash.rotation.z = side * -0.08;
-        headGroup.add(lash);
-      }
-    });
-
-    // Sorriso natural curvo (Torus parcial em vez de retângulo duro)
-    const smile = new THREE.Mesh(new THREE.TorusGeometry(0.042, 0.009, 8, 16, Math.PI), matBoca);
-    smile.rotation.z = Math.PI;
-    smile.position.set(0, -0.085, 0.196);
-    headGroup.add(smile);
-
- // 💇 CABELOS EM CAMADAS REALISTAS (RECUADOS ACIMA DA TESTA — OLHOS E SOBRANCELHAS 100% LIVRES)
- const hairStyle = seed % 3;
- const hairGroup = new THREE.Group();
-
- if (isFemale) {
-   // Abertura reduzida (0.43 * PI) e inclinada para trás (-0.25 rad) para liberar olhos e sobrancelhas
-   const capGeo = new THREE.SphereGeometry(0.226, 22, 18, 0, Math.PI * 2, 0, Math.PI * 0.43);
-   capGeo.scale(0.95, 1.04, 1.0);
-   const cap = new THREE.Mesh(capGeo, matCabelo);
-   cap.position.set(0, 0.032, -0.02);
-   cap.rotation.x = -0.25;
-   hairGroup.add(cap);
-
-   // Franja lateral alta (fica na testa, bem acima das sobrancelhas)
-   const franja = new THREE.Mesh(new THREE.SphereGeometry(0.08, 14, 12), matCabelo);
-   franja.scale.set(1.35, 0.36, 0.45);
-   franja.position.set(-0.045, 0.178, 0.145);
-   franja.rotation.z = 0.20;
-   hairGroup.add(franja);
-
-   if (hairStyle === 0) {
-     // Cabelo longo atrás e mechas laterais atrás das bochechas
-     const backHair = new THREE.Mesh(new THREE.CylinderGeometry(0.175, 0.205, 0.44, 16), matCabelo);
-     backHair.scale.set(1.0, 1.0, 0.50);
-     backHair.position.set(0, -0.17, -0.135);
-     hairGroup.add(backHair);
-     [-1, 1].forEach(side => {
-       const strand = new THREE.Mesh(new THREE.SphereGeometry(0.068, 14, 12), matCabelo);
-       strand.scale.set(0.72, 2.6, 0.80);
-       strand.position.set(side * 0.185, -0.14, -0.055);
-       hairGroup.add(strand);
-     });
-   } else if (hairStyle === 1) {
-     // Rabo de cavalo elegante atrás da cabeça
-     const tie = new THREE.Mesh(new THREE.TorusGeometry(0.05, 0.013, 8, 16), matCamisa);
-     tie.position.set(0, 0.045, -0.225);
-     const pony = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 12), matCabelo);
-     pony.scale.set(0.85, 2.0, 0.85);
-     pony.position.set(0, -0.135, -0.255);
-     pony.rotation.x = 0.22;
-     hairGroup.add(tie, pony);
-   } else {
-     // Coque alto + mechas finas laterais atrás das orelhas
-     const bun = new THREE.Mesh(new THREE.SphereGeometry(0.10, 16, 14), matCabelo);
-     bun.position.set(0, 0.235, -0.085);
-     hairGroup.add(bun);
-     [-1, 1].forEach(side => {
-       const lock = new THREE.Mesh(new THREE.SphereGeometry(0.048, 12, 10), matCabelo);
-       lock.scale.set(0.65, 1.85, 0.68);
-       lock.position.set(side * 0.185, -0.05, -0.03);
-       hairGroup.add(lock);
-     });
-   }
- } else {
-   // Corte masculino com abertura 0.41 * PI e recuo traseiro (-0.27 rad)
-   const capGeo = new THREE.SphereGeometry(0.223, 20, 16, 0, Math.PI * 2, 0, Math.PI * 0.41);
-   capGeo.scale(0.95, 1.04, 0.99);
-   const cap = new THREE.Mesh(capGeo, matCabelo);
-   cap.position.set(0, 0.038, -0.022);
-   cap.rotation.x = -0.27;
-   hairGroup.add(cap);
-
-   if (hairStyle === 0) {
-     // Topete moderno alto no topo da cabeça
-     const quiff = new THREE.Mesh(new THREE.SphereGeometry(0.10, 14, 12), matCabelo);
-     quiff.scale.set(1.18, 0.46, 0.72);
-     quiff.position.set(0.015, 0.218, 0.075);
-     quiff.rotation.z = -0.14;
-     hairGroup.add(quiff);
-   } else if (hairStyle === 1) {
-     // Cachos texturizados no topo (sem cair sobre os olhos)
-     for (let i = 0; i < 6; i++) {
-       const curl = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), matCabelo);
-       curl.position.set(-0.125 + i * 0.05, 0.218 + (i % 2) * 0.015, 0.02 + (i % 2) * 0.03);
-       hairGroup.add(curl);
-     }
-   } else {
-     // Corte social com franja leve acima da testa
-     const sweep = new THREE.Mesh(new THREE.SphereGeometry(0.09, 14, 12), matCabelo);
-     sweep.scale.set(1.28, 0.35, 0.52);
-     sweep.position.set(-0.015, 0.19, 0.12);
-     hairGroup.add(sweep);
-   }
- }
-
- headGroup.add(hairGroup);
-    bodyRoot.add(headGroup);
-
-    // 🟢 Anel de proximidade fixo no chão (fora do bodyRoot para não pular ao caminhar)
-    const ringGeo = new THREE.RingGeometry(0.65, 0.82, 28);
-    ringGeo.rotateX(-Math.PI / 2);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x10b981, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
-    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
-    ringMesh.position.y = 0.03;
-    ringMesh.userData.isRing = true;
-    group.add(ringMesh);
-
-    // Sombras suaves em todas as partes do corpo
-    bodyRoot.traverse(obj => {
-      if (obj.isMesh) {
-        obj.castShadow = true;
-        obj.receiveShadow = true;
-      }
-    });
-
-    group.userData = {
-      bodyRoot,
-      leftLeg,
-      rightLeg,
-      leftArm,
-      rightArm,
-      headGroup,
-      ringMat,
-      matCamisa,
-      matCalca,
-      matSapato,
-      walkPhase: 0,
-      idlePhase: Math.random() * Math.PI * 2,
-      emotePhase: 0,
-      isEmoting: false,
-      isFemale
-    };
-    return group;
+criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68a, isFemale = false) {
+    return this.personagens.criarBonecoHumano3D(corCamisa, corCalca, corPele, isFemale);
   }
 
   async alternarGeneroMeuAvatar() {
@@ -3067,67 +2640,11 @@ if (escolhido === 'bicycle') {
   }
 
   animarPassosBoneco(meshGroup, estaAndando, delta) {
-    const ud = meshGroup?.userData;
-    if (!ud || !ud.leftLeg) return;
-
-    if (ud.isEmoting) {
-      ud.emotePhase += delta * 6.5;
-      const wave = Math.sin(ud.emotePhase) * 1.1;
-      if (ud.rightArm && ud.rightArm.rotation) {
-        ud.rightArm.rotation.x = -2.0 + wave * 0.25;
-        ud.rightArm.rotation.z = -0.35 + wave * 0.18;
-      }
-      if (ud.emotePhase > Math.PI * 2) {
-        ud.isEmoting = false;
-        ud.emotePhase = 0;
-        if (ud.rightArm && ud.rightArm.rotation) {
-          ud.rightArm.rotation.z = 0;
-          ud.rightArm.rotation.x = 0;
-        }
-      }
-      return;
-    }
-
-    if (estaAndando) {
-      ud.walkPhase += delta * 10.5;
-      const ang = Math.sin(ud.walkPhase) * 0.52;
-      ud.leftLeg.rotation.x = ang;
-      ud.rightLeg.rotation.x = -ang;
-      ud.leftArm.rotation.x = -ang * 0.72;
-      ud.rightArm.rotation.x = ang * 0.72;
-      ud.leftArm.rotation.z = 0.05;
-      ud.rightArm.rotation.z = -0.05;
-
-      // Balanço vertical natural de cada passo (sem mexer na altura do elevador)
-      if (ud.bodyRoot) {
-        ud.bodyRoot.position.y = Math.abs(Math.sin(ud.walkPhase)) * 0.045;
-      }
-      if (ud.headGroup) {
-        ud.headGroup.rotation.y *= 0.85;
-      }
-    } else {
-      ud.idlePhase = (ud.idlePhase || 0) + delta * 2.2;
-      ud.leftLeg.rotation.x *= 0.82;
-      ud.rightLeg.rotation.x *= 0.82;
-      ud.leftArm.rotation.x *= 0.82;
-      ud.rightArm.rotation.x *= 0.82;
-      ud.leftArm.rotation.z = 0.04;
-      ud.rightArm.rotation.z = -0.04;
-
-      // Respiração suave e movimento sutil de cabeça quando parado
-      if (ud.bodyRoot) {
-        ud.bodyRoot.position.y = Math.sin(ud.idlePhase) * 0.012;
-      }
-      if (ud.headGroup) {
-        ud.headGroup.rotation.y = Math.sin(ud.idlePhase * 0.45) * 0.06;
-      }
-    }
+    return this.personagens?.animarPassosBoneco(meshGroup, estaAndando, delta);
   }
 
   animarEmote(entidade) {
-    if (!entidade?.mesh?.userData) return;
-    entidade.mesh.userData.isEmoting = true;
-    entidade.mesh.userData.emotePhase = 0;
+    return this.personagens?.animarEmote(entidade);
   }
 
   podeMoverPara(newX, newZ, oldX, oldZ) {
@@ -5842,35 +5359,8 @@ for (let i = 0; i < 4; i++) {
 }
   }
 
-  criarPedestres() {
-    this.pedestrians = [];
-    const phrases = [
-      "Beautiful day, isn't it?",
-      "Hi there! Earning DOVRYX today?",
-      "Check out the Guild Baú do Inglês!",
-      "Have a wonderful day!"
-    ];
-    for (let i = 0; i < 8; i++) {
-      const isLeft = i % 2 === 0;
-      const isFemalePed = i % 2 === 1;
-      const pedMesh = this.criarBonecoHumano3D(isLeft ? 0xf59e0b : 0x38bdf8, 0x1e293b, 0xfde68a, isFemalePed);
-      const x = isLeft ? -8.8 : 8.8;
-      const z = -85 + i * 12;
-      pedMesh.position.set(x, 0, z);
-      pedMesh.rotation.y = i % 2 === 0 ? 0 : Math.PI;
-      const labelEl = this.criarEtiquetaHTML('Citizen', null, '#facc15');
-      this.exteriorGroup.add(pedMesh);
-      this.pedestrians.push({
-        mesh: pedMesh,
-        labelEl,
-        x,
-        z,
-        dir: pedMesh.rotation.y === 0 ? 1 : -1,
-        speed: 1.3 + Math.random() * 0.6,
-        bubbleText: phrases[i % phrases.length],
-        lastGreet: 0
-      });
-    }
+ criarPedestres() {
+    return this.personagens?.criarPedestres();
   }
 
   criarOutdoorsInteligentes() {
@@ -6120,39 +5610,11 @@ criarVitrinesVivas() {
   }
 
   criarMusicoDeRua() {
-    const THREE = window.THREE;
-    const mus = this.criarBonecoHumano3D(0xf97316, 0x1e293b, 0xfde68a, false);
-    mus.position.set(-8.8, 0, -24);
-    mus.rotation.y = Math.PI / 3;
-    const guitar = new THREE.Mesh(new THREE.BoxGeometry(0.35, 0.12, 0.6), new THREE.MeshLambertMaterial({ color: 0x92400e }));
-    guitar.position.set(0, 1.2, 0.25);
-    guitar.userData = { clickable: true, englishName: "Street Musician: That song is lit! Lit means amazing!" };
-    this.clickableObjects.push(guitar);
-    mus.add(guitar);
-    const label = this.criarEtiquetaHTML('Musician 🎸', null, '#f59e0b');
-    this.exteriorGroup.add(mus);
-    this.musician = {
-      mesh: mus,
-      labelEl: label,
-      x: -8.8,
-      z: -24,
-      lastTeach: 0,
-      slangs: [
-        "That song is lit! ('Lit' = amazing!)",
-        "This beat is sick! ('Sick' = super cool!)",
-        "I'm hyped for DOVRYX! ('Hyped' = very excited!)"
-      ]
-    };
+    return this.personagens?.criarMusicoDeRua();
   }
 
-  atualizarMusico() {
-    if (!this.musician || !this.localPlayer || this.modoInterior) return;
-    const d = Math.hypot(this.musician.x - this.localPlayer.x, this.musician.z - this.localPlayer.z);
-    if (d < 3.8 && Date.now() - this.musician.lastTeach > 12000) {
-      const slang = this.musician.slangs[Math.floor(Math.random() * this.musician.slangs.length)];
-      this.mostrarBalaoNoBoneco(this.musician, slang, 5500);
-      this.musician.lastTeach = Date.now();
-    }
+  atualizarMusico(delta = 0.016) {
+    return this.personagens?.atualizarMusico(delta);
   }
 
   criarFotoPolaroid() {
@@ -6188,448 +5650,27 @@ criarVitrinesVivas() {
   }
 
  criarAnimaisRua() {
-    this.animais.caes = [];
-    this.animais.gatos = [];
-    this.animais.passaros = [];
-
-    for (let i = 0; i < 2; i++) {
-      const dog = this.criarCachorro3D(i === 0 ? 0xb4773e : 0x5c3a21);
-      dog.position.set(-9 + i * 18, 0, -14 - i * 18);
-      this.exteriorGroup.add(dog);
-      this.animais.caes.push({
-        mesh: dog,
-        dir: i === 0 ? 1 : -1,
-        speed: 1.5 + i * 0.25,
-        x: dog.position.x,
-        z: dog.position.z
-      });
-    }
-
-    for (let i = 0; i < 2; i++) {
-      const cat = this.criarGato3D(i === 0 ? 0xd97706 : 0x64748b);
-      cat.position.set(i === 0 ? 8.6 : -8.6, 0, -26 - i * 20);
-      this.exteriorGroup.add(cat);
-      this.animais.gatos.push({
-        mesh: cat,
-        dir: i === 0 ? -1 : 1,
-        speed: 1.05,
-        x: cat.position.x,
-        z: cat.position.z
-      });
-    }
-
-    const THREE = window.THREE;
-    this.animais.passarosGroup = new THREE.Group();
-    for (let i = 0; i < 8; i++) {
-      const bird = this.criarPassaro3D();
-      bird.position.set((Math.random() - 0.5) * 70, 15 + Math.random() * 6, -35 + (Math.random() - 0.5) * 70);
-      bird.userData.speed = 2.6 + Math.random() * 1.6;
-      bird.userData.angle = Math.random() * Math.PI * 2;
-      this.animais.passarosGroup.add(bird);
-      this.animais.passaros.push(bird);
-    }
-    this.scene.add(this.animais.passarosGroup);
+    return this.personagens?.criarAnimaisRua();
   }
 
-  // 🐶 CACHORRO 3D REALISTA (ORIENTADO PARA +Z, PATAS ARTICULADAS, ORELHAS, COLEIRA E CAUDA ABANANDO)
   criarCachorro3D(corPelo = 0xc68642) {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-    const bodyRoot = new THREE.Group();
-    group.add(bodyRoot);
-
-    const matPelo = new THREE.MeshStandardMaterial({ color: corPelo, roughness: 0.78 });
-    const matBarriga = new THREE.MeshStandardMaterial({ color: 0xf3d5b5, roughness: 0.85 });
-    const matOrelha = new THREE.MeshStandardMaterial({ color: 0x5c381a, roughness: 0.85 });
-    const matFocinho = new THREE.MeshStandardMaterial({ color: 0x1c1917, roughness: 0.35 });
-    const matColeira = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.5 });
-    const matTag = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.8, roughness: 0.25 });
-    const matOlho = new THREE.MeshStandardMaterial({ color: 0x09090b, roughness: 0.15 });
-    const matGlint = new THREE.MeshBasicMaterial({ color: 0xffffff });
-
-    // Tronco arredondado anatômico (eixo Z = frente)
-    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.24, 16, 14), matPelo);
-    torso.scale.set(0.86, 0.88, 1.55);
-    torso.position.set(0, 0.36, 0);
-
-    const peito = new THREE.Mesh(new THREE.SphereGeometry(0.20, 14, 12), matBarriga);
-    peito.scale.set(0.85, 0.9, 0.95);
-    peito.position.set(0, 0.37, 0.22);
-
-    // Pescoço e coleira com pingente dourado
-    const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.11, 0.14, 0.22, 12), matPelo);
-    pescoco.position.set(0, 0.49, 0.28);
-    pescoco.rotation.x = 0.35;
-
-    const coleira = new THREE.Mesh(new THREE.TorusGeometry(0.125, 0.022, 8, 18), matColeira);
-    coleira.position.set(0, 0.48, 0.29);
-    coleira.rotation.x = Math.PI / 2 - 0.35;
-
-    const tag = new THREE.Mesh(new THREE.SphereGeometry(0.028, 8, 8), matTag);
-    tag.position.set(0, 0.40, 0.40);
-
-    // Cabeça esculpida voltada para +Z
-    const head = new THREE.Group();
-    head.position.set(0, 0.59, 0.36);
-
-    const cranio = new THREE.Mesh(new THREE.SphereGeometry(0.165, 16, 14), matPelo);
-    cranio.scale.set(0.95, 0.96, 1.05);
-
-    const focinho = new THREE.Mesh(new THREE.SphereGeometry(0.088, 12, 10), matBarriga);
-    focinho.scale.set(0.95, 0.78, 1.35);
-    focinho.position.set(0, -0.045, 0.155);
-
-    const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.036, 10, 10), matFocinho);
-    nariz.scale.set(1.1, 0.8, 0.8);
-    nariz.position.set(0, -0.02, 0.255);
-
-    const lingua = new THREE.Mesh(
-      new THREE.SphereGeometry(0.028, 8, 8),
-      new THREE.MeshStandardMaterial({ color: 0xf472b6, roughness: 0.4 })
-    );
-    lingua.scale.set(0.85, 0.4, 1.2);
-    lingua.position.set(0, -0.092, 0.205);
-
-    // Olhos expressivos + Orelhas caídas naturais
-    [-1, 1].forEach(side => {
-      const olho = new THREE.Mesh(new THREE.SphereGeometry(0.024, 10, 10), matOlho);
-      olho.position.set(side * 0.068, 0.035, 0.135);
-      const glint = new THREE.Mesh(new THREE.SphereGeometry(0.008, 6, 6), matGlint);
-      glint.position.set(side * 0.068 + 0.006, 0.044, 0.155);
-
-      const orelha = new THREE.Mesh(new THREE.SphereGeometry(0.068, 10, 10), matOrelha);
-      orelha.scale.set(0.45, 1.55, 0.85);
-      orelha.position.set(side * 0.145, -0.015, -0.01);
-      orelha.rotation.z = side * 0.22;
-
-      head.add(olho, glint, orelha);
-    });
-
-    head.add(cranio, focinho, nariz, lingua);
-
-    // Cauda articulada (para abanar de alegria!)
-    const tailPivot = new THREE.Group();
-    tailPivot.position.set(0, 0.42, -0.34);
-    const tailMesh = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.045, 0.28, 10), matPelo);
-    tailMesh.position.set(0, 0.11, -0.07);
-    tailMesh.rotation.x = -0.65;
-    tailPivot.add(tailMesh);
-
-    // 4 Patas articuladas com patinhas claras
-    const legs = [];
-    const posPatas = [
-      [-0.125, 0.26,  0.22], // Frente Esq
-      [ 0.125, 0.26,  0.22], // Frente Dir
-      [-0.125, 0.26, -0.22], // Trás Esq
-      [ 0.125, 0.26, -0.22]  // Trás Dir
-    ];
-    posPatas.forEach(([lx, ly, lz]) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(lx, ly, lz);
-      const perna = new THREE.Mesh(new THREE.CylinderGeometry(0.048, 0.038, 0.24, 10), matPelo);
-      perna.position.y = -0.12;
-      const pata = new THREE.Mesh(new THREE.SphereGeometry(0.048, 10, 8), matBarriga);
-      pata.scale.set(0.95, 0.62, 1.25);
-      pata.position.set(0, -0.24, 0.02);
-      pivot.add(perna, pata);
-      bodyRoot.add(pivot);
-      legs.push(pivot);
-    });
-
-    bodyRoot.add(torso, peito, pescoco, coleira, tag, head, tailPivot);
-    bodyRoot.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-
-    group.userData = {
-      isPetModel: true,
-      bodyRoot,
-      legs,
-      tailPivot,
-      head,
-      walkPhase: Math.random() * Math.PI * 2,
-      tailPhase: Math.random() * Math.PI * 2
-    };
-    return group;
+    return this.personagens.criarCachorro3D(corPelo);
   }
 
-  // 🐱 GATO 3D REALISTA (ORIENTADO PARA +Z, SILHUETA FELINA, OLHOS VERDES, BIGODES E CAUDA ELEGANTE)
   criarGato3D(corPelo = 0x9ca3af) {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-    const bodyRoot = new THREE.Group();
-    group.add(bodyRoot);
-
-    const matPelo = new THREE.MeshStandardMaterial({ color: corPelo, roughness: 0.72 });
-    const matClaro = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.8 });
-    const matRosa = new THREE.MeshStandardMaterial({ color: 0xf9a8d4, roughness: 0.55 });
-    const matOlho = new THREE.MeshStandardMaterial({ color: 0x10b981, roughness: 0.2 });
-    const matPupila = new THREE.MeshStandardMaterial({ color: 0x09090b });
-    const matColeira = new THREE.MeshStandardMaterial({ color: 0x8b5cf6, roughness: 0.45 });
-    const matSino = new THREE.MeshStandardMaterial({ color: 0xfacc15, metalness: 0.85, roughness: 0.2 });
-
-    // Corpo felino esguio
-    const torso = new THREE.Mesh(new THREE.SphereGeometry(0.18, 16, 14), matPelo);
-    torso.scale.set(0.78, 0.82, 1.55);
-    torso.position.set(0, 0.29, 0);
-
-    const peito = new THREE.Mesh(new THREE.SphereGeometry(0.13, 12, 10), matClaro);
-    peito.position.set(0, 0.30, 0.18);
-
-    const pescoco = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.10, 0.16, 12), matPelo);
-    pescoco.position.set(0, 0.40, 0.22);
-    pescoco.rotation.x = 0.25;
-
-    const coleira = new THREE.Mesh(new THREE.TorusGeometry(0.095, 0.016, 8, 16), matColeira);
-    coleira.position.set(0, 0.39, 0.23);
-    coleira.rotation.x = Math.PI / 2 - 0.25;
-
-    const sino = new THREE.Mesh(new THREE.SphereGeometry(0.024, 8, 8), matSino);
-    sino.position.set(0, 0.33, 0.32);
-
-    // Cabeça felina voltada para +Z
-    const head = new THREE.Group();
-    head.position.set(0, 0.49, 0.28);
-
-    const cranio = new THREE.Mesh(new THREE.SphereGeometry(0.135, 16, 14), matPelo);
-    cranio.scale.set(1.06, 0.94, 0.96);
-
-    const focinho = new THREE.Mesh(new THREE.SphereGeometry(0.055, 10, 10), matClaro);
-    focinho.scale.set(1.15, 0.78, 0.9);
-    focinho.position.set(0, -0.032, 0.115);
-
-    const nariz = new THREE.Mesh(new THREE.SphereGeometry(0.018, 8, 8), matRosa);
-    nariz.position.set(0, -0.018, 0.158);
-
-    [-1, 1].forEach(side => {
-      // Orelhas pontudas com parte interna rosada
-      const ear = new THREE.Mesh(new THREE.ConeGeometry(0.052, 0.12, 6), matPelo);
-      ear.position.set(side * 0.082, 0.135, 0.0);
-      ear.rotation.z = side * -0.22;
-
-      const innerEar = new THREE.Mesh(new THREE.ConeGeometry(0.030, 0.08, 6), matRosa);
-      innerEar.position.set(side * 0.082, 0.13, 0.022);
-      innerEar.rotation.z = side * -0.22;
-
-      // Olhos verdes felinos com pupila vertical
-      const olho = new THREE.Mesh(new THREE.SphereGeometry(0.026, 10, 10), matOlho);
-      olho.position.set(side * 0.055, 0.02, 0.112);
-
-      const pupila = new THREE.Mesh(new THREE.BoxGeometry(0.008, 0.034, 0.012), matPupila);
-      pupila.position.set(side * 0.055, 0.02, 0.133);
-
-      // Bigodes delicados
-      const whisker = new THREE.Mesh(new THREE.BoxGeometry(0.11, 0.004, 0.004), matClaro);
-      whisker.position.set(side * 0.095, -0.035, 0.13);
-      whisker.rotation.y = side * -0.25;
-
-      head.add(ear, innerEar, olho, pupila, whisker);
-    });
-    head.add(cranio, focinho, nariz);
-
-    // Cauda felina elegante erguida
-    const tailPivot = new THREE.Group();
-    tailPivot.position.set(0, 0.34, -0.26);
-    const tail1 = new THREE.Mesh(new THREE.CylinderGeometry(0.020, 0.026, 0.24, 8), matPelo);
-    tail1.position.set(0, 0.11, -0.05);
-    tail1.rotation.x = -0.35;
-    const tail2 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.020, 0.18, 8), matClaro);
-    tail2.position.set(0, 0.28, -0.07);
-    tail2.rotation.x = 0.25;
-    tailPivot.add(tail1, tail2);
-
-    // 4 Patas finas articuladas
-    const legs = [];
-    const posPatas = [
-      [-0.095, 0.22,  0.17],
-      [ 0.095, 0.22,  0.17],
-      [-0.095, 0.22, -0.17],
-      [ 0.095, 0.22, -0.17]
-    ];
-    posPatas.forEach(([lx, ly, lz]) => {
-      const pivot = new THREE.Group();
-      pivot.position.set(lx, ly, lz);
-      const perna = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.026, 0.20, 10), matPelo);
-      perna.position.y = -0.10;
-      const pata = new THREE.Mesh(new THREE.SphereGeometry(0.034, 8, 8), matClaro);
-      pata.scale.set(0.9, 0.6, 1.2);
-      pata.position.set(0, -0.20, 0.015);
-      pivot.add(perna, pata);
-      bodyRoot.add(pivot);
-      legs.push(pivot);
-    });
-
-    bodyRoot.add(torso, peito, pescoco, coleira, sino, head, tailPivot);
-    bodyRoot.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-
-    group.userData = {
-      isPetModel: true,
-      bodyRoot,
-      legs,
-      tailPivot,
-      head,
-      walkPhase: Math.random() * Math.PI * 2,
-      tailPhase: Math.random() * Math.PI * 2
-    };
-    return group;
+    return this.personagens.criarGato3D(corPelo);
   }
 
-  // 🐦 PÁSSARO 3D REALISTA (CORPO AERODINÂMICO, BICO, CAUDA E ASAS ARTICULADAS)
   criarPassaro3D() {
-    const THREE = window.THREE;
-    const group = new THREE.Group();
-
-    const matCorpo = new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.6 });
-    const matPeito = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.7 });
-    const matBico = new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.4 });
-
-    const body = new THREE.Mesh(new THREE.SphereGeometry(0.11, 10, 10), matCorpo);
-    body.scale.set(0.85, 0.8, 1.65);
-
-    const belly = new THREE.Mesh(new THREE.SphereGeometry(0.09, 8, 8), matPeito);
-    belly.scale.set(0.8, 0.65, 1.3);
-    belly.position.set(0, -0.03, 0.02);
-
-    const head = new THREE.Mesh(new THREE.SphereGeometry(0.075, 10, 10), matCorpo);
-    head.position.set(0, 0.055, 0.16);
-
-    const beak = new THREE.Mesh(new THREE.ConeGeometry(0.025, 0.09, 6), matBico);
-    beak.rotation.x = Math.PI / 2;
-    beak.position.set(0, 0.045, 0.25);
-
-    const tail = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.015, 0.16), matCorpo);
-    tail.position.set(0, 0.02, -0.22);
-    tail.rotation.x = 0.18;
-
-    // Asas articuladas presas pelos ombros para bater de forma realista
-    const wingGeo = new THREE.BoxGeometry(0.30, 0.018, 0.14);
-    const wingL = new THREE.Group();
-    wingL.position.set(-0.08, 0.04, 0.0);
-    const meshWL = new THREE.Mesh(wingGeo, matCorpo);
-    meshWL.position.x = -0.14;
-    wingL.add(meshWL);
-
-    const wingR = new THREE.Group();
-    wingR.position.set(0.08, 0.04, 0.0);
-    const meshWR = new THREE.Mesh(wingGeo, matCorpo);
-    meshWR.position.x = 0.14;
-    wingR.add(meshWR);
-
-    group.add(body, belly, head, beak, tail, wingL, wingR);
-    group.userData = { wingL, wingR, flapPhase: Math.random() * Math.PI * 2 };
-    return group;
+    return this.personagens.criarPassaro3D();
   }
 
-  // 🐾 ANIMAÇÃO UNIFICADA DE PATAS, CAUDA E RESPIRAÇÃO PARA CÃES E GATOS
   animarQuadrúpede(mesh, andando, delta) {
-    const ud = mesh?.userData;
-    if (!ud || !ud.legs) return;
-
-    ud.tailPhase = (ud.tailPhase || 0) + delta * (andando ? 12 : 6);
-    if (ud.tailPivot) {
-      ud.tailPivot.rotation.z = Math.sin(ud.tailPhase) * (andando ? 0.55 : 0.35);
-    }
-
-    if (andando) {
-      ud.walkPhase = (ud.walkPhase || 0) + delta * 13;
-      const a = Math.sin(ud.walkPhase) * 0.62;
-      // Marcha cruzada natural (frente esq + trás dir juntas)
-      if (ud.legs[0]) ud.legs[0].rotation.x = a;
-      if (ud.legs[3]) ud.legs[3].rotation.x = a;
-      if (ud.legs[1]) ud.legs[1].rotation.x = -a;
-      if (ud.legs[2]) ud.legs[2].rotation.x = -a;
-      if (ud.bodyRoot) ud.bodyRoot.position.y = Math.abs(Math.sin(ud.walkPhase)) * 0.035;
-    } else {
-      ud.legs.forEach(leg => { leg.rotation.x *= 0.82; });
-      if (ud.bodyRoot) ud.bodyRoot.position.y = Math.sin(ud.tailPhase * 0.5) * 0.008;
-    }
+    return this.personagens?.animarQuadrúpede(mesh, andando, delta);
   }
 
-  // 🐕 SEGUIMENTO SUAVE E CORRIGIDO DO PET ADOTADO + ANIMAIS DE RUA
   atualizarAnimais(delta) {
-    if (this.adoptedPet && this.localPlayer) {
-      const p = this.localPlayer;
-      const pet = this.adoptedPet;
-
-      // Posição alvo confortável: levemente atrás e ao lado direito do dono
-      const sinR = Math.sin(p.rotY || 0);
-      const cosR = Math.cos(p.rotY || 0);
-      const alvoX = p.x - sinR * 1.15 + cosR * 0.72;
-      const alvoZ = p.z - cosR * 1.15 - sinR * 0.72;
-      const alvoY = p.y || 0;
-
-      const dx = alvoX - pet.position.x;
-      const dz = alvoZ - pet.position.z;
-      const dist = Math.hypot(dx, dz);
-
-      let petAndando = false;
-
-      if (dist > 14.0) {
-        // Se o dono usou GPS ou teleporte, o pet acompanha instantaneamente ao lado dele
-        pet.position.set(alvoX, alvoY, alvoZ);
-        pet.rotation.y = p.rotY || 0;
-      } else if (dist > 0.35) {
-        // Velocidade adaptativa: trota normal perto, corre se ficar mais para trás
-        const velPet = dist > 3.2 ? 9.5 : 6.2;
-        const passo = Math.min(dist, velPet * delta);
-        pet.position.x += (dx / dist) * passo;
-        pet.position.z += (dz / dist) * passo;
-
-        // Rotação suave pelo menor arco para a direção real do movimento (nunca gira errado!)
-        const angAlvo = Math.atan2(dx, dz);
-        let diff = angAlvo - pet.rotation.y;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        pet.rotation.y += diff * Math.min(1, delta * 9.5);
-
-        petAndando = dist > 0.45;
-      } else {
-        // Quando parado ao lado do dono, alinha suavemente para olhar na mesma direção
-        let diff = (p.rotY || 0) - pet.rotation.y;
-        while (diff > Math.PI) diff -= Math.PI * 2;
-        while (diff < -Math.PI) diff += Math.PI * 2;
-        pet.rotation.y += diff * Math.min(1, delta * 4.0);
-      }
-
-      // Acompanha suavemente a altura do elevador nas torres residenciais!
-      pet.position.y += (alvoY - pet.position.y) * Math.min(1, delta * 12);
-      this.animarQuadrúpede(pet, petAndando, delta);
-    }
-
-    if (this.modoInterior) return;
-
-    // Cães de rua caminhando na calçada olhando para frente
-    this.animais.caes.forEach(dogData => {
-      dogData.mesh.position.z += dogData.dir * dogData.speed * delta;
-      dogData.mesh.rotation.y = dogData.dir > 0 ? 0 : Math.PI;
-      if (dogData.mesh.position.z > 10) dogData.mesh.position.z = -84;
-      if (dogData.mesh.position.z < -84) dogData.mesh.position.z = 10;
-      this.animarQuadrúpede(dogData.mesh, true, delta);
-    });
-
-    // Gatos de rua passeando suavemente pelas calçadas
-    this.animais.gatos.forEach(catData => {
-      catData.mesh.position.z += catData.dir * catData.speed * delta;
-      catData.mesh.rotation.y = catData.dir > 0 ? 0 : Math.PI;
-      if (catData.mesh.position.z > 10) catData.mesh.position.z = -84;
-      if (catData.mesh.position.z < -84) catData.mesh.position.z = 10;
-      this.animarQuadrúpede(catData.mesh, true, delta);
-    });
-
-    // Pássaros voando em círculos suaves no céu
-    this.animais.passaros.forEach(bird => {
-      bird.userData.angle += delta * 0.28;
-      const vx = Math.cos(bird.userData.angle) * bird.userData.speed;
-      const vz = Math.sin(bird.userData.angle) * bird.userData.speed;
-      bird.position.x += vx * delta;
-      bird.position.z += vz * delta;
-      bird.rotation.y = Math.atan2(vx, vz);
-
-      if (bird.userData.wingL) {
-        bird.userData.flapPhase = (bird.userData.flapPhase || 0) + delta * 14;
-        const flap = Math.sin(bird.userData.flapPhase) * 0.65;
-        bird.userData.wingL.rotation.z = flap;
-        bird.userData.wingR.rotation.z = -flap;
-      }
-    });
+    return this.personagens?.atualizarAnimais(delta);
   }
 
   criarLetreiro3D(texto, pos, col, isMastered = false) {
@@ -6670,6 +5711,7 @@ criarVitrinesVivas() {
     this.clock = new THREE.Clock();
     this.exteriorGroup = new THREE.Group();
     this.scene.add(this.exteriorGroup);
+    this.personagens = new ES3DPersonagens(this); 
 
     this.ambientLight = new THREE.AmbientLight(0xffffff, 0.72);
     this.scene.add(this.ambientLight);
@@ -6969,17 +6011,7 @@ this.scene.add(facadeHeader);
       this.buildingMeshes.set(bCfg.id, { walls: wallMatsTransp, roof, frontX, doorZ: centerZ, centerX, centerZ, bw, bd, bh, floor: floorMesh, doorGroup, placa3D, shopLight });
       this.decorarInteriorEdificio3D(bCfg.id, centerX, centerZ, signCol, bCfg);
 
-      const npcX = centerX + (signCol * 3.1);
-      const npcZ = centerZ;
-      const isFemaleNPC = ['coffee', 'school', 'shopping', 'cinema', 'hotel', 'job', 'clothing', 'petshop', 'pharmacy', 'real_estate'].includes(bCfg.id);
-      const npcMesh = this.criarBonecoHumano3D(bCfg.npcColor, 0x0f172a, 0xfde68a, isFemaleNPC);
-      npcMesh.position.set(npcX, 0, npcZ);
-      npcMesh.rotation.y = signCol === -1 ? (Math.PI / 2) : (-Math.PI / 2);
-      this.scene.add(npcMesh);
-
-      const labelEl = this.criarEtiquetaHTML(`${spInfo.emoji} ${spInfo.npcName}`, 'AI HOST', '#10b981');
-      if (labelEl) labelEl.style.display = 'none';
-      this.npcs3D.set(bCfg.id, { id: bCfg.id, space: spInfo, name: spInfo.npcName, x: npcX, z: npcZ, mesh: npcMesh, labelEl, col: signCol });
+     this.personagens.criarNPCLoja(bCfg, spInfo, centerX, centerZ, signCol);
 
       this.buildingsMeta.push({
         id: bCfg.id,
@@ -7588,10 +6620,10 @@ if (this.torreAtual) {
      this.cameraUI.atualizarMinimapa();
    }
 
-      this.atualizarPortas();
+     this.atualizarPortas();
       this.atualizarAnimais(delta);
       this.atualizarAvioes(delta);
-      this.atualizarMusico();
+      this.atualizarMusico(delta);
          this.colisoesPro?.update(delta);
                 this.gameShowBuilder?.update(delta);
                 this.multiplayerTour?.update(delta, estaAndando);
@@ -7711,19 +6743,7 @@ if (this.torreAtual) {
   }
 });
 
-      this.pedestrians.forEach(ped => {
-        if (this.modoInterior) return;
-        ped.mesh.position.z += ped.dir * ped.speed * delta * 0.6;
-        if (ped.mesh.position.z > 14) ped.mesh.position.z = -92;
-        if (ped.mesh.position.z < -92) ped.mesh.position.z = 14;
-        ped.mesh.rotation.y = ped.dir > 0 ? 0 : Math.PI;
-        this.animarPassosBoneco(ped.mesh, true, delta);
-        const d = Math.hypot(ped.mesh.position.x - p.x, ped.mesh.position.z - p.z);
-        if (d < 3.2 && Date.now() - ped.lastGreet > 8000) {
-          this.mostrarBalaoNoBoneco(ped, ped.bubbleText, 3500);
-          ped.lastGreet = Date.now();
-        }
-      });
+     this.personagens?.atualizarPedestres(delta);
 
       if (this.cloudsGroup && !this.modoInterior) {
         this.cloudsGroup.children.forEach(cloud => {
@@ -8557,6 +7577,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.multiplayerTour.dispose();
       this.multiplayerTour = null;
     } 
+  if (this.personagens) {
+      this.personagens.dispose();
+      this.personagens = null;
+    }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {

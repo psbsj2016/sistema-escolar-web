@@ -399,8 +399,12 @@ export class ES3DInteracoes {
       if (ud.bodyRoot) ud.bodyRoot.position.y = 0;
       if (ud.leftLeg) ud.leftLeg.rotation.x = 0;
       if (ud.rightLeg) ud.rightLeg.rotation.x = 0;
+      if (ud.leftKnee) ud.leftKnee.rotation.x = 0;
+      if (ud.rightKnee) ud.rightKnee.rotation.x = 0;
       if (ud.leftArm) ud.leftArm.rotation.x = 0;
       if (ud.rightArm) ud.rightArm.rotation.x = 0;
+      if (ud.leftElbow) ud.leftElbow.rotation.x = -0.16;
+      if (ud.rightElbow) ud.rightElbow.rotation.x = -0.16;
     }
     if (this.standBtnEl) this.standBtnEl.style.display = 'none';
   }
@@ -436,7 +440,7 @@ export class ES3DInteracoes {
     }
   }
 
-  aplicarAnimacoesAvatar(delta, estaAndando) {
+ aplicarAnimacoesAvatar(delta, estaAndando) {
     const p = this.world?.localPlayer;
     const ud = p?.mesh?.userData;
     if (!p || !ud) return;
@@ -450,9 +454,13 @@ export class ES3DInteracoes {
         if (ud.bodyRoot) ud.bodyRoot.position.y = -0.26;
         if (ud.leftLeg) ud.leftLeg.rotation.x = -1.42;
         if (ud.rightLeg) ud.rightLeg.rotation.x = -1.42;
+        if (ud.leftKnee) ud.leftKnee.rotation.x = 1.42;
+        if (ud.rightKnee) ud.rightKnee.rotation.x = 1.42;
         if (!this.activeEmote) {
-          if (ud.leftArm) { ud.leftArm.rotation.x = -0.35; ud.leftArm.rotation.z = 0.08; }
-          if (ud.rightArm) { ud.rightArm.rotation.x = -0.35; ud.rightArm.rotation.z = -0.08; }
+          if (ud.leftArm) { ud.leftArm.rotation.x = -0.32; ud.leftArm.rotation.z = 0.08; }
+          if (ud.rightArm) { ud.rightArm.rotation.x = -0.32; ud.rightArm.rotation.z = -0.08; }
+          if (ud.leftElbow) ud.leftElbow.rotation.x = -0.58;
+          if (ud.rightElbow) ud.rightElbow.rotation.x = -0.58;
         }
       }
     }
@@ -473,16 +481,19 @@ export class ES3DInteracoes {
           ud.rightArm.rotation.x = -2.45;
           ud.rightArm.rotation.z = -0.45 + Math.sin(t * 14) * 0.35;
         }
+        if (ud.rightElbow) ud.rightElbow.rotation.x = -0.45 + Math.sin(t * 14) * 0.25;
       } else if (tipo === 'clap') {
         const batida = Math.abs(Math.sin(t * 11));
         if (ud.leftArm) {
-          ud.leftArm.rotation.x = -1.25;
+          ud.leftArm.rotation.x = -1.15;
           ud.leftArm.rotation.z = -0.15 - batida * 0.42;
         }
         if (ud.rightArm) {
-          ud.rightArm.rotation.x = -1.25;
+          ud.rightArm.rotation.x = -1.15;
           ud.rightArm.rotation.z = 0.15 + batida * 0.42;
         }
+        if (ud.leftElbow) ud.leftElbow.rotation.x = -0.85;
+        if (ud.rightElbow) ud.rightElbow.rotation.x = -0.85;
       } else if (tipo === 'jump') {
         const pulo = Math.abs(Math.sin(t * 7.5)) * 0.55;
         if (ud.bodyRoot) ud.bodyRoot.position.y = pulo;
