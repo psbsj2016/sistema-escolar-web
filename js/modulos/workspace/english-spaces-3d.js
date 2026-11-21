@@ -3,6 +3,7 @@ import { ES3DAmbiente } from './es3d-ambiente.js';
 import { ES3DInteracoes } from './es3d-interacoes.js';
 import { ES3DColisoes } from './es3d-colisoes.js';
 import { ES3DGameShowBuilder } from './es3d-gameshow-builder.js';
+import { ES3DMultiplayerTour } from './es3d-multiplayer-tour.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -480,6 +481,7 @@ garantirAudioAtivo() {
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
               <button type="button" class="es-top-btn" id="es-city-gameshow-btn" title="Live English Game Show at Central Plaza">🎤 Game Show</button>
               <button type="button" class="es-top-btn" id="es-city-decorate-btn" title="Decorate Your House or Apartment">🛋️ Decorate</button>
+              <button type="button" class="es-top-btn" id="es-city-tour-btn" title="Professor Guided Tour Control" style="display:none;">🎓 Tour</button>
               <button type="button" class="es-top-btn" id="es-city-quest-btn" title="Daily Treasure Hunt in English">🎁 Quests 0/4</button>
               <button type="button" class="es-top-btn" id="es-city-emote-btn" title="Avatar Emotes">🎭 Emotes</button>
               <button type="button" class="es-top-btn" id="es-city-photo-btn" title="Take English City Postcard Photo">📸 Photo</button>
@@ -2304,6 +2306,7 @@ if (escolhido === 'bicycle') {
     if (window.Workspace?.mostrarAviso) {
       window.Workspace.mostrarAviso(`🚀 Riding ${nomes[escolhido] || 'Vehicle'}! Use Bike Lanes & watch out for Speed Bumps!`, 'success');
     }
+    this.enviarMinhaPosicaoServidor();
   }
 
   desmontarVeiculo() {
@@ -2315,6 +2318,7 @@ if (escolhido === 'bicycle') {
     }
     const btn = document.getElementById('es-city-vehicle-btn');
     if (btn) btn.innerHTML = '🚲 Ride';
+       this.enviarMinhaPosicaoServidor();
   }
 
   // 💼 TRABALHOS REMUNERADOS NAS LOJAS (PART-TIME JOBS PARA GANHAR DRX)
@@ -6927,8 +6931,11 @@ this.scene.add(facadeHeader);
   this.colisoesPro = new ES3DColisoes(this);
     this.colisoesPro.init();
 
-    this.gameShowBuilder = new ES3DGameShowBuilder(this);
+   this.gameShowBuilder = new ES3DGameShowBuilder(this);
     this.gameShowBuilder.init();
+
+    this.multiplayerTour = new ES3DMultiplayerTour(this);
+    this.multiplayerTour.init();
 
     this.iniciarLoopRenderizacao();
   }
@@ -7446,8 +7453,9 @@ if (this.torreAtual) {
       this.atualizarAnimais(delta);
       this.atualizarAvioes(delta);
       this.atualizarMusico();
-                this.colisoesPro?.update(delta);
+         this.colisoesPro?.update(delta);
                 this.gameShowBuilder?.update(delta);
+                this.multiplayerTour?.update(delta, estaAndando);
                 this.ambientePro?.update(delta, this.modoInterior);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
@@ -7479,11 +7487,12 @@ if (this.torreAtual) {
         if (perto) this.nearbyTargets.push({ type: 'npc', id: npc.id, name: npc.name, space: npc.space, dist: d, ref: npc });
       });
 
-      this.otherPlayers3D.forEach((op) => {
-        const isStreet = !this.modoInterior;
-        const opIsStreet = !op.spaceId || op.spaceId === 'street';
+    this.otherPlayers3D.forEach((op) => {
+        const isStreet = !this.modoInterior && !this.torreAtual;
+        const opIsStreet = (!op.spaceId || op.spaceId === 'street') && !op.torreAtual;
         const sameBuilding = this.modoInterior && op.spaceId === this.predioAtual;
-        const naMesmaZona = isStreet ? opIsStreet : sameBuilding;
+        const sameTower = Boolean(this.torreAtual && op.torreAtual === this.torreAtual);
+        const naMesmaZona = this.torreAtual ? sameTower : (isStreet ? opIsStreet : sameBuilding);
 
         op.mesh.visible = naMesmaZona;
         if (op.labelEl) op.labelEl.style.display = naMesmaZona ? 'flex' : 'none';
@@ -7492,6 +7501,7 @@ if (this.torreAtual) {
         const dz = op.targetZ - op.mesh.position.z;
         const movendoOp = Math.hypot(dx, dz) > 0.05;
         op.mesh.position.x += dx * 0.15;
+        op.mesh.position.y += ((op.targetY || 0) - op.mesh.position.y) * 0.2;
         op.mesh.position.z += dz * 0.15;
         op.mesh.rotation.y = op.rotY || 0;
         this.animarPassosBoneco(op.mesh, movendoOp, delta);
@@ -7944,6 +7954,11 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.gameShowBuilder?.alternarModoConstrutor();
     });
 
+ document.getElementById('es-city-tour-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.multiplayerTour?.alternarPainelProfessor();
+    });
+
  document.getElementById('es-city-quest-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.interacoesPro?.abrirModalDailyQuests();
@@ -8120,6 +8135,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       credentials: 'include',
       body: JSON.stringify({
         userId: this.localPlayer.userId,
+        escolaId: window.Workspace?.usuario?.escolaId || 'DEFAULT',
         nome: this.localPlayer.nome,
         avatar: this.localPlayer.avatar,
         role: this.localPlayer.role,
@@ -8130,19 +8146,31 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
         equippedVehicle: this.currentVehicle || null,
         houseStage: this.houseStage || 1,
         x: Math.round(this.localPlayer.x * 100) / 100,
+        y: Math.round((this.localPlayer.y || 0) * 100) / 100,
         z: Math.round(this.localPlayer.z * 100) / 100,
         rotY: Math.round(this.localPlayer.rotY * 100) / 100,
-        spaceId: this.currentZoneId
+        spaceId: this.currentZoneId,
+        torreAtual: this.torreAtual || null,
+        andarTorreAtual: this.andarTorreAtual || 1
       })
     }).then(r => r.json()).then(data => {
-      if (data && Array.isArray(data.players)) this.sincronizarListaJogadoresRemotos(data.players);
+      if (data && Array.isArray(data.players)) {
+        this.sincronizarListaJogadoresRemotos(data.players, true);
+      }
+      if (data && data.activeTour !== undefined) {
+        this.multiplayerTour?.sincronizarEstadoTourInicial(data.activeTour);
+      }
     }).catch(() => {});
   }
 
-  sincronizarListaJogadoresRemotos(lista) {
+  sincronizarListaJogadoresRemotos(lista, listaCompleta = false) {
     if (!this.active || !this.scene || !this.localPlayer) return;
+    const idsAtivos = new Set();
+
     lista.forEach(pData => {
       if (!pData || !pData.userId || pData.userId === this.localPlayer.userId) return;
+      idsAtivos.add(pData.userId);
+
       let op = this.otherPlayers3D.get(pData.userId);
       const nomeCurto = this.formatarNomeCompleto(pData.nome || 'Student');
       const isFem = typeof pData.isFemale === 'boolean'
@@ -8154,7 +8182,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       if (!op) {
         const mesh = this.criarBonecoHumano3D(corCamisa, 0x0f172a, 0xfde68a, isFem);
         if (mesh.userData?.matSapato) mesh.userData.matSapato.color.setHex(corSapato);
-        mesh.position.set(pData.x || 0, 0, pData.z || 0);
+        mesh.position.set(pData.x || 0, pData.y || 0, pData.z || 0);
         this.scene.add(mesh);
         const labelEl = this.criarEtiquetaHTML(nomeCurto, null, '#38bdf8');
         op = {
@@ -8164,19 +8192,25 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
           isFemale: isFem,
           shirtColor: corCamisa,
           shoeColor: corSapato,
+          petType: pData.petType || null,
+          equippedVehicle: pData.equippedVehicle || null,
           spaceId: pData.spaceId || 'street',
+          torreAtual: pData.torreAtual || null,
           mesh,
           labelEl,
           targetX: pData.x || 0,
+          targetY: Number(pData.y) || 0,
           targetZ: pData.z || 0,
           rotY: pData.rotY || 0
         };
         this.otherPlayers3D.set(pData.userId, op);
       } else {
         op.targetX = Number(pData.x) || 0;
+        op.targetY = Number(pData.y) || 0;
         op.targetZ = Number(pData.z) || 0;
         op.rotY = Number(pData.rotY) || 0;
         op.spaceId = pData.spaceId || 'street';
+        op.torreAtual = pData.torreAtual || null;
 
         if (op.isFemale !== isFem) {
           this.scene.remove(op.mesh);
@@ -8197,7 +8231,21 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
           }
         }
       }
+
+      this.multiplayerTour?.sincronizarJogadorRemoto(op, pData);
     });
+
+    // Remove colegas que desconectaram por timeout (evita avatares/pets fantasmas)
+    if (listaCompleta) {
+      this.otherPlayers3D.forEach((op, uid) => {
+        if (!idsAtivos.has(uid)) {
+          this.scene.remove(op.mesh);
+          if (op.labelEl) op.labelEl.remove();
+          this.multiplayerTour?.removerJogadorRemoto(uid);
+          this.otherPlayers3D.delete(uid);
+        }
+      });
+    }
   }
 
  iniciarMultiplayerRealtime() {
@@ -8238,6 +8286,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
                 if (rem.labelEl) rem.labelEl.remove();
                 this.otherPlayers3D.delete(data.userId);
               }
+              this.multiplayerTour?.removerJogadorRemoto(data.userId);
+            }
+            if (data.type === 'ES_WORLD_TOUR') {
+              this.multiplayerTour?.aoReceberEventoTour(data);
             }
             if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
               const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
@@ -8350,7 +8402,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.colisoesPro.dispose();
       this.colisoesPro = null;
     }
-
+ if (this.multiplayerTour) {
+      this.multiplayerTour.dispose();
+      this.multiplayerTour = null;
+    } 
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {
