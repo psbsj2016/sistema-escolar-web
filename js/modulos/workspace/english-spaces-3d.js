@@ -7838,7 +7838,8 @@ const elevadorDisponivel =
 
     this._onKeyDown = (e) => {
       this.garantirAudioAtivo();
-      if (['es-city-chat-input', 'es-sticky-text', 'job-answer'].includes(document.activeElement?.id)) return;
+      const activeTag = document.activeElement?.tagName;
+      if (activeTag === 'INPUT' || activeTag === 'TEXTAREA') return;
       this.keys[e.code] = true;
       this.keys[e.key] = true;
 // 🏢 Interação com torres residenciais (tecla E)
