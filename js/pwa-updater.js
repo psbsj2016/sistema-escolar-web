@@ -1,4 +1,4 @@
-// js/pwa-updater.js - Motor de Atualização Forçada Universal com Blindagem Absoluta para Aulas Ao Vivo
+// js/pwa-updater.js - Motor de Atualização Forçada Universal com Blindagem de Lives + Continuidade Instantânea na Cidade 3D
 import { registerSW } from 'virtual:pwa-register';
 
 const CHAVE_VERSAO_LOCAL = 'ptt_versao_build_instalada';
@@ -6,11 +6,16 @@ const CHAVE_TENTATIVA_RELOAD = 'ptt_reload_forcado_versao';
 const CHAVE_LOCK_LIVE = 'ws_live_em_andamento_lock';
 const VERSAO_DESTE_BUNDLE = typeof __APP_BUILD_VERSION__ !== 'undefined' ? String(__APP_BUILD_VERSION__) : null;
 
+// ⚙️ PARÂMETROS AJUSTÁVEIS DE DETECÇÃO EM TEMPO REAL
+const INTERVALO_CHECAGEM_CIDADE_3D_MS = 10000; // Verifica atualizações a cada 10s dentro da Cidade 3D
+const INTERVALO_CHECAGEM_NORMAL_MS = 25000;    // Verifica a cada 25s nas demais telas
+
 let swRegistrationGlobal = null;
 let versaoRemotaDetetada = null;
 let atualizacaoEmCurso = false;
 let atualizacaoAguardandoFimDeAula = false;
 let sinalLiveRecebidoDoIframe = false;
+let ultimaVerificacaoRedeMs = 0;
 
 // 1. Grava a versão deste bundle JS caso ainda não exista no aparelho
 if (VERSAO_DESTE_BUNDLE) {
@@ -18,6 +23,10 @@ if (VERSAO_DESTE_BUNDLE) {
     if (!salva) {
         localStorage.setItem(CHAVE_VERSAO_LOCAL, VERSAO_DESTE_BUNDLE);
     }
+}
+
+function estaNaCidade3D() {
+    return Boolean(window.Workspace?.EnglishSpaces3D?.active);
 }
 
 // 🛡️ DETETOR BLINDADO DE AULA AO VIVO OU PROVA (Nunca expulsa professor nem aluno!)
@@ -40,17 +49,9 @@ function utilizadorEmAtividadeCriticaAoVivo() {
             return false;
         }
 
-        // 2a. Se o modal estiver minimizado em PiP navegando pelo WorkSpace, há uma live ativa!
-        if (modalVideo.dataset.minimizado === 'true') {
-            return true;
-        }
+        if (modalVideo.dataset.minimizado === 'true') return true;
+        if (sinalLiveRecebidoDoIframe) return true;
 
-        // 2b. Se o iframe reportou recentemente via postMessage que há live/portaria/gravação ativa
-        if (sinalLiveRecebidoDoIframe) {
-            return true;
-        }
-
-        // 2c. Verifica o carimbo recente em sessionStorage (renovado a cada 2s durante a live)
         const lockRaw = sessionStorage.getItem(CHAVE_LOCK_LIVE);
         if (lockRaw) {
             const lockData = JSON.parse(lockRaw);
@@ -59,7 +60,6 @@ function utilizadorEmAtividadeCriticaAoVivo() {
             }
         }
 
-        // 2d. Inspeção direta dentro do iframe (tela cheia, PiP interno, PiP externo, Estúdio, WebRTC ou Gravação)
         if (iframeVideo && iframeVideo.contentWindow) {
             const win = iframeVideo.contentWindow;
             const body = win.document?.body;
@@ -89,7 +89,6 @@ window.addEventListener('message', (ev) => {
 
     if (d.type === 'LIVE_PROTECAO_ATUALIZACAO') {
         sinalLiveRecebidoDoIframe = Boolean(d.ativa);
-        // Assim que a Live terminar ou o aluno sair da chamada, aplica a atualização que ficou guardada!
         if (!sinalLiveRecebidoDoIframe && atualizacaoAguardandoFimDeAula && !atualizacaoEmCurso) {
             setTimeout(() => {
                 if (!utilizadorEmAtividadeCriticaAoVivo() && atualizacaoAguardandoFimDeAula) {
@@ -101,14 +100,21 @@ window.addEventListener('message', (ev) => {
     }
 });
 
-// 💾 Salva qualquer texto que o utilizador estivesse a digitar antes de recarregar
+// 💾 Salva rascunhos de texto + posição exata do English Spaces (2D e Cidade 3D) antes do reload
 function salvarRascunhosAntesDeAtualizar() {
     try {
-        if (window.Workspace && window.Workspace.Rascunho && typeof window.Workspace.Rascunho.salvarAoSair === 'function') {
+        if (window.Workspace?.Rascunho?.salvarAoSair) {
             window.Workspace.Rascunho.salvarAoSair();
         }
-        if (window.App && typeof window.App.salvarRascunhoModal === 'function') {
+        if (window.App?.salvarRascunhoModal) {
             window.App.salvarRascunhoModal();
+        }
+        if (window.Workspace?.EnglishSpaces?.salvarEstadoSessao) {
+            window.Workspace.EnglishSpaces.salvarEstadoSessao();
+        }
+        if (window.Workspace?.EnglishSpaces3D?.active) {
+            window.Workspace.EnglishSpaces3D.salvarEstadoSessao3D?.();
+            sessionStorage.setItem('es3d_atualizado_agora', '1');
         }
     } catch (e) {}
 }
@@ -118,7 +124,6 @@ if ('serviceWorker' in navigator) {
     navigator.serviceWorker.addEventListener('controllerchange', () => {
         if (utilizadorEmAtividadeCriticaAoVivo()) {
             atualizacaoAguardandoFimDeAula = true;
-            console.log("🛡️ Atualização segurada em segundo plano porque há uma Aula Ao Vivo ativa.");
             return;
         }
         if (atualizacaoEmCurso) {
@@ -156,11 +161,11 @@ const updateSW = registerSW({
     }
 });
 
-// 🔍 4. DETETOR UNIVERSAL POR REDE (Funciona em Chrome, Edge, Firefox, Safari, Opera Mini e PWA Instalado)
+// 🔍 4. DETETOR UNIVERSAL POR REDE (Funciona em Chrome, Edge, Firefox, Safari e PWA Instalado)
 async function verificarVersaoNoServidor() {
     if (atualizacaoEmCurso) return;
+    ultimaVerificacaoRedeMs = Date.now();
 
-    // Se havia atualização guardada e a aula ao vivo já acabou, aplica agora!
     if (atualizacaoAguardandoFimDeAula && !utilizadorEmAtividadeCriticaAoVivo()) {
         atualizacaoAguardandoFimDeAula = false;
         dispararAtualizacaoForcadaImediata();
@@ -204,7 +209,7 @@ async function verificarVersaoNoServidor() {
         const desatualizadoPeloBundle = VERSAO_DESTE_BUNDLE && (versaoServidor !== String(VERSAO_DESTE_BUNDLE).trim());
         const desatualizadoPeloStorage = versaoSalvaLocal && (versaoServidor !== String(versaoSalvaLocal).trim());
 
-       if (desatualizadoPeloBundle || desatualizadoPeloStorage) {
+        if (desatualizadoPeloBundle || desatualizadoPeloStorage) {
             const tentativaRaw = sessionStorage.getItem(CHAVE_TENTATIVA_RELOAD) || '';
             const [verTentada, qtdStr] = tentativaRaw.split('|');
             const qtdTentativas = verTentada === versaoServidor ? (parseInt(qtdStr, 10) || 0) : 0;
@@ -221,7 +226,7 @@ async function verificarVersaoNoServidor() {
     } catch (e) {}
 }
 
-// ⚡ Decide se aplica imediatamente ou segura silenciosamente até a Live acabar
+// ⚡ Aplica imediatamente (salva snapshot da Cidade 3D para voltar no exato ponto após o piscar!)
 function dispararAtualizacaoForcadaImediata() {
     if (atualizacaoEmCurso) return;
     if (utilizadorEmAtividadeCriticaAoVivo()) {
@@ -229,13 +234,17 @@ function dispararAtualizacaoForcadaImediata() {
         console.log("🛡️ Nova versão detetada — aguardando o término da Aula Ao Vivo para aplicar sem expulsar ninguém.");
         return;
     }
+
+    salvarRascunhosAntesDeAtualizar();
     mostrarBannerAtualizacaoAutomatica();
+
+    const atraso = estaNaCidade3D() ? 450 : 850;
     setTimeout(() => {
         executarAtualizacaoProfunda();
-    }, 900);
+    }, atraso);
 }
 
-// 📡 5. GATILHOS DE VERIFICAÇÃO EM TEMPO REAL
+// 📡 5. GATILHOS DE VERIFICAÇÃO EM TEMPO REAL (10s dentro da Cidade 3D | 25s nas demais telas)
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', () => setTimeout(verificarVersaoNoServidor, 200));
 } else {
@@ -250,12 +259,14 @@ window.addEventListener('focus', () => verificarVersaoNoServidor());
 window.addEventListener('online', () => verificarVersaoNoServidor());
 
 setInterval(() => {
-    if (document.visibilityState === 'visible') {
+    if (document.visibilityState !== 'visible') return;
+    const intervaloAlvo = estaNaCidade3D() ? INTERVALO_CHECAGEM_CIDADE_3D_MS : INTERVALO_CHECAGEM_NORMAL_MS;
+    if (Date.now() - ultimaVerificacaoRedeMs >= intervaloAlvo) {
         verificarVersaoNoServidor();
     }
-}, 25000);
+}, 5000);
 
-// 🔄 Recarregamento limpo com última barreira anti-expulsão
+// 🔄 Recarregamento limpo com última barreira anti-expulsão e snapshot final da posição 3D
 async function forcarRecarregamentoLimpo() {
     if (utilizadorEmAtividadeCriticaAoVivo()) {
         atualizacaoEmCurso = false;
@@ -264,6 +275,9 @@ async function forcarRecarregamentoLimpo() {
         if (banner) banner.remove();
         return;
     }
+
+    // Grava o snapshot uma última vez no milissegundo exato antes de recarregar
+    salvarRascunhosAntesDeAtualizar();
 
     try {
         await fetch(window.location.href, {
@@ -288,7 +302,6 @@ async function forcarRecarregamentoLimpo() {
 async function executarAtualizacaoProfunda() {
     if (atualizacaoEmCurso) return;
 
-    // 🛡️ Segunda barreira de segurança antes de limpar caches ou recarregar
     if (utilizadorEmAtividadeCriticaAoVivo()) {
         atualizacaoAguardandoFimDeAula = true;
         const banner = document.getElementById('global-pwa-update-prompt');
@@ -307,7 +320,6 @@ async function executarAtualizacaoProfunda() {
         localStorage.setItem(CHAVE_VERSAO_LOCAL, versaoAlvo);
         sessionStorage.setItem(CHAVE_TENTATIVA_RELOAD, `${versaoAlvo}|${proxTentativa}`);
 
-        // 1. Manda o Service Worker em espera assumir agora que a aula não está ativa
         if (swRegistrationGlobal && swRegistrationGlobal.waiting) {
             swRegistrationGlobal.waiting.postMessage({ type: 'SKIP_WAITING' });
         }
@@ -316,13 +328,11 @@ async function executarAtualizacaoProfunda() {
             updateSW(true);
         } catch (e) {}
 
-        // 2. Apaga caches antigas para garantir 100% os ficheiros novos
         if ('caches' in window) {
             const chavesCache = await caches.keys();
             await Promise.all(chavesCache.map(chave => caches.delete(chave)));
         }
 
-       // 3. Remove o Service Worker antigo para que o reload puxe 100% os ficheiros novos (o novo SW re-registra ao abrir!)
         if ('serviceWorker' in navigator) {
             const regs = await navigator.serviceWorker.getRegistrations();
             for (const reg of regs) {
@@ -338,7 +348,7 @@ async function executarAtualizacaoProfunda() {
 
     setTimeout(() => {
         forcarRecarregamentoLimpo();
-    }, 350);
+    }, 260);
 }
 
 window.atualizarApp = executarAtualizacaoProfunda;
@@ -347,6 +357,7 @@ export function mostrarBannerAtualizacaoAutomatica() {
     if (utilizadorEmAtividadeCriticaAoVivo()) return;
     if (document.getElementById('global-pwa-update-prompt')) return;
 
+    const naCidade = estaNaCidade3D();
     const aviso = document.createElement('div');
     aviso.id = 'global-pwa-update-prompt';
     aviso.style.cssText = `
@@ -366,10 +377,12 @@ export function mostrarBannerAtualizacaoAutomatica() {
         font-family: system-ui, -apple-system, sans-serif;
         font-size: 13px;
         font-weight: 700;
-        border: 1px solid #3b82f6;
+        border: 1px solid ${naCidade ? '#8b5cf6' : '#3b82f6'};
         white-space: nowrap;
     `;
-    aviso.innerHTML = `<span>🔄</span> <span>Aplicando nova atualização do sistema...</span>`;
+    aviso.innerHTML = naCidade
+        ? `<span>✨</span> <span>Atualizando Cidade 3D — mantendo sua posição...</span>`
+        : `<span>🔄</span> <span>Aplicando nova atualização do sistema...</span>`;
     document.body.appendChild(aviso);
 }
 

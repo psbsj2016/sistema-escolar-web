@@ -1536,8 +1536,8 @@ class EnglishSpacesManager {
       if (window.DOVRYX) window.DOVRYX.setBalance(this.progressData.xp);
       this.atualizarResumoNoBannerFeed();
 
-      // Atualiza o HUD caso o painel 2D já esteja aberto na tela
-      if (this.container && this.state.view === 'home') {
+      // Atualiza o HUD caso o painel 2D já esteja aberto na tela (nunca sobrescreve a Cidade 3D ativa!)
+      if (this.container && this.state.view === 'home' && !window.Workspace?.EnglishSpaces3D?.active) {
         this.renderHome();
       }
     } catch (e) {}
@@ -1727,14 +1727,112 @@ class EnglishSpacesManager {
     }
   }
 
+  salvarEstadoSessao() {
+    try {
+      const uid = window.Workspace?.usuario?.id ? String(window.Workspace.usuario.id) : null;
+      const viewParaSalvar = this.state.view === 'entering' ? 'space' : (this.state.view || 'home');
+      const payload = {
+        userId: uid,
+        view: viewParaSalvar,
+        spaceId: this.state.currentSpace?.id || null,
+        level: this.state.level || 'B1',
+        role: this.state.role || null,
+        dialogueState: this.state.dialogueState || 'start',
+        immersion: Boolean(this.state.immersion),
+        missionsDone: Array.isArray(this.state.missionsDone) ? this.state.missionsDone : [],
+        searchQuery: this.state.searchQuery || '',
+        categoryFilter: this.state.categoryFilter || 'ALL',
+        updatedAt: Date.now()
+      };
+      localStorage.setItem('ws_english_spaces_estado', JSON.stringify(payload));
+    } catch (e) {}
+  }
+
+  limparEstadoSessao() {
+    try {
+      localStorage.removeItem('ws_english_spaces_estado');
+      localStorage.removeItem('ws_english_spaces_3d_estado');
+    } catch (e) {}
+  }
+
+  restaurarOuAbrirPainel(isInitialLoad = false) {
+    this.container = document.getElementById('english-spaces-root');
+    if (!this.container) return;
+
+    // Se a Cidade 3D já está aberta na tela, não interfere
+    if (window.Workspace?.EnglishSpaces3D?.active) return;
+
+    const uidAtual = window.Workspace?.usuario?.id ? String(window.Workspace.usuario.id) : null;
+
+    // 1. Verifica se o usuário estava DENTRO DA CIDADE 3D antes do F5 ou da atualização automática
+    try {
+      const snap3DRaw = localStorage.getItem('ws_english_spaces_3d_estado');
+      if (snap3DRaw) {
+        const snap3D = JSON.parse(snap3DRaw);
+        const validoTempo = snap3D && (Date.now() - (snap3D.updatedAt || 0) < 4 * 60 * 60 * 1000);
+        const mesmoUsuario = !snap3D?.userId || !uidAtual || String(snap3D.userId) === uidAtual;
+
+        if (snap3D && snap3D.active && validoTempo && mesmoUsuario && window.Workspace?.EnglishSpaces3D) {
+          this.container.innerHTML = `
+            <div style="min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:12px; color:#e2e8f0; text-align:center; font-family:Inter,sans-serif;">
+              <div style="font-size:48px; animation:esPulse 1s infinite;">🏙️</div>
+              <div style="font-size:17px; font-weight:800; color:#fff;">Restaurando Cidade 3D no mesmo ponto...</div>
+              <div style="font-size:12.5px; color:#94a3b8;">Aplicando versão mais recente e sincronizando sua posição</div>
+            </div>
+          `;
+          this.sincronizarProgressoNuvem();
+          window.Workspace.EnglishSpaces3D.abrirCidade3D(
+            this,
+            snap3D.predioAtual || snap3D.initialSpaceId || 'coffee',
+            snap3D
+          );
+          return;
+        }
+        localStorage.removeItem('ws_english_spaces_3d_estado');
+      }
+    } catch (e) {}
+
+    // 2. Caso contrário, restaura a tela 2D (cenário específico ou Home) sem nunca deixar o card preto
+    let restaurou2D = false;
+    if (isInitialLoad) {
+      try {
+        const snap2DRaw = localStorage.getItem('ws_english_spaces_estado');
+        if (snap2DRaw) {
+          const snap2D = JSON.parse(snap2DRaw);
+          const mesmoUsuario = !snap2D?.userId || !uidAtual || String(snap2D.userId) === uidAtual;
+          if (snap2D && mesmoUsuario) {
+            this.state.level = snap2D.level || 'B1';
+            this.state.immersion = typeof snap2D.immersion === 'boolean' ? snap2D.immersion : true;
+            this.state.searchQuery = snap2D.searchQuery || '';
+            this.state.categoryFilter = snap2D.categoryFilter || 'ALL';
+
+            if (snap2D.view === 'space' && snap2D.spaceId && SPACES_REGISTRY[snap2D.spaceId]) {
+              const alvo = SPACES_REGISTRY[snap2D.spaceId];
+              this.state.currentSpace = alvo;
+              this.state.role = snap2D.role || alvo.roles[0];
+              this.state.dialogueState = snap2D.dialogueState || 'start';
+              this.state.missionsDone = Array.isArray(snap2D.missionsDone) ? snap2D.missionsDone : [];
+              this.state.view = 'space';
+              restaurou2D = true;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!restaurou2D) {
+      this.state.view = 'home';
+    }
+    this.render();
+    this.sincronizarProgressoNuvem();
+  }
+
   abrirPainel() {
     if (window.Workspace?.navegarPara) {
       window.Workspace.navegarPara('english_spaces');
+    } else {
+      this.restaurarOuAbrirPainel(false);
     }
-    this.container = document.getElementById('english-spaces-root');
-    this.state.view = 'home';
-    this.render();
-    this.sincronizarProgressoNuvem();
   }
 
   navigate(view, spaceId = null) {
@@ -1775,9 +1873,11 @@ class EnglishSpacesManager {
   }
 
   render() {
+    if (window.Workspace?.EnglishSpaces3D?.active) return;
     this.container = document.getElementById('english-spaces-root');
     if (!this.container) return;
 
+    this.salvarEstadoSessao();
     if (this.state.view === 'home') this.renderHome();
     else if (this.state.view === 'entering') this.renderEntering();
     else if (this.state.view === 'space') this.renderSpace();

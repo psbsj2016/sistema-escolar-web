@@ -779,6 +779,14 @@ Object.assign(Workspace, {
         if (Workspace.Ingles && typeof Workspace.Ingles.fecharJogo === 'function') {
             Workspace.Ingles.fecharJogo();
         }
+        if (!isInitialLoad && tela !== 'english_spaces') {
+            if (Workspace.EnglishSpaces3D && Workspace.EnglishSpaces3D.active) {
+                Workspace.EnglishSpaces3D.fecharCidade3D(false);
+            }
+            if (Workspace.EnglishSpaces && typeof Workspace.EnglishSpaces.limparEstadoSessao === 'function') {
+                Workspace.EnglishSpaces.limparEstadoSessao();
+            }
+        }
         if (!isInitialLoad && typeof Workspace.fecharPlataformaVideos === 'function') {
             const modalVid = document.getElementById('ws-modal-video-aulas');
             const winVid = document.getElementById('iframeVideoAulas')?.contentWindow;
@@ -918,6 +926,9 @@ Object.assign(Workspace, {
         if (tela === 'ingles' && Workspace.Ingles) {
             Workspace.Ingles.loadDados().then(() => Workspace.Ingles.renderizarVisualizacao());
         } 
+        else if (tela === 'english_spaces' && Workspace.EnglishSpaces) {
+            Workspace.EnglishSpaces.restaurarOuAbrirPainel(isInitialLoad);
+        }
         else if (tela === 'materiais' && Workspace.Materiais) {
             Workspace.Materiais.carregarMateriais().then(() => {
                 if (Workspace.usuario.tipo === 'Aluno') Workspace.Materiais.renderizarAluno();
@@ -1906,8 +1917,10 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
             'ws_avaliacoes_prof_subtela',
             'ws_bau_aba_ativa',
             'ws_aba_encontros_arquivo',
-            'ws_estado_profundo',
-            'ws_tarefas_prof_subtela'
+           'ws_estado_profundo',
+            'ws_tarefas_prof_subtela',
+            'ws_english_spaces_estado',
+            'ws_english_spaces_3d_estado'
         ];
         chavesDeNavegacao.forEach(chave => localStorage.removeItem(chave));
         
@@ -2539,6 +2552,7 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
             { id: 'materiais', titulo: 'Estante de Materiais', icone: '📚', tela: 'materiais' },
             { id: 'bau', titulo: 'Baú das Memórias (Lembretes)', icone: '🧰', tela: 'bau' },
             { id: 'ingles', titulo: 'Baú do Inglês (Games)', icone: '🏴‍☠️', tela: 'ingles' },
+            { id: 'english_spaces', titulo: 'English Spaces & Cidade 3D', icone: '🌎', tela: 'english_spaces' },
             { id: 'configuracoes', titulo: 'Configurações', icone: '⚙️', tela: 'configuracoes' }
         ],
 

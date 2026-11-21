@@ -361,11 +361,12 @@ garantirAudioAtivo() {
           const oldMesh = this.localPlayer.mesh;
           const newMesh = this.criarBonecoHumano3D(corCamisaSalva, 0x1e1b4b, 0xfde68a, femSalvo);
           if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoSalvo);
-          newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
+          newMesh.position.set(this.localPlayer.x, this.localPlayer.y || 0, this.localPlayer.z);
           newMesh.rotation.y = this.localPlayer.rotY;
           this.scene.remove(oldMesh);
           this.scene.add(newMesh);
           this.localPlayer.mesh = newMesh;
+          this.cameraUI?.sincronizarVisibilidadeAvatar();
 
           if (cfg.petType === 'pet_dog' || cfg.petType === 'pet_cat') {
             this.aplicarItemCompradoNoAvatar({ tipo: cfg.petType });
@@ -381,8 +382,140 @@ garantirAudioAtivo() {
     } catch (e) {}
   }
 
-  async abrirCidade3D(parentManager, initialSpaceId = 'coffee') {
+  salvarEstadoSessao3D() {
+    if (!this.active || !this.localPlayer) return;
+    try {
+      const snap = {
+        active: true,
+        userId: String(this.localPlayer.userId || ''),
+        initialSpaceId: this._initialSpaceId || 'coffee',
+        x: Math.round(this.localPlayer.x * 100) / 100,
+        y: Math.round((this.localPlayer.y || 0) * 100) / 100,
+        z: Math.round(this.localPlayer.z * 100) / 100,
+        rotY: Math.round((this.localPlayer.rotY || 0) * 100) / 100,
+        cameraYaw: Math.round((this.cameraYaw || 0) * 1000) / 1000,
+        cameraPitch: Math.round((this.cameraPitch || 0.15) * 1000) / 1000,
+        modoInterior: Boolean(this.modoInterior),
+        predioAtual: this.predioAtual || null,
+        torreAtual: this.torreAtual || null,
+        andarTorreAtual: this.andarTorreAtual || 0,
+        posicaoExteriorTorre: this.posicaoExteriorTorre || null,
+        currentVehicle: this.currentVehicle || null,
+        firstPerson: Boolean(this.cameraUI?.firstPerson),
+        weatherMode: this.ambientePro?.weatherMode || 'clear',
+        builderActive: Boolean(this.gameShowBuilder?.builderActive),
+        updatedAt: Date.now()
+      };
+      localStorage.setItem('ws_english_spaces_3d_estado', JSON.stringify(snap));
+    } catch (e) {}
+  }
+
+  limparEstadoSessao3D() {
+    try {
+      localStorage.removeItem('ws_english_spaces_3d_estado');
+    } catch (e) {}
+  }
+
+  aplicarEstadoRestaurado3D(snap) {
+    if (!snap || !snap.active || !this.localPlayer) return;
+    if (snap.userId && String(snap.userId) !== String(this.localPlayer.userId)) {
+      this.limparEstadoSessao3D();
+      return;
+    }
+
+    const p = this.localPlayer;
+    if (typeof snap.x === 'number') p.x = Math.max(-75, Math.min(82, snap.x));
+    if (typeof snap.y === 'number') p.y = Math.max(0, snap.y);
+    if (typeof snap.z === 'number') p.z = Math.max(-135, Math.min(70, snap.z));
+    if (typeof snap.rotY === 'number') p.rotY = snap.rotY;
+    p.targetX = null;
+    p.targetZ = null;
+
+    if (typeof snap.cameraYaw === 'number') this.cameraYaw = snap.cameraYaw;
+    if (typeof snap.cameraPitch === 'number') this.cameraPitch = snap.cameraPitch;
+
+    if (p.mesh) {
+      p.mesh.position.set(p.x, p.y || 0, p.z);
+      p.mesh.rotation.y = p.rotY || 0;
+    }
+
+    // 1. Restaura Torre Residencial + Andar + Cabine do Elevador
+    if (snap.torreAtual && this.torresResidenciais?.has(snap.torreAtual)) {
+      const torre = this.torresResidenciais.get(snap.torreAtual);
+      this.torreAtual = torre.id;
+      this.andarTorreAtual = Math.max(1, Math.min(torre.totalAndares, snap.andarTorreAtual || 1));
+      this.posicaoExteriorTorre = snap.posicaoExteriorTorre || { x: torre.x, z: torre.z + torre.profundidade / 2 + 2.2 };
+      this.transicaoVerticalTorre = null;
+
+      this.torresResidenciais.forEach(t => { if (t.grupoInterior) t.grupoInterior.visible = false; });
+      if (this.torresInterioresGroup) this.torresInterioresGroup.visible = true;
+      if (torre.grupoInterior) torre.grupoInterior.visible = true;
+
+      const cabine = torre.grupoInterior?.userData?.elevadorCabine;
+      if (cabine) {
+        cabine.position.y = p.y || 0;
+        cabine.userData.aberturaDesejada = 1;
+      }
+      const badge = document.getElementById('es-city-zone-badge');
+      if (badge) badge.innerHTML = `🏢 ${torre.nome} • Floor ${this.andarTorreAtual}/${torre.totalAndares}`;
+    } else if (snap.modoInterior && snap.predioAtual) {
+      // 2. Restaura Interior da Loja
+      this.entrarModoInterior(snap.predioAtual);
+    }
+
+    // 3. Restaura Veículo montado na rua
+    if (snap.currentVehicle && !this.modoInterior && !this.torreAtual) {
+      this.alternarOuMontarVeiculo(snap.currentVehicle);
+    }
+
+    // 4. Restaura Câmera 1ª Pessoa silenciosamente
+    if (snap.firstPerson && this.cameraUI) {
+      this.cameraUI.firstPerson = true;
+      this.cameraUI.sincronizarVisibilidadeAvatar();
+      const btnCam = document.getElementById('es-city-cam-btn');
+      if (btnCam) btnCam.innerHTML = '👁️ 1st Person';
+    }
+
+    // 5. Restaura Clima silenciosamente
+    if (snap.weatherMode && snap.weatherMode !== 'clear' && this.ambientePro) {
+      this.ambientePro.weatherMode = snap.weatherMode;
+      if (this.ambientePro.weatherPoints) {
+        this.ambientePro.weatherPoints.visible = !this.modoInterior;
+        if (snap.weatherMode === 'rain') {
+          this.ambientePro.weatherPoints.material.color.setHex(0x93c5fd);
+          this.ambientePro.weatherPoints.material.size = 0.19;
+          this.ambientePro.weatherPoints.material.opacity = 0.78;
+        } else if (snap.weatherMode === 'snow') {
+          this.ambientePro.weatherPoints.material.color.setHex(0xffffff);
+          this.ambientePro.weatherPoints.material.size = 0.32;
+          this.ambientePro.weatherPoints.material.opacity = 0.92;
+        }
+      }
+      const btnW = document.getElementById('es-city-weather-btn');
+      if (btnW) btnW.innerHTML = snap.weatherMode === 'rain' ? '🌧️ Rain' : '❄️ Snow';
+    }
+
+    // 6. Reabre painel de decoração se o usuário estava decorando a casa/apartamento
+    if (snap.builderActive && this.gameShowBuilder?.obterZonaDecoravelAtual?.()) {
+      this.gameShowBuilder.alternarModoConstrutor(true);
+    }
+
+    this.cameraUI?.atualizarCamera(0.016);
+    this.enviarMinhaPosicaoServidor();
+
+    if (sessionStorage.getItem('es3d_atualizado_agora') === '1') {
+      sessionStorage.removeItem('es3d_atualizado_agora');
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso('✨ Cidade 3D atualizada em tempo real!', 'success', 3200);
+      }
+    }
+  }
+
+  async abrirCidade3D(parentManager, initialSpaceId = 'coffee', estadoRestaurar = null) {
     this.parentManager = parentManager;
+    this._initialSpaceId = initialSpaceId;
+    this._estadoRestaurarPendente = estadoRestaurar || null;
+    this._lastStateSave = 0;
     const containerRoot = document.getElementById('english-spaces-root');
     if (!containerRoot) return;
 
@@ -2801,12 +2934,12 @@ if (escolhido === 'bicycle') {
     const corSapatoAtual = this.localPlayer.shoeColor || 0x111111;
     const newMesh = this.criarBonecoHumano3D(corCamisaAtual, 0x1e1b4b, 0xfde68a, novoFem);
     if (newMesh.userData?.matSapato) newMesh.userData.matSapato.color.setHex(corSapatoAtual);
-    newMesh.position.set(this.localPlayer.x, 0, this.localPlayer.z);
-    newMesh.rotation.y = this.localPlayer.rotY;
-    this.scene.remove(oldMesh);
-    this.scene.add(newMesh);
-    this.localPlayer.mesh = newMesh;
-    this.cameraUI?.sincronizarVisibilidadeAvatar();
+    newMesh.position.set(this.localPlayer.x, this.localPlayer.y || 0, this.localPlayer.z);
+          newMesh.rotation.y = this.localPlayer.rotY;
+          this.scene.remove(oldMesh);
+          this.scene.add(newMesh);
+          this.localPlayer.mesh = newMesh;
+          this.cameraUI?.sincronizarVisibilidadeAvatar();
 
     await fetch('/api/workspace/english-spaces/progress/customization', {
       method: 'PUT',
@@ -6938,6 +7071,12 @@ this.scene.add(facadeHeader);
     this.multiplayerTour.init();
 
     this.iniciarLoopRenderizacao();
+
+    if (this._estadoRestaurarPendente) {
+      this.aplicarEstadoRestaurado3D(this._estadoRestaurarPendente);
+      this._estadoRestaurarPendente = null;
+    }
+    this.salvarEstadoSessao3D();
   }
 
   criarEtiquetaHTML(nome, role, corBadge, isLocalUser = false) {
@@ -7671,6 +7810,12 @@ const elevadorDisponivel =
         this.lastSyncTime = Date.now();
         this.enviarMinhaPosicaoServidor();
       }
+      
+      const agoraEstado = Date.now();
+               if (agoraEstado - (this._lastStateSave || 0) > 1200) {
+               this._lastStateSave = agoraEstado;
+               this.salvarEstadoSessao3D();
+               }      
 
       const vw = viewport.clientWidth || window.innerWidth;
       const vh = viewport.clientHeight || window.innerHeight;
@@ -7835,6 +7980,8 @@ const elevadorDisponivel =
       this.renderer.setSize(w, h);
     };
     window.addEventListener('resize', this._onResize);
+    this._onBeforeUnload = () => { this.salvarEstadoSessao3D(); };
+          window.addEventListener('beforeunload', this._onBeforeUnload);
 
     this._onKeyDown = (e) => {
       this.garantirAudioAtivo();
@@ -8327,6 +8474,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     this._onVisibilityChange = () => {
       if (!this.active) return;
       if (document.hidden) {
+        this.salvarEstadoSessao3D();
         if (this.sseConnection) {
           try { this.sseConnection.close(); } catch (e) {}
           this.sseConnection = null;
@@ -8339,8 +8487,9 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     document.addEventListener('visibilitychange', this._onVisibilityChange);
   }
 
- fecharCidade3D() {
+ fecharCidade3D(voltarParaHome2D = true) {
     this.active = false;
+    this.limparEstadoSessao3D();
     this.modoInterior = false;
     this.predioAtual = null;
     this.torreAtual = null;
@@ -8371,6 +8520,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       document.removeEventListener('visibilitychange', this._onVisibilityChange);
     }
     window.removeEventListener('resize', this._onResize);
+    if (this._onBeforeUnload) window.removeEventListener('beforeunload', this._onBeforeUnload);
     window.removeEventListener('keydown', this._onKeyDown);
     window.removeEventListener('keyup', this._onKeyUp);
 
@@ -8454,7 +8604,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     this.interiorGroups.clear();
     this.buildingMeshes.clear();
 
-    if (this.parentManager) this.parentManager.navigate('home');
+    if (voltarParaHome2D && this.parentManager) this.parentManager.navigate('home');
   }
 }
 
