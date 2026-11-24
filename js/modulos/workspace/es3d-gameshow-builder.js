@@ -1,5 +1,5 @@
 // js/modulos/workspace/es3d-gameshow-builder.js
-// 🎤 Etapa 4 Pro: Game Show Ao Vivo + 12 Móveis Realistas, Inteligência de Canto/Parede, Duplo Clique e Depósito Guardado
+// 🎤🛋️ Game Show Ao Vivo + Móveis Realistas com Duplo Clique Aceso, Arrastar Segurando (Mouse/Dedo), Spawn na Visão e Depósito Guardado
 
 // ⚙️ PARÂMETROS AJUSTÁVEIS
 const GAMESHOW_CONFIG = {
@@ -8,9 +8,8 @@ const GAMESHOW_CONFIG = {
   TEMPO_PERGUNTA_SEG: 12,       // Tempo (segundos) para correr até a plataforma certa
   PREMIO_ACERTO_DRX: 50,        // DRX por resposta correta no Game Show
   BONUS_SEQUENCIA_DRX: 25,      // Bônus extra a cada 3 acertos seguidos
-  PASSO_NUDGE_MOVEL: 0.35,      // Distância (metros) que os botões ↑↓←→ movem um móvel
   DIST_SNAP_PAREDE: 0.72,       // Distância até a parede para ativar orientação inteligente
-  DUPLO_CLIQUE_MS: 420          // Intervalo máximo (ms) entre 2 cliques para selecionar o móvel
+  DUPLO_CLIQUE_MS: 380          // Intervalo máximo (ms) entre 2 cliques rápidos para acender e liberar arraste
 };
 
 // 🧠 Banco de 15 Perguntas de Inglês para o Game Show Ao Vivo
@@ -75,10 +74,15 @@ export class ES3DGameShowBuilder {
     this.selectedUid = null;
     this.selectionRing = null;
     this.panelEl = null;
+    this.dragBarEl = null;
 
-    // Controle de Duplo Clique
+    // Controle de Duplo Clique + Arraste Direto (Mouse/Dedo)
     this._lastClickUid = null;
     this._lastClickTime = 0;
+    this.isDraggingFurniture = false;
+    this._dragOffsetX = 0;
+    this._dragOffsetZ = 0;
+    this._glowPhase = 0;
   }
 
   init() {
@@ -92,10 +96,11 @@ export class ES3DGameShowBuilder {
     this.carregarMoveisSalvos();
     this.carregarDepositoSalvo();
     this.criarPainelConstrutorUI();
+    this.criarBarraFlutuanteMovelAcesoUI();
   }
 
   // ============================================================================
-  // 1. 🎤 GAME SHOW AO VIVO NA PRAÇA CENTRAL (TELÃO 3D + PLATAFORMAS A, B, C)
+  // 1. 🎤 GAME SHOW AO VIVO NA PRAÇA CENTRAL
   // ============================================================================
   criarArenaGameShow() {
     const THREE = this.THREE;
@@ -192,7 +197,7 @@ export class ES3DGameShowBuilder {
     this.desenharTelaoIdle();
   }
 
-  desenharTelaoIdle(msgTopo = '🎤 LIVE ENGLISH GAME SHOW', sub = 'Click this screen or the 🎤 Game Show button to start!') {
+  desenharTelaoIdle(msgTopo = '🎤 LIVE ENGLISH GAME SHOW', sub = 'Click this screen or open 📱 Phone → Game Show to start!') {
     const ctx = this.gsScreenCtx;
     if (!ctx) return;
     ctx.fillStyle = '#090d1e';
@@ -357,7 +362,6 @@ export class ES3DGameShowBuilder {
     if (!zoneKey) return null;
 
     if (zoneKey === 'lot_0') {
-      // Vão estritamente INTERNO da Casa (paredes internas em x: -30.20..-23.80, z: 30.80..37.20)
       return {
         zoneKey: 'lot_0',
         label: '🏡 Inside My House',
@@ -390,9 +394,7 @@ export class ES3DGameShowBuilder {
           minZ: torre.z - torre.profundidade / 2 + 0.50,
           maxZ: torre.z + torre.profundidade / 2 - 0.50,
           obstacles: [
-            // Poço do elevador + área frontal da porta do elevador
             { minX: torre.x - 1.15, maxX: torre.x + 1.15, minZ: torre.z - 0.88, maxZ: torre.z + 1.35 },
-            // Lance de escadas
             { minX: torre.x + 1.15, maxX: torre.x + 5.05, minZ: torre.z - 0.75, maxZ: torre.z + 0.75 }
           ]
         };
@@ -413,7 +415,6 @@ export class ES3DGameShowBuilder {
 
     if (!w.modoInterior) {
       const p = w.localPlayer;
-      // Permite abrir/usar o Decorate quando estiver dentro ou na entrada do seu lote
       if (p.x >= -33.5 && p.x <= -20.5 && p.z >= 27.5 && p.z <= 40.5) {
         return this.obterZonaPorChave('lot_0');
       }
@@ -440,7 +441,6 @@ export class ES3DGameShowBuilder {
     this.world.sairDeQualquerAmbienteFechado?.();
     if (this.world.currentVehicle) this.world.desmontarVeiculo?.();
 
-    // Posiciona o avatar DENTRO da casa, logo após a porta, olhando para o centro da sala (+Z)
     p.x = -27.0;
     p.z = 32.35;
     p.y = 0;
@@ -451,7 +451,6 @@ export class ES3DGameShowBuilder {
     this.world.enviarMinhaPosicaoServidor?.();
   }
 
-  // 🧠 Inteligência de parede e de canto para móveis de chão
   calcularOrientacaoInteligente(zona, x, z, cfg, rotYAtual = 0) {
     if (!zona || !cfg || cfg.cornerMode === 'none') return rotYAtual;
 
@@ -468,7 +467,6 @@ export class ES3DGameShowBuilder {
     let nearNorth = dNorth <= raioBase + limiar;
     let nearSouth = dSouth <= raioBase + limiar;
 
-    // Se o cômodo for estreito, escolhe sempre a parede mais próxima em cada eixo
     if (nearWest && nearEast) {
       if (dWest <= dEast) nearEast = false; else nearWest = false;
     }
@@ -478,17 +476,14 @@ export class ES3DGameShowBuilder {
 
     const emCanto = (nearWest || nearEast) && (nearNorth || nearSouth);
 
-    // 1. MÓVEL EM CANTO (2 paredes perpendiculares)
     if (emCanto) {
       if (cfg.cornerMode === 'diagonal') {
-        if (nearWest && nearNorth) return Math.PI / 4;          // Olha para SE (+X, +Z)
-        if (nearEast && nearNorth) return -Math.PI / 4;         // Olha para SW (-X, +Z)
-        if (nearWest && nearSouth) return (3 * Math.PI) / 4;    // Olha para NE (+X, -Z)
-        if (nearEast && nearSouth) return -(3 * Math.PI) / 4;   // Olha para NW (-X, -Z)
+        if (nearWest && nearNorth) return Math.PI / 4;
+        if (nearEast && nearNorth) return -Math.PI / 4;
+        if (nearWest && nearSouth) return (3 * Math.PI) / 4;
+        if (nearEast && nearSouth) return -(3 * Math.PI) / 4;
       }
 
-      // Móveis retangulares de parede (Sofá, Cama, Estante, Geladeira, Escrivaninha)
-      // Evita encostar as costas na parede da porta se outra parede do canto estiver disponível
       const distX = nearWest ? dWest : dEast;
       const distZ = nearNorth ? dNorth : dSouth;
       const pertoDaPortaNorte = Boolean(zona.isHouse && nearNorth && Math.abs(x - zona.doorX) < 1.8);
@@ -499,11 +494,10 @@ export class ES3DGameShowBuilder {
       return nearNorth ? 0 : Math.PI;
     }
 
-    // 2. ENCOSTADO EM APENAS 1 PAREDE (vira a frente para o centro do cômodo)
-    if (nearNorth) return 0;             // Costas na parede Norte -> frente para +Z
-    if (nearSouth) return Math.PI;       // Costas na parede Sul   -> frente para -Z
-    if (nearWest)  return Math.PI / 2;   // Costas na parede Oeste -> frente para +X
-    if (nearEast)  return -Math.PI / 2;  // Costas na parede Leste -> frente para -X
+    if (nearNorth) return 0;
+    if (nearSouth) return Math.PI;
+    if (nearWest)  return Math.PI / 2;
+    if (nearEast)  return -Math.PI / 2;
 
     return rotYAtual;
   }
@@ -523,7 +517,7 @@ export class ES3DGameShowBuilder {
   }
 
   // ============================================================================
-  // 3. 🎨 MODELOS 3D REALISTAS DOS 12 MÓVEIS (TODOS COM FRENTE EM +Z E COSTAS EM -Z)
+  // 3. 🎨 MODELOS 3D REALISTAS DOS 12 MÓVEIS + EFEITO ACESO AO SELECIONAR
   // ============================================================================
   criarTexturaTelaTV() {
     const c = document.createElement('canvas');
@@ -536,7 +530,6 @@ export class ES3DGameShowBuilder {
     ctx.fillStyle = grad;
     ctx.fillRect(0, 0, 512, 288);
 
-    // Barra superior de streaming
     ctx.fillStyle = 'rgba(255,255,255,0.08)';
     ctx.fillRect(0, 0, 512, 46);
     ctx.fillStyle = '#38bdf8';
@@ -546,7 +539,6 @@ export class ES3DGameShowBuilder {
     ctx.font = 'bold 16px Inter, sans-serif';
     ctx.fillText('4K UHD', 425, 30);
 
-    // Banner central + mini cards
     ctx.fillStyle = '#ffffff';
     ctx.font = '900 30px Inter, sans-serif';
     ctx.fillText('LONDON STORIES', 26, 118);
@@ -603,7 +595,6 @@ export class ES3DGameShowBuilder {
     ctx.lineWidth = 6;
     ctx.strokeRect(42, 42, 428, 300);
 
-    // Padrão geométrico moderno (losangos suaves)
     ctx.strokeStyle = 'rgba(51, 65, 85, 0.28)';
     ctx.lineWidth = 4;
     for (let x = 90; x <= 422; x += 66) {
@@ -622,7 +613,7 @@ export class ES3DGameShowBuilder {
 
   criarAnelSelecaoMovel() {
     const THREE = this.THREE;
-    const ringGeo = new THREE.RingGeometry(0.68, 0.88, 32);
+    const ringGeo = new THREE.RingGeometry(0.68, 0.90, 36);
     ringGeo.rotateX(-Math.PI / 2);
     this.selectionRing = new THREE.Mesh(
       ringGeo,
@@ -630,6 +621,30 @@ export class ES3DGameShowBuilder {
     );
     this.selectionRing.visible = false;
     this.world.scene.add(this.selectionRing);
+  }
+
+  aplicarBrilhoMovel(mesh, aceso, intensidade = 0.68) {
+    if (!mesh) return;
+    mesh.traverse(obj => {
+      if (!obj.isMesh || !obj.material) return;
+      const mats = Array.isArray(obj.material) ? obj.material : [obj.material];
+      mats.forEach(m => {
+        if (!m || !m.emissive) return;
+        if (!m.userData._esOrigEmissive) {
+          m.userData._esOrigEmissive = {
+            hex: m.emissive.getHex(),
+            intensity: typeof m.emissiveIntensity === 'number' ? m.emissiveIntensity : 1
+          };
+        }
+        if (aceso) {
+          m.emissive.setHex(0x38bdf8);
+          m.emissiveIntensity = intensidade;
+        } else {
+          m.emissive.setHex(m.userData._esOrigEmissive.hex);
+          m.emissiveIntensity = m.userData._esOrigEmissive.intensity;
+        }
+      });
+    });
   }
 
   criarMeshMovel3D(typeId) {
@@ -647,7 +662,6 @@ export class ES3DGameShowBuilder {
 
     switch (typeId) {
       case 'sofa': {
-        // 4 pés torneados de madeira + rodapé estrutural
         [[-0.84, -0.34], [0.84, -0.34], [-0.84, 0.34], [0.84, 0.34]].forEach(([lx, lz]) => {
           const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.032, 0.022, 0.14, 10), matWalnut);
           leg.position.set(lx, 0.07, lz);
@@ -656,7 +670,6 @@ export class ES3DGameShowBuilder {
         const plinth = new THREE.Mesh(new THREE.BoxGeometry(1.86, 0.14, 0.82), matWalnut);
         plinth.position.set(0, 0.20, 0);
 
-        // 3 almofadas de assento separadas + 3 de encosto inclinadas
         [-0.54, 0, 0.54].forEach(cx => {
           const seat = new THREE.Mesh(new THREE.BoxGeometry(0.52, 0.16, 0.64), matFabricLight);
           seat.position.set(cx, 0.35, 0.06);
@@ -666,7 +679,6 @@ export class ES3DGameShowBuilder {
           g.add(seat, backCush);
         });
 
-        // Estrutura traseira (costas em -Z) + braços estofados largos
         const backFrame = new THREE.Mesh(new THREE.BoxGeometry(1.90, 0.64, 0.14), matFabric);
         backFrame.position.set(0, 0.56, -0.36);
         [-0.86, 0.86].forEach(ax => {
@@ -678,7 +690,6 @@ export class ES3DGameShowBuilder {
           g.add(arm, armTop);
         });
 
-        // 2 almofadas decorativas coloridas
         const p1 = new THREE.Mesh(new THREE.BoxGeometry(0.32, 0.30, 0.11), new THREE.MeshStandardMaterial({ color: 0xf59e0b, roughness: 0.9 }));
         p1.position.set(-0.62, 0.55, -0.06); p1.rotation.set(-0.2, 0.28, 0.14);
         const p2 = new THREE.Mesh(new THREE.BoxGeometry(0.30, 0.28, 0.11), new THREE.MeshStandardMaterial({ color: 0x14b8a6, roughness: 0.9 }));
@@ -689,7 +700,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'bed': {
-        // 4 pés + estrado de madeira + cabeceira estofada com moldura em -Z
         [[-0.78, -0.96], [0.78, -0.96], [-0.78, 0.96], [0.78, 0.96]].forEach(([lx, lz]) => {
           const leg = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.16, 0.08), matWalnut);
           leg.position.set(lx, 0.08, lz);
@@ -703,7 +713,6 @@ export class ES3DGameShowBuilder {
         const headPad = new THREE.Mesh(new THREE.BoxGeometry(1.56, 0.66, 0.07), new THREE.MeshStandardMaterial({ color: 0x94a3b8, roughness: 0.9 }));
         headPad.position.set(0, 0.72, -0.93);
 
-        // Colchão branco + dobra do lençol + edredom com manta nos pés
         const mattress = new THREE.Mesh(new THREE.BoxGeometry(1.58, 0.24, 1.94), matCream);
         mattress.position.set(0, 0.44, 0.02);
 
@@ -716,7 +725,6 @@ export class ES3DGameShowBuilder {
         const runner = new THREE.Mesh(new THREE.BoxGeometry(1.64, 0.04, 0.36), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.85 }));
         runner.position.set(0, 0.59, 0.72);
 
-        // 2 travesseiros volumosos inclinados na cabeceira
         [-0.38, 0.38].forEach(px => {
           const pil = new THREE.Mesh(new THREE.SphereGeometry(0.28, 12, 10), matCream);
           pil.scale.set(1.15, 0.36, 0.75);
@@ -730,7 +738,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'tv_stand': {
-        // Rack de madeira com pés, 2 portas com puxadores e nicho central
         [[-0.68, -0.18], [0.68, -0.18], [-0.68, 0.18], [0.68, 0.18]].forEach(([lx, lz]) => {
           const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.018, 0.14, 8), matDark);
           leg.position.set(lx, 0.07, lz);
@@ -741,7 +748,6 @@ export class ES3DGameShowBuilder {
         const topPlate = new THREE.Mesh(new THREE.BoxGeometry(1.52, 0.04, 0.48), matOak);
         topPlate.position.set(0, 0.55, 0);
 
-        // Portas laterais + puxadores + nicho central com soundbar (frente em +Z)
         [-0.48, 0.48].forEach(dx => {
           const door = new THREE.Mesh(new THREE.BoxGeometry(0.46, 0.32, 0.03), matOak);
           door.position.set(dx, 0.34, 0.23);
@@ -754,7 +760,6 @@ export class ES3DGameShowBuilder {
         const soundbar = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.06, 0.09), matDark);
         soundbar.position.set(0, 0.60, 0.12);
 
-        // Base metálica + Smart TV ultrafina com tela desenhada em CanvasTexture
         const baseStand = new THREE.Mesh(new THREE.BoxGeometry(0.42, 0.03, 0.20), matChrome);
         baseStand.position.set(0, 0.585, -0.02);
         const neck = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.16, 0.05), matChrome);
@@ -774,7 +779,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'table': {
-        // Mesa de jantar com tampo chanfrado, saia lateral, 4 pés torneados, trilho e centro de mesa
         const top = new THREE.Mesh(new THREE.BoxGeometry(1.42, 0.07, 0.96), matOak);
         top.position.set(0, 0.76, 0);
         const apron = new THREE.Mesh(new THREE.BoxGeometry(1.26, 0.08, 0.80), matWalnut);
@@ -801,7 +805,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'chair': {
-        // Cadeira moderna com pernas, assento estofado e encosto ripado em -Z
         [[-0.21, -0.21], [0.21, -0.21], [-0.21, 0.21], [0.21, 0.21]].forEach(([lx, lz]) => {
           const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.018, 0.45, 8), matWalnut);
           leg.position.set(lx, 0.225, lz);
@@ -829,11 +832,9 @@ export class ES3DGameShowBuilder {
       }
 
       case 'desk_pc': {
-        // Escrivaninha com gaveteiro à direita, perna metálica à esquerda, PC completo e caneca
         const top = new THREE.Mesh(new THREE.BoxGeometry(1.34, 0.055, 0.68), matOak);
         top.position.set(0, 0.75, 0);
 
-        // Perna metálica esquerda
         [-0.28, 0.28].forEach(lz => {
           const leg = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.73, 0.05), matDark);
           leg.position.set(-0.58, 0.365, lz);
@@ -842,7 +843,6 @@ export class ES3DGameShowBuilder {
         const bar = new THREE.Mesh(new THREE.BoxGeometry(0.04, 0.04, 0.56), matDark);
         bar.position.set(-0.58, 0.14, 0);
 
-        // Gaveteiro com 3 gavetas (frente em +Z)
         const drawerBox = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.72, 0.62), matWalnut);
         drawerBox.position.set(0.44, 0.36, 0);
         [0.16, 0.38, 0.58].forEach(dy => {
@@ -853,7 +853,6 @@ export class ES3DGameShowBuilder {
           g.add(front, pull);
         });
 
-        // Monitor widescreen + tela CanvasTexture (voltado para +Z)
         const monBase = new THREE.Mesh(new THREE.BoxGeometry(0.24, 0.025, 0.16), matChrome);
         monBase.position.set(-0.12, 0.79, -0.15);
         const monNeck = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.16, 0.04), matChrome);
@@ -864,7 +863,6 @@ export class ES3DGameShowBuilder {
         const monScreen = new THREE.Mesh(new THREE.PlaneGeometry(0.62, 0.34), new THREE.MeshBasicMaterial({ map: pcTex }));
         monScreen.position.set(-0.12, 1.07, -0.138);
 
-        // Mousepad, teclado, mouse e caneca
         const pad = new THREE.Mesh(new THREE.BoxGeometry(0.76, 0.008, 0.28), matDark);
         pad.position.set(-0.08, 0.782, 0.14);
         const kb = new THREE.Mesh(new THREE.BoxGeometry(0.40, 0.022, 0.14), new THREE.MeshStandardMaterial({ color: 0x334155 }));
@@ -880,7 +878,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'bookshelf': {
-        // Estante ABERTA real (laterais, fundo em -Z, tampo e 4 prateleiras)
         const backPanel = new THREE.Mesh(new THREE.BoxGeometry(1.12, 1.78, 0.04), matWalnut);
         backPanel.position.set(0, 0.89, -0.18);
         [-0.54, 0.54].forEach(sx => {
@@ -889,14 +886,12 @@ export class ES3DGameShowBuilder {
           g.add(side);
         });
 
-        const shelfYs = [0.08, 0.50, 0.92, 1.34, 1.76];
-        shelfYs.forEach(sy => {
+        [0.08, 0.50, 0.92, 1.34, 1.76].forEach(sy => {
           const board = new THREE.Mesh(new THREE.BoxGeometry(1.12, 0.045, 0.39), matOak);
           board.position.set(0, sy, 0);
           g.add(board);
         });
 
-        // Livros de alturas, espessuras e cores variadas nas 3 prateleiras centrais
         const coresLivros = [0xdc2626, 0x2563eb, 0x059669, 0xd97706, 0x7c3aed, 0x0891b2, 0x475569];
         [0.52, 0.94, 1.36].forEach((baseY, rowIdx) => {
           let curX = -0.45;
@@ -918,7 +913,6 @@ export class ES3DGameShowBuilder {
           }
         });
 
-        // Item decorativo no topo (pequeno globo dourado)
         const globeBase = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.08, 0.04, 10), matBrass);
         globeBase.position.set(0.28, 1.80, 0.02);
         const globe = new THREE.Mesh(new THREE.SphereGeometry(0.11, 12, 10), new THREE.MeshStandardMaterial({ color: 0x0ea5e9, roughness: 0.4 }));
@@ -929,7 +923,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'plant': {
-        // Vaso cerâmico com borda, terra escura e folhagem tropical em camadas
         const potMat = new THREE.MeshStandardMaterial({ color: 0xb4532a, roughness: 0.75 });
         const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.23, 0.16, 0.42, 16), potMat);
         pot.position.y = 0.21;
@@ -962,7 +955,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'lamp': {
-        // Luminária de piso com base pesada em latão, haste fina, cúpula de tecido acesa e bulbo interno
         const base = new THREE.Mesh(new THREE.CylinderGeometry(0.20, 0.22, 0.045, 18), matBrass);
         base.position.y = 0.022;
         const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.022, 0.028, 1.46, 12), matBrass);
@@ -988,7 +980,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'fridge': {
-        // Geladeira Duplex Inox com portas separadas, puxadores cromados e dispenser frontal em +Z
         const matInox = new THREE.MeshStandardMaterial({ color: 0xdbe2ea, metalness: 0.58, roughness: 0.24 });
         const body = new THREE.Mesh(new THREE.BoxGeometry(0.80, 1.80, 0.70), matInox);
         body.position.set(0, 0.92, -0.02);
@@ -996,19 +987,16 @@ export class ES3DGameShowBuilder {
         const baseGrille = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.08, 0.70), matDark);
         baseGrille.position.set(0, 0.04, -0.01);
 
-        // Porta superior (geladeira) e inferior (freezer) com relevo frontal em +Z
         const upperDoor = new THREE.Mesh(new THREE.BoxGeometry(0.78, 1.08, 0.06), matInox);
         upperDoor.position.set(0, 1.24, 0.35);
         const lowerDoor = new THREE.Mesh(new THREE.BoxGeometry(0.78, 0.58, 0.06), matInox);
         lowerDoor.position.set(0, 0.38, 0.35);
 
-        // Dispenser de água/gelo na porta superior
         const dispenser = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.30, 0.03), matDark);
         dispenser.position.set(0.06, 1.18, 0.375);
         const dispLed = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.015), new THREE.MeshBasicMaterial({ color: 0x38bdf8 }));
         dispLed.position.set(0.06, 1.28, 0.392);
 
-        // Puxadores verticais metálicos
         const handle1 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.52, 8), matChrome);
         handle1.position.set(-0.30, 1.18, 0.415);
         const handle2 = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, 0.36, 8), matChrome);
@@ -1019,7 +1007,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'rug': {
-        // Tapete estampado com textura tecida em CanvasTexture
         const rugTex = this.criarTexturaTapete();
         const rug = new THREE.Mesh(
           new THREE.BoxGeometry(2.18, 0.024, 1.48),
@@ -1031,7 +1018,6 @@ export class ES3DGameShowBuilder {
       }
 
       case 'guitar': {
-        // Violão acústico em formato de 8 apoiado em suporte (frente voltada para +Z)
         const standBase = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.22, 0.05, 12), matDark);
         standBase.position.y = 0.025;
         const standBack = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.022, 0.58, 8), matDark);
@@ -1101,7 +1087,7 @@ export class ES3DGameShowBuilder {
   }
 
   // ============================================================================
-  // 4. 💾 PERSISTÊNCIA LOCAL (MÓVEIS NA CENA + DEPÓSITO DE MÓVEIS GUARDADOS)
+  // 4. 💾 PERSISTÊNCIA LOCAL (MÓVEIS NA CENA + DEPÓSITO DO PROPRIETÁRIO)
   // ============================================================================
   obterChaveStorageMoveis() {
     const uid = this.world?.localPlayer?.userId || window.Workspace?.usuario?.id || 'guest';
@@ -1197,26 +1183,34 @@ export class ES3DGameShowBuilder {
     return registro;
   }
 
-  // Posiciona um móvel novo (comprado ou retirado do depósito) DENTRO da casa e na frente do avatar
+  // 👁️ SPAWN NA FRENTE DA VISÃO REAL DO AVATAR / CÂMERA (SEMPRE DENTRO DO CÔMODO)
   colocarMovelNaFrenteDoAvatar(cfg, uidExistente = null) {
     let zona = this.obterZonaDecoravelAtual();
     if (!zona) {
       this.entrarNaCasaParaDecorar();
       zona = this.obterZonaDecoravelAtual();
     } else if (zona.isHouse && !this.jogadorEstaDentroDaCasa()) {
-      // Garante que o avatar esteja dentro da casa para o móvel surgir na sua frente dentro do cômodo
       this.entrarNaCasaParaDecorar();
     }
     if (!zona) return null;
 
     const p = this.world.localPlayer;
-    const distFrente = Math.max(1.25, (cfg.d || 0.8) * 0.65 + 0.65);
-    const rawX = p.x + Math.sin(p.rotY || 0) * distFrente;
-    const rawZ = p.z + Math.cos(p.rotY || 0) * distFrente;
+    // Direção exata para onde a câmera/visão do jogador está olhando
+    const yawVisao = this.world.cameraYaw || 0;
+    const visX = -Math.sin(yawVisao);
+    const visZ = -Math.cos(yawVisao);
 
-    // Começa voltado para o avatar (alinhado em 90°), mas respeita inteligência de parede/canto se nascer perto da parede
-    const angParaAvatar = Math.atan2(p.x - rawX, p.z - rawZ);
-    const rotBase = Math.round(angParaAvatar / (Math.PI / 2)) * (Math.PI / 2);
+    // Alinha o avatar para encarar o ponto onde o móvel vai surgir
+    p.rotY = Math.atan2(visX, visZ);
+    if (p.mesh) p.mesh.rotation.y = p.rotY;
+
+    const distFrente = Math.max(1.45, (cfg.d || 0.8) * 0.65 + 0.85);
+    const rawX = p.x + visX * distFrente;
+    const rawZ = p.z + visZ * distFrente;
+
+    // Começa voltado de frente para o jogador, respeitando paredes/cantos se nascer encostado
+    const angParaJogador = Math.atan2(p.x - rawX, p.z - rawZ);
+    const rotBase = Math.round(angParaJogador / (Math.PI / 2)) * (Math.PI / 2);
 
     const limIni = this.limitarComColisoes(zona, rawX, rawZ, cfg, rotBase);
     const rotFinal = this.calcularOrientacaoInteligente(zona, limIni.x, limIni.z, cfg, rotBase);
@@ -1235,6 +1229,9 @@ export class ES3DGameShowBuilder {
     if (novo) {
       this.selecionarMovel(novo.uid);
       this.world.falarTextoNPC?.(cfg.phrase, 'home');
+      if (window.Workspace?.mostrarAviso) {
+        window.Workspace.mostrarAviso(`✨ ${cfg.name} aceso na sua frente! Clique, segure e arraste para posicionar.`, 'info', 3000);
+      }
     }
     return novo;
   }
@@ -1261,19 +1258,28 @@ export class ES3DGameShowBuilder {
     if (colocado) {
       this.storageItems.splice(idx, 1);
       this.salvarDepositoLocal();
-      if (window.Workspace?.mostrarAviso) {
-        window.Workspace.mostrarAviso(`📦 ${cfg.name} retirado do depósito e colocado na sala!`, 'success', 2400);
-      }
     }
   }
 
+  // 💡 SELECIONA E ACENDE O MÓVEL PARA MOVIMENTAÇÃO POR ARRASTE (MOUSE/DEDO)
   selecionarMovel(uid) {
+    // Apaga o brilho do móvel anteriormente aceso
+    if (this.selectedUid) {
+      const anterior = this.placedItems.find(it => it.uid === this.selectedUid);
+      if (anterior?.mesh) this.aplicarBrilhoMovel(anterior.mesh, false);
+    }
+
     this.selectedUid = uid;
+    this.isDraggingFurniture = false;
     const item = this.placedItems.find(it => it.uid === uid);
 
+    if (item?.mesh) {
+      this.aplicarBrilhoMovel(item.mesh, true, 0.72);
+    }
+
     if (this.selectionRing) {
-      if (item && this.builderActive) {
-        const raio = Math.max(0.65, Math.max(item.cfg?.w || 0.8, item.cfg?.d || 0.8) * 0.58);
+      if (item) {
+        const raio = Math.max(0.68, Math.max(item.cfg?.w || 0.8, item.cfg?.d || 0.8) * 0.60);
         this.selectionRing.scale.set(raio, 1, raio);
         this.selectionRing.position.set(item.x, (item.y || 0) + 0.04, item.z);
         this.selectionRing.visible = true;
@@ -1282,22 +1288,21 @@ export class ES3DGameShowBuilder {
       }
     }
 
-    const controlsBox = document.getElementById('es-builder-selected-controls');
-    const nameEl = document.getElementById('es-builder-selected-name');
-    if (controlsBox && nameEl) {
+    if (this.dragBarEl) {
       if (item) {
-        controlsBox.style.display = 'flex';
-        nameEl.textContent = `${item.cfg.emoji} ${item.cfg.name} — Clique no piso para mover`;
+        const titleEl = this.dragBarEl.querySelector('#es-drag-bar-title');
+        if (titleEl) titleEl.textContent = `✨ ${item.cfg.emoji} ${item.cfg.name} aceso — Segure e arraste`;
+        this.dragBarEl.style.display = 'flex';
       } else {
-        controlsBox.style.display = 'none';
+        this.dragBarEl.style.display = 'none';
       }
     }
   }
 
-  moverMovelSelecionadoPara(nx, nz, usarInteligenciaCanto = true) {
+  moverMovelSelecionadoPara(nx, nz, usarInteligenciaCanto = true, salvarAgora = true) {
     const item = this.placedItems.find(it => it.uid === this.selectedUid);
-    const zona = this.obterZonaDecoravelAtual();
-    if (!item || !zona || item.zoneKey !== zona.zoneKey) return;
+    const zona = this.obterZonaPorChave(item?.zoneKey) || this.obterZonaDecoravelAtual();
+    if (!item || !zona) return;
 
     const rotAlvo = usarInteligenciaCanto
       ? this.calcularOrientacaoInteligente(zona, nx, nz, item.cfg, item.rotY || 0)
@@ -1315,22 +1320,15 @@ export class ES3DGameShowBuilder {
     if (this.selectionRing) {
       this.selectionRing.position.set(item.x, item.y + 0.04, item.z);
     }
-    this.salvarMoveisLocal();
-  }
-
-  empurrarMovelSelecionado(dx, dz) {
-    const item = this.placedItems.find(it => it.uid === this.selectedUid);
-    if (!item) return;
-    this.moverMovelSelecionadoPara(item.x + dx, item.z + dz, true);
+    if (salvarAgora) this.salvarMoveisLocal();
   }
 
   girarMovelSelecionado() {
     const item = this.placedItems.find(it => it.uid === this.selectedUid);
-    const zona = this.obterZonaDecoravelAtual();
+    const zona = this.obterZonaPorChave(item?.zoneKey) || this.obterZonaDecoravelAtual();
     if (!item || !zona) return;
 
     item.rotY = (item.rotY || 0) + Math.PI / 4;
-    // Ao girar perto da parede, empurra suavemente para dentro para nunca atravessar
     const posSegura = this.limitarComColisoes(zona, item.x, item.z, item.cfg, item.rotY);
     item.x = posSegura.x;
     item.z = posSegura.z;
@@ -1343,12 +1341,12 @@ export class ES3DGameShowBuilder {
     this.salvarMoveisLocal();
   }
 
-  // 📦 REMOVE O MÓVEL DO CÔMODO E ARMAZENA NO DEPÓSITO DO PROPRIETÁRIO
   guardarMovelSelecionado() {
     const idx = this.placedItems.findIndex(it => it.uid === this.selectedUid);
     if (idx === -1) return;
 
     const item = this.placedItems[idx];
+    this.aplicarBrilhoMovel(item.mesh, false);
     this.furnitureGroup?.remove(item.mesh);
     const cIdx = this.world.clickableObjects.indexOf(item.mesh);
     if (cIdx > -1) this.world.clickableObjects.splice(cIdx, 1);
@@ -1366,7 +1364,7 @@ export class ES3DGameShowBuilder {
     this.salvarDepositoLocal();
 
     if (window.Workspace?.mostrarAviso) {
-      window.Workspace.mostrarAviso(`📦 ${item.cfg?.name || 'Móvel'} guardado no seu Depósito (aba Guardados)!`, 'info', 3000);
+      window.Workspace.mostrarAviso(`📦 ${item.cfg?.name || 'Móvel'} guardado na aba 📦 Guardados!`, 'info', 2800);
     }
   }
 
@@ -1375,6 +1373,7 @@ export class ES3DGameShowBuilder {
     if (idx === -1) return;
 
     const item = this.placedItems[idx];
+    this.aplicarBrilhoMovel(item.mesh, false);
     this.furnitureGroup?.remove(item.mesh);
     const cIdx = this.world.clickableObjects.indexOf(item.mesh);
     if (cIdx > -1) this.world.clickableObjects.splice(cIdx, 1);
@@ -1388,6 +1387,72 @@ export class ES3DGameShowBuilder {
     await window.DOVRYX?.add(reembolso, `Sold ${item.cfg?.name || 'Furniture'}`);
   }
 
+  // ============================================================================
+  // 5. 🖐️ MOTOR DE ARRASTE DIRETO COM MOUSE OU DEDO (SEGURAR E MOVER)
+  // ============================================================================
+  obterPontoNoPisoPorEvento(e, domCanvas, raycaster, mouse, alturaY) {
+    const rect = domCanvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.world.camera);
+
+    const floorPlane = new this.THREE.Plane(new this.THREE.Vector3(0, 1, 0), -alturaY);
+    const pt = new this.THREE.Vector3();
+    return raycaster.ray.intersectPlane(floorPlane, pt) ? pt : null;
+  }
+
+  aoIniciarArrasteMovel(e, domCanvas, raycaster, mouse) {
+    if (!this.selectedUid || !this.world?.camera) return false;
+    const item = this.placedItems.find(it => it.uid === this.selectedUid);
+    if (!item || !item.mesh?.visible) return false;
+
+    const rect = domCanvas.getBoundingClientRect();
+    mouse.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+    mouse.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+    raycaster.setFromCamera(mouse, this.world.camera);
+
+    const alvos = [item.mesh];
+    if (this.selectionRing?.visible) alvos.push(this.selectionRing);
+    const hits = raycaster.intersectObjects(alvos, true);
+    if (hits.length === 0) return false;
+
+    const zona = this.obterZonaPorChave(item.zoneKey) || this.obterZonaDecoravelAtual();
+    const alturaY = zona ? zona.y : (item.y || 0);
+    const pt = this.obterPontoNoPisoPorEvento(e, domCanvas, raycaster, mouse, alturaY);
+    if (!pt) return false;
+
+    this.isDraggingFurniture = true;
+    this._dragOffsetX = item.x - pt.x;
+    this._dragOffsetZ = item.z - pt.z;
+    domCanvas.style.cursor = 'grabbing';
+    return true;
+  }
+
+  aoMoverArrasteMovel(e, domCanvas, raycaster, mouse) {
+    if (!this.isDraggingFurniture || !this.selectedUid) return false;
+    const item = this.placedItems.find(it => it.uid === this.selectedUid);
+    if (!item) return false;
+
+    const zona = this.obterZonaPorChave(item.zoneKey) || this.obterZonaDecoravelAtual();
+    const alturaY = zona ? zona.y : (item.y || 0);
+    const pt = this.obterPontoNoPisoPorEvento(e, domCanvas, raycaster, mouse, alturaY);
+    if (!pt) return true;
+
+    this.moverMovelSelecionadoPara(pt.x + this._dragOffsetX, pt.z + this._dragOffsetZ, true, false);
+    return true;
+  }
+
+  aoFinalizarArrasteMovel(domCanvas = null) {
+    if (!this.isDraggingFurniture) return false;
+    this.isDraggingFurniture = false;
+    if (domCanvas) domCanvas.style.cursor = '';
+    this.salvarMoveisLocal();
+    return true;
+  }
+
+  // ============================================================================
+  // 6. 🎨 UI DO CATÁLOGO/DEPÓSITO + BARRA FLUTUANTE DO MÓVEL ACESO
+  // ============================================================================
   alternarModoConstrutor(forcarAbrir = null) {
     const querAbrir = forcarAbrir !== null ? Boolean(forcarAbrir) : !this.builderActive;
 
@@ -1440,9 +1505,8 @@ export class ES3DGameShowBuilder {
     }
 
     if (this.activeTab === 'buy') {
-      if (hint) hint.textContent = 'Compre itens novos ou dê DUPLO CLIQUE em um móvel na sala para mover:';
+      if (hint) hint.textContent = 'Toque em um item para colocar na sua frente. Para mover depois, dê DUPLO CLIQUE rápido no móvel e arraste:';
 
-      // Conta quantos de cada tipo estão guardados para exibir um selinho discreto
       const contGuardados = {};
       this.storageItems.forEach(s => { contGuardados[s.typeId] = (contGuardados[s.typeId] || 0) + 1; });
 
@@ -1465,19 +1529,18 @@ export class ES3DGameShowBuilder {
         });
       });
     } else {
-      if (hint) hint.textContent = 'Seus móveis e objetos guardados (clique para colocar de volta de graça):';
+      if (hint) hint.textContent = 'Móveis pertencentes a você (clique para colocar na sua frente de graça):';
 
       if (totalGuardados === 0) {
         grid.innerHTML = `
           <div style="grid-column:1/-1; text-align:center; padding:22px 10px; background:rgba(30,41,59,0.65); border:1px dashed #475569; border-radius:12px; color:#94a3b8; font-size:11.5px; line-height:1.45;">
             📦 Seu depósito está vazio.<br><br>
-            Dê <b>duplo clique</b> em qualquer móvel da sala e clique em <b>📦 Guardar</b> para armazená-lo aqui.
+            Dê <b>duplo clique rápido</b> em um móvel da casa para acendê-lo e clique em <b>📦 Guardar</b>.
           </div>
         `;
         return;
       }
 
-      // Agrupa itens guardados por tipo para exibir a quantidade limpa
       const agrupado = new Map();
       this.storageItems.forEach(s => {
         agrupado.set(s.typeId, (agrupado.get(s.typeId) || 0) + 1);
@@ -1513,8 +1576,8 @@ export class ES3DGameShowBuilder {
     const panel = document.createElement('div');
     panel.id = 'es-builder-panel';
     panel.style.cssText = `
-      display: none; position: absolute; left: 14px; top: 96px; z-index: 34;
-      width: 278px; max-width: calc(100vw - 28px); max-height: calc(100dvh - 190px);
+      display: none; position: absolute; left: 14px; top: 82px; z-index: 34;
+      width: 266px; max-width: calc(100vw - 28px); max-height: calc(100dvh - 180px);
       background: rgba(12, 16, 32, 0.95); backdrop-filter: blur(18px);
       border: 1.5px solid rgba(96, 165, 250, 0.45); border-radius: 18px;
       padding: 12px; flex-direction: column; gap: 9px; color: #fff;
@@ -1530,26 +1593,9 @@ export class ES3DGameShowBuilder {
         <button type="button" id="es-builder-close" style="background:#1e293b;color:#cbd5e1;border:none;width:28px;height:28px;border-radius:50%;font-weight:800;cursor:pointer;">✕</button>
       </div>
 
-      <!-- Abas: Loja vs Depósito de Móveis Guardados -->
       <div style="display:flex; gap:6px;">
         <button type="button" id="es-tab-buy" style="flex:1; padding:7px 8px; border-radius:10px; border:none; background:#2563eb; color:#fff; font-size:11px; font-weight:800; cursor:pointer;">🛒 Loja</button>
         <button type="button" id="es-tab-storage" style="flex:1; padding:7px 8px; border-radius:10px; border:none; background:#1e293b; color:#94a3b8; font-size:11px; font-weight:800; cursor:pointer;">📦 Guardados (0)</button>
-      </div>
-
-      <!-- Controles do Móvel Selecionado (ativado com DUPLO CLIQUE) -->
-      <div id="es-builder-selected-controls" style="display:none; flex-direction:column; gap:7px; background:rgba(37,99,235,0.18); border:1px solid #3b82f6; border-radius:12px; padding:9px;">
-        <div id="es-builder-selected-name" style="font-size:11px; font-weight:800; color:#dbeafe; text-align:center;">Selected Item</div>
-        <div style="display:flex; justify-content:center; gap:5px;">
-          <button type="button" id="es-mv-up"    style="width:34px;height:30px;border-radius:8px;border:none;background:#1e293b;color:#fff;font-weight:900;cursor:pointer;">▲</button>
-          <button type="button" id="es-mv-down"  style="width:34px;height:30px;border-radius:8px;border:none;background:#1e293b;color:#fff;font-weight:900;cursor:pointer;">▼</button>
-          <button type="button" id="es-mv-left"  style="width:34px;height:30px;border-radius:8px;border:none;background:#1e293b;color:#fff;font-weight:900;cursor:pointer;">◀</button>
-          <button type="button" id="es-mv-right" style="width:34px;height:30px;border-radius:8px;border:none;background:#1e293b;color:#fff;font-weight:900;cursor:pointer;">▶</button>
-        </div>
-        <div style="display:flex; gap:5px;">
-          <button type="button" id="es-mv-rotate" style="flex:1;padding:7px 4px;border-radius:8px;border:none;background:#2563eb;color:#fff;font-size:11px;font-weight:800;cursor:pointer;">↻ Girar</button>
-          <button type="button" id="es-mv-store"  style="flex:1.1;padding:7px 4px;border-radius:8px;border:none;background:#7c3aed;color:#fff;font-size:11px;font-weight:800;cursor:pointer;">📦 Guardar</button>
-          <button type="button" id="es-mv-delete" style="flex:1;padding:7px 4px;border-radius:8px;border:none;background:#dc2626;color:#fff;font-size:11px;font-weight:800;cursor:pointer;">💰 Vender</button>
-        </div>
       </div>
 
       <div id="es-builder-hint" style="font-size:10.5px; color:#cbd5e1; line-height:1.35;"></div>
@@ -1564,19 +1610,46 @@ export class ES3DGameShowBuilder {
     panel.querySelector('#es-tab-buy')?.addEventListener('click', () => this.mudarAbaConstrutor('buy'));
     panel.querySelector('#es-tab-storage')?.addEventListener('click', () => this.mudarAbaConstrutor('storage'));
 
-    panel.querySelector('#es-mv-up')?.addEventListener('click', () => this.empurrarMovelSelecionado(0, -GAMESHOW_CONFIG.PASSO_NUDGE_MOVEL));
-    panel.querySelector('#es-mv-down')?.addEventListener('click', () => this.empurrarMovelSelecionado(0, GAMESHOW_CONFIG.PASSO_NUDGE_MOVEL));
-    panel.querySelector('#es-mv-left')?.addEventListener('click', () => this.empurrarMovelSelecionado(-GAMESHOW_CONFIG.PASSO_NUDGE_MOVEL, 0));
-    panel.querySelector('#es-mv-right')?.addEventListener('click', () => this.empurrarMovelSelecionado(GAMESHOW_CONFIG.PASSO_NUDGE_MOVEL, 0));
-    panel.querySelector('#es-mv-rotate')?.addEventListener('click', () => this.girarMovelSelecionado());
-    panel.querySelector('#es-mv-store')?.addEventListener('click', () => this.guardarMovelSelecionado());
-    panel.querySelector('#es-mv-delete')?.addEventListener('click', () => this.removerMovelSelecionado());
-
     this.renderizarConteudoPainel();
   }
 
+  criarBarraFlutuanteMovelAcesoUI() {
+    document.getElementById('es-furniture-drag-bar')?.remove();
+    const wrapper = document.getElementById('es-city-wrapper');
+    if (!wrapper) return;
+
+    const bar = document.createElement('div');
+    bar.id = 'es-furniture-drag-bar';
+    bar.style.cssText = `
+      display: none; position: absolute; left: 50%; bottom: 88px; transform: translateX(-50%);
+      z-index: 36; background: rgba(12, 18, 36, 0.94); backdrop-filter: blur(16px);
+      border: 1.5px solid rgba(56, 189, 248, 0.65); border-radius: 18px; padding: 8px 12px;
+      flex-direction: column; align-items: center; gap: 7px; color: #fff;
+      box-shadow: 0 14px 35px rgba(0,0,0,0.55); font-family: Inter, sans-serif;
+      max-width: calc(100vw - 24px);
+    `;
+
+    bar.innerHTML = `
+      <div id="es-drag-bar-title" style="font-size:11.5px; font-weight:900; color:#7dd3fc; text-align:center;">✨ Móvel aceso — Segure e arraste</div>
+      <div style="display:flex; gap:6px; flex-wrap:wrap; justify-content:center;">
+        <button type="button" id="es-drag-rotate" style="background:#2563eb; color:#fff; border:none; border-radius:999px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer;">↻ Girar</button>
+        <button type="button" id="es-drag-store"  style="background:#7c3aed; color:#fff; border:none; border-radius:999px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer;">📦 Guardar</button>
+        <button type="button" id="es-drag-sell"   style="background:#dc2626; color:#fff; border:none; border-radius:999px; padding:6px 12px; font-size:11px; font-weight:800; cursor:pointer;">💰 Vender</button>
+        <button type="button" id="es-drag-done"   style="background:#10b981; color:#fff; border:none; border-radius:999px; padding:6px 12px; font-size:11px; font-weight:900; cursor:pointer;">✅ Travar</button>
+      </div>
+    `;
+
+    wrapper.appendChild(bar);
+    this.dragBarEl = bar;
+
+    bar.querySelector('#es-drag-rotate')?.addEventListener('click', () => this.girarMovelSelecionado());
+    bar.querySelector('#es-drag-store')?.addEventListener('click', () => this.guardarMovelSelecionado());
+    bar.querySelector('#es-drag-sell')?.addEventListener('click', () => this.removerMovelSelecionado());
+    bar.querySelector('#es-drag-done')?.addEventListener('click', () => this.selecionarMovel(null));
+  }
+
   // ============================================================================
-  // 5. 🔗 INTEGRAÇÃO DE DUPLO CLIQUE, COLISÕES E LOOP
+  // 7. 🔗 CLIQUES, COLISÕES E LOOP
   // ============================================================================
   aoClicarObjeto3D(ud) {
     if (!ud) return false;
@@ -1596,30 +1669,34 @@ export class ES3DGameShowBuilder {
       this._lastClickUid = ud.furnitureUid;
       this._lastClickTime = agora;
 
-      // 🖱️ DUPLO CLIQUE: Seleciona o móvel para movimentação (e abre o Decorate se estava fechado)
+      // 🖱️ DUPLO CLIQUE RÁPIDO: Acende o móvel para arrastar direto (ou apaga se já estava aceso!)
       if (ehDuploClique) {
         this._lastClickUid = null;
         this._lastClickTime = 0;
 
         this.world.interacoesPro?.levantar?.();
-        if (!this.builderActive) {
-          this.alternarModoConstrutor(true);
-        }
-        this.selecionarMovel(ud.furnitureUid);
 
+        if (this.selectedUid === ud.furnitureUid) {
+          this.selecionarMovel(null);
+          return true;
+        }
+
+        this.selecionarMovel(ud.furnitureUid);
         const itemSel = this.placedItems.find(it => it.uid === ud.furnitureUid);
         if (window.Workspace?.mostrarAviso && itemSel) {
-          window.Workspace.mostrarAviso(`✨ Movendo ${itemSel.cfg.name}! Clique no piso para posicionar ou use 📦 Guardar.`, 'info', 2600);
+          window.Workspace.mostrarAviso(`✨ ${itemSel.cfg.name} aceso! Clique, segure e arraste para mover.`, 'info', 2600);
         }
         return true;
       }
 
-      // 👆 1 CLIQUE SIMPLES: Apenas interação normal (fala em inglês e senta se for sofá/cadeira)
+      // 👆 1 CLIQUE SIMPLES: Apenas interação normal (fala em inglês, salva no Caderno Vivo e senta se não estiver aceso)
       const item = this.placedItems.find(it => it.uid === ud.furnitureUid);
       if (item) {
         this.world.falarTextoNPC?.(item.cfg.phrase, 'home');
-        this.world.mostrarBalaoNoBoneco?.(this.world.localPlayer, `${item.cfg.emoji} ${item.cfg.name}`, 3200);
-        if (!this.builderActive && (item.typeId === 'sofa' || item.typeId === 'chair') && this.world.interacoesPro) {
+        this.world.mostrarBalaoNoBoneco?.(this.world.localPlayer, `${item.cfg.emoji} ${item.cfg.name}`, 3000);
+        this.world.smartphone?.registrarPalavra?.(item.cfg.name, 'home');
+
+        if (!this.selectedUid && (item.typeId === 'sofa' || item.typeId === 'chair') && this.world.interacoesPro) {
           this.world.interacoesPro.sentarNoLocal({
             name: item.cfg.name,
             x: item.x,
@@ -1627,8 +1704,6 @@ export class ES3DGameShowBuilder {
             z: item.z,
             rotY: item.rotY || 0
           });
-        } else if (this.builderActive && window.Workspace?.mostrarAviso) {
-          window.Workspace.mostrarAviso('💡 Dê DUPLO CLIQUE no móvel para selecionar e mover!', 'info', 1900);
         }
         return true;
       }
@@ -1637,13 +1712,11 @@ export class ES3DGameShowBuilder {
     return false;
   }
 
-  aoClicarNoChao(intersectPt) {
-    if (!this.builderActive || !this.selectedUid || !intersectPt) return false;
-    this.moverMovelSelecionadoPara(intersectPt.x, intersectPt.z, true);
-    return true;
+  // Não move mais clicando no chão — movimento é EXCLUSIVAMENTE por clique duplo + segurar e arrastar!
+  aoClicarNoChao() {
+    return false;
   }
 
-  // Fornece as caixas sólidas do telão e dos móveis visíveis para o ES3DColisoes
   obterColisoresMoveisAtivos() {
     const boxes = [];
     if (!this.world.modoInterior && !this.world.torreAtual && this.gsScreenBox) {
@@ -1675,7 +1748,6 @@ export class ES3DGameShowBuilder {
   }
 
   update(delta) {
-    // 1. Mantém visíveis apenas os móveis do ambiente atual (Casa no Lote vs Andar da Torre)
     const zonaVisivel = this.world.torreAtual
       ? `${this.world.torreAtual}_floor_${this.world.andarTorreAtual || 1}`
       : (!this.world.modoInterior ? 'lot_0' : null);
@@ -1684,12 +1756,25 @@ export class ES3DGameShowBuilder {
       it.mesh.visible = Boolean(zonaVisivel && it.zoneKey === zonaVisivel);
     });
 
-    // Fecha o painel construtor se o jogador sair para longe da casa/torre
+    // Pulso luminoso suave enquanto um móvel está aceso para movimentação
+    if (this.selectedUid) {
+      const sel = this.placedItems.find(it => it.uid === this.selectedUid);
+      if (!sel || !sel.mesh?.visible) {
+        this.selecionarMovel(null);
+      } else {
+        this._glowPhase += delta * 5.2;
+        const pulso = 0.58 + Math.sin(this._glowPhase) * 0.22;
+        this.aplicarBrilhoMovel(sel.mesh, true, pulso);
+        if (this.selectionRing) {
+          this.selectionRing.material.opacity = 0.65 + Math.sin(this._glowPhase) * 0.28;
+        }
+      }
+    }
+
     if (this.builderActive && !this.obterZonaDecoravelAtual()) {
       this.alternarModoConstrutor(false);
     }
 
-    // 2. Cronômetro ao vivo do Game Show
     if (this.gsRunning) {
       const segAntes = Math.ceil(this.gsTimer);
       this.gsTimer -= delta;
@@ -1704,10 +1789,14 @@ export class ES3DGameShowBuilder {
   }
 
   dispose() {
+    this.selecionarMovel(null);
     this.builderActive = false;
     this.gsRunning = false;
+    this.isDraggingFurniture = false;
     this.panelEl?.remove();
     this.panelEl = null;
+    this.dragBarEl?.remove();
+    this.dragBarEl = null;
 
     if (this.selectionRing) {
       this.world.scene?.remove(this.selectionRing);

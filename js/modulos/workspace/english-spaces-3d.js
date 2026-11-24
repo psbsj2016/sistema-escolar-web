@@ -6,6 +6,7 @@ import { ES3DGameShowBuilder } from './es3d-gameshow-builder.js';
 import { ES3DMultiplayerTour } from './es3d-multiplayer-tour.js';
 import { ES3DPersonagens } from './es3d-personagens.js';
 import { ES3DVeiculos } from './es3d-veiculos.js';
+import { ES3DSmartphone } from './es3d-smartphone.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -612,20 +613,9 @@ garantirAudioAtivo() {
             <span id="es-city-zone-badge">🏙️ English City Boulevard</span>
             <div class="es-top-right-btns">
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
-              <button type="button" class="es-top-btn" id="es-city-gps-btn" title="Quick Teleport GPS">🗺️ GPS</button>
+              <button type="button" class="es-top-btn" id="es-city-phone-btn" title="Open In-Game Smartphone" style="background:linear-gradient(135deg,#2563eb,#7c3aed) !important; color:#fff !important; border-color:rgba(147,197,253,0.5) !important;">📱 Phone</button>
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
-              <button type="button" class="es-top-btn" id="es-city-gameshow-btn" title="Live English Game Show at Central Plaza">🎤 Game Show</button>
-              <button type="button" class="es-top-btn" id="es-city-decorate-btn" title="Decorate Your House or Apartment">🛋️ Decorate</button>
               <button type="button" class="es-top-btn" id="es-city-tour-btn" title="Professor Guided Tour Control" style="display:none;">🎓 Tour</button>
-              <button type="button" class="es-top-btn" id="es-city-quest-btn" title="Daily Treasure Hunt in English">🎁 Quests 0/4</button>
-              <button type="button" class="es-top-btn" id="es-city-emote-btn" title="Avatar Emotes">🎭 Emotes</button>
-              <button type="button" class="es-top-btn" id="es-city-photo-btn" title="Take English City Postcard Photo">📸 Photo</button>
-              <button type="button" class="es-top-btn" id="es-city-weather-btn" title="Change City Weather">☀️ Clear</button>
-              <button type="button" class="es-top-btn" id="es-city-audio3d-btn" title="Toggle 3D Spatial Audio">🔊 3D SFX</button>
-              <button type="button" class="es-top-btn" id="es-city-vehicle-btn" title="Mount / Switch Vehicle">🚲 Ride</button>
-              <button type="button" class="es-top-btn" id="es-city-home-btn" title="Teleport to My House Lot">🏡 My Lot</button>
-              <button type="button" class="es-top-btn" id="es-city-bau-btn" title="Teleport to Guild Baú do Inglês">🧙‍♂️ Guild</button>
-              <button type="button" class="es-top-btn" id="es-city-gender-btn">${isFemInicial ? '👩 Female' : '🧑 Male'}</button>
               <button type="button" class="es-top-btn" id="es-city-exit-btn">⇄ Exit 3D</button>
             </div>
           </div>
@@ -5240,7 +5230,10 @@ this.scene.add(facadeHeader);
       bubbleText: ''
     };
 
-  this.cameraUI = new ES3DCameraUI(this);
+  this.smartphone = new ES3DSmartphone(this);
+    this.smartphone.init();
+
+    this.cameraUI = new ES3DCameraUI(this);
     this.cameraUI.init();
 
     this.ambientePro = new ES3DAmbiente(this);
@@ -6204,6 +6197,11 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
       this.abrirModalGPS();
     });
 
+    document.getElementById('es-city-phone-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.smartphone?.alternarTelefone();
+    });
+
 document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.cameraUI?.alternarModoCamera();
@@ -6291,8 +6289,13 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     const mouse = new THREE.Vector2();
     const planeY0 = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
-    domCanvas.addEventListener('pointerdown', (e) => {
+   domCanvas.addEventListener('pointerdown', (e) => {
       this.garantirAudioAtivo();
+      if (this.gameShowBuilder?.aoIniciarArrasteMovel(e, domCanvas, raycaster, mouse)) {
+        this._draggingFurniture = true;
+        this.isDraggingCam = false;
+        return;
+      }
       this.isDraggingCam = true;
       this.dragStartX = e.clientX;
       this.dragStartY = e.clientY;
@@ -6302,6 +6305,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     });
 
     domCanvas.addEventListener('pointermove', (e) => {
+      if (this._draggingFurniture) {
+        this.gameShowBuilder?.aoMoverArrasteMovel(e, domCanvas, raycaster, mouse);
+        return;
+      }
       if (!this.isDraggingCam) return;
       const dx = e.clientX - this.dragStartX;
       const dy = e.clientY - this.dragStartY;
@@ -6310,7 +6317,20 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.cameraPitch = Math.max(-0.45, Math.min(1.35, this._startPitch + dy * 0.0045));
     });
 
+    domCanvas.addEventListener('pointercancel', () => {
+      if (this._draggingFurniture) {
+        this._draggingFurniture = false;
+        this.gameShowBuilder?.aoFinalizarArrasteMovel(domCanvas);
+      }
+      this.isDraggingCam = false;
+    });
+
     domCanvas.addEventListener('pointerup', (e) => {
+      if (this._draggingFurniture) {
+        this._draggingFurniture = false;
+        this.gameShowBuilder?.aoFinalizarArrasteMovel(domCanvas);
+        return;
+      }
       this.isDraggingCam = false;
       if (!this._movedDrag && this.localPlayer) {
         const rect = domCanvas.getBoundingClientRect();
@@ -6342,7 +6362,8 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
             return;
           }
 
-          const name = ud.englishName || 'Object';
+         const name = ud.englishName || 'Object';
+          this.smartphone?.registrarPalavra(name, this.currentZoneId);
           this.falarTextoNPC(name, this.currentZoneId);
           this.mostrarBalaoNoBoneco(this.localPlayer, `💡 ${name}`, 3500);
           DOVRYX.add(15, name);
@@ -6682,6 +6703,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.veiculos.dispose();
       this.veiculos = null;
     }
+  if (this.smartphone) {
+      this.smartphone.dispose();
+      this.smartphone = null;
+    }  
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {
