@@ -1,4 +1,5 @@
 import './english-spaces-3d.js';
+import { ES3DRelatorioProf } from './es3d-relatorio-prof.js';
 
 // js/modulos/workspace/english-spaces.js
 // Módulo Integrado: 🌎 ENGLISH SPACES (24 Cenários Reais + Economia Unificada DOVRYX DRX + Sincronização Nuvem MongoDB)
@@ -1942,6 +1943,11 @@ class EnglishSpacesManager {
           <button type="button" id="es-btn-open-3d-direct" style="background:linear-gradient(135deg,#10b981,#059669); color:#fff; border:none; padding:8px 18px; border-radius:999px; font-weight:900; font-size:13px; cursor:pointer; box-shadow:0 6px 18px rgba(16,185,129,0.35);">
             🏙️ Enter 3D City World
           </button>
+          ${this.ehProfessorOuGestor() ? `
+            <button type="button" id="es-btn-teacher-report" style="background:linear-gradient(135deg,#8b5cf6,#ec4899); color:#fff; border:none; padding:8px 16px; border-radius:999px; font-weight:900; font-size:13px; cursor:pointer; box-shadow:0 6px 18px rgba(139,92,246,0.35);">
+              📊 Relatório da Turma
+            </button>
+          ` : ''}
           <div class="es-level-pills">
             <span style="font-size:12px; color:#a1a1aa; font-weight:700; margin-right:4px;">CEFR Level:</span>
             ${['A1', 'A2', 'B1', 'B2'].map(lvl => `
@@ -1988,6 +1994,10 @@ class EnglishSpacesManager {
       if (window.Workspace?.EnglishSpaces3D) {
         window.Workspace.EnglishSpaces3D.abrirCidade3D(this, 'coffee');
       }
+    });
+
+    this.container.querySelector('#es-btn-teacher-report')?.addEventListener('click', () => {
+      ES3DRelatorioProf.abrirRelatorio();
     });
 
     this.container.querySelectorAll('[data-set-level]').forEach(btn => {
@@ -2328,6 +2338,24 @@ class EnglishSpacesManager {
 
           if (res.grammarTip) {
             this.state.grammarTipsCount = (this.state.grammarTipsCount || 0) + 1;
+          }
+
+          const uLog = window.Workspace?.usuario;
+          if (uLog?.id) {
+            fetch('/api/workspace/english-spaces/progress/fluency-log', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              credentials: 'include',
+              body: JSON.stringify({
+                userId: uLog.id,
+                ownerName: uLog.nome || uLog.login || 'Aluno',
+                escolaId: uLog.escolaId || 'DEFAULT',
+                spokenPhrase: texto,
+                grammarTip: res.grammarTip || null,
+                spaceId: space.id,
+                source: 'Roleplay 2D'
+              })
+            }).catch(() => {});
           }
 
           // Prioriza o ID de missão validado pela IA; se não vier, usa o da opção compatível

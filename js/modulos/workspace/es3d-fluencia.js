@@ -236,6 +236,23 @@ export class ES3DFluencia {
       localStorage.setItem(this.obterChaveMetrics(), JSON.stringify(this.metrics));
     } catch (e) {}
   }
+  
+  enviarTelemetriaNuvem(dados = {}) {
+    const uid = this.obterUid();
+    if (!uid || uid === 'guest') return;
+    fetch('/api/workspace/english-spaces/progress/fluency-log', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      credentials: 'include',
+      body: JSON.stringify({
+        userId: uid,
+        ownerName: this.world?.localPlayer?.nome || window.Workspace?.usuario?.nome || 'Student',
+        escolaId: window.Workspace?.usuario?.escolaId || 'DEFAULT',
+        stampsList: Object.keys(this.passport.stamps || {}),
+        ...dados
+      })
+    }).catch(() => {});
+  }
 
   obterPatenteAtual() {
     const qtd = Object.keys(this.passport.stamps || {}).length;
@@ -501,6 +518,7 @@ export class ES3DFluencia {
       this.world?.interacoesPro?.dispararEmote?.('jump', false);
 
       this.metrics.deliveriesDone++;
+      this.enviarTelemetriaNuvem({ spokenPhrase: frase, spaceId: m.deliverId, source: 'Delivery 3D', incDelivery: true });
       this.salvarPassaporteEMetricas();
       this.cancelarMissaoEntrega();
 
@@ -607,6 +625,12 @@ export class ES3DFluencia {
       }
 
       this.salvarPassaporteEMetricas();
+      this.enviarTelemetriaNuvem({
+        spokenPhrase: texto,
+        grammarTip: res?.grammarTip || null,
+        spaceId: sp.id,
+        source: 'NPC 3D'
+      });
     } catch (e) {}
   }
 
@@ -812,6 +836,13 @@ export class ES3DFluencia {
         }).then(r => r.json()).catch(() => null);
 
         if (res?.grammarTip) this.mostrarCoachTip(res.grammarTip);
+        this.enviarTelemetriaNuvem({
+        spokenPhrase: frase,
+        grammarTip: res?.grammarTip || null,
+        spaceId: 'home',
+        source: 'House Tour',
+        incHouseTour: (this.activeHouseTour.index + 1 >= this.activeHouseTour.steps.length)
+      });
         if (res?.reply) this.world?.falarTextoNPC?.(res.reply, 'home');
       } catch (e) {}
 
@@ -896,6 +927,7 @@ export class ES3DFluencia {
         this.fecharEventoRelampago();
         if (idx === ev.correct) {
           this.metrics.flashEventsWon++;
+          this.enviarTelemetriaNuvem({ spaceId: ev.spaceId, source: 'Flash Event', incFlashWin: true });
           this.salvarPassaporteEMetricas();
           this.world?.interacoesPro?.dispararEmote?.('jump', false);
           this.world?.falarTextoNPC?.('Spot on! Amazing listening skills!', 'street');
