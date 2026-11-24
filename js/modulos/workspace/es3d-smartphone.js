@@ -142,6 +142,8 @@ export class ES3DSmartphone {
           <button type="button" id="es-phone-app-rank" style="${tileStyle} border-color:rgba(250,204,21,0.45); background:rgba(250,204,21,0.12);">
             🏆 Ranking
           </button>
+          <button type="button" id="es-phone-app-neighbors" data-phone-autoclose="1" style="${tileStyle} border-color:rgba(16,185,129,0.5); background:rgba(16,185,129,0.14);">🏘️ Vizinhos</button>
+          ${['Professor', 'Gestor'].includes(window.Workspace?.usuario?.tipo) ? `<button type="button" id="es-phone-app-gs-prof" data-phone-autoclose="1" style="${tileStyle} border-color:rgba(168,85,247,0.55); background:rgba(168,85,247,0.18);">🎓 Pergunta Telão</button>` : ''}
           <button type="button" id="es-city-emote-btn" data-phone-autoclose="1" style="${tileStyle}">🎭 Emotes</button>
           <button type="button" id="es-city-photo-btn" data-phone-autoclose="1" style="${tileStyle}">📸 Photo</button>
         </div>
@@ -203,6 +205,16 @@ export class ES3DSmartphone {
     shell.querySelector('#es-phone-app-flash')?.addEventListener('click', () => {
       this.world.garantirAudioAtivo?.();
       this.world.fluenciaPro?.dispararEventoRelampago();
+    });
+
+    shell.querySelector('#es-phone-app-neighbors')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.socialPro?.abrirModalVisitarVizinhos();
+    });
+
+    shell.querySelector('#es-phone-app-gs-prof')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.socialPro?.abrirModalPerguntaProfessorGameShow();
     });
 
     this.atualizarRelogio();

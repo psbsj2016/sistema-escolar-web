@@ -288,6 +288,10 @@ export class ES3DGameShowBuilder {
 
   iniciarRodadaGameShow() {
     if (this.gsRunning) return;
+    if (this.world?.socialPro && !this._fromSocialSync) {
+      this.world.socialPro.dispararRodadaGameShowMultiplayer();
+      return;
+    }
 
     let idx = Math.floor(Math.random() * GAMESHOW_QUESTIONS.length);
     if (idx === this.gsLastIndex) idx = (idx + 1) % GAMESHOW_QUESTIONS.length;
@@ -352,6 +356,7 @@ export class ES3DGameShowBuilder {
       this.desenharTelaoIdle(`❌ ANSWER WAS ${correta}`, `${msg} Click screen to try again!`);
       this.world.falarTextoNPC?.(`Time is up! The right answer was ${correta}. Try the next question!`, 'street');
     }
+      this.world?.socialPro?.registrarRespostaGameShow(escolha, correta);
   }
 
   // ============================================================================
@@ -1111,12 +1116,14 @@ export class ES3DGameShowBuilder {
         rotY: Math.round(it.rotY * 100) / 100
       }));
       localStorage.setItem(this.obterChaveStorageMoveis(), JSON.stringify(dados));
+      this.world?.socialPro?.agendarSyncMoveisNuvem();
     } catch (e) {}
   }
 
   salvarDepositoLocal() {
     try {
       localStorage.setItem(this.obterChaveDepositoMoveis(), JSON.stringify(this.storageItems));
+      this.world?.socialPro?.agendarSyncMoveisNuvem();
     } catch (e) {}
     this.renderizarConteudoPainel();
   }

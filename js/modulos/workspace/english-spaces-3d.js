@@ -8,6 +8,7 @@ import { ES3DPersonagens } from './es3d-personagens.js';
 import { ES3DVeiculos } from './es3d-veiculos.js';
 import { ES3DSmartphone } from './es3d-smartphone.js';
 import { ES3DFluencia } from './es3d-fluencia.js';
+import { ES3DSocial } from './es3d-social.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -5255,6 +5256,9 @@ this.scene.add(facadeHeader);
     this.fluenciaPro = new ES3DFluencia(this);
     this.fluenciaPro.init();
 
+  this.socialPro = new ES3DSocial(this);
+    this.socialPro.init();
+
     this.iniciarLoopRenderizacao();
 
     if (this._estadoRestaurarPendente) {
@@ -5780,6 +5784,7 @@ if (this.torreAtual) {
                 this.gameShowBuilder?.update(delta);
                this.multiplayerTour?.update(delta, estaAndando);
                 this.fluenciaPro?.update(delta);
+                this.socialPro?.update(delta);
                 this.ambientePro?.update(delta, this.modoInterior);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
@@ -6574,6 +6579,9 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
             if (data.type === 'ES_WORLD_TOUR') {
               this.multiplayerTour?.aoReceberEventoTour(data);
             }
+            if (['ES_GAMESHOW_EVENT', 'ES_HOUSE_UPDATE', 'ES_HOUSE_LIKE', 'ES_WORLD_DUEL'].includes(data.type)) {
+              this.socialPro?.aoReceberEventoSSE(data);
+            }
             if (data.type === 'ES_WORLD_SPEAK' && data.speakerId !== this.localPlayer.userId) {
               const dist = Math.hypot((data.x || 0) - this.localPlayer.x, (data.z || 0) - this.localPlayer.z);
               if (dist <= PROXIMITY_RADIUS) {
@@ -6707,6 +6715,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
   if (this.fluenciaPro) {
       this.fluenciaPro.dispose();
       this.fluenciaPro = null;
+    }
+  if (this.socialPro) {
+      this.socialPro.dispose();
+      this.socialPro = null;
     }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
