@@ -7,6 +7,7 @@ import { ES3DMultiplayerTour } from './es3d-multiplayer-tour.js';
 import { ES3DPersonagens } from './es3d-personagens.js';
 import { ES3DVeiculos } from './es3d-veiculos.js';
 import { ES3DSmartphone } from './es3d-smartphone.js';
+import { ES3DFluencia } from './es3d-fluencia.js';
 
 // js/modulos/workspace/english-spaces-3d.js
 // 🏙️ MOTOR DA CIDADE 3D MULTIPLAYER - LIFE RPG EDITION (24 PRÉDIOS + ECONOMIA DOVRYX DRX + GUILDA MAGO + IMOBILIÁRIA + VEÍCULOS + GLB MODELS)
@@ -5248,8 +5249,11 @@ this.scene.add(facadeHeader);
    this.gameShowBuilder = new ES3DGameShowBuilder(this);
     this.gameShowBuilder.init();
 
-    this.multiplayerTour = new ES3DMultiplayerTour(this);
+   this.multiplayerTour = new ES3DMultiplayerTour(this);
     this.multiplayerTour.init();
+
+    this.fluenciaPro = new ES3DFluencia(this);
+    this.fluenciaPro.init();
 
     this.iniciarLoopRenderizacao();
 
@@ -5774,7 +5778,8 @@ if (this.torreAtual) {
       this.atualizarMusico(delta);
          this.colisoesPro?.update(delta);
                 this.gameShowBuilder?.update(delta);
-                this.multiplayerTour?.update(delta, estaAndando);
+               this.multiplayerTour?.update(delta, estaAndando);
+                this.fluenciaPro?.update(delta);
                 this.ambientePro?.update(delta, this.modoInterior);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
@@ -6063,19 +6068,11 @@ const elevadorDisponivel =
       })
     }).catch(() => {});
 
-    const npcAlvo = this.nearbyTargets.find(t => t.type === 'npc');
+   const npcAlvo = this.nearbyTargets.find(t => t.type === 'npc');
     if (npcAlvo) {
-      const sp = npcAlvo.space;
-      try {
-        const prompt = `[3D City Location: ${sp.name} | You are: ${sp.npcName} | Student (${this.localPlayer.nome}) is right in front of you and said: "${texto}"]. Reply naturally in character in 1-2 short sentences in English.`;
-        const res = await window.Workspace.api('/workspace/ingles/ia-teste/groq', 'POST', { mensagem: prompt, historico: [] });
-        if (res && res.success && res.resposta) {
-          this.mostrarBalaoNoBoneco(npcAlvo.ref, res.resposta, 8000);
-          this.adicionarMensagemFeedProximidade(sp.npcName, res.resposta, '#34d399');
-          this.falarTextoNPC(res.resposta, sp.id);
-          await DOVRYX.add(35, `Conversation at ${sp.name}`);
-        }
-      } catch (e) {}
+      if (this.fluenciaPro) {
+        await this.fluenciaPro.processarConversaComNPC3D(npcAlvo, texto);
+      }
     }
   }
 
@@ -6707,6 +6704,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.smartphone.dispose();
       this.smartphone = null;
     }  
+  if (this.fluenciaPro) {
+      this.fluenciaPro.dispose();
+      this.fluenciaPro = null;
+    }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
     if (this.scene) {

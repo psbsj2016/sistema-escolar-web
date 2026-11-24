@@ -114,8 +114,16 @@ export class ES3DSmartphone {
         </div>
       </div>
 
-      <!-- Tela Inicial de Aplicativos (Mantém os IDs oficiais para 100% de compatibilidade!) -->
+   <!-- Tela Inicial de Aplicativos (Mantém os IDs oficiais para 100% de compatibilidade!) -->
       <div id="es-phone-screen-home" style="overflow-y:auto; display:flex; flex-direction:column; gap:10px; padding-right:2px;">
+        <div style="font-size:10.5px; font-weight:800; color:#fde047; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px;">🎯 Fluência &amp; Missões</div>
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px;">
+          <button type="button" id="es-phone-app-delivery"  data-phone-autoclose="1" style="${tileStyle} border-color:rgba(245,158,11,0.5); background:rgba(245,158,11,0.14);">🛵 Delivery</button>
+          <button type="button" id="es-phone-app-passport"  data-phone-autoclose="1" style="${tileStyle} border-color:rgba(168,85,247,0.5); background:rgba(168,85,247,0.15);">🛂 Passport</button>
+          <button type="button" id="es-phone-app-housetour" data-phone-autoclose="1" style="${tileStyle} border-color:rgba(56,189,248,0.5); background:rgba(56,189,248,0.14);">🏡 House Tour</button>
+          <button type="button" id="es-phone-app-flash"     data-phone-autoclose="1" style="${tileStyle} border-color:rgba(234,179,8,0.5); background:rgba(234,179,8,0.12);">⚡ Flash Quiz</button>
+        </div>
+
         <div style="font-size:10.5px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px;">🧭 Explorar &amp; Jogar</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px;">
           <button type="button" id="es-city-gps-btn"      data-phone-autoclose="1" style="${tileStyle}">🗺️ GPS</button>
@@ -175,6 +183,26 @@ export class ES3DSmartphone {
     shell.querySelector('#es-phone-app-rank')?.addEventListener('click', () => {
       this.world.garantirAudioAtivo?.();
       this.abrirTela('rank');
+    });
+
+    shell.querySelector('#es-phone-app-delivery')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.fluenciaPro?.iniciarMissaoEntrega();
+    });
+
+    shell.querySelector('#es-phone-app-passport')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.fluenciaPro?.abrirModalPassaporte();
+    });
+
+    shell.querySelector('#es-phone-app-housetour')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.fluenciaPro?.iniciarDesafioHouseTour();
+    });
+
+    shell.querySelector('#es-phone-app-flash')?.addEventListener('click', () => {
+      this.world.garantirAudioAtivo?.();
+      this.world.fluenciaPro?.dispararEventoRelampago();
     });
 
     this.atualizarRelogio();
