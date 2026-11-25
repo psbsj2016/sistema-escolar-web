@@ -23,21 +23,23 @@ const DAILY_TREASURE_POOL = [
   { id: 'school_bag', emoji: '🎒', word: 'English Backpack',cor: 0x4ade80, x: -10.5, z: -16,   clue: 'A student forgot a backpack right outside the School!' }
 ];
 
-// 🪑 Coordenadas dos bancos fixos da Praça Central e da Avenida Principal
+// 🪑 Coordenadas dos bancos fixos da Praça Central, Calçadão da Orla e Píer
 const PUBLIC_BENCH_SEATS = [
   // Praça Central (centro em x=18, z=-103)
   { name: 'Central Plaza Bench', x: 14.35, y: 0.78, z: -107.25, rotY: 0 },
   { name: 'Central Plaza Bench', x: 22.25, y: 0.78, z: -106.65, rotY: -Math.PI / 2 },
   { name: 'Central Plaza Bench', x: 13.75, y: 0.78, z: -99.35,  rotY: Math.PI / 2 },
-  // Bancos da Avenida Principal (x = ±7.65, z = -82, -34, +14)
-  { name: 'Boulevard Bench', x: -7.65, y: 0.72, z: -82, rotY: Math.PI / 2 },
-  { name: 'Boulevard Bench', x:  7.65, y: 0.72, z: -82, rotY: -Math.PI / 2 },
-  { name: 'Boulevard Bench', x: -7.65, y: 0.72, z: -34, rotY: Math.PI / 2 },
-  { name: 'Boulevard Bench', x:  7.65, y: 0.72, z: -34, rotY: -Math.PI / 2 },
-  { name: 'Boulevard Bench', x: -7.65, y: 0.72, z:  14, rotY: Math.PI / 2 },
-  { name: 'Boulevard Bench', x:  7.65, y: 0.72, z:  14, rotY: -Math.PI / 2 }
+  // Calçadão da Orla voltados para o Mar (z = 67.6)
+  { name: 'Oceanfront Bench', x: -42, y: 0.72, z: 67.6, rotY: 0 },
+  { name: 'Oceanfront Bench', x: -24, y: 0.72, z: 67.6, rotY: 0 },
+  { name: 'Oceanfront Bench', x: -10, y: 0.72, z: 67.6, rotY: 0 },
+  { name: 'Oceanfront Bench', x:  10, y: 0.72, z: 67.6, rotY: 0 },
+  { name: 'Oceanfront Bench', x:  24, y: 0.72, z: 67.6, rotY: 0 },
+  { name: 'Oceanfront Bench', x:  42, y: 0.72, z: 67.6, rotY: 0 },
+  // Bancos na ponta do Píer de Madeira
+  { name: 'Ocean Pier Bench', x: -1.75, y: 0.72, z: 93.8, rotY: Math.PI / 2 },
+  { name: 'Ocean Pier Bench', x:  1.75, y: 0.72, z: 93.8, rotY: -Math.PI / 2 }
 ];
-
 export class ES3DInteracoes {
   constructor(world) {
     this.world = world;

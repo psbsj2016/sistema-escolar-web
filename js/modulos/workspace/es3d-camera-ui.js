@@ -56,8 +56,12 @@ export class ES3DCameraUI {
           if (w && w.isMesh) this.wallColliders.push(w);
         });
       }
-      if (entry.roof && entry.roof.isMesh) {
-        this.wallColliders.push(entry.roof);
+      if (entry.roof) {
+        if (entry.roof.isMesh) {
+          this.wallColliders.push(entry.roof);
+        } else if (entry.roof.traverse) {
+          entry.roof.traverse(obj => { if (obj.isMesh) this.wallColliders.push(obj); });
+        }
       }
     });
   }
@@ -131,7 +135,8 @@ export class ES3DCameraUI {
     const dentroAmbiente = Boolean(this.world.modoInterior || this.world.torreAtual);
     const distBase = dentroAmbiente ? CAMERA_UI_CONFIG.DIST_INTERIOR : CAMERA_UI_CONFIG.DIST_EXTERIOR;
     const distDesejada = distBase + pitch * 0.35;
-    const camHeightDesejada = Math.max(0.85, (dentroAmbiente ? 2.9 : 4.8) - pitch * 1.8 + baseY);
+    const tetoMaximoLoja = this.world.modoInterior ? 3.82 : Infinity;
+    const camHeightDesejada = Math.min(tetoMaximoLoja, Math.max(0.85, (dentroAmbiente ? 2.75 : 4.8) - pitch * 1.8 + baseY));
 
     const pivot = new THREE.Vector3(p.x, baseY + 1.55, p.z);
     const idealPos = new THREE.Vector3(
@@ -166,7 +171,8 @@ export class ES3DCameraUI {
 
     const ratio = totalDist > 0.001 ? Math.min(1, this.currentCamDist / totalDist) : 1;
     const finalPos = pivot.clone().lerp(idealPos, ratio);
-    cam.position.set(finalPos.x, Math.max(0.75 + baseY, finalPos.y), finalPos.z);
+    const finalY = Math.min(tetoMaximoLoja, Math.max(0.75 + baseY, finalPos.y));
+    cam.position.set(finalPos.x, finalY, finalPos.z);
 
     const lookAtY = baseY + 1.4 + pitch * 10;
     const lookAtX = p.x - Math.sin(yaw) * pitch * 1.2;
@@ -289,7 +295,21 @@ export class ES3DCameraUI {
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
       ctx.stroke();
     });
+  
+     // Reserva Ecológica Oeste, Bosque Sudeste e Cinturão Verde Norte
+    ctx.fillStyle = 'rgba(21, 128, 61, 0.55)';
+    ctx.fillRect(mapX(-77), mapY(-102), 23 * escala, 162 * escala);
+    ctx.fillRect(mapX(37),  mapY(16),   42 * escala, 46 * escala);
+    ctx.fillRect(mapX(-72), mapY(-132), 142 * escala, 12 * escala);
 
+    // Praia, Mar Vivo e Píer de Madeira na Costa Sul
+    ctx.fillStyle = 'rgba(253, 230, 138, 0.72)';
+    ctx.fillRect(mapX(-140), mapY(70), 280 * escala, 14 * escala);
+    ctx.fillStyle = 'rgba(14, 165, 233, 0.75)';
+    ctx.fillRect(mapX(-150), mapY(84), 300 * escala, 90 * escala);
+    ctx.fillStyle = '#a16207';
+    ctx.fillRect(mapX(-2.4), mapY(72), 4.8 * escala, 24 * escala);
+     
     // Avenidas principais (x = 0, -34, +34)
     ctx.fillStyle = 'rgba(100, 116, 139, 0.35)';
     [0, -34, 34].forEach(ax => {

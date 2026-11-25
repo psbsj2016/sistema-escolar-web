@@ -52,20 +52,16 @@ export class ES3DColisoes {
       this.staticCircles.push({ x, z, r, tag });
     };
 
-    // 1. Bancos e lixeiras da Avenida Principal
+    // 1. Lixeiras encostadas junto às fachadas (calçadas 100% livres, sem bancos nem árvores bloqueando)
     for (let z = -82; z <= 14; z += 48) {
       [-1, 1].forEach(side => {
-        addBox(side * 7.65, z, 1.55, 0.52, 'bench');
-        addCircle(side * 10.25, z + 5.5, 0.32, 'bin');
+        addCircle(side * 10.45, z + 5.5, 0.30, 'bin');
       });
     }
 
-    // 2. Árvores e canteiros ornamentais da avenida
-    for (let z = -105; z <= 39; z += 24) {
-      [-9.55, 9.55].forEach(x => {
-        addBox(x, z, 1.05, 1.65, 'tree_planter');
-      });
-    }
+    // 2. Troncos da Mata Realista, Coqueiros e Bancos da Orla (gerados por es3d-ambiente.js)
+    (this.world?.forestColliders || []).forEach(c => addCircle(c.x, c.z, c.r, c.tag || 'tree'));
+    (this.world?.coastColliders || []).forEach(b => this.staticBoxes.push(b));
 
     // 3. Postes de iluminação das avenidas
     for (let row = 0; row < 6; row++) {
@@ -89,13 +85,7 @@ export class ES3DColisoes {
       [-11.5, 11.5].forEach(xPos => addCircle(xPos, zPos, 0.85, 'outdoor'));
     }
 
-    // 6. Árvores laterais de fundo
-    for (let z = -80; z < 10; z += 10) {
-      addCircle(-23.5, z, 0.45, 'tree');
-      addCircle(23.5, z, 0.45, 'tree');
-    }
-
-    // 7. Praça Central (centro em x=18, z=-103): fonte, bancos, mesa, postes, lixeiras e placa
+    // 6. Praça Central (centro em x=18, z=-103): fonte, bancos, mesa, postes, lixeiras e placa
     const px = 18;
     const pz = -103;
     addCircle(px + 3.65, pz + 3.65, 1.52, 'fountain');       // Fonte ornamental
@@ -377,6 +367,12 @@ export class ES3DColisoes {
     }
 
     // C) NA RUA (EXTERIOR): Mobiliário urbano, Casas dos Lotes, Móveis do Lote, Trânsito e Pessoas
+    // Limite da água do mar na Costa Sul: areia livre até z=83.2; sobre o Píer (|x| <= 2.05) pode ir até z=95.2!
+    if (newZ > 83.2) {
+      const noPier = Math.abs(newX) <= 2.05 && newZ <= 95.2;
+      if (!noPier) return false;
+    }
+
     for (const box of this.staticBoxes) {
       if (this.bloquearCaixaComEscape(newX, newZ, oldX, oldZ, r, box)) return false;
     }

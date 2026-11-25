@@ -152,7 +152,6 @@ export class ES3DSmartphone {
         <div style="font-size:10.5px; font-weight:800; color:#94a3b8; text-transform:uppercase; letter-spacing:0.6px; padding:0 2px;">⚙️ Ações Rápidas</div>
         <div style="display:grid; grid-template-columns:1fr 1fr; gap:7px;">
           <button type="button" id="es-city-vehicle-btn" style="${tileStyle}">🚲 Ride</button>
-          <button type="button" id="es-city-weather-btn" style="${tileStyle}">☀️ Clear</button>
           <button type="button" id="es-city-audio3d-btn" style="${tileStyle}">🔊 3D SFX</button>
           <button type="button" id="es-city-gender-btn"  style="${tileStyle}">${isFem ? '👩 Female' : '🧑 Male'}</button>
         </div>

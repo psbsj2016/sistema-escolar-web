@@ -431,7 +431,7 @@ garantirAudioAtivo() {
     const p = this.localPlayer;
     if (typeof snap.x === 'number') p.x = Math.max(-75, Math.min(82, snap.x));
     if (typeof snap.y === 'number') p.y = Math.max(0, snap.y);
-    if (typeof snap.z === 'number') p.z = Math.max(-135, Math.min(70, snap.z));
+    if (typeof snap.z === 'number') p.z = Math.max(-135, Math.min(96, snap.z));
     if (typeof snap.rotY === 'number') p.rotY = snap.rotY;
     p.targetX = null;
     p.targetZ = null;
@@ -1295,47 +1295,47 @@ const greenMat = new THREE.MeshStandardMaterial({
 
 this.trafficLightMaterials = { redMat, yellowMat, greenMat };
 
-[-56, -24].forEach((zPos, index) => {
+[-56, -24].forEach((zPos) => {
   [-1, 1].forEach(side => {
     const signal = new THREE.Group();
+    const dirPista = -side; // Aponta SEMPRE da calçada para cima da avenida!
 
-    const pole = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.07, 0.09, 3.5, 10),
-      signalPoleMat
-    );
-    pole.position.y = 1.75;
+    // Poste vertical na borda da calçada
+    const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.11, 4.15, 10), signalPoleMat);
+    pole.position.y = 2.08;
     signal.add(pole);
 
-    const housing = new THREE.Mesh(
-      new THREE.BoxGeometry(0.48, 1.18, 0.42),
-      signalBodyMat
-    );
-    housing.position.set(-side * 0.22, 3.05, 0);
+    // Braço horizontal avançando sobre a pista
+    const arm = new THREE.Mesh(new THREE.BoxGeometry(2.1, 0.10, 0.10), signalPoleMat);
+    arm.position.set(dirPista * 1.0, 4.02, 0);
+    signal.add(arm);
+
+    // Caixa do semáforo suspensa sobre a pista com lentes voltadas para os carros (+Z e -Z)
+    const housing = new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.18, 0.44), signalBodyMat);
+    housing.position.set(dirPista * 1.92, 3.45, 0);
     signal.add(housing);
 
-    [3.4, 3.05, 2.7].forEach((y, i) => {
-      const lens = new THREE.Mesh(
-        new THREE.SphereGeometry(0.125, 12, 10),
-        [redMat, yellowMat, greenMat][i]
-      );
+    [-1, 1].forEach(faceZ => {
+      [3.80, 3.45, 3.10].forEach((y, i) => {
+        const lens = new THREE.Mesh(
+          new THREE.SphereGeometry(0.125, 12, 10),
+          [redMat, yellowMat, greenMat][i]
+        );
+        lens.position.set(dirPista * 1.92, y, faceZ * 0.22);
+        signal.add(lens);
 
-      lens.position.set(-side * 0.47, y, 0);
-      signal.add(lens);
+        // Pequena viseira anti-sol acima de cada lente
+        const visor = new THREE.Mesh(new THREE.BoxGeometry(0.28, 0.04, 0.14), signalBodyMat);
+        visor.position.set(dirPista * 1.92, y + 0.12, faceZ * 0.26);
+        signal.add(visor);
+      });
     });
 
-    signal.position.set(side * 6.1, 0, zPos);
-    signal.rotation.y = side === 1 ? 0 : Math.PI;
-
-    signal.traverse(obj => {
-      if (obj.isMesh) {
-        obj.castShadow = true;
-      }
-    });
-
+    signal.position.set(side * 6.3, 0, zPos);
+    signal.traverse(obj => { if (obj.isMesh) obj.castShadow = true; });
     this.exteriorGroup.add(signal);
   });
 });
-
     const placas = [
       { pos: [-7.2, -72], tipo: 'STOP',  texto: 'STOP' },
       { pos: [ 7.2, -40], tipo: 'YIELD', texto: 'YIELD' },
@@ -2344,7 +2344,7 @@ criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68
         }
       }
     }
-    if (newX < -75 || newX > 82 || newZ < -135 || newZ > 70) return false;
+    if (newX < -75 || newX > 82 || newZ < -135 || newZ > 96) return false;
     if (this.colisoesPro && !this.colisoesPro.podePassar(newX, newZ, oldX, oldZ)) return false;
     return true;
   }
@@ -2945,165 +2945,28 @@ criarAvenidaRealista() {
     const rightSidewalk = new THREE.Mesh(new THREE.PlaneGeometry(4.2, 170), sidewalkMat); rightSidewalk.rotation.x = -Math.PI / 2; rightSidewalk.position.set(8.8, 0.08, -36); rightSidewalk.receiveShadow = true;
     this.exteriorGroup.add(leftSidewalk, rightSidewalk);
  
-// Mobiliário urbano: bancos e lixeiras
-const benchWoodMat = new THREE.MeshStandardMaterial({
-  color: 0x795438,
-  roughness: 0.82
-});
-
-const benchMetalMat = new THREE.MeshStandardMaterial({
-  color: 0x343b40,
-  metalness: 0.72,
-  roughness: 0.38
-});
-
+// Lixeiras discretas encostadas na borda das fachadas (calçada 100% livre, sem bancos nem árvores bloqueando)
 const binMat = new THREE.MeshStandardMaterial({
   color: 0x46565a,
   metalness: 0.55,
   roughness: 0.48
 });
+const binLidMat = new THREE.MeshStandardMaterial({
+  color: 0x343b40,
+  metalness: 0.72,
+  roughness: 0.38
+});
 
 for (let z = -82; z <= 14; z += 48) {
   [-1, 1].forEach(side => {
-    const x = side * 7.65;
-
-    // Assento do banco
-    const seat = new THREE.Mesh(
-      new THREE.BoxGeometry(1.55, 0.13, 0.43),
-      benchWoodMat
-    );
-    seat.position.set(x, 0.65, z);
-    seat.castShadow = true;
-    this.exteriorGroup.add(seat);
-
-    // Encosto
-    const back = new THREE.Mesh(
-      new THREE.BoxGeometry(1.55, 0.48, 0.12),
-      benchWoodMat
-    );
-    back.position.set(x, 0.96, z - 0.17);
-    back.castShadow = true;
-    this.exteriorGroup.add(back);
-
-    // Pés metálicos
-    [-0.58, 0.58].forEach(offset => {
-      const leg = new THREE.Mesh(
-        new THREE.BoxGeometry(0.09, 0.62, 0.12),
-        benchMetalMat
-      );
-      leg.position.set(x + offset, 0.36, z);
-      this.exteriorGroup.add(leg);
-    });
-
-    // Lixeira urbana
-    const bin = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.25, 0.22, 0.78, 12),
-      binMat
-    );
-    bin.position.set(side * 10.25, 0.48, z + 5.5);
+    const bin = new THREE.Mesh(new THREE.CylinderGeometry(0.24, 0.21, 0.76, 12), binMat);
+    bin.position.set(side * 10.45, 0.46, z + 5.5);
     bin.castShadow = true;
-    this.exteriorGroup.add(bin);
-
-    // Tampa da lixeira
-    const lid = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.27, 0.27, 0.07, 12),
-      benchMetalMat
-    );
-    lid.position.set(side * 10.25, 0.9, z + 5.5);
-    this.exteriorGroup.add(lid);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.26, 0.07, 12), binLidMat);
+    lid.position.set(side * 10.45, 0.87, z + 5.5);
+    this.exteriorGroup.add(bin, lid);
   });
 }
-
- // Árvores ornamentais e canteiros urbanos
-const planterMat = new THREE.MeshStandardMaterial({
-  color: 0x77736a,
-  roughness: 0.92
-});
-
-const soilMat = new THREE.MeshStandardMaterial({
-  color: 0x493522,
-  roughness: 1
-});
-
-const trunkMat = new THREE.MeshStandardMaterial({
-  color: 0x654321,
-  roughness: 0.95
-});
-
-const foliageMat = new THREE.MeshStandardMaterial({
-  color: 0x356b3b,
-  roughness: 0.9
-});
-
-const foliageLightMat = new THREE.MeshStandardMaterial({
-  color: 0x4b8548,
-  roughness: 0.92
-});
-
-for (let z = -105; z <= 39; z += 24) {
-  [-9.55, 9.55].forEach(x => {
-    // Canteiro de concreto
-    const planter = new THREE.Mesh(
-      new THREE.BoxGeometry(1.05, 0.24, 1.65),
-      planterMat
-    );
-
-    planter.position.set(x, 0.19, z);
-    planter.castShadow = true;
-    planter.receiveShadow = true;
-    this.exteriorGroup.add(planter);
-
-    // Terra dentro do canteiro
-    const soil = new THREE.Mesh(
-      new THREE.BoxGeometry(0.91, 0.045, 1.5),
-      soilMat
-    );
-
-    soil.position.set(x, 0.33, z);
-    this.exteriorGroup.add(soil);
-
-    // Tronco da árvore
-    const trunk = new THREE.Mesh(
-      new THREE.CylinderGeometry(0.13, 0.19, 2.25, 8),
-      trunkMat
-    );
-
-    trunk.position.set(x, 1.45, z);
-    trunk.castShadow = true;
-    this.exteriorGroup.add(trunk);
-
-    // Copa principal
-    const crown = new THREE.Mesh(
-      new THREE.SphereGeometry(0.95, 10, 8),
-      foliageMat
-    );
-
-    crown.position.set(x, 3.05, z);
-    crown.scale.set(1, 1.12, 1);
-    crown.castShadow = true;
-    this.exteriorGroup.add(crown);
-
-    // Volume adicional da copa
-    const crownSide1 = new THREE.Mesh(
-      new THREE.SphereGeometry(0.62, 9, 7),
-      foliageLightMat
-    );
-
-    crownSide1.position.set(x - 0.48, 3.12, z + 0.12);
-    crownSide1.castShadow = true;
-    this.exteriorGroup.add(crownSide1);
-
-    const crownSide2 = new THREE.Mesh(
-      new THREE.SphereGeometry(0.62, 9, 7),
-      foliageMat
-    );
-
-    crownSide2.position.set(x + 0.48, 3.08, z - 0.12);
-    crownSide2.castShadow = true;
-    this.exteriorGroup.add(crownSide2);
-  });
-}
-
 
 // Juntas discretas entre as placas das calçadas
 const sidewalkJointMat = new THREE.MeshStandardMaterial({
@@ -4395,51 +4258,6 @@ this.torresResidenciais.set(cfg.id, {
       fundoGroup.add(montanha);
     }
 
-    // 🌳 Árvores do cenário
-    const criarArvore = (x, z, scale = 1) => {
-      const tronco = new THREE.Mesh(
-        new THREE.CylinderGeometry(
-          0.12 * scale,
-          0.18 * scale,
-          1.2 * scale,
-          8
-        ),
-        new THREE.MeshStandardMaterial({
-          color: 0x422006,
-          roughness: 0.9
-        })
-      );
-
-      tronco.position.set(x, 0.6 * scale, z);
-
-      const copa = new THREE.Mesh(
-        new THREE.SphereGeometry(0.85 * scale, 10, 8),
-        new THREE.MeshStandardMaterial({
-          color: 0x14532d,
-          roughness: 0.9
-        })
-      );
-
-      copa.position.set(x, 1.8 * scale, z);
-
-      const copa2 = new THREE.Mesh(
-        new THREE.SphereGeometry(0.65 * scale, 10, 8),
-        new THREE.MeshStandardMaterial({
-          color: 0x166534,
-          roughness: 0.9
-        })
-      );
-
-      copa2.position.set(x, 2.45 * scale, z);
-
-      fundoGroup.add(tronco, copa, copa2);
-    };
-
-    for (let z = -80; z < 10; z += 10) {
-      criarArvore(-23.5, z, 1.1);
-      criarArvore(23.5, z, 1.1);
-    }
-
     this.exteriorGroup.add(fundoGroup);
   }
 
@@ -5094,8 +4912,31 @@ const lampGlowMat = new THREE.MeshStandardMaterial({
       topDoor.position.set(frontX, (2.7 + bh) / 2, centerZ);
       this.scene.add(topDoor); wallMatsTransp.push(topDoor);
 
-      const roof = new THREE.Mesh(new THREE.BoxGeometry(bw + 0.6, 0.36, bd + 0.6), new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.9 }));
-      roof.position.set(centerX, bh + 0.18, centerZ);
+      const roof = new THREE.Group();
+      roof.position.set(centerX, bh, centerZ);
+
+      const outerRoof = new THREE.Mesh(
+        new THREE.BoxGeometry(bw + 0.6, 0.34, bd + 0.6),
+        new THREE.MeshStandardMaterial({ color: bCfg.roof, roughness: 0.9 })
+      );
+      outerRoof.position.y = 0.19;
+
+      // Forro interno claro + 2 luminárias LED no teto (visíveis ao entrar na loja)
+      const innerCeiling = new THREE.Mesh(
+        new THREE.PlaneGeometry(bw - 0.18, bd - 0.18),
+        new THREE.MeshStandardMaterial({ color: 0xf1f5f9, roughness: 0.92 })
+      );
+      innerCeiling.rotation.x = Math.PI / 2;
+      innerCeiling.position.y = -0.01;
+
+      const ledMat = new THREE.MeshBasicMaterial({ color: 0xfffbeb });
+      [-2.1, 2.1].forEach(lz => {
+        const panel = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.05, 0.52), ledMat);
+        panel.position.set(0, -0.04, lz);
+        roof.add(panel);
+      });
+
+      roof.add(outerRoof, innerCeiling);
       this.scene.add(roof);
 
   // Acabamento arquitetônico da fachada
@@ -5327,7 +5168,7 @@ this.scene.add(facadeHeader);
       if (b.id === id) {
         if (meshes) {
           meshes.walls.forEach(w => { w.visible = true; });
-          if (meshes.roof) meshes.roof.visible = false;
+          if (meshes.roof) meshes.roof.visible = true;
           if (meshes.floor) meshes.floor.visible = true;
           if (meshes.placa3D) meshes.placa3D.visible = false;
         }
@@ -5418,6 +5259,8 @@ this.scene.add(facadeHeader);
     const destinosEspeciais = [
       { key: 'lot',    icon: '🏡', nome: 'My House Lot',     sub: 'Residential District' },
       { key: 'plaza',  icon: '⛲', nome: 'Central Plaza',    sub: 'Park & Fountain' },
+      { key: 'pier',   icon: '🌊', nome: 'Ocean Beach & Pier', sub: 'Sea, Ships & Boardwalk' },
+              { key: 'forest', icon: '🌲', nome: 'Forest Reserve',     sub: 'Tall Trees & Nature Trail' },
       ...CITY_TOWERS_LAYOUT.map(t => ({
         key: `tower:${t.id}`,
         icon: '🏢',
@@ -5463,6 +5306,12 @@ this.scene.add(facadeHeader);
       } else if (key === 'plaza') {
         this.localPlayer.x = 18;
         this.localPlayer.z = -95.5;
+      }  else if (key === 'pier') {
+                   this.localPlayer.x = 0;
+                   this.localPlayer.z = 74;
+              }  else if (key === 'forest') {
+                   this.localPlayer.x = -61.5;
+                   this.localPlayer.z = -18;
       } else if (key.startsWith('tower:')) {
         const tId = key.replace('tower:', '');
         const torre = this.torresResidenciais?.get(tId);
@@ -5727,7 +5576,7 @@ if (this.torreAtual) {
         const nextZ = p.z + worldDirZ * speed * delta;
         if (this.podeMoverPara(nextX, nextZ, p.x, p.z)) {
           p.x = Math.max(-75, Math.min(82, nextX));
-          p.z = Math.max(-135, Math.min(70, nextZ));
+          p.z = Math.max(-135, Math.min(96, nextZ));
           p.rotY = Math.atan2(worldDirX, worldDirZ);
           estaAndando = true;
         } else if (this.podeMoverPara(nextX, p.z, p.x, p.z)) {
@@ -6239,11 +6088,6 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
       this.interacoesPro?.tirarFotoPostal();
     });
 
-    document.getElementById('es-city-weather-btn')?.addEventListener('click', () => {
-      this.garantirAudioAtivo();
-      this.ambientePro?.alternarClima();
-    });
-
     document.getElementById('es-city-audio3d-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.ambientePro?.alternarAudioEspacial();
@@ -6382,7 +6226,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
           if (this.gameShowBuilder?.aoClicarNoChao(intersectPt)) return;
 
           const tx = Math.max(-75, Math.min(82, intersectPt.x));
-          const tz = Math.max(-135, Math.min(70, intersectPt.z));
+          const tz = Math.max(-135, Math.min(96, intersectPt.z));
           if (this.podeMoverPara(tx, tz, this.localPlayer.x, this.localPlayer.z)) {
             this.localPlayer.targetX = tx;
             this.localPlayer.targetZ = tz;
@@ -6759,6 +6603,7 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
     this.motos = [];
     this.ciclistas = [];
     this.avioes = [];
+    this.embarcacoes = [ ];
     this.pedestrians = [];
     this.otherPlayers3D.clear();
     this.npcs3D.clear();

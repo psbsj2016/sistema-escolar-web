@@ -9,7 +9,9 @@ const VEICULOS_CONFIG = {
   VEL_BASE_MOTO: 6.2,
   VEL_BASE_CICLISTA: 4.3,
   RUNWAY_X: 68,
-  STROBE_INTERVALO_MS: 850
+  STROBE_INTERVALO_MS: 850,
+  NIVEL_AGUA_MAR_Y: 0.06,
+  LIMITE_MAR_X: 138
 };
 
 export class ES3DVeiculos {
@@ -604,6 +606,7 @@ export class ES3DVeiculos {
       this.world.exteriorGroup.add(moto);
       this.world.motos.push(moto);
     }
+      this.criarEmbarcacoesMar();
   }
 
   atualizarTransito(delta) {
@@ -664,6 +667,7 @@ export class ES3DVeiculos {
         });
       }
     });
+        this.atualizarEmbarcacoes(delta);
   }
 
   // ============================================================================
@@ -1021,6 +1025,330 @@ export class ES3DVeiculos {
           ud.speed = Math.max(4.5, ud.speed - delta * 5.0);
           if (av.position.z >= -95) ud.phase = 'taxi';
         }
+      }
+    });
+  }
+
+  // ============================================================================
+  // 8. 🚢⛵🚤 FROTA MARÍTIMA REALISTA (NAVIO, IATE, VELEIROS E LANCHAS)
+  // ============================================================================
+  criarTexturaCabinesNavio() {
+    const c = document.createElement('canvas');
+    c.width = 512;
+    c.height = 128;
+    const ctx = c.getContext('2d');
+    ctx.fillStyle = '#f8fafc';
+    ctx.fillRect(0, 0, 512, 128);
+    ctx.fillStyle = '#0f172a';
+    ctx.fillRect(0, 14, 512, 26);
+    ctx.fillRect(0, 58, 512, 24);
+
+    // Janelas iluminadas das cabines nos dois convés
+    for (let x = 14; x < 498; x += 24) {
+      ctx.fillStyle = x % 48 === 14 ? '#fef08a' : '#38bdf8';
+      ctx.fillRect(x, 19, 14, 15);
+      ctx.fillStyle = x % 72 === 14 ? '#fde047' : '#7dd3fc';
+      ctx.fillRect(x, 63, 14, 14);
+    }
+    ctx.fillStyle = '#1d4ed8';
+    ctx.fillRect(0, 102, 512, 14);
+    return this.registrarTextura(new (window.THREE || this.THREE).CanvasTexture(c));
+  }
+
+  // 🚢 NAVIO DE CRUZEIRO / TRANSPORTE REALISTA (PROA EM +X)
+  criarNavioRealista3D() {
+    const THREE = window.THREE || this.THREE;
+    const ship = new THREE.Group();
+
+    const matCasco = new THREE.MeshStandardMaterial({ color: 0x0f172a, roughness: 0.42, metalness: 0.28 });
+    const matLinhaAgua = new THREE.MeshStandardMaterial({ color: 0xb91c1c, roughness: 0.55 });
+    const matBranco = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35, metalness: 0.12 });
+    const matDeck = new THREE.MeshStandardMaterial({ color: 0xb07d4f, roughness: 0.78 });
+    const matVidro = new THREE.MeshStandardMaterial({ color: 0x0ea5e9, metalness: 0.78, roughness: 0.15 });
+    const matChamine = new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.38 });
+    const matPreto = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.65 });
+    const matBote = new THREE.MeshStandardMaterial({ color: 0xf97316, roughness: 0.45 });
+
+    // Casco principal + faixa vermelha na linha d'água
+    const cascoBase = new THREE.Mesh(new THREE.BoxGeometry(19.5, 2.2, 5.2), matCasco);
+    cascoBase.position.set(-1.2, 1.15, 0);
+    const linhaAgua = new THREE.Mesh(new THREE.BoxGeometry(19.8, 0.55, 5.28), matLinhaAgua);
+    linhaAgua.position.set(-1.2, 0.28, 0);
+
+    // Proa afilada (bico do navio apontando para +X)
+    const proa = new THREE.Mesh(new THREE.CylinderGeometry(0.15, 2.65, 5.6, 4), matCasco);
+    proa.rotation.z = -Math.PI / 2;
+    proa.rotation.x = Math.PI / 4;
+    proa.scale.set(0.62, 1.0, 1.0);
+    proa.position.set(10.8, 1.15, 0);
+
+    const proaBase = new THREE.Mesh(new THREE.CylinderGeometry(0.10, 2.55, 5.4, 4), matLinhaAgua);
+    proaBase.rotation.z = -Math.PI / 2;
+    proaBase.rotation.x = Math.PI / 4;
+    proaBase.scale.set(0.22, 1.0, 1.0);
+    proaBase.position.set(10.8, 0.30, 0);
+
+    // Convés de madeira
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(19.2, 0.14, 4.9), matDeck);
+    deck.position.set(-1.1, 2.28, 0);
+
+    // Superestrutura (2 andares de cabines com textura de janelas iluminadas)
+    const cabinTex = this.criarTexturaCabinesNavio();
+    const matCabines = new THREE.MeshStandardMaterial({ map: cabinTex, roughness: 0.3 });
+    const bloco1 = new THREE.Mesh(new THREE.BoxGeometry(15.2, 2.5, 4.5), matCabines);
+    bloco1.position.set(-1.4, 3.55, 0);
+
+    const bloco2 = new THREE.Mesh(new THREE.BoxGeometry(11.4, 1.65, 3.9), matBranco);
+    bloco2.position.set(-1.1, 5.60, 0);
+
+    // Ponte de comando envidraçada (mais larga para visão lateral)
+    const ponte = new THREE.Mesh(new THREE.BoxGeometry(2.6, 1.15, 5.6), matBranco);
+    ponte.position.set(4.5, 5.85, 0);
+    const ponteVidro = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.62, 5.45), matVidro);
+    ponteVidro.position.set(5.82, 5.95, 0);
+
+    // Botes salva-vidas laranja nas laterais
+    [-2.42, 2.42].forEach(bz => {
+      [-4.2, -1.4, 1.4].forEach(bx => {
+        const bote = new THREE.Mesh(new THREE.BoxGeometry(1.65, 0.45, 0.50), matBote);
+        bote.position.set(bx, 2.65, bz);
+        ship.add(bote);
+      });
+    });
+
+    // Chaminé estilizada + mastro de radar + luzes de navegação
+    const chamine = new THREE.Mesh(new THREE.CylinderGeometry(0.62, 0.92, 2.6, 14), matChamine);
+    chamine.position.set(-3.4, 7.65, 0);
+    chamine.rotation.z = 0.14;
+    const chamineTopo = new THREE.Mesh(new THREE.CylinderGeometry(0.64, 0.66, 0.45, 14), matPreto);
+    chamineTopo.position.set(-3.55, 8.95, 0);
+    chamineTopo.rotation.z = 0.14;
+
+    const mastro = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.14, 2.6, 8), matBranco);
+    mastro.position.set(4.2, 7.6, 0);
+    const luzNavL = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0xff2222 }));
+    luzNavL.position.set(5.8, 6.2, -2.75);
+    const luzNavR = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0x22ff55 }));
+    luzNavR.position.set(5.8, 6.2, 2.75);
+
+    // Fumaça leve saindo da chaminé (animada no update)
+    const smokePuffs = [];
+    const matSmoke = new THREE.MeshBasicMaterial({ color: 0xe2e8f0, transparent: true, opacity: 0.42 });
+    for (let s = 0; s < 4; s++) {
+      const puff = new THREE.Mesh(new THREE.SphereGeometry(0.45 + s * 0.16, 8, 8), matSmoke.clone());
+      puff.position.set(-3.6 - s * 1.1, 9.4 + s * 0.55, 0);
+      puff.userData.phase = s * 0.25;
+      ship.add(puff);
+      smokePuffs.push(puff);
+    }
+
+    // Rastro de espuma branca na água
+    const wake = new THREE.Mesh(
+      new THREE.PlaneGeometry(11.5, 4.4),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.34, depthWrite: false })
+    );
+    wake.rotation.x = -Math.PI / 2;
+    wake.position.set(-16.2, 0.08, 0);
+
+    ship.add(cascoBase, linhaAgua, proa, proaBase, deck, bloco1, bloco2, ponte, ponteVidro, chamine, chamineTopo, mastro, luzNavL, luzNavR, wake);
+    ship.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    ship.userData.smokePuffs = smokePuffs;
+    return ship;
+  }
+
+  // ⛵ VELEIRO REALISTA (PROA EM +X)
+  criarVeleiroRealista3D(corCasco = 0x2563eb) {
+    const THREE = window.THREE || this.THREE;
+    const boat = new THREE.Group();
+
+    const matCasco = new THREE.MeshStandardMaterial({ color: corCasco, roughness: 0.35, metalness: 0.2 });
+    const matDeck = new THREE.MeshStandardMaterial({ color: 0xc89b6e, roughness: 0.78 });
+    const matVela = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.65, side: THREE.DoubleSide });
+    const matMastro = new THREE.MeshStandardMaterial({ color: 0xcbd5e1, metalness: 0.8, roughness: 0.25 });
+
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(4.4, 0.75, 1.85), matCasco);
+    hull.position.set(-0.2, 0.35, 0);
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(1.05, 1.9, 4), matCasco);
+    bow.rotation.z = -Math.PI / 2;
+    bow.rotation.x = Math.PI / 4;
+    bow.scale.set(0.55, 1.0, 1.15);
+    bow.position.set(2.9, 0.36, 0);
+
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(4.1, 0.12, 1.65), matDeck);
+    deck.position.set(-0.2, 0.74, 0);
+    const cabin = new THREE.Mesh(new THREE.BoxGeometry(1.8, 0.45, 1.2), new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.3 }));
+    cabin.position.set(-0.5, 0.98, 0);
+
+    const mast = new THREE.Mesh(new THREE.CylinderGeometry(0.055, 0.075, 5.8, 10), matMastro);
+    mast.position.set(0.35, 3.6, 0);
+    const boom = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, 2.5, 8), matMastro);
+    boom.rotation.z = Math.PI / 2;
+    boom.position.set(-0.9, 1.48, 0);
+
+    // Vela principal + vela de proa triangulares
+    const mainSailShape = new THREE.Shape();
+    mainSailShape.moveTo(0, 0);
+    mainSailShape.lineTo(-2.35, 0);
+    mainSailShape.lineTo(0, 4.7);
+    mainSailShape.closePath();
+    const mainSail = new THREE.Mesh(new THREE.ShapeGeometry(mainSailShape), matVela);
+    mainSail.position.set(0.30, 1.52, 0.04);
+    mainSail.rotation.y = 0.10;
+
+    const jibShape = new THREE.Shape();
+    jibShape.moveTo(0, 0);
+    jibShape.lineTo(2.45, 0);
+    jibShape.lineTo(0, 4.1);
+    jibShape.closePath();
+    const jibSail = new THREE.Mesh(new THREE.ShapeGeometry(jibShape), matVela);
+    jibSail.position.set(0.42, 1.38, -0.04);
+    jibSail.rotation.y = -0.10;
+
+    const wake = new THREE.Mesh(
+      new THREE.PlaneGeometry(3.2, 1.25),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.28, depthWrite: false })
+    );
+    wake.rotation.x = -Math.PI / 2;
+    wake.position.set(-4.0, 0.06, 0);
+
+    boat.add(hull, bow, deck, cabin, mast, boom, mainSail, jibSail, wake);
+    boat.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return boat;
+  }
+
+  // 🛥️ IATE DE PASSEIO REALISTA (PROA EM +X)
+  criarIateRealista3D() {
+    const THREE = window.THREE || this.THREE;
+    const yacht = new THREE.Group();
+
+    const matBranco = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.25, metalness: 0.18 });
+    const matFaixa = new THREE.MeshStandardMaterial({ color: 0x0284c7, roughness: 0.3, metalness: 0.25 });
+    const matVidro = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.85, roughness: 0.12 });
+    const matDeck = new THREE.MeshStandardMaterial({ color: 0xb67b43, roughness: 0.78 });
+
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(7.2, 1.15, 2.75), matBranco);
+    hull.position.set(-0.4, 0.55, 0);
+    const stripe = new THREE.Mesh(new THREE.BoxGeometry(7.3, 0.18, 2.80), matFaixa);
+    stripe.position.set(-0.4, 0.82, 0);
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(1.55, 2.8, 4), matBranco);
+    bow.rotation.z = -Math.PI / 2;
+    bow.rotation.x = Math.PI / 4;
+    bow.scale.set(0.55, 1.0, 1.22);
+    bow.position.set(4.5, 0.58, 0);
+
+    const deck = new THREE.Mesh(new THREE.BoxGeometry(6.9, 0.12, 2.55), matDeck);
+    deck.position.set(-0.4, 1.16, 0);
+    const salon = new THREE.Mesh(new THREE.BoxGeometry(4.2, 1.05, 2.25), matBranco);
+    salon.position.set(-0.3, 1.72, 0);
+    const glass = new THREE.Mesh(new THREE.BoxGeometry(4.32, 0.52, 2.30), matVidro);
+    glass.position.set(-0.25, 1.78, 0);
+
+    const flybridge = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.55, 1.85), matBranco);
+    flybridge.position.set(-0.8, 2.48, 0);
+    const arch = new THREE.Mesh(new THREE.TorusGeometry(0.88, 0.08, 8, 16, Math.PI), matBranco);
+    arch.rotation.y = Math.PI / 2;
+    arch.position.set(-1.3, 2.75, 0);
+
+    const wake = new THREE.Mesh(
+      new THREE.PlaneGeometry(5.2, 2.0),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.34, depthWrite: false })
+    );
+    wake.rotation.x = -Math.PI / 2;
+    wake.position.set(-6.4, 0.07, 0);
+
+    yacht.add(hull, stripe, bow, deck, salon, glass, flybridge, arch, wake);
+    yacht.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return yacht;
+  }
+
+  // 🚤 LANCHA ESPORTIVA RÁPIDA (PROA EM +X)
+  criarLanchaRealista3D(cor = 0xef4444) {
+    const THREE = window.THREE || this.THREE;
+    const boat = new THREE.Group();
+
+    const matCor = new THREE.MeshStandardMaterial({ color: cor, roughness: 0.25, metalness: 0.32 });
+    const matBranco = new THREE.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.28 });
+    const matVidro = new THREE.MeshStandardMaterial({ color: 0x0f172a, metalness: 0.8, roughness: 0.12 });
+    const matMotor = new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 0.45 });
+
+    const hull = new THREE.Mesh(new THREE.BoxGeometry(3.4, 0.58, 1.55), matBranco);
+    hull.position.set(-0.2, 0.28, 0);
+    const topDeck = new THREE.Mesh(new THREE.BoxGeometry(3.45, 0.18, 1.58), matCor);
+    topDeck.position.set(-0.2, 0.62, 0);
+    const bow = new THREE.Mesh(new THREE.ConeGeometry(0.88, 1.65, 4), matCor);
+    bow.rotation.z = -Math.PI / 2;
+    bow.rotation.x = Math.PI / 4;
+    bow.scale.set(0.45, 1.0, 1.2);
+    bow.position.set(2.3, 0.38, 0);
+
+    const windshield = new THREE.Mesh(new THREE.BoxGeometry(0.55, 0.34, 1.32), matVidro);
+    windshield.position.set(0.55, 0.84, 0);
+    windshield.rotation.z = 0.42;
+
+    const motor = new THREE.Mesh(new THREE.BoxGeometry(0.38, 0.68, 0.34), matMotor);
+    motor.position.set(-2.05, 0.46, 0);
+
+    const wake = new THREE.Mesh(
+      new THREE.PlaneGeometry(4.4, 1.25),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.42, depthWrite: false })
+    );
+    wake.rotation.x = -Math.PI / 2;
+    wake.position.set(-4.3, 0.06, 0);
+
+    boat.add(hull, topDeck, bow, windshield, motor, wake);
+    boat.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return boat;
+  }
+
+  criarEmbarcacoesMar() {
+    if (!this.world?.exteriorGroup) return;
+    this.world.embarcacoes = [];
+
+    const yAgua = VEICULOS_CONFIG.NIVEL_AGUA_MAR_Y;
+    const frota = [
+      { mesh: this.criarNavioRealista3D(),           x: -65, z: 128, dir:  1, speed: 2.6, ampBalanco: 0.018 },
+      { mesh: this.criarIateRealista3D(),            x:  50, z: 112, dir: -1, speed: 4.1, ampBalanco: 0.032 },
+      { mesh: this.criarVeleiroRealista3D(0x2563eb), x: -35, z: 103, dir:  1, speed: 2.9, ampBalanco: 0.048 },
+      { mesh: this.criarVeleiroRealista3D(0x10b981), x:  72, z: 107, dir: -1, speed: 2.5, ampBalanco: 0.045 },
+      { mesh: this.criarLanchaRealista3D(0xef4444),  x: -95, z:  98, dir:  1, speed: 7.4, ampBalanco: 0.040 },
+      { mesh: this.criarLanchaRealista3D(0xf59e0b),  x:  15, z: 118, dir: -1, speed: 6.8, ampBalanco: 0.040 }
+    ];
+
+    frota.forEach((v, idx) => {
+      v.mesh.position.set(v.x, yAgua, v.z);
+      v.mesh.rotation.y = v.dir === 1 ? 0 : Math.PI;
+      v.phase = idx * 1.15;
+      this.world.exteriorGroup.add(v.mesh);
+      this.world.embarcacoes.push(v);
+    });
+  }
+
+  atualizarEmbarcacoes(delta) {
+    if (this.world.modoInterior || !Array.isArray(this.world.embarcacoes)) return;
+    const limX = VEICULOS_CONFIG.LIMITE_MAR_X;
+    const yBase = VEICULOS_CONFIG.NIVEL_AGUA_MAR_Y;
+
+    this.world.embarcacoes.forEach(v => {
+      v.phase += delta * 1.9;
+      v.mesh.position.x += v.dir * v.speed * delta;
+      if (v.dir > 0 && v.mesh.position.x > limX) v.mesh.position.x = -limX;
+      if (v.dir < 0 && v.mesh.position.x < -limX) v.mesh.position.x = limX;
+
+      // Balanço suave realista das ondas
+      v.mesh.position.y = yBase + Math.sin(v.phase) * 0.08;
+      v.mesh.rotation.x = Math.sin(v.phase * 0.9) * v.ampBalanco;
+      v.mesh.rotation.z = Math.cos(v.phase * 0.7) * (v.ampBalanco * 0.65);
+
+      // Fumaça subindo da chaminé do navio
+      if (v.mesh.userData?.smokePuffs) {
+        v.mesh.userData.smokePuffs.forEach(puff => {
+          puff.userData.phase = (puff.userData.phase + delta * 0.35) % 1;
+          const t = puff.userData.phase;
+          puff.position.set(-3.55 - t * 4.2, 9.2 + t * 2.6, Math.sin(v.phase + t * 4) * 0.25);
+          const sc = 0.7 + t * 1.3;
+          puff.scale.set(sc, sc, sc);
+          puff.material.opacity = 0.42 * (1 - t);
+        });
       }
     });
   }
