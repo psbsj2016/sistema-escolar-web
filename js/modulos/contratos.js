@@ -167,29 +167,128 @@ Object.assign(App, {
         }
     },
 
-  // =========================================================
-    // 🧩 HUB CENTRAL DE CONTRATOS E LINKS
+    // =========================================================
+    // 🧩 HUB CENTRAL DE CONTRATOS E MATRÍCULAS (2 SETORES)
     // =========================================================
     renderizarHubContratos: () => {
         App.setTitulo("Hub de Contratos e Matrículas");
+        App.setorHubAtivo = null;
+        App.subAbaHubAtiva = null;
+        App.previewModo = App.previewModo || 'desktop';
+        App._configMatriculaCarregada = false;
+
         const div = document.getElementById('app-content');
-        
+
         div.innerHTML = `
-            <div class="card" style="margin-bottom: 20px; border-bottom: 3px solid #34495e;">
-                <div style="display:flex; gap:10px; flex-wrap:wrap; justify-content:center;">
-                    <button class="btn-primary" onclick="App.mostrarAreaLinks()" style="background:#3498db; border:none;">🔗 Link de Matrícula</button>
-                    <button class="btn-primary" onclick="App.renderizarContratos()" style="background:#2c3e50; border:none;">🗄️ Cofre de Contratos</button>
-                    <button class="btn-primary" onclick="App.renderizarConfiguradorMatricula()" style="background:#f39c12; border:none;">⚙️ Configurar Formulário</button>
-                    <button class="btn-primary" onclick="App.renderizarConfiguradorHub()" style="background:#8e44ad; border:none;">🎨 Configurar Hub</button>
+            <div class="card" style="margin-bottom: 16px; padding: 18px 20px; border-bottom: 3px solid #34495e;">
+                <div style="display:flex; gap:12px; flex-wrap:wrap; justify-content:center;">
+                    <button id="btn-setor-links-contratos" class="btn-primary" onclick="App.abrirSetorHub('links_contratos')" style="flex:1; min-width:240px; max-width:360px; padding:14px 18px; background:#f1f5f9; color:#1e293b; border:2px solid #cbd5e1; justify-content:center; font-weight:800; font-size:14px; border-radius:10px; transition:all 0.2s;">
+                        🔗 Setor de Links e Contratos
+                    </button>
+                    <button id="btn-setor-config-paginas" class="btn-primary" onclick="App.abrirSetorHub('config_paginas')" style="flex:1; min-width:240px; max-width:360px; padding:14px 18px; background:#f1f5f9; color:#1e293b; border:2px solid #cbd5e1; justify-content:center; font-weight:800; font-size:14px; border-radius:10px; transition:all 0.2s;">
+                        🎨 Setor de Configuração das Páginas de Matrícula
+                    </button>
                 </div>
+
+                <div id="subbar-hub-setor" style="display:none; margin-top:14px; padding-top:14px; border-top:1px dashed #e2e8f0; gap:10px; flex-wrap:wrap; justify-content:center;"></div>
             </div>
+
             <div id="area-dinamica-hub">
-                <div class="card" style="text-align:center; padding:50px; opacity:0.6;">
+                <div class="card" style="text-align:center; padding:50px; opacity:0.7;">
                     <span style="font-size:40px;">📂</span>
-                    <p>Selecione uma das opções acima para gerenciar.</p>
+                    <p>Selecione um dos dois setores acima para começar.</p>
                 </div>
             </div>
         `;
+
+        // Já abre no primeiro setor pronto para uso
+        App.abrirSetorHub('links_contratos', 'links');
+    },
+
+    abrirSetorHub: (setor, subAbaInicial = null) => {
+        App.setorHubAtivo = setor;
+
+        const btnLinks = document.getElementById('btn-setor-links-contratos');
+        const btnConfig = document.getElementById('btn-setor-config-paginas');
+        const subbar = document.getElementById('subbar-hub-setor');
+
+        if (btnLinks) {
+            const ativo = setor === 'links_contratos';
+            btnLinks.style.background = ativo ? 'linear-gradient(135deg, #2563eb, #1d4ed8)' : '#f1f5f9';
+            btnLinks.style.color = ativo ? '#ffffff' : '#1e293b';
+            btnLinks.style.borderColor = ativo ? '#1d4ed8' : '#cbd5e1';
+            btnLinks.style.boxShadow = ativo ? '0 6px 16px rgba(37, 99, 235, 0.28)' : 'none';
+        }
+
+        if (btnConfig) {
+            const ativo = setor === 'config_paginas';
+            btnConfig.style.background = ativo ? 'linear-gradient(135deg, #7c3aed, #6d28d9)' : '#f1f5f9';
+            btnConfig.style.color = ativo ? '#ffffff' : '#1e293b';
+            btnConfig.style.borderColor = ativo ? '#6d28d9' : '#cbd5e1';
+            btnConfig.style.boxShadow = ativo ? '0 6px 16px rgba(124, 58, 237, 0.28)' : 'none';
+        }
+
+        if (!subbar) return;
+        subbar.style.display = 'flex';
+
+        if (setor === 'links_contratos') {
+            subbar.innerHTML = `
+                <button type="button" data-hub-sub="links" onclick="App.abrirSubAbaHub('links')" style="padding:9px 18px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;">
+                    🔗 Links de Matrícula
+                </button>
+                <button type="button" data-hub-sub="cofre" onclick="App.abrirSubAbaHub('cofre')" style="padding:9px 18px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;">
+                    🗄️ Cofre de Contratos
+                </button>
+            `;
+            App.abrirSubAbaHub(subAbaInicial || 'links');
+        } else {
+            subbar.innerHTML = `
+                <button type="button" data-hub-sub="hub" onclick="App.abrirSubAbaHub('hub')" style="padding:9px 18px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;">
+                    🏠 Hub-Matrículas
+                </button>
+                <button type="button" data-hub-sub="presencial" onclick="App.abrirSubAbaHub('presencial')" style="padding:9px 18px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;">
+                    🏫 Matrícula Presencial
+                </button>
+                <button type="button" data-hub-sub="online" onclick="App.abrirSubAbaHub('online')" style="padding:9px 18px; border-radius:999px; font-weight:700; font-size:13px; cursor:pointer; transition:0.2s;">
+                    💻 Matrícula Online
+                </button>
+            `;
+            App.abrirSubAbaHub(subAbaInicial || 'hub');
+        }
+    },
+
+    abrirSubAbaHub: (subAba) => {
+        App.subAbaHubAtiva = subAba;
+
+        const cores = {
+            links: '#2563eb',
+            cofre: '#2c3e50',
+            hub: '#8e44ad',
+            presencial: '#2c3e50',
+            online: '#16a34a'
+        };
+
+        document.querySelectorAll('#subbar-hub-setor [data-hub-sub]').forEach(btn => {
+            const id = btn.getAttribute('data-hub-sub');
+            const ativo = id === subAba;
+            const cor = cores[id] || '#3498db';
+            btn.style.background = ativo ? cor : '#ffffff';
+            btn.style.color = ativo ? '#ffffff' : '#334155';
+            btn.style.border = ativo ? `2px solid ${cor}` : '1px solid #cbd5e1';
+            btn.style.boxShadow = ativo ? '0 4px 12px rgba(15,23,42,0.14)' : 'none';
+        });
+
+        if (subAba === 'links') {
+            App.mostrarAreaLinks();
+        } else if (subAba === 'cofre') {
+            App.renderizarContratos();
+        } else if (subAba === 'hub') {
+            App.renderizarConfiguradorHub();
+        } else if (subAba === 'presencial') {
+            App.renderizarConfiguradorMatricula('presencial');
+        } else if (subAba === 'online') {
+            App.renderizarConfiguradorMatricula('online');
+        }
     },
 
     mostrarAreaLinks: async () => {
@@ -639,62 +738,94 @@ Object.assign(App, {
         );
     },
 
-    renderizarConfiguradorMatricula: async () => {
+   // =========================================================
+    // 📱💻 ALTERNADOR DE PRÉ-VISUALIZAÇÃO (DESKTOP ↔ CELULAR)
+    // =========================================================
+    alternarModoPreview: (modo) => {
+        App.previewModo = modo === 'mobile' ? 'mobile' : 'desktop';
+        if (App.subAbaHubAtiva === 'hub') {
+            App.atualizarPreviewHub();
+        } else {
+            App.atualizarPreviewConfigurador();
+        }
+    },
+
+    gerarBarraTopoPreview: (urlSimulada, avisoExtraHTML = '') => {
+        const isMobile = App.previewModo === 'mobile';
+        return `
+            <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; margin-bottom:14px; background:#ffffff; padding:10px 14px; border-radius:10px; border:1px solid #cbd5e1;">
+                <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                    <span style="background:#0f172a; color:#ffffff; font-size:11px; font-weight:700; padding:4px 10px; border-radius:999px;">👁️ Prévia Real</span>
+                    <span style="background:#f1f5f9; color:#475569; font-size:11.5px; font-family:monospace; padding:4px 10px; border-radius:6px; border:1px solid #e2e8f0;">🔒 ${App.escapeHTML(urlSimulada)}</span>
+                    ${avisoExtraHTML}
+                </div>
+                <div style="display:inline-flex; background:#f1f5f9; padding:3px; border-radius:999px; border:1px solid #cbd5e1; gap:3px;">
+                    <button type="button" onclick="App.alternarModoPreview('desktop')" style="border:none; padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; transition:0.15s; background:${!isMobile ? '#2563eb' : 'transparent'}; color:${!isMobile ? '#ffffff' : '#475569'};">
+                        💻 Desktop
+                    </button>
+                    <button type="button" onclick="App.alternarModoPreview('mobile')" style="border:none; padding:5px 12px; border-radius:999px; font-size:12px; font-weight:700; cursor:pointer; transition:0.15s; background:${isMobile ? '#2563eb' : 'transparent'}; color:${isMobile ? '#ffffff' : '#475569'};">
+                        📱 Celular
+                    </button>
+                </div>
+            </div>
+        `;
+    },
+
+    renderizarConfiguradorMatricula: async (abaInicial = 'presencial') => {
         const area = document.getElementById('area-dinamica-hub');
-        area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do contrato... ⏳</p>';
+        const abaAlvo = abaInicial === 'online' ? 'online' : 'presencial';
+
+        // Se já carregou nesta visita, apenas troca para a aba sem perder edições pendentes
+        if (App._configMatriculaCarregada && App.configTemp && App.configTemp[abaAlvo]) {
+            area.innerHTML = `<div id="container-config-interno"></div>`;
+            App.alternarAbaConfig(abaAlvo);
+            return;
+        }
+
+        area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor da página de matrícula... ⏳</p>';
 
         try {
             const escola = await App.api('/escola') || {};
-            
+
             const configPadrao = {
                 imagemHeader: 'https://placehold.co/1000x500?text=Sua+Imagem+de+Cabecalho',
-                imagemPosicao: '50% 50%', 
-                tituloHeader: 'Matrícula Digital',
-                descHeader: 'Preencha os dados abaixo com atenção para garantir a sua vaga.',
+                imagemPosicao: '50% 50%',
+                tituloHeader: 'Matrícula Presencial',
+                descHeader: 'PREENCHA OS DADOS NOS ESPAÇOS ABAIXO COM ATENÇÃO PARA GARANTIR A SUA VAGA.',
                 opcoesPlano: 'Padrão, Intensivo, Personalizado',
                 opcoesVencimento: '08, 20',
-                horarios: '',
+                horarios: 'Manhã, Tarde, Noite',
                 textoContrato: `TERMO DE PRESTAÇÃO DE SERVIÇOS EDUCACIONAIS<br><br>CLÁUSULA PRIMEIRA...`
             };
 
-            // Puxa a caixa de configurações principal que o banco de dados aceita
             const configBD = escola.configMatricula || {};
 
-            // 1. O Presencial recebe a caixa principal (ignorando o EAD que está lá dentro)
             let configPresencial = { ...configBD };
-            delete configPresencial.online; // Limpa o EAD para não sujar o Presencial
-            
+            delete configPresencial.online;
             if (!configPresencial.tituloHeader) configPresencial = { ...configPadrao };
             if (configPresencial.textoContrato) configPresencial.textoContrato = App.unescapeHTML(configPresencial.textoContrato);
 
-            // 2. O Online puxa do compartimento secreto "online"
-            let configOnline = configBD.online || { 
-                ...configPadrao, 
-                tituloHeader: 'Matrícula Digital EAD',
+            let configOnline = configBD.online || {
+                ...configPadrao,
+                tituloHeader: 'Matrícula Online EAD',
                 opcoesPlano: 'Curso Online VIP, Curso Online Básico',
-                horarios: '100% Online'
+                horarios: 'Manhã, Tarde, Noite, 100% Online'
             };
             if (configOnline.textoContrato) configOnline.textoContrato = App.unescapeHTML(configOnline.textoContrato);
 
-            // Guarda as duas na memória para podermos editar
             App.configTemp = {
                 presencial: configPresencial,
                 online: configOnline
             };
-            
-            App.abaAtiva = 'presencial';
+            App._escolaPreviewMeta = {
+                corSecundaria: escola.corSecundaria || configPresencial.corSecundaria || '#3498db',
+                logoUrl: escola.logoUrl || configPresencial.logoUrl || '',
+                configHub: escola.configHub || {}
+            };
+            App._configMatriculaCarregada = true;
 
-        
-            // Renderiza as abas e o container interno
-            area.innerHTML = `
-                <div style="display:flex; gap:10px; margin-bottom: 20px; justify-content: center; background: #fff; padding: 10px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
-                    <button id="btn-aba-presencial" onclick="App.alternarAbaConfig('presencial')" style="flex:1; max-width: 200px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; background: #2c3e50; color: white;">🏫 Contrato Presencial</button>
-                    <button id="btn-aba-online" onclick="App.alternarAbaConfig('online')" style="flex:1; max-width: 200px; padding: 12px; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; transition: 0.3s; background: #e0e6ed; color: #2c3e50;">💻 Contrato Online</button>
-                </div>
-                <div id="container-config-interno"></div>
-            `;
-
-            App.alternarAbaConfig('presencial');
+            area.innerHTML = `<div id="container-config-interno"></div>`;
+            App.alternarAbaConfig(abaAlvo);
 
         } catch (e) {
             console.error(e);
@@ -703,39 +834,33 @@ Object.assign(App, {
     },
 
     alternarAbaConfig: (aba) => {
-        App.abaAtiva = aba;
-        
-        const btnPresencial = document.getElementById('btn-aba-presencial');
-        const btnOnline = document.getElementById('btn-aba-online');
-        
-        if (aba === 'presencial') {
-            if(btnPresencial) { btnPresencial.style.background = '#2c3e50'; btnPresencial.style.color = 'white'; }
-            if(btnOnline) { btnOnline.style.background = '#e0e6ed'; btnOnline.style.color = '#2c3e50'; }
-        } else {
-            if(btnOnline) { btnOnline.style.background = '#27ae60'; btnOnline.style.color = 'white'; }
-            if(btnPresencial) { btnPresencial.style.background = '#e0e6ed'; btnPresencial.style.color = '#2c3e50'; }
-        }
+        App.abaAtiva = aba === 'online' ? 'online' : 'presencial';
+        const isOnline = App.abaAtiva === 'online';
+        const corDestaque = isOnline ? '#16a34a' : '#2c3e50';
 
         const container = document.getElementById('container-config-interno');
+        if (!container) return;
+
         container.innerHTML = `
-            <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
-                <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
-                    <h3 style="margin-top:0; color:#2c3e50; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🛠️ Ferramentas (${aba === 'presencial' ? 'Presencial' : 'Online'})</h3>
-                    
+            <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+                <div style="flex: 0 0 265px; width: 265px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+                    <h3 style="margin-top:0; color:${corDestaque}; font-size:15.5px; border-bottom:2px solid #eee; padding-bottom:10px;">
+                        ${isOnline ? '💻 Matrícula Online' : '🏫 Matrícula Presencial'}
+                    </h3>
+
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:5px; justify-content:flex-start;" onclick="App.editarConfig('imagem')">🖼️ Imagem do Cabeçalho</button>
                     <div style="font-size:11px; color:#7f8c8d; text-align:center; margin-bottom:15px; line-height:1.4;">Tamanho recomendado:<br><b style="color:#2c3e50;">1000 x 500px</b></div>
 
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('titulo')">✏️ Título do Cabeçalho</button>
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('descricao')">📝 Descrição do Cabeçalho</button>
                     <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfig('opcoes')">⚙️ Alterar Dados Editáveis</button>
-                    <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
+                    <button class="btn-primary" style="width:100%; background:#34495e; color:white; border:none; margin-bottom:22px; justify-content:flex-start;" onclick="App.editarConfig('contrato')">📑 Editar Contrato Digital</button>
                     <button class="btn-primary" style="width:100%; background:#27ae60; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorMatricula()">💾 Salvar Tudo</button>
                 </div>
 
-                <div style="flex: 1; min-width: 0;">
-                    <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
-                        <div id="preview-word-doc" style="background:white; width:100%; max-width:100%; min-height:600px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px;">
-                        </div>
+                <div style="flex: 1 1 420px; min-width: 0;">
+                    <div style="background:#e0e6ed; padding:18px; border-radius:12px; width:100%; box-sizing:border-box;">
+                        <div id="preview-word-doc"></div>
                     </div>
                 </div>
             </div>
@@ -745,35 +870,179 @@ Object.assign(App, {
 
     atualizarPreviewConfigurador: () => {
         const preview = document.getElementById('preview-word-doc');
-        const config = App.configTemp[App.abaAtiva]; 
-        
-        if(preview) {
-            preview.innerHTML = `
-                <div id="preview-header-img" 
-                     onmousedown="App.iniciarArraste(event)" 
-                     ontouchstart="App.iniciarArraste(event)"
-                     style="width:100%; height:250px; background:url('${config.imagemHeader}') no-repeat; background-size: cover; background-position: ${config.imagemPosicao}; border-radius:8px 8px 0 0; cursor:grab; position:relative; overflow:hidden; user-select:none;">
-                     <div style="position:absolute; bottom:6px; right:6px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.2);">🖐️ Arraste para reposicionar</div>
-                </div>
-                <div style="padding: 25px; text-align: center; border-bottom: 2px dashed #eee;">
-                    <h2 style="color:#2c3e50; margin:0 0 10px 0;">${App.escapeHTML(config.tituloHeader)}</h2>
-                    <p style="color:#7f8c8d; font-size:14px; margin:0;">${App.escapeHTML(config.descHeader)}</p>
-                </div>
-                <div style="padding: 25px;">
-                    <h4 style="color:#2980b9; margin-top:0;">📋 Dados Editáveis (Preview)</h4>
-                    <div style="display:flex; gap:10px; margin-bottom: 15px;">
-                        <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
-                            <option>Plano de Curso: ${config.opcoesPlano}</option>
-                        </select>
-                        <select style="flex:1; padding:8px; border:1px solid #ccc; border-radius:4px;" disabled>
-                            <option>Vencimento: ${config.opcoesVencimento}</option>
-                        </select>
+        if (!preview || !App.configTemp || !App.configTemp[App.abaAtiva]) return;
+
+        const config = App.configTemp[App.abaAtiva];
+        const isOnline = App.abaAtiva === 'online';
+        const isMobile = App.previewModo === 'mobile';
+        const meta = App._escolaPreviewMeta || {};
+        const corSec = (isOnline ? meta.corSecundaria : (config.corSecundaria || meta.corSecundaria)) || '#3498db';
+
+        const hubAtual = App.configHubTemp || meta.configHub || {};
+        const estaBloqueada = isOnline ? Boolean(hubAtual.bloquearOnline) : Boolean(hubAtual.bloquearPresencial);
+        const badgeBloq = estaBloqueada
+            ? `<span style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px;">🔒 Bloqueada no Hub</span>`
+            : '';
+
+        const montarOpcoesSelect = (textoCSV, fallbackCSV = '') => {
+            const fonte = String(textoCSV || fallbackCSV || '').trim();
+            const itens = fonte ? fonte.split(',').map(s => s.trim()).filter(Boolean) : [];
+            return `<option value="">-- Selecione --</option>` + itens.map(op => `<option>${App.escapeHTML(op)}</option>`).join('');
+        };
+
+        const opcoesPlanoHTML = montarOpcoesSelect(config.opcoesPlano, isOnline ? 'Curso Online' : 'Curso Presencial');
+        const opcoesVencHTML = montarOpcoesSelect(config.opcoesVencimento, '08, 20');
+        const opcoesHorarioHTML = montarOpcoesSelect(config.horarios, isOnline ? 'Manhã, Tarde, Noite, 100% Online' : 'Manhã, Tarde, Noite');
+
+        const temImagemHeader = config.imagemHeader && String(config.imagemHeader).trim().length > 5;
+        const logoUrl = isOnline ? (meta.logoUrl || '') : (config.logoUrl || meta.logoUrl || '');
+        const tituloFinal = config.tituloHeader || (isOnline ? 'Matrícula Online EAD' : 'Matrícula Presencial');
+        const descFinal = config.descHeader || 'PREENCHA OS DADOS NOS ESPAÇOS ABAIXO COM ATENÇÃO PARA GARANTIR A SUA VAGA.';
+        const contratoSanitizado = App.sanitizeHTML(config.textoContrato || 'Contrato padrão da instituição...');
+
+        const gridCols = isMobile ? '1fr' : '1fr 1fr';
+        const padContainer = isMobile ? '18px' : '30px';
+        const padExterno = isMobile ? '12px' : '20px';
+        const alturaHeader = isMobile ? '185px' : '250px';
+
+        const frameStyle = isMobile
+            ? 'max-width:390px; margin:0 auto; border:9px solid #1e293b; border-radius:30px; overflow:hidden; box-shadow:0 20px 45px rgba(15,23,42,0.28); background:#f4f6f7;'
+            : 'width:100%; border-radius:10px; overflow:hidden; border:1px solid #cbd5e1; background:#f4f6f7;';
+
+        const inputStyle = 'width:100%; padding:11px; border:1px solid #ccc; border-radius:6px; box-sizing:border-box; font-size:13.5px; background:#fff; color:#333; font-family:inherit;';
+        const labelStyle = 'display:block; font-weight:bold; font-size:12.5px; margin-bottom:5px; color:#555;';
+        const h3Style = `color:${corSec}; border-bottom:1px solid #eee; padding-bottom:10px; margin:26px 0 15px 0; font-size:16px;`;
+
+        const barraTopo = App.gerarBarraTopoPreview(
+            isOnline ? '/matricula-online?escola=...' : '/matricula?escola=...',
+            badgeBloq
+        );
+
+        preview.innerHTML = `
+            ${barraTopo}
+            <div style="${frameStyle}">
+                <div style="background:#f4f6f7; padding:${padExterno}; max-height:760px; overflow-y:auto; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; color:#333; box-sizing:border-box;">
+                    <div style="max-width:700px; margin:0 auto; background:#fff; padding:${padContainer}; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.1); border-top:5px solid ${corSec}; box-sizing:border-box;">
+
+                        ${temImagemHeader ? `
+                            <div id="preview-header-img"
+                                 onmousedown="App.iniciarArraste(event)"
+                                 ontouchstart="App.iniciarArraste(event)"
+                                 style="width:100%; height:${alturaHeader}; background:#eee url('${config.imagemHeader}') no-repeat; background-size:cover; background-position:${config.imagemPosicao || '50% 50%'}; border-radius:12px 12px 0 0; margin-bottom:20px; cursor:grab; position:relative; overflow:hidden; user-select:none;">
+                                <div style="position:absolute; bottom:8px; right:8px; background:rgba(15,23,42,0.72); color:#fff; font-size:10.5px; font-weight:600; padding:4px 10px; border-radius:999px; pointer-events:none; backdrop-filter:blur(2px); border:1px solid rgba(255,255,255,0.22);">
+                                    🖐️ Arraste para reposicionar
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        <div style="text-align:center; margin-bottom:28px;">
+                            ${logoUrl ? `<img src="${logoUrl}" alt="Logo da Escola" style="max-height:90px; max-width:100%; margin:0 auto 14px auto; display:block; border-radius:8px;">` : ''}
+                            <h2 style="color:#2c3e50; margin:0 0 6px 0; font-size:${isMobile ? '20px' : '24px'};">${App.escapeHTML(tituloFinal)}</h2>
+                            <p style="color:#7f8c8d; font-size:13.5px; margin:0; line-height:1.45;">${App.escapeHTML(descFinal)}</p>
+                        </div>
+
+                        <h3 style="${h3Style} margin-top:10px;">1. Dados Pessoais</h3>
+                        <div style="margin-bottom:14px;">
+                            <label style="${labelStyle}">Nome Completo *</label>
+                            <input type="text" placeholder="Nome completo do aluno" readonly style="${inputStyle} background:#f8fafc;">
+                        </div>
+                        <div style="display:grid; grid-template-columns:${gridCols}; gap:14px;">
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">WhatsApp *</label>
+                                <input type="text" placeholder="Ex: (11) 99999-9999" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">E-mail</label>
+                                <input type="email" placeholder="aluno@email.com" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">CPF *</label>
+                                <input type="text" placeholder="000.000.000-00" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">RG</label>
+                                <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">Data de Nascimento *</label>
+                                <input type="date" disabled style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div style="margin-bottom:2px;">
+                                <label style="${labelStyle}">Sexo</label>
+                                <select disabled style="${inputStyle} background:#f8fafc;">
+                                    <option>-- Selecione --</option>
+                                    <option>Masculino</option>
+                                    <option>Feminino</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div style="margin-top:14px;">
+                            <label style="${labelStyle}">Profissão / Ocupação</label>
+                            <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                        </div>
+
+                        <h3 style="${h3Style}">2. Endereço Completo</h3>
+                        <div style="display:grid; grid-template-columns:${gridCols}; gap:14px;">
+                            <div>
+                                <label style="${labelStyle}">Logradouro (Rua/Av) *</label>
+                                <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div>
+                                <label style="${labelStyle}">Número *</label>
+                                <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div>
+                                <label style="${labelStyle}">Bairro *</label>
+                                <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                            <div>
+                                <label style="${labelStyle}">Cidade *</label>
+                                <input type="text" readonly style="${inputStyle} background:#f8fafc;">
+                            </div>
+                        </div>
+
+                        <h3 style="${h3Style}">3. Dados do Curso e Pagamento</h3>
+                        <div style="display:grid; grid-template-columns:${gridCols}; gap:14px; margin-bottom:14px;">
+                            <div>
+                                <label style="${labelStyle}">Curso Adquirido *</label>
+                                <select style="${inputStyle}">${opcoesPlanoHTML}</select>
+                            </div>
+                            <div>
+                                <label style="${labelStyle}">Dia de Vencimento da Mensalidade *</label>
+                                <select style="${inputStyle}">${opcoesVencHTML}</select>
+                            </div>
+                        </div>
+                        <div style="margin-bottom:14px;">
+                            <label style="${labelStyle}">Horário de Preferência *</label>
+                            <select style="${inputStyle}">${opcoesHorarioHTML}</select>
+                        </div>
+
+                        <h3 style="${h3Style}">4. Contrato de Prestação de Serviços${isOnline ? ' (EAD)' : ''}</h3>
+                        <p style="font-size:13px; color:#e67e22; margin-top:0; font-weight:bold;">
+                            ⚠️ Por favor, leia o Contrato de Adesão do Curso ${isOnline ? 'Online' : 'Presencial'} abaixo com muita atenção.
+                        </p>
+
+                        <div style="background:#f9f9f9; border:1px solid #ccc; border-radius:6px; padding:15px; height:200px; overflow-y:auto; font-size:12px; color:#555; margin-top:16px; margin-bottom:12px; line-height:1.5; text-align:left;">
+                            ${contratoSanitizado}
+                        </div>
+
+                        <div style="font-size:12px; color:#666; margin-top:18px; display:flex; align-items:flex-start; gap:10px;">
+                            <input type="checkbox" disabled style="width:auto; transform:scale(1.15); margin-top:2px;">
+                            <span style="font-weight:bold; color:#27ae60;">Declaro que as informações adicionadas acima por mim são verdadeiras.*</span>
+                        </div>
+
+                        <div style="font-size:12px; color:#666; margin-top:12px; display:flex; align-items:flex-start; gap:10px;">
+                            <input type="checkbox" disabled style="width:auto; transform:scale(1.15); margin-top:2px;">
+                            <span style="font-weight:bold; color:#2c3e50;">${isOnline ? 'Autorizo o envio de notificações, avisos e mensagens para o WhatsApp e E-mail cadastrados.*' : 'Autorizo o envio de notificações e mensagens para o WhatsApp e e-mail cadastrados.*'}</span>
+                        </div>
+
+                        <button type="button" style="width:100%; background:${corSec === '#3498db' ? '#27ae60' : corSec}; color:#ffffff; padding:15px; border:none; border-radius:6px; font-size:15.5px; font-weight:bold; cursor:default; margin-top:20px;">
+                            Revisar Dados e Concluir Matrícula
+                        </button>
                     </div>
-                    <h4 style="color:#2980b9;">📑 Texto do Contrato</h4>
-                    <div style="font-size:11px; color:#555; background:#f9f9f9; padding:15px; border-radius:6px; border:1px solid #eee; height:300px; overflow-y:auto; text-align:justify;">${config.textoContrato}</div>
                 </div>
-            `;
-        }
+            </div>
+        `;
     },
 
     editarConfig: (tipo) => {
@@ -782,13 +1051,13 @@ Object.assign(App, {
         if (tipo === 'imagem') {
             const input = document.createElement('input');
             input.type = 'file';
-            input.accept = 'image/*'; 
-            
+            input.accept = 'image/*';
+
             input.onchange = (e) => {
                 const file = e.target.files[0];
                 if (file) {
                     App.showToast("A processar e otimizar a imagem... ⏳", "info");
-                    
+
                     App.otimizarImagem(file, 1000, (imgBase64) => {
                         App.configTemp[App.abaAtiva].imagemHeader = imgBase64;
                         App.atualizarPreviewConfigurador();
@@ -802,10 +1071,10 @@ Object.assign(App, {
             const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
                 const overlay = document.createElement('div');
                 overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
-                
+
                 const modal = document.createElement('div');
                 modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
-                
+
                 modal.innerHTML = `
                     <style>
                         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -848,60 +1117,60 @@ Object.assign(App, {
                 abrirModalBonito(
                     "✏️ Editar Título",
                     `<label class="modal-custom-label">Título do Documento:</label>
-                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Contrato de Prestação de Serviços" value="${config.tituloHeader || ''}">`,
+                     <input type="text" id="inputTitulo" class="modal-custom-input" placeholder="Ex: Matrícula Presencial" value="${App.escapeHTML(config.tituloHeader || '')}">`,
                     (modal) => {
                         App.configTemp[App.abaAtiva].tituloHeader = modal.querySelector('#inputTitulo').value;
                         App.atualizarPreviewConfigurador();
                     }
                 );
-            } 
+            }
             else if (tipo === 'descricao') {
                 abrirModalBonito(
                     "📝 Editar Descrição",
                     `<label class="modal-custom-label">Subtítulo ou Descrição:</label>
-                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${config.descHeader || ''}</textarea>`,
+                     <textarea id="inputDescricao" class="modal-custom-input" style="height:110px; resize:vertical;" placeholder="Digite aqui uma breve descrição...">${App.escapeHTML(config.descHeader || '')}</textarea>`,
                     (modal) => {
                         App.configTemp[App.abaAtiva].descHeader = modal.querySelector('#inputDescricao').value;
                         App.atualizarPreviewConfigurador();
                     }
                 );
-            } 
+            }
             else if (tipo === 'opcoes') {
                 abrirModalBonito(
                     "⚙️ Dados Complementares",
                     `<div style="margin-bottom:16px;">
                         <label class="modal-custom-label">Curso Adquirido</label><br>
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
-                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${config.opcoesPlano || ''}">
+                        <input type="text" id="inputCursos" class="modal-custom-input" placeholder="Ex: Inglês, Informática" value="${App.escapeHTML(config.opcoesPlano || '')}">
                      </div>
                      <div style="margin-bottom:16px;">
                         <label class="modal-custom-label">Dia de Vencimento</label><br>
                         <span style="font-size:12px; color:#6c757d;">Separe as opções por vírgula</span>
-                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${config.opcoesVencimento || ''}">
+                        <input type="text" id="inputDias" class="modal-custom-input" placeholder="Ex: 5, 10, 15" value="${App.escapeHTML(config.opcoesVencimento || '')}">
                      </div>
                      <div>
                         <label class="modal-custom-label">Horários Disponíveis</label><br>
                         <span style="font-size:12px; color:#6c757d;">Ex: Manhã (08h às 10h), Noite (19h às 21h)</span>
-                        <input type="text" id="inputHorarios" class="modal-custom-input" placeholder="Separe por vírgula" value="${config.horarios || ''}">
+                        <input type="text" id="inputHorarios" class="modal-custom-input" placeholder="Separe por vírgula" value="${App.escapeHTML(config.horarios || '')}">
                      </div>`,
                     (modal) => {
                         App.configTemp[App.abaAtiva].opcoesPlano = modal.querySelector('#inputCursos').value;
                         App.configTemp[App.abaAtiva].opcoesVencimento = modal.querySelector('#inputDias').value;
-                        App.configTemp[App.abaAtiva].horarios = modal.querySelector('#inputHorarios').value; 
+                        App.configTemp[App.abaAtiva].horarios = modal.querySelector('#inputHorarios').value;
                         App.atualizarPreviewConfigurador();
                     }
                 );
             }
         }
         else if (tipo === 'contrato') {
-            const modal = document.getElementById('modal-overlay'); 
+            const modal = document.getElementById('modal-overlay');
             if(modal) modal.style.display = 'flex';
             document.getElementById('modal-titulo').innerText = `Editar Texto do Contrato (${App.abaAtiva === 'presencial' ? 'Presencial' : 'Online'})`;
-            
+
             document.getElementById('modal-form-content').innerHTML = `
                 <div id="editor-contrato-quill" style="height:350px; background:#fff; font-family:sans-serif; line-height:1.5;">${App.sanitizeHTML(config.textoContrato || '')}</div>
             `;
-            
+
             setTimeout(() => {
                 window.quillContrato = new Quill('#editor-contrato-quill', {
                     theme: 'snow',
@@ -911,7 +1180,7 @@ Object.assign(App, {
                             [{ 'list': 'ordered'}, { 'list': 'bullet' }],
                             [{ 'align': [] }],
                             [{ 'size': ['small', false, 'large', 'huge'] }],
-                            ['clean'] 
+                            ['clean']
                         ]
                     }
                 });
@@ -934,7 +1203,7 @@ Object.assign(App, {
 
         e.preventDefault();
         let isDragging = true;
-        
+
         let currentPos = App.configTemp[App.abaAtiva].imagemPosicao || '50% 50%';
         let [posX, posY] = currentPos.split(' ').map(p => parseFloat(p) || 50);
 
@@ -945,9 +1214,9 @@ Object.assign(App, {
             if (!isDragging) return;
             const currentY = moveEvent.type.includes('touch') ? moveEvent.touches[0].clientY : moveEvent.clientY;
             const diffY = currentY - startY;
-            
-            posY = initialPosY - (diffY * 0.2); 
-            
+
+            posY = initialPosY - (diffY * 0.2);
+
             if (posY < 0) posY = 0;
             if (posY > 100) posY = 100;
 
@@ -970,50 +1239,49 @@ Object.assign(App, {
         document.addEventListener('touchend', onEnd);
     },
 
-   salvarConfiguradorMatricula: async () => {
+    salvarConfiguradorMatricula: async () => {
         const btn = document.querySelector('button[onclick="App.salvarConfiguradorMatricula()"]');
         const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Tudo';
-        
-        if (btn) { 
-            btn.innerHTML = "A salvar... ⏳"; 
-            btn.disabled = true; 
-            btn.style.opacity = '0.8'; 
+
+        if (btn) {
+            btn.innerHTML = "A salvar... ⏳";
+            btn.disabled = true;
+            btn.style.opacity = '0.8';
         }
         document.body.style.cursor = 'wait';
 
         try {
             const escola = await App.api('/escola') || {};
-            
-            // 🚀 O TRUQUE NINJA: Colocamos o EAD DENTRO da variável que o Banco de Dados já aceita!
+
             escola.configMatricula = {
                 ...App.configTemp.presencial,
                 online: App.configTemp.online
             };
-            
+
             await App.api('/escola', 'PUT', escola);
             App.showToast("Configurações salvas para Presencial e Online!", "success");
         } catch(e) {
             App.showToast("Erro ao guardar as configurações.", "error");
         } finally {
-            if (btn) { 
-                btn.innerHTML = txtOriginal; 
-                btn.disabled = false; 
-                btn.style.opacity = '1'; 
+            if (btn) {
+                btn.innerHTML = txtOriginal;
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
             document.body.style.cursor = 'default';
         }
     },
 
     // =========================================================
-    // 🎨 CONFIGURADOR DO HUB DE MATRÍCULAS (VITRINE)
+    // 🎨 CONFIGURADOR DO HUB DE MATRÍCULAS (VITRINE + BLOQUEADOR)
     // =========================================================
-   renderizarConfiguradorHub: async () => {
+    renderizarConfiguradorHub: async () => {
         const area = document.getElementById('area-dinamica-hub');
         area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do Hub... ⏳</p>';
 
         try {
             const escola = await App.api('/escola') || {};
-            
+
             const configPadrao = {
                 tituloHeader: 'Bem-vindo(a) à Área de Matrículas',
                 descHeader: 'Estamos muito felizes em tê-lo(a) connosco! Por favor, selecione abaixo a modalidade do curso que pretende frequentar.',
@@ -1029,15 +1297,14 @@ Object.assign(App, {
                 bloquearOnline: false
             };
 
-            // Mistura as configurações do BD com as padrões
             App.configHubTemp = escola.configHub ? { ...configPadrao, ...escola.configHub } : { ...configPadrao };
 
             area.innerHTML = `
                 <div id="container-config-interno">
-                    <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
-                        <div style="flex: 0 0 260px; width: 260px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
-                            <h3 style="margin-top:0; color:#8e44ad; font-size:16px; border-bottom:2px solid #eee; padding-bottom:10px;">🎨 Ferramentas da Vitrine</h3>
-                            
+                    <div style="display:flex; gap:20px; flex-wrap:wrap; align-items:flex-start;">
+                        <div style="flex: 0 0 265px; width: 265px; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); box-sizing: border-box;">
+                            <h3 style="margin-top:0; color:#8e44ad; font-size:15.5px; border-bottom:2px solid #eee; padding-bottom:10px;">🏠 Hub-Matrículas</h3>
+
                             <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('header')">📝 Textos do Topo</button>
                             <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('presencial')">🏫 Cartão Presencial</button>
                             <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:15px; justify-content:flex-start;" onclick="App.editarConfigHub('online')">💻 Cartão Online</button>
@@ -1053,14 +1320,13 @@ Object.assign(App, {
                                     <span>Bloquear Online (EAD)</span>
                                 </label>
                             </div>
-                            
+
                             <button class="btn-primary" style="width:100%; background:#8e44ad; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorHub()">💾 Salvar Hub</button>
                         </div>
 
-                        <div style="flex: 1; min-width: 0;">
-                            <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
-                                <div id="preview-hub-page" style="background:#f4f7f6; width:100%; max-width:100%; min-height:500px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px; padding: 30px; font-family: 'Segoe UI', sans-serif; position: relative;">
-                                </div>
+                        <div style="flex: 1 1 420px; min-width: 0;">
+                            <div style="background:#e0e6ed; padding:18px; border-radius:12px; width:100%; box-sizing:border-box;">
+                                <div id="preview-hub-page"></div>
                             </div>
                         </div>
                     </div>
@@ -1080,70 +1346,81 @@ Object.assign(App, {
         App.atualizarPreviewHub();
     },
 
-   atualizarPreviewHub: () => {
+    atualizarPreviewHub: () => {
         const preview = document.getElementById('preview-hub-page');
-        if(!preview) return;
+        if(!preview || !App.configHubTemp) return;
         const config = App.configHubTemp;
         const bloqPres = Boolean(config.bloquearPresencial);
         const bloqOn = Boolean(config.bloquearOnline);
+        const isMobile = App.previewModo === 'mobile';
+
+        const cardMaxW = isMobile ? '100%' : '290px';
 
         const cardPresencialHTML = bloqPres ? '' : `
-            <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconePresencial)}</div>
-                <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloPresencial)}</h2>
-                <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descPresencial)}</p>
-                <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnPresencial)}</div>
+            <div style="background:#fff; border-radius:20px; padding:32px 24px; width:100%; max-width:${cardMaxW}; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.06); display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div style="font-size:56px; margin-bottom:14px;">${App.escapeHTML(config.iconePresencial)}</div>
+                <h2 style="color:#2c3e50; margin:0 0 12px 0; font-size:1.35rem;">${App.escapeHTML(config.tituloPresencial)}</h2>
+                <p style="color:#666; line-height:1.55; margin:0 0 24px 0; font-size:0.9rem; flex-grow:1;">${App.escapeHTML(config.descPresencial)}</p>
+                <div style="background-color:#3498db; color:#fff; padding:13px 18px; border-radius:10px; font-weight:bold; font-size:0.95rem;">${App.escapeHTML(config.btnPresencial)}</div>
             </div>
         `;
 
         const cardOnlineHTML = bloqOn ? '' : `
-            <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
-                <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconeOnline)}</div>
-                <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloOnline)}</h2>
-                <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descOnline)}</p>
-                <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnOnline)}</div>
+            <div style="background:#fff; border-radius:20px; padding:32px 24px; width:100%; max-width:${cardMaxW}; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.06); display:flex; flex-direction:column; justify-content:space-between; box-sizing:border-box;">
+                <div style="font-size:56px; margin-bottom:14px;">${App.escapeHTML(config.iconeOnline)}</div>
+                <h2 style="color:#2c3e50; margin:0 0 12px 0; font-size:1.35rem;">${App.escapeHTML(config.tituloOnline)}</h2>
+                <p style="color:#666; line-height:1.55; margin:0 0 24px 0; font-size:0.9rem; flex-grow:1;">${App.escapeHTML(config.descOnline)}</p>
+                <div style="background-color:#3498db; color:#fff; padding:13px 18px; border-radius:10px; font-weight:bold; font-size:0.95rem;">${App.escapeHTML(config.btnOnline)}</div>
             </div>
         `;
 
         const conteudoCartoes = (bloqPres && bloqOn)
             ? `
-                <div style="background:#fff; border:2px dashed #fca5a5; border-radius:20px; padding:35px 25px; max-width:460px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+                <div style="background:#fff; border:2px dashed #fca5a5; border-radius:20px; padding:35px 25px; max-width:480px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.05); box-sizing:border-box;">
                     <div style="font-size:48px; margin-bottom:10px;">🔒</div>
                     <h2 style="color:#b91c1c; margin:0 0 10px 0; font-size:1.3rem;">Matrículas Temporariamente Encerradas</h2>
-                    <p style="color:#64748b; font-size:0.9rem; margin:0; line-height:1.5;">No momento não há modalidades abertas para novas matrículas. Entre em contato com a nossa secretaria para mais informações.</p>
+                    <p style="color:#64748b; font-size:0.92rem; margin:0; line-height:1.55;">No momento não há modalidades abertas para novas matrículas. Entre em contato com a nossa secretaria para mais informações.</p>
                 </div>
             `
             : `${cardPresencialHTML}${cardOnlineHTML}`;
 
         const badgeBloqueio = (bloqPres || bloqOn)
-            ? `<div style="position:absolute; top:10px; right:10px; background:#dc2626; color:white; font-size:10px; font-weight:bold; padding:4px 10px; border-radius:12px;">🚫 ${bloqPres && bloqOn ? 'Ambos bloqueados' : (bloqPres ? 'Presencial bloqueado' : 'Online bloqueado')}</div>`
+            ? `<span style="background:#fee2e2; color:#b91c1c; border:1px solid #fca5a5; font-size:11px; font-weight:800; padding:4px 9px; border-radius:999px;">🚫 ${bloqPres && bloqOn ? 'Ambos bloqueados' : (bloqPres ? 'Presencial bloqueado' : 'Online bloqueado')}</span>`
             : '';
 
+        const frameStyle = isMobile
+            ? 'max-width:390px; margin:0 auto; border:9px solid #1e293b; border-radius:30px; overflow:hidden; box-shadow:0 20px 45px rgba(15,23,42,0.28); background:#f4f7f6;'
+            : 'width:100%; border-radius:10px; overflow:hidden; border:1px solid #cbd5e1; background:#f4f7f6;';
+
+        const barraTopo = App.gerarBarraTopoPreview('/hub-matriculas?escola=...', badgeBloqueio);
+
         preview.innerHTML = `
-            <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px;">👁️ Pré-visualização ao Vivo</div>
-            ${badgeBloqueio}
-            
-            <div style="text-align: center; padding: 20px 10px 20px; max-width: 600px; margin: 20px auto 0;">
-                <h1 style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px; margin-top:0;">${App.escapeHTML(config.tituloHeader)}</h1>
-                <p style="color: #666; font-size: 0.95rem; line-height: 1.5;">${App.escapeHTML(config.descHeader)}</p>
-            </div>
-            
-            <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
-                ${conteudoCartoes}
+            ${barraTopo}
+            <div style="${frameStyle}">
+                <div style="background:#f4f7f6; min-height:500px; max-height:740px; overflow-y:auto; padding:${isMobile ? '22px 16px' : '32px 24px'}; font-family:'Segoe UI', Roboto, Helvetica, Arial, sans-serif; box-sizing:border-box;">
+                    <div style="text-align:center; padding:8px 10px 22px; max-width:600px; margin:0 auto;">
+                        <h1 style="color:#2c3e50; font-size:${isMobile ? '1.55rem' : '2rem'}; margin:0 0 10px 0;">${App.escapeHTML(config.tituloHeader)}</h1>
+                        <p style="color:#666; font-size:${isMobile ? '0.92rem' : '1.02rem'}; line-height:1.5; margin:0;">${App.escapeHTML(config.descHeader)}</p>
+                    </div>
+
+                    <div style="display:flex; gap:24px; justify-content:center; flex-wrap:wrap; flex-direction:${isMobile ? 'column' : 'row'}; align-items:center;">
+                        ${conteudoCartoes}
+                    </div>
+                </div>
             </div>
         `;
     },
 
     editarConfigHub: (tipo) => {
         const config = App.configHubTemp;
-        
+
         const abrirModalBonito = (tituloModal, conteudoHTML, onSave) => {
             const overlay = document.createElement('div');
             overlay.style.cssText = "position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); backdrop-filter:blur(5px); display:flex; align-items:center; justify-content:center; z-index:9999; animation: fadeIn 0.3s ease;";
-            
+
             const modal = document.createElement('div');
             modal.style.cssText = "background:#fff; border-radius:12px; padding:24px; width:100%; max-width:450px; box-shadow:0 10px 25px rgba(0,0,0,0.2); transform: scale(0.95); animation: scaleUp 0.3s ease forwards; font-family: inherit;";
-            
+
             modal.innerHTML = `
                 <style>
                     @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -1186,27 +1463,27 @@ Object.assign(App, {
             abrirModalBonito(
                 "📝 Textos do Topo",
                 `<label class="modal-custom-label">Título Principal:</label>
-                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloHeader || ''}">
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${App.escapeHTML(config.tituloHeader || '')}">
                  <label class="modal-custom-label">Mensagem de Boas-vindas:</label>
-                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descHeader || ''}</textarea>`,
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${App.escapeHTML(config.descHeader || '')}</textarea>`,
                 (modal) => {
                     App.configHubTemp.tituloHeader = modal.querySelector('#iTitulo').value;
                     App.configHubTemp.descHeader = modal.querySelector('#iDesc').value;
                     App.atualizarPreviewHub();
                 }
             );
-        } 
+        }
         else if (tipo === 'presencial') {
             abrirModalBonito(
                 "🏫 Cartão Presencial",
                 `<label class="modal-custom-label">Ícone (Emoji):</label>
-                 <input type="text" id="iIcone" class="modal-custom-input" value="${config.iconePresencial || ''}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
+                 <input type="text" id="iIcone" class="modal-custom-input" value="${App.escapeHTML(config.iconePresencial || '')}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
                  <label class="modal-custom-label">Título do Cartão:</label>
-                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloPresencial || ''}">
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${App.escapeHTML(config.tituloPresencial || '')}">
                  <label class="modal-custom-label">Descrição Curta:</label>
-                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descPresencial || ''}</textarea>
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${App.escapeHTML(config.descPresencial || '')}</textarea>
                  <label class="modal-custom-label">Texto do Botão:</label>
-                 <input type="text" id="iBtn" class="modal-custom-input" value="${config.btnPresencial || ''}">`,
+                 <input type="text" id="iBtn" class="modal-custom-input" value="${App.escapeHTML(config.btnPresencial || '')}">`,
                 (modal) => {
                     App.configHubTemp.iconePresencial = modal.querySelector('#iIcone').value;
                     App.configHubTemp.tituloPresencial = modal.querySelector('#iTitulo').value;
@@ -1220,13 +1497,13 @@ Object.assign(App, {
             abrirModalBonito(
                 "💻 Cartão Online",
                 `<label class="modal-custom-label">Ícone (Emoji):</label>
-                 <input type="text" id="iIcone" class="modal-custom-input" value="${config.iconeOnline || ''}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
+                 <input type="text" id="iIcone" class="modal-custom-input" value="${App.escapeHTML(config.iconeOnline || '')}" maxlength="5" style="width: 80px; text-align: center; font-size: 20px;">
                  <label class="modal-custom-label">Título do Cartão:</label>
-                 <input type="text" id="iTitulo" class="modal-custom-input" value="${config.tituloOnline || ''}">
+                 <input type="text" id="iTitulo" class="modal-custom-input" value="${App.escapeHTML(config.tituloOnline || '')}">
                  <label class="modal-custom-label">Descrição Curta:</label>
-                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${config.descOnline || ''}</textarea>
+                 <textarea id="iDesc" class="modal-custom-input" style="height:100px; resize:vertical;">${App.escapeHTML(config.descOnline || '')}</textarea>
                  <label class="modal-custom-label">Texto do Botão:</label>
-                 <input type="text" id="iBtn" class="modal-custom-input" value="${config.btnOnline || ''}">`,
+                 <input type="text" id="iBtn" class="modal-custom-input" value="${App.escapeHTML(config.btnOnline || '')}">`,
                 (modal) => {
                     App.configHubTemp.iconeOnline = modal.querySelector('#iIcone').value;
                     App.configHubTemp.tituloOnline = modal.querySelector('#iTitulo').value;
@@ -1241,27 +1518,27 @@ Object.assign(App, {
     salvarConfiguradorHub: async () => {
         const btn = document.querySelector('button[onclick="App.salvarConfiguradorHub()"]');
         const txtOriginal = btn ? btn.innerHTML : '💾 Salvar Hub';
-        
-        if (btn) { 
-            btn.innerHTML = "A salvar... ⏳"; 
-            btn.disabled = true; 
-            btn.style.opacity = '0.8'; 
+
+        if (btn) {
+            btn.innerHTML = "A salvar... ⏳";
+            btn.disabled = true;
+            btn.style.opacity = '0.8';
         }
         document.body.style.cursor = 'wait';
 
         try {
             const escola = await App.api('/escola') || {};
             escola.configHub = App.configHubTemp;
-            
+
             await App.api('/escola', 'PUT', escola);
             App.showToast("Vitrine salva e pronta para os alunos!", "success");
         } catch(e) {
             App.showToast("Erro ao guardar as configurações da vitrine.", "error");
         } finally {
-            if (btn) { 
-                btn.innerHTML = txtOriginal; 
-                btn.disabled = false; 
-                btn.style.opacity = '1'; 
+            if (btn) {
+                btn.innerHTML = txtOriginal;
+                btn.disabled = false;
+                btn.style.opacity = '1';
             }
             document.body.style.cursor = 'default';
         }
