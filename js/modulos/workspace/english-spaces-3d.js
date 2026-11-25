@@ -1331,7 +1331,7 @@ this.trafficLightMaterials = { redMat, yellowMat, greenMat };
       });
     });
 
-    signal.position.set(side * 6.3, 0, zPos);
+    signal.position.set(side * 6.65, 0, zPos);
     signal.traverse(obj => { if (obj.isMesh) obj.castShadow = true; });
     this.exteriorGroup.add(signal);
   });

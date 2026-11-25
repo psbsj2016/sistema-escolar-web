@@ -73,7 +73,7 @@ export class ES3DColisoes {
 
     // 4. Semáforos e placas de trânsito
     [-56, -24].forEach(zPos => {
-      [-1, 1].forEach(side => addCircle(side * 6.1, zPos, 0.22, 'signal'));
+      [-1, 1].forEach(side => addCircle(side * 6.65, zPos, 0.22, 'signal'));
     });
     [[-7.2, -72], [7.2, -40], [-7.2, -8], [7.2, 16]].forEach(([x, z]) => {
       addCircle(x, z, 0.20, 'sign');
@@ -377,7 +377,7 @@ export class ES3DColisoes {
       if (this.bloquearCaixaComEscape(newX, newZ, oldX, oldZ, r, box)) return false;
     }
     for (const c of this.staticCircles) {
-      if (this.bloquearCirculoComEscape(newX, newZ, oldX, oldZ, r + c.r, c.x, c.z)) return false;
+     if (this.bloquearCirculoComEscape(newX, newZ, oldX, oldZ, r + c.r, c.x, c.z)) return false;
     }
     for (const wall of this.lotWallBoxes) {
       if (this.bloquearCaixaComEscape(newX, newZ, oldX, oldZ, r, wall)) return false;

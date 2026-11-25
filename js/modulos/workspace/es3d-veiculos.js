@@ -631,9 +631,11 @@ export class ES3DVeiculos {
       }
     });
 
-    // 2. Ciclistas pedalando nas ciclovias
+    // 2. Ciclistas pedalando nas ciclovias (agora também respeitam o semáforo!)
     (this.world.ciclistas || []).forEach(ciclista => {
       if (!ciclista.mesh || this.world.modoInterior) return;
+      const pareSemaforoBike = this.world.ambientePro?.devePararNoSemaforo(ciclista.mesh.position.z, ciclista.dir);
+      if (pareSemaforoBike) return;
 
       ciclista.mesh.position.z += ciclista.dir * ciclista.speed * delta;
       if (ciclista.dir > 0 && ciclista.mesh.position.z > 49) ciclista.mesh.position.z = -121;
