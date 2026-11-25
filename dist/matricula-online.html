@@ -6,100 +6,10 @@
     <title>Matrícula</title>
     <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" type="image/png">
 
-    <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f7; color: #333; margin: 0; padding: 20px; }
-        .container { 
-            max-width: 700px; margin: 0 auto; background: #fff; padding: 30px; 
-            border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
-            border-top: 5px solid #3498db; 
-            display: none; /* 🚀 ESCONDE O FORMULÁRIO ENQUANTO CARREGA */
-            animation: fadeIn 0.5s ease-in-out;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(15px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .header { text-align: center; margin-bottom: 30px; }
-        .header h2 { color: #2c3e50; margin-bottom: 5px; }
-        .header p { color: #7f8c8d; font-size: 14px; margin-top: 0; }
-        h3 { color: #3498db; border-bottom: 1px solid #eee; padding-bottom: 10px; margin-top: 30px; }
-        .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; font-weight: bold; font-size: 13px; margin-bottom: 5px; color: #555; }
-        input, select { width: 100%; padding: 12px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; }
-        input:focus, select:focus { border-color: #3498db; outline: none; }
-        #box-responsavel { display: none; background: #fff3e0; padding: 20px; border-radius: 8px; border: 1px dashed #e67e22; margin-top: 20px; }
-        button { width: 100%; background: #27ae60; color: white; padding: 15px; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 20px; transition: 0.3s; }
-        button:hover { background: #219653; }
-        .termo { font-size: 12px; color: #666; margin-top: 20px; display: flex; gap: 10px; }
-        .contrato-box { 
-            background: #f9f9f9; 
-            border: 1px solid #ccc; 
-            border-radius: 6px; 
-            padding: 15px; 
-            height: 200px; 
-            overflow-y: auto; 
-            font-size: 12px; 
-            color: #555; 
-            margin-top: 20px; 
-            margin-bottom: 10px;
-            line-height: 1.5;
-        }
-        .contrato-box strong { color: #2c3e50; } 
-   
-       /* CSS ATUALIZADO PARA O MODAL E O BOTÃO */
-        #modalLeitura {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: white; z-index: 9999; overflow-y: auto; padding: 40px 20px;
-            box-sizing: border-box; /* Garante que o padding não alargue a tela */
-            overflow-x: hidden; /* Trava barras de rolagem horizontais */
-        }
-        
-        .texto-contrato-gigante {
-            max-width: 800px; margin: 0 auto; font-size: 18px; line-height: 1.6; color: #2c3e50; text-align: justify;
-            width: 100%; 
-            word-wrap: break-word; 
-            overflow-wrap: break-word;
-        }
-
-        .btn-fixo-leitura {
-            /* 1. O botão agora respeita o fluxo normal, aparecendo apenas no final */
-            display: block; 
-            
-            /* 2. Margens: 40px (topo) auto (lados para centralizar) 20px (base) */
-            margin: 40px auto 20px auto; 
-            
-            background: #27ae60; 
-            color: white; 
-            padding: 15px 20px; 
-            border-radius: 50px;
-            font-weight: bold; 
-            border: none; 
-            cursor: pointer; 
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            
-            /* 3. Limites de largura e quebra de texto para telemóveis */
-            width: 90%; 
-            max-width: 400px;
-            text-align: center;
-            white-space: normal; /* Deixa o texto quebrar em várias linhas se necessário */
-            line-height: 1.4;
-        }
-
-        @media (max-width: 768px) {
-            #modalLeitura {
-                padding: 20px 15px;
-            }
-            .texto-contrato-gigante {
-                font-size: 15px; 
-            }
-        }
- 
-    </style>
+    <style>body{color:#333;background-color:#f4f6f7;margin:0;padding:20px;font-family:Segoe UI,Tahoma,Geneva,Verdana,sans-serif}.container{background:#fff;border-top:5px solid #3498db;border-radius:12px;max-width:700px;margin:0 auto;padding:30px;animation:.5s ease-in-out fadeIn;display:none;box-shadow:0 10px 25px #0000001a}@keyframes fadeIn{0%{opacity:0;transform:translateY(15px)}to{opacity:1;transform:translateY(0)}}.header{text-align:center;margin-bottom:30px}.header h2{color:#2c3e50;margin-bottom:5px}.header p{color:#7f8c8d;margin-top:0;font-size:14px}h3{color:#3498db;border-bottom:1px solid #eee;margin-top:30px;padding-bottom:10px}.grid-2{grid-template-columns:1fr 1fr;gap:15px;display:grid}.input-group{margin-bottom:15px}label{color:#555;margin-bottom:5px;font-size:13px;font-weight:700;display:block}input,select{box-sizing:border-box;border:1px solid #ccc;border-radius:6px;width:100%;padding:12px;font-size:14px}input:focus,select:focus{border-color:#3498db;outline:none}#box-responsavel{background:#fff3e0;border:1px dashed #e67e22;border-radius:8px;margin-top:20px;padding:20px;display:none}button{color:#fff;cursor:pointer;background:#27ae60;border:none;border-radius:6px;width:100%;margin-top:20px;padding:15px;font-size:16px;font-weight:700;transition:all .3s}button:hover{background:#219653}.termo{color:#666;gap:10px;margin-top:20px;font-size:12px;display:flex}.contrato-box{color:#555;background:#f9f9f9;border:1px solid #ccc;border-radius:6px;height:200px;margin-top:20px;margin-bottom:10px;padding:15px;font-size:12px;line-height:1.5;overflow-y:auto}.contrato-box strong{color:#2c3e50}#modalLeitura{z-index:9999;box-sizing:border-box;background:#fff;width:100%;height:100%;padding:40px 20px;display:none;position:fixed;top:0;left:0;overflow:hidden auto}.texto-contrato-gigante{color:#2c3e50;text-align:justify;word-wrap:break-word;overflow-wrap:break-word;width:100%;max-width:800px;margin:0 auto;font-size:18px;line-height:1.6}.btn-fixo-leitura{color:#fff;cursor:pointer;text-align:center;white-space:normal;background:#27ae60;border:none;border-radius:50px;width:90%;max-width:400px;margin:40px auto 20px;padding:15px 20px;font-weight:700;line-height:1.4;display:block;box-shadow:0 5px 15px #0003}@media (width<=768px){#modalLeitura{padding:20px 15px}.texto-contrato-gigante{font-size:15px}}</style>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script src="https://cdn.jsdelivr.net/npm/dompurify@3.1.6/dist/purify.min.js"></script>
-  <meta name="app-build-version" content="1795579676379">
+  <meta name="app-build-version" content="1795640210501">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
 
@@ -107,7 +17,7 @@
         
         <h1 style="color: #2c3e50; margin: 0;">Preparando um ambiente extremamente seguro...</h1>
         <h1><p style="color: #7f8c8d;">Aguarde!</p></h1> <div style="font-size: 40px; margin-bottom: 15px; animation: pulse 1.5s infinite;">⏳</div>
-        <style>@keyframes pulse { 0% { transform: scale(1); opacity: 0.8; } 50% { transform: scale(1.1); opacity: 1; } 100% { transform: scale(1); opacity: 0.8; } }</style>
+        <style>@keyframes pulse{0%{opacity:.8;transform:scale(1)}50%{opacity:1;transform:scale(1.1)}to{opacity:.8;transform:scale(1)}}</style>
     </div>
 
 <div class="container">

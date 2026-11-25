@@ -276,38 +276,12 @@ this.topLeaderText = 'Leader: Paulo - 1,250 DRX';
     return primeiroNome.endsWith('a') && !['luca', 'joshua', 'nikola'].includes(primeiroNome);
   }
 
-  async carregarGLTFLoader() {
-    if (window.THREE && window.THREE.GLTFLoader) {
-      this.gltfLoader = new window.THREE.GLTFLoader();
-      return;
-    }
-    return new Promise((resolve) => {
-      const s = document.createElement('script');
-      s.src = 'https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js';
-      s.onload = () => {
-        try { this.gltfLoader = new window.THREE.GLTFLoader(); } catch (e) {}
-        resolve();
-      };
-      s.onerror = () => resolve();
-      document.head.appendChild(s);
-    });
-  }
-
-  async carregarThreeJS() {
-    if (window.THREE) {
-      await this.carregarGLTFLoader();
-      return window.THREE;
-    }
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
-      script.onload = async () => {
-        await this.carregarGLTFLoader();
-        resolve(window.THREE);
-      };
-      script.onerror = reject;
-      document.head.appendChild(script);
-    });
+ async carregarThreeJS() {
+    const mod = await import('./es3d-engine.js');
+    const THREE = mod.obterThreeModerno();
+    this._ES3DEngineClass = mod.ES3DEngine;
+    this.gltfLoader = mod.criarGLTFLoaderComDraco();
+    return THREE;
   }
 
 garantirAudioAtivo() {
@@ -2761,12 +2735,13 @@ criarBonecoHumano3D(corCamisa = 0x8b5cf6, corCalca = 0x1e293b, corPele = 0xfde68
         this.starsGroup.visible = true;
         this.starsGroup.children.forEach(s => { s.userData.twinkle += 0.04; s.material.opacity = 0.6 + Math.sin(s.userData.twinkle) * 0.4; s.material.transparent = true; });
       }
-      if (this.cloudsGroup) this.cloudsGroup.visible = true;
+     if (this.cloudsGroup) this.cloudsGroup.visible = true;
       this.posteLights.forEach(p => {
-  p.light.intensity = 0.85;
-  p.lampHead.material.color.setHex(0xffe2a8);
-});
+        p.light.intensity = 0.85;
+        p.lampHead.material.color.setHex(0xffe2a8);
+      });
     }
+    this.enginePro?.atualizarIluminacaoPorHorario();
   }
 
   gerarTexturaPisoPremium(tipo) {
@@ -4448,7 +4423,7 @@ criarVitrinesVivas() {
 }
 
 
-  ativarSombrasReais() {
+ ativarSombrasReais() {
     if (!this.renderer) return;
     this.renderer.shadowMap.enabled = true;
     this.renderer.shadowMap.type = window.THREE.PCFSoftShadowMap;
@@ -4691,8 +4666,12 @@ criarVitrinesVivas() {
     this.renderer.setSize(w, h);
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-    viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
+         this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+         if (this._ES3DEngineClass) {
+         this.enginePro = new this._ES3DEngineClass(this);
+         this.enginePro.configurarRendererModerno(this.renderer);
+           }
+         viewport.insertBefore(this.renderer.domElement, viewport.firstChild);
 
     const ground = new THREE.Mesh(new THREE.PlaneGeometry(280, 340), new THREE.MeshLambertMaterial({ color: 0x0f172a }));
     ground.rotation.x = -Math.PI / 2; ground.position.set(0, 0, -35); ground.receiveShadow = true;
@@ -5099,6 +5078,11 @@ this.scene.add(facadeHeader);
 
   this.socialPro = new ES3DSocial(this);
     this.socialPro.init();
+
+    if (this.enginePro) {
+      this.enginePro.configurarIluminacaoESombrasPro();
+      this.enginePro.calibrarCenaModerna();
+    }
 
     this.iniciarLoopRenderizacao();
 
@@ -5635,6 +5619,7 @@ if (this.torreAtual) {
                 this.fluenciaPro?.update(delta);
                 this.socialPro?.update(delta);
                 this.ambientePro?.update(delta, this.modoInterior);
+                this.enginePro?.atualizarSombraNoJogador();
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
       this.footprints = this.footprints.filter(f => {
@@ -6563,6 +6548,10 @@ document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () =>
   if (this.socialPro) {
       this.socialPro.dispose();
       this.socialPro = null;
+    }
+  if (this.enginePro) {
+      this.enginePro.dispose();
+      this.enginePro = null;
     }
 
     // 🧹 Libera geometrias, materiais, texturas e o contexto WebGL do Three.js para evitar lentidão
