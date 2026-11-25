@@ -50,12 +50,12 @@ async function carregarHubPersonalizado() {
         const bloqPres = Boolean(configHub.bloquearPresencial);
         const bloqOn = Boolean(configHub.bloquearOnline);
 
-        if (cardPresencial) {
-            cardPresencial.href = "matricula.html" + paramsString;
+       if (cardPresencial) {
+            cardPresencial.href = "/matricula" + paramsString;
             cardPresencial.style.display = bloqPres ? 'none' : 'flex';
         }
         if (cardOnline) {
-            cardOnline.href = "matricula-online.html" + paramsString;
+            cardOnline.href = "/matricula-online" + paramsString;
             cardOnline.style.display = bloqOn ? 'none' : 'flex';
         }
 

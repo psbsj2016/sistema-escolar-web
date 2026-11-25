@@ -12,7 +12,7 @@
       "continue": true
     },
     {
-      "src": "^/(|version\\.json|sw\\.js|workbox-.*\\.js|registerSW\\.js|workspace-manifest\\.json|index\\.html|workspace(\\.html)?|workspace-lousa(\\.html)?|workspace-aulas-video(\\.html)?)$",
+      "src": "^/(|version\\.json|sw\\.js|workbox-.*\\.js|registerSW\\.js|workspace-manifest\\.json|index\\.html|hub-matriculas(\\.html)?|matricula(\\.html)?|matricula-online(\\.html)?|workspace(\\.html)?|workspace-lousa(\\.html)?|workspace-aulas-video(\\.html)?)$",
       "headers": {
         "Cache-Control": "no-cache, no-store, must-revalidate"
       },

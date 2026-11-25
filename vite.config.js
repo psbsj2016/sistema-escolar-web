@@ -103,8 +103,8 @@ export default defineConfig({
             urlPattern: /\/version\.json/,
             handler: 'NetworkOnly'
           },
-          {
-            urlPattern: /\/(index|workspace|workspace-lousa|workspace-aulas-video|admin)(\.html)?(\?.*)?$/,
+        {
+            urlPattern: /\/(index|hub-matriculas|matricula|matricula-online|workspace|workspace-lousa|workspace-aulas-video|admin)(\.html)?(\?.*)?$/,
             handler: 'NetworkOnly'
           },
           {

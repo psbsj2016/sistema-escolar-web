@@ -210,7 +210,7 @@ Object.assign(App, {
             }
 
             const meuEscolaId = escola.escolaId;
-            const linkBaseEscola = `${window.location.origin}/hub-matriculas.html?escola=${encodeURIComponent(meuEscolaId)}`;
+            const linkBaseEscola = `${window.location.origin}/hub-matriculas?escola=${encodeURIComponent(meuEscolaId)}`;
             const links = Array.isArray(escola.linksMatricula) ? escola.linksMatricula : [];
 
             const htmlLista = links.length === 0
