@@ -312,6 +312,23 @@
             const dados = await res.json();
 
             escolaValida = true;
+            if (dados.configHub && dados.configHub.bloquearOnline) {
+                document.getElementById('loading-tela').style.display = 'none';
+                const container = document.querySelector('.container');
+                if (container) {
+                    container.style.display = 'block';
+                    container.innerHTML = `
+                        <div style="text-align:center; padding:45px 20px;">
+                            <div style="font-size:56px; margin-bottom:15px;">🔒</div>
+                            <h2 style="color:#b91c1c; margin-bottom:10px;">Matrículas Online (EAD) Indisponíveis</h2>
+                            <p style="color:#666; font-size:15px; line-height:1.6;">
+                                As matrículas para o curso online (EAD) estão temporariamente encerradas. Entre em contato com a instituição para mais informações.
+                            </p>
+                        </div>
+                    `;
+                }
+                return;
+            }
             
             // 🚀 A NOVA MAGIA: Procurar o EAD dentro da caixa principal
             const caixaForte = dados.configMatricula || {};

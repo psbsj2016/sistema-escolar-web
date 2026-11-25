@@ -1007,7 +1007,7 @@ Object.assign(App, {
     // =========================================================
     // 🎨 CONFIGURADOR DO HUB DE MATRÍCULAS (VITRINE)
     // =========================================================
-    renderizarConfiguradorHub: async () => {
+   renderizarConfiguradorHub: async () => {
         const area = document.getElementById('area-dinamica-hub');
         area.innerHTML = '<p style="text-align:center; padding: 40px; color:#666;">A carregar o construtor do Hub... ⏳</p>';
 
@@ -1024,13 +1024,14 @@ Object.assign(App, {
                 iconeOnline: '💻',
                 tituloOnline: 'Curso Online (EAD)',
                 descOnline: 'Estude a partir de casa e ao seu próprio ritmo. Acesso imediato à plataforma virtual de aprendizagem, materiais e suporte 100% online.',
-                btnOnline: 'Matrícula Online'
+                btnOnline: 'Matrícula Online',
+                bloquearPresencial: false,
+                bloquearOnline: false
             };
 
             // Mistura as configurações do BD com as padrões
             App.configHubTemp = escola.configHub ? { ...configPadrao, ...escola.configHub } : { ...configPadrao };
 
-            // O mesmo layout protegido que o configurador de formulários usa!
             area.innerHTML = `
                 <div id="container-config-interno">
                     <div style="display:flex; gap:20px; flex-wrap: nowrap; align-items: flex-start;">
@@ -1039,7 +1040,19 @@ Object.assign(App, {
                             
                             <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('header')">📝 Textos do Topo</button>
                             <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:10px; justify-content:flex-start;" onclick="App.editarConfigHub('presencial')">🏫 Cartão Presencial</button>
-                            <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:25px; justify-content:flex-start;" onclick="App.editarConfigHub('online')">💻 Cartão Online</button>
+                            <button class="btn-primary" style="width:100%; background:#f1f2f6; color:#2c3e50; border:1px solid #dcdde1; margin-bottom:15px; justify-content:flex-start;" onclick="App.editarConfigHub('online')">💻 Cartão Online</button>
+
+                            <div style="background:#fff5f5; border:1px solid #fecaca; border-radius:10px; padding:12px; margin-bottom:20px;">
+                                <div style="font-size:12.5px; font-weight:800; color:#b91c1c; margin-bottom:10px;">🚫 Bloquear Exibição no Site</div>
+                                <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#334155; font-weight:600; cursor:pointer; margin-bottom:8px;">
+                                    <input type="checkbox" id="hub-bloq-presencial" ${App.configHubTemp.bloquearPresencial ? 'checked' : ''} onchange="App.toggleBloqueioHub('presencial', this.checked)" style="width:16px; height:16px; accent-color:#dc2626; cursor:pointer; margin:0;">
+                                    <span>Bloquear Presencial</span>
+                                </label>
+                                <label style="display:flex; align-items:center; gap:8px; font-size:13px; color:#334155; font-weight:600; cursor:pointer;">
+                                    <input type="checkbox" id="hub-bloq-online" ${App.configHubTemp.bloquearOnline ? 'checked' : ''} onchange="App.toggleBloqueioHub('online', this.checked)" style="width:16px; height:16px; accent-color:#dc2626; cursor:pointer; margin:0;">
+                                    <span>Bloquear Online (EAD)</span>
+                                </label>
+                            </div>
                             
                             <button class="btn-primary" style="width:100%; background:#8e44ad; border:none; justify-content:center; padding:15px; font-weight:bold;" onclick="App.salvarConfiguradorHub()">💾 Salvar Hub</button>
                         </div>
@@ -1047,7 +1060,7 @@ Object.assign(App, {
                         <div style="flex: 1; min-width: 0;">
                             <div style="background:#e0e6ed; padding:20px; border-radius:12px; display:flex; justify-content:center; width:100%; box-sizing: border-box;">
                                 <div id="preview-hub-page" style="background:#f4f7f6; width:100%; max-width:100%; min-height:500px; box-shadow:0 15px 35px rgba(0,0,0,0.1); border-radius:8px; padding: 30px; font-family: 'Segoe UI', sans-serif; position: relative;">
-                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1060,13 +1073,55 @@ Object.assign(App, {
         }
     },
 
-    atualizarPreviewHub: () => {
+    toggleBloqueioHub: (modalidade, bloqueado) => {
+        if (!App.configHubTemp) return;
+        if (modalidade === 'presencial') App.configHubTemp.bloquearPresencial = Boolean(bloqueado);
+        if (modalidade === 'online') App.configHubTemp.bloquearOnline = Boolean(bloqueado);
+        App.atualizarPreviewHub();
+    },
+
+   atualizarPreviewHub: () => {
         const preview = document.getElementById('preview-hub-page');
         if(!preview) return;
         const config = App.configHubTemp;
-        
+        const bloqPres = Boolean(config.bloquearPresencial);
+        const bloqOn = Boolean(config.bloquearOnline);
+
+        const cardPresencialHTML = bloqPres ? '' : `
+            <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconePresencial)}</div>
+                <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloPresencial)}</h2>
+                <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descPresencial)}</p>
+                <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnPresencial)}</div>
+            </div>
+        `;
+
+        const cardOnlineHTML = bloqOn ? '' : `
+            <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
+                <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconeOnline)}</div>
+                <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloOnline)}</h2>
+                <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descOnline)}</p>
+                <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnOnline)}</div>
+            </div>
+        `;
+
+        const conteudoCartoes = (bloqPres && bloqOn)
+            ? `
+                <div style="background:#fff; border:2px dashed #fca5a5; border-radius:20px; padding:35px 25px; max-width:460px; width:100%; text-align:center; box-shadow:0 10px 30px rgba(0,0,0,0.05);">
+                    <div style="font-size:48px; margin-bottom:10px;">🔒</div>
+                    <h2 style="color:#b91c1c; margin:0 0 10px 0; font-size:1.3rem;">Matrículas Temporariamente Encerradas</h2>
+                    <p style="color:#64748b; font-size:0.9rem; margin:0; line-height:1.5;">No momento não há modalidades abertas para novas matrículas. Entre em contato com a nossa secretaria para mais informações.</p>
+                </div>
+            `
+            : `${cardPresencialHTML}${cardOnlineHTML}`;
+
+        const badgeBloqueio = (bloqPres || bloqOn)
+            ? `<div style="position:absolute; top:10px; right:10px; background:#dc2626; color:white; font-size:10px; font-weight:bold; padding:4px 10px; border-radius:12px;">🚫 ${bloqPres && bloqOn ? 'Ambos bloqueados' : (bloqPres ? 'Presencial bloqueado' : 'Online bloqueado')}</div>`
+            : '';
+
         preview.innerHTML = `
             <div style="position:absolute; top:10px; left:10px; background:rgba(0,0,0,0.6); color:white; font-size:10px; padding:4px 8px; border-radius:12px;">👁️ Pré-visualização ao Vivo</div>
+            ${badgeBloqueio}
             
             <div style="text-align: center; padding: 20px 10px 20px; max-width: 600px; margin: 20px auto 0;">
                 <h1 style="color: #2c3e50; font-size: 1.8rem; margin-bottom: 10px; margin-top:0;">${App.escapeHTML(config.tituloHeader)}</h1>
@@ -1074,19 +1129,7 @@ Object.assign(App, {
             </div>
             
             <div style="display: flex; gap: 20px; justify-content: center; flex-wrap: wrap; margin-top: 10px;">
-                <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
-                    <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconePresencial)}</div>
-                    <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloPresencial)}</h2>
-                    <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descPresencial)}</p>
-                    <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnPresencial)}</div>
-                </div>
-
-                <div style="background: #fff; border-radius: 20px; padding: 25px 20px; width: 100%; max-width: 250px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.06); display: flex; flex-direction: column; justify-content: space-between;">
-                    <div style="font-size: 45px; margin-bottom: 10px;">${App.escapeHTML(config.iconeOnline)}</div>
-                    <h2 style="color: #2c3e50; margin-bottom: 10px; font-size: 1.2rem; margin-top:0;">${App.escapeHTML(config.tituloOnline)}</h2>
-                    <p style="color: #666; line-height: 1.4; margin-bottom: 20px; font-size: 0.85rem; flex-grow: 1;">${App.escapeHTML(config.descOnline)}</p>
-                    <div style="background-color: #3498db; color: white; padding: 10px 15px; border-radius: 8px; font-weight: bold; font-size: 0.9rem;">${App.escapeHTML(config.btnOnline)}</div>
-                </div>
+                ${conteudoCartoes}
             </div>
         `;
     },
