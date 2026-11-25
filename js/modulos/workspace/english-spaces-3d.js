@@ -5584,7 +5584,7 @@ if (this.torreAtual) {
           p.rotY = Math.atan2(worldDirX, worldDirZ);
           estaAndando = true;
         } else if (this.podeMoverPara(p.x, nextZ, p.x, p.z)) {
-          p.z = Math.max(-135, Math.min(70, nextZ));
+          p.z = Math.max(-135, Math.min(96, nextZ));
           p.rotY = Math.atan2(worldDirX, worldDirZ);
           estaAndando = true;
         }

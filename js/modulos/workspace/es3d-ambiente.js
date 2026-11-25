@@ -684,8 +684,8 @@ export class ES3DAmbiente {
     const matEstaca = new THREE.MeshStandardMaterial({ color: 0x4a2c1a, roughness: 0.95 });
     const matLanterna = new THREE.MeshStandardMaterial({ color: 0xfef08a, emissive: 0xfacc15, emissiveIntensity: 1.4 });
 
-    const deckPier = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.24, 24.4), matMadeiraPier);
-    deckPier.position.set(0, 0.20, 84.2);
+    const deckPier = new THREE.Mesh(new THREE.BoxGeometry(4.8, 0.10, 24.4), matMadeiraPier);
+    deckPier.position.set(0, 0.08, 84.2);
     deckPier.receiveShadow = true;
     pierGroup.add(deckPier);
 
