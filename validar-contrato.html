@@ -58,7 +58,7 @@
         <div id="resultado-validacao"></div>
 
         <div class="lgpd-note">
-            🔒 Em conformidade com a <b>LGPD (Lei nº 13.709/2018)</b>, dados sensíveis pessoais são exibidos de forma parcialmente mascarada nesta consulta pública.
+            🔒 Em conformidade com a <b>LGPD (Lei nº 13.709/2018)</b>, dados pessoais sensíveis são exibidos de forma parcialmente mascarada e os acessos de verificação são registrados para segurança e auditoria do documento.
         </div>
     </div>
 
@@ -67,9 +67,47 @@
             return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
         }
 
-        async function consultarContrato(idParam) {
+        async function gerarAssinaturaDispositivo() {
+            try {
+                let webglInfo = '';
+                try {
+                    const c = document.createElement('canvas');
+                    const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+                    if (gl) {
+                        const dbg = gl.getExtension('WEBGL_debug_renderer_info');
+                        webglInfo = dbg ? (gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL) || '') : '';
+                    }
+                } catch (e) {}
+
+                const traits = [
+                    navigator.userAgent || '',
+                    navigator.language || '',
+                    navigator.platform || '',
+                    `${screen.width}x${screen.height}x${screen.colorDepth}`,
+                    String(window.devicePixelRatio || 1),
+                    String(navigator.hardwareConcurrency || ''),
+                    String(navigator.deviceMemory || ''),
+                    String(navigator.maxTouchPoints || 0),
+                    Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+                    webglInfo
+                ].join('|');
+
+                if (window.crypto && crypto.subtle) {
+                    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(traits));
+                    return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 16).toUpperCase();
+                }
+                let h = 0;
+                for (let i = 0; i < traits.length; i++) h = ((h << 5) - h) + traits.charCodeAt(i) | 0;
+                return Math.abs(h).toString(16).toUpperCase();
+            } catch (e) {
+                return '';
+            }
+        }
+
+        async function consultarContrato(idParam, origemForcada) {
             const inp = document.getElementById('input-id-contrato');
             const id = (idParam !== undefined ? idParam : inp.value).trim();
+            const origem = origemForcada || 'manual';
             const box = document.getElementById('resultado-validacao');
             if (!id) {
                 box.innerHTML = `<div class="badge-err"><b>Informe o ID da Transação (CONT_...)</b> para validar.</div>`;
@@ -79,7 +117,24 @@
             box.innerHTML = `<div style="text-align:center; padding:26px; color:#64748b;">⏳ Consultando registro criptográfico no servidor...</div>`;
 
             try {
-                const res = await fetch(`/api/public/validar-contrato/${encodeURIComponent(id)}?_t=${Date.now()}`);
+                const fingerprint = await gerarAssinaturaDispositivo();
+                const telemetria = {
+                    origem,
+                    fingerprint,
+                    tela: `${screen.width}x${screen.height} (dpr ${window.devicePixelRatio || 1})`,
+                    fusoHorario: Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+                    idioma: navigator.language || '',
+                    plataforma: navigator.platform || '',
+                    touch: (navigator.maxTouchPoints || 0) > 0,
+                    nucleos: navigator.hardwareConcurrency || null,
+                    memoria: navigator.deviceMemory || null
+                };
+
+                const res = await fetch(`/api/public/validar-contrato/${encodeURIComponent(id)}?_t=${Date.now()}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(telemetria)
+                });
                 const d = await res.json();
 
                 if (!res.ok || !d.valid) {
@@ -130,7 +185,7 @@
         }
 
         const idInicial = new URLSearchParams(window.location.search).get('id');
-        if (idInicial) consultarContrato(idInicial);
+        if (idInicial) consultarContrato(idInicial, 'qrcode');
     </script>
 </body>
 </html>

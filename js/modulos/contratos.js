@@ -568,6 +568,9 @@ Object.assign(App, {
                 <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:16px;">
                     <span style="font-size:16px;">🔍</span>
                     <input type="text" id="busca-cofre-contratos" oninput="App.filtrarCofreContratos()" placeholder="Pesquisar por ID da Transação (CONT_...), Nome do Aluno, CPF ou Hash SHA-256..." style="flex:1; min-width:220px; border:none; outline:none; font-size:13.5px; color:#1e293b;">
+                    <button type="button" onclick="App.abrirPainelConsultasValidacao()" style="background:#0f172a; color:#ffffff; border:none; padding:8px 13px; border-radius:8px; font-size:12px; font-weight:bold; cursor:pointer; white-space:nowrap; display:inline-flex; align-items:center; gap:6px;">
+                        🕵️ Consultas de Verificação
+                    </button>
                     <a href="/validar-contrato" target="_blank" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:bold; text-decoration:none; white-space:nowrap;">🛡️ Validador Público ↗</a>
                 </div>
                 
@@ -666,6 +669,248 @@ Object.assign(App, {
                 ${htmlEAD}
             </div>
         `;
+    },
+
+    // =========================================================
+    // 🕵️ PAINEL FORENSE: AUDITORIA DE CONSULTAS AO VALIDADOR
+    // =========================================================
+    abrirPainelConsultasValidacao: async () => {
+        document.getElementById('modal-auditoria-validacao')?.remove();
+
+        const overlay = document.createElement('div');
+        overlay.id = 'modal-auditoria-validacao';
+        overlay.style.cssText = 'position:fixed; inset:0; background:rgba(15,23,42,0.75); backdrop-filter:blur(5px); z-index:10050; display:flex; align-items:center; justify-content:center; padding:16px; box-sizing:border-box;';
+        overlay.innerHTML = `
+            <div style="background:#ffffff; width:100%; max-width:1060px; max-height:90vh; border-radius:16px; box-shadow:0 25px 60px rgba(0,0,0,0.4); display:flex; flex-direction:column; overflow:hidden; font-family:inherit;">
+                <div style="background:#0f172a; color:#ffffff; padding:18px 22px; display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                    <div>
+                        <h3 style="margin:0; font-size:18px; color:#f8fafc;">🕵️ Segurança e Auditoria — Consultas de Verificação</h3>
+                        <p style="margin:4px 0 0; font-size:12px; color:#94a3b8;">Registro silencioso de todos os acessos via QR Code ou busca manual nos contratos desta instituição.</p>
+                    </div>
+                    <div style="display:flex; gap:8px; align-items:center;">
+                        <button type="button" onclick="App.imprimirDossieConsultasValidacao()" style="background:#16a34a; color:#fff; border:none; padding:8px 14px; border-radius:8px; font-size:12.5px; font-weight:bold; cursor:pointer;">🖨️ Imprimir Dossiê</button>
+                        <button type="button" onclick="document.getElementById('modal-auditoria-validacao')?.remove()" style="background:#334155; color:#fff; border:none; width:34px; height:34px; border-radius:8px; font-size:16px; font-weight:bold; cursor:pointer;">✕</button>
+                    </div>
+                </div>
+
+                <div style="padding:16px 22px; background:#f8fafc; border-bottom:1px solid #e2e8f0;">
+                    <div id="kpis-logs-validacao" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(170px, 1fr)); gap:10px; margin-bottom:14px;"></div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                        <input type="text" id="filtro-texto-logs-val" oninput="App.filtrarTabelaLogsValidacao()" placeholder="🔍 Filtrar por ID (CONT_...), Aluno, IP, Cidade, Operadora ou ID do Dispositivo..." style="flex:1; min-width:230px; padding:10px 14px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff;">
+                        <select id="filtro-origem-logs-val" onchange="App.filtrarTabelaLogsValidacao()" style="padding:10px 12px; border:1px solid #cbd5e1; border-radius:8px; font-size:13px; background:#fff; min-width:170px;">
+                            <option value="">Todas as Origens</option>
+                            <option value="QR Code">📷 Via QR Code</option>
+                            <option value="Manual">⌨️ Busca Manual</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="lista-logs-validacao" style="padding:18px 22px; overflow-y:auto; flex:1; background:#ffffff;">
+                    <p style="text-align:center; padding:40px; color:#64748b;">⏳ Carregando histórico de verificações...</p>
+                </div>
+            </div>
+        `;
+        overlay.addEventListener('click', (e) => { if (e.target.id === 'modal-auditoria-validacao') overlay.remove(); });
+        document.body.appendChild(overlay);
+
+        try {
+            const logs = await App.api('/sistema/logs-validacao-contratos');
+            App._logsValidacaoCache = Array.isArray(logs) ? logs : [];
+            App.filtrarTabelaLogsValidacao();
+        } catch (e) {
+            const listaEl = document.getElementById('lista-logs-validacao');
+            if (listaEl) listaEl.innerHTML = `<p style="text-align:center; color:#dc2626; padding:30px;">Erro ao carregar os registros de verificação.</p>`;
+        }
+    },
+
+    filtrarTabelaLogsValidacao: () => {
+        const listaEl = document.getElementById('lista-logs-validacao');
+        const kpisEl = document.getElementById('kpis-logs-validacao');
+        if (!listaEl) return;
+
+        const todos = Array.isArray(App._logsValidacaoCache) ? App._logsValidacaoCache : [];
+        const termo = (document.getElementById('filtro-texto-logs-val')?.value || '').toLowerCase().trim();
+        const origemSel = (document.getElementById('filtro-origem-logs-val')?.value || '').toLowerCase();
+
+        // Conta repetições por dispositivo (fingerprint ou IP) para destacar acessos recorrentes
+        const contagemAparelho = {};
+        todos.forEach(l => {
+            const chave = l.dispositivo?.fingerprint || l.ip || 'desconhecido';
+            contagemAparelho[chave] = (contagemAparelho[chave] || 0) + 1;
+        });
+
+        const filtrados = todos.filter(l => {
+            if (origemSel && !String(l.origem || '').toLowerCase().includes(origemSel)) return false;
+            if (!termo) return true;
+            const bloco = [
+                l.contratoId, l.nomeAluno, l.curso, l.ip, l.origem, l.resultado,
+                l.localizacao?.cidade, l.localizacao?.regiao, l.localizacao?.pais, l.localizacao?.isp,
+                l.dispositivo?.sistemaOperacional, l.dispositivo?.navegador, l.dispositivo?.fingerprint
+            ].join(' ').toLowerCase();
+            return bloco.includes(termo);
+        });
+
+        App._logsValidacaoFiltrados = filtrados;
+
+        if (kpisEl) {
+            const viaQr = todos.filter(l => String(l.origem || '').includes('QR')).length;
+            const manuais = todos.length - viaQr;
+            const aparelhosUnicos = Object.keys(contagemAparelho).length;
+            kpisEl.innerHTML = `
+                <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid #2563eb; border-radius:10px; padding:10px 14px;">
+                    <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase;">Total de Consultas</div>
+                    <div style="font-size:20px; font-weight:800; color:#0f172a;">${todos.length}</div>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid #16a34a; border-radius:10px; padding:10px 14px;">
+                    <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase;">📷 Via QR Code</div>
+                    <div style="font-size:20px; font-weight:800; color:#15803d;">${viaQr}</div>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid #7c3aed; border-radius:10px; padding:10px 14px;">
+                    <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase;">⌨️ Busca Manual</div>
+                    <div style="font-size:20px; font-weight:800; color:#6d28d9;">${manuais}</div>
+                </div>
+                <div style="background:#fff; border:1px solid #e2e8f0; border-left:4px solid #ea580c; border-radius:10px; padding:10px 14px;">
+                    <div style="font-size:11px; color:#64748b; font-weight:700; text-transform:uppercase;">📱 Dispositivos Únicos</div>
+                    <div style="font-size:20px; font-weight:800; color:#c2410c;">${aparelhosUnicos}</div>
+                </div>
+            `;
+        }
+
+        if (filtrados.length === 0) {
+            listaEl.innerHTML = `
+                <div style="text-align:center; padding:45px 20px; color:#64748b;">
+                    <div style="font-size:40px; margin-bottom:10px;">🛡️</div>
+                    <strong style="color:#1e293b;">Nenhuma consulta registrada para este filtro.</strong>
+                    <p style="font-size:12.5px; margin-top:6px;">Sempre que alguém ler o QR Code de um contrato ou pesquisar o ID no validador público, os dados técnicos do acesso aparecerão aqui.</p>
+                </div>
+            `;
+            return;
+        }
+
+        listaEl.innerHTML = filtrados.map(l => {
+            const isQR = String(l.origem || '').includes('QR');
+            const badgeOrigem = isQR
+                ? `<span style="background:#dcfce7; color:#15803d; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700;">📷 QR Code</span>`
+                : `<span style="background:#ede9fe; color:#6d28d9; padding:3px 8px; border-radius:999px; font-size:11px; font-weight:700;">⌨️ Manual</span>`;
+
+            const badgeRes = l.resultado === 'INTEGRO'
+                ? `<span style="background:#ecfdf5; color:#047857; border:1px solid #a7f3d0; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700;">✅ Íntegro</span>`
+                : (l.resultado === 'HISTORICO'
+                    ? `<span style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700;">📜 Histórico</span>`
+                    : `<span style="background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; padding:2px 8px; border-radius:999px; font-size:10.5px; font-weight:700;">⚠️ ${App.escapeHTML(l.resultado || 'Alerta')}</span>`);
+
+            const loc = l.localizacao || {};
+            const localTexto = [loc.cidade, loc.regiao, loc.pais].filter(Boolean).join(' - ') || 'Não identificada';
+            const disp = l.dispositivo || {};
+            const chaveAp = disp.fingerprint || l.ip || 'desconhecido';
+            const qtdAp = contagemAparelho[chaveAp] || 1;
+            const badgeRepetido = qtdAp > 1
+                ? `<span style="background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; padding:2px 7px; border-radius:999px; font-size:10.5px; font-weight:700; margin-left:4px;">🔁 ${qtdAp}x neste aparelho</span>`
+                : '';
+
+            return `
+                <div style="border:1px solid #e2e8f0; border-left:4px solid ${isQR ? '#16a34a' : '#7c3aed'}; border-radius:10px; padding:14px 16px; margin-bottom:12px; background:#fff; box-shadow:0 2px 6px rgba(15,23,42,0.03);">
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; margin-bottom:8px; padding-bottom:8px; border-bottom:1px dashed #e2e8f0;">
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            ${badgeOrigem}
+                            ${badgeRes}
+                            <strong style="color:#0f172a; font-size:14px;">${App.escapeHTML(l.nomeAluno || 'Não informado')}</strong>
+                            <span style="font-size:11.5px; color:#64748b; font-family:monospace;">(${App.escapeHTML(l.contratoId || '-')})</span>
+                        </div>
+                        <div style="text-align:right; font-size:12px; color:#334155;">
+                            <strong>🕒 ${App.escapeHTML(l.dataBrasilia || '-')}</strong>
+                            <div style="font-size:10px; color:#94a3b8; font-family:monospace;">UTC: ${App.escapeHTML(l.dataUTC || '-')}</div>
+                        </div>
+                    </div>
+
+                    <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:10px; font-size:12px; color:#334155;">
+                        <div>
+                            <div style="color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase;">🌐 Rede e IP Real</div>
+                            <div><b>IP:</b> <span style="font-family:monospace; color:#0f172a;">${App.escapeHTML(l.ip || '-')}</span></div>
+                            <div><b>Localização:</b> ${App.escapeHTML(localTexto)}</div>
+                            ${loc.isp ? `<div><b>Operadora/ISP:</b> ${App.escapeHTML(loc.isp)}</div>` : ''}
+                        </div>
+                        <div>
+                            <div style="color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase;">📱 Aparelho e Navegador</div>
+                            <div><b>Sistema:</b> ${App.escapeHTML(disp.sistemaOperacional || '-')} • ${App.escapeHTML(disp.navegador || '-')}</div>
+                            ${disp.tela ? `<div><b>Tela / Fuso:</b> ${App.escapeHTML(disp.tela)} ${disp.fusoHorario ? '• ' + App.escapeHTML(disp.fusoHorario) : ''}</div>` : ''}
+                            <div><b>ID Dispositivo:</b> <span style="font-family:monospace; background:#f1f5f9; padding:1px 6px; border-radius:4px;">${App.escapeHTML(disp.fingerprint || 'N/A')}</span>${badgeRepetido}</div>
+                        </div>
+                        <div>
+                            <div style="color:#64748b; font-size:10.5px; font-weight:700; text-transform:uppercase;">🔗 Origem Técnica</div>
+                            <div><b>Curso:</b> ${App.escapeHTML(l.curso || '-')}</div>
+                            <div style="word-break:break-all;"><b>Referer:</b> ${App.escapeHTML(l.referer || 'Acesso direto')}</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    },
+
+    imprimirDossieConsultasValidacao: () => {
+        const logs = Array.isArray(App._logsValidacaoFiltrados) ? App._logsValidacaoFiltrados : (App._logsValidacaoCache || []);
+        if (logs.length === 0) return App.showToast('Nenhuma consulta para imprimir.', 'warning');
+
+        const escola = JSON.parse(localStorage.getItem(App.getTenantKey('escola_perfil'))) || {};
+        const linhas = logs.map(l => {
+            const loc = l.localizacao || {};
+            const disp = l.dispositivo || {};
+            const localStr = [loc.cidade, loc.regiao, loc.pais].filter(Boolean).join(' - ') || '-';
+            return `
+                <tr>
+                    <td>${App.escapeHTML(l.dataBrasilia || '-')}<br><small style="color:#666;">UTC: ${App.escapeHTML(l.dataUTC || '-')}</small></td>
+                    <td><b>${App.escapeHTML(l.nomeAluno || '-')}</b><br><small style="font-family:monospace;">${App.escapeHTML(l.contratoId || '-')}</small></td>
+                    <td>${App.escapeHTML(l.origem || '-')}<br><small>${App.escapeHTML(l.resultado || '-')}</small></td>
+                    <td style="font-family:monospace;"><b>${App.escapeHTML(l.ip || '-')}</b><br><small style="font-family:Arial;">${App.escapeHTML(localStr)}${loc.isp ? ' • ' + App.escapeHTML(loc.isp) : ''}</small></td>
+                    <td>${App.escapeHTML(disp.sistemaOperacional || '-')} / ${App.escapeHTML(disp.navegador || '-')}<br><small style="font-family:monospace;">ID: ${App.escapeHTML(disp.fingerprint || 'N/A')}</small></td>
+                </tr>
+            `;
+        }).join('');
+
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = 'position:absolute; top:-10000px; width:900px; height:1000px; border:none;';
+        document.body.appendChild(iframe);
+
+        const doc = iframe.contentWindow.document;
+        doc.open();
+        doc.write(`
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <title>Dossiê de Auditoria - Consultas de Contratos</title>
+                <style>
+                    body { font-family: Arial, sans-serif; padding: 24px; color: #1e293b; font-size: 11px; }
+                    h2 { margin: 0 0 4px 0; color: #0f172a; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 16px; }
+                    th, td { border: 1px solid #cbd5e1; padding: 7px 8px; text-align: left; vertical-align: top; }
+                    th { background: #f1f5f9; font-size: 10.5px; text-transform: uppercase; }
+                    @media print { body { padding: 0; } @page { margin: 12mm; size: landscape; } }
+                </style>
+            </head>
+            <body>
+                <h2>🛡️ Dossiê Forense — Consultas de Verificação de Contratos</h2>
+                <div><b>Instituição:</b> ${App.escapeHTML(escola.nome || 'Instituição')} ${escola.cnpj ? '• CNPJ: ' + App.escapeHTML(escola.cnpj) : ''} • <b>Emitido em:</b> ${new Date().toLocaleString('pt-BR')}</div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Data / Hora (BR & UTC)</th>
+                            <th>Contrato / Aluno</th>
+                            <th>Origem / Status</th>
+                            <th>IP Real / Localização / ISP</th>
+                            <th>Dispositivo / Fingerprint</th>
+                        </tr>
+                    </thead>
+                    <tbody>${linhas}</tbody>
+                </table>
+            </body>
+            </html>
+        `);
+        doc.close();
+        setTimeout(() => {
+            iframe.contentWindow.focus();
+            iframe.contentWindow.print();
+            setTimeout(() => document.body.removeChild(iframe), 1500);
+        }, 500);
     },
 
     imprimirContrato: () => {
