@@ -3601,7 +3601,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
                 <span id="live-elapsed-timer" class="live-duration-timer">00:00</span>
               </div>
 
-              <!-- Indicador de Gravação em Andamento -->
+             <!-- Indicador de Gravação em Andamento -->
               <div id="recording-status-box" style="display:none; align-items:center; gap:6px; background:rgba(225,29,72,0.22); border:1px solid #f43f5e; padding:3px 10px; border-radius:99px; flex-shrink:0;">
                 <span style="color:#fda4af; font-weight:800; font-size:11px; white-space:nowrap;">🔴 <span id="rec-timer">00:00</span></span>
                 <button type="button" class="vc-btn danger" style="padding:2px 8px; font-size:10.5px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
@@ -3609,8 +3609,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
               <!-- Botão visível apenas se o navegador bloquear o autoplay de algum colega -->
               <button type="button" id="btn-desbloquear-audio-sala" class="vc-btn" style="display:none; background:#f59e0b; color:#0f172a; border:none; padding:4px 10px; font-size:11px; border-radius:99px; font-weight:800; animation:pulseRed 1.5s infinite; flex-shrink:0;" onclick="desbloquearTodosAudiosRemotos()">🔊 Ativar Áudio</button>
-              </div>
-              
+
               <!-- Menu Hambúrguer no Topo (Visível no PC e Celular em Pé; no Horizontal vai para a Caixa Direita) -->
               <div class="live-hamburger-wrap live-hamb-portrait-only" id="wrap-menu-hamburguer-live" style="flex-shrink:0;">
                 <button type="button" class="live-hamburger-btn" id="btn-live-hamburger" onclick="alternarMenuHamburguerLive(event)" title="Menu da Sala Ao Vivo">☰</button>
@@ -5446,13 +5445,20 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
         participantesSalaMap.set(pId, p);
         if (p.maoLevantada) {
-                      aplicarEstadoMaoParticipante({
-                      autorId: pId,
-                      nome: p.role === 'professor' ? `Prof. ${p.nome}` : p.nome,
-                      autorRole: p.role,
-                      maoLevantada: true
-                      }, false);
-                    }
+          aplicarEstadoMaoParticipante({
+            autorId: pId,
+            nome: p.role === 'professor' ? `Prof. ${p.nome}` : p.nome,
+            autorRole: p.role,
+            maoLevantada: true
+          }, false);
+        } else if (maosLevantadasMap.has(pId)) {
+          aplicarEstadoMaoParticipante({
+            autorId: pId,
+            nome: p.role === 'professor' ? `Prof. ${p.nome}` : p.nome,
+            autorRole: p.role,
+            maoLevantada: false
+          }, false);
+        }
 
         // Ignora a mim mesmo para ligações remotas, mas garante meu cartão local se sou aluno
         if (pId === meuId || p.peerId === meuPeerIdAtual) {
@@ -5732,13 +5738,14 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
     }
 
     // 📷 LIGAR / DESLIGAR CÂMARA (COM RESOLUÇÃO LEVE + TROCA GARANTIDA EM TODAS AS CONEXÕES!)
-    async function alternarMinhaCamara() {
+   async function alternarMinhaCamara() {
       if (!meuStreamLocal) {
         meuStreamLocal = new MediaStream();
         if (!streamTransmissaoAtual) streamTransmissaoAtual = meuStreamLocal;
       }
 
       let videoTrack = meuStreamLocal.getVideoTracks()[0];
+      let precisouCapturar = false;
 
       if (!camAtiva && (!videoTrack || videoTrack._isFallbackTrack || videoTrack.readyState === 'ended')) {
         try {
@@ -5754,11 +5761,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
             novaTrilhaVideo.enabled = true;
             meuStreamLocal.addTrack(novaTrilhaVideo);
             videoTrack = novaTrilhaVideo;
-
-            if (!profTelaPartilhadaAtiva) {
-              streamTransmissaoAtual = meuStreamLocal;
-              await substituirTrilhaEmTodasChamadas('video', novaTrilhaVideo);
-            }
+            precisouCapturar = true;
           }
         } catch (errPerm) {
           mostrarToast('⚠️ Permissão de câmara negada no navegador. Autorize no ícone de cadeado da barra de endereço.', '#f59e0b');
@@ -5769,7 +5772,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       camAtiva = !camAtiva;
       meuStreamLocal.getVideoTracks().forEach(t => { t.enabled = camAtiva; });
 
-      if (camAtiva && videoTrack && !videoTrack._isFallbackTrack && !profTelaPartilhadaAtiva) {
+      if (camAtiva && videoTrack && !videoTrack._isFallbackTrack && !profTelaPartilhadaAtiva && precisouCapturar) {
         streamTransmissaoAtual = meuStreamLocal;
         await substituirTrilhaEmTodasChamadas('video', videoTrack);
       }
