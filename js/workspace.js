@@ -1529,7 +1529,7 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         // 🔓 Libera explicitamente Tela Cheia, Câmera, Microfone e Giro Paisagem dentro do iframe
         iframe.setAttribute('allowfullscreen', 'true');
         iframe.setAttribute('webkitallowfullscreen', 'true');
-        iframe.setAttribute('allow', 'camera; microphone; display-capture; fullscreen; autoplay; encrypted-media; picture-in-picture');
+        iframe.setAttribute('allow', 'camera *; microphone *; display-capture *; fullscreen *; autoplay *; encrypted-media *; picture-in-picture *');
 
         // Se o modal já estava minimizado e o utilizador clicou apenas para restaurar
         if (modal.dataset.minimizado === 'true' && !videoId && !playlistSlug && !liveToken) {

@@ -1579,22 +1579,23 @@
           { urls: 'stun:stun2.l.google.com:19302' },
           { urls: 'stun:stun3.l.google.com:19302' },
           { urls: 'stun:stun4.l.google.com:19302' }
-          // Dica: se algum dia precisar atravessar redes 4G corporativas muito fechadas,
-          // adicione aqui um servidor TURN gratuito (ex: Metered.ca).
         ]
       }
     };
-    const INTERVALO_HEARTBEAT_PRESENCA_MS = 20000; // Renova presença no servidor a cada 20s
-    const INTERVALO_MONITOR_MALHA_MS = 8000;       // Verifica e repara ligações pendentes a cada 8s
+    let peerConfigAtiva = PEER_CONFIG_ICE;
+    const INTERVALO_HEARTBEAT_PRESENCA_MS = 20000;
+    const INTERVALO_MONITOR_MALHA_MS = 8000;
 
     let peerInstance = null;
     let meuPeerIdAtual = '';
     let meuStreamLocal = null;
+    let streamPreAutorizado = null;
+    let permissaoMidiaConfirmadaNaSessao = false;
     let streamTransmissaoAtual = null;
     let telaPartilhadaAudioTrackAtual = null;
     let conexoesAlunos = [];
     const conexoesDadosMap = new Map();
-    const participantesSalaMap = new Map(); // userId/peerId -> dados do participante
+    const participantesSalaMap = new Map();
     let chamadasAtivas = {};
     let micAtivo = false;
     let camAtiva = false;
@@ -1612,6 +1613,18 @@
     const estadoCamsPorId = {};
     let professorPrincipalPeerId = null;
     let professorPrincipalNome = '';
+
+    async function carregarConfiguracaoIceLive() {
+      try {
+        const res = await fetch('/api/workspace/video-aulas/live/ice-servers', { credentials: 'include' });
+        const data = await res.json().catch(() => null);
+        if (data && data.success && Array.isArray(data.iceServers) && data.iceServers.length > 0) {
+          peerConfigAtiva = { debug: 0, config: { iceServers: data.iceServers } };
+          return;
+        }
+      } catch (e) {}
+      peerConfigAtiva = PEER_CONFIG_ICE;
+    }
 
     const normalizarStr = (s) => String(s || '').normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim();
 
@@ -3043,7 +3056,16 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       if (!manterCronometro) {
         pararCronometroDuracaoLive();
       }
-    }
+      const poolAudio = document.getElementById('live-remote-audio-pool');
+      if (poolAudio) poolAudio.innerHTML = '';
+      if (!manterCronometro) {
+        permissaoMidiaConfirmadaNaSessao = false;
+        if (streamPreAutorizado) {
+          streamPreAutorizado.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+          streamPreAutorizado = null;
+        }
+      }
+ }
 
  let statusPortariaAluno = 'inicial'; // 'inicial' | 'aguardando' | 'recusado'
 
@@ -3256,6 +3278,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       const stage = document.getElementById('meet-stage-container');
       if (!stage) return;
       stage.dataset.salaMontada = '';
+      permissaoMidiaConfirmadaNaSessao = false;
       if (IS_GESTOR_OU_PROF) {
         stage.innerHTML = `
           <div style="width:100%; height:100%; display:flex; flex-direction:column; position:relative;">
@@ -3291,8 +3314,135 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         `;
       }
     }
+ 
+   // 🎤📷 SOLICITAÇÃO EXPLÍCITA DE MICROFONE E CÂMERA (SEMPRE NO CLIQUE DIRETO DO USUÁRIO)
+    async function preAutorizarMidiaNoClique(modo = 'ambos') {
+      if (streamPreAutorizado) {
+        streamPreAutorizado.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
+        streamPreAutorizado = null;
+      }
+
+      if (modo === 'ouvinte') {
+        streamPreAutorizado = new MediaStream();
+        permissaoMidiaConfirmadaNaSessao = true;
+        return { ok: true, temAudio: false, temVideo: false };
+      }
+
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return { ok: false, motivo: 'NotSupported', mensagem: 'Este navegador não suporta captura de microfone/câmara nesta conexão.' };
+      }
+
+      try {
+        let streamObtido = null;
+        if (modo === 'ambos') {
+          try {
+            streamObtido = await navigator.mediaDevices.getUserMedia({
+              video: obterOpcoesVideoLocal(),
+              audio: OPCOES_AUDIO_ANTI_ECO
+            });
+          } catch (errAmbos) {
+            if (errAmbos && ['NotFoundError', 'DevicesNotFoundError', 'OverconstrainedError', 'NotReadableError'].includes(errAmbos.name)) {
+              streamObtido = await navigator.mediaDevices.getUserMedia({
+                audio: OPCOES_AUDIO_ANTI_ECO,
+                video: false
+              });
+            } else {
+              throw errAmbos;
+            }
+          }
+        } else {
+          streamObtido = await navigator.mediaDevices.getUserMedia({
+            audio: OPCOES_AUDIO_ANTI_ECO,
+            video: false
+          });
+        }
+
+        // Entra na sala com ambos desativados (sem eco), mas com a permissão real já garantida pelo navegador!
+        streamObtido.getAudioTracks().forEach(t => { t.enabled = false; });
+        streamObtido.getVideoTracks().forEach(t => { t.enabled = false; });
+        streamPreAutorizado = streamObtido;
+        permissaoMidiaConfirmadaNaSessao = true;
+        return {
+          ok: true,
+          temAudio: streamObtido.getAudioTracks().length > 0,
+          temVideo: streamObtido.getVideoTracks().length > 0
+        };
+      } catch (err) {
+        return {
+          ok: false,
+          motivo: err?.name || 'Error',
+          mensagem: err?.message || 'Permissão negada pelo navegador.'
+        };
+      }
+    }
+
+    function mostrarTelaPermissaoMidiaLive(codigoSala, tituloLive, erroAnterior = null) {
+      const stage = document.getElementById('meet-stage-container');
+      if (!stage) return;
+      stage.dataset.salaMontada = `PERMISSAO_${codigoSala}`;
+
+      const avisoBloqueioHTML = erroAnterior ? `
+        <div style="background:rgba(225,29,72,0.16); border:1px solid #f43f5e; border-radius:12px; padding:14px; margin-bottom:16px; text-align:left; font-size:12.5px; color:#fecdd3; line-height:1.5;">
+          <div style="font-weight:800; color:#fda4af; margin-bottom:6px;">🚫 O navegador bloqueou o acesso ao Microfone/Câmara</div>
+          <div>1. Toque no ícone de <b>cadeado 🔒</b> ou <b>ajustes</b> ao lado do endereço do site lá em cima.</div>
+          <div>2. Em <b>Permissões</b>, mude <b>Microfone</b> e <b>Câmara</b> para <b>Permitir</b>.</div>
+          <div>3. Clique em <b>"🔄 Testar e Liberar Novamente"</b> abaixo.</div>
+        </div>
+      ` : '';
+
+      stage.innerHTML = `
+        <div style="width:100%; height:100%; display:flex; flex-direction:column; background:#050811; color:#fff; overflow-y:auto;">
+          <div style="padding:12px 18px; display:flex; justify-content:space-between; align-items:center; border-bottom:1px solid #1e293b; flex-shrink:0;">
+            <span style="color:#34d399; font-size:13px; font-weight:800;">🎤 Verificação de Microfone e Câmara</span>
+            <button type="button" class="vc-btn danger" style="padding:6px 14px; font-size:12px;" onclick="alternarAba('catalogo')">↩ Voltar</button>
+          </div>
+          <div style="text-align:center; padding:26px 20px; max-width:480px; margin:auto;">
+            <div style="width:74px; height:74px; border-radius:50%; background:rgba(29,125,250,0.16); border:2px solid #3b82f6; display:flex; align-items:center; justify-content:center; font-size:34px; margin:0 auto 14px auto;">🎤</div>
+            <h3 style="margin:0 0 8px 0; font-size:20px; font-weight:900;">${esc(tituloLive || 'Aula Ao Vivo')}</h3>
+            <p style="color:#cbd5e1; font-size:13.5px; line-height:1.5; margin:0 0 18px 0;">
+              Para falar com o professor e ouvir todos os colegas sem bloqueios, clique abaixo e toque em <b>Permitir</b> no aviso do navegador.<br>
+              <span style="font-size:12px; color:#93c5fd;">(Você entrará com microfone e câmara desligados — ligue só quando quiser falar.)</span>
+            </p>
+            ${avisoBloqueioHTML}
+            <div style="display:flex; flex-direction:column; gap:10px;">
+              <button type="button" id="btn-autorizar-ambos-live" class="vc-btn primary" style="padding:14px 20px; font-size:14.5px; border-radius:12px; width:100%;" onclick="confirmarPermissaoEEntrarLive('${esc(codigoSala)}', 'ambos', this)">
+                ${erroAnterior ? '🔄 Testar e Liberar Microfone + Câmara' : '🎤📷 Liberar Microfone e Câmara e Entrar'}
+              </button>
+              <button type="button" class="vc-btn" style="padding:12px 18px; font-size:13.5px; border-radius:12px; width:100%; background:#1e293b; color:#e2e8f0; border-color:#334155;" onclick="confirmarPermissaoEEntrarLive('${esc(codigoSala)}', 'audio', this)">
+                🎤 Liberar Apenas Microfone e Entrar
+              </button>
+              <button type="button" style="background:transparent; border:none; color:#94a3b8; font-size:12.5px; font-weight:700; cursor:pointer; padding:6px; text-decoration:underline;" onclick="confirmarPermissaoEEntrarLive('${esc(codigoSala)}', 'ouvinte', this)">
+                🎧 Entrar apenas ouvindo (sem microfone)
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    async function confirmarPermissaoEEntrarLive(codigoSala, modo, btnEl) {
+      const txtOrig = btnEl ? btnEl.innerText : '';
+      if (btnEl) { btnEl.disabled = true; btnEl.innerText = '⏳ Aguardando sua autorização no navegador...'; }
+
+      const resp = await preAutorizarMidiaNoClique(modo);
+      if (!resp.ok) {
+        if (btnEl) { btnEl.disabled = false; btnEl.innerText = txtOrig; }
+        mostrarTelaPermissaoMidiaLive(codigoSala, liveAtivaObj?.titulo || 'Aula Ao Vivo', resp);
+        return;
+      }
+
+      const stage = document.getElementById('meet-stage-container');
+      if (stage) stage.dataset.salaMontada = '';
+      montarPalcoMeetAoVivo(codigoSala, liveAtivaObj?.titulo || 'Aula Ao Vivo');
+    }
 
   async function montarPalcoMeetAoVivo(codigoSala, tituloLive) {
+      if (!permissaoMidiaConfirmadaNaSessao) {
+        if (stage.dataset.salaMontada !== `PERMISSAO_${codigoSala}`) {
+          mostrarTelaPermissaoMidiaLive(codigoSala, tituloLive, null);
+        }
+        return;
+      }
       const stage = document.getElementById('meet-stage-container');
       if (!codigoSala || stage.dataset.salaMontada === `${codigoSala}_${modoMotorLive}`) return;
       stage.dataset.salaMontada = `${codigoSala}_${modoMotorLive}`;
@@ -3345,10 +3495,12 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
               <!-- Indicador de Gravação em Andamento -->
               <div id="recording-status-box" style="display:none; align-items:center; gap:6px; background:rgba(225,29,72,0.22); border:1px solid #f43f5e; padding:3px 10px; border-radius:99px; flex-shrink:0;">
+                <!-- Botão visível apenas se o navegador bloquear o autoplay de algum colega -->
+         <button type="button" id="btn-desbloquear-audio-sala" class="vc-btn" style="display:none; background:#f59e0b; color:#0f172a; border:none; padding:4px 10px; font-size:11px; border-radius:99px; font-weight:800; animation:pulseRed 1.5s infinite; flex-shrink:0;" onclick="desbloquearTodosAudiosRemotos()">🔊 Ativar Áudio</button>
                 <span style="color:#fda4af; font-weight:800; font-size:11px; white-space:nowrap;">🔴 <span id="rec-timer">00:00</span></span>
                 <button type="button" class="vc-btn danger" style="padding:2px 8px; font-size:10.5px; border-radius:99px;" onclick="pararGravacaoEPublicar()">⏹️ Parar</button>
               </div>
-
+              
               <!-- Menu Hambúrguer no Topo (Visível no PC e Celular em Pé; no Horizontal vai para a Caixa Direita) -->
               <div class="live-hamburger-wrap live-hamb-portrait-only" id="wrap-menu-hamburguer-live" style="flex-shrink:0;">
                 <button type="button" class="live-hamburger-btn" id="btn-live-hamburger" onclick="alternarMenuHamburguerLive(event)" title="Menu da Sala Ao Vivo">☰</button>
@@ -3502,6 +3654,8 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
           <!-- Pega para Ajustar o Tamanho da Janela PiP -->
           <div id="pip-resize-handle" title="Arraste para ajustar o tamanho da janela">⤡</div>
+          <!-- 🔊 POOL DE ÁUDIO DEDICADO (Mantém o som de todos os alunos ativo mesmo com painel retraído ou PiP) -->
+     <div id="live-remote-audio-pool" style="position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0.01; pointer-events:none; overflow:hidden;"></div>
         </div>
       `;
 
@@ -3570,6 +3724,11 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
       let removidos = 0;
       if (idLimpo) {
+        const audioRem = document.getElementById(`remote_audio_${limparIdDom(idLimpo)}`);
+              if (audioRem) {
+              audioRem.srcObject = null;
+             audioRem.remove();
+            }
         document.querySelectorAll(`[data-participant-id="${CSS.escape(idLimpo)}"]`).forEach(el => {
           el.remove();
           removidos++;
@@ -4009,26 +4168,19 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
     // 🔊 BLOQUEAR SAÍDA DE SOM / TIRAR VIVA-VOZ (NUNCA TIRA O MUDO DO PRÓPRIO VÍDEO LOCAL!)
     function alternarSaidaDeSom() {
       somSaidaAtivo = !somSaidaAtivo;
-      const videoMain = document.getElementById('video-prof-main');
-      if (videoMain) {
-        if (IS_GESTOR_OU_PROF) {
-          videoMain.muted = true;
-          videoMain.volume = 0;
-        } else {
-          videoMain.muted = !somSaidaAtivo;
-          videoMain.volume = somSaidaAtivo ? 1 : 0;
-          if (somSaidaAtivo) videoMain.play().catch(() => {});
-        }
-      }
 
-      document.querySelectorAll('.remote-participant-video').forEach(v => {
-        v.muted = !somSaidaAtivo;
-        v.volume = somSaidaAtivo ? 1 : 0;
-        if (somSaidaAtivo) v.play().catch(() => {});
+      document.querySelectorAll('#live-remote-audio-pool audio').forEach(a => {
+        a.muted = !somSaidaAtivo;
+        a.volume = somSaidaAtivo ? 1 : 0;
+        if (somSaidaAtivo) a.play().catch(() => {});
       });
 
-      // Garantia extra anti-eco: cartão local sempre mudo
-      document.querySelectorAll('.local-participant-video').forEach(v => {
+      const videoMain = document.getElementById('video-prof-main');
+      if (videoMain) {
+        videoMain.muted = true;
+        videoMain.volume = 0;
+      }
+      document.querySelectorAll('.local-participant-video, .remote-participant-video').forEach(v => {
         v.muted = true;
         v.volume = 0;
       });
@@ -4043,6 +4195,56 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         btn.classList.toggle('danger', !somSaidaAtivo);
       }
       mostrarToast(somSaidaAtivo ? '🔊 Saída de som ativada (Viva-voz ligado).' : '🔈 Saída de som bloqueada (Silenciado).', somSaidaAtivo ? '#10b981' : '#f59e0b');
+    }
+
+    function anexarAudioRemotoNoPool(participantId, remoteStream) {
+      if (!remoteStream) return;
+      const pool = document.getElementById('live-remote-audio-pool');
+      if (!pool) return;
+
+      const idUnico = String(participantId || 'rem').trim();
+      const idDom = `remote_audio_${limparIdDom(idUnico)}`;
+      let audioEl = document.getElementById(idDom);
+      if (!audioEl) {
+        audioEl = document.createElement('audio');
+        audioEl.id = idDom;
+        audioEl.setAttribute('data-participant-id', idUnico);
+        audioEl.autoplay = true;
+        audioEl.playsInline = true;
+        pool.appendChild(audioEl);
+      }
+
+      audioEl.muted = !somSaidaAtivo;
+      audioEl.volume = somSaidaAtivo ? 1 : 0;
+      if (audioEl.srcObject !== remoteStream) {
+        audioEl.srcObject = remoteStream;
+      }
+
+      if (somSaidaAtivo) {
+        const prom = audioEl.play();
+        if (prom && typeof prom.catch === 'function') {
+          prom.then(() => {
+            const btnUn = document.getElementById('btn-desbloquear-audio-sala');
+            if (btnUn) btnUn.style.display = 'none';
+          }).catch(() => {
+            const btnUn = document.getElementById('btn-desbloquear-audio-sala');
+            if (btnUn) btnUn.style.display = 'inline-flex';
+          });
+        }
+      }
+    }
+
+    function desbloquearTodosAudiosRemotos() {
+      somSaidaAtivo = true;
+      let todosOk = true;
+      document.querySelectorAll('#live-remote-audio-pool audio').forEach(a => {
+        a.muted = false;
+        a.volume = 1;
+        a.play().catch(() => { todosOk = false; });
+      });
+      const btnUn = document.getElementById('btn-desbloquear-audio-sala');
+      if (btnUn && todosOk) btnUn.style.display = 'none';
+      mostrarToast('🔊 Áudio da sala ativado!');
     }
 
  async function minimizarChamadaAoVivo() {
@@ -4414,17 +4616,14 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
     (function configurarDesbloqueioAudioMobile() {
       const desbloquear = () => {
         if (!somSaidaAtivo) return;
-        const videoMain = document.getElementById('video-prof-main');
-        if (videoMain && !IS_GESTOR_OU_PROF && videoMain.srcObject && videoMain.paused) {
-          videoMain.muted = false;
-          videoMain.volume = 1;
-          videoMain.play().catch(() => {});
-        }
-        document.querySelectorAll('.remote-participant-video').forEach(v => {
-          if (v.srcObject && v.paused) {
-            v.muted = false;
-            v.volume = 1;
-            v.play().catch(() => {});
+        document.querySelectorAll('#live-remote-audio-pool audio').forEach(a => {
+          if (a.srcObject && a.paused) {
+            a.muted = false;
+            a.volume = 1;
+            a.play().then(() => {
+              const btnUn = document.getElementById('btn-desbloquear-audio-sala');
+              if (btnUn) btnUn.style.display = 'none';
+            }).catch(() => {});
           }
         });
       };
@@ -4578,6 +4777,8 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         const pc = call.peerConnection;
         const sender = obterSenderPorTipo(pc, tipo);
 
+        if (sender && sender.track === novaTrilha) continue;
+
         if (sender && typeof sender.replaceTrack === 'function') {
           try {
             await sender.replaceTrack(novaTrilha);
@@ -4585,7 +4786,6 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           } catch (e) {}
         }
 
-        // Plano B garantido: se a ligação antiga subiu sem esse canal (ex: negou permissão antes), refaz a chamada com o stream completo!
         renegociarChamadaComPeer(pId);
       }
     }
@@ -4652,14 +4852,17 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       const nomePessoa = String(infoPessoa?.nome || 'Participante').trim();
       const cargoPessoa = String(infoPessoa?.role || 'aluno').toLowerCase();
 
-      // Se sou aluno e recebi o stream do Professor -> vai para o Palco Principal!
+      // 🔊 Áudio remoto vai SEMPRE para o pool fora das áreas ocultáveis (alunos se ouvem em qualquer tela!)
+      anexarAudioRemotoNoPool(pId, remoteStream);
+
+      // Se sou aluno e recebi o stream do Professor -> vídeo no Palco Principal (mudo pois o áudio está no pool!)
       if (!IS_GESTOR_OU_PROF && cargoPessoa === 'professor') {
         professorPrincipalPeerId = remotePeerId;
         professorPrincipalNome = nomePessoa;
         const videoMain = document.getElementById('video-prof-main');
         if (videoMain) {
-          videoMain.muted = !somSaidaAtivo;
-          videoMain.volume = somSaidaAtivo ? 1 : 0;
+          videoMain.muted = true;
+          videoMain.volume = 0;
           if (videoMain.srcObject !== remoteStream) {
             videoMain.srcObject = remoteStream;
           }
@@ -4669,7 +4872,6 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         return;
       }
 
-      // Todos os demais participantes (alunos vendo colegas + professor vendo alunos) vão para a Grelha Inteligente!
       const micSt = estadoMicsPorId[pId] !== undefined ? estadoMicsPorId[pId] : Boolean(infoPessoa?.micAtivo);
       const camSt = estadoCamsPorId[pId] !== undefined ? estadoCamsPorId[pId] : Boolean(infoPessoa?.camAtiva);
       adicionarVideoParticipanteNaGrelha(pId, nomePessoa, remoteStream, false, micSt, camSt);
@@ -4721,8 +4923,8 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       if (!call || !call.peer) return;
       const remotePeerId = call.peer;
 
-      // Se já existia uma chamada antiga para o mesmo peer, fecha antes de substituir (evita conexões duplicadas!)
       const antiga = chamadasAtivas[remotePeerId];
+      chamadasAtivas[remotePeerId] = call;
       if (antiga && antiga !== call) {
         try { antiga.close(); } catch (e) {}
       }
@@ -4881,6 +5083,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       const statusEl = document.getElementById('webrtc-status-badge');
       try {
         await carregarPeerJS();
+        await carregarConfiguracaoIceLive();
         limparConexoesWebRTC(true); // ⏱️ Mantém o cronómetro a correr sem interrupção!
 
         // 🔒 Inicia SEMPRE com Microfone e Câmara DESLIGADOS (evita ruído e microfonia na entrada)
@@ -4892,22 +5095,13 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         atualizarFundoCamaraPrincipal();
         iniciarCronometroDuracaoLive();
 
-        // 1. Tenta pedir permissão inicial com filtros anti-eco e resolução leve
-        try {
-          meuStreamLocal = await navigator.mediaDevices.getUserMedia({
-            video: obterOpcoesVideoLocal(),
-            audio: OPCOES_AUDIO_ANTI_ECO
-          });
-        } catch (errAmbos) {
-          try {
-            meuStreamLocal = await navigator.mediaDevices.getUserMedia({
-              audio: OPCOES_AUDIO_ANTI_ECO,
-              video: false
-            });
-          } catch (errSoAudio) {
-            meuStreamLocal = new MediaStream();
-          }
-        }
+       // 1. Usa o stream já autorizado explicitamente no clique do usuário
+   if (streamPreAutorizado) {
+     meuStreamLocal = streamPreAutorizado;
+     streamPreAutorizado = null;
+   } else {
+     meuStreamLocal = new MediaStream();
+   }
 
         // 2. Desliga as trilhas capturadas para entrar mudo e sem câmara, garantindo reservas SDP
         meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = false; });
@@ -4943,7 +5137,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           if (peerInstance) {
             try { peerInstance.destroy(); } catch (e) {}
           }
-          peerInstance = new Peer(meuPeerIdAtual, PEER_CONFIG_ICE);
+          peerInstance = new Peer(meuPeerIdAtual, peerConfigAtiva);
 
           peerInstance.on('open', async (idConfirmado) => {
             meuPeerIdAtual = idConfirmado;
@@ -5046,15 +5240,10 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         grid.appendChild(card);
       }
 
-      const v = card.querySelector('video');
+     const v = card.querySelector('video');
       if (v) {
-        if (isLocal) {
-          v.muted = true;
-          v.volume = 0;
-        } else {
-          v.muted = !somSaidaAtivo;
-          v.volume = somSaidaAtivo ? 1 : 0;
-        }
+        v.muted = true;
+        v.volume = 0;
         if (stream && v.srcObject !== stream) {
           v.srcObject = stream;
           v.play().catch(() => {});
@@ -5067,13 +5256,14 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
     }
 
     // 🎤 LIGAR / DESLIGAR MICROFONE (COM CANCELAMENTO DE ECO + TROCA GARANTIDA EM TODAS AS CONEXÕES!)
-    async function alternarMeuMicrofone() {
+   async function alternarMeuMicrofone() {
       if (!meuStreamLocal) {
         meuStreamLocal = new MediaStream();
         if (!streamTransmissaoAtual) streamTransmissaoAtual = meuStreamLocal;
       }
 
       let audioTrack = meuStreamLocal.getAudioTracks()[0];
+      let precisouCapturar = false;
 
       if (!micAtivo && (!audioTrack || audioTrack._isFallbackTrack || audioTrack.readyState === 'ended')) {
         try {
@@ -5089,17 +5279,10 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
             novaTrilhaAudio.enabled = true;
             meuStreamLocal.addTrack(novaTrilhaAudio);
             audioTrack = novaTrilhaAudio;
-
-            // Se houver partilha de tela com áudio ativa, remistura o novo microfone com o som da tela
-            if (telaPartilhadaAudioTrackAtual && telaPartilhadaAudioTrackAtual.readyState === 'live') {
-              const mixAtualizado = criarFaixaAudioCombinadaTelaEMic(telaPartilhadaAudioTrackAtual);
-              await substituirTrilhaEmTodasChamadas('audio', mixAtualizado || novaTrilhaAudio);
-            } else {
-              await substituirTrilhaEmTodasChamadas('audio', novaTrilhaAudio);
-            }
+            precisouCapturar = true;
           }
         } catch (errPerm) {
-          mostrarToast('⚠️ Permissão de microfone negada no navegador. Autorize no ícone de cadeado da barra de endereço.', '#f59e0b');
+          mostrarToast('⚠️ Microfone bloqueado no navegador. Toque no cadeado 🔒 da barra de endereço e permita o Microfone.', '#f59e0b');
           return;
         }
       }
@@ -5107,13 +5290,13 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       micAtivo = !micAtivo;
       meuStreamLocal.getAudioTracks().forEach(t => { t.enabled = micAtivo; });
 
-      // Garante que todos os colegas e o professor estejam recebendo a trilha real do microfone
+      // Atualiza as ligações UMA única vez se a trilha real acabou de ser capturada ou se o sender ainda não a possui
       if (micAtivo && audioTrack && !audioTrack._isFallbackTrack) {
-        if (telaPartilhadaAudioTrackAtual && telaPartilhadaAudioTrackAtual.readyState === 'live') {
-          const mix = criarFaixaAudioCombinadaTelaEMic(telaPartilhadaAudioTrackAtual);
-          await substituirTrilhaEmTodasChamadas('audio', mix || audioTrack);
-        } else {
-          await substituirTrilhaEmTodasChamadas('audio', audioTrack);
+        const trilhaEnvio = (telaPartilhadaAudioTrackAtual && telaPartilhadaAudioTrackAtual.readyState === 'live')
+          ? (criarFaixaAudioCombinadaTelaEMic(telaPartilhadaAudioTrackAtual) || audioTrack)
+          : audioTrack;
+        if (precisouCapturar || trilhaEnvio !== audioTrack) {
+          await substituirTrilhaEmTodasChamadas('audio', trilhaEnvio);
         }
       }
 
@@ -5432,6 +5615,9 @@ function estaEmModoTelaCheiaOuHorizontal() {
     window.addEventListener('orientationchange', () => setTimeout(sincronizarSaidaTelaCheiaEOrientacao, 250));
 
     async function iniciarSalaAoVivo() {
+      if (!permissaoMidiaConfirmadaNaSessao) {
+               await preAutorizarMidiaNoClique('ambos');
+                 }
       const titulo = document.getElementById('live-titulo-input').value.trim() || `Aula Ao Vivo - ${new Date().toLocaleDateString('pt-BR')}`;
       const assunto = document.getElementById('live-assunto-input').value.trim() || 'Aulas Ao Vivo Gravadas';
       const sel = document.getElementById('live-destino-select');
