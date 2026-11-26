@@ -9,13 +9,17 @@ window.App = App;
 // =========================================================
 
 Object.assign(App, {
+  
+    removerEscudoAntiPiscar: () => {
+        document.getElementById('anti-piscar-style')?.remove();
+        document.documentElement.removeAttribute('style');
+    }, 
 
     mostrarTelaBloqueioLogin: (escola) => {
-        document.documentElement.removeAttribute('style');
-        document.getElementById('tela-sistema').style.display = 'none';
-
+        App.removerEscudoAntiPiscar();
+        document.getElementById('tela-sistema')?.style.setProperty('display', 'none', 'important');
         const telaLogin = document.getElementById('tela-login');
-        if(telaLogin) telaLogin.style.display = telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block';
+        if (telaLogin) telaLogin.style.setProperty('display', telaLogin.classList.contains('login-wrapper') ? 'flex' : 'block', 'important');
 
         const loginForms = telaLogin.querySelectorAll('.login-box, .box-login');
         loginForms.forEach(form => {
@@ -155,10 +159,11 @@ Object.assign(App, {
             if (!localStorage.getItem(keyAtalhos)) { 
                 localStorage.setItem(keyAtalhos, JSON.stringify(['novo_aluno','fin_carne','ped_chamada','ped_notas','ped_plan','ped_bol'])); 
             }
-
-            document.getElementById('tela-login')?.style.setProperty('display', 'none');
-            document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
             
+            App.removerEscudoAntiPiscar();
+            document.getElementById('tela-login')?.style.setProperty('display', 'none', 'important');
+            document.getElementById('tela-sistema')?.style.setProperty('display', 'flex', 'important');
+
             const el = document.getElementById('user-name');
             if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
             
@@ -185,7 +190,9 @@ Object.assign(App, {
                     localStorage.setItem(App.getTenantKey('escola_perfil'), JSON.stringify(escola));
                     if (typeof App.atualizarUIHeader === 'function') App.atualizarUIHeader(escola);
                     if (typeof App.verificarBloqueioGeral === 'function' && App.verificarBloqueioGeral(escola)) {
-                        document.documentElement.removeAttribute('style'); 
+                        App.removerEscudoAntiPiscar();
+                    document.getElementById('tela-login')?.style.setProperty('display', 'flex', 'important');
+                    document.getElementById('tela-sistema')?.style.setProperty('display', 'none', 'important'); 
                         App.mostrarTelaBloqueioLogin(escola);
                     }
                 }
@@ -279,25 +286,26 @@ Object.assign(App, {
     },
 
     entrarNoSistema: async () => {
-        document.getElementById('tela-login')?.style.setProperty('display', 'none');
-        document.getElementById('tela-sistema')?.style.setProperty('display', 'flex');
-        
+        App.removerEscudoAntiPiscar();
+        document.getElementById('bio-touch-screen')?.style.setProperty('display', 'none');
+        document.getElementById('tela-login')?.style.setProperty('display', 'none', 'important');
+        document.getElementById('tela-sistema')?.style.setProperty('display', 'flex', 'important');
+
         const el = document.getElementById('user-name');
-        if(el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
-        
-        if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario(); 
+        if (el && App.usuario) el.innerText = App.usuario.nome || App.usuario.login;
+
+        if (typeof App.aplicarPermissoesDeUsuario === 'function') App.aplicarPermissoesDeUsuario();
         if (typeof App.setupMobileMenu === 'function') App.setupMobileMenu();
-        
-        if (typeof App.carregarDadosEscola === 'function') await App.carregarDadosEscola(true);
-        
-        const telaSistema = document.getElementById('tela-sistema');
-        if (telaSistema && telaSistema.style.display !== 'none') {
-            // 🚀 Em vez de mandar para o Início cegamente, chamamos o Roteador Inteligente!
-            if(typeof App.iniciarRoteadorGlobal === 'function') {
-                App.iniciarRoteadorGlobal();
-            } else if (typeof App.renderizarInicio === 'function') {
-                App.renderizarInicio();
-            }
+
+        // 🚀 Abre o Dashboard/tela imediatamente sem esperar o carregamento em segundo plano
+        if (typeof App.iniciarRoteadorGlobal === 'function') {
+            App.iniciarRoteadorGlobal();
+        } else if (typeof App.renderizarInicio === 'function') {
+            App.renderizarInicio();
+        }
+
+        if (typeof App.carregarDadosEscola === 'function') {
+            App.carregarDadosEscola(true);
         }
     },
 
@@ -642,9 +650,9 @@ Object.assign(App, {
         const tela = document.getElementById('bio-touch-screen');
         if (tela) tela.style.display = 'none';
         
-        document.documentElement.removeAttribute('style'); 
-        document.getElementById('tela-login').style.display = 'flex'; 
-        document.getElementById('tela-sistema').style.display = 'none'; 
+        App.removerEscudoAntiPiscar();
+        document.getElementById('tela-login')?.style.setProperty('display', 'flex', 'important');
+        document.getElementById('tela-sistema')?.style.setProperty('display', 'none', 'important'); 
     },
 
     // 🚀 AQUI É O MOTOR DE ENTRADA DIÁRIO DA BIOMETRIA (Sem telas de loading pretas)
@@ -679,16 +687,16 @@ Object.assign(App, {
             } else {
                 throw new Error("Credenciais recusadas pelo servidor.");
             }
-        } catch (e) { 
+      } catch (e) {
             console.error("Biometria bloqueada ou falhou:", e);
-            
-            // 🛡️ PROTEÇÃO DO NAVEGADOR (User Gesture Requirement)
-            // Se a Apple ou Google não permitirem abrir o sensor porque o utilizador ainda não tocou no ecrã,
-            // atiramos o utilizador para a tela "👆 Toque para desbloquear", em vez de cancelar.
-            if (e.name === 'NotAllowedError' || e.message.includes('user activation')) {
+
+            if (e.name === 'NotAllowedError' || (e.message && e.message.includes('user activation'))) {
                 App.exibirTelaTouchBiometria();
-            } else if (!isAuto) {
-                App.showToast("A leitura falhou. Por favor, use a sua senha.", "error"); 
+            } else if (isAuto) {
+                // Fallback seguro: nunca deixa o utilizador preso num ecrã vazio
+                App.cancelarTouchBiometria();
+            } else {
+                App.showToast("A leitura falhou. Por favor, use a sua senha.", "error");
             }
         }
     },

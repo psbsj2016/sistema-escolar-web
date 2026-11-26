@@ -39,8 +39,10 @@ export const renderizarInicio = async (veioDoHistorico = false) => {
     if (!veioDoHistorico) window.history.pushState({ tela: 'inicio' }, '', '#inicio');
 
     App.verificarNotificacoes(); 
-    App.setTitulo("Dashboard"); 
+    if (typeof App.verificarNotificacoes === 'function') App.verificarNotificacoes();
+    App.setTitulo("Dashboard");
     const div = document.getElementById('app-content');
+    if (!div) return;
     
     const nomeUsuario = App.escapeHTML(App.usuario ? App.usuario.nome : 'Gestor');
 

@@ -183,34 +183,39 @@ Object.assign(App, {
         localStorage.setItem(App.getTenantKey('estado_navegacao'), JSON.stringify(estadoAtual));
     },
 
-    iniciarRoteadorGlobal: () => {
+   iniciarRoteadorGlobal: () => {
         if (!App.usuario) return;
-        
+
         const estadoSalvo = localStorage.getItem(App.getTenantKey('estado_navegacao'));
-        
+
         if (estadoSalvo) {
-            const estado = JSON.parse(estadoSalvo);
-            
-            // 1. RECONSTRÓI A BASE DO ECRÃ (Lista ou Tela)
-            if (estado.fundo && estado.fundo.tipo === 'lista') {
-                App.renderizarLista(estado.fundo.alvo, true);
-            } else if (estado.fundo && estado.fundo.tipo === 'tela') {
-                App.renderizarTela(estado.fundo.alvo, true);
-            } else {
-                App.renderizarInicio();
+            try {
+                const estado = JSON.parse(estadoSalvo);
+
+                if (estado?.fundo?.tipo === 'lista' && estado.fundo.alvo) {
+                    App.renderizarLista(estado.fundo.alvo, true);
+                } else if (estado?.fundo?.tipo === 'tela' && estado.fundo.alvo) {
+                    App.renderizarTela(estado.fundo.alvo, true);
+                } else if (typeof App.renderizarInicio === 'function') {
+                    App.renderizarInicio(true);
+                }
+
+                if (estado?.modal?.tipo) {
+                    setTimeout(() => {
+                        App.abrirModalCadastro(estado.modal.tipo, estado.modal.id);
+                    }, 500);
+                }
+                return;
+            } catch (e) {
+                localStorage.removeItem(App.getTenantKey('estado_navegacao'));
             }
-            
-            // 2. RECONSTRÓI A JANELA MODAL POR CIMA (Se estivesse aberta)
-            if (estado.modal && estado.modal.tipo) {
-                setTimeout(() => {
-                    App.abrirModalCadastro(estado.modal.tipo, estado.modal.id);
-                }, 500); // Dá tempo para a lista desenhar primeiro
-            }
-        } else {
-            // Fallback para URL ou Início
-            const hashAtual = window.location.hash.replace('#', '').trim();
-            if (hashAtual && hashAtual !== 'login') App.renderizarTela(hashAtual, true);
-            else App.renderizarInicio();
+        }
+
+        const hashAtual = window.location.hash.replace('#', '').trim();
+        if (hashAtual && hashAtual !== 'login' && hashAtual !== 'inicio') {
+            App.renderizarTela(hashAtual, true);
+        } else if (typeof App.renderizarInicio === 'function') {
+            App.renderizarInicio(true);
         }
     },
 
@@ -2809,11 +2814,11 @@ validarCadastroInst: async () => {
 // 🚀 EVENTOS DE ARRANQUE BLINDADOS (CORREÇÃO DO BUG DO F5)
 // =========================================================
 const arrancarSistema = () => {
-    // Garante que o ficheiro auth.js já carregou a função init antes de a chamar!
-    if (typeof App.init === 'function') {
+    // Garante que auth.js e dashboard.js (via main.js) já estão anexados ao App antes do arranque
+    if (typeof App.init === 'function' && typeof App.renderizarInicio === 'function') {
         App.init();
     } else {
-        setTimeout(arrancarSistema, 50); // Se não carregou, tenta de novo em 50 milissegundos
+        setTimeout(arrancarSistema, 50);
     }
 };
 

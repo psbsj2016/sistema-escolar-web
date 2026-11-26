@@ -25,28 +25,24 @@
     <!-- 🚀 GUARDA-COSTAS ANTI-PISCAR (Evita o Flash da Tela de Login no F5) -->
     <script>
         (function() {
-            // Verifica a memória na velocidade da luz antes de desenhar o corpo da página
             var usuarioLogado = localStorage.getItem('usuario_logado');
             var biometriaAtivada = localStorage.getItem('escola_bio_id');
-            
+            var style = document.createElement('style');
+            style.id = 'anti-piscar-style';
+
             if (usuarioLogado || biometriaAtivada) {
-                // Injeta uma barreira CSS instantânea para esconder o login
-                var style = document.createElement('style');
                 style.innerHTML = '#tela-login { display: none !important; }';
-                document.head.appendChild(style);
             } else {
-                // Se NÃO estiver logado, garante que o sistema principal fica escondido
-                var style = document.createElement('style');
                 style.innerHTML = '#tela-sistema { display: none !important; }';
-                document.head.appendChild(style);
             }
+            document.head.appendChild(style);
         })();
     </script>
-  <meta name="app-build-version" content="1795663103477">
-  <script type="module" crossorigin src="/assets/pwa-updater-CkGwuV6R.js"></script>
+  <meta name="app-build-version" content="1795665897008">
+  <script type="module" crossorigin src="/assets/pwa-updater-BZCoL3Ma.js"></script>
   <script type="module" crossorigin src="/assets/rolldown-runtime-DK3Fl9T5.js"></script>
   <script type="module" crossorigin src="/assets/site-DVhRpgLI.js"></script>
-  <script type="module" crossorigin src="/assets/main-OkDLZpqQ.js"></script>
+  <script type="module" crossorigin src="/assets/main-DBtxaKGd.js"></script>
   <link rel="stylesheet" crossorigin href="/assets/site-Bo8mnQWM.css">
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
