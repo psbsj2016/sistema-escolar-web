@@ -556,18 +556,19 @@ Object.assign(App, {
                 : '<p style="text-align:center; color:#999; font-size:12px; padding:20px; border:1px dashed #e2e8f0; border-radius:8px;">Nenhuma matrícula presencial.</p>';
 
             // Monta as duas colunas lado a lado
-            area.innerHTML = `
+           area.innerHTML = `
             <div>
-                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px 15px; border-radius:6px; margin-bottom:15px; font-size:13px; gap: 10px;">
+                <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px 15px; border-radius:6px; margin-bottom:12px; font-size:13px; gap: 10px;">
                     <div>🔒 <strong>Zona de Segurança Jurídica:</strong> Documentos imutáveis.</div>
-                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:16px;">
-                    <span style="font-size:16px;">🔍</span>
-                    <input type="text" id="busca-cofre-contratos" oninput="App.filtrarCofreContratos()" placeholder="Pesquisar por ID da Transação (CONT_...), Nome do Aluno, CPF ou Hash SHA-256..." style="flex:1; min-width:220px; border:none; outline:none; font-size:13.5px; color:#1e293b;">
-                    <a href="/validar-contrato" target="_blank" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:bold; text-decoration:none; white-space:nowrap;">🛡️ Validador Público ↗</a>
-                </div>
                     <button onclick="App.selecionarTodosContratos()" style="background:transparent; border:1px solid #c0392b; color:#c0392b; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold; transition: 0.2s;">
                         ☑️ Marcar / Desmarcar Todos
                     </button>
+                </div>
+
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:16px;">
+                    <span style="font-size:16px;">🔍</span>
+                    <input type="text" id="busca-cofre-contratos" oninput="App.filtrarCofreContratos()" placeholder="Pesquisar por ID da Transação (CONT_...), Nome do Aluno, CPF ou Hash SHA-256..." style="flex:1; min-width:220px; border:none; outline:none; font-size:13.5px; color:#1e293b;">
+                    <a href="/validar-contrato" target="_blank" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:bold; text-decoration:none; white-space:nowrap;">🛡️ Validador Público ↗</a>
                 </div>
                 
                 <div id="barra-exclusao-massa" style="display:none; flex-wrap:wrap; gap:10px; background:#ffe5e5; border:1px solid #ffb3b3; color:#d93025; padding:12px 20px; border-radius:8px; margin-bottom:20px; justify-content:space-between; align-items:center; box-shadow:0 4px 10px rgba(217,48,37,0.15);">
@@ -580,7 +581,7 @@ Object.assign(App, {
                     </button>
                 </div>
                 
-                <div style="display:flex; gap:20px; flex-wrap:wrap; align-items: flex-start;">
+                <div id="cofre-colunas-container" style="display:flex; gap:20px; flex-wrap:wrap; align-items: flex-start;">
                     <div style="flex:1; min-width:300px; background:#f8f9fa; padding:15px; border-radius:10px; border-top: 4px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
                         <h3 style="text-align:center; color:#2c3e50; margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
                             🏫 Curso Presencial 

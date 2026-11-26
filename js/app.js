@@ -2456,13 +2456,36 @@ validarCadastroInst: async () => {
                     </div>   
 
                     <button class="btn-primary" style="width:100%; margin-top:25px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
-                </div>`; 
+                </div>`;
+            App.iniciarCanvasAssinaturaEscola();
         } catch(e) { div.innerHTML = "Erro ao carregar."; } 
-    },    
+    },   
 
-    previewImagemLocal: (input, imgId) => {
+   previewImagemLocal: (input, imgId) => {
         if (!input.files || input.files.length === 0) return;
-        App.otimizarImagem(input.files[0], 400, (imgBase64) => {
+        const file = input.files[0];
+        if (imgId === 'conf-ass-preview') {
+            const reader = new FileReader();
+            reader.onload = (ev) => {
+                const imgTmp = new Image();
+                imgTmp.onload = () => {
+                    const c = document.createElement('canvas');
+                    let w = imgTmp.width, h = imgTmp.height;
+                    if (w > 420) { h *= 420 / w; w = 420; }
+                    c.width = w; c.height = h;
+                    c.getContext('2d').drawImage(imgTmp, 0, 0, w, h);
+                    const img = document.getElementById(imgId);
+                    if (img) {
+                        img.src = c.toDataURL('image/png');
+                        img.setAttribute('data-nova', 'true');
+                    }
+                };
+                imgTmp.src = ev.target.result;
+            };
+            reader.readAsDataURL(file);
+            return;
+        }
+        App.otimizarImagem(file, 400, (imgBase64) => {
             const img = document.getElementById(imgId); img.src = imgBase64; img.setAttribute('data-nova', 'true');
         });
     },
@@ -2474,7 +2497,7 @@ validarCadastroInst: async () => {
         const fileInput = document.getElementById(imgId === 'conf-preview' ? 'conf-file' : 'conf-qr-file'); if(fileInput) fileInput.value = '';
     },
 
-    iniciarCanvasAssinaturaEscola: () => {
+  iniciarCanvasAssinaturaEscola: () => {
         const canvas = document.getElementById('conf-canvas-ass');
         if (!canvas) return;
         const ctx = canvas.getContext('2d');
@@ -2487,9 +2510,16 @@ validarCadastroInst: async () => {
             const r = canvas.getBoundingClientRect();
             return { x: (ev.clientX - r.left) * (canvas.width / r.width), y: (ev.clientY - r.top) * (canvas.height / r.height) };
         };
+        const sincronizarPreview = () => {
+            const img = document.getElementById('conf-ass-preview');
+            if (img) {
+                img.src = canvas.toDataURL('image/png');
+                img.setAttribute('data-nova', 'true');
+            }
+        };
         canvas.onpointerdown = (ev) => { desenhando = true; canvas.setPointerCapture(ev.pointerId); const p = pos(ev); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
         canvas.onpointermove = (ev) => { if (!desenhando) return; const p = pos(ev); ctx.lineTo(p.x, p.y); ctx.stroke(); };
-        canvas.onpointerup = () => { desenhando = false; };
+        canvas.onpointerup = () => { if (!desenhando) return; desenhando = false; sincronizarPreview(); };
         canvas.onpointercancel = () => { desenhando = false; };
     },
 
@@ -2546,7 +2576,7 @@ validarCadastroInst: async () => {
             await App.api('/escola','PUT', { ...escolaAtual, ...p }); 
             await App.carregarDadosEscola(); 
             
-            if (imgLogo) imgLogo.removeAttribute('data-nova'); if (imgQr) imgQr.removeAttribute('data-nova');
+            if (imgLogo) imgLogo.removeAttribute('data-nova'); if (imgQr) imgQr.removeAttribute('data-nova'); if (imgAss) imgAss.removeAttribute('data-nova');
             App.showToast("Configurações atualizadas com sucesso!", "success"); 
         } catch(e) { App.showToast("Erro ao salvar perfil da escola.", "error"); } finally { btn.innerText = txt; btn.disabled = false; } 
     },
