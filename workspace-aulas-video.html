@@ -1326,13 +1326,21 @@
             <h2 style="margin: 0; font-size: 20px; font-weight: 900;">📜 Histórico de Lives e Links Criptografados</h2>
             <p style="margin: 4px 0 0 0; font-size: 13px; color: var(--text-muted);">Consulte todas as salas geradas, copie o link direto criptografado e verifique os horários de criação, início de uso e término.</p>
           </div>
-          <button type="button" class="vc-btn primary" onclick="carregarHistoricoLives()">🔄 Atualizar Registos</button>
+          <div style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap;">
+            <button type="button" id="btn-excluir-hist-massa" class="vc-btn danger" style="display: none;" onclick="excluirSelecionadosHistoricoLive()">
+              🗑️ Excluir Selecionados (0)
+            </button>
+            <button type="button" class="vc-btn primary" onclick="carregarHistoricoLives()">🔄 Atualizar Registos</button>
+          </div>
         </div>
 
         <div class="hist-table-wrap">
           <table class="hist-table">
             <thead>
               <tr>
+                <th style="width: 40px; text-align: center;">
+                  <input type="checkbox" id="chk-hist-todos" onchange="toggleSelecionarTodosHistorico(this.checked)" style="width: 17px; height: 17px; accent-color: #e11d48; cursor: pointer;" title="Selecionar todos">
+                </th>
                 <th>Título da Aula / Assunto</th>
                 <th>Turma de Destino</th>
                 <th>Horário de Criação</th>
@@ -1343,7 +1351,7 @@
               </tr>
             </thead>
             <tbody id="tabela-historico-lives-body">
-              <tr><td colspan="7" style="text-align: center; padding: 30px; color: #64748b;">A carregar histórico...</td></tr>
+              <tr><td colspan="8" style="text-align: center; padding: 30px; color: #64748b;">A carregar histórico...</td></tr>
             </tbody>
           </table>
         </div>
@@ -2144,6 +2152,8 @@
         if (btnHist) btnHist.style.display = 'none';
         if (painelProfLive) painelProfLive.style.display = 'none';
         if (painelLateralCard) painelLateralCard.style.display = 'none';
+        const btnTabLive = document.getElementById('btn-tab-live');
+                     if (btnTabLive && !liveEmAndamento) btnTabLive.innerHTML = '🔴 Sala Ao Vivo';
       }
     }
 
@@ -2919,11 +2929,43 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       });
     }
 
+   function toggleSelecionarTodosHistorico(marcar) {
+      document.querySelectorAll('.chk-hist-live').forEach(chk => {
+        chk.checked = Boolean(marcar);
+      });
+      atualizarBotaoExclusaoMassaHistorico();
+    }
+
+    function atualizarBotaoExclusaoMassaHistorico() {
+      const todos = Array.from(document.querySelectorAll('.chk-hist-live'));
+      const marcados = todos.filter(c => c.checked);
+      const btnMassa = document.getElementById('btn-excluir-hist-massa');
+      const chkMaster = document.getElementById('chk-hist-todos');
+
+      if (chkMaster) {
+        chkMaster.checked = todos.length > 0 && marcados.length === todos.length;
+        chkMaster.indeterminate = marcados.length > 0 && marcados.length < todos.length;
+      }
+
+      if (btnMassa) {
+        if (marcados.length > 0) {
+          btnMassa.style.display = 'inline-flex';
+          btnMassa.innerText = `🗑️ Excluir Selecionados (${marcados.length})`;
+        } else {
+          btnMassa.style.display = 'none';
+        }
+      }
+    }
+
     async function carregarHistoricoLives() {
       if (!IS_GESTOR_OU_PROF) return;
       const tbody = document.getElementById('tabela-historico-lives-body');
+      const chkMaster = document.getElementById('chk-hist-todos');
+      const btnMassa = document.getElementById('btn-excluir-hist-massa');
+      if (chkMaster) { chkMaster.checked = false; chkMaster.indeterminate = false; }
+      if (btnMassa) btnMassa.style.display = 'none';
       if (!tbody) return;
-      tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:25px; color:#64748b;">A carregar registos de lives... ⏳</td></tr>`;
+      tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:25px; color:#64748b;">A carregar registos de lives... ⏳</td></tr>`;
 
       try {
         const res = await fetch(`/api/workspace/video-aulas/live/historico?escolaId=${encodeURIComponent(ESCOLA_ID)}&userId=${encodeURIComponent(USER_ID)}`, {
@@ -2931,7 +2973,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         });
         const data = await res.json();
         if (!data || !data.success || !Array.isArray(data.historico)) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:25px; color:#e11d48;">Erro ao carregar histórico.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:25px; color:#e11d48;">Erro ao carregar histórico.</td></tr>`;
           return;
         }
 
@@ -2939,7 +2981,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         popularSeletorLivesAgendadas();
 
         if (historicoLivesCache.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:30px; color:#64748b;">Nenhuma live ou link criptografado gerado ainda.</td></tr>`;
+          tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:30px; color:#64748b;">Nenhuma live ou link criptografado gerado ainda.</td></tr>`;
           return;
         }
 
@@ -2962,6 +3004,9 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
           return `
             <tr>
+              <td style="text-align:center;">
+                <input type="checkbox" class="chk-hist-live" value="${esc(item.id)}" onchange="atualizarBotaoExclusaoMassaHistorico()" style="width:17px; height:17px; accent-color:#e11d48; cursor:pointer;">
+              </td>
               <td>
                 <div style="font-weight:800; color:#0f172a;">${esc(item.titulo)}</div>
                 <div style="font-size:11.5px; color:#64748b;">📚 ${esc(item.assunto || 'Geral')} • 👨‍🏫 ${esc(item.professorNome || 'Professor')}</div>
@@ -2983,7 +3028,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           `;
         }).join('');
       } catch (e) {
-        tbody.innerHTML = `<tr><td colspan="7" style="text-align:center; padding:25px; color:#e11d48;">Falha de ligação ao buscar histórico.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; padding:25px; color:#e11d48;">Falha de ligação ao buscar histórico.</td></tr>`;
       }
     }
 
@@ -3000,6 +3045,36 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
           carregarHistoricoLives();
         }
       } catch (e) {}
+    }
+
+    async function excluirSelecionadosHistoricoLive() {
+      const ids = Array.from(document.querySelectorAll('.chk-hist-live:checked')).map(c => c.value).filter(Boolean);
+      if (ids.length === 0) return;
+      if (!confirm(`Deseja excluir permanentemente ${ids.length} registo(s) selecionado(s) do histórico?`)) return;
+
+      const btnMassa = document.getElementById('btn-excluir-hist-massa');
+      if (btnMassa) {
+        btnMassa.disabled = true;
+        btnMassa.innerText = `⏳ Excluindo ${ids.length}...`;
+      }
+
+      try {
+        const resultados = await Promise.allSettled(
+          ids.map(id =>
+            fetch(`/api/workspace/video-aulas/live/historico/${encodeURIComponent(id)}`, {
+              method: 'DELETE',
+              credentials: 'include'
+            }).then(r => r.json())
+          )
+        );
+        const removidos = resultados.filter(r => r.status === 'fulfilled' && r.value && r.value.success).length;
+        mostrarToast(`🗑️ ${removidos} de ${ids.length} registo(s) excluído(s) do histórico!`);
+        await carregarHistoricoLives();
+      } catch (e) {
+        mostrarToast('Erro ao excluir registos selecionados.', '#e11d48');
+      } finally {
+        if (btnMassa) btnMassa.disabled = false;
+      }
     }
 
     async function abrirLivePorTokenCriptografado(token) {
@@ -6435,7 +6510,8 @@ function estaEmModoTelaCheiaOuHorizontal() {
       };
     } catch (e) {}
 
-    carregarCatalogo(true);
+    aplicarPermissoesVisuaisCargo();
+         carregarCatalogo(true);
   </script>
 </body>
 </html>
