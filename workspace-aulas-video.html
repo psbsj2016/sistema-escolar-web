@@ -1537,6 +1537,30 @@
     </div>
   </div>
 
+  <!-- 🪟 MODAL DE AUTORIZAÇÃO EXPLÍCITA PARA JANELA FLUTUANTE EXTERNA -->
+  <div class="vc-modal" id="modal-autorizar-pip-flutuante" style="z-index: 2147483647;">
+    <div class="vc-modal-card" style="max-width: 430px; background: #0f172a; color: #fff; border-color: #334155;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h3 style="margin: 0; font-size: 17px; display: flex; align-items: center; gap: 8px; color: #fff;">🪟 Autorizar Janela Flutuante</h3>
+        <button type="button" class="vc-btn" style="background:#1e293b; color:#fff; border-color:#334155;" onclick="fecharModalAutorizacaoPip()">✕</button>
+      </div>
+
+      <p style="margin: 0 0 14px 0; font-size: 13px; color: #cbd5e1; line-height: 1.55;">
+        Deseja autorizar a aula ao vivo a <b>flutuar por cima de outras abas e aplicativos</b>? Ela ficará fora da página compartilhada com acesso rápido a <b>Microfone, Câmara, Emojis, Menu (⋯) e Desligar</b>.
+      </p>
+
+      <label style="display:flex; align-items:center; gap:8px; background:#1e293b; border:1px solid #334155; border-radius:10px; padding:10px 12px; font-size:12.5px; color:#e2e8f0; cursor:pointer; margin-bottom:16px;">
+        <input type="checkbox" id="chk-lembrar-autorizacao-pip" style="width:17px; height:17px; accent-color:#3b82f6; cursor:pointer; margin:0;">
+        <span>Lembrar minha autorização neste navegador</span>
+      </label>
+
+      <div style="display: flex; justify-content: flex-end; gap: 10px;">
+        <button type="button" class="vc-btn" style="background:#1e293b; color:#cbd5e1; border-color:#334155;" onclick="fecharModalAutorizacaoPip()">Cancelar</button>
+        <button type="button" class="vc-btn primary" onclick="confirmarAutorizacaoEAbrirPipFlutuante()">✅ Autorizar e Flutuar</button>
+      </div>
+    </div>
+  </div>
+
   <div id="vc-toast"></div>
 
   <script>
@@ -1861,6 +1885,7 @@
         videoMain.style.opacity = mostrarVideoReal ? '1' : '0';
         videoMain.style.transition = 'opacity 0.2s ease';
       }
+        sincronizarJanelaPipFlutuante();
     }
 
     function atualizarIndicadorCamParticipante(nomePessoa, isCamLigada, rolePessoa = 'aluno', participantId = '') {
@@ -2064,9 +2089,11 @@
     async function autorizarOuTestarPipFlutuante() {
       pipNativoAtivo = true;
       localStorage.setItem('ws_live_pip_nativo', 'true');
+      localStorage.setItem('ws_live_pip_autorizado', 'true');
       const chkPip = document.getElementById('chk-pip-nativo');
       if (chkPip) chkPip.checked = true;
-      await ativarPipFlutuanteNativo(true);
+      fecharModalConfigLive();
+      await abrirJanelaPipFlutuanteUnica();
     }
 
     function mostrarToast(msg, cor = '#10b981') {
@@ -3710,7 +3737,8 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
 
     // 📞 SAÍDA INDIVIDUAL DO ALUNO (Desliga apenas para ele e remove o quadrado dele da sala)
     function sairDaChamadaAluno() {
-      maximizarChamadaAoVivo();
+      fecharJanelaPipFlutuanteSemRestaurar();
+                maximizarChamadaAoVivo();
       notificarSaidaDaLiveELimpar();
       mostrarToast('📞 Você saiu da chamada ao vivo.');
       alternarAba('catalogo');
@@ -4247,134 +4275,396 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
       mostrarToast('🔊 Áudio da sala ativado!');
     }
 
- async function minimizarChamadaAoVivo() {
-      // 1. Se estava em Tela Cheia, sai primeiro para o modo flutuante abrir livremente
+ // ============================================================================
+    // 🪟 MOTOR ÚNICO DE JANELA FLUTUANTE EXTERNA (DOCUMENT PiP + FALLBACK NATIVO)
+    // ============================================================================
+    let janelaPipFlutuante = null;
+    let fechandoPipPorDesligar = false;
+
+    function obterJanelaTopoSegura() {
+      try {
+        if (window.top && window.top.document) return window.top;
+      } catch (e) {}
+      return window;
+    }
+
+    function fecharJanelaPipFlutuanteSemRestaurar() {
+      fechandoPipPorDesligar = true;
+      if (janelaPipFlutuante && !janelaPipFlutuante.closed) {
+        try { janelaPipFlutuante.close(); } catch (e) {}
+      }
+      janelaPipFlutuante = null;
+      if (document.pictureInPictureElement && typeof document.exitPictureInPicture === 'function') {
+        document.exitPictureInPicture().catch(() => {});
+      }
+      setTimeout(() => { fechandoPipPorDesligar = false; }, 400);
+    }
+
+    function fecharModalAutorizacaoPip() {
+      const modal = document.getElementById('modal-autorizar-pip-flutuante');
+      if (!modal) return;
+      modal.style.display = 'none';
+      if (modal.parentElement !== document.body) document.body.appendChild(modal);
+    }
+
+    function abrirModalAutorizacaoPip() {
+      const modal = document.getElementById('modal-autorizar-pip-flutuante');
+      if (!modal) return;
+      const hospedeiro = document.fullscreenElement || document.getElementById('meet-stage-container') || document.body;
+      if (modal.parentElement !== hospedeiro) hospedeiro.appendChild(modal);
+      const chk = document.getElementById('chk-lembrar-autorizacao-pip');
+      if (chk) chk.checked = localStorage.getItem('ws_live_pip_autorizado') === 'true';
+      modal.style.display = 'flex';
+    }
+
+    function minimizarChamadaAoVivo() {
+      if (!liveAtivaObj || !liveAtivaObj.ativa) {
+        mostrarToast('⚠️ Nenhuma transmissão ao vivo ativa para minimizar.', '#f59e0b');
+        return;
+      }
+      const jaAutorizouAntes = localStorage.getItem('ws_live_pip_autorizado') === 'true';
+      if (jaAutorizouAntes) {
+        abrirJanelaPipFlutuanteUnica();
+      } else {
+        abrirModalAutorizacaoPip();
+      }
+    }
+
+    async function confirmarAutorizacaoEAbrirPipFlutuante() {
+      const chk = document.getElementById('chk-lembrar-autorizacao-pip');
+      if (chk && chk.checked) {
+        localStorage.setItem('ws_live_pip_autorizado', 'true');
+      }
+      pipNativoAtivo = true;
+      localStorage.setItem('ws_live_pip_nativo', 'true');
+      fecharModalAutorizacaoPip();
+      await abrirJanelaPipFlutuanteUnica();
+    }
+
+    function prepararSaidaTelaCheiaParaPip() {
       document.body.classList.remove('modo-tela-cheia-fallback', 'live-ui-oculta', 'modo-pip-interno');
       destravarOrientacaoTela();
       const fsAtual = document.fullscreenElement || document.webkitFullscreenElement;
       const exitFs = document.exitFullscreen || document.webkitExitFullscreen;
       if (fsAtual && exitFs) {
-        try { await exitFs.call(document); } catch (e) {}
+        try { exitFs.call(document).catch(() => {}); } catch (e) {}
       }
       if (window.parent && window.parent !== window) {
         window.parent.postMessage({ type: 'SOLICITAR_TELA_CHEIA_VIDEO', ativar: false, orientacao: 'unlock' }, '*');
       }
+    }
 
-      // 2. Se o Picture-in-Picture Flutuante estiver ativado nas Configurações, aciona a janela flutuante nativa!
-      let abriuPipExterno = false;
-      if (pipNativoAtivo) {
-        abriuPipExterno = await ativarPipFlutuanteNativo(false);
+    function registrarControlesMediaSessionPip() {
+      try {
+        if (!('mediaSession' in navigator)) return;
+        navigator.mediaSession.setActionHandler('togglemicrophone', () => alternarMeuMicrofone());
+        navigator.mediaSession.setActionHandler('togglecamera', () => alternarMinhaCamara());
+        navigator.mediaSession.setActionHandler('hangup', () => {
+          fecharJanelaPipFlutuanteSemRestaurar();
+          if (IS_GESTOR_OU_PROF) encerrarSalaAoVivo();
+          else sairDaChamadaAluno();
+        });
+        if (typeof navigator.mediaSession.setMicrophoneActive === 'function') {
+          navigator.mediaSession.setMicrophoneActive(Boolean(micAtivo));
+        }
+        if (typeof navigator.mediaSession.setCameraActive === 'function') {
+          navigator.mediaSession.setCameraActive(Boolean(camAtiva));
+        }
+      } catch (e) {}
+    }
+
+    function sincronizarJanelaPipFlutuante() {
+      // Atualiza indicadores do MediaSession (para Video PiP nativo)
+      try {
+        if ('mediaSession' in navigator) {
+          if (typeof navigator.mediaSession.setMicrophoneActive === 'function') {
+            navigator.mediaSession.setMicrophoneActive(Boolean(micAtivo));
+          }
+          if (typeof navigator.mediaSession.setCameraActive === 'function') {
+            navigator.mediaSession.setCameraActive(Boolean(camAtiva));
+          }
+        }
+      } catch (e) {}
+
+      if (!janelaPipFlutuante || janelaPipFlutuante.closed) return;
+      const d = janelaPipFlutuante.document;
+      if (!d) return;
+
+      // 1. Sincroniza Vídeo Principal e Avatar quando a câmara estiver desligada
+      const videoMain = document.getElementById('video-prof-main');
+      const pipVideo = d.getElementById('pip-ext-video');
+      const pipAvatarWrap = d.getElementById('pip-ext-avatar');
+      const pipAvatarCircle = d.getElementById('pip-ext-avatar-circle');
+      const pipAvatarNome = d.getElementById('pip-ext-avatar-nome');
+
+      const nomeExibido = IS_GESTOR_OU_PROF
+        ? USER_NAME
+        : (professorPrincipalNome || liveAtivaObj?.professorNome || 'Professor');
+      const mostrarVideoReal = IS_GESTOR_OU_PROF
+        ? Boolean(camAtiva || profTelaPartilhadaAtiva)
+        : Boolean(profCamAtiva);
+
+      if (pipVideo && videoMain && videoMain.srcObject && pipVideo.srcObject !== videoMain.srcObject) {
+        pipVideo.srcObject = videoMain.srcObject;
+        pipVideo.play().catch(() => {});
+      }
+      if (pipVideo) pipVideo.style.opacity = mostrarVideoReal ? '1' : '0';
+      if (pipAvatarWrap) pipAvatarWrap.style.display = mostrarVideoReal ? 'none' : 'flex';
+      if (pipAvatarCircle) pipAvatarCircle.innerHTML = gerarHtmlAvatarCentro(nomeExibido);
+      if (pipAvatarNome) pipAvatarNome.textContent = nomeExibido;
+
+      // 2. Sincroniza Botão de Microfone
+      const btnMic = d.getElementById('pip-btn-mic');
+      if (btnMic) {
+        btnMic.textContent = micAtivo ? '🎤' : '🔇';
+        btnMic.className = `pip-btn ${micAtivo ? 'primary' : 'danger'}`;
+        btnMic.title = micAtivo ? 'Silenciar Microfone' : 'Ativar Microfone';
       }
 
-      // 3. Minimiza também no WorkSpace (mantém controlos e funciona como plano B caso o navegador não suporte PiP externo)
-      document.body.classList.add('modo-minimizado-pip');
-      if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true }, '*');
+      // 3. Sincroniza Botão de Câmara
+      const btnCam = d.getElementById('pip-btn-cam');
+      if (btnCam) {
+        btnCam.textContent = camAtiva ? '📷' : '🚫';
+        btnCam.className = `pip-btn ${camAtiva ? 'primary' : 'danger'}`;
+        btnCam.title = camAtiva ? 'Desligar Câmara' : 'Ligar Câmara';
       }
 
-      if (abriuPipExterno) {
-        mostrarToast('🖼️ Modo Picture-in-Picture flutuante ativo! Você pode alternar de aba ou app.');
+      // 4. Sincroniza Rótulos do Menu de Três Pontos (⋯)
+      const lblSom = d.getElementById('pip-menu-som-lbl');
+      if (lblSom) lblSom.textContent = somSaidaAtivo ? '🔇 Bloquear Som da Sala' : '🔊 Ativar Som da Sala';
+      const lblLousa = d.getElementById('pip-menu-lousa-lbl');
+      if (lblLousa) lblLousa.textContent = lousaProjetadaAtiva ? '🖍️ Fechar Lousa Projetada' : '🖍️ Projetar Lousa';
+    }
+
+    function construirInterfaceDocumentPip(pipWin) {
+      const d = pipWin.document;
+      d.title = `● Ao Vivo • ${liveAtivaObj?.titulo || 'PlayClass & Meet'}`;
+
+      const style = d.createElement('style');
+      style.textContent = `
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Inter', system-ui, -apple-system, sans-serif; }
+        html, body { width: 100%; height: 100%; background: #050811; color: #fff; overflow: hidden; user-select: none; }
+        .pip-shell { width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; background: #050811; }
+        .pip-top { position: absolute; top: 0; left: 0; right: 0; padding: 8px 10px; z-index: 20; display: flex; justify-content: space-between; align-items: center; gap: 6px; background: linear-gradient(to bottom, rgba(2,6,23,0.92), transparent); }
+        .pip-badge { background: rgba(225,29,72,0.92); color: #fff; font-size: 10.5px; font-weight: 800; padding: 3px 8px; border-radius: 99px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 62%; }
+        .pip-back-btn { background: #2563eb; color: #fff; border: none; border-radius: 8px; padding: 4px 9px; font-size: 11px; font-weight: 800; cursor: pointer; flex-shrink: 0; }
+        .pip-back-btn:hover { background: #1d4ed8; }
+        .pip-stage { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; background: #090d16; overflow: hidden; }
+        .pip-stage video { width: 100%; height: 100%; object-fit: contain; position: relative; z-index: 2; transition: opacity 0.2s; }
+        .pip-avatar { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; background: radial-gradient(circle, #172554 0%, #090d16 100%); z-index: 1; }
+        .pip-avatar-circle { width: 66px; height: 66px; border-radius: 50%; overflow: hidden; border: 2px solid #60a5fa; background: #1d4ed8; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: #fff; }
+        .pip-avatar-circle img { width: 100%; height: 100%; object-fit: cover; display: block; }
+        .pip-avatar-nome { font-size: 11.5px; font-weight: 700; color: #cbd5e1; background: rgba(15,23,42,0.75); padding: 2px 9px; border-radius: 99px; }
+        .pip-dock { padding: 8px 10px; background: #0b1222; border-top: 1px solid #1e293b; display: flex; justify-content: space-evenly; align-items: center; gap: 6px; position: relative; z-index: 30; flex-shrink: 0; }
+        .pip-btn { width: 40px; height: 40px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.14); background: #1e293b; color: #fff; font-size: 17px; cursor: pointer; display: inline-flex; align-items: center; justify-content: center; transition: 0.16s; flex-shrink: 0; }
+        .pip-btn:hover { background: #334155; transform: scale(1.06); }
+        .pip-btn.primary { background: #1d7dfa; border-color: #60a5fa; }
+        .pip-btn.danger { background: #e11d48; border-color: #fb7185; }
+        .pip-popover { display: none; position: absolute; bottom: calc(100% + 8px); left: 8px; right: 8px; background: rgba(15,23,42,0.98); border: 1px solid #475569; border-radius: 12px; padding: 8px; box-shadow: 0 12px 30px rgba(0,0,0,0.65); z-index: 40; }
+        .pip-popover.open { display: flex; }
+        .pip-emoji-bar { justify-content: space-around; align-items: center; gap: 4px; }
+        .pip-emoji-item { background: transparent; border: none; font-size: 21px; cursor: pointer; padding: 4px; border-radius: 8px; transition: 0.15s; }
+        .pip-emoji-item:hover { background: rgba(255,255,255,0.12); transform: scale(1.2); }
+        .pip-menu-list { flex-direction: column; gap: 4px; }
+        .pip-menu-btn { width: 100%; background: transparent; border: none; color: #f1f5f9; padding: 8px 10px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-align: left; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .pip-menu-btn:hover { background: rgba(59,130,246,0.22); color: #93c5fd; }
+      `;
+      d.head.appendChild(style);
+
+      d.body.innerHTML = `
+        <div class="pip-shell">
+          <div class="pip-top">
+            <span class="pip-badge">● Ao Vivo • ${esc(liveAtivaObj?.titulo || 'Aula')}</span>
+            <button type="button" class="pip-back-btn" id="pip-btn-voltar">🗖 Voltar</button>
+          </div>
+
+          <div class="pip-stage">
+            <div class="pip-avatar" id="pip-ext-avatar">
+              <div class="pip-avatar-circle" id="pip-ext-avatar-circle">👨‍🏫</div>
+              <span class="pip-avatar-nome" id="pip-ext-avatar-nome">Professor</span>
+            </div>
+            <video id="pip-ext-video" autoplay playsinline muted></video>
+          </div>
+
+          <div class="pip-dock">
+            <div id="pip-popover-emoji" class="pip-popover pip-emoji-bar">
+              <button type="button" class="pip-emoji-item" data-emoji="👏">👏</button>
+              <button type="button" class="pip-emoji-item" data-emoji="❤️">❤️</button>
+              <button type="button" class="pip-emoji-item" data-emoji="😂">😂</button>
+              <button type="button" class="pip-emoji-item" data-emoji="😮">😮</button>
+              <button type="button" class="pip-emoji-item" data-emoji="🎉">🎉</button>
+              <button type="button" class="pip-emoji-item" data-emoji="👍">👍</button>
+              <button type="button" class="pip-emoji-item" data-mao="1" title="Levantar a Mão">✋</button>
+            </div>
+
+            <div id="pip-popover-more" class="pip-popover pip-menu-list">
+              <button type="button" class="pip-menu-btn" id="pip-menu-tela">🖥️ Partilhar Tela</button>
+              <button type="button" class="pip-menu-btn" id="pip-menu-som"><span id="pip-menu-som-lbl">🔇 Bloquear Som da Sala</span></button>
+              <button type="button" class="pip-menu-btn" id="pip-menu-chat">💬 Abrir Chat da Aula</button>
+              ${IS_GESTOR_OU_PROF ? `<button type="button" class="pip-menu-btn" id="pip-menu-lousa"><span id="pip-menu-lousa-lbl">🖍️ Projetar Lousa</span></button>` : ''}
+              <button type="button" class="pip-menu-btn" id="pip-menu-voltar-item">🗖 Voltar à Tela Cheia</button>
+            </div>
+
+            <button type="button" class="pip-btn danger" id="pip-btn-mic" title="Microfone">🔇</button>
+            <button type="button" class="pip-btn danger" id="pip-btn-cam" title="Câmara">🚫</button>
+            <button type="button" class="pip-btn" id="pip-btn-emoji" title="Reações e Mão">😊</button>
+            <button type="button" class="pip-btn" id="pip-btn-more" title="Mais Opções">⋯</button>
+            <button type="button" class="pip-btn danger" id="pip-btn-hangup" title="${IS_GESTOR_OU_PROF ? 'Encerrar Live' : 'Sair da Chamada'}">📞</button>
+          </div>
+        </div>
+      `;
+
+      const fecharPopoversPip = () => {
+        d.getElementById('pip-popover-emoji')?.classList.remove('open');
+        d.getElementById('pip-popover-more')?.classList.remove('open');
+      };
+
+      // 1. Microfone
+      d.getElementById('pip-btn-mic')?.addEventListener('click', async () => {
+        fecharPopoversPip();
+        await alternarMeuMicrofone();
+        sincronizarJanelaPipFlutuante();
+      });
+
+      // 2. Câmara
+      d.getElementById('pip-btn-cam')?.addEventListener('click', async () => {
+        fecharPopoversPip();
+        await alternarMinhaCamara();
+        sincronizarJanelaPipFlutuante();
+      });
+
+      // 3. Emoji + Mão
+      d.getElementById('pip-btn-emoji')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        d.getElementById('pip-popover-more')?.classList.remove('open');
+        d.getElementById('pip-popover-emoji')?.classList.toggle('open');
+      });
+      d.querySelectorAll('.pip-emoji-item').forEach(btn => {
+        btn.addEventListener('click', () => {
+          fecharPopoversPip();
+          if (btn.dataset.mao) levantarMaoNaAula();
+          else if (btn.dataset.emoji) enviarReacaoLive(btn.dataset.emoji);
+        });
+      });
+
+      // 4. Menu de Três Pontos (⋯)
+      d.getElementById('pip-btn-more')?.addEventListener('click', (ev) => {
+        ev.stopPropagation();
+        d.getElementById('pip-popover-emoji')?.classList.remove('open');
+        d.getElementById('pip-popover-more')?.classList.toggle('open');
+      });
+      d.getElementById('pip-menu-tela')?.addEventListener('click', async () => {
+        fecharPopoversPip();
+        await partilharEcraNaLive();
+        sincronizarJanelaPipFlutuante();
+      });
+      d.getElementById('pip-menu-som')?.addEventListener('click', () => {
+        fecharPopoversPip();
+        alternarSaidaDeSom();
+        sincronizarJanelaPipFlutuante();
+      });
+      d.getElementById('pip-menu-chat')?.addEventListener('click', () => {
+        fecharPopoversPip();
+        maximizarChamadaAoVivo();
+        setTimeout(() => alternarMiniChatLive(true), 180);
+      });
+      d.getElementById('pip-menu-lousa')?.addEventListener('click', async () => {
+        fecharPopoversPip();
+        await alternarProjecaoLousaNaLive();
+        sincronizarJanelaPipFlutuante();
+      });
+      d.getElementById('pip-menu-voltar-item')?.addEventListener('click', () => maximizarChamadaAoVivo());
+      d.getElementById('pip-btn-voltar')?.addEventListener('click', () => maximizarChamadaAoVivo());
+
+      // 5. Desligar (📞)
+      d.getElementById('pip-btn-hangup')?.addEventListener('click', () => {
+        fecharJanelaPipFlutuanteSemRestaurar();
+        if (IS_GESTOR_OU_PROF) encerrarSalaAoVivo();
+        else sairDaChamadaAluno();
+      });
+
+      d.addEventListener('click', (ev) => {
+        if (!ev.target.closest('.pip-dock')) fecharPopoversPip();
+      });
+
+      pipWin.addEventListener('pagehide', () => {
+        janelaPipFlutuante = null;
+        if (!fechandoPipPorDesligar && liveAtivaObj && liveAtivaObj.ativa) {
+          maximizarChamadaAoVivo();
+        }
+      });
+
+      sincronizarJanelaPipFlutuante();
+    }
+
+    async function abrirJanelaPipFlutuanteUnica() {
+      prepararSaidaTelaCheiaParaPip();
+      const topWin = obterJanelaTopoSegura();
+
+      // 1️⃣ PRIORIDADE MÁXIMA (PC Chrome/Edge): Document Picture-in-Picture com TODOS os 5 botões funcionais
+      if (topWin && topWin.documentPictureInPicture && typeof topWin.documentPictureInPicture.requestWindow === 'function') {
+        try {
+          if (janelaPipFlutuante && !janelaPipFlutuante.closed) {
+            janelaPipFlutuante.focus();
+            return true;
+          }
+          const pipWin = await topWin.documentPictureInPicture.requestWindow({
+            width: 370,
+            height: 270
+          });
+          janelaPipFlutuante = pipWin;
+          construirInterfaceDocumentPip(pipWin);
+
+          // Oculta 100% o quadro interno do WorkSpace (ZERO duplicação, ZERO sobreposição na partilha de tela!)
+          document.body.classList.add('modo-minimizado-pip');
+          if (window.parent && window.parent !== window) {
+            window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true, ocultarDomExterno: true }, '*');
+          }
+          mostrarToast('🪟 Janela flutuante ativa! Ela acompanha você em qualquer aba ou aplicativo.');
+          return true;
+        } catch (errDocPip) {
+          console.warn('Document PiP não abriu, tentando Video PiP nativo:', errDocPip);
+        }
       }
+
+      // 2️⃣ FALLBACK NATIVO (Celular Android Chrome / Safari): Video PiP externo + MediaSession (sem duplicar quadro interno!)
+      registrarControlesMediaSessionPip();
+      const abriuVideoPip = await ativarPipFlutuanteNativo(false);
+      if (abriuVideoPip) {
+        document.body.classList.add('modo-minimizado-pip');
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: true, ocultarDomExterno: true }, '*');
+        }
+        mostrarToast('🪟 Janela flutuante nativa ativa! Você pode alternar de aba ou app.');
+        return true;
+      }
+
+      mostrarToast('⚠️ Este navegador não permitiu abrir janela flutuante externa. Use Chrome ou Edge atualizado.', '#f59e0b');
+      return false;
     }
 
     function maximizarChamadaAoVivo() {
-      // Se o Picture-in-Picture nativo estiver aberto, fecha-o ao voltar à tela cheia da aula
+      if (janelaPipFlutuante && !janelaPipFlutuante.closed) {
+        fechandoPipPorDesligar = true;
+        try { janelaPipFlutuante.close(); } catch (e) {}
+        janelaPipFlutuante = null;
+        setTimeout(() => { fechandoPipPorDesligar = false; }, 300);
+      }
+
       if (document.pictureInPictureElement && typeof document.exitPictureInPicture === 'function') {
         document.exitPictureInPicture().catch(() => {});
       }
 
-      const estavaPipInterno = document.body.classList.contains('modo-pip-interno');
       document.body.classList.remove('modo-minimizado-pip', 'modo-pip-interno');
 
-      const viewLive = document.getElementById('view-live');
-      if (viewLive) {
-        viewLive.style.width = '';
-        viewLive.style.height = '';
-        viewLive.style.left = '';
-        viewLive.style.top = '';
-        viewLive.style.right = '';
-        viewLive.style.bottom = '';
-      }
-
       if (window.parent && window.parent !== window) {
-        window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: false }, '*');
+        window.parent.postMessage({ type: 'MINIMIZAR_VIDEO_AULAS', minimizar: false, ocultarDomExterno: false }, '*');
       }
-      if (estavaPipInterno) {
+      if (liveAtivaObj && liveAtivaObj.ativa) {
         alternarAba('live');
       }
       atualizarRotuloBotaoTelaCheia();
     }
-
-    // 🖐️ Motor que permite Arrastar e Redimensionar a Janela PiP sobre o Catálogo (Com trava mínima de 255x185)
-    (function configurarInteracaoPipInterno() {
-      let arrastando = false, redimensionando = false;
-      let startX = 0, startY = 0, startLeft = 0, startTop = 0, startW = 0, startH = 0;
-
-      document.addEventListener('pointerdown', (e) => {
-        const viewLive = document.getElementById('view-live');
-        if (!viewLive) return;
-
-        // Se estiver minimizado no WorkSpace externo, encaminha o arraste para o modal pai
-        if (document.body.classList.contains('modo-minimizado-pip') && e.target.closest('#pip-restore-bar') && !e.target.closest('button')) {
-          if (window.parent && window.parent !== window) {
-            window.parent.postMessage({ type: 'INICIAR_ARRASTE_PIP_EXTERNO' }, '*');
-          }
-          return;
-        }
-
-        if (!document.body.classList.contains('modo-pip-interno')) return;
-
-        if (e.target.closest('#pip-resize-handle')) {
-          redimensionando = true;
-          const rect = viewLive.getBoundingClientRect();
-          startX = e.clientX; startY = e.clientY;
-          startW = rect.width; startH = rect.height;
-          viewLive.style.left = rect.left + 'px';
-          viewLive.style.top = rect.top + 'px';
-          viewLive.style.right = 'auto';
-          viewLive.style.bottom = 'auto';
-          e.preventDefault();
-        } else if (e.target.closest('#pip-restore-bar') && !e.target.closest('button')) {
-          arrastando = true;
-          const rect = viewLive.getBoundingClientRect();
-          startX = e.clientX; startY = e.clientY;
-          startLeft = rect.left; startTop = rect.top;
-          viewLive.style.left = rect.left + 'px';
-          viewLive.style.top = rect.top + 'px';
-          viewLive.style.right = 'auto';
-          viewLive.style.bottom = 'auto';
-          e.preventDefault();
-        }
-      });
-
-      window.addEventListener('pointermove', (e) => {
-        if (!arrastando && !redimensionando) return;
-        const viewLive = document.getElementById('view-live');
-        if (!viewLive) return;
-
-        if (arrastando) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          const novoLeft = Math.max(6, Math.min(window.innerWidth - viewLive.offsetWidth - 6, startLeft + dx));
-          const novoTop = Math.max(6, Math.min(window.innerHeight - viewLive.offsetHeight - 6, startTop + dy));
-          viewLive.style.left = novoLeft + 'px';
-          viewLive.style.top = novoTop + 'px';
-        } else if (redimensionando) {
-          const dx = e.clientX - startX;
-          const dy = e.clientY - startY;
-          // 🔒 Trava mínima: nunca diminui além de 255px x 185px para manter Microfone, Câmara e Reação visíveis!
-          const novaW = Math.max(255, Math.min(window.innerWidth - 20, startW + dx));
-          const novaH = Math.max(185, Math.min(window.innerHeight - 20, startH + dy));
-          viewLive.style.width = novaW + 'px';
-          viewLive.style.height = novaH + 'px';
-        }
-      });
-
-      window.addEventListener('pointerup', () => {
-        arrastando = false;
-        redimensionando = false;
-      });
-    })();
 
     // 📡 Recebe comandos diretos do alertas.js e do workspace.js (Modo Minimizado, Clique no Sininho e Reanimação Silenciosa)
     window.addEventListener('message', (ev) => {
@@ -4717,6 +5007,7 @@ stage.innerHTML = `<video id="active-html5-video" src="${esc(url)}" controls aut
         btnCam.classList.toggle('primary', camAtiva);
         btnCam.classList.toggle('danger', !camAtiva);
       }
+       sincronizarJanelaPipFlutuante();
     }
 
     function atualizarPreviewVideoLocal() {
@@ -5652,7 +5943,8 @@ function estaEmModoTelaCheiaOuHorizontal() {
 
     async function encerrarSalaAoVivo() {
       try {
-        maximizarChamadaAoVivo();
+        fecharJanelaPipFlutuanteSemRestaurar();
+                     maximizarChamadaAoVivo();
         limparConexoesWebRTC();
         await fetch('/api/workspace/video-aulas/live/encerrar', {
           method: 'POST',
@@ -5790,11 +6082,10 @@ function estaEmModoTelaCheiaOuHorizontal() {
         document.getElementById('view-live').style.display = 'block';
         document.body.classList.add('modo-cinema-live');
       } else if (chamadaEmAndamento) {
-        // 🗕 Se a chamada está ativa e clicou em "Voltar ao Catálogo" (ou Histórico), minimiza em PiP automaticamente!
-        document.body.classList.remove('modo-cinema-live');
-        document.body.classList.add('modo-pip-interno');
-        document.getElementById('view-live').style.display = 'block';
-      } else {
+                   document.body.classList.remove('modo-cinema-live', 'modo-pip-interno');
+                    document.getElementById('view-live').style.display = 'none';
+                     minimizarChamadaAoVivo();
+                } else {
         document.body.classList.remove('modo-cinema-live', 'modo-pip-interno');
         document.getElementById('view-live').style.display = 'none';
       }

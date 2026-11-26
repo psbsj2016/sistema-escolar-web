@@ -1604,8 +1604,8 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
                 const modalAtual = document.getElementById('ws-modal-video-aulas');
 
                 if (ev.data.type === 'MINIMIZAR_VIDEO_AULAS') {
-                    Workspace.alternarMinimizarVideos(Boolean(ev.data.minimizar));
-                } else if (ev.data.type === 'MODO_CINEMA_LIVE') {
+                                          Workspace.alternarMinimizarVideos(Boolean(ev.data.minimizar), Boolean(ev.data.ocultarDomExterno));
+                                         } else if (ev.data.type === 'MODO_CINEMA_LIVE') {
                     const headerModal = modalAtual ? modalAtual.firstElementChild : null;
                     if (headerModal && modalAtual.dataset.minimizado !== 'true') {
                         headerModal.style.display = ev.data.ativo ? 'none' : 'flex';
@@ -1664,107 +1664,53 @@ abrirPlataformaVideos: (videoId = '', playlistSlug = '', liveToken = '') => {
         }
     },
 
-   alternarMinimizarVideos: (minimizar = true) => {
+   alternarMinimizarVideos: (minimizar = true, ocultarDomExterno = false) => {
         const modal = document.getElementById('ws-modal-video-aulas');
         const iframe = document.getElementById('iframeVideoAulas');
         if (!modal) return;
         const headerModal = modal.firstElementChild;
         if (headerModal) headerModal.style.display = 'none';
 
-        // Cria a barra de arraste e a pega de redimensionamento da janela PiP (estilo Google Meet)
-        let dragBar = document.getElementById('ws-pip-drag-handle');
-        let resizeCorner = document.getElementById('ws-pip-resize-handle');
+        const dragBar = document.getElementById('ws-pip-drag-handle');
+        const resizeCorner = document.getElementById('ws-pip-resize-handle');
+        if (dragBar) dragBar.style.display = 'none';
+        if (resizeCorner) resizeCorner.style.display = 'none';
 
-        if (!dragBar) {
-            dragBar = document.createElement('div');
-            dragBar.id = 'ws-pip-drag-handle';
-            dragBar.title = 'Arraste para mover a chamada pela tela';
-            dragBar.style.cssText = 'display:none; position:absolute; top:0; left:0; right:95px; height:36px; z-index:20; cursor:move; user-select:none; touch-action:none;';
-            modal.appendChild(dragBar);
-
-            resizeCorner = document.createElement('div');
-            resizeCorner.id = 'ws-pip-resize-handle';
-            resizeCorner.title = 'Arraste para ajustar o tamanho da janela';
-            resizeCorner.innerHTML = '⤡';
-            resizeCorner.style.cssText = 'display:none; position:absolute; right:0; bottom:0; width:24px; height:24px; z-index:25; cursor:nwse-resize; color:#93c5fd; font-size:13px; font-weight:900; align-items:center; justify-content:center; background:rgba(15,23,42,0.8); border-radius:8px 0 0 0; user-select:none; touch-action:none;';
-            modal.appendChild(resizeCorner);
-
-            // Motor de Arraste e Redimensionamento com trava mínima (255px x 185px)
-            let movendo = false, redimensionando = false;
-            let sx = 0, sy = 0, sl = 0, st = 0, sw = 0, sh = 0;
-
-            const bloquearIframeDuranteGesto = (bloq) => {
-                if (iframe) iframe.style.pointerEvents = bloq ? 'none' : 'auto';
-            };
-
-            dragBar.addEventListener('pointerdown', (e) => {
-                if (modal.dataset.minimizado !== 'true') return;
-                movendo = true;
-                bloquearIframeDuranteGesto(true);
-                const r = modal.getBoundingClientRect();
-                sx = e.clientX; sy = e.clientY; sl = r.left; st = r.top;
-                modal.style.left = r.left + 'px';
-                modal.style.top = r.top + 'px';
-                modal.style.right = 'auto';
-                modal.style.bottom = 'auto';
-                e.preventDefault();
-            });
-
-            resizeCorner.addEventListener('pointerdown', (e) => {
-                if (modal.dataset.minimizado !== 'true') return;
-                redimensionando = true;
-                bloquearIframeDuranteGesto(true);
-                const r = modal.getBoundingClientRect();
-                sx = e.clientX; sy = e.clientY; sw = r.width; sh = r.height;
-                modal.style.left = r.left + 'px';
-                modal.style.top = r.top + 'px';
-                modal.style.right = 'auto';
-                modal.style.bottom = 'auto';
-                e.preventDefault();
-            });
-
-            window.addEventListener('pointermove', (e) => {
-                if (!movendo && !redimensionando) return;
-                if (movendo) {
-                    const nl = Math.max(6, Math.min(window.innerWidth - modal.offsetWidth - 6, sl + (e.clientX - sx)));
-                    const nt = Math.max(6, Math.min(window.innerHeight - modal.offsetHeight - 6, st + (e.clientY - sy)));
-                    modal.style.left = nl + 'px';
-                    modal.style.top = nt + 'px';
-                } else if (redimensionando) {
-                    // 🔒 Limite mínimo travado em 255px x 185px para manter Microfone, Câmara e Reação sempre visíveis!
-                    const nw = Math.max(255, Math.min(window.innerWidth - 16, sw + (e.clientX - sx)));
-                    const nh = Math.max(185, Math.min(window.innerHeight - 16, sh + (e.clientY - sy)));
-                    modal.style.width = nw + 'px';
-                    modal.style.height = nh + 'px';
+        // Se já está em PiP externo flutuante e recebeu outro pedido de minimizar (ex: navegou no WorkSpace), mantém oculto!
+        if (minimizar && (ocultarDomExterno || modal.dataset.pipExterno === 'true')) {
+            modal.dataset.minimizado = 'true';
+            modal.dataset.pipExterno = 'true';
+            // Mantém o iframe vivo (WebRTC + áudio ativos), mas 100% invisível e fora da área partilhada
+            modal.style.cssText = 'display:flex; position:fixed; left:-9999px; top:-9999px; width:1px; height:1px; opacity:0; pointer-events:none; border:none; box-shadow:none; overflow:hidden; z-index:-1;';
+            document.body.style.overflow = '';
+            try {
+                if (iframe && iframe.contentWindow) {
+                    iframe.contentWindow.postMessage({ type: 'ESTADO_PIP_EXTERNO', minimizado: true, pipExterno: true }, '*');
                 }
-            });
-
-            window.addEventListener('pointerup', () => {
-                if (movendo || redimensionando) {
-                    movendo = false;
-                    redimensionando = false;
-                    bloquearIframeDuranteGesto(false);
-                }
-            });
+            } catch (e) {}
+            return;
         }
 
         if (minimizar) {
-            modal.dataset.minimizado = 'true';
-            modal.style.cssText = 'display:flex; position:fixed; bottom:18px; right:18px; top:auto; left:auto; width:340px; height:225px; min-width:255px; min-height:185px; max-width:94vw; max-height:85vh; z-index:9999999; background:#050811; flex-direction:column; border-radius:16px; overflow:hidden; box-shadow:0 20px 50px rgba(0,0,0,0.65); border:2px solid #3b82f6;';
-            if (dragBar) dragBar.style.display = 'block';
-            if (resizeCorner) resizeCorner.style.display = 'flex';
-            document.body.style.overflow = '';
-        } else {
-            modal.dataset.minimizado = 'false';
-            modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
-            if (dragBar) dragBar.style.display = 'none';
-            if (resizeCorner) resizeCorner.style.display = 'none';
-            document.body.style.overflow = 'hidden';
+            // Solicita ao iframe que abra o fluxo único de janela flutuante com autorização
+            try {
+                if (iframe && iframe.contentWindow && typeof iframe.contentWindow.minimizarChamadaAoVivo === 'function') {
+                    iframe.contentWindow.minimizarChamadaAoVivo();
+                    return;
+                }
+            } catch (e) {}
+            return;
         }
+
+        // Restaurar para Tela Cheia da Aula
+        modal.dataset.minimizado = 'false';
+        modal.dataset.pipExterno = 'false';
+        modal.style.cssText = 'display:flex; position:fixed; top:0; left:0; width:100vw; height:100dvh; z-index:9999999; background:#0f172a; flex-direction:column; border-radius:0; border:none;';
+        document.body.style.overflow = 'hidden';
 
         try {
             if (iframe && iframe.contentWindow) {
-                iframe.contentWindow.postMessage({ type: 'ESTADO_PIP_EXTERNO', minimizado: Boolean(minimizar) }, '*');
+                iframe.contentWindow.postMessage({ type: 'ESTADO_PIP_EXTERNO', minimizado: false, pipExterno: false }, '*');
             }
         } catch (e) {}
     },
