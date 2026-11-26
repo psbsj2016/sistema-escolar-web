@@ -2380,7 +2380,8 @@ validarCadastroInst: async () => {
             const escola = await App.api('/escola') || {}; 
             const imgLogo = escola.foto || 'https://placehold.co/100?text=LOGO'; 
             const imgQr = escola.qrCodeImagem || 'https://placehold.co/100?text=QR+CODE'; 
-            
+            const imgAssInst = escola.assinaturaInstituicao || '';            
+
             div.innerHTML = `
                 <div class="card" style="max-width:850px; margin:0 auto;">
                     <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap:20px; margin-bottom:30px;">
@@ -2428,6 +2429,31 @@ validarCadastroInst: async () => {
                         <div class="input-group"><label>Cidade</label><input id="conf-cidade" value="${App.escapeHTML(escola.cidade||'')}"></div>
                         <div class="input-group"><label>Estado (UF)</label><input id="conf-estado" value="${App.escapeHTML(escola.estado||'')}" maxlength="2" style="text-transform: uppercase;"></div>
                     </div>
+                  
+                     <h4 style="margin: 25px 0 15px 0; color: #333; border-bottom: 1px solid #eee; padding-bottom: 10px;">✍️ Assinatura Digital da Instituição (Contratos)</h4>
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:15px; margin-bottom:15px;">
+                        <div class="input-group"><label>Nome do Representante Legal</label><input id="conf-rep-nome" value="${App.escapeHTML(escola.representanteNome||'')}" placeholder="Ex: Paulo Sérgio Jr."></div>
+                        <div class="input-group"><label>Cargo na Instituição</label><input id="conf-rep-cargo" value="${App.escapeHTML(escola.representanteCargo||'')}" placeholder="Ex: Diretor Geral"></div>
+                    </div>
+                    <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px; margin-bottom:10px;">
+                        <div style="font-size:12.5px; color:#475569; margin-bottom:10px;">
+                            Desenhe sua rubrica/assinatura abaixo <b>ou</b> envie uma imagem PNG com fundo transparente. Ela será carimbada automaticamente nos novos contratos.
+                        </div>
+                        <div style="display:flex; gap:16px; flex-wrap:wrap; align-items:center;">
+                            <div style="flex:1; min-width:240px;">
+                                <canvas id="conf-canvas-ass" width="420" height="120" style="width:100%; max-width:420px; height:110px; background:#fff; border:2px dashed #94a3b8; border-radius:8px; touch-action:none; cursor:crosshair;"></canvas>
+                                <div style="display:flex; gap:8px; margin-top:8px; flex-wrap:wrap;">
+                                    <button type="button" class="btn-primary" style="width:auto; padding:6px 12px; font-size:12px; background:#2563eb;" onclick="App.aplicarDesenhoAssinaturaEscola()">✅ Usar Desenho</button>
+                                    <button type="button" class="btn-del" style="width:auto; padding:6px 12px; font-size:12px;" onclick="App.limparAssinaturaEscola()">🗑️ Limpar / Remover</button>
+                                    <input type="file" id="conf-ass-file" accept="image/*" onchange="App.previewImagemLocal(this, 'conf-ass-preview')" style="font-size:11.5px; max-width:210px;">
+                                </div>
+                            </div>
+                            <div style="width:200px; text-align:center; background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:10px;">
+                                <div style="font-size:11px; color:#64748b; font-weight:bold; margin-bottom:6px;">Assinatura Atual</div>
+                                <img id="conf-ass-preview" src="${imgAssInst || 'https://placehold.co/180x60?text=SEM+ASSINATURA'}" style="max-width:180px; max-height:65px; object-fit:contain;">
+                            </div>
+                        </div>
+                    </div>   
 
                     <button class="btn-primary" style="width:100%; margin-top:25px; padding:15px; justify-content:center;" onclick="App.salvarConfiguracoes()">💾 ATUALIZAR DADOS DA ESCOLA</button>
                 </div>`; 
@@ -2448,6 +2474,46 @@ validarCadastroInst: async () => {
         const fileInput = document.getElementById(imgId === 'conf-preview' ? 'conf-file' : 'conf-qr-file'); if(fileInput) fileInput.value = '';
     },
 
+    iniciarCanvasAssinaturaEscola: () => {
+        const canvas = document.getElementById('conf-canvas-ass');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.4;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        let desenhando = false;
+        const pos = (ev) => {
+            const r = canvas.getBoundingClientRect();
+            return { x: (ev.clientX - r.left) * (canvas.width / r.width), y: (ev.clientY - r.top) * (canvas.height / r.height) };
+        };
+        canvas.onpointerdown = (ev) => { desenhando = true; canvas.setPointerCapture(ev.pointerId); const p = pos(ev); ctx.beginPath(); ctx.moveTo(p.x, p.y); };
+        canvas.onpointermove = (ev) => { if (!desenhando) return; const p = pos(ev); ctx.lineTo(p.x, p.y); ctx.stroke(); };
+        canvas.onpointerup = () => { desenhando = false; };
+        canvas.onpointercancel = () => { desenhando = false; };
+    },
+
+    aplicarDesenhoAssinaturaEscola: () => {
+        const canvas = document.getElementById('conf-canvas-ass');
+        const img = document.getElementById('conf-ass-preview');
+        if (!canvas || !img) return;
+        img.src = canvas.toDataURL('image/png');
+        img.setAttribute('data-nova', 'true');
+        App.showToast("Desenho aplicado! Clique em Atualizar Dados da Escola para salvar.", "info");
+    },
+
+    limparAssinaturaEscola: () => {
+        const canvas = document.getElementById('conf-canvas-ass');
+        if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        const img = document.getElementById('conf-ass-preview');
+        if (img) {
+            img.src = 'https://placehold.co/180x60?text=SEM+ASSINATURA';
+            img.setAttribute('data-nova', 'true');
+        }
+        const f = document.getElementById('conf-ass-file');
+        if (f) f.value = '';
+    },
+
     salvarConfiguracoes: async () => { 
         const p = { 
             nome: document.getElementById('conf-nome').value, 
@@ -2459,7 +2525,9 @@ validarCadastroInst: async () => {
             numero: document.getElementById('conf-numero').value,
             bairro: document.getElementById('conf-bairro').value,
             cidade: document.getElementById('conf-cidade').value,
-            estado: document.getElementById('conf-estado').value.toUpperCase()
+            estado: document.getElementById('conf-estado').value.toUpperCase(),
+            representanteNome: document.getElementById('conf-rep-nome')?.value.trim() || '',
+            representanteCargo: document.getElementById('conf-rep-cargo')?.value.trim() || ''
         }; 
         
         const imgLogo = document.getElementById('conf-preview');
@@ -2467,6 +2535,8 @@ validarCadastroInst: async () => {
 
         const imgQr = document.getElementById('conf-qr-preview');
         if (imgQr && imgQr.hasAttribute('data-nova')) p.qrCodeImagem = imgQr.src.includes('placehold') ? "" : imgQr.src;
+        const imgAss = document.getElementById('conf-ass-preview');
+        if (imgAss && imgAss.hasAttribute('data-nova')) p.assinaturaInstituicao = imgAss.src.includes('placehold') ? "" : imgAss.src;
 
         const btn = document.querySelector('button[onclick="App.salvarConfiguracoes()"]'); 
         const txt = btn.innerText; btn.innerText = "A atualizar... ⏳"; btn.disabled = true; 

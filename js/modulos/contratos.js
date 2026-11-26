@@ -133,22 +133,56 @@ Object.assign(App, {
                         ${corpoContrato}
                     </div>
                     
-                    <div style="padding:15px; background:#eafaf1; border:1px solid #27ae60; text-align:center; font-size:12px; border-radius:6px; page-break-inside: avoid;">
-                        <p style="margin:0 0 5px 0; color:#333;">Pelo presente instrumento, as partes concordam com todos os termos acima descritos.</p>
-                        ✅ <b>ACEITE DIGITAL REGISTRADO COM VALIDADE JURÍDICA:</b><br>
-                        <span style="font-size:16px; font-weight:bold; color:#1e8449; display:block; margin-top:5px;">📅 ${dataBr}</span>
-                        <p style="margin:10px 0 0 0; font-size:10px; color:#7f8c8d;">ID da Transação: ${contrato._id || idContrato}</p>
-                    </div>
-                    
-                    <div style="margin-top: 50px; display: flex; justify-content: space-between; text-align: center; font-size: 12px; page-break-inside: avoid; color: #333;">
-                        <div style="width: 45%;">
-                            <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura do Responsável / Aluno</div>
-                        </div>
-                        <div style="width: 45%;">
-                            <div style="border-top: 1px solid #333; padding-top: 5px;">Assinatura da Instituição</div>
-                        </div>
-                    </div>
+                   ${(() => {
+                        const idExibicao = contrato.id || idContrato;
+                        const urlVal = `${window.location.origin}/validar-contrato?id=${encodeURIComponent(idExibicao)}`;
+                        const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=130x130&data=${encodeURIComponent(urlVal)}`;
+                        const aud = contrato.auditoria || {};
+                        const assAlunoHTML = contrato.assinaturaAluno
+                            ? `<img src="${contrato.assinaturaAluno}" style="max-height:68px; max-width:220px; object-fit:contain; display:block; margin:0 auto 4px auto;">`
+                            : `<div style="height:46px; display:flex; align-items:flex-end; justify-content:center; font-size:10px; color:#94a3b8; font-style:italic; padding-bottom:4px;">Aceite digital (registro anterior)</div>`;
+                        const assInstHTML = contrato.assinaturaInstituicao
+                            ? `<img src="${contrato.assinaturaInstituicao}" style="max-height:68px; max-width:220px; object-fit:contain; display:block; margin:0 auto 4px auto;">`
+                            : `<div style="height:46px; display:flex; align-items:flex-end; justify-content:center; font-size:10px; color:#64748b; font-weight:bold; padding-bottom:4px;">CARIMBO INSTITUCIONAL DIGITAL</div>`;
+                        const nomeRep = contrato.representanteNome || 'Representante Legal';
+                        const cargoRep = contrato.representanteCargo || 'Assinatura da Instituição';
 
+                        return `
+                            <div style="margin-top:34px; display:flex; justify-content:space-between; align-items:flex-end; gap:20px; text-align:center; font-size:12px; page-break-inside:avoid; color:#333;">
+                                <div style="flex:1;">
+                                    ${assAlunoHTML}
+                                    <div style="border-top:1px solid #333; padding-top:5px;">
+                                        <b>${App.escapeHTML(contrato.resp_nome || nomeAluno)}</b><br>
+                                        <span style="font-size:10.5px; color:#555;">Assinatura do Responsável / Aluno</span>
+                                    </div>
+                                </div>
+                                <div style="flex:1;">
+                                    ${assInstHTML}
+                                    <div style="border-top:1px solid #333; padding-top:5px;">
+                                        <b>${App.escapeHTML(nomeRep)}</b><br>
+                                        <span style="font-size:10.5px; color:#555;">${App.escapeHTML(cargoRep)}</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top:24px; padding:15px; background:#eafaf1; border:1.5px solid #27ae60; border-radius:8px; display:flex; align-items:center; gap:16px; flex-wrap:wrap; page-break-inside:avoid;">
+                                <div style="text-align:center; flex-shrink:0;">
+                                    <img src="${qrUrl}" alt="QR Code de Validação" style="width:105px; height:105px; border:1px solid #cbd5e1; border-radius:6px; background:#fff; padding:3px;">
+                                    <div style="font-size:9px; color:#15803d; font-weight:bold; margin-top:3px;">Ler QR Code</div>
+                                </div>
+                                <div style="flex:1; min-width:220px; font-size:11.5px; color:#1e293b; line-height:1.55; text-align:left; word-break:break-all;">
+                                    <div style="font-weight:bold; color:#15803d; font-size:12.5px; margin-bottom:4px;">✅ CERTIFICADO DE ASSINATURA ELETRÔNICA E AUDITORIA</div>
+                                    <div><b>ID da Transação:</b> <span style="font-family:monospace;">${App.escapeHTML(idExibicao)}</span></div>
+                                    <div><b>Data/Hora:</b> ${dataBr} ${aud.otpVerificado ? '• <span style="color:#15803d; font-weight:bold;">✅ E-mail autenticado (OTP)</span>' : ''}</div>
+                                    ${aud.ip ? `<div><b>IP de Origem:</b> ${App.escapeHTML(aud.ip)}</div>` : ''}
+                                    ${contrato.hashSha256 ? `<div><b>Hash SHA-256:</b> <span style="font-family:monospace; font-size:10.5px;">${App.escapeHTML(contrato.hashSha256)}</span></div>` : ''}
+                                    <div style="margin-top:6px;">
+                                        <a href="${urlVal}" target="_blank" style="color:#2563eb; font-weight:bold; text-decoration:underline; font-size:11px;">🔎 Abrir Página Pública de Validação ↗</a>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    })()}
                 </div>
             `;        
 
@@ -485,21 +519,24 @@ Object.assign(App, {
             App.contratosSelecionados = []; 
 
             // 1. Função que desenha o layout do documento (AGORA COM CHECKBOX)
-            const desenharCard = (c, corBorda, icone) => {
+           const desenharCard = (c, corBorda, icone) => {
                 const dataRegistro = c.dataHoraRegistro || c.dataCriacao || new Date().toISOString();
                 const dataBr = new Date(dataRegistro).toLocaleString('pt-BR');
                 const nomeSeguro = App.escapeHTML(c.nomeAluno || c.nome || 'Aluno Indefinido');
                 
                 return `
-                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid ${corBorda}; box-shadow: 0 2px 4px rgba(0,0,0,0.02);">
-                    <div style="display:flex; align-items:center; gap:12px;">
+                <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid ${corBorda}; box-shadow: 0 2px 4px rgba(0,0,0,0.02); gap:10px;">
+                    <div style="display:flex; align-items:center; gap:12px; min-width:0;">
                         <input type="checkbox" class="chk-contrato" value="${c.id}" onchange="App.toggleSelecaoContrato(this)" style="width:18px; height:18px; cursor:pointer; accent-color: #e74c3c; flex-shrink: 0;">
-                        <div>
+                        <div style="min-width:0;">
                             <div style="font-weight:bold; color:#2c3e50; font-size:15px;">${icone} ${nomeSeguro}</div>
                             <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                            <div style="font-size:11px; color:#64748b; margin-top:3px; font-family:monospace; word-break:break-all;">
+                                🆔 ${App.escapeHTML(c.id || '-')} ${c.hashSha256 ? '<span style="background:#dcfce7; color:#15803d; padding:1px 6px; border-radius:999px; font-family:sans-serif; font-weight:bold; margin-left:4px;">🛡️ SHA-256</span>' : ''}
+                            </div>
                         </div>
                     </div>
-                    <div style="display:flex; gap:8px;">
+                    <div style="display:flex; gap:8px; flex-shrink:0;">
                         <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:${corBorda}; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">👁️ Ver</button>
                         <button onclick="App.excluirContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold; transition: background 0.2s;">🗑️ Apagar</button>
                     </div>
@@ -523,6 +560,11 @@ Object.assign(App, {
             <div>
                 <div style="display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center; background:#fdf2f2; border:1px solid #f5b7b1; color:#c0392b; padding:12px 15px; border-radius:6px; margin-bottom:15px; font-size:13px; gap: 10px;">
                     <div>🔒 <strong>Zona de Segurança Jurídica:</strong> Documentos imutáveis.</div>
+                    <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; background:#fff; border:1px solid #cbd5e1; border-radius:10px; padding:10px 14px; margin-bottom:16px;">
+                    <span style="font-size:16px;">🔍</span>
+                    <input type="text" id="busca-cofre-contratos" oninput="App.filtrarCofreContratos()" placeholder="Pesquisar por ID da Transação (CONT_...), Nome do Aluno, CPF ou Hash SHA-256..." style="flex:1; min-width:220px; border:none; outline:none; font-size:13.5px; color:#1e293b;">
+                    <a href="/validar-contrato" target="_blank" style="background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; padding:7px 12px; border-radius:8px; font-size:12px; font-weight:bold; text-decoration:none; white-space:nowrap;">🛡️ Validador Público ↗</a>
+                </div>
                     <button onclick="App.selecionarTodosContratos()" style="background:transparent; border:1px solid #c0392b; color:#c0392b; padding:6px 12px; border-radius:4px; cursor:pointer; font-size:11px; font-weight:bold; transition: 0.2s;">
                         ☑️ Marcar / Desmarcar Todos
                     </button>
@@ -562,6 +604,67 @@ Object.assign(App, {
             console.error(e);
             area.innerHTML = "<p style='color:red;'>Erro ao carregar cofre.</p>";
         }
+    },
+
+    filtrarCofreContratos: () => {
+        const container = document.getElementById('cofre-colunas-container');
+        const termo = (document.getElementById('busca-cofre-contratos')?.value || '').toLowerCase().trim();
+        const lista = Array.isArray(App.listaCacheContratos) ? App.listaCacheContratos : [];
+        if (!container) return;
+
+        const filtrados = !termo ? lista : lista.filter(c => {
+            const id = String(c.id || '').toLowerCase();
+            const nome = String(c.nomeAluno || c.nome || '').toLowerCase();
+            const cpf = String(c.cpf || '').replace(/\D/g, '');
+            const cpfTermo = termo.replace(/\D/g, '');
+            const hash = String(c.hashSha256 || '').toLowerCase();
+            return id.includes(termo) || nome.includes(termo) || hash.includes(termo) || (cpfTermo && cpf.includes(cpfTermo));
+        });
+
+        const desenharCard = (c, corBorda, icone) => {
+            const dataRegistro = c.dataHoraRegistro || c.dataCriacao || new Date().toISOString();
+            const dataBr = new Date(dataRegistro).toLocaleString('pt-BR');
+            const nomeSeguro = App.escapeHTML(c.nomeAluno || c.nome || 'Aluno Indefinido');
+            const marcado = (App.contratosSelecionados || []).includes(c.id) ? 'checked' : '';
+            return `
+            <div style="background:#fff; border:1px solid #eee; padding:15px; border-radius:8px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; border-left: 5px solid ${corBorda}; box-shadow: 0 2px 4px rgba(0,0,0,0.02); gap:10px;">
+                <div style="display:flex; align-items:center; gap:12px; min-width:0;">
+                    <input type="checkbox" class="chk-contrato" value="${c.id}" ${marcado} onchange="App.toggleSelecaoContrato(this)" style="width:18px; height:18px; cursor:pointer; accent-color: #e74c3c; flex-shrink: 0;">
+                    <div style="min-width:0;">
+                        <div style="font-weight:bold; color:#2c3e50; font-size:15px;">${icone} ${nomeSeguro}</div>
+                        <div style="font-size:12px; color:#7f8c8d; margin-top:4px;">⏱️ Recebido em: <strong style="color:#2c3e50;">${dataBr}</strong></div>
+                        <div style="font-size:11px; color:#64748b; margin-top:3px; font-family:monospace; word-break:break-all;">
+                            🆔 ${App.escapeHTML(c.id || '-')} ${c.hashSha256 ? '<span style="background:#dcfce7; color:#15803d; padding:1px 6px; border-radius:999px; font-family:sans-serif; font-weight:bold; margin-left:4px;">🛡️ SHA-256</span>' : ''}
+                        </div>
+                    </div>
+                </div>
+                <div style="display:flex; gap:8px; flex-shrink:0;">
+                    <button onclick="App.abrirVisualizacaoContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:${corBorda}; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">👁️ Ver</button>
+                    <button onclick="App.excluirContrato('${c.id}')" style="padding:8px 15px; font-size:12px; background:#e74c3c; color:white; border:none; border-radius:5px; cursor:pointer; font-weight:bold;">🗑️ Apagar</button>
+                </div>
+            </div>`;
+        };
+
+        const ead = filtrados.filter(c => c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online')));
+        const presencial = filtrados.filter(c => !(c.modalidade === 'Online' || c.modalidade_escolhida === 'Online' || (c.planoCurso && c.planoCurso.toLowerCase().includes('online'))));
+
+        const htmlEAD = ead.length > 0 ? ead.map(c => desenharCard(c, '#27ae60', '💻')).join('') : '<p style="text-align:center; color:#999; font-size:12px; padding:20px; border:1px dashed #bbf7d0; border-radius:8px;">Nenhum contrato online encontrado.</p>';
+        const htmlPres = presencial.length > 0 ? presencial.map(c => desenharCard(c, '#2c3e50', '🏫')).join('') : '<p style="text-align:center; color:#999; font-size:12px; padding:20px; border:1px dashed #e2e8f0; border-radius:8px;">Nenhum contrato presencial encontrado.</p>';
+
+        container.innerHTML = `
+            <div style="flex:1; min-width:300px; background:#f8f9fa; padding:15px; border-radius:10px; border-top: 4px solid #2c3e50; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#2c3e50; margin-top:0; border-bottom:2px solid #e2e8f0; padding-bottom:10px;">
+                    🏫 Curso Presencial <span style="font-size:12px; background:#2c3e50; color:white; padding:3px 8px; border-radius:12px; vertical-align:middle; margin-left:5px;">${presencial.length}</span>
+                </h3>
+                ${htmlPres}
+            </div>
+            <div style="flex:1; min-width:300px; background:#f0fdf4; padding:15px; border-radius:10px; border-top: 4px solid #27ae60; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+                <h3 style="text-align:center; color:#27ae60; margin-top:0; border-bottom:2px solid #bbf7d0; padding-bottom:10px;">
+                    💻 Curso Online <span style="font-size:12px; background:#27ae60; color:white; padding:3px 8px; border-radius:12px; vertical-align:middle; margin-left:5px;">${ead.length}</span>
+                </h3>
+                ${htmlEAD}
+            </div>
+        `;
     },
 
     imprimirContrato: () => {

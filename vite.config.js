@@ -104,7 +104,7 @@ export default defineConfig({
             handler: 'NetworkOnly'
           },
         {
-            urlPattern: /\/(index|hub-matriculas|matricula|matricula-online|workspace|workspace-lousa|workspace-aulas-video|admin)(\.html)?(\?.*)?$/,
+            urlPattern: /\/(index|hub-matriculas|matricula|matricula-online|workspace|workspace-lousa|workspace-aulas-video|validar-contrato|admin)(\.html)?(\?.*)?$/,
             handler: 'NetworkOnly'
           },
           {
@@ -147,7 +147,8 @@ export default defineConfig({
         online: resolve(__dirname, 'matricula-online.html'),
         workspace: resolve(__dirname, 'workspace.html'),
         lousa: resolve(__dirname, 'workspace-lousa.html'),
-        videoAulas: resolve(__dirname, 'workspace-aulas-video.html')
+        videoAulas: resolve(__dirname, 'workspace-aulas-video.html'),
+        validarContrato: resolve(__dirname, 'validar-contrato.html')
       }
     }
   }

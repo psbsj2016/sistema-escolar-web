@@ -141,8 +141,8 @@
                 <input type="text" id="whatsapp" placeholder="Ex: (11) 99999-9999" maxlength="20" required>
             </div>
             <div class="input-group">
-                <label>E-mail</label>
-                <input type="email" id="email">
+                <label>E-mail * <small style="font-weight:normal; color:#e67e22;">(para código de assinatura)</small></label>
+                <input type="email" id="email" required>
             </div>
             <div class="input-group">
                 <label>CPF *</label>
@@ -256,6 +256,39 @@
         <h3 style="text-align: center; color: #2c3e50; font-size: 18px; margin-top: 40px; margin-bottom: 20px;">Contrato de Prestação de Serviços</h3>
         <div id="corpoContratoLeitura" style="margin-bottom: 40px;"></div>
         
+        <!-- 🔐 BLOCO DE AUTORIA E ASSINATURA ELETRÔNICA -->
+        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:12px; padding:20px; margin:25px 0;">
+            <h3 style="margin:0 0 8px 0; color:#1e293b; font-size:16px; border:none; padding:0;">🔐 1. Confirmação de Identidade por E-mail</h3>
+            <p style="font-size:13px; color:#475569; margin:0 0 12px 0;">
+                Enviaremos um código de 6 dígitos para <strong id="otp-email-destino">-</strong> para comprovar sua autoria no contrato.
+            </p>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:10px;">
+                <button type="button" id="btn-enviar-otp" onclick="enviarCodigoContratoOTP()" style="width:auto; margin:0; padding:11px 18px; background:#2563eb; color:#fff; border-radius:8px; font-size:13.5px;">
+                    📩 Enviar Código de 6 Dígitos
+                </button>
+                <input type="text" id="input-otp-contrato" maxlength="6" inputmode="numeric" placeholder="Código (6 dígitos)" style="flex:1; min-width:170px; text-align:center; font-size:18px; font-weight:bold; letter-spacing:4px; padding:10px;">
+            </div>
+            <div id="status-otp-contrato" style="font-size:12.5px; color:#64748b; margin-bottom:20px;"></div>
+
+            <h3 style="margin:18px 0 8px 0; color:#1e293b; font-size:16px; border-top:1px dashed #cbd5e1; padding-top:16px;">✍️ 2. Sua Assinatura / Rubrica</h3>
+            <div style="display:flex; gap:8px; margin-bottom:12px;">
+                <button type="button" id="tab-ass-desenho" onclick="alternarModoAssinatura('desenho')" style="flex:1; margin:0; padding:9px; font-size:13px; background:#1e293b; color:#fff; border-radius:8px;">✍️ Desenhar</button>
+                <button type="button" id="tab-ass-texto" onclick="alternarModoAssinatura('texto')" style="flex:1; margin:0; padding:9px; font-size:13px; background:#e2e8f0; color:#334155; border-radius:8px;">⌨️ Digitar Nome</button>
+            </div>
+
+            <div id="box-ass-desenho">
+                <canvas id="canvas-assinatura-aluno" width="560" height="160" style="width:100%; max-width:560px; height:150px; background:#ffffff; border:2px dashed #94a3b8; border-radius:10px; touch-action:none; cursor:crosshair; display:block; margin:0 auto;"></canvas>
+                <div style="text-align:right; margin-top:6px;">
+                    <button type="button" onclick="limparAssinaturaCanvas()" style="width:auto; margin:0; padding:6px 14px; font-size:12px; background:#ef4444; color:#fff; border-radius:6px;">🗑️ Limpar</button>
+                </div>
+            </div>
+
+            <div id="box-ass-texto" style="display:none;">
+                <input type="text" id="input-ass-texto" placeholder="Digite seu nome completo para rubricar..." oninput="atualizarPreviewAssinaturaTexto()" style="margin-bottom:10px;">
+                <div id="preview-ass-cursiva" style="background:#fff; border:2px dashed #94a3b8; border-radius:10px; padding:18px; text-align:center; font-family:'Brush Script MT','Segoe Script',cursive,serif; font-style:italic; font-size:30px; color:#0f172a; min-height:48px;"></div>
+            </div>
+        </div>
+
         <button onclick="enviarMatriculaDefinitiva()" class="btn-fixo-leitura">
             ✅ Li e Concordo: Enviar Matrícula
         </button>
@@ -518,6 +551,9 @@ if ('serviceWorker' in navigator) {
         
         // Exibe o modal e sobe para o topo
         document.getElementById('modalLeitura').style.display = 'block';
+        const elDest = document.getElementById('otp-email-destino');
+        if (elDest) elDest.innerText = document.getElementById('email')?.value || '';
+        inicializarPadAssinatura();
         window.scrollTo(0, 0);
     });
 
@@ -526,7 +562,145 @@ if ('serviceWorker' in navigator) {
         document.getElementById('modalLeitura').style.display = 'none';
     }
 
+    let modoAssinaturaAluno = 'desenho';
+    let alunoDesenhou = false;
+    let padInicializado = false;
+
+    function inicializarPadAssinatura() {
+        if (padInicializado) return;
+        const canvas = document.getElementById('canvas-assinatura-aluno');
+        if (!canvas) return;
+        const ctx = canvas.getContext('2d');
+        ctx.strokeStyle = '#0f172a';
+        ctx.lineWidth = 2.6;
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+
+        let desenhando = false;
+        const getPos = (ev) => {
+            const r = canvas.getBoundingClientRect();
+            return {
+                x: (ev.clientX - r.left) * (canvas.width / r.width),
+                y: (ev.clientY - r.top) * (canvas.height / r.height)
+            };
+        };
+
+        canvas.addEventListener('pointerdown', (ev) => {
+            desenhando = true;
+            alunoDesenhou = true;
+            canvas.setPointerCapture(ev.pointerId);
+            const p = getPos(ev);
+            ctx.beginPath();
+            ctx.moveTo(p.x, p.y);
+        });
+        canvas.addEventListener('pointermove', (ev) => {
+            if (!desenhando) return;
+            const p = getPos(ev);
+            ctx.lineTo(p.x, p.y);
+            ctx.stroke();
+        });
+        const encerrar = () => { desenhando = false; };
+        canvas.addEventListener('pointerup', encerrar);
+        canvas.addEventListener('pointercancel', encerrar);
+        padInicializado = true;
+    }
+
+    function limparAssinaturaCanvas() {
+        const canvas = document.getElementById('canvas-assinatura-aluno');
+        if (!canvas) return;
+        canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
+        alunoDesenhou = false;
+    }
+
+    function alternarModoAssinatura(modo) {
+        modoAssinaturaAluno = modo;
+        const bD = document.getElementById('box-ass-desenho');
+        const bT = document.getElementById('box-ass-texto');
+        const tD = document.getElementById('tab-ass-desenho');
+        const tT = document.getElementById('tab-ass-texto');
+        if (modo === 'desenho') {
+            bD.style.display = 'block'; bT.style.display = 'none';
+            tD.style.background = '#1e293b'; tD.style.color = '#fff';
+            tT.style.background = '#e2e8f0'; tT.style.color = '#334155';
+        } else {
+            bD.style.display = 'none'; bT.style.display = 'block';
+            tT.style.background = '#1e293b'; tT.style.color = '#fff';
+            tD.style.background = '#e2e8f0'; tD.style.color = '#334155';
+            const inp = document.getElementById('input-ass-texto');
+            if (inp && !inp.value) inp.value = document.getElementById('resp_nome')?.value || document.getElementById('nome')?.value || '';
+            atualizarPreviewAssinaturaTexto();
+        }
+    }
+
+    function atualizarPreviewAssinaturaTexto() {
+        const txt = document.getElementById('input-ass-texto')?.value || '';
+        const prev = document.getElementById('preview-ass-cursiva');
+        if (prev) prev.innerText = txt;
+    }
+
+    function obterImagemAssinaturaAluno() {
+        if (modoAssinaturaAluno === 'desenho') {
+            if (!alunoDesenhou) return '';
+            const canvas = document.getElementById('canvas-assinatura-aluno');
+            return canvas ? canvas.toDataURL('image/png') : '';
+        }
+        const txt = (document.getElementById('input-ass-texto')?.value || '').trim();
+        if (txt.length < 3) return '';
+        const c = document.createElement('canvas');
+        c.width = 560; c.height = 140;
+        const ctx = c.getContext('2d');
+        ctx.fillStyle = '#0f172a';
+        ctx.font = 'italic 44px "Brush Script MT", "Segoe Script", Georgia, serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(txt, 280, 72);
+        return c.toDataURL('image/png');
+    }
+
+    async function enviarCodigoContratoOTP() {
+        const email = (document.getElementById('email')?.value || '').trim();
+        const nome = (document.getElementById('resp_nome')?.value || document.getElementById('nome')?.value || '').trim();
+        const btn = document.getElementById('btn-enviar-otp');
+        const st = document.getElementById('status-otp-contrato');
+        if (!email || !email.includes('@')) {
+            Swal.fire({ icon: 'warning', title: 'E-mail obrigatório', text: 'Volte e preencha um e-mail válido para receber o código.' });
+            return;
+        }
+        btn.disabled = true; btn.innerText = '⏳ Enviando...';
+        st.innerText = '';
+        try {
+            const r = await fetch(`${API_BASE}/public/enviar-codigo-contrato`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ escolaId, email, nome })
+            });
+            const d = await r.json();
+            if (r.ok && d.success) {
+                st.style.color = '#15803d';
+                st.innerHTML = '✅ <b>Código enviado!</b> Verifique sua caixa de entrada (ou spam) e digite os 6 dígitos acima.';
+            } else {
+                st.style.color = '#dc2626';
+                st.innerText = '⚠️ ' + (d.error || 'Falha ao enviar código.');
+            }
+        } catch (e) {
+            st.style.color = '#dc2626';
+            st.innerText = '⚠️ Erro de conexão ao enviar código.';
+        } finally {
+            btn.disabled = false; btn.innerText = '🔁 Reenviar Código';
+        }
+    }
+
     async function enviarMatriculaDefinitiva() {
+        const codigoOtp = (document.getElementById('input-otp-contrato')?.value || '').trim();
+        if (codigoOtp.length !== 6) {
+            Swal.fire({ icon: 'warning', title: 'Confirme seu e-mail', text: 'Clique em "Enviar Código de 6 Dígitos" e informe o código recebido no seu e-mail.' });
+            return;
+        }
+        const assinaturaImg = obterImagemAssinaturaAluno();
+        if (!assinaturaImg) {
+            Swal.fire({ icon: 'warning', title: 'Assinatura obrigatória', text: 'Desenhe sua assinatura/rubrica no quadro ou digite seu nome completo antes de enviar.' });
+            return;
+        }
         const btnFixo = document.querySelector('.btn-fixo-leitura');
         btnFixo.innerText = "Enviando ao Sistema... ⏳"; 
         btnFixo.disabled = true;
@@ -567,6 +741,10 @@ if ('serviceWorker' in navigator) {
             autorizoComunicacao: document.getElementById('autorizo_comunicacao')?.checked ? 'Sim' : 'Não',
 
             conteudoHTML: document.getElementById('corpoContratoLeitura').innerHTML
+            codigoOtp: codigoOtp,
+            assinaturaAluno: assinaturaImg,
+            assinaturaAlunoModo: modoAssinaturaAluno,
+            fusoHorario: Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/Sao_Paulo'
         };
 
         try {

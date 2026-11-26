@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Validação Oficial de Contrato</title>
+    <link rel="icon" href="https://cdn-icons-png.flaticon.com/512/3074/3074058.png" type="image/png">
+    <style>
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(145deg, #0f172a 0%, #1e293b 100%);
+            margin: 0; padding: 24px 16px; min-height: 100vh; color: #1e293b;
+            display: flex; align-items: center; justify-content: center; box-sizing: border-box;
+        }
+        .card {
+            background: #ffffff; width: 100%; max-width: 640px; border-radius: 20px;
+            padding: 32px 26px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35); box-sizing: border-box;
+        }
+        .header { text-align: center; margin-bottom: 22px; }
+        .header h1 { margin: 8px 0 6px; font-size: 22px; color: #0f172a; }
+        .header p { margin: 0; font-size: 13.5px; color: #64748b; }
+        .search-row { display: flex; gap: 8px; margin-bottom: 22px; flex-wrap: wrap; }
+        .search-row input {
+            flex: 1; min-width: 210px; padding: 12px 14px; border: 1.5px solid #cbd5e1;
+            border-radius: 10px; font-size: 14px; font-family: monospace; outline: none;
+        }
+        .search-row input:focus { border-color: #2563eb; }
+        .search-row button {
+            padding: 12px 20px; background: #2563eb; color: #fff; border: none;
+            border-radius: 10px; font-weight: 700; font-size: 14px; cursor: pointer;
+        }
+        .search-row button:hover { background: #1d4ed8; }
+        .badge-ok { background: #ecfdf5; border: 2px solid #10b981; color: #065f46; border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 18px; }
+        .badge-hist { background: #eff6ff; border: 2px solid #3b82f6; color: #1e40af; border-radius: 14px; padding: 16px; text-align: center; margin-bottom: 18px; }
+        .badge-err { background: #fef2f2; border: 2px solid #ef4444; color: #991b1b; border-radius: 14px; padding: 18px; text-align: center; }
+        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 14px; }
+        .field { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 11px 13px; }
+        .field span { display: block; font-size: 11px; color: #64748b; text-transform: uppercase; font-weight: 700; margin-bottom: 4px; }
+        .field strong { font-size: 13.5px; color: #0f172a; word-break: break-word; }
+        .hash-box { background: #0f172a; color: #38bdf8; border-radius: 10px; padding: 12px; font-family: monospace; font-size: 11.5px; word-break: break-all; margin-top: 10px; }
+        .lgpd-note { font-size: 11.5px; color: #64748b; text-align: center; margin-top: 16px; line-height: 1.5; }
+        @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } .card { padding: 24px 18px; } }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div class="header">
+            <div style="font-size: 42px;">🛡️</div>
+            <h1>Autenticidade de Contrato Digital</h1>
+            <p>Informe ou leia o QR Code com o ID da Transação para confirmar a integridade do documento.</p>
+        </div>
+
+        <form class="search-row" onsubmit="event.preventDefault(); consultarContrato();">
+            <input type="text" id="input-id-contrato" placeholder="Ex: CONT_0b674f4a-8c69-..." autocomplete="off">
+            <button type="submit">🔍 Validar</button>
+        </form>
+
+        <div id="resultado-validacao"></div>
+
+        <div class="lgpd-note">
+            🔒 Em conformidade com a <b>LGPD (Lei nº 13.709/2018)</b>, dados sensíveis pessoais são exibidos de forma parcialmente mascarada nesta consulta pública.
+        </div>
+    </div>
+
+    <script>
+        function esc(s) {
+            return String(s || '').replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;' }[c]));
+        }
+
+        async function consultarContrato(idParam) {
+            const inp = document.getElementById('input-id-contrato');
+            const id = (idParam !== undefined ? idParam : inp.value).trim();
+            const box = document.getElementById('resultado-validacao');
+            if (!id) {
+                box.innerHTML = `<div class="badge-err"><b>Informe o ID da Transação (CONT_...)</b> para validar.</div>`;
+                return;
+            }
+            inp.value = id;
+            box.innerHTML = `<div style="text-align:center; padding:26px; color:#64748b;">⏳ Consultando registro criptográfico no servidor...</div>`;
+
+            try {
+                const res = await fetch(`/api/public/validar-contrato/${encodeURIComponent(id)}?_t=${Date.now()}`);
+                const d = await res.json();
+
+                if (!res.ok || !d.valid) {
+                    box.innerHTML = `
+                        <div class="badge-err">
+                            <div style="font-size:32px; margin-bottom:6px;">❌</div>
+                            <strong style="font-size:16px;">${d.statusIntegridade === 'ADULTERADO' ? 'ATENÇÃO: INTEGRIDADE COMPROMETIDA' : 'DOCUMENTO NÃO ENCONTRADO'}</strong>
+                            <p style="margin:6px 0 0; font-size:13px;">${esc(d.error || 'O hash criptográfico não corresponde ao registro original.')}</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                const isIntegro = d.statusIntegridade === 'INTEGRO';
+                const selo = isIntegro
+                    ? `<div class="badge-ok">
+                         <div style="font-size:30px; margin-bottom:4px;">✅</div>
+                         <strong style="font-size:16px; display:block;">DOCUMENTO AUTÊNTICO E ÍNTEGRO</strong>
+                         <span style="font-size:12.5px;">Assinatura eletrônica e Hash SHA-256 conferidos com sucesso.</span>
+                       </div>`
+                    : `<div class="badge-hist">
+                         <div style="font-size:30px; margin-bottom:4px;">✅</div>
+                         <strong style="font-size:16px; display:block;">REGISTRO HISTÓRICO CONFIRMADO</strong>
+                         <span style="font-size:12.5px;">Contrato autêntico emitido antes da ativação do selo SHA-256.</span>
+                       </div>`;
+
+                box.innerHTML = `
+                    ${selo}
+                    <div class="grid">
+                        <div class="field"><span>Contratante</span><strong>${esc(d.contratante?.nome)}</strong></div>
+                        <div class="field"><span>CPF (LGPD)</span><strong>${esc(d.contratante?.cpfMascarado)}</strong></div>
+                        <div class="field"><span>Instituição</span><strong>${esc(d.instituicao?.nome)}</strong></div>
+                        <div class="field"><span>CNPJ</span><strong>${esc(d.instituicao?.cnpj)}</strong></div>
+                        <div class="field"><span>Curso / Modalidade</span><strong>${esc(d.curso)} (${esc(d.modalidade)})</strong></div>
+                        <div class="field"><span>Data / Hora (Brasília)</span><strong>${esc(d.dataAssinatura)}</strong></div>
+                        <div class="field"><span>Verificação de Autoria</span><strong>${d.auditoria?.otpVerificado ? '✅ E-mail verificado (OTP)' : 'Aceite digital registrado'}</strong></div>
+                        <div class="field"><span>IP de Origem (Parcial)</span><strong>${esc(d.auditoria?.ipParcial)}</strong></div>
+                    </div>
+                    <div class="field">
+                        <span>ID da Transação</span>
+                        <strong style="font-family:monospace;">${esc(d.idTransacao)}</strong>
+                        ${d.auditoria?.hashSha256 ? `<div class="hash-box">SHA-256: ${esc(d.auditoria.hashSha256)}</div>` : ''}
+                    </div>
+                `;
+            } catch (e) {
+                box.innerHTML = `<div class="badge-err">Erro de comunicação com o servidor de validação. Tente novamente.</div>`;
+            }
+        }
+
+        const idInicial = new URLSearchParams(window.location.search).get('id');
+        if (idInicial) consultarContrato(idInicial);
+    </script>
+</body>
+</html>
