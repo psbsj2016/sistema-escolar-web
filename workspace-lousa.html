@@ -221,81 +221,111 @@
     .shape-option-btn { background: #ffffff; border: 1px solid #e2e8f0; color: #1e293b; padding: 8px 10px; border-radius: 9px; font-size: 12px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 6px; }
     .shape-option-btn:hover { background: #eff6ff; border-color: #93c5fd; }
 
-    /* ===== CAIXA DE TEXTO RICA, EXPANSÍVEL PARA TODOS OS LADOS E EM TEMPO REAL ===== */
+   /* ===== TEXTO DIRETO NA LOUSA (TRANSPARENTE + BARRINHA FLUTUANTE COM TODOS OS RECURSOS) ===== */
     #text-editor-box {
       display: none; position: fixed; z-index: 68;
-      background: rgba(255, 255, 255, 0.99);
-      border: 2px solid #2563eb; border-radius: 14px;
-      padding: 8px 10px 10px 10px;
-      box-shadow: 0 20px 56px rgba(15,23,42,0.24);
-      flex-direction: column; gap: 8px;
-      width: 390px; min-width: 240px; max-width: 94vw;
-      height: 225px; min-height: 155px; max-height: 82vh;
+      background: transparent;
+      border: none;
+      padding: 0;
+      box-shadow: none;
+      flex-direction: column;
+      width: auto; min-width: 110px; max-width: 90vw;
+      height: auto;
+      overflow: visible;
       touch-action: auto;
     }
-    .text-box-drag-header {
-      display: flex; align-items: center; justify-content: space-between;
-      cursor: move; padding: 2px 2px 4px 2px; border-bottom: 1px solid #e2e8f0;
-      font-size: 11px; font-weight: 800; color: #475569;
-    }
-    .fmt-toolbar {
+
+    #text-floating-toolbar {
+      position: absolute;
+      bottom: calc(100% + 10px);
+      left: 0;
       display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
-      background: #f8fafc; padding: 5px; border-radius: 9px; border: 1px solid #e2e8f0;
+      background: rgba(255, 255, 255, 0.98);
+      backdrop-filter: blur(14px);
+      padding: 5px 7px;
+      border-radius: 11px;
+      border: 1px solid #cbd5e1;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, 0.22);
+      width: max-content;
+      max-width: calc(100vw - 20px);
+      z-index: 70;
     }
+    #text-editor-box.toolbar-below #text-floating-toolbar {
+      bottom: auto;
+      top: calc(100% + 10px);
+    }
+
+    .text-drag-grip {
+      cursor: move;
+      color: #64748b;
+      font-size: 13px;
+      font-weight: 900;
+      padding: 0 5px;
+      height: 26px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 6px;
+      touch-action: none;
+    }
+    .text-drag-grip:hover { background: #f1f5f9; color: #0f172a; }
+
     .fmt-btn {
       background: #ffffff; border: 1px solid #e2e8f0; color: #334155;
-      width: 28px; height: 28px; border-radius: 7px; font-size: 12.5px; cursor: pointer;
+      width: 26px; height: 26px; border-radius: 7px; font-size: 12px; cursor: pointer;
       display: inline-flex; align-items: center; justify-content: center; transition: 0.12s;
     }
     .fmt-btn:hover { background: #eff6ff; border-color: #93c5fd; }
     .fmt-btn.active { background: var(--slate-900); color: #ffffff; border-color: var(--slate-900); }
+    .fmt-btn.confirm-btn { background: #2563eb; border-color: #2563eb; color: #ffffff; width: auto; padding: 0 9px; font-weight: 800; }
+    .fmt-btn.confirm-btn:hover { background: #1d4ed8; }
+    .fmt-btn.cancel-btn { background: #fff1f2; border-color: #fecdd3; color: #e11d48; font-weight: 800; }
+    .fmt-btn.cancel-btn:hover { background: #ffe4e6; }
+
     .fmt-color-wrap {
       display: inline-flex; align-items: center; gap: 3px;
-      padding: 2px 5px; border-radius: 7px; background: #ffffff; border: 1px solid #e2e8f0;
+      padding: 2px 5px; border-radius: 7px; background: #f8fafc; border: 1px solid #e2e8f0;
     }
     .fmt-color-dot {
-      width: 16px; height: 16px; border-radius: 50%; cursor: pointer;
+      width: 15px; height: 15px; border-radius: 50%; cursor: pointer;
       border: 1.5px solid #ffffff; box-shadow: 0 0 0 1px #cbd5e1;
       transition: transform 0.12s;
     }
     .fmt-color-dot:hover { transform: scale(1.18); }
     #text-color-input {
-      width: 22px; height: 22px; border: none; padding: 0; background: transparent; cursor: pointer;
+      width: 20px; height: 20px; border: none; padding: 0; background: transparent; cursor: pointer;
     }
     #text-font-select {
-      flex: 1; min-width: 115px; height: 28px; padding: 0 6px;
-      border-radius: 7px; border: 1px solid #e2e8f0; font-size: 11.5px; font-weight: 600;
+      width: 112px; height: 26px; padding: 0 5px;
+      border-radius: 7px; border: 1px solid #e2e8f0; font-size: 11px; font-weight: 600;
       color: #334155; outline: none; background: #fff; cursor: pointer;
     }
 
-    /* Área contenteditable: permite selecionar palavras e ver cor/negrito/fonte em tempo real! */
+    /* Área de digitação 100% transparente diretamente sobre a lousa */
     #text-editor-input {
-      flex: 1; min-height: 60px; width: 100%; overflow-y: auto;
-      border: 1.5px dashed #93c5fd; border-radius: 10px; padding: 8px 10px;
-      font-family: 'Segoe UI', sans-serif; font-size: 20px; line-height: 1.3;
-      color: #0f172a; background: #ffffff; outline: none;
+      min-width: 80px; min-height: 1.3em; width: 100%;
+      border: 1.5px dashed rgba(37, 99, 235, 0.5);
+      border-radius: 6px;
+      padding: 2px 6px;
+      font-family: 'Segoe UI', sans-serif; font-size: 22px; line-height: 1.3;
+      color: #0f172a; background: transparent; outline: none;
       white-space: pre-wrap; word-wrap: break-word; overflow-wrap: break-word;
       user-select: text !important; -webkit-user-select: text !important;
       touch-action: auto !important; cursor: text;
     }
     #text-editor-input:empty::before {
       content: attr(data-placeholder);
-      color: #94a3b8; font-weight: 500; font-style: normal; pointer-events: none;
+      color: rgba(100, 116, 139, 0.65); font-weight: 500; font-style: normal; pointer-events: none;
     }
 
-    /* 8 Alças invisíveis nas bordas e cantos para expandir a caixa para QUALQUER lado! */
-    .txt-resize-handle { position: absolute; z-index: 5; touch-action: none; }
-    .txt-resize-handle.n  { top: -5px; left: 10px; right: 10px; height: 10px; cursor: ns-resize; }
-    .txt-resize-handle.s  { bottom: -5px; left: 10px; right: 10px; height: 10px; cursor: ns-resize; }
-    .txt-resize-handle.e  { right: -5px; top: 10px; bottom: 10px; width: 10px; cursor: ew-resize; }
-    .txt-resize-handle.w  { left: -5px; top: 10px; bottom: 10px; width: 10px; cursor: ew-resize; }
-    .txt-resize-handle.nw { top: -6px; left: -6px; width: 14px; height: 14px; cursor: nwse-resize; }
-    .txt-resize-handle.ne { top: -6px; right: -6px; width: 14px; height: 14px; cursor: nesw-resize; }
-    .txt-resize-handle.sw { bottom: -6px; left: -6px; width: 14px; height: 14px; cursor: nesw-resize; }
-    .txt-resize-handle.se {
-      bottom: -5px; right: -5px; width: 16px; height: 16px; cursor: nwse-resize;
-      background: #2563eb; border-radius: 4px 0 10px 0;
-      display: flex; align-items: center; justify-content: center; color: #fff; font-size: 9px; font-weight: 900;
+    /* Alça discreta na borda direita para moldar a largura da quebra de linha quando quiser */
+    .txt-resize-handle.e {
+      position: absolute; top: 0; bottom: 0; right: -7px; width: 12px;
+      cursor: ew-resize; z-index: 6; touch-action: none;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .txt-resize-handle.e::after {
+      content: ''; width: 4px; height: 20px; border-radius: 99px;
+      background: rgba(37, 99, 235, 0.55);
     }
 
     .studio-modal { display: none; position: fixed; inset: 0; background: rgba(2, 6, 23, 0.64); backdrop-filter: blur(12px); z-index: 75; align-items: center; justify-content: center; padding: 16px; }
@@ -484,30 +514,16 @@
       </div>
     </div>
 
-    <!-- CAIXA DE TEXTO RICA (EXPANSÍVEL PELOS 8 LADOS + COR INTERNA + TEMPO REAL) -->
+    <!-- EDITOR DE TEXTO DIRETO NA LOUSA (SEM CAIXA BRANCA + BARRINHA FLUTUANTE) -->
     <div id="text-editor-box">
-      <div class="txt-resize-handle n"  data-resize-dir="n"></div>
-      <div class="txt-resize-handle s"  data-resize-dir="s"></div>
-      <div class="txt-resize-handle e"  data-resize-dir="e"></div>
-      <div class="txt-resize-handle w"  data-resize-dir="w"></div>
-      <div class="txt-resize-handle nw" data-resize-dir="nw"></div>
-      <div class="txt-resize-handle ne" data-resize-dir="ne"></div>
-      <div class="txt-resize-handle sw" data-resize-dir="sw"></div>
-      <div class="txt-resize-handle se" data-resize-dir="se">⤡</div>
+      <div id="text-floating-toolbar">
+        <span class="text-drag-grip" id="text-box-drag-header" title="Arrastar posição do texto">⠿</span>
+        <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito"><b>B</b></button>
+        <button type="button" class="fmt-btn" id="fmt-italic" title="Itálico"><i>I</i></button>
+        <button type="button" class="fmt-btn" id="fmt-underline" title="Sublinhar"><u>U</u></button>
+        <button type="button" class="fmt-btn" id="fmt-strike" title="Riscar"><s>S</s></button>
 
-      <div class="text-box-drag-header" id="text-box-drag-header">
-        <span>⠿ Caixa de Texto (Arraste bordas para moldar)</span>
-        <span style="font-size:10px; color:#2563eb;">Tempo real</span>
-      </div>
-
-      <div class="fmt-toolbar">
-        <button type="button" class="fmt-btn" id="fmt-bold" title="Negrito (na seleção ou ao digitar)"><b>B</b></button>
-        <button type="button" class="fmt-btn" id="fmt-italic" title="Itálico (na seleção ou ao digitar)"><i>I</i></button>
-        <button type="button" class="fmt-btn" id="fmt-underline" title="Sublinhar (na seleção ou ao digitar)"><u>U</u></button>
-        <button type="button" class="fmt-btn" id="fmt-strike" title="Riscar (na seleção ou ao digitar)"><s>S</s></button>
-
-        <!-- 🎨 Cor dentro da caixa de texto (cores rápidas + seletor livre) -->
-        <div class="fmt-color-wrap" title="Cor do texto (muda a seleção ou o que você digitar)">
+        <div class="fmt-color-wrap" title="Cor do texto">
           <span class="fmt-color-dot" data-text-color="#0f172a" style="background:#0f172a;"></span>
           <span class="fmt-color-dot" data-text-color="#2563eb" style="background:#2563eb;"></span>
           <span class="fmt-color-dot" data-text-color="#dc2626" style="background:#dc2626;"></span>
@@ -528,17 +544,13 @@
           <option value="'Palatino Linotype', 'Book Antiqua', serif">Palatino</option>
           <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
         </select>
+
+        <button type="button" class="fmt-btn confirm-btn" id="btn-text-confirm" title="Fixar na lousa (Ctrl+Enter)">✔</button>
+        <button type="button" class="fmt-btn cancel-btn" id="btn-text-cancel" title="Cancelar (Esc)">✕</button>
       </div>
 
-      <div id="text-editor-input" contenteditable="true" spellcheck="true" data-placeholder="Digite aqui... Selecione palavras para formatar ou mude a cor antes de escrever."></div>
-
-      <div style="display:flex; justify-content:space-between; align-items:center; gap:6px; flex-shrink:0;">
-        <span style="font-size:10.5px; color:#64748b;">💡 Duplo clique no quadro p/ reeditar</span>
-        <div style="display:flex; gap:6px;">
-          <button type="button" id="btn-text-cancel" style="background:#f1f5f9; border:none; color:#475569; padding:6px 11px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
-          <button type="button" id="btn-text-confirm" style="background:#2563eb; border:none; color:#ffffff; padding:6px 13px; border-radius:7px; font-size:12px; font-weight:700; cursor:pointer;">✔ Salvar no Quadro</button>
-        </div>
-      </div>
+      <div id="text-editor-input" contenteditable="true" spellcheck="true" data-placeholder="Digite aqui..."></div>
+      <div class="txt-resize-handle e" data-resize-dir="e" title="Arraste para ajustar a largura da linha"></div>
     </div>
 
     <div id="infographic-modal" class="studio-modal">
@@ -606,6 +618,18 @@
       let activeScreenIndex = 0;
       let shapes = [];
       let redoStack = [];
+      let undoStack = [];
+      let textBoxWidthManual = false;
+
+      function clonarShapes(lista) {
+        return JSON.parse(JSON.stringify(lista || []));
+      }
+
+      function registrarHistoricoUndo(snapshotOpcional = null) {
+        undoStack.push(snapshotOpcional ? snapshotOpcional : clonarShapes(shapes));
+        if (undoStack.length > 40) undoStack.shift();
+        redoStack = [];
+      }
       let currentBg = 'bg-grade';
       let currentTool = 'pen';
       let currentColor = '#0f172a';
@@ -794,6 +818,7 @@
         currentBg = sc.bgType || 'bg-grade';
         if (selectFundo) selectFundo.value = currentBg;
         redoStack = [];
+        undoStack = [ ];
         hoveredShape = null;
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
@@ -931,6 +956,17 @@
         return {
           x: (canvasX - camera.x) / camera.zoom,
           y: (canvasY - camera.y) / camera.zoom
+        };
+      }
+
+      function quadroParaTela(worldX, worldY) {
+        validarCameraSegura();
+        const rect = canvas.getBoundingClientRect();
+        const canvasX = worldX * camera.zoom + camera.x;
+        const canvasY = worldY * camera.zoom + camera.y;
+        return {
+          x: rect.left + canvasX * (rect.width / 1280),
+          y: rect.top + canvasY * (rect.height / 720)
         };
       }
 
@@ -1991,6 +2027,7 @@
         inkCtx.scale(camera.zoom, camera.zoom);
 
         for (let i = 0; i < shapes.length; i++) {
+          if (editingShapeId && shapes[i] && shapes[i].id === editingShapeId) continue;
           desenharForma(inkCtx, shapes[i]);
         }
         if (activeShape) {
@@ -2131,14 +2168,180 @@
       // ====== FIM DA ETAPA 2 — COLE A ETAPA 3 LOGO ABAIXO DESTA LINHA ======
 
 // =========================================================================
+      // 🧽 MOTOR DE BORRACHA VETORIAL REAL (APAGA DE VERDADE, SEM PINTAR NEM DEIXAR FANTASMAS)
+      // =========================================================================
+      function distPontoSegmento(px, py, x1, y1, x2, y2) {
+        const dx = x2 - x1;
+        const dy = y2 - y1;
+        const lenSq = dx * dx + dy * dy;
+        if (lenSq === 0) return Math.hypot(px - x1, py - y1);
+        const t = Math.max(0, Math.min(1, ((px - x1) * dx + (py - y1) * dy) / lenSq));
+        return Math.hypot(px - (x1 + t * dx), py - (y1 + t * dy));
+      }
+
+      function densificarPontosParaCorte(pts, maxPasso = 6) {
+        if (!Array.isArray(pts) || pts.length < 2) return pts || [];
+        const out = [pts[0]];
+        for (let i = 1; i < pts.length; i++) {
+          const a = pts[i - 1];
+          const b = pts[i];
+          const d = Math.hypot(b.x - a.x, b.y - a.y);
+          if (d > maxPasso) {
+            const steps = Math.ceil(d / maxPasso);
+            for (let k = 1; k < steps; k++) {
+              const f = k / steps;
+              out.push({ x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f });
+            }
+          }
+          out.push(b);
+        }
+        return out;
+      }
+
+      function apagarComBorrachaNoSegmento(ptA, ptB, raio) {
+        let modificou = false;
+        const novasFormas = [];
+
+        // Amostra pontos ao longo do arraste da borracha para nunca pular objetos em movimentos rápidos
+        const distArraste = Math.hypot(ptB.x - ptA.x, ptB.y - ptA.y);
+        const passos = Math.max(1, Math.ceil(distArraste / Math.max(4, raio * 0.45)));
+        const amostras = [];
+        for (let k = 0; k <= passos; k++) {
+          const f = k / passos;
+          amostras.push({ x: ptA.x + (ptB.x - ptA.x) * f, y: ptA.y + (ptB.y - ptA.y) * f });
+        }
+
+        const segMinX = Math.min(ptA.x, ptB.x) - raio;
+        const segMaxX = Math.max(ptA.x, ptB.x) + raio;
+        const segMinY = Math.min(ptA.y, ptB.y) - raio;
+        const segMaxY = Math.max(ptA.y, ptB.y) + raio;
+
+        for (let i = 0; i < shapes.length; i++) {
+          const s = shapes[i];
+          if (!s || s.tool === 'meta_bg') continue;
+
+          // Remove eventuais máscaras antigas de borracha legadas se a borracha passar por elas
+          if (s.tool === 'eraser') {
+            modificou = true;
+            continue;
+          }
+
+          // 1. Traços livres (Lápis e Marca-Texto em área livre) -> recorta apenas os trechos tocados!
+          if ((s.tool === 'pen' || (s.tool === 'highlighter' && !s.rectMode)) && Array.isArray(s.points) && s.points.length > 0) {
+            const pad = raio + ((s.tool === 'highlighter' ? (s.rectH || HIGHLIGHTER_DEFAULT_H) : (s.size || 6)) / 2);
+            let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+            for (const p of s.points) {
+              if (p.x < minX) minX = p.x;
+              if (p.x > maxX) maxX = p.x;
+              if (p.y < minY) minY = p.y;
+              if (p.y > maxY) maxY = p.y;
+            }
+            if (maxX + pad < segMinX || minX - pad > segMaxX || maxY + pad < segMinY || minY - pad > segMaxY) {
+              novasFormas.push(s);
+              continue;
+            }
+
+            const densos = densificarPontosParaCorte(s.points, 6);
+            const pedacos = [];
+            let atual = [];
+            let tocouNesteTraco = false;
+
+            for (let j = 0; j < densos.length; j++) {
+              const p = densos[j];
+              const atingido = distPontoSegmento(p.x, p.y, ptA.x, ptA.y, ptB.x, ptB.y) <= pad;
+              if (atingido) {
+                tocouNesteTraco = true;
+                if (atual.length >= 2) pedacos.push(atual);
+                atual = [];
+              } else {
+                atual.push(p);
+              }
+            }
+            if (atual.length >= 2 || (densos.length === 1 && atual.length === 1 && !tocouNesteTraco)) {
+              pedacos.push(atual);
+            }
+
+            if (!tocouNesteTraco) {
+              novasFormas.push(s);
+            } else {
+              modificou = true;
+              pedacos.forEach((ptsChunk, idx) => {
+                novasFormas.push({
+                  ...s,
+                  id: `${s.id || 'sh'}_cut_${Date.now()}_${idx}`,
+                  points: ptsChunk
+                });
+              });
+            }
+            continue;
+          }
+
+          // 2. Marca-Texto retangular encaixado em texto
+          if (s.tool === 'highlighter' && s.rectMode) {
+            const rx = Math.min(s.x1, s.x2);
+            const rw = Math.max(12, Math.abs(s.x2 - s.x1));
+            const ry = s.rectY;
+            const rh = s.rectH;
+            const tocou = amostras.some(a =>
+              a.x >= rx - raio && a.x <= rx + rw + raio && a.y >= ry - raio && a.y <= ry + rh + raio
+            );
+            if (tocou) { modificou = true; continue; }
+            novasFormas.push(s);
+            continue;
+          }
+
+          // 3. Linha e Seta
+          if (s.tool === 'line' || s.tool === 'arrow') {
+            const tol = raio + (s.size || 6) / 2;
+            const tocou = amostras.some(a => distPontoSegmento(a.x, a.y, s.x1, s.y1, s.x2, s.y2) <= tol);
+            if (tocou) { modificou = true; continue; }
+            novasFormas.push(s);
+            continue;
+          }
+
+          // 4. Textos, Formas Geométricas, Infográficos e Imagens
+          const box = obterCaixaElemento(s);
+          if (box) {
+            const tol = raio * 0.45;
+            const tocou = amostras.some(a =>
+              a.x >= box.x - tol && a.x <= box.x + box.w + tol &&
+              a.y >= box.y - tol && a.y <= box.y + box.h + tol
+            );
+            if (tocou) {
+              modificou = true;
+              if (hoveredShape === s) hoveredShape = null;
+              continue;
+            }
+          }
+
+          novasFormas.push(s);
+        }
+
+        if (modificou) {
+          shapes = novasFormas;
+          guardarEstadoNaTelaAtual();
+          atualizarBarraNumeracaoTelas();
+        }
+        return modificou;
+      }
+
+      // =========================================================================
       // 🖱️ EVENTOS DE PONTEIRO (LASER SEM CLIQUE + BORRACHA REAL + MARCADOR INTELIGENTE)
       // =========================================================================
-      let eraserDownPt = null;
-      let eraserMoved = false;
+      let eraserLastPt = null;
+      let eraserBeforeSnapshot = null;
+      let eraserChangedAnything = false;
+      let transformBeforeSnapshot = null;
 
       canvas.addEventListener('pointerdown', (e) => {
         if ((role === 'aluno' && isReadonly) || !isAllowed) return;
         fecharPopoversFlutuantes();
+
+        // Se estiver digitando direto na lousa e clicar fora no quadro, fixa o texto automaticamente!
+        if (textEditorBox && textEditorBox.style.display === 'flex') {
+          confirmarEditorTexto();
+          return;
+        }
 
         const pt = telaParaQuadro(e.clientX, e.clientY);
         lastFocusPoint = pt;
@@ -2165,6 +2368,7 @@
               return;
             }
             if (hit.action === 'resize') {
+              transformBeforeSnapshot = clonarShapes(shapes);
               resizingShape = hit.shape;
               resizeCenterPt = { x: hit.box.x, y: hit.box.y };
               resizeStartDist = Math.max(20, Math.hypot(pt.x - resizeCenterPt.x, pt.y - resizeCenterPt.y));
@@ -2174,6 +2378,7 @@
               return;
             }
             if (hit.action === 'move') {
+              transformBeforeSnapshot = clonarShapes(shapes);
               movingShape = hit.shape;
               moveLastPt = pt;
               isPointerDown = true;
@@ -2184,13 +2389,13 @@
           }
         }
 
-        // 3. Ferramenta Texto: abre a caixa rica expansível no local clicado
+        // 3. Ferramenta Texto: digita diretamente no ponto clicado da lousa
         if (currentTool === 'text') {
           abrirEditorTextoNoPonto(pt, e.clientX, e.clientY, null);
           return;
         }
 
-        // 4. Ferramenta Laser (funciona também em toque no celular/tablet)
+        // 4. Ferramenta Laser
         if (currentTool === 'laser') {
           isPointerDown = true;
           atualizarLaserNoPonto(pt);
@@ -2198,27 +2403,22 @@
           return;
         }
 
-        // 5. Ferramenta Borracha Real
+        // 5. Ferramenta Borracha Vetorial Real (remove de verdade já no toque!)
         if (currentTool === 'eraser') {
           isPointerDown = true;
-          redoStack = [];
-          eraserDownPt = pt;
-          eraserMoved = false;
+          eraserBeforeSnapshot = clonarShapes(shapes);
+          eraserLastPt = pt;
           eraserHoverPt = pt;
-          activeShape = {
-            id: 'er_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
-            tool: 'eraser',
-            size: currentSize,
-            points: [pt]
-          };
+          const raio = ((currentSize || 6) * ERASER_SIZE_MULTIPLIER) / 2;
+          eraserChangedAnything = apagarComBorrachaNoSegmento(pt, pt, raio);
           desenharQuadro();
+          if (eraserChangedAnything) transmitirQuadroAoVivo();
           return;
         }
 
         // 6. Ferramenta Marca-Texto Retangular Inteligente
         if (currentTool === 'highlighter') {
           isPointerDown = true;
-          redoStack = [];
           const snapTexto = encontrarLinhaTextoNoPonto(pt);
           if (snapTexto) {
             activeShape = {
@@ -2249,7 +2449,6 @@
 
         // 7. Lápis e Figuras Geométricas
         isPointerDown = true;
-        redoStack = [];
         if (currentTool === 'pen') {
           activeShape = {
             id: 'sh_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
@@ -2320,7 +2519,7 @@
           return;
         }
 
-        // 4. 🔴 LASER AUTOMÁTICO: Aparece a bolinha vermelha e cria o rastro SEM precisar segurar o clique!
+        // 4. 🔴 LASER AUTOMÁTICO
         if (currentTool === 'laser' && !editorOuModalAberto() && (e.target === canvas || isPointerDown)) {
           lastFocusPoint = pt;
           atualizarLaserNoPonto(pt);
@@ -2328,16 +2527,25 @@
           return;
         }
 
-        // 5. Desenho ativo (Lápis, Borracha, Marca-Texto, Formas)
+        // 5. 🧽 BORRACHA VETORIAL EM MOVIMENTO
+        if (isPointerDown && currentTool === 'eraser') {
+          lastFocusPoint = pt;
+          eraserHoverPt = pt;
+          const raio = ((currentSize || 6) * ERASER_SIZE_MULTIPLIER) / 2;
+          const apagou = apagarComBorrachaNoSegmento(eraserLastPt || pt, pt, raio);
+          eraserLastPt = pt;
+          if (apagou) {
+            eraserChangedAnything = true;
+            transmitirQuadroAoVivo();
+          }
+          desenharQuadro();
+          return;
+        }
+
+        // 6. Desenho ativo (Lápis, Marca-Texto, Formas)
         if (isPointerDown && activeShape) {
           lastFocusPoint = pt;
-          if (activeShape.tool === 'eraser') {
-            eraserHoverPt = pt;
-            if (eraserDownPt && Math.hypot(pt.x - eraserDownPt.x, pt.y - eraserDownPt.y) > 4) {
-              eraserMoved = true;
-            }
-            activeShape.points.push(pt);
-          } else if (activeShape.tool === 'highlighter' && activeShape.rectMode) {
+          if (activeShape.tool === 'highlighter' && activeShape.rectMode) {
             activeShape.x2 = pt.x;
           } else if (activeShape.points) {
             activeShape.points.push(pt);
@@ -2350,7 +2558,7 @@
           return;
         }
 
-        // 6. Prévia visual da Borracha e guia inteligente do Marca-Texto ao mover sem clicar
+        // 7. Prévia visual da Borracha e guia inteligente do Marca-Texto ao mover sem clicar
         if (!isPointerDown && !editorOuModalAberto() && e.target === canvas) {
           if (currentTool === 'eraser') {
             eraserHoverPt = pt;
@@ -2366,7 +2574,6 @@
             return;
           }
 
-          // Hover para arraste de objetos
           const hit = encontrarElementoNoPonto(pt);
           const novoHover = hit ? hit.shape : null;
           const novoHandle = hit ? hit.action : null;
@@ -2401,6 +2608,10 @@
           return;
         }
         if (movingShape || resizingShape) {
+          if (transformBeforeSnapshot) {
+            registrarHistoricoUndo(transformBeforeSnapshot);
+            transformBeforeSnapshot = null;
+          }
           movingShape = null;
           resizingShape = null;
           moveLastPt = null;
@@ -2416,23 +2627,22 @@
           agendarSalvamentoNuvem(80);
           return;
         }
-        if (isPointerDown && activeShape) {
-          // 🧽 Se deu um clique curto com a borracha diretamente sobre um objeto, apaga o objeto inteiro
-          if (activeShape.tool === 'eraser' && !eraserMoved && eraserDownPt) {
-            const hitApagar = encontrarElementoNoPonto(eraserDownPt);
-            if (hitApagar && hitApagar.shape) {
-              shapes = shapes.filter(item => item !== hitApagar.shape);
-              hoveredShape = null;
-              activeShape = null;
-              isPointerDown = false;
-              guardarEstadoNaTelaAtual();
-              atualizarBarraNumeracaoTelas();
-              desenharQuadro();
-              agendarSalvamentoNuvem(30);
-              return;
-            }
+        if (currentTool === 'eraser' && isPointerDown) {
+          isPointerDown = false;
+          eraserLastPt = null;
+          if (eraserChangedAnything && eraserBeforeSnapshot) {
+            registrarHistoricoUndo(eraserBeforeSnapshot);
+            guardarEstadoNaTelaAtual();
+            atualizarBarraNumeracaoTelas();
+            desenharQuadro();
+            agendarSalvamentoNuvem(30);
           }
-
+          eraserBeforeSnapshot = null;
+          eraserChangedAnything = false;
+          return;
+        }
+        if (isPointerDown && activeShape) {
+          registrarHistoricoUndo();
           shapes.push(activeShape);
           activeShape = null;
           isPointerDown = false;
@@ -2623,10 +2833,11 @@
         };
       });
 
-      // =========================================================================
-      // 🔤 CAIXA DE TEXTO RICA, EXPANSÍVEL PELOS 8 LADOS E FORMATAÇÃO EM TEMPO REAL
+     // =========================================================================
+      // 🔤 DIGITAÇÃO DIRETA NA LOUSA (SEM CAIXA OPACA + BARRINHA FLUTUANTE COMPLETA)
       // =========================================================================
       const textEditorBox = document.getElementById('text-editor-box');
+      const textFloatingToolbar = document.getElementById('text-floating-toolbar');
       const textEditorInput = document.getElementById('text-editor-input');
       const textColorInput = document.getElementById('text-color-input');
       const textFontSelect = document.getElementById('text-font-select');
@@ -2688,7 +2899,6 @@
         document.getElementById('fmt-strike')?.classList.toggle('active', !!textStyle.strike);
       }
 
-      // Converte runs salvos em HTML fiel para reedição (duplo clique)
       function montarHtmlDeRuns(runs) {
         return (runs || []).map(r => {
           const deco = [r.underline ? 'underline' : '', r.strike ? 'line-through' : ''].filter(Boolean).join(' ') || 'none';
@@ -2704,7 +2914,6 @@
         }).join('');
       }
 
-      // Extrai o conteúdo formatado do editor em trechos estilizados (runs) para desenhar no canvas
       function extrairRunsDoEditor(rootEl) {
         const runsBrutos = [];
         const estiloBase = {
@@ -2719,9 +2928,7 @@
         const caminhar = (node, herdado) => {
           if (node.nodeType === Node.TEXT_NODE) {
             const val = node.nodeValue || '';
-            if (val.length > 0) {
-              runsBrutos.push({ text: val, ...herdado });
-            }
+            if (val.length > 0) runsBrutos.push({ text: val, ...herdado });
             return;
           }
           if (node.nodeType !== Node.ELEMENT_NODE) return;
@@ -2769,7 +2976,6 @@
 
           const filhos = Array.from(node.childNodes);
           filhos.forEach((filho, idx) => {
-            // Ignora <br> fantasma no final de uma div vazia que já adicionou quebra de linha
             if (ehBloco && filho.nodeName === 'BR' && idx === filhos.length - 1 && filhos.length > 1) return;
             caminhar(filho, prox);
           });
@@ -2777,7 +2983,6 @@
 
         caminhar(rootEl, estiloBase);
 
-        // Agrupa trechos vizinhos com o mesmo estilo para deixar o salvamento leve
         const compactados = [];
         runsBrutos.forEach(r => {
           const prev = compactados[compactados.length - 1];
@@ -2796,7 +3001,6 @@
           }
         });
 
-        // Remove quebras de linha vazias sobrando no fim
         while (compactados.length > 0 && compactados[compactados.length - 1].text === '\n') {
           compactados.pop();
         }
@@ -2808,14 +3012,36 @@
         return (Math.max(1, rect.width) / 1280) * (camera.zoom || 1);
       }
 
+      function alinharToolbarFlutuanteTexto() {
+        if (!textFloatingToolbar || textEditorBox.style.display !== 'flex') return;
+        const boxRect = textEditorBox.getBoundingClientRect();
+        const tbRect = textFloatingToolbar.getBoundingClientRect();
+
+        // Se estiver muito perto do topo da tela, mostra a barrinha logo abaixo do texto
+        textEditorBox.classList.toggle('toolbar-below', boxRect.top < 110);
+
+        // Mantém a barrinha sempre dentro da largura visível da tela
+        let offsetLeft = 0;
+        if (boxRect.left + tbRect.width > window.innerWidth - 10) {
+          offsetLeft = (window.innerWidth - 10) - (boxRect.left + tbRect.width);
+        }
+        if (boxRect.left + offsetLeft < 10) {
+          offsetLeft = 10 - boxRect.left;
+        }
+        textFloatingToolbar.style.left = Math.round(offsetLeft) + 'px';
+      }
+
       function abrirEditorTextoNoPonto(worldPt, clientX, clientY, shapeExistente = null) {
         pendingTextWorldPt = worldPt;
         editingShapeId = shapeExistente ? shapeExistente.id : null;
         savedTextRange = null;
+        textBoxWidthManual = false;
 
         const escalaTela = obterFatorTelaPorMundo();
         activeTextBaseFontSize = shapeExistente?.fontSize || Math.max(20, (shapeExistente?.size || currentSize || 6) * 3.8);
-        const fontPxVisual = Math.max(14, Math.min(48, Math.round(activeTextBaseFontSize * (shapeExistente?.scale || 1) * escalaTela)));
+        const fontPxVisual = Math.max(14, Math.min(54, Math.round(activeTextBaseFontSize * (shapeExistente?.scale || 1) * escalaTela)));
+
+        const screenPos = quadroParaTela(worldPt.x, worldPt.y);
 
         if (shapeExistente) {
           const runsAntigos = obterRunsDoTexto(shapeExistente);
@@ -2829,11 +3055,13 @@
             fontFamily: primeiro.fontFamily || shapeExistente.fontFamily || "'Segoe UI', sans-serif"
           };
           textEditorInput.innerHTML = montarHtmlDeRuns(runsAntigos);
-          const largSalvaTela = Number.isFinite(shapeExistente.boxWidth)
-            ? Math.round(shapeExistente.boxWidth * (shapeExistente.scale || 1) * escalaTela + 44)
-            : 390;
-          textEditorBox.style.width = Math.max(250, Math.min(window.innerWidth - 24, largSalvaTela)) + 'px';
-          textEditorBox.style.height = '230px';
+          if (Number.isFinite(shapeExistente.boxWidth) && shapeExistente.boxWidth > 40) {
+            const largTela = Math.round(shapeExistente.boxWidth * (shapeExistente.scale || 1) * escalaTela + 14);
+            textEditorBox.style.width = Math.max(120, Math.min(window.innerWidth - 24, largTela)) + 'px';
+            textBoxWidthManual = true;
+          } else {
+            textEditorBox.style.width = 'auto';
+          }
         } else {
           textStyle = {
             bold: false,
@@ -2844,8 +3072,7 @@
             fontFamily: textFontSelect?.value || "'Segoe UI', sans-serif"
           };
           textEditorInput.innerHTML = '';
-          textEditorBox.style.width = '390px';
-          textEditorBox.style.height = '225px';
+          textEditorBox.style.width = 'auto';
         }
 
         textEditorInput.style.fontSize = fontPxVisual + 'px';
@@ -2854,17 +3081,22 @@
         if (textColorInput) textColorInput.value = rgbParaHex(textStyle.color);
         if (textFontSelect) textFontSelect.value = textStyle.fontFamily;
 
-        textEditorBox.style.display = 'flex';
-        const boxW = parseFloat(textEditorBox.style.width) || 390;
-        const boxH = parseFloat(textEditorBox.style.height) || 225;
-        textEditorBox.style.left = Math.max(10, Math.min(window.innerWidth - boxW - 10, clientX - 30)) + 'px';
-        textEditorBox.style.top = Math.max(10, Math.min(window.innerHeight - boxH - 10, clientY - 70)) + 'px';
+        const rectCanvas = canvas.getBoundingClientRect();
+        const posX = Math.max(rectCanvas.left + 6, Math.min(window.innerWidth - 130, screenPos.x - 6));
+        const posY = Math.max(rectCanvas.top + 6, Math.min(window.innerHeight - 50, screenPos.y - (shapeExistente ? 2 : fontPxVisual * 0.5)));
 
+        textEditorBox.style.left = Math.round(posX) + 'px';
+        textEditorBox.style.top = Math.round(posY) + 'px';
+        textEditorBox.style.maxWidth = Math.max(180, Math.round(rectCanvas.right - posX - 10)) + 'px';
+        textEditorBox.style.display = 'flex';
+
+        desenharQuadro();
         sincronizarBotoesBarraTexto();
+        requestAnimationFrame(alinharToolbarFlutuanteTexto);
+
         setTimeout(() => {
           textEditorInput.focus();
           try { document.execCommand('styleWithCSS', false, true); } catch (e) {}
-          // Coloca o cursor no final ao reeditar
           if (shapeExistente) {
             const range = document.createRange();
             range.selectNodeContents(textEditorInput);
@@ -2874,10 +3106,9 @@
             sel.addRange(range);
           }
           salvarSelecaoEditorTexto();
-        }, 30);
+        }, 20);
       }
 
-      // ⚡ Comandos de formatação parcial em tempo real (B, I, U, S, Cor e Fonte)
       function executarComandoTexto(comando, valor = null) {
         restaurarSelecaoEditorTexto();
         try {
@@ -2892,8 +3123,6 @@
         textStyle.color = novaCor;
         if (textColorInput) textColorInput.value = rgbParaHex(novaCor);
         restaurarSelecaoEditorTexto();
-
-        // Se ainda não digitou nada, muda a cor base da caixa; se já tem texto, aplica na seleção ou a partir do cursor!
         if (textEditorInput.innerText.replace(/\u200B/g, '').trim() === '') {
           textEditorInput.style.color = novaCor;
         }
@@ -2908,28 +3137,17 @@
       function aplicarFonteNoEditorTexto(novaFonte) {
         textStyle.fontFamily = novaFonte;
         restaurarSelecaoEditorTexto();
-
         if (textEditorInput.innerText.replace(/\u200B/g, '').trim() === '') {
           textEditorInput.style.fontFamily = novaFonte;
         }
-        const sel = window.getSelection();
-        if (sel && sel.rangeCount > 0 && !sel.isCollapsed && textEditorInput.contains(sel.anchorNode)) {
-          try {
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('fontName', false, novaFonte);
-          } catch (e) {}
-        } else {
-          // Aplica para o texto que será digitado a partir do cursor
-          try {
-            document.execCommand('styleWithCSS', false, true);
-            document.execCommand('fontName', false, novaFonte);
-          } catch (e) {}
-        }
+        try {
+          document.execCommand('styleWithCSS', false, true);
+          document.execCommand('fontName', false, novaFonte);
+        } catch (e) {}
         salvarSelecaoEditorTexto();
         sincronizarBotoesBarraTexto();
       }
 
-      // Evita perder a seleção ao clicar nos botões B, I, U, S e nas bolinhas de cor
       ['fmt-bold', 'fmt-italic', 'fmt-underline', 'fmt-strike'].forEach(id => {
         const el = document.getElementById(id);
         if (el) el.addEventListener('mousedown', (e) => e.preventDefault());
@@ -2953,22 +3171,31 @@
       textEditorInput.addEventListener('keyup', () => { salvarSelecaoEditorTexto(); sincronizarBotoesBarraTexto(); });
       textEditorInput.addEventListener('mouseup', () => { salvarSelecaoEditorTexto(); sincronizarBotoesBarraTexto(); });
       textEditorInput.addEventListener('blur', salvarSelecaoEditorTexto);
+      textEditorInput.addEventListener('keydown', (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          e.preventDefault();
+          confirmarEditorTexto();
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          cancelarEditorTexto();
+        }
+      });
 
-      // Cola texto limpo (sem estilos quebrados de sites externos)
       textEditorInput.addEventListener('paste', (e) => {
         e.preventDefault();
         const textoPuro = (e.clipboardData || window.clipboardData).getData('text/plain');
         document.execCommand('insertText', false, textoPuro);
       });
 
-      // 📐 EXPANSÃO DA CAIXA DE TEXTO PARA TODOS OS 8 LADOS + ARRASTE PELO CABEÇALHO
-      (function configurarMovimentoEExpansaoCaixaTexto() {
-        let modoCaixa = null; // 'drag' ou direção ('n','s','e','w','nw','ne','sw','se')
-        let sx = 0, sy = 0, sLeft = 0, sTop = 0, sW = 0, sH = 0;
+      // Arraste livre pelo ícone ⠿ e ajuste de largura pela borda direita
+      (function configurarMovimentoEExpansaoTextoDireto() {
+        let modoCaixa = null;
+        let sx = 0, sy = 0, sLeft = 0, sTop = 0, sW = 0;
 
-        const header = document.getElementById('text-box-drag-header');
-        if (header) {
-          header.addEventListener('pointerdown', (e) => {
+        const grip = document.getElementById('text-box-drag-header');
+        if (grip) {
+          grip.addEventListener('pointerdown', (e) => {
             modoCaixa = 'drag';
             const r = textEditorBox.getBoundingClientRect();
             sx = e.clientX; sy = e.clientY;
@@ -2979,10 +3206,10 @@
 
         textEditorBox.querySelectorAll('.txt-resize-handle').forEach(handle => {
           handle.addEventListener('pointerdown', (e) => {
-            modoCaixa = handle.dataset.resizeDir;
+            modoCaixa = 'resize_e';
             const r = textEditorBox.getBoundingClientRect();
-            sx = e.clientX; sy = e.clientY;
-            sLeft = r.left; sTop = r.top; sW = r.width; sH = r.height;
+            sx = e.clientX; sW = r.width; sLeft = r.left;
+            textBoxWidthManual = true;
             e.preventDefault();
             e.stopPropagation();
           });
@@ -2990,35 +3217,17 @@
 
         window.addEventListener('pointermove', (e) => {
           if (!modoCaixa) return;
-          const dx = e.clientX - sx;
-          const dy = e.clientY - sy;
-
           if (modoCaixa === 'drag') {
-            const nl = Math.max(6, Math.min(window.innerWidth - textEditorBox.offsetWidth - 6, sLeft + dx));
-            const nt = Math.max(6, Math.min(window.innerHeight - textEditorBox.offsetHeight - 6, sTop + dy));
-            textEditorBox.style.left = nl + 'px';
-            textEditorBox.style.top = nt + 'px';
-            return;
+            const nl = Math.max(6, Math.min(window.innerWidth - 100, sLeft + (e.clientX - sx)));
+            const nt = Math.max(6, Math.min(window.innerHeight - 40, sTop + (e.clientY - sy)));
+            textEditorBox.style.left = Math.round(nl) + 'px';
+            textEditorBox.style.top = Math.round(nt) + 'px';
+            alinharToolbarFlutuanteTexto();
+          } else if (modoCaixa === 'resize_e') {
+            const nw = Math.max(110, Math.min(window.innerWidth - sLeft - 12, sW + (e.clientX - sx)));
+            textEditorBox.style.width = Math.round(nw) + 'px';
+            alinharToolbarFlutuanteTexto();
           }
-
-          let nl = sLeft, nt = sTop, nw = sW, nh = sH;
-          if (modoCaixa.includes('e')) nw = Math.max(240, Math.min(window.innerWidth - sLeft - 8, sW + dx));
-          if (modoCaixa.includes('s')) nh = Math.max(155, Math.min(window.innerHeight - sTop - 8, sH + dy));
-          if (modoCaixa.includes('w')) {
-            const tentativaW = Math.max(240, Math.min(sLeft + sW - 8, sW - dx));
-            nl = sLeft + (sW - tentativaW);
-            nw = tentativaW;
-          }
-          if (modoCaixa.includes('n')) {
-            const tentativaH = Math.max(155, Math.min(sTop + sH - 8, sH - dy));
-            nt = sTop + (sH - tentativaH);
-            nh = tentativaH;
-          }
-
-          textEditorBox.style.left = nl + 'px';
-          textEditorBox.style.top = nt + 'px';
-          textEditorBox.style.width = nw + 'px';
-          textEditorBox.style.height = nh + 'px';
         });
 
         window.addEventListener('pointerup', () => {
@@ -3026,28 +3235,34 @@
         });
       })();
 
-      document.getElementById('btn-text-cancel').onclick = () => {
+      function cancelarEditorTexto() {
         textEditorBox.style.display = 'none';
         editingShapeId = null;
-      };
+        desenharQuadro();
+      }
 
-      document.getElementById('btn-text-confirm').onclick = () => {
+      function confirmarEditorTexto() {
         const runs = extrairRunsDoEditor(textEditorInput);
         const textoPlano = runs.map(r => r.text).join('').trim();
 
         if (textoPlano) {
+          registrarHistoricoUndo();
           const escalaTela = Math.max(0.1, obterFatorTelaPorMundo());
           const inputRect = textEditorInput.getBoundingClientRect();
-          const ptMundoFinal = telaParaQuadro(inputRect.left + 10, inputRect.top + 8);
-          const larguraMoldadaMundo = Math.max(90, Math.round((inputRect.width - 20) / escalaTela));
+          const ptMundoFinal = telaParaQuadro(inputRect.left + 6, inputRect.top + 2);
+          const larguraMoldadaMundo = textBoxWidthManual
+            ? Math.max(80, Math.round((inputRect.width - 12) / escalaTela))
+            : Math.max(80, Math.round((inputRect.width + 8) / escalaTela));
 
           if (editingShapeId) {
             const alvo = shapes.find(s => s.id === editingShapeId);
             if (alvo) {
               const sc = alvo.scale || 1;
+              alvo.x = Math.round(ptMundoFinal.x);
+              alvo.y = Math.round(ptMundoFinal.y);
               alvo.text = textoPlano;
               alvo.runs = runs;
-              alvo.boxWidth = Math.max(80, Math.round(larguraMoldadaMundo / sc));
+              alvo.boxWidth = textBoxWidthManual ? Math.max(80, Math.round(larguraMoldadaMundo / sc)) : null;
               alvo.fontSize = activeTextBaseFontSize;
               alvo.color = runs[0]?.color || currentColor;
               alvo.fontFamily = runs[0]?.fontFamily || textStyle.fontFamily;
@@ -3060,7 +3275,7 @@
               y: Math.round(ptMundoFinal.y),
               text: textoPlano,
               runs: runs,
-              boxWidth: larguraMoldadaMundo,
+              boxWidth: textBoxWidthManual ? larguraMoldadaMundo : null,
               fontSize: activeTextBaseFontSize,
               color: runs[0]?.color || currentColor,
               size: currentSize,
@@ -3070,14 +3285,17 @@
           }
           guardarEstadoNaTelaAtual();
           atualizarBarraNumeracaoTelas();
-          desenharQuadro();
           agendarSalvamentoNuvem(30);
         }
 
         textEditorBox.style.display = 'none';
         editingShapeId = null;
+        desenharQuadro();
         selecionarFerramenta('pen');
-      };
+      }
+
+      document.getElementById('btn-text-cancel').onclick = cancelarEditorTexto;
+      document.getElementById('btn-text-confirm').onclick = confirmarEditorTexto;
 
       // =========================================================================
       // 📊 ESTÚDIO DE INFOGRÁFICOS E MAPAS MENTAIS (16 MODELOS PRESERVADOS)
@@ -3417,8 +3635,9 @@
       };
 
       function executarUndo() {
-        if (shapes.length === 0) return;
-        redoStack.push(shapes.pop());
+        if (undoStack.length === 0) return;
+        redoStack.push(clonarShapes(shapes));
+        shapes = undoStack.pop();
         hoveredShape = null;
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
@@ -3428,7 +3647,9 @@
 
       function executarRedo() {
         if (redoStack.length === 0) return;
-        shapes.push(redoStack.pop());
+        undoStack.push(clonarShapes(shapes));
+        shapes = redoStack.pop();
+        hoveredShape = null;
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
         desenharQuadro();
@@ -3438,8 +3659,8 @@
       function executarLimparTela() {
         if (shapes.length === 0) return;
         if (!confirm('Deseja limpar todos os desenhos desta tela?')) return;
+        registrarHistoricoUndo();
         shapes = [];
-        redoStack = [];
         hoveredShape = null;
         guardarEstadoNaTelaAtual();
         atualizarBarraNumeracaoTelas();
