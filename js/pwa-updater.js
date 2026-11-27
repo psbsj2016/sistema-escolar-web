@@ -32,6 +32,11 @@ function estaNaCidade3D() {
 // 🛡️ DETETOR BLINDADO DE AULA AO VIVO OU PROVA (Nunca expulsa professor nem aluno!)
 function utilizadorEmAtividadeCriticaAoVivo() {
     try {
+        // 0. Se a página estiver abrindo um link direto de Live (#live-...), protege imediatamente!
+        if (window.location.hash && window.location.hash.startsWith('#live-')) {
+            return true;
+        }
+
         // 1. Verifica se está em prova escrita ou teste oral ativo no WorkSpace
         if (window.Workspace && window.Workspace.Avaliacoes) {
             if (window.Workspace.Avaliacoes.exameAtivo || window.Workspace.Avaliacoes.estudioAtivo) {
@@ -47,6 +52,12 @@ function utilizadorEmAtividadeCriticaAoVivo() {
         if (!modalAberto) {
             sinalLiveRecebidoDoIframe = false;
             return false;
+        }
+
+        // 🛡️ Se o iframe está carregando ou exibindo um link de live, nunca recarrega no meio do download!
+        const srcIframe = iframeVideo?.getAttribute('src') || '';
+        if (srcIframe.includes('workspace-aulas-video.html') && (srcIframe.includes('live=lvk_') || srcIframe.includes('live=live_'))) {
+            return true;
         }
 
         if (modalVideo.dataset.minimizado === 'true') return true;

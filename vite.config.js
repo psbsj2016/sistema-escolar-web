@@ -97,16 +97,8 @@ export default defineConfig({
         globPatterns: ['manifest.webmanifest'],
         importScripts: ['/push-sw.js'],
 
-        // 🔄 Garante que HTMLs, Lousa, Sala de Vídeos e version.json venham SEMPRE direto da rede
+        // 🔄 Mantém apenas bundles JS/CSS no Workbox; HTMLs e version.json passam direto pela rede (controlados pelo vercel.json)
         runtimeCaching: [
-          {
-            urlPattern: /\/version\.json/,
-            handler: 'NetworkOnly'
-          },
-        {
-            urlPattern: /\/(index|hub-matriculas|matricula|matricula-online|workspace|workspace-lousa|workspace-aulas-video|validar-contrato|admin)(\.html)?(\?.*)?$/,
-            handler: 'NetworkOnly'
-          },
           {
             urlPattern: /\/assets\/.*\.(js|css)$/,
             handler: 'NetworkFirst',
