@@ -60,6 +60,8 @@ export class ES3DAmbiente {
     this.waterFountainTexture = null;
     this.foamLineMesh = null;
     this.waterMeshes = [];
+    this.waterShaderMaterial = null;
+    this.waterTime = 0;
     this.fountainJets = null;
     this.fountainVelocities = [];
 
@@ -104,6 +106,7 @@ export class ES3DAmbiente {
   // 1. ✨ REFLEXOS REALISTAS COM PMREMGenerator
   // ============================================================================
   aplicarReflexosPMREM() {
+    if (this.world?.enginePro) return;
     const THREE = this.THREE;
     if (!THREE.PMREMGenerator) return;
 
@@ -654,25 +657,124 @@ export class ES3DAmbiente {
       this.criarCoqueiroRealista(px, 72.2 + (i % 2) * 1.4, 6.2 + (i % 3) * 0.7, (i % 2 === 0 ? 0.4 : -0.4));
     });
 
-    // 3. Faixa de Espuma (Arrebentação animada) + Oceano Vivo (z = 83..185)
-    this.foamLineMesh = new THREE.Mesh(
-      new THREE.PlaneGeometry(290, 2.4),
-      new THREE.MeshBasicMaterial({ color: 0xf0f9ff, transparent: true, opacity: 0.62, depthWrite: false })
-    );
-    this.foamLineMesh.rotation.x = -Math.PI / 2;
-    this.foamLineMesh.position.set(0, 0.065, 84.4);
-    this.world.exteriorGroup.add(this.foamLineMesh);
-
+    // 3. 🌊 Oceano Costeiro com Shader GLSL (Ondas, Fresnel, Brilho Solar/Lunar, Espuma Orgânica na Orla e Congelamento)
     this.waterTexture = this.gerarTexturaAgua();
-    const waterMat = new THREE.MeshStandardMaterial({
-      map: this.waterTexture,
-      color: 0x38bdf8,
-      roughness: 0.14,
-      metalness: 0.35,
+    this.foamLineMesh = null;
+
+    this.waterShaderMaterial = new THREE.ShaderMaterial({
       transparent: true,
-      opacity: 0.90
+      depthWrite: true,
+      uniforms: {
+        uTime: { value: 0 },
+        uWaveHeight: { value: 0.22 },
+        uWaveSpeed: { value: 1.0 },
+        uFreeze: { value: 0.0 },
+        uShallowColor: { value: new THREE.Color(0x22d3ee) },
+        uDeepColor: { value: new THREE.Color(0x034f84) },
+        uSkyColor: { value: new THREE.Color(0x93c5fd) },
+        uSunColor: { value: new THREE.Color(0xfff7ed) },
+        uSunDir: { value: new THREE.Vector3(0.42, 0.78, -0.45).normalize() },
+        uFogColor: { value: new THREE.Color(0x87ceeb) },
+        uFogDensity: { value: 0.005 },
+        uShoreZ: { value: 83.5 }
+      },
+      vertexShader: `
+        uniform float uTime;
+        uniform float uWaveHeight;
+        uniform float uWaveSpeed;
+        uniform float uShoreZ;
+        varying vec3 vWorldPos;
+        varying float vWaveElev;
+        varying float vShoreDist;
+
+        void main() {
+          vec4 worldPos = modelMatrix * vec4(position, 1.0);
+          float dist = max(0.0, worldPos.z - uShoreZ);
+          vShoreDist = dist;
+
+          // Atenua as ondas perto da areia e do píer para nunca atravessar o deck
+          float amp = uWaveHeight * smoothstep(0.0, 14.0, dist);
+          float t = uTime * uWaveSpeed;
+
+          float w1 = sin(worldPos.x * 0.14 + t * 1.35 + worldPos.z * 0.09);
+          float w2 = cos(worldPos.z * 0.21 - t * 1.15 - worldPos.x * 0.06) * 0.65;
+          float w3 = sin((worldPos.x - worldPos.z) * 0.32 + t * 1.85) * 0.30;
+          float elev = (w1 + w2 + w3) * amp * 0.55;
+
+          worldPos.y += elev;
+          vWaveElev = elev;
+          vWorldPos = worldPos.xyz;
+
+          gl_Position = projectionMatrix * viewMatrix * worldPos;
+        }
+      `,
+      fragmentShader: `
+        uniform float uTime;
+        uniform float uWaveHeight;
+        uniform float uWaveSpeed;
+        uniform float uFreeze;
+        uniform vec3 uShallowColor;
+        uniform vec3 uDeepColor;
+        uniform vec3 uSkyColor;
+        uniform vec3 uSunColor;
+        uniform vec3 uSunDir;
+        uniform vec3 uFogColor;
+        uniform float uFogDensity;
+        varying vec3 vWorldPos;
+        varying float vWaveElev;
+        varying float vShoreDist;
+
+        void main() {
+          float t = uTime * uWaveSpeed;
+
+          // Normais analíticas multi-oitava para reflexos e brilho de água viva
+          float nx = cos(vWorldPos.x * 0.35 + t * 1.6) * 0.14
+                   + sin(vWorldPos.x * 0.85 - vWorldPos.z * 0.55 + t * 2.1) * 0.07;
+          float nz = sin(vWorldPos.z * 0.42 - t * 1.4) * 0.15
+                   + cos(vWorldPos.z * 0.92 + vWorldPos.x * 0.45 - t * 1.9) * 0.07;
+          float chop = 0.65 + uWaveHeight * 2.2;
+          vec3 N = normalize(vec3(nx * chop, 1.0, nz * chop));
+          vec3 V = normalize(cameraPosition - vWorldPos);
+          vec3 L = normalize(uSunDir);
+
+          // Gradiente de profundidade (turquesa raso -> azul profundo)
+          float depthFactor = smoothstep(0.0, 42.0, vShoreDist);
+          vec3 waterCol = mix(uShallowColor, uDeepColor, depthFactor);
+
+          // Iluminação difusa suave + reflexo Fresnel do céu HDR
+          float diff = 0.55 + 0.45 * max(dot(N, L), 0.0);
+          waterCol *= diff;
+          float fresnel = pow(1.0 - max(dot(N, V), 0.0), 3.6);
+          waterCol = mix(waterCol, uSkyColor, clamp(fresnel * 0.82, 0.08, 0.88));
+
+          // Brilho especular do Sol/Lua nas cristas das ondas
+          vec3 H = normalize(L + V);
+          float spec = pow(max(dot(N, H), 0.0), 110.0) * (1.25 - uFreeze * 0.4);
+          waterCol += uSunColor * spec;
+
+          // Espuma animada e orgânica na arrebentação da praia
+          float shoreWave = sin(vShoreDist * 2.3 - t * 2.4 + sin(vWorldPos.x * 0.25) * 1.8);
+          float foamBand = (1.0 - smoothstep(0.0, 3.8, vShoreDist)) * smoothstep(-0.15, 0.65, shoreWave);
+          float crestFoam = smoothstep(0.16, 0.34, vWaveElev) * 0.42;
+          float foam = clamp(foamBand * 0.85 + crestFoam, 0.0, 0.92);
+          waterCol = mix(waterCol, vec3(0.94, 0.98, 1.0), foam);
+
+          // Efeito de congelamento/gelo quando está nevando
+          vec3 iceCol = mix(vec3(0.76, 0.90, 0.98), vec3(0.95, 0.98, 1.0), fresnel);
+          waterCol = mix(waterCol, iceCol, clamp(uFreeze * 0.82, 0.0, 0.82));
+
+          // Mistura suave com a neblina da cena no horizonte
+          float camDist = length(cameraPosition - vWorldPos);
+          float fogFactor = 1.0 - exp(-uFogDensity * uFogDensity * camDist * camDist);
+          waterCol = mix(waterCol, uFogColor, clamp(fogFactor, 0.0, 1.0));
+
+          float alpha = mix(0.76, 0.96, smoothstep(0.0, 3.0, vShoreDist));
+          gl_FragColor = vec4(waterCol, alpha);
+        }
+      `
     });
-    const oceano = new THREE.Mesh(new THREE.PlaneGeometry(310, 105), waterMat);
+
+    const oceano = new THREE.Mesh(new THREE.PlaneGeometry(310, 105, 96, 48), this.waterShaderMaterial);
     oceano.rotation.x = -Math.PI / 2;
     oceano.position.set(0, 0.055, 136);
     this.world.exteriorGroup.add(oceano);
@@ -776,6 +878,50 @@ export class ES3DAmbiente {
   atualizarAguaEFonte(delta) {
     // Congela a velocidade das ondas suavemente se o gelo/neve estiver muito forte
     const fatorFluidez = Math.max(0.2, 1 - this.snowAccumulation * 0.7);
+    if (this.waterShaderMaterial) {
+      const u = this.waterShaderMaterial.uniforms;
+      const ehTempestade = this.weatherMode === 'rain';
+      const modoDia = this.world?.enginePro?.currentTimeMode || 'day';
+
+      this.waterTime += delta * fatorFluidez;
+      u.uTime.value = this.waterTime;
+
+      const alturaAlvo = ehTempestade ? 0.38 : (this.snowAccumulation > 0.5 ? 0.07 : 0.21);
+      const velAlvo = ehTempestade ? 1.55 : (this.snowAccumulation > 0.5 ? 0.35 : 1.0);
+      u.uWaveHeight.value += (alturaAlvo - u.uWaveHeight.value) * Math.min(1, delta * 1.5);
+      u.uWaveSpeed.value += (velAlvo - u.uWaveSpeed.value) * Math.min(1, delta * 1.5);
+      u.uFreeze.value = this.snowAccumulation;
+
+      if (ehTempestade) {
+        u.uShallowColor.value.setHex(0x1e4e68);
+        u.uDeepColor.value.setHex(0x0b1f33);
+        u.uSkyColor.value.setHex(0x475569);
+        u.uSunColor.value.setHex(0xcbd5e1);
+      } else if (modoDia === 'sunset') {
+        u.uShallowColor.value.setHex(0x0e7490);
+        u.uDeepColor.value.setHex(0x1e2952);
+        u.uSkyColor.value.setHex(0xfb923c);
+        u.uSunColor.value.setHex(0xfde047);
+      } else if (modoDia === 'night') {
+        u.uShallowColor.value.setHex(0x0c3454);
+        u.uDeepColor.value.setHex(0x041024);
+        u.uSkyColor.value.setHex(0x1e3a8a);
+        u.uSunColor.value.setHex(0xbfdbfe);
+      } else {
+        u.uShallowColor.value.setHex(0x22d3ee);
+        u.uDeepColor.value.setHex(0x035388);
+        u.uSkyColor.value.setHex(0x93c5fd);
+        u.uSunColor.value.setHex(0xfffbeb);
+      }
+
+      if (this.world?.dirLight) {
+        u.uSunDir.value.copy(this.world.dirLight.position).sub(this.world.dirLight.target.position).normalize();
+      }
+      if (this.world?.scene?.fog) {
+        u.uFogColor.value.copy(this.world.scene.fog.color);
+        u.uFogDensity.value = this.world.scene.fog.density || 0.005;
+      }
+    }
 
     if (this.waterTexture) {
       this.waterTexture.offset.x = (this.waterTexture.offset.x + delta * 0.07 * fatorFluidez) % 1;
@@ -1365,6 +1511,10 @@ export class ES3DAmbiente {
     this.forestColliders = [];
     this.coastColliders = [];
     this.waterMeshes = [];
+    if (this.waterShaderMaterial) {
+      try { this.waterShaderMaterial.dispose(); } catch (e) {}
+      this.waterShaderMaterial = null;
+    }
     this.headlightBeams = [];
 
     if (this.envRT) {

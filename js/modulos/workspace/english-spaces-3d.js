@@ -591,6 +591,7 @@ garantirAudioAtivo() {
               <span id="es-dovryx-hud">💎 ${DOVRYX.getBalance().toLocaleString('pt-BR')} DRX</span>
               <button type="button" class="es-top-btn" id="es-city-phone-btn" title="Open In-Game Smartphone" style="background:linear-gradient(135deg,#2563eb,#7c3aed) !important; color:#fff !important; border-color:rgba(147,197,253,0.5) !important;">📱 Phone</button>
               <button type="button" class="es-top-btn" id="es-city-cam-btn" title="Switch 3rd / 1st Person Camera (Key V)">🎥 3rd Person</button>
+              <button type="button" class="es-top-btn" id="es-city-quality-btn" title="Alternar Qualidade Gráfica (Ultra / Médio / Leve)">✨ Ultra</button>
               <button type="button" class="es-top-btn" id="es-city-tour-btn" title="Professor Guided Tour Control" style="display:none;">🎓 Tour</button>
               <button type="button" class="es-top-btn" id="es-city-exit-btn">⇄ Exit 3D</button>
             </div>
@@ -4578,7 +4579,8 @@ criarVitrinesVivas() {
 
   tirarFotoPolaroid() {
     try {
-      this.renderer.render(this.scene, this.camera);
+      if (this.enginePro) this.enginePro.renderizarFrame();
+                else this.renderer.render(this.scene, this.camera);
       const dataURL = this.renderer.domElement.toDataURL('image/png');
       const link = document.createElement('a');
       link.download = `english-city-${Date.now()}.png`;
@@ -5619,7 +5621,7 @@ if (this.torreAtual) {
                 this.fluenciaPro?.update(delta);
                 this.socialPro?.update(delta);
                 this.ambientePro?.update(delta, this.modoInterior);
-                this.enginePro?.atualizarSombraNoJogador();
+                this.enginePro?.update(delta);
       if (estaAndando) this.soltarPegada();
       this.vitrines.forEach(v => { v.mesh.rotation.y += delta * 0.6; });
       this.footprints = this.footprints.filter(f => {
@@ -5795,7 +5797,8 @@ const elevadorDisponivel =
         if (falando) this.projetarEtiquetaHTML(this.musician.mesh.position, 2.35, this.musician.labelEl, vw, vh);
       }
 
-      this.renderer.render(this.scene, this.camera);
+      if (this.enginePro) this.enginePro.renderizarFrame();
+      else this.renderer.render(this.scene, this.camera);
     };
     this.atualizarHudZonaLocal('street');
     animar();
@@ -5923,7 +5926,8 @@ const elevadorDisponivel =
       const h = vp.clientHeight || window.innerHeight;
       this.camera.aspect = w / h;
       this.camera.updateProjectionMatrix();
-      this.renderer.setSize(w, h);
+      if (this.enginePro) this.enginePro.redimensionar(w, h);
+                else this.renderer.setSize(w, h);
     };
     window.addEventListener('resize', this._onResize);
     this._onBeforeUnload = () => { this.salvarEstadoSessao3D(); };
@@ -6041,6 +6045,11 @@ document.getElementById('es-city-elevator-down')?.addEventListener('click', () =
 document.getElementById('es-city-cam-btn')?.addEventListener('click', () => {
       this.garantirAudioAtivo();
       this.cameraUI?.alternarModoCamera();
+    });
+
+document.getElementById('es-city-quality-btn')?.addEventListener('click', () => {
+      this.garantirAudioAtivo();
+      this.enginePro?.alternarQualidadeGrafica();
     });
 
 document.getElementById('es-city-gameshow-btn')?.addEventListener('click', () => {
