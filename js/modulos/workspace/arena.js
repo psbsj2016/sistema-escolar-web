@@ -1059,77 +1059,56 @@ Workspace.Arena = {
         };
     },
 
-   // 🎙️ MOTOR UNIVERSAL DE MICROFONE (ANDROID, IPHONE, IPAD, TABLET E PC)
+   // 🎙️ MOTOR HÍBRIDO CORRIGIDO: 1 TOQUE COM ENVIO AUTOMÁTICO EM QUALQUER APARELHO
+    micAtivoArena: false,
+    textoParcialVoz: '',
+    jaEnviouResultadoVoz: false,
+    timerWatchdogVoz: null,
     mediaRecorderArena: null,
     audioStreamArena: null,
     audioChunksArena: [],
     audioContextArena: null,
-    audioAnimFrameArena: null,
-    micEstadoArena: 'idle', // 'idle' | 'starting' | 'recording' | 'transcribing'
-    micAbortController: null,
+    silencioMonitorInterval: null,
+    usandoGravadorNuvem: false,
     timerMaximoGravacao: null,
-    inicioGravacaoMs: 0,
-    picoVozArena: 0,
+    micAbortController: null,
 
     configurarMicrofone: () => {
-        // Mantido para compatibilidade com init(): o microfone universal abre diretamente no clique do utilizador
-        Workspace.Arena.micEstadoArena = 'idle';
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        Workspace.Arena.usandoGravadorNuvem = !SpeechRecognition;
         Workspace.Arena.reconhecimentoVoz = null;
+        Workspace.Arena.micAtivoArena = false;
     },
 
-    _atualizarBotaoMicVisual: (estado, nivelVoz = 0) => {
+    _resetarBotaoMic: () => {
         const btn = document.getElementById('ws-btn-mic-arena');
-        if (!btn) return;
-
-        if (estado === 'starting') {
-            btn.innerHTML = '⏳';
-            btn.style.background = '#f59e0b';
-            btn.style.animation = 'none';
-            btn.style.boxShadow = '0 5px 20px rgba(245, 158, 11, 0.45)';
-            btn.title = 'A abrir o microfone...';
-        } else if (estado === 'recording') {
-            btn.innerHTML = '⏹️';
-            btn.style.background = '#ef4444';
-            btn.style.animation = 'none';
-            const brilho = Math.min(26, Math.round(6 + nivelVoz * 90));
-            btn.style.boxShadow = `0 0 0 ${brilho}px rgba(239, 68, 68, 0.35), 0 5px 20px rgba(239, 68, 68, 0.6)`;
-            btn.title = 'A gravar... Toque novamente para enviar!';
-        } else if (estado === 'transcribing') {
-            btn.innerHTML = '⏳';
-            btn.style.background = '#f59e0b';
-            btn.style.animation = 'pulse 1s infinite';
-            btn.style.boxShadow = '0 5px 20px rgba(245, 158, 11, 0.45)';
-            btn.title = 'A transcrever a sua voz... (toque para cancelar)';
-        } else {
+        if (btn) {
             btn.innerHTML = '🎙️';
             btn.style.background = '#3b82f6';
             btn.style.animation = 'none';
             btn.style.boxShadow = '0 5px 20px rgba(59, 130, 246, 0.4)';
-            btn.title = 'Toque para falar em inglês';
+            btn.title = 'Falar no Microfone';
         }
     },
 
-    _liberarHardwareMicrofone: () => {
+    _liberarHardwareAudio: () => {
+        clearTimeout(Workspace.Arena.timerWatchdogVoz);
         clearTimeout(Workspace.Arena.timerMaximoGravacao);
+        clearInterval(Workspace.Arena.silencioMonitorInterval);
+        Workspace.Arena.timerWatchdogVoz = null;
         Workspace.Arena.timerMaximoGravacao = null;
-
-        if (Workspace.Arena.audioAnimFrameArena) {
-            cancelAnimationFrame(Workspace.Arena.audioAnimFrameArena);
-            Workspace.Arena.audioAnimFrameArena = null;
-        }
+        Workspace.Arena.silencioMonitorInterval = null;
 
         if (Workspace.Arena.audioContextArena) {
             try { Workspace.Arena.audioContextArena.close(); } catch (e) {}
             Workspace.Arena.audioContextArena = null;
         }
-
         if (Workspace.Arena.audioStreamArena) {
-            Workspace.Arena.audioStreamArena.getTracks().forEach(track => {
-                try { track.stop(); } catch (e) {}
+            Workspace.Arena.audioStreamArena.getTracks().forEach(t => {
+                try { t.stop(); } catch (e) {}
             });
             Workspace.Arena.audioStreamArena = null;
         }
-
         Workspace.Arena.mediaRecorderArena = null;
     },
 
@@ -1138,108 +1117,28 @@ Workspace.Arena = {
             try { Workspace.Arena.micAbortController.abort(); } catch (e) {}
             Workspace.Arena.micAbortController = null;
         }
-        const rec = Workspace.Arena.mediaRecorderArena;
-        if (rec) {
-            rec.onstop = null;
-            rec.ondataavailable = null;
-            try { if (rec.state === 'recording') rec.stop(); } catch (e) {}
+        if (Workspace.Arena.reconhecimentoVoz) {
+            const rec = Workspace.Arena.reconhecimentoVoz;
+            Workspace.Arena.reconhecimentoVoz = null;
+            rec.onresult = null;
+            rec.onerror = null;
+            rec.onend = null;
+            try { rec.abort(); } catch (e) {}
         }
-        Workspace.Arena._liberarHardwareMicrofone();
-        Workspace.Arena.audioChunksArena = [];
-        Workspace.Arena.micEstadoArena = 'idle';
-        Workspace.Arena._atualizarBotaoMicVisual('idle');
+        if (Workspace.Arena.mediaRecorderArena) {
+            const mr = Workspace.Arena.mediaRecorderArena;
+            mr.onstop = null;
+            mr.ondataavailable = null;
+            try { if (mr.state === 'recording') mr.stop(); } catch (e) {}
+        }
+        Workspace.Arena._liberarHardwareAudio();
+        Workspace.Arena.micAtivoArena = false;
+        Workspace.Arena.textoParcialVoz = '';
+        Workspace.Arena.jaEnviouResultadoVoz = false;
+        Workspace.Arena._resetarBotaoMic();
     },
 
-    _iniciarMedidorVozVisual: (stream) => {
-        try {
-            const AudioCtx = window.AudioContext || window.webkitAudioContext;
-            if (!AudioCtx) return;
-
-            const ctx = new AudioCtx();
-            if (ctx.state === 'suspended') {
-                ctx.resume().catch(() => {});
-            }
-            const source = ctx.createMediaStreamSource(stream);
-            const analyser = ctx.createAnalyser();
-            analyser.fftSize = 256;
-            source.connect(analyser);
-
-            Workspace.Arena.audioContextArena = ctx;
-            Workspace.Arena.picoVozArena = 0;
-
-            const dados = new Uint8Array(analyser.fftSize);
-            const medir = () => {
-                if (Workspace.Arena.micEstadoArena !== 'recording') return;
-                analyser.getByteTimeDomainData(dados);
-                let soma = 0;
-                for (let i = 0; i < dados.length; i++) {
-                    const v = (dados[i] - 128) / 128;
-                    soma += v * v;
-                }
-                const rms = Math.sqrt(soma / dados.length);
-                if (rms > Workspace.Arena.picoVozArena) {
-                    Workspace.Arena.picoVozArena = rms;
-                }
-                Workspace.Arena._atualizarBotaoMicVisual('recording', rms);
-                Workspace.Arena.audioAnimFrameArena = requestAnimationFrame(medir);
-            };
-            Workspace.Arena.audioAnimFrameArena = requestAnimationFrame(medir);
-        } catch (e) {
-            // Se o aparelho bloquear AudioContext, a gravação continua normalmente sem medidor visual
-        }
-    },
-
-    _escolherMimeTypeAudio: () => {
-        if (typeof MediaRecorder === 'undefined' || typeof MediaRecorder.isTypeSupported !== 'function') {
-            return '';
-        }
-        const candidatos = [
-            'audio/webm;codecs=opus',
-            'audio/webm',
-            'audio/mp4;codecs=mp4a.40.2',
-            'audio/mp4',
-            'audio/ogg;codecs=opus',
-            'audio/ogg'
-        ];
-        for (const tipo of candidatos) {
-            try {
-                if (MediaRecorder.isTypeSupported(tipo)) return tipo;
-            } catch (e) {}
-        }
-        return '';
-    },
-
-    _criarMediaRecorderSeguro: (stream, mimeType) => {
-        if (mimeType) {
-            try {
-                return new MediaRecorder(stream, { mimeType, audioBitsPerSecond: 32000 });
-            } catch (e1) {
-                try {
-                    return new MediaRecorder(stream, { mimeType });
-                } catch (e2) {}
-            }
-        }
-        try {
-            return new MediaRecorder(stream, { audioBitsPerSecond: 32000 });
-        } catch (e3) {
-            return new MediaRecorder(stream);
-        }
-    },
-
-    _blobParaBase64: (blob) => {
-        return new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                if (reader.result) resolve(reader.result);
-                else reject(new Error('Falha ao ler áudio gravado.'));
-            };
-            reader.onerror = () => reject(new Error('Erro ao ler áudio no aparelho.'));
-            reader.onabort = () => reject(new Error('Leitura de áudio cancelada.'));
-            reader.readAsDataURL(blob);
-        });
-    },
-
-    // 🧠 Finaliza a pontuação localmente (0ms, sem segunda chamada de IA) e envia para a Arena
+    // 🚀 Lança a fala imediatamente na tela com pontuação inteligente (0ms, sem travar no ⏳)
     processarTextoCaptado: async (transcricaoBruta) => {
         const limpo = String(transcricaoBruta || '').trim();
         if (!limpo) return;
@@ -1251,247 +1150,346 @@ Workspace.Arena = {
         Workspace.Arena.ultimoTempoFala = agora;
 
         const textoFinal = Workspace.Arena.adicionarPontuacaoInteligente(limpo);
+        Workspace.Arena._resetarBotaoMic();
         await Workspace.Arena.enviarFala(textoFinal);
     },
 
-    // ☁️ GRAVADOR UNIVERSAL COM MEDIDOR DE VOZ, TIMEOUT DE 15s E LIBERTAÇÃO IMEDIATA DO MICROFONE
-    iniciarGravacaoNuvem: async () => {
-        if (Workspace.Arena.micEstadoArena !== 'idle') return;
-
-        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
-            const inputFala = document.getElementById('ws-arena-input-fala');
-            if (inputFala) inputFala.focus();
-            if (window.Workspace && Workspace.mostrarAviso) {
-                Workspace.mostrarAviso("Este navegador não permite gravação de voz direta. Use a barra de texto abaixo!", "warning", 5000);
-            }
+    // 🎤 MOTOR PRINCIPAL: SpeechRecognition limpo a cada clique + captura parcial garantida
+    iniciarReconhecimentoNativo: () => {
+        const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+        if (!SpeechRecognition) {
+            Workspace.Arena.iniciarGravacaoNuvem();
             return;
         }
 
-        // 🔇 Pausa efeitos sonoros da Arena e síntese de voz para evitar conflito de hardware em iOS/Android
+        // Pausa efeitos sonoros da Arena para não disputar áudio no celular/tablet
         Workspace.Arena.pararSons();
         if ('speechSynthesis' in window) {
             try { window.speechSynthesis.cancel(); } catch (e) {}
         }
 
-        Workspace.Arena.micEstadoArena = 'starting';
-        Workspace.Arena._atualizarBotaoMicVisual('starting');
+        const btn = document.getElementById('ws-btn-mic-arena');
+        const rec = new SpeechRecognition();
+        rec.lang = 'en-US';
+        rec.continuous = false;
+        rec.interimResults = true;
+        rec.maxAlternatives = 1;
 
-        let stream = null;
-        try {
-            try {
-                stream = await navigator.mediaDevices.getUserMedia({
-                    audio: {
-                        echoCancellation: true,
-                        noiseSuppression: true,
-                        autoGainControl: true,
-                        channelCount: 1
-                    }
-                });
-            } catch (errRestricao) {
-                if (errRestricao && (errRestricao.name === 'OverconstrainedError' || errRestricao.name === 'TypeError')) {
-                    stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                } else {
-                    throw errRestricao;
+        Workspace.Arena.reconhecimentoVoz = rec;
+        Workspace.Arena.micAtivoArena = true;
+        Workspace.Arena.textoParcialVoz = '';
+        Workspace.Arena.jaEnviouResultadoVoz = false;
+
+        if (btn) {
+            btn.innerHTML = '🔴';
+            btn.style.background = '#ef4444';
+            btn.style.animation = 'pulse 1s infinite';
+            btn.title = 'A ouvir... Fale em inglês!';
+        }
+
+        const rearmarWatchdog = (ms) => {
+            clearTimeout(Workspace.Arena.timerWatchdogVoz);
+            Workspace.Arena.timerWatchdogVoz = setTimeout(() => {
+                if (Workspace.Arena.reconhecimentoVoz === rec) {
+                    try { rec.stop(); } catch (e) { Workspace.Arena.pararECancelarMicrofone(); }
                 }
+            }, ms);
+        };
+
+        // Se o aparelho ficar mudo sem encerrar sozinho, encerra em 9s e destrava
+        rearmarWatchdog(9000);
+
+        rec.onresult = (event) => {
+            let finalAcumulado = '';
+            let parcialAcumulado = '';
+
+            for (let i = 0; i < event.results.length; i++) {
+                const trecho = event.results[i][0]?.transcript || '';
+                if (event.results[i].isFinal) finalAcumulado += trecho + ' ';
+                parcialAcumulado += trecho + ' ';
             }
 
-            // Se o utilizador saiu da sala enquanto autorizava o microfone, liberta imediatamente
-            if (!Workspace.Arena.salaAtual || Workspace.Arena.micEstadoArena !== 'starting') {
-                stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
-                Workspace.Arena.micEstadoArena = 'idle';
-                Workspace.Arena._atualizarBotaoMicVisual('idle');
+            if (parcialAcumulado.trim()) {
+                Workspace.Arena.textoParcialVoz = parcialAcumulado.trim();
+                // Usuário falou algo: dá mais 3s para concluir a frase antes do corte de segurança
+                rearmarWatchdog(3000);
+            }
+
+            if (finalAcumulado.trim() && !Workspace.Arena.jaEnviouResultadoVoz) {
+                Workspace.Arena.jaEnviouResultadoVoz = true;
+                clearTimeout(Workspace.Arena.timerWatchdogVoz);
+                const textoParaEnviar = finalAcumulado.trim();
+                Workspace.Arena.textoParcialVoz = '';
+                Workspace.Arena.micAtivoArena = false;
+                Workspace.Arena.reconhecimentoVoz = null;
+                try { rec.stop(); } catch (e) {}
+                Workspace.Arena.processarTextoCaptado(textoParaEnviar);
+            }
+        };
+
+        rec.onerror = (event) => {
+            const erro = event?.error || '';
+            clearTimeout(Workspace.Arena.timerWatchdogVoz);
+
+            // Se já tinha captado alguma palavra antes do erro, lança na tela em vez de jogar fora!
+            if (!Workspace.Arena.jaEnviouResultadoVoz && Workspace.Arena.textoParcialVoz.trim()) {
+                Workspace.Arena.jaEnviouResultadoVoz = true;
+                const resgate = Workspace.Arena.textoParcialVoz.trim();
+                Workspace.Arena.textoParcialVoz = '';
+                Workspace.Arena.micAtivoArena = false;
+                Workspace.Arena.reconhecimentoVoz = null;
+                Workspace.Arena.processarTextoCaptado(resgate);
                 return;
             }
 
-            const mimeEscolhido = Workspace.Arena._escolherMimeTypeAudio();
-            const recorder = Workspace.Arena._criarMediaRecorderSeguro(stream, mimeEscolhido);
+            Workspace.Arena.micAtivoArena = false;
+            Workspace.Arena.reconhecimentoVoz = null;
+            Workspace.Arena._resetarBotaoMic();
+
+            if (erro === 'service-not-allowed' || erro === 'audio-capture' || erro === 'network') {
+                // Plano B automático para dispositivos que bloqueiam o Google Speech (sem travar para sempre)
+                Workspace.Arena.iniciarGravacaoNuvem();
+            } else if (erro === 'not-allowed') {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("🔒 Permita o microfone no cadeado da barra de endereço para falar na Arena.", "warning", 5000);
+                }
+            } else if (erro === 'no-speech') {
+                if (window.Workspace && Workspace.mostrarAviso) {
+                    Workspace.mostrarAviso("🎙️ Nenhuma voz captada. Fale mais perto do microfone e tente novamente.", "info", 2800);
+                }
+            }
+        };
+
+        rec.onend = () => {
+            clearTimeout(Workspace.Arena.timerWatchdogVoz);
+            if (Workspace.Arena.reconhecimentoVoz === rec) {
+                Workspace.Arena.reconhecimentoVoz = null;
+            }
+            Workspace.Arena.micAtivoArena = false;
+
+            // 🛡️ CORREÇÃO PRINCIPAL: Se o celular/tablet encerrou sem isFinal, envia o texto parcial captado!
+            if (!Workspace.Arena.jaEnviouResultadoVoz && Workspace.Arena.textoParcialVoz.trim()) {
+                Workspace.Arena.jaEnviouResultadoVoz = true;
+                const textoResgatado = Workspace.Arena.textoParcialVoz.trim();
+                Workspace.Arena.textoParcialVoz = '';
+                Workspace.Arena.processarTextoCaptado(textoResgatado);
+                return;
+            }
+
+            Workspace.Arena._resetarBotaoMic();
+        };
+
+        try {
+            rec.start();
+        } catch (errStart) {
+            Workspace.Arena.micAtivoArena = false;
+            Workspace.Arena.reconhecimentoVoz = null;
+            Workspace.Arena._resetarBotaoMic();
+            Workspace.Arena.iniciarGravacaoNuvem();
+        }
+    },
+
+    // ☁️ PLANO B AUTOMÁTICO (Firefox / WebViews / Conflito com Meet): grava leve (16kbps) e para sozinho no silêncio
+    iniciarGravacaoNuvem: async () => {
+        if (Workspace.Arena.micAtivoArena) return;
+        const btn = document.getElementById('ws-btn-mic-arena');
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia || typeof MediaRecorder === 'undefined') {
+            const inputFala = document.getElementById('ws-arena-input-fala');
+            if (inputFala) inputFala.focus();
+            if (window.Workspace && Workspace.mostrarAviso) {
+                Workspace.mostrarAviso("Use a barra de texto abaixo para enviar a sua fala!", "info");
+            }
+            return;
+        }
+
+        Workspace.Arena.pararSons();
+        Workspace.Arena.micAtivoArena = true;
+
+        try {
+            let stream;
+            try {
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 }
+                });
+            } catch (e) {
+                stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            }
 
             Workspace.Arena.audioStreamArena = stream;
-            Workspace.Arena.mediaRecorderArena = recorder;
             Workspace.Arena.audioChunksArena = [];
-            Workspace.Arena.inicioGravacaoMs = Date.now();
+
+            const candidatos = ['audio/webm;codecs=opus', 'audio/webm', 'audio/mp4', 'audio/ogg'];
+            let mimeEscolhido = '';
+            for (const c of candidatos) {
+                try { if (MediaRecorder.isTypeSupported(c)) { mimeEscolhido = c; break; } } catch (e) {}
+            }
+
+            let recorder;
+            try {
+                recorder = mimeEscolhido
+                    ? new MediaRecorder(stream, { mimeType: mimeEscolhido, audioBitsPerSecond: 16000 })
+                    : new MediaRecorder(stream, { audioBitsPerSecond: 16000 });
+            } catch (e) {
+                recorder = mimeEscolhido ? new MediaRecorder(stream, { mimeType: mimeEscolhido }) : new MediaRecorder(stream);
+            }
+
+            Workspace.Arena.mediaRecorderArena = recorder;
 
             recorder.ondataavailable = (e) => {
-                if (e.data && e.data.size > 0) {
-                    Workspace.Arena.audioChunksArena.push(e.data);
-                }
-            };
-
-            recorder.onerror = () => {
-                Workspace.Arena._liberarHardwareMicrofone();
-                Workspace.Arena.micEstadoArena = 'idle';
-                Workspace.Arena._atualizarBotaoMicVisual('idle');
-                if (window.Workspace && Workspace.mostrarAviso) {
-                    Workspace.mostrarAviso("Falha na captura de áudio. Tente novamente ou use a barra de texto.", "warning");
-                }
+                if (e.data && e.data.size > 0) Workspace.Arena.audioChunksArena.push(e.data);
             };
 
             recorder.onstop = async () => {
-                const duracaoMs = Date.now() - Workspace.Arena.inicioGravacaoMs;
                 const chunks = [...Workspace.Arena.audioChunksArena];
-                const mimeReal = recorder.mimeType || mimeEscolhido || '';
-                const picoRegistrado = Workspace.Arena.picoVozArena;
-
-                // 🔓 Liberta imediatamente microfone e AudioContext (compatível com chamadas e Meet!)
-                Workspace.Arena._liberarHardwareMicrofone();
+                const mimeUsado = recorder.mimeType || mimeEscolhido || 'audio/webm';
+                Workspace.Arena._liberarHardwareAudio();
                 Workspace.Arena.audioChunksArena = [];
 
-                if (!Workspace.Arena.salaAtual) {
-                    Workspace.Arena.micEstadoArena = 'idle';
-                    Workspace.Arena._atualizarBotaoMicVisual('idle');
+                const blob = new Blob(chunks, { type: mimeUsado });
+                if (blob.size < 350) {
+                    Workspace.Arena.micAtivoArena = false;
+                    Workspace.Arena._resetarBotaoMic();
                     return;
                 }
 
-                const blob = new Blob(chunks, { type: mimeReal || 'application/octet-stream' });
-
-                if (duracaoMs < 400 || blob.size < 450) {
-                    Workspace.Arena.micEstadoArena = 'idle';
-                    Workspace.Arena._atualizarBotaoMicVisual('idle');
-                    if (window.Workspace && Workspace.mostrarAviso) {
-                        Workspace.mostrarAviso("🎙️ Gravação muito curta! Toque no 🎙️, fale a sua frase e só depois toque no ⏹️ para enviar.", "warning", 4000);
-                    }
-                    return;
+                if (btn) {
+                    btn.innerHTML = '⏳';
+                    btn.style.background = '#f59e0b';
+                    btn.style.animation = 'none';
                 }
-
-                // Se o áudio estiver minúsculo e o medidor confirmou silêncio absoluto
-                if (blob.size < 1600 && picoRegistrado > 0 && picoRegistrado < 0.005) {
-                    Workspace.Arena.micEstadoArena = 'idle';
-                    Workspace.Arena._atualizarBotaoMicVisual('idle');
-                    if (window.Workspace && Workspace.mostrarAviso) {
-                        Workspace.mostrarAviso("🔇 Nenhum som detetado! Fale mais perto do microfone ou verifique se ele não está silenciado.", "warning", 4500);
-                    }
-                    return;
-                }
-
-                Workspace.Arena.micEstadoArena = 'transcribing';
-                Workspace.Arena._atualizarBotaoMicVisual('transcribing');
 
                 const controller = new AbortController();
                 Workspace.Arena.micAbortController = controller;
-                const timeoutRede = setTimeout(() => controller.abort(), 15000);
+                const timeoutRede = setTimeout(() => controller.abort(), 12000);
 
                 try {
-                    const base64Audio = await Workspace.Arena._blobParaBase64(blob);
+                    const base64Audio = await new Promise((resolve, reject) => {
+                        const r = new FileReader();
+                        r.onloadend = () => r.result ? resolve(r.result) : reject(new Error('Erro leitura'));
+                        r.onerror = () => reject(new Error('Erro leitura'));
+                        r.readAsDataURL(blob);
+                    });
+
                     const resp = await fetch('/api/workspace/arena/transcrever-audio', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         credentials: 'include',
                         signal: controller.signal,
-                        body: JSON.stringify({
-                            audioBase64: base64Audio,
-                            mimeType: mimeReal || blob.type || ''
-                        })
+                        body: JSON.stringify({ audioBase64: base64Audio, mimeType: mimeUsado })
                     });
-
                     clearTimeout(timeoutRede);
-
-                    if (resp.status === 401) {
-                        sessionStorage.setItem('ws_aviso_expirado', 'A sua sessão expirou por segurança. Faça login novamente.');
-                        Workspace.logout(false);
-                        return;
-                    }
-
                     const res = await resp.json().catch(() => null);
 
                     if (res && res.success && res.textoTranscrito) {
                         await Workspace.Arena.processarTextoCaptado(res.textoTranscrito);
-                    } else {
-                        const msgAviso = (res && res.error)
-                            ? res.error
-                            : "Não conseguimos ouvir bem. Fale mais perto do microfone ou escreva na barra abaixo!";
-                        if (window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso(msgAviso, "warning", 4000);
-                        }
+                    } else if (window.Workspace && Workspace.mostrarAviso) {
+                        Workspace.mostrarAviso("Não ouvimos bem. Fale mais perto do microfone ou digite abaixo!", "warning");
                     }
                 } catch (err) {
                     clearTimeout(timeoutRede);
-                    if (err && err.name === 'AbortError') {
-                        if (window.Workspace && Workspace.mostrarAviso) {
-                            Workspace.mostrarAviso("⏱️ O envio demorou muito ou foi cancelado. Tente falar novamente!", "warning", 3500);
-                        }
-                    } else if (window.Workspace && Workspace.mostrarAviso) {
-                        Workspace.mostrarAviso("Falha de ligação ao transcrever voz. Tente de novo ou digite abaixo!", "warning", 4000);
+                    if (window.Workspace && Workspace.mostrarAviso) {
+                        Workspace.mostrarAviso("Falha ao enviar voz. Tente novamente ou use a barra de texto abaixo!", "warning");
                     }
                 } finally {
                     Workspace.Arena.micAbortController = null;
-                    Workspace.Arena.micEstadoArena = 'idle';
-                    Workspace.Arena._atualizarBotaoMicVisual('idle');
+                    Workspace.Arena.micAtivoArena = false;
+                    Workspace.Arena._resetarBotaoMic();
                 }
             };
 
-            // 📦 timeslice de 250ms garante que tablets e iOS entregam os pacotes de áudio continuamente
+            try { recorder.start(250); } catch (e) { recorder.start(); }
+
+            if (btn) {
+                btn.innerHTML = '🔴';
+                btn.style.background = '#ef4444';
+                btn.style.animation = 'pulse 1s infinite';
+                btn.title = 'A ouvir... Pára sozinho ao terminar ou toque para enviar!';
+            }
+
+            // 🔇 Auto-parada por silêncio (para funcionar igual ao SpeechRecognition com 1 toque!)
             try {
-                recorder.start(250);
-            } catch (errStart) {
-                recorder.start();
-            }
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (AudioCtx) {
+                    const ctx = new AudioCtx();
+                    if (ctx.state === 'suspended') ctx.resume().catch(() => {});
+                    const src = ctx.createMediaStreamSource(stream);
+                    const analyser = ctx.createAnalyser();
+                    analyser.fftSize = 256;
+                    src.connect(analyser);
+                    Workspace.Arena.audioContextArena = ctx;
 
-            Workspace.Arena.micEstadoArena = 'recording';
-            Workspace.Arena._atualizarBotaoMicVisual('recording', 0.05);
-            Workspace.Arena._iniciarMedidorVozVisual(stream);
+                    const buf = new Uint8Array(analyser.fftSize);
+                    let falouAlgo = false;
+                    let ultimoSomMs = Date.now();
+                    const inicioMs = Date.now();
 
-            if (window.Workspace && Workspace.mostrarAviso) {
-                Workspace.mostrarAviso("🎙️ A gravar! Fale em inglês e toque no ⏹️ para enviar.", "info", 2200);
-            }
+                    Workspace.Arena.silencioMonitorInterval = setInterval(() => {
+                        if (!Workspace.Arena.mediaRecorderArena || Workspace.Arena.mediaRecorderArena.state !== 'recording') return;
+                        analyser.getByteTimeDomainData(buf);
+                        let soma = 0;
+                        for (let i = 0; i < buf.length; i++) {
+                            const v = (buf[i] - 128) / 128;
+                            soma += v * v;
+                        }
+                        const rms = Math.sqrt(soma / buf.length);
+                        const agora = Date.now();
+                        if (rms > 0.025) {
+                            falouAlgo = true;
+                            ultimoSomMs = agora;
+                        }
+                        if (falouAlgo && (agora - ultimoSomMs) > 1700 && (agora - inicioMs) > 1200) {
+                            try { Workspace.Arena.mediaRecorderArena.stop(); } catch (e) {}
+                        }
+                    }, 150);
+                }
+            } catch (e) {}
 
-            // Envio automático de segurança após 18 segundos para nunca ficar aberto indefinidamente
-            clearTimeout(Workspace.Arena.timerMaximoGravacao);
+            // Limite máximo de 12s (mantém o arquivo pequeno e rápido)
             Workspace.Arena.timerMaximoGravacao = setTimeout(() => {
                 if (Workspace.Arena.mediaRecorderArena && Workspace.Arena.mediaRecorderArena.state === 'recording') {
-                    try { Workspace.Arena.mediaRecorderArena.requestData(); } catch (e) {}
                     try { Workspace.Arena.mediaRecorderArena.stop(); } catch (e) {}
                 }
-            }, 18000);
+            }, 12000);
 
         } catch (errMic) {
-            if (stream) {
-                stream.getTracks().forEach(t => { try { t.stop(); } catch (e) {} });
-            }
-            Workspace.Arena._liberarHardwareMicrofone();
-            Workspace.Arena.micEstadoArena = 'idle';
-            Workspace.Arena._atualizarBotaoMicVisual('idle');
-
-            const nomeErro = errMic?.name || '';
-            let msgErro = "🎙️ Não foi possível aceder ao microfone. Verifique as permissões do navegador ou use a barra de texto abaixo.";
-            if (nomeErro === 'NotAllowedError' || nomeErro === 'PermissionDeniedError') {
-                msgErro = "🔒 Microfone bloqueado! Toque no ícone de cadeado na barra de endereço, permita o Microfone e tente novamente.";
-            } else if (nomeErro === 'NotFoundError' || nomeErro === 'DevicesNotFoundError') {
-                msgErro = "🎙️ Nenhum microfone foi encontrado neste aparelho. Use a barra de texto abaixo!";
-            } else if (nomeErro === 'NotReadableError' || nomeErro === 'AbortError') {
-                msgErro = "🎙️ Outro aplicativo (ex: chamada/Meet) está a segurar o microfone. Silencie a outra chamada por 3s ou digite abaixo.";
-            }
-
+            Workspace.Arena._liberarHardwareAudio();
+            Workspace.Arena.micAtivoArena = false;
+            Workspace.Arena._resetarBotaoMic();
             const inputFala = document.getElementById('ws-arena-input-fala');
             if (inputFala) inputFala.focus();
             if (window.Workspace && Workspace.mostrarAviso) {
-                Workspace.mostrarAviso(msgErro, "warning", 5500);
+                Workspace.mostrarAviso("🔒 Microfone indisponível ou bloqueado pelo aparelho. Verifique a permissão ou escreva abaixo.", "warning", 5000);
             }
         }
     },
 
     alternarMicrofone: () => {
-        // 1. Se já está a gravar -> pára e envia para transcrição
-        if (Workspace.Arena.micEstadoArena === 'recording' && Workspace.Arena.mediaRecorderArena) {
-            try { Workspace.Arena.mediaRecorderArena.requestData(); } catch (e) {}
-            try { Workspace.Arena.mediaRecorderArena.stop(); } catch (e) {
+        // 1. Se o gravador de nuvem estiver ativo -> pára e envia na hora
+        if (Workspace.Arena.mediaRecorderArena && Workspace.Arena.mediaRecorderArena.state === 'recording') {
+            try { Workspace.Arena.mediaRecorderArena.stop(); } catch (e) { Workspace.Arena.pararECancelarMicrofone(); }
+            return;
+        }
+
+        // 2. Se o reconhecimento nativo estiver ativo -> encerra e envia o que já captou
+        if (Workspace.Arena.micAtivoArena) {
+            if (Workspace.Arena.reconhecimentoVoz) {
+                try { Workspace.Arena.reconhecimentoVoz.stop(); } catch (e) { Workspace.Arena.pararECancelarMicrofone(); }
+                setTimeout(() => {
+                    if (Workspace.Arena.micAtivoArena) Workspace.Arena.pararECancelarMicrofone();
+                }, 450);
+            } else {
                 Workspace.Arena.pararECancelarMicrofone();
             }
             return;
         }
 
-        // 2. Se está a transcrever (⏳) -> toque cancela e destrava imediatamente
-        if (Workspace.Arena.micEstadoArena === 'transcribing') {
-            Workspace.Arena.pararECancelarMicrofone();
-            return;
+        // 3. Inicia o modo rápido (SpeechRecognition nativo com fallback automático para nuvem)
+        if (Workspace.Arena.usandoGravadorNuvem) {
+            Workspace.Arena.iniciarGravacaoNuvem();
+        } else {
+            Workspace.Arena.iniciarReconhecimentoNativo();
         }
-
-        // 3. Se está a aguardar o pedido de permissão do sistema -> ignora duplo toque
-        if (Workspace.Arena.micEstadoArena === 'starting') {
-            return;
-        }
-
-        // 4. Inicia gravação universal diretamente no gesto do utilizador
-        Workspace.Arena.iniciarGravacaoNuvem();
     },
 
     // ⌨️ Envia a fala digitada ou ditada na barra rápida inferior
