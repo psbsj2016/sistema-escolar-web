@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700;800&family=JetBrains+Mono:wght@600&display=swap" rel="stylesheet">
-  <style>:root{--bg:#f8fafc;--bg-soft:#f1f5f9;--surface:#fff;--slate-950:#020617;--slate-900:#0f172a;--slate-800:#1e293b;--slate-700:#334155;--slate-600:#475569;--slate-500:#64748b;--slate-300:#cbd5e1;--slate-200:#e2e8f0;--slate-100:#f1f5f9;--blue-600:#2563eb;--blue-500:#3b82f6;--blue-50:#eff6ff;--sidebar-w:274px}*,:before,:after{box-sizing:border-box}*{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}html,body{background:var(--bg-soft);overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,-apple-system,sans-serif;overflow:hidden}#lousa-app{background:#eef2f7;flex-direction:row;align-items:stretch;width:100vw;height:100dvh;display:flex;position:relative;overflow:hidden}.sidebar-left{width:var(--sidebar-w);min-width:var(--sidebar-w);max-width:var(--sidebar-w);z-index:35;background:#fff;border-right:1px solid #e2e8f0;flex-direction:column;flex-shrink:0;height:100dvh;transition:margin-left .24s cubic-bezier(.4,0,.2,1),opacity .18s;display:flex;overflow:hidden;box-shadow:4px 0 22px #0f172a0f}#lousa-app.sidebar-collapsed .sidebar-left{margin-left:calc(var(--sidebar-w) * -1);opacity:0;pointer-events:none}.sidebar-top-minimal{background:#fff;border-bottom:1px solid #f1f5f9;flex:none;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.sidebar-top-label{color:#475569;text-transform:uppercase;letter-spacing:.06em;align-items:center;gap:6px;font-size:11.5px;font-weight:800;display:inline-flex}.btn-collapse-sidebar{color:#334155;cursor:pointer;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;align-items:center;gap:5px;height:30px;padding:0 10px;font-size:11.5px;font-weight:700;transition:all .16s;display:inline-flex}.btn-collapse-sidebar:hover{color:#fff;background:#0f172a;border-color:#0f172a}.sidebar-scroll{touch-action:pan-y;flex-direction:column;flex:1;gap:10px;padding:10px 12px 18px;display:flex;overflow:hidden auto}.sidebar-scroll::-webkit-scrollbar{width:5px}.sidebar-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.sidebar-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;flex-direction:column;gap:8px;width:100%;padding:10px;display:flex}.sidebar-section-title{letter-spacing:.06em;text-transform:uppercase;color:#64748b;justify-content:space-between;align-items:center;margin:0;font-size:10px;font-weight:800;display:flex}.tools-grid-compact{grid-template-columns:repeat(2,1fr);gap:6px;width:100%;display:grid}.tool-btn{color:#334155;cursor:pointer;white-space:nowrap;text-overflow:ellipsis;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;justify-content:flex-start;align-items:center;gap:6px;height:36px;padding:0 9px;font-size:12px;font-weight:700;transition:all .15s;display:inline-flex;overflow:hidden}.tool-btn:hover{color:#0f172a;background:#f1f5f9;border-color:#cbd5e1}.tool-btn.active{color:#fff;background:#0f172a;border-color:#0f172a;box-shadow:0 4px 10px #0f172a29}.tool-btn.full-row{grid-column:span 2;justify-content:center}.screens-group{background:#fff;border:1px solid #e2e8f0;border-radius:10px;flex-wrap:wrap;align-items:center;gap:5px;width:100%;padding:6px;display:flex}.screen-nav-btn{color:#334155;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;justify-content:center;align-items:center;gap:3px;min-width:30px;height:30px;padding:0 8px;font-size:11.5px;font-weight:700;display:flex}.screen-nav-btn:hover{color:#0f172a;background:#e2e8f0}.screen-nav-btn.add{color:#fff;background:linear-gradient(#10b981 0%,#059669 100%);border-color:#059669;font-weight:800}.screen-nav-btn.del{color:#e11d48;background:#fff1f2;border-color:#fecdd3}#select-screen-number{color:#0f172a;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:8px;outline:none;flex:1;min-width:105px;height:30px;padding:0 8px;font-size:11.5px;font-weight:700}.picker-trigger-btn{color:#0f172a;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;justify-content:space-between;align-items:center;width:100%;height:34px;padding:0 10px;font-size:12px;font-weight:700;display:flex}.picker-trigger-btn:hover{border-color:#94a3b8}.color-preview-circle{border:2px solid #fff;border-radius:50%;flex-shrink:0;width:17px;height:17px;display:inline-block;box-shadow:0 0 0 1px #cbd5e1}.size-btn{color:#475569;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:8px;flex:1;height:31px;padding:0 8px;font-size:11.5px;font-weight:700}.size-btn.active{color:#fff;background:#0f172a;border-color:#0f172a}#select-fundo{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:9px;outline:none;width:100%;height:33px;padding:0 10px;font-size:12px;font-weight:700}.action-pill{color:#334155;cursor:pointer;white-space:nowrap;background:#fff;border:1px solid #e2e8f0;border-radius:8px;flex:1;justify-content:center;align-items:center;gap:4px;height:31px;padding:0 8px;font-size:11.5px;font-weight:700;display:inline-flex}.action-pill:hover{background:#f1f5f9;border-color:#cbd5e1}.action-pill.danger{color:#dc2626;background:#fff5f5;border-color:#fecaca}#canvas-stage{background:radial-gradient(#94a3b838 1.2px,#0000 1.2px) 0 0/22px 22px,linear-gradient(#f8fafc 0%,#eef2ff 100%);flex-direction:column;flex:1;justify-content:center;align-items:center;width:100%;height:100dvh;min-height:0;padding:46px 10px 10px;display:flex;position:relative;overflow:hidden}#lousa-canvas{z-index:2;touch-action:none;background:#fff;border:1px solid #cbd5e1e6;border-radius:14px;display:block;position:relative;box-shadow:0 4px 12px #0f172a0f,0 18px 42px #0f172a17}#floating-quick-dock{z-index:40;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);scrollbar-width:none;background:#fffffff2;border:1px solid #cbd5e1;border-radius:12px;align-items:center;gap:4px;max-width:calc(100% - 16px);padding:4px 8px;display:flex;position:absolute;top:6px;left:50%;overflow-x:auto;transform:translate(-50%);box-shadow:0 6px 20px #0f172a1a}#floating-quick-dock::-webkit-scrollbar{display:none}.qd-btn{color:#1e293b;cursor:pointer;white-space:nowrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;flex-shrink:0;justify-content:center;align-items:center;gap:4px;min-width:32px;height:30px;padding:0 7px;font-size:13.5px;font-weight:700;transition:all .14s;display:inline-flex}.qd-btn:hover{color:#1d4ed8;background:#eff6ff;border-color:#93c5fd}.qd-btn.active{color:#fff;background:#0f172a;border-color:#0f172a;box-shadow:0 2px 8px #0f172a40}.qd-btn.qd-menu-btn{color:#fff;background:#2563eb;border-color:#2563eb;padding:0 9px;font-size:11.5px}.qd-btn.qd-menu-btn:hover{color:#fff;background:#1d4ed8;border-color:#1d4ed8}.qd-btn.qd-danger{color:#dc2626;background:#fff5f5;border-color:#fecaca}.qd-btn.qd-danger:hover{background:#fee2e2;border-color:#fca5a5}.qd-divider{background:#cbd5e1;flex-shrink:0;width:1px;height:18px;margin:0 2px}.qd-color-dot{border:2px solid #fff;border-radius:50%;width:15px;height:15px;display:inline-block;box-shadow:0 0 0 1.5px #64748b}@keyframes popIn{0%{opacity:0;transform:translateY(8px)scale(.96)}to{opacity:1;transform:translateY(0)scale(1)}}.floating-popover{z-index:60;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);background:#fffffffa;border:1px solid #cbd5e1;border-radius:16px;flex-direction:column;gap:10px;min-width:256px;padding:13px;animation:.16s popIn;display:none;position:fixed;box-shadow:0 24px 64px #0f172a38}.color-grid{grid-template-columns:repeat(6,1fr);gap:8px;display:grid}.color-swatch{cursor:pointer;border:3px solid #fff;border-radius:50%;width:32px;height:32px;transition:all .15s;box-shadow:0 0 0 1px #cbd5e1}.color-swatch.active{transform:scale(1.08);box-shadow:0 0 0 2.5px #0f172a,0 0 0 5px #2563eb33}.shape-grid{grid-template-columns:repeat(2,1fr);gap:7px;display:grid}.shape-option-btn{color:#1e293b;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:9px;align-items:center;gap:6px;padding:8px 10px;font-size:12px;font-weight:700;display:flex}.shape-option-btn:hover{background:#eff6ff;border-color:#93c5fd}#text-editor-box{z-index:68;box-shadow:none;touch-action:auto;background:0 0;border:none;flex-direction:column;width:auto;min-width:110px;max-width:90vw;height:auto;padding:0;display:none;position:fixed;overflow:visible}#text-floating-toolbar{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:70;background:#fffffffa;border:1px solid #cbd5e1;border-radius:11px;flex-wrap:wrap;align-items:center;gap:4px;width:max-content;max-width:calc(100vw - 20px);padding:5px 7px;display:flex;position:absolute;bottom:calc(100% + 10px);left:0;box-shadow:0 12px 32px #0f172a38}#text-editor-box.toolbar-below #text-floating-toolbar{top:calc(100% + 10px);bottom:auto}.text-drag-grip{cursor:move;color:#64748b;touch-action:none;border-radius:6px;align-items:center;height:26px;padding:0 5px;font-size:13px;font-weight:900;display:inline-flex}.text-drag-grip:hover{color:#0f172a;background:#f1f5f9}.fmt-btn{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:7px;justify-content:center;align-items:center;width:26px;height:26px;font-size:12px;transition:all .12s;display:inline-flex}.fmt-btn:hover{background:#eff6ff;border-color:#93c5fd}.fmt-btn.active{background:var(--slate-900);color:#fff;border-color:var(--slate-900)}.fmt-btn.confirm-btn{color:#fff;background:#2563eb;border-color:#2563eb;width:auto;padding:0 9px;font-weight:800}.fmt-btn.confirm-btn:hover{background:#1d4ed8}.fmt-btn.cancel-btn{color:#e11d48;background:#fff1f2;border-color:#fecdd3;font-weight:800}.fmt-btn.cancel-btn:hover{background:#ffe4e6}.fmt-btn.dup-btn{color:#059669;background:#ecfdf5;border-color:#a7f3d0;font-weight:800}.fmt-btn.dup-btn:hover{background:#d1fae5;border-color:#34d399}.fmt-color-wrap{background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;align-items:center;gap:3px;padding:2px 5px;display:inline-flex}.fmt-color-dot{cursor:pointer;border:1.5px solid #fff;border-radius:50%;width:15px;height:15px;transition:transform .12s;box-shadow:0 0 0 1px #cbd5e1}.fmt-color-dot:hover{transform:scale(1.18)}#text-color-input{cursor:pointer;background:0 0;border:none;width:20px;height:20px;padding:0}#text-font-select{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:7px;outline:none;width:112px;height:26px;padding:0 5px;font-size:11px;font-weight:600}#text-editor-input{color:#0f172a;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;cursor:text;background:0 0;border:1.5px dashed #2563eb80;border-radius:6px;outline:none;width:100%;min-width:80px;min-height:1.3em;padding:2px 6px;font-family:Segoe UI,sans-serif;font-size:22px;line-height:1.3;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}#text-editor-input:empty:before{content:attr(data-placeholder);color:#64748ba6;pointer-events:none;font-style:normal;font-weight:500}.txt-resize-handle.e{cursor:ew-resize;z-index:6;touch-action:none;justify-content:center;align-items:center;width:12px;display:flex;position:absolute;top:0;bottom:0;right:-7px}.txt-resize-handle.e:after{content:"";background:#2563eb8c;border-radius:99px;width:4px;height:20px}.studio-modal{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);z-index:75;background:#020617a3;justify-content:center;align-items:center;padding:16px;display:none;position:fixed;inset:0}.info-modal-card{background:#fff;border:1px solid #e2e8f0;border-radius:22px;flex-direction:column;width:100%;max-width:740px;max-height:90vh;animation:.22s popIn;display:flex;overflow:hidden;box-shadow:0 32px 80px #00000047}.info-type-grid{grid-template-columns:repeat(auto-fill,minmax(155px,1fr));gap:8px;margin-bottom:14px;display:grid}.info-type-btn{text-align:left;cursor:pointer;background:#f8fafc;border:1.5px solid #e2e8f0;border-radius:12px;flex-direction:column;gap:3px;padding:10px;transition:all .15s;display:flex}.info-type-btn.active{background:linear-gradient(#eff6ff 0%,#dbeafe 100%);border-color:#2563eb;box-shadow:0 0 0 3px #2563eb24}.info-input{background:#fff;border:1px solid #cbd5e1;border-radius:9px;outline:none;width:100%;height:38px;padding:0 12px;font-family:inherit;font-size:13px;font-weight:500;-webkit-user-select:text!important;user-select:text!important}#tela-espera-aluno{color:#fff;text-align:center;z-index:90;background:radial-gradient(800px 500px at 30% 20%,#2563eb2e 0%,#0000 60%),linear-gradient(#0f172a 0%,#020617 100%);flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:28px;display:none;position:fixed;inset:0}@keyframes pulse{0%,to{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.98)}}#badge-somente-leitura{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#f1f5f9;z-index:30;white-space:nowrap;pointer-events:none;background:#0f172ae0;border:1px solid #ffffff1f;border-radius:999px;padding:7px 15px;font-size:12px;font-weight:700;display:none;position:absolute;bottom:12px;left:50%;transform:translate(-50%)}@media (width<=900px){.sidebar-left{z-index:55;position:fixed;top:0;bottom:0;left:0;box-shadow:12px 0 36px #0f172a47}#canvas-stage{padding:44px 6px 8px}#floating-quick-dock{justify-content:flex-start;width:calc(100% - 12px);max-width:none;left:6px;right:6px;transform:none}}</style>
+  <style>:root{--bg:#f8fafc;--bg-soft:#f1f5f9;--surface:#fff;--slate-950:#020617;--slate-900:#0f172a;--slate-800:#1e293b;--slate-700:#334155;--slate-600:#475569;--slate-500:#64748b;--slate-300:#cbd5e1;--slate-200:#e2e8f0;--slate-100:#f1f5f9;--blue-600:#2563eb;--blue-500:#3b82f6;--blue-50:#eff6ff;--sidebar-w:274px}*,:before,:after{box-sizing:border-box}*{-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}html,body{background:var(--bg-soft);overscroll-behavior:none;touch-action:none;-webkit-user-select:none;user-select:none;width:100%;height:100%;margin:0;padding:0;font-family:Inter,system-ui,-apple-system,sans-serif;overflow:hidden}#lousa-app{background:#eef2f7;flex-direction:row;align-items:stretch;width:100vw;height:100dvh;display:flex;position:relative;overflow:hidden}.sidebar-left{width:var(--sidebar-w);min-width:var(--sidebar-w);max-width:var(--sidebar-w);z-index:35;background:#fff;border-right:1px solid #e2e8f0;flex-direction:column;flex-shrink:0;height:100dvh;transition:margin-left .24s cubic-bezier(.4,0,.2,1),opacity .18s;display:flex;overflow:hidden;box-shadow:4px 0 22px #0f172a0f}#lousa-app.sidebar-collapsed .sidebar-left{margin-left:calc(var(--sidebar-w) * -1);opacity:0;pointer-events:none}.sidebar-top-minimal{background:#fff;border-bottom:1px solid #f1f5f9;flex:none;justify-content:space-between;align-items:center;gap:8px;padding:10px 12px;display:flex}.sidebar-top-label{color:#475569;text-transform:uppercase;letter-spacing:.06em;align-items:center;gap:6px;font-size:11.5px;font-weight:800;display:inline-flex}.btn-collapse-sidebar{color:#334155;cursor:pointer;background:#f1f5f9;border:1px solid #e2e8f0;border-radius:8px;align-items:center;gap:5px;height:30px;padding:0 10px;font-size:11.5px;font-weight:700;transition:all .16s;display:inline-flex}.btn-collapse-sidebar:hover{color:#fff;background:#0f172a;border-color:#0f172a}.sidebar-scroll{touch-action:pan-y;flex-direction:column;flex:1;gap:10px;padding:10px 12px 18px;display:flex;overflow:hidden auto}.sidebar-scroll::-webkit-scrollbar{width:5px}.sidebar-scroll::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:999px}.sidebar-section{background:#f8fafc;border:1px solid #e2e8f0;border-radius:12px;flex-direction:column;gap:8px;width:100%;padding:10px;display:flex}.sidebar-section-title{letter-spacing:.06em;text-transform:uppercase;color:#64748b;justify-content:space-between;align-items:center;margin:0;font-size:10px;font-weight:800;display:flex}.tools-grid-compact{grid-template-columns:repeat(2,1fr);gap:6px;width:100%;display:grid}.tool-btn{color:#334155;cursor:pointer;white-space:nowrap;text-overflow:ellipsis;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;justify-content:flex-start;align-items:center;gap:6px;height:36px;padding:0 9px;font-size:12px;font-weight:700;transition:all .15s;display:inline-flex;overflow:hidden}.tool-btn:hover{color:#0f172a;background:#f1f5f9;border-color:#cbd5e1}.tool-btn.active{color:#fff;background:#0f172a;border-color:#0f172a;box-shadow:0 4px 10px #0f172a29}.tool-btn.full-row{grid-column:span 2;justify-content:center}.screens-group{background:#fff;border:1px solid #e2e8f0;border-radius:10px;flex-wrap:wrap;align-items:center;gap:5px;width:100%;padding:6px;display:flex}.screen-nav-btn{color:#334155;cursor:pointer;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;justify-content:center;align-items:center;gap:3px;min-width:30px;height:30px;padding:0 8px;font-size:11.5px;font-weight:700;display:flex}.screen-nav-btn:hover{color:#0f172a;background:#e2e8f0}.screen-nav-btn.add{color:#fff;background:linear-gradient(#10b981 0%,#059669 100%);border-color:#059669;font-weight:800}.screen-nav-btn.del{color:#e11d48;background:#fff1f2;border-color:#fecdd3}#select-screen-number{color:#0f172a;cursor:pointer;background:#fff;border:1px solid #cbd5e1;border-radius:8px;outline:none;flex:1;min-width:105px;height:30px;padding:0 8px;font-size:11.5px;font-weight:700}.picker-trigger-btn{color:#0f172a;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:9px;justify-content:space-between;align-items:center;width:100%;height:34px;padding:0 10px;font-size:12px;font-weight:700;display:flex}.picker-trigger-btn:hover{border-color:#94a3b8}.color-preview-circle{border:2px solid #fff;border-radius:50%;flex-shrink:0;width:17px;height:17px;display:inline-block;box-shadow:0 0 0 1px #cbd5e1}.size-btn{color:#475569;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:8px;flex:1;height:31px;padding:0 8px;font-size:11.5px;font-weight:700}.size-btn.active{color:#fff;background:#0f172a;border-color:#0f172a}#select-fundo{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:9px;outline:none;width:100%;height:33px;padding:0 10px;font-size:12px;font-weight:700}.action-pill{color:#334155;cursor:pointer;white-space:nowrap;background:#fff;border:1px solid #e2e8f0;border-radius:8px;flex:1;justify-content:center;align-items:center;gap:4px;height:31px;padding:0 8px;font-size:11.5px;font-weight:700;display:inline-flex}.action-pill:hover{background:#f1f5f9;border-color:#cbd5e1}.action-pill.danger{color:#dc2626;background:#fff5f5;border-color:#fecaca}#canvas-stage{background:radial-gradient(#94a3b838 1.2px,#0000 1.2px) 0 0/22px 22px,linear-gradient(#f8fafc 0%,#eef2ff 100%);flex-direction:column;flex:1;justify-content:center;align-items:center;width:100%;height:100dvh;min-height:0;padding:46px 10px 10px;display:flex;position:relative;overflow:hidden}#lousa-canvas{z-index:2;touch-action:none;background:#fff;border:1px solid #cbd5e1e6;border-radius:14px;display:block;position:relative;box-shadow:0 4px 12px #0f172a0f,0 18px 42px #0f172a17}#floating-quick-dock{z-index:40;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);scrollbar-width:none;background:#fffffff2;border:1px solid #cbd5e1;border-radius:12px;align-items:center;gap:4px;max-width:calc(100% - 16px);padding:4px 8px;display:flex;position:absolute;top:6px;left:50%;overflow-x:auto;transform:translate(-50%);box-shadow:0 6px 20px #0f172a1a}#floating-quick-dock::-webkit-scrollbar{display:none}.qd-btn{color:#1e293b;cursor:pointer;white-space:nowrap;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;flex-shrink:0;justify-content:center;align-items:center;gap:4px;min-width:32px;height:30px;padding:0 7px;font-size:13.5px;font-weight:700;transition:all .14s;display:inline-flex}.qd-btn:hover{color:#1d4ed8;background:#eff6ff;border-color:#93c5fd}.qd-btn.active{color:#fff;background:#0f172a;border-color:#0f172a;box-shadow:0 2px 8px #0f172a40}.qd-btn.qd-menu-btn{color:#fff;background:#2563eb;border-color:#2563eb;padding:0 9px;font-size:11.5px}.qd-btn.qd-menu-btn:hover{color:#fff;background:#1d4ed8;border-color:#1d4ed8}.qd-btn.qd-danger{color:#dc2626;background:#fff5f5;border-color:#fecaca}.qd-btn.qd-danger:hover{background:#fee2e2;border-color:#fca5a5}.qd-divider{background:#cbd5e1;flex-shrink:0;width:1px;height:18px;margin:0 2px}.qd-color-dot{border:2px solid #fff;border-radius:50%;width:15px;height:15px;display:inline-block;box-shadow:0 0 0 1.5px #64748b}@keyframes popIn{0%{opacity:0;transform:translateY(8px)scale(.96)}to{opacity:1;transform:translateY(0)scale(1)}}.floating-popover{z-index:60;-webkit-backdrop-filter:blur(22px);backdrop-filter:blur(22px);background:#fffffffa;border:1px solid #cbd5e1;border-radius:16px;flex-direction:column;gap:10px;min-width:256px;padding:13px;animation:.16s popIn;display:none;position:fixed;box-shadow:0 24px 64px #0f172a38}.color-grid{grid-template-columns:repeat(6,1fr);gap:8px;display:grid}.color-swatch{cursor:pointer;border:3px solid #fff;border-radius:50%;width:32px;height:32px;transition:all .15s;box-shadow:0 0 0 1px #cbd5e1}.color-swatch.active{transform:scale(1.08);box-shadow:0 0 0 2.5px #0f172a,0 0 0 5px #2563eb33}.shape-grid{grid-template-columns:repeat(2,1fr);gap:7px;display:grid}.shape-option-btn{color:#1e293b;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:9px;align-items:center;gap:6px;padding:8px 10px;font-size:12px;font-weight:700;display:flex}.shape-option-btn:hover{background:#eff6ff;border-color:#93c5fd}#text-editor-box{z-index:68;box-shadow:none;touch-action:auto;background:0 0;border:none;flex-direction:column;width:auto;min-width:110px;max-width:90vw;height:auto;padding:0;display:none;position:fixed;overflow:visible}#text-floating-toolbar{-webkit-backdrop-filter:blur(14px);backdrop-filter:blur(14px);z-index:70;background:#fffffffa;border:1px solid #cbd5e1;border-radius:11px;flex-wrap:wrap;align-items:center;gap:4px;width:max-content;max-width:calc(100vw - 20px);padding:5px 7px;display:flex;position:absolute;bottom:calc(100% + 10px);left:0;box-shadow:0 12px 32px #0f172a38}#text-editor-box.toolbar-below #text-floating-toolbar{top:calc(100% + 10px);bottom:auto}.text-drag-grip{cursor:move;color:#64748b;touch-action:none;border-radius:6px;align-items:center;height:26px;padding:0 5px;font-size:13px;font-weight:900;display:inline-flex}.text-drag-grip:hover{color:#0f172a;background:#f1f5f9}.fmt-btn{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:7px;justify-content:center;align-items:center;width:26px;height:26px;font-size:12px;transition:all .12s;display:inline-flex}.fmt-btn:hover{background:#eff6ff;border-color:#93c5fd}.fmt-btn.active{background:var(--slate-900);color:#fff;border-color:var(--slate-900)}.fmt-btn.confirm-btn{color:#fff;background:#2563eb;border-color:#2563eb;width:auto;padding:0 9px;font-weight:800}.fmt-btn.confirm-btn:hover{background:#1d4ed8}.fmt-btn.cancel-btn{color:#e11d48;background:#fff1f2;border-color:#fecdd3;font-weight:800}.fmt-btn.cancel-btn:hover{background:#ffe4e6}.fmt-btn.dup-btn{color:#059669;background:#ecfdf5;border-color:#a7f3d0;font-weight:800}.fmt-btn.dup-btn:hover{background:#d1fae5;border-color:#34d399}.fmt-color-wrap{background:#f8fafc;border:1px solid #e2e8f0;border-radius:7px;align-items:center;gap:3px;padding:2px 5px;display:inline-flex}.fmt-color-dot{cursor:pointer;border:1.5px solid #fff;border-radius:50%;width:15px;height:15px;transition:transform .12s;box-shadow:0 0 0 1px #cbd5e1}.fmt-color-dot:hover{transform:scale(1.18)}#text-color-input{cursor:pointer;background:0 0;border:none;width:20px;height:20px;padding:0}#text-font-select{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:7px;outline:none;width:112px;height:26px;padding:0 5px;font-size:11px;font-weight:600}#text-editor-input{color:#0f172a;white-space:pre-wrap;word-wrap:break-word;overflow-wrap:break-word;cursor:text;background:0 0;border:1.5px dashed #2563eb80;border-radius:6px;outline:none;width:100%;min-width:80px;min-height:1.3em;padding:2px 6px;font-family:Segoe UI,sans-serif;font-size:22px;line-height:1.3;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}#text-editor-input:empty:before{content:attr(data-placeholder);color:#64748ba6;pointer-events:none;font-style:normal;font-weight:500}.txt-resize-handle.e{cursor:ew-resize;z-index:6;touch-action:none;justify-content:center;align-items:center;width:12px;display:flex;position:absolute;top:0;bottom:0;right:-7px}.txt-resize-handle.e:after{content:"";background:#2563eb8c;border-radius:99px;width:4px;height:20px}.mindmap-popover-grid{grid-template-columns:repeat(2,1fr);gap:6px;width:310px;max-width:calc(100vw - 36px);display:grid}.mindmap-option-btn{color:#0f172a;text-align:left;cursor:pointer;background:#fff;border:1.5px solid #e2e8f0;border-radius:10px;flex-direction:column;gap:2px;padding:8px 9px;transition:all .14s;display:flex}.mindmap-option-btn:hover{background:#eff6ff;border-color:#3b82f6;transform:translateY(-1px)}.mindmap-option-btn b{color:#0f172a;font-size:11.5px;line-height:1.2}.mindmap-option-btn span{color:#64748b;font-size:10px;line-height:1.2}#inline-map-editor{z-index:72;touch-action:auto;background:0 0;border:none;padding:0;display:none;position:fixed;overflow:visible}#inline-map-input{resize:none;background:#ffffff40;border:1.5px dashed #2563eb;border-radius:6px;outline:none;width:100%;height:100%;padding:2px 5px;font-family:Segoe UI,sans-serif;line-height:1.22;overflow-y:auto;-webkit-user-select:text!important;user-select:text!important;touch-action:auto!important}#inline-map-actions{-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);z-index:74;background:#fffffffa;border:1px solid #cbd5e1;border-radius:8px;align-items:center;gap:4px;padding:3px 5px;display:flex;position:absolute;bottom:calc(100% + 6px);right:0;box-shadow:0 8px 20px #0f172a33}#inline-map-editor.bar-below #inline-map-actions{top:calc(100% + 6px);bottom:auto}.imap-btn{color:#334155;cursor:pointer;background:#fff;border:1px solid #e2e8f0;border-radius:6px;justify-content:center;align-items:center;gap:3px;height:24px;padding:0 8px;font-size:11px;font-weight:800;display:inline-flex}.imap-btn.ok{color:#fff;background:#2563eb;border-color:#2563eb}.imap-btn.del{color:#e11d48;background:#fff1f2;border-color:#fecdd3}#tela-espera-aluno{color:#fff;text-align:center;z-index:90;background:radial-gradient(800px 500px at 30% 20%,#2563eb2e 0%,#0000 60%),linear-gradient(#0f172a 0%,#020617 100%);flex-direction:column;justify-content:center;align-items:center;gap:20px;padding:28px;display:none;position:fixed;inset:0}@keyframes pulse{0%,to{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.98)}}#badge-somente-leitura{-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);color:#f1f5f9;z-index:30;white-space:nowrap;pointer-events:none;background:#0f172ae0;border:1px solid #ffffff1f;border-radius:999px;padding:7px 15px;font-size:12px;font-weight:700;display:none;position:absolute;bottom:12px;left:50%;transform:translate(-50%)}@media (width<=900px){.sidebar-left{z-index:55;position:fixed;top:0;bottom:0;left:0;box-shadow:12px 0 36px #0f172a47}#canvas-stage{padding:44px 6px 8px}#floating-quick-dock{justify-content:flex-start;width:calc(100% - 12px);max-width:none;left:6px;right:6px;transform:none}}</style>
 <link rel="manifest" href="/manifest.webmanifest"></head>
 <body>
   <div id="lousa-app">
@@ -40,12 +40,13 @@
           </div>
         </div>
 
-        <!-- 2. QUADROS PEDAGÓGICOS -->
+        <!-- 2. MAPAS MENTAIS (10 FORMATOS ÚNICOS COM EDIÇÃO DIRETA NA LOUSA) -->
         <div class="sidebar-section" id="ui-studio-bar">
-          <div class="sidebar-section-title">🧩 Quadros Pedagógicos</div>
+          <div class="sidebar-section-title">🧠 Mapas Mentais</div>
           <div class="tools-grid-compact">
-            <button class="tool-btn" id="btn-open-infographic" title="Criar Infográfico (8 Modelos)">📊 Infográfico</button>
-            <button class="tool-btn" id="btn-open-mindmap" title="Criar Mapa Mental (8 Modelos)">🧠 Mapa Mental</button>
+            <button type="button" class="tool-btn full-row" id="btn-open-mindmaps-popover" title="Inserir Mapa Mental ou Esquema direto na lousa">
+              🧠 Mapas Mentais ▾
+            </button>
           </div>
         </div>
 
@@ -125,6 +126,7 @@
         <button type="button" class="qd-btn" data-qd-tool="laser" title="Laser Ao Vivo">🔴</button>
         <button type="button" class="qd-btn" data-qd-tool="pan" title="Arrastar a Tela">🖐️</button>
         <button type="button" class="qd-btn" id="qd-btn-shapes" title="Figuras Geométricas">📐</button>
+        <button type="button" class="qd-btn" id="qd-btn-mindmaps" title="Mapas Mentais (10 Formatos)">🧠</button>
         <div class="qd-divider"></div>
         <button type="button" class="qd-btn" id="qd-undo" title="Desfazer (Ctrl+Z)">↩</button>
         <button type="button" class="qd-btn" id="qd-redo" title="Refazer (Ctrl+Y)">↪</button>
@@ -171,6 +173,22 @@
       </div>
     </div>
 
+    <div id="mindmap-popover" class="floating-popover">
+      <div style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase;">🧠 Mapas Mentais (Clique para inserir)</div>
+      <div class="mindmap-popover-grid">
+        <button type="button" class="mindmap-option-btn" data-map-type="mm_aranha"><b>🕷️ Mapa Aranha</b><span>Núcleo central e ramos</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="mm_arvore"><b>🌳 Árvore / Organograma</b><span>Raiz e ramificações</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="mm_fluxo"><b>🔄 Fluxo / Passos</b><span>Etapas com setas</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="mm_ciclo"><b>♻️ Ciclo Contínuo</b><span>Fases em anel fechado</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="linha_tempo"><b>⏳ Linha do Tempo</b><span>Marcos cronológicos</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="comparativo"><b>⚖️ Comparativo A vs B</b><span>Duas colunas lado a lado</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="informativo"><b>📋 Lista / Notas</b><span>Tópicos destacados</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="estatistico"><b>📊 Barras de Domínio</b><span>Métricas de 0 a 100%</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="espaco_tempo"><b>📍 Cenários / Contextos</b><span>Cartões de situação</span></button>
+        <button type="button" class="mindmap-option-btn" data-map-type="interativo"><b>🃏 Flashcards Q&amp;A</b><span>Pergunta e resposta</span></button>
+      </div>
+    </div>
+
     <!-- EDITOR DE TEXTO DIRETO NA LOUSA (SEM CAIXA BRANCA + BARRINHA FLUTUANTE) -->
     <div id="text-editor-box">
       <div id="text-floating-toolbar">
@@ -211,36 +229,14 @@
       <div class="txt-resize-handle e" data-resize-dir="e" title="Arraste para ajustar a largura da linha"></div>
     </div>
 
-    <div id="infographic-modal" class="studio-modal">
-      <div class="info-modal-card">
-        <div style="padding:12px 18px; background:#0f172a; color:#fff; display:flex; justify-content:space-between; align-items:center;">
-          <div style="display:flex; align-items:center; gap:8px;">
-            <span id="studio-modal-icon" style="font-size:18px;">📊</span>
-            <h3 id="info-modal-header-title" style="margin:0; font-size:15px; font-weight:800;">Construtor de Infográficos Pedagógicos</h3>
-          </div>
-          <button type="button" id="btn-close-info-modal" style="background:rgba(255,255,255,0.15); border:none; color:#fff; width:28px; height:28px; border-radius:8px; cursor:pointer; font-weight:bold;">✕</button>
-        </div>
-        <div style="padding:14px 18px; overflow-y:auto; flex:1;">
-          <label style="font-size:11px; font-weight:800; color:#475569; text-transform:uppercase; display:block; margin-bottom:8px;">1. Escolha o Modelo:</label>
-          <div class="info-type-grid" id="info-type-grid"></div>
-          <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:12px; padding:12px;">
-            <div style="margin-bottom:10px;">
-              <label style="font-size:11.5px; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Título / Tema Principal:</label>
-              <input type="text" id="info-title-input" class="info-input" value="Simple Past vs Present Perfect">
-            </div>
-            <div id="info-extra-headers" style="margin-bottom:8px;"></div>
-            <div id="info-dynamic-fields" style="display:flex; flex-direction:column; gap:7px;"></div>
-            <button type="button" id="btn-add-info-option" style="margin-top:10px; width:100%; background:#eff6ff; border:1.5px dashed #3b82f6; color:#1d4ed8; padding:8px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">➕ Adicionar Mais Opção / Ramo</button>
-          </div>
-        </div>
-        <div style="padding:10px 18px; background:#f1f5f9; border-top:1px solid #e2e8f0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
-          <span style="font-size:11px; color:#64748b;">💡 Passe o cursor sobre o cartão na lousa para arrastar ou redimensionar.</span>
-          <div style="display:flex; gap:8px;">
-            <button type="button" id="btn-cancel-info" style="background:#fff; border:1px solid #cbd5e1; color:#475569; padding:7px 14px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer;">Cancelar</button>
-            <button type="button" id="btn-insert-info" style="background:linear-gradient(135deg, #2563eb, #1d4ed8); border:none; color:#fff; padding:7px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer;">✨ Salvar na Lousa</button>
-          </div>
-        </div>
+   <!-- EDITOR TRANSPARENTE DIRETO SOBRE QUALQUER TEXTO DO MAPA MENTAL -->
+    <div id="inline-map-editor">
+      <div id="inline-map-actions">
+        <button type="button" class="imap-btn ok" id="inline-map-ok" title="Salvar (Enter)">✔ Salvar</button>
+        <button type="button" class="imap-btn del" id="inline-map-delete-item" title="Excluir este ramo/item" style="display:none;">🗑️</button>
+        <button type="button" class="imap-btn" id="inline-map-cancel" title="Cancelar (Esc)">✕</button>
       </div>
+      <textarea id="inline-map-input" spellcheck="true"></textarea>
     </div>
 
     <div id="tela-espera-aluno">
@@ -415,10 +411,10 @@
           canvas.style.cursor = 'nwse-resize';
           return;
         }
-        if (hoveredHandle === 'duplicate' || hoveredHandle === 'info_add' || hoveredHandle === 'info_edit') {
+        if (['duplicate', 'info_add', 'info_remove', 'info_color', 'info_dup'].includes(hoveredHandle)) {
                           canvas.style.cursor = 'pointer';
-                          return;
-                      }
+                           return;
+                     }
         if (hoveredShape && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           canvas.style.cursor = 'grab';
           return;
@@ -1038,12 +1034,31 @@
         const y = item.y || 80;
         const { w, h, scale } = calcularDimensoesInfografico(item);
         const cor = item.color || '#2563eb';
-        const d = item.infoData || {};
-        const titulo = item.title || 'Quadro Visual';
+        const d = item.infoData = item.infoData || {};
+        const titulo = item.title || 'Mapa Mental';
         const t = item.infoType;
+
+        // Regista os campos editáveis sem poluir o JSON salvo no servidor (enumerable: false)
+        const slots = [];
+        Object.defineProperty(item, '_editSlots', {
+          value: slots,
+          writable: true,
+          configurable: true,
+          enumerable: false
+        });
+
+        const desenharSlot = (key, textoExibir, sx, sy, sw, sh, opts, handlers) => {
+          slots.push({ key, x: sx, y: sy, w: sw, h: sh, opts, ...handlers });
+          const estaEditando = activeInlineMapEdit && activeInlineMapEdit.shape === item && activeInlineMapEdit.slotKey === key;
+          if (!estaEditando) {
+            desenharTextoAjustado(c, textoExibir, sx, sy, sw, sh, opts);
+          }
+        };
+
         c.save();
         c.translate(x, y);
         c.scale(scale, scale);
+
         c.shadowColor = 'rgba(15, 23, 42, 0.14)';
         c.shadowBlur = 18;
         c.shadowOffsetY = 6;
@@ -1054,47 +1069,63 @@
         c.lineWidth = 2;
         c.strokeStyle = cor;
         c.stroke();
+
+        // Cabeçalho colorido do Mapa
         c.fillStyle = cor;
         roundRect(c, 0, 0, w, 44, 12);
         c.fill();
         c.fillRect(0, 28, w, 16);
-        desenharTextoAjustado(c, titulo, 16, 4, w - 165, 36, {
-          weight: '800', maxFont: 15, minFont: 10, color: '#ffffff', align: 'left', vAlign: 'middle'
+
+        // Título editável direto no cabeçalho
+        desenharSlot('title', titulo, 14, 4, w - 166, 36, {
+          weight: '800', maxFont: 15, minFont: 10, color: '#ffffff', align: 'left', vAlign: 'middle', darkBg: true
+        }, {
+          get: () => item.title || '',
+          set: (val) => { item.title = val.trim() || 'Mapa Mental'; }
         });
+
+        // 4 Botões diretos no topo: ➕ Adicionar ramo | ➖ Remover último | 🎨 Cor | 📋 Duplicar
         if (!(role === 'aluno' && isReadonly)) {
-          c.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(c, w - 142, 8, 38, 28, 7);
-          c.fill();
-          c.fillStyle = '#ffffff';
+          const botoesTopo = [
+            { x: w - 142, icon: '➕' },
+            { x: w - 108, icon: '➖' },
+            { x: w - 74,  icon: '🎨' },
+            { x: w - 40,  icon: '📋' }
+          ];
           c.font = '800 13px "Segoe UI", sans-serif';
           c.textAlign = 'center';
           c.textBaseline = 'middle';
-          c.fillText('➕', w - 123, 22);
-          c.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(c, w - 98, 8, 42, 28, 7);
-          c.fill();
-          c.fillStyle = '#ffffff';
-          c.fillText('✏️', w - 77, 22);
-          c.fillStyle = 'rgba(255,255,255,0.22)';
-          roundRect(c, w - 50, 8, 42, 28, 7);
-          c.fill();
-          c.font = '800 10px "Segoe UI", sans-serif';
-          c.fillText(`${Math.round(scale * 100)}%`, w - 29, 22);
+          botoesTopo.forEach(bt => {
+            c.fillStyle = 'rgba(255,255,255,0.22)';
+            roundRect(c, bt.x, 8, 30, 28, 7);
+            c.fill();
+            c.fillStyle = '#ffffff';
+            c.fillText(bt.icon, bt.x + 15, 22);
+          });
           c.textAlign = 'left';
         }
+
         const bodyY = 54;
         const bodyH = h - 66;
+
         if (t === 'estatistico') {
-          const itens = d.items || [{ label: 'Speaking', val: 85 }];
+          if (!Array.isArray(d.items) || d.items.length === 0) d.items = [{ label: 'Speaking', val: 85 }];
+          const itens = d.items;
           const rowH = bodyH / itens.length;
           itens.forEach((it, idx) => {
             const ry = bodyY + idx * rowH;
             const pct = Math.max(0, Math.min(100, Number(it.val) || 0));
-            desenharTextoAjustado(c, it.label, 16, ry + 4, 145, rowH - 8, {
+
+            desenharSlot(`stat_label_${idx}`, it.label, 16, ry + 4, 145, rowH - 8, {
               weight: '700', maxFont: 13, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => it.label || '',
+              set: (v) => { it.label = v.trim() || 'Item'; },
+              remove: itens.length > 1 ? () => { itens.splice(idx, 1); } : null
             });
+
             const barX = 168;
-            const barMaxW = w - 235;
+            const barMaxW = w - 238;
             const barY = ry + (rowH - 22) / 2;
             c.fillStyle = '#e2e8f0';
             roundRect(c, barX, barY, barMaxW, 22, 11);
@@ -1103,12 +1134,21 @@
             c.fillStyle = cor;
             roundRect(c, barX, barY, barW, 22, 11);
             c.fill();
-            desenharTextoAjustado(c, `${pct}%`, w - 58, ry + 4, 44, rowH - 8, {
+
+            desenharSlot(`stat_val_${idx}`, `${pct}%`, w - 62, ry + 4, 48, rowH - 8, {
               weight: '800', maxFont: 12.5, minFont: 10, color: '#0f172a', align: 'right', vAlign: 'middle'
+            }, {
+              get: () => String(pct),
+              set: (v) => {
+                const n = parseInt(String(v).replace(/[^\d]/g, ''), 10);
+                it.val = isNaN(n) ? 0 : Math.max(0, Math.min(100, n));
+              },
+              remove: itens.length > 1 ? () => { itens.splice(idx, 1); } : null
             });
           });
         } else if (t === 'informativo' || t === 'mm_texto') {
-          const topicos = d.topics || ['Tópico 1'];
+          if (!Array.isArray(d.topics) || d.topics.length === 0) d.topics = ['Tópico 1'];
+          const topicos = d.topics;
           const rowH = bodyH / topicos.length;
           topicos.forEach((topico, idx) => {
             const ry = bodyY + idx * rowH;
@@ -1119,6 +1159,7 @@
             c.strokeStyle = t === 'mm_texto' ? '#fde047' : '#cbd5e1';
             c.lineWidth = 1.5;
             c.stroke();
+
             c.fillStyle = cor;
             roundRect(c, 24, ry + (boxH - 24) / 2, 26, 24, 6);
             c.fill();
@@ -1126,42 +1167,68 @@
             c.font = '800 11.5px "Segoe UI", sans-serif';
             c.textAlign = 'center';
             c.textBaseline = 'middle';
-            c.fillText(t === 'mm_texto' ? '📝' : String(idx + 1), 37, ry + boxH / 2);
-            desenharTextoAjustado(c, String(topico), 60, ry + 4, w - 86, boxH - 8, {
+            c.fillText(String(idx + 1), 37, ry + boxH / 2);
+
+            desenharSlot(`topic_${idx}`, String(topico), 60, ry + 4, w - 86, boxH - 8, {
               weight: '600', maxFont: 13.5, minFont: 9.5, color: '#1e293b', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => String(topicos[idx] || ''),
+              set: (v) => { topicos[idx] = v.trim() || 'Tópico'; },
+              remove: topicos.length > 1 ? () => { topicos.splice(idx, 1); } : null
             });
           });
         } else if (t === 'comparativo') {
+          if (!Array.isArray(d.itemsA) || d.itemsA.length === 0) d.itemsA = ['Item A1'];
+          if (!Array.isArray(d.itemsB) || d.itemsB.length === 0) d.itemsB = ['Item B1'];
           const colW = (w - 44) / 2;
-          const itemsA = d.itemsA || [];
-          const itemsB = d.itemsB || [];
+          const itemsA = d.itemsA;
+          const itemsB = d.itemsB;
           const maxRows = Math.max(itemsA.length, itemsB.length, 1);
           const itemH = (bodyH - 42) / maxRows;
+
           c.fillStyle = '#eff6ff';
           roundRect(c, 16, bodyY, colW, bodyH, 10);
           c.fill();
-          desenharTextoAjustado(c, d.colA || 'Lado A', 26, bodyY + 6, colW - 20, 28, {
+          desenharSlot('colA', d.colA || 'Lado A', 24, bodyY + 6, colW - 16, 28, {
             weight: '800', maxFont: 14, minFont: 10, color: '#1d4ed8', align: 'center', vAlign: 'middle'
+          }, {
+            get: () => d.colA || 'Lado A',
+            set: (v) => { d.colA = v.trim() || 'Lado A'; }
           });
+
           itemsA.forEach((txt, i) => {
-            desenharTextoAjustado(c, `• ${txt}`, 24, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+            desenharSlot(`itemA_${i}`, `• ${txt}`, 24, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
               weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => String(itemsA[i] || ''),
+              set: (v) => { itemsA[i] = v.trim() || 'Item A'; },
+              remove: itemsA.length > 1 ? () => { itemsA.splice(i, 1); } : null
             });
           });
+
           const colBX = 28 + colW;
           c.fillStyle = '#fef2f2';
           roundRect(c, colBX, bodyY, colW, bodyH, 10);
           c.fill();
-          desenharTextoAjustado(c, d.colB || 'Lado B', colBX + 10, bodyY + 6, colW - 20, 28, {
+          desenharSlot('colB', d.colB || 'Lado B', colBX + 8, bodyY + 6, colW - 16, 28, {
             weight: '800', maxFont: 14, minFont: 10, color: '#dc2626', align: 'center', vAlign: 'middle'
+          }, {
+            get: () => d.colB || 'Lado B',
+            set: (v) => { d.colB = v.trim() || 'Lado B'; }
           });
+
           itemsB.forEach((txt, i) => {
-            desenharTextoAjustado(c, `• ${txt}`, colBX + 10, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
+            desenharSlot(`itemB_${i}`, `• ${txt}`, colBX + 8, bodyY + 38 + i * itemH, colW - 16, itemH - 4, {
               weight: '600', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => String(itemsB[i] || ''),
+              set: (v) => { itemsB[i] = v.trim() || 'Item B'; },
+              remove: itemsB.length > 1 ? () => { itemsB.splice(i, 1); } : null
             });
           });
         } else if (t === 'processos' || t === 'mm_fluxo') {
-          const steps = d.steps || ['Passo 1'];
+          if (!Array.isArray(d.steps) || d.steps.length === 0) d.steps = ['Etapa 1'];
+          const steps = d.steps;
           const cols = Math.min(4, steps.length);
           const rows = Math.ceil(steps.length / cols);
           const stepW = (w - 32) / cols;
@@ -1173,12 +1240,13 @@
             const sy = bodyY + r * rowH + 6;
             const boxW = stepW - 14;
             const boxH = rowH - 14;
-            c.fillStyle = t === 'mm_fluxo' ? '#f0fdf4' : '#f8fafc';
+            c.fillStyle = '#f8fafc';
             roundRect(c, sx + 4, sy, boxW, boxH, 10);
             c.fill();
             c.strokeStyle = cor;
             c.lineWidth = 1.8;
             c.stroke();
+
             c.fillStyle = cor;
             c.beginPath();
             c.arc(sx + 4 + boxW / 2, sy + 20, 12, 0, Math.PI * 2);
@@ -1188,9 +1256,15 @@
             c.textAlign = 'center';
             c.textBaseline = 'middle';
             c.fillText(String(idx + 1), sx + 4 + boxW / 2, sy + 20);
-            desenharTextoAjustado(c, String(st), sx + 10, sy + 36, boxW - 12, boxH - 42, {
+
+            desenharSlot(`step_${idx}`, String(st), sx + 10, sy + 36, boxW - 12, boxH - 42, {
               weight: '700', maxFont: 12.5, minFont: 9, color: '#1e293b', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => String(steps[idx] || ''),
+              set: (v) => { steps[idx] = v.trim() || 'Etapa'; },
+              remove: steps.length > 1 ? () => { steps.splice(idx, 1); } : null
             });
+
             if (col < cols - 1 && idx < steps.length - 1) {
               c.fillStyle = cor;
               c.font = '900 15px "Segoe UI", sans-serif';
@@ -1199,7 +1273,8 @@
             }
           });
         } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
-          const events = d.events || [{ time: '2020', label: 'Marco' }];
+          if (!Array.isArray(d.events) || d.events.length === 0) d.events = [{ time: 'Past', label: 'Ação' }];
+          const events = d.events;
           const midY = bodyY + bodyH / 2;
           c.strokeStyle = cor;
           c.lineWidth = 3;
@@ -1218,26 +1293,32 @@
             c.arc(cx, midY, 8, 0, Math.PI * 2);
             c.fill();
             c.stroke();
+
             const boxX = cx - slotW / 2 + 4;
             const boxW = slotW - 8;
-            if (acima) {
-              desenharTextoAjustado(c, ev.time, boxX, bodyY + 4, boxW, 24, {
-                weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
-              });
-              desenharTextoAjustado(c, ev.label, boxX, bodyY + 30, boxW, midY - bodyY - 42, {
-                weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
-              });
-            } else {
-              desenharTextoAjustado(c, ev.time, boxX, midY + 14, boxW, 24, {
-                weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
-              });
-              desenharTextoAjustado(c, ev.label, boxX, midY + 40, boxW, bodyH / 2 - 46, {
-                weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
-              });
-            }
+            const timeY = acima ? (bodyY + 4) : (midY + 14);
+            const lblY = acima ? (bodyY + 30) : (midY + 40);
+            const lblH = acima ? (midY - bodyY - 42) : (bodyH / 2 - 46);
+
+            desenharSlot(`ev_time_${idx}`, ev.time, boxX, timeY, boxW, 24, {
+              weight: '800', maxFont: 13, minFont: 9.5, color: cor, align: 'center', vAlign: 'middle'
+            }, {
+              get: () => ev.time || '',
+              set: (v) => { ev.time = v.trim() || 'Marco'; },
+              remove: events.length > 1 ? () => { events.splice(idx, 1); } : null
+            });
+
+            desenharSlot(`ev_label_${idx}`, ev.label, boxX, lblY, boxW, lblH, {
+              weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => ev.label || '',
+              set: (v) => { ev.label = v.trim() || '...'; },
+              remove: events.length > 1 ? () => { events.splice(idx, 1); } : null
+            });
           });
         } else if (t === 'espaco_tempo') {
-          const stages = d.stages || [{ place: '📍 Lugar', desc: 'Ação' }];
+          if (!Array.isArray(d.stages) || d.stages.length === 0) d.stages = [{ place: '📍 Local', desc: 'Frase-chave' }];
+          const stages = d.stages;
           const cols = Math.min(3, stages.length);
           const rows = Math.ceil(stages.length / cols);
           const colW = (w - 36) / cols;
@@ -1255,21 +1336,33 @@
             c.strokeStyle = cor;
             c.lineWidth = 1.5;
             c.stroke();
-            desenharTextoAjustado(c, st.place, sx + 12, sy + 8, boxW - 16, 30, {
+
+            desenharSlot(`st_place_${idx}`, st.place, sx + 12, sy + 8, boxW - 16, 30, {
               weight: '800', maxFont: 12.5, minFont: 9.5, color: '#0f172a', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => st.place || '',
+              set: (v) => { st.place = v.trim() || '📍 Local'; },
+              remove: stages.length > 1 ? () => { stages.splice(idx, 1); } : null
             });
-            desenharTextoAjustado(c, st.desc, sx + 12, sy + 42, boxW - 16, boxH - 48, {
+
+            desenharSlot(`st_desc_${idx}`, st.desc, sx + 12, sy + 42, boxW - 16, boxH - 48, {
               weight: '600', maxFont: 12, minFont: 9, color: '#334155', align: 'left', vAlign: 'middle'
+            }, {
+              get: () => st.desc || '',
+              set: (v) => { st.desc = v.trim() || '...'; },
+              remove: stages.length > 1 ? () => { stages.splice(idx, 1); } : null
             });
           });
         } else if (t === 'relacional' || t === 'mm_aranha' || t === 'mm_conceitos') {
+          if (!Array.isArray(d.nodes) || d.nodes.length === 0) d.nodes = ['Ramo 1', 'Ramo 2', 'Ramo 3', 'Ramo 4'];
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
-          const centerText = d.center || 'Tema Central';
-          const nodes = d.nodes || ['Ideia 1', 'Ideia 2', 'Ideia 3', 'Ideia 4'];
+          const centerText = d.center || titulo;
+          const nodes = d.nodes;
           const total = Math.max(1, nodes.length);
           const rx = w * 0.34;
           const ry = bodyH * 0.35;
+
           nodes.forEach((nd, idx) => {
             const ang = (idx / total) * Math.PI * 2 - Math.PI / 2;
             const nx = cx + Math.cos(ang) * rx;
@@ -1281,11 +1374,12 @@
             c.lineTo(nx, ny);
             c.stroke();
           });
+
           nodes.forEach((nd, idx) => {
             const ang = (idx / total) * Math.PI * 2 - Math.PI / 2;
             const nx = cx + Math.cos(ang) * rx;
             const ny = cy + Math.sin(ang) * ry;
-            const bw = 128;
+            const bw = 132;
             const bh = 44;
             c.fillStyle = '#f8fafc';
             roundRect(c, nx - bw / 2, ny - bh / 2, bw, bh, 10);
@@ -1293,32 +1387,44 @@
             c.strokeStyle = cor;
             c.lineWidth = 1.8;
             c.stroke();
-            desenharTextoAjustado(c, String(nd), nx - bw / 2 + 6, ny - bh / 2 + 4, bw - 12, bh - 8, {
+
+            desenharSlot(`node_${idx}`, String(nd), nx - bw / 2 + 6, ny - bh / 2 + 4, bw - 12, bh - 8, {
               weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => String(nodes[idx] || ''),
+              set: (v) => { nodes[idx] = v.trim() || 'Ramo'; },
+              remove: nodes.length > 1 ? () => { nodes.splice(idx, 1); } : null
             });
           });
+
           c.fillStyle = cor;
-          roundRect(c, cx - 76, cy - 28, 152, 56, 28);
+          roundRect(c, cx - 78, cy - 28, 156, 56, 28);
           c.fill();
-          desenharTextoAjustado(c, centerText, cx - 68, cy - 22, 136, 44, {
-            weight: '800', maxFont: 13.5, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
+          desenharSlot('center', centerText, cx - 70, cy - 22, 140, 44, {
+            weight: '800', maxFont: 13.5, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle', darkBg: true
+          }, {
+            get: () => d.center || titulo,
+            set: (v) => { d.center = v.trim() || 'Tema'; }
           });
         } else if (t === 'mm_ciclo') {
+          if (!Array.isArray(d.nodes) || d.nodes.length === 0) d.nodes = ['Fase 1', 'Fase 2', 'Fase 3', 'Fase 4'];
           const cx = w / 2;
           const cy = bodyY + bodyH / 2;
-          const nodes = d.nodes || ['Fase 1', 'Fase 2', 'Fase 3', 'Fase 4'];
+          const nodes = d.nodes;
           const total = Math.max(1, nodes.length);
           const r = Math.min(w, bodyH) * 0.34;
+
           c.strokeStyle = '#cbd5e1';
           c.lineWidth = 3;
           c.beginPath();
           c.arc(cx, cy, r, 0, Math.PI * 2);
           c.stroke();
+
           nodes.forEach((nd, idx) => {
             const ang = (idx / total) * Math.PI * 2 - Math.PI / 2;
             const nx = cx + Math.cos(ang) * r;
             const ny = cy + Math.sin(ang) * r;
-            const bw = 118;
+            const bw = 124;
             const bh = 42;
             c.fillStyle = '#ffffff';
             roundRect(c, nx - bw / 2, ny - bh / 2, bw, bh, 12);
@@ -1326,23 +1432,34 @@
             c.strokeStyle = cor;
             c.lineWidth = 2;
             c.stroke();
-            desenharTextoAjustado(c, `${idx + 1}. ${nd}`, nx - bw / 2 + 6, ny - bh / 2 + 4, bw - 12, bh - 8, {
+
+            desenharSlot(`node_${idx}`, `${idx + 1}. ${nd}`, nx - bw / 2 + 6, ny - bh / 2 + 4, bw - 12, bh - 8, {
               weight: '700', maxFont: 11.5, minFont: 8.5, color: '#0f172a', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => String(nodes[idx] || ''),
+              set: (v) => { nodes[idx] = v.trim() || 'Fase'; },
+              remove: nodes.length > 1 ? () => { nodes.splice(idx, 1); } : null
             });
           });
         } else if (t === 'mm_arvore' || t === 'mm_organograma') {
+          if (!Array.isArray(d.nodes) || d.nodes.length === 0) d.nodes = ['Ramo 1', 'Ramo 2', 'Ramo 3'];
           const rootText = d.center || titulo;
-          const nodes = d.nodes || ['Ramo 1', 'Ramo 2', 'Ramo 3'];
+          const nodes = d.nodes;
           const topY = bodyY + 10;
-          const rootW = 180;
+          const rootW = 190;
           const rootH = 42;
           const rootX = (w - rootW) / 2;
+
           c.fillStyle = cor;
           roundRect(c, rootX, topY, rootW, rootH, 10);
           c.fill();
-          desenharTextoAjustado(c, rootText, rootX + 8, topY + 4, rootW - 16, rootH - 8, {
-            weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle'
+          desenharSlot('center', rootText, rootX + 8, topY + 4, rootW - 16, rootH - 8, {
+            weight: '800', maxFont: 13, minFont: 9.5, color: '#ffffff', align: 'center', vAlign: 'middle', darkBg: true
+          }, {
+            get: () => d.center || titulo,
+            set: (v) => { d.center = v.trim() || 'Raiz'; }
           });
+
           const midY = topY + rootH + 28;
           const childY = midY + 24;
           const slotW = (w - 32) / Math.max(1, nodes.length);
@@ -1356,13 +1473,14 @@
             c.lineTo(w - 16 - slotW / 2, midY);
           }
           c.stroke();
+
           nodes.forEach((nd, idx) => {
             const cx = 16 + idx * slotW + slotW / 2;
             c.beginPath();
             c.moveTo(cx, midY);
             c.lineTo(cx, childY);
             c.stroke();
-            const bw = Math.min(140, slotW - 10);
+            const bw = Math.min(144, slotW - 10);
             const bh = bodyH - (childY - bodyY) - 14;
             c.fillStyle = '#f8fafc';
             roundRect(c, cx - bw / 2, childY, bw, bh, 10);
@@ -1370,12 +1488,18 @@
             c.strokeStyle = cor;
             c.lineWidth = 1.6;
             c.stroke();
-            desenharTextoAjustado(c, String(nd), cx - bw / 2 + 6, childY + 6, bw - 12, bh - 12, {
+
+            desenharSlot(`node_${idx}`, String(nd), cx - bw / 2 + 6, childY + 6, bw - 12, bh - 12, {
               weight: '700', maxFont: 12, minFont: 8.5, color: '#1e293b', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => String(nodes[idx] || ''),
+              set: (v) => { nodes[idx] = v.trim() || 'Ramo'; },
+              remove: nodes.length > 1 ? () => { nodes.splice(idx, 1); } : null
             });
           });
         } else if (t === 'interativo') {
-          const cards = d.cards || [{ front: 'Pergunta', back: 'Resposta' }];
+          if (!Array.isArray(d.cards) || d.cards.length === 0) d.cards = [{ front: 'Pergunta?', back: 'Resposta' }];
+          const cards = d.cards;
           const cols = Math.min(3, cards.length);
           const rows = Math.ceil(cards.length / cols);
           const colW = (w - 36) / cols;
@@ -1393,16 +1517,27 @@
             c.strokeStyle = cor;
             c.lineWidth = 1.6;
             c.stroke();
-            desenharTextoAjustado(c, `❓ ${cd.front || ''}`, cx + 8, cy + 6, bw - 16, bh * 0.42, {
+
+            desenharSlot(`card_front_${idx}`, `❓ ${cd.front || ''}`, cx + 8, cy + 6, bw - 16, bh * 0.42, {
               weight: '800', maxFont: 12.5, minFont: 9, color: cor, align: 'center', vAlign: 'middle'
+            }, {
+              get: () => cd.front || '',
+              set: (v) => { cd.front = v.trim() || 'Pergunta?'; },
+              remove: cards.length > 1 ? () => { cards.splice(idx, 1); } : null
             });
+
             c.strokeStyle = '#e2e8f0';
             c.beginPath();
             c.moveTo(cx + 10, cy + bh * 0.48);
             c.lineTo(cx + bw - 10, cy + bh * 0.48);
             c.stroke();
-            desenharTextoAjustado(c, `💡 ${cd.back || ''}`, cx + 8, cy + bh * 0.52, bw - 16, bh * 0.42, {
+
+            desenharSlot(`card_back_${idx}`, `💡 ${cd.back || ''}`, cx + 8, cy + bh * 0.52, bw - 16, bh * 0.42, {
               weight: '600', maxFont: 12, minFont: 8.5, color: '#334155', align: 'center', vAlign: 'middle'
+            }, {
+              get: () => cd.back || '',
+              set: (v) => { cd.back = v.trim() || 'Resposta'; },
+              remove: cards.length > 1 ? () => { cards.splice(idx, 1); } : null
             });
           });
         }
@@ -1643,7 +1778,7 @@
         c.font = `700 ${10 / z}px "Inter", sans-serif`;
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillText('Clicar 2x para editar', box.x + 8 / z, box.y - badgeH / 2 - 6);
+        c.fillText(' Clicar 2x para editar ', box.x + 8 / z, box.y - badgeH / 2 - 6);
 
         // 📋 Botãozinho compacto acima na ponta direita da caixa para duplicar o texto com 1 clique
         if (item.tool === 'text') {
@@ -1834,12 +1969,10 @@
             const localX = (pt.x - s.x) / (box.scale || 1);
             const localY = (pt.y - s.y) / (box.scale || 1);
             if (localY >= 6 && localY <= 38) {
-              if (localX >= box.baseW - 144 && localX <= box.baseW - 102) {
-                return { shape: s, action: 'info_add', box };
-              }
-              if (localX >= box.baseW - 100 && localX <= box.baseW - 54) {
-                return { shape: s, action: 'info_edit', box };
-              }
+              if (localX >= box.baseW - 144 && localX <= box.baseW - 110) return { shape: s, action: 'info_add', box };
+              if (localX >= box.baseW - 110 && localX <= box.baseW - 76)  return { shape: s, action: 'info_remove', box };
+              if (localX >= box.baseW - 76  && localX <= box.baseW - 42)  return { shape: s, action: 'info_color', box };
+              if (localX >= box.baseW - 42  && localX <= box.baseW - 8)   return { shape: s, action: 'info_dup', box };
             }
           }
 
@@ -1860,10 +1993,24 @@
         return null;
       }
 
+      function encontrarSlotNoMapa(shape, worldPt) {
+        if (!shape || !Array.isArray(shape._editSlots)) return null;
+        const scale = shape.scale || 1;
+        const lx = (worldPt.x - shape.x) / scale;
+        const ly = (worldPt.y - shape.y) / scale;
+        for (let i = shape._editSlots.length - 1; i >= 0; i--) {
+          const sl = shape._editSlots[i];
+          if (lx >= sl.x - 4 && lx <= sl.x + sl.w + 4 && ly >= sl.y - 4 && ly <= sl.y + sl.h + 4) {
+            return sl;
+          }
+        }
+        return null;
+      }
+
       function editorOuModalAberto() {
         const txtBox = document.getElementById('text-editor-box');
-        const infoModal = document.getElementById('infographic-modal');
-        return (txtBox && txtBox.style.display === 'flex') || (infoModal && infoModal.style.display === 'flex');
+        const mapBox = document.getElementById('inline-map-editor');
+        return (txtBox && txtBox.style.display === 'flex') || (mapBox && mapBox.style.display === 'block');
       }
 
       // ====== FIM DA ETAPA 2 — COLE A ETAPA 3 LOGO ABAIXO DESTA LINHA ======
@@ -2033,6 +2180,9 @@
       let eraserBeforeSnapshot = null;
       let eraserChangedAnything = false;
       let transformBeforeSnapshot = null;
+  let moveStartScreenPt = null;
+      let moveDidDrag = false;
+      let pendingMapSlotHit = null;
 
       canvas.addEventListener('pointerdown', (e) => {
         if ((role === 'aluno' && isReadonly) || !isAllowed) return;
@@ -2041,6 +2191,10 @@
         // Se estiver digitando direto na lousa e clicar fora no quadro, fixa o texto automaticamente!
         if (textEditorBox && textEditorBox.style.display === 'flex') {
           confirmarEditorTexto();
+          return;
+        }
+   if (activeInlineMapEdit) {
+          fecharEditorInlineMapa(true);
           return;
         }
 
@@ -2064,12 +2218,20 @@
               duplicarObjetoTexto(hit.shape);
               return;
             }
-            if (hit.action === 'info_add') {
-              adicionarOpcaoRapidaInfografico(hit.shape);
+           if (hit.action === 'info_add') {
+              adicionarItemMapaMental(hit.shape);
               return;
             }
-            if (hit.action === 'info_edit') {
-              abrirModalEdicaoInfografico(hit.shape);
+            if (hit.action === 'info_remove') {
+              removerUltimoItemMapaMental(hit.shape);
+              return;
+            }
+            if (hit.action === 'info_color') {
+              trocarCorMapaMental(hit.shape);
+              return;
+            }
+            if (hit.action === 'info_dup') {
+              duplicarMapaMental(hit.shape);
               return;
             }
             if (hit.action === 'resize') {
@@ -2086,6 +2248,9 @@
               transformBeforeSnapshot = clonarShapes(shapes);
               movingShape = hit.shape;
               moveLastPt = pt;
+              moveStartScreenPt = { x: e.clientX, y: e.clientY };
+              moveDidDrag = false;
+              pendingMapSlotHit = (hit.shape.tool === 'infographic') ? encontrarSlotNoMapa(hit.shape, pt) : null;
               isPointerDown = true;
               atualizarCursorCanvas();
               desenharQuadro();
@@ -2206,6 +2371,12 @@
 
         // 3. Arrastar objeto
         if (isPointerDown && movingShape && moveLastPt) {
+          if (moveStartScreenPt && !moveDidDrag) {
+            if (Math.hypot(e.clientX - moveStartScreenPt.x, e.clientY - moveStartScreenPt.y) < 5) {
+              return;
+            }
+            moveDidDrag = true;
+          }
           const dx = pt.x - moveLastPt.x;
           const dy = pt.y - moveLastPt.y;
           if (['line', 'arrow', 'rect', 'circle', 'triangle', 'diamond', 'hexagon'].includes(movingShape.tool)) {
@@ -2313,17 +2484,31 @@
           return;
         }
         if (movingShape || resizingShape) {
-          if (transformBeforeSnapshot) {
+          const mapaClicado = movingShape;
+          const slotClicado = pendingMapSlotHit;
+          const houveArraste = Boolean(resizingShape || moveDidDrag);
+
+          if (houveArraste && transformBeforeSnapshot) {
             registrarHistoricoUndo(transformBeforeSnapshot);
-            transformBeforeSnapshot = null;
           }
+          transformBeforeSnapshot = null;
           movingShape = null;
           resizingShape = null;
           moveLastPt = null;
+          moveStartScreenPt = null;
+          moveDidDrag = false;
+          pendingMapSlotHit = null;
           isPointerDown = false;
           atualizarCursorCanvas();
+
+          // Clique rápido em qualquer texto do mapa abre edição direta na hora (também perfeito no celular/tablet!)
+          if (!houveArraste && mapaClicado && mapaClicado.tool === 'infographic' && slotClicado) {
+            abrirEditorInlineMapa(mapaClicado, slotClicado);
+            return;
+          }
+
           desenharQuadro();
-          agendarSalvamentoNuvem(40);
+          if (houveArraste) agendarSalvamentoNuvem(40);
           return;
         }
         if (currentTool === 'laser' && isPointerDown) {
@@ -2374,7 +2559,8 @@
         if (hit.shape.tool === 'text') {
           abrirEditorTextoNoPonto({ x: hit.shape.x, y: hit.shape.y }, e.clientX, e.clientY, hit.shape);
         } else if (hit.shape.tool === 'infographic') {
-          abrirModalEdicaoInfografico(hit.shape);
+          const slotAlvo = encontrarSlotNoMapa(hit.shape, pt) || (hit.shape._editSlots && hit.shape._editSlots[0]);
+                          if (slotAlvo) abrirEditorInlineMapa(hit.shape, slotAlvo);
         }
       });
 
@@ -2417,12 +2603,14 @@
       // =========================================================================
       const colorPopover = document.getElementById('color-popover');
       const shapesPopover = document.getElementById('shapes-popover');
+      const mindmapPopover = document.getElementById('mindmap-popover');
       const FORMAS_GEOMETRICAS = ['line', 'arrow', 'rect', 'circle', 'triangle', 'diamond', 'hexagon'];
 
       function fecharPopoversFlutuantes() {
-        if (colorPopover) colorPopover.style.display = 'none';
-        if (shapesPopover) shapesPopover.style.display = 'none';
-      }
+                     if (colorPopover) colorPopover.style.display = 'none';
+                     if (shapesPopover) shapesPopover.style.display = 'none';
+                     if (mindmapPopover) mindmapPopover.style.display = 'none';
+                  }
 
       function aplicarCorAtivaGlobal(novaCor) {
         currentColor = novaCor;
@@ -2507,7 +2695,7 @@
       };
 
       document.addEventListener('click', (e) => {
-        const emPopover = e.target.closest('#color-popover, #shapes-popover, #btn-open-color-popover, #qd-btn-color, #btn-open-shapes-popover, #qd-btn-shapes');
+       const emPopover = e.target.closest('#color-popover, #shapes-popover, #mindmap-popover, #btn-open-color-popover, #qd-btn-color, #btn-open-shapes-popover, #qd-btn-shapes, #btn-open-mindmaps-popover, #qd-btn-mindmaps');
         if (!emPopover) fecharPopoversFlutuantes();
       });
 
@@ -3040,277 +3228,354 @@
       document.getElementById('btn-text-cancel').onclick = cancelarEditorTexto;
       document.getElementById('btn-text-confirm').onclick = () => confirmarEditorTexto();
 
+  // =========================================================================
+      // 🧠 MAPAS MENTAIS UNIFICADOS (10 FORMATOS ÚNICOS + EDIÇÃO DIRETA NA LOUSA)
       // =========================================================================
-      // 📊 ESTÚDIO DE INFOGRÁFICOS E MAPAS MENTAIS (16 MODELOS PRESERVADOS)
-      // =========================================================================
-      const CATALOGO_STUDIO = {
-        infographic: [
-          { id: 'comparativo', nome: '⚖️ Comparativo A vs B', desc: 'Duas colunas lado a lado' },
-          { id: 'processos', nome: '🔢 Passo a Passo', desc: 'Etapas numeradas em sequência' },
-          { id: 'estatistico', nome: '📊 Barras de Domínio', desc: 'Percentagens e métricas' },
-          { id: 'linha_tempo', nome: '⏳ Linha do Tempo', desc: 'Marcos cronológicos' },
-          { id: 'informativo', nome: '📋 Lista Destacada', desc: 'Regras e pontos-chave' },
-          { id: 'espaco_tempo', nome: '📍 Cenários / Lugares', desc: 'Cartões de contexto' },
-          { id: 'relacional', nome: '🕸️ Teia Relacional', desc: 'Núcleo e conexões' },
-          { id: 'interativo', nome: '🃏 Flashcards Q&A', desc: 'Pergunta e resposta' }
-        ],
-        mindmap: [
-          { id: 'mm_aranha', nome: '🕷️ Mapa Aranha', desc: 'Ideia central e ramos radiais' },
-          { id: 'mm_arvore', nome: '🌳 Árvore Lógica', desc: 'Raiz no topo e ramificações' },
-          { id: 'mm_fluxo', nome: '🔄 Fluxo de Ideias', desc: 'Cadeia conectada com setas' },
-          { id: 'mm_ciclo', nome: '♻️ Ciclo Contínuo', desc: 'Fases em anel fechado' },
-          { id: 'mm_organograma', nome: '🏛️ Organograma', desc: 'Estrutura hierárquica' },
-          { id: 'mm_linha_tempo', nome: '📅 Evolução Temporal', desc: 'Tempos verbais / história' },
-          { id: 'mm_conceitos', nome: '🧠 Rede de Conceitos', desc: 'Associação livre de vocabulário' },
-          { id: 'mm_texto', nome: '📝 Quadro de Notas', desc: 'Blocos de resumo estruturado' }
-        ]
-      };
+      const inlineMapEditor = document.getElementById('inline-map-editor');
+      const inlineMapInput = document.getElementById('inline-map-input');
+      const inlineMapDelBtn = document.getElementById('inline-map-delete-item');
+      let activeInlineMapEdit = null; // { shape, slotKey, slot }
 
-      let studioMode = 'infographic';
-      let selectedInfoType = 'comparativo';
-      let editingInfoShape = null;
+      const CORES_MAPAS = ['#2563eb', '#9333ea', '#059669', '#d97706', '#dc2626', '#0891b2', '#4f46e5', '#db2777'];
 
-      function abrirStudioModal(modo, shapeParaEditar = null) {
-        studioMode = modo;
-        editingInfoShape = shapeParaEditar;
-        const modal = document.getElementById('infographic-modal');
-        document.getElementById('studio-modal-icon').innerText = modo === 'mindmap' ? '🧠' : '📊';
-        document.getElementById('info-modal-header-title').innerText = modo === 'mindmap'
-          ? 'Construtor de Mapas Mentais (8 Modelos)'
-          : 'Construtor de Infográficos Pedagógicos (8 Modelos)';
-
-        const listaModelos = CATALOGO_STUDIO[modo];
-        selectedInfoType = (shapeParaEditar && shapeParaEditar.infoType) ? shapeParaEditar.infoType : listaModelos[0].id;
-        renderizarGrelhaModelosStudio();
-        renderizarCamposDinamicosStudio(shapeParaEditar ? shapeParaEditar.infoData : null, shapeParaEditar ? shapeParaEditar.title : null);
-        modal.style.display = 'flex';
-      }
-
-      function renderizarGrelhaModelosStudio() {
-        const grid = document.getElementById('info-type-grid');
-        const lista = CATALOGO_STUDIO[studioMode];
-        grid.innerHTML = lista.map(m => `
-          <button type="button" class="info-type-btn ${m.id === selectedInfoType ? 'active' : ''}" data-type="${m.id}">
-            <b style="font-size:12px; color:#0f172a;">${m.nome}</b>
-            <span style="font-size:10.5px; color:#64748b;">${m.desc}</span>
-          </button>
-        `).join('');
-
-        grid.querySelectorAll('.info-type-btn').forEach(btn => {
-          btn.onclick = () => {
-            selectedInfoType = btn.dataset.type;
-            renderizarGrelhaModelosStudio();
-            renderizarCamposDinamicosStudio(null, document.getElementById('info-title-input').value);
-          };
-        });
-      }
-
-      function renderizarCamposDinamicosStudio(dadosExistentes = null, tituloExistente = null) {
-        const titleInput = document.getElementById('info-title-input');
-        const extraHeaders = document.getElementById('info-extra-headers');
-        const fieldsBox = document.getElementById('info-dynamic-fields');
-        if (tituloExistente) titleInput.value = tituloExistente;
-        extraHeaders.innerHTML = '';
-        fieldsBox.innerHTML = '';
-
-        const t = selectedInfoType;
-        if (t === 'comparativo') {
-          const colA = dadosExistentes?.colA || 'Simple Past';
-          const colB = dadosExistentes?.colB || 'Present Perfect';
-          extraHeaders.innerHTML = `
-            <div style="display:flex; gap:8px;">
-              <input type="text" id="info-col-a" class="info-input" value="${colA}" placeholder="Título Coluna A">
-              <input type="text" id="info-col-b" class="info-input" value="${colB}" placeholder="Título Coluna B">
-            </div>
-          `;
-          const pares = Math.max(dadosExistentes?.itemsA?.length || 0, dadosExistentes?.itemsB?.length || 0, 3);
-          for (let i = 0; i < pares; i++) {
-            const vA = dadosExistentes?.itemsA?.[i] ?? (i === 0 ? 'Finished time (yesterday)' : i === 1 ? 'Did / Didn\'t + Verb' : 'I went to London in 2022');
-            const vB = dadosExistentes?.itemsB?.[i] ?? (i === 0 ? 'Unfinished time (already/yet)' : i === 1 ? 'Have / Has + Past Participle' : 'I have been to London');
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <div class="info-row-pair" style="display:flex; gap:8px;">
-                <input type="text" class="info-input inp-a" value="${vA}" placeholder="Item Lado A">
-                <input type="text" class="info-input inp-b" value="${vB}" placeholder="Item Lado B">
-              </div>
-            `);
+      function criarModeloMapaPadrao(tipo) {
+        const cor = currentColor === '#0f172a' ? '#2563eb' : currentColor;
+        const modelos = {
+          mm_aranha: {
+            title: 'Mapa Mental',
+            infoData: { center: 'Tema Central', nodes: ['Ideia 1', 'Ideia 2', 'Ideia 3', 'Ideia 4'] }
+          },
+          mm_arvore: {
+            title: 'Estrutura Hierárquica',
+            infoData: { center: 'Conceito Raiz', nodes: ['Ramo 1', 'Ramo 2', 'Ramo 3'] }
+          },
+          mm_fluxo: {
+            title: 'Passo a Passo',
+            infoData: { steps: ['1. Início', '2. Desenvolvimento', '3. Prática', '4. Conclusão'] }
+          },
+          mm_ciclo: {
+            title: 'Ciclo Contínuo',
+            infoData: { nodes: ['Ouvir', 'Repetir', 'Praticar', 'Revisar'] }
+          },
+          linha_tempo: {
+            title: 'Linha do Tempo',
+            infoData: {
+              events: [
+                { time: 'Past', label: 'I studied' },
+                { time: 'Present', label: 'I study' },
+                { time: 'Future', label: 'I will study' }
+              ]
+            }
+          },
+          comparativo: {
+            title: 'Comparativo A vs B',
+            infoData: {
+              colA: 'Simple Past',
+              colB: 'Present Perfect',
+              itemsA: ['Tempo definido (yesterday)', 'Did / Didn\'t + verbo', 'I went to London'],
+              itemsB: ['Tempo aberto (already/yet)', 'Have / Has + particípio', 'I have been to London']
+            }
+          },
+          informativo: {
+            title: 'Quadro de Tópicos',
+            infoData: { topics: ['Regra principal e uso', 'Exemplo afirmativo', 'Exemplo negativo e pergunta'] }
+          },
+          estatistico: {
+            title: 'Barras de Domínio',
+            infoData: {
+              items: [
+                { label: 'Listening', val: 85 },
+                { label: 'Speaking', val: 75 },
+                { label: 'Vocabulary', val: 90 }
+              ]
+            }
+          },
+          espaco_tempo: {
+            title: 'Cenários de Conversação',
+            infoData: {
+              stages: [
+                { place: '✈️ Airport', desc: 'Can I see your boarding pass?' },
+                { place: '🏨 Hotel', desc: 'I have a reservation.' },
+                { place: '🍽️ Restaurant', desc: 'Could we have the bill?' }
+              ]
+            }
+          },
+          interativo: {
+            title: 'Flashcards Q&A',
+            infoData: {
+              cards: [
+                { front: 'How long have you...', back: '...lived here?' },
+                { front: 'Would you mind...', back: '...opening the door?' },
+                { front: 'I look forward to...', back: '...hearing from you!' }
+              ]
+            }
           }
-        } else if (t === 'estatistico') {
-          const items = dadosExistentes?.items || [
-            { label: 'Listening', val: 85 },
-            { label: 'Speaking', val: 75 },
-            { label: 'Vocabulary', val: 90 }
-          ];
-          items.forEach(it => {
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <div class="info-row-stat" style="display:flex; gap:8px;">
-                <input type="text" class="info-input inp-label" value="${it.label}" placeholder="Competência" style="flex:2;">
-                <input type="number" class="info-input inp-val" value="${it.val}" min="0" max="100" style="flex:1;">
-              </div>
-            `);
-          });
-        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
-          const evs = dadosExistentes?.events || [
-            { time: 'Past', label: 'I studied yesterday' },
-            { time: 'Present', label: 'I am studying now' },
-            { time: 'Future', label: 'I will study tomorrow' }
-          ];
-          evs.forEach(ev => {
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <div class="info-row-ev" style="display:flex; gap:8px;">
-                <input type="text" class="info-input inp-time" value="${ev.time}" placeholder="Tempo/Ano" style="flex:1;">
-                <input type="text" class="info-input inp-label" value="${ev.label}" placeholder="Descrição" style="flex:2.2;">
-              </div>
-            `);
-          });
-        } else if (t === 'espaco_tempo') {
-          const stages = dadosExistentes?.stages || [
-            { place: '✈️ At the Airport', desc: 'Can I see your passport and boarding pass?' },
-            { place: '🏨 At the Hotel', desc: 'I have a reservation under my name.' },
-            { place: '🍽️ Restaurant', desc: 'Could we have the bill, please?' }
-          ];
-          stages.forEach(st => {
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <div class="info-row-st" style="display:flex; gap:8px;">
-                <input type="text" class="info-input inp-place" value="${st.place}" placeholder="Cenário" style="flex:1;">
-                <input type="text" class="info-input inp-desc" value="${st.desc}" placeholder="Frase-chave" style="flex:2;">
-              </div>
-            `);
-          });
-        } else if (t === 'interativo') {
-          const cards = dadosExistentes?.cards || [
-            { front: 'How long have you...', back: '...lived here?' },
-            { front: 'Would you mind...', back: '...opening the window?' },
-            { front: 'I look forward to...', back: '...hearing from you!' }
-          ];
-          cards.forEach(cd => {
-            fieldsBox.insertAdjacentHTML('beforeend', `
-              <div class="info-row-card" style="display:flex; gap:8px;">
-                <input type="text" class="info-input inp-front" value="${cd.front}" placeholder="Frente (Pergunta)">
-                <input type="text" class="info-input inp-back" value="${cd.back}" placeholder="Verso (Resposta)">
-              </div>
-            `);
-          });
-        } else {
-          const listaPadrao = dadosExistentes?.nodes || dadosExistentes?.steps || dadosExistentes?.topics || [
-            '1. Affirmative form & examples',
-            '2. Negative contractions (don\'t / doesn\'t)',
-            '3. Questions & short answers',
-            '4. Common time expressions'
-          ];
-          listaPadrao.forEach((txt, i) => {
-            fieldsBox.insertAdjacentHTML('beforeend', `<input type="text" class="info-input inp-single" value="${txt}" placeholder="Opção ${i + 1}">`);
-          });
-        }
+        };
+
+        const base = modelos[tipo] || modelos.mm_aranha;
+        const centro = telaParaQuadro(window.innerWidth / 2, window.innerHeight / 2);
+        return {
+          id: 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5),
+          tool: 'infographic',
+          infoType: tipo,
+          title: base.title,
+          color: cor,
+          x: Math.max(30, Math.round(centro.x - 280)),
+          y: Math.max(30, Math.round(centro.y - 160)),
+          scale: 1,
+          infoData: JSON.parse(JSON.stringify(base.infoData))
+        };
       }
 
-      document.getElementById('btn-add-info-option').onclick = () => {
-        const fieldsBox = document.getElementById('info-dynamic-fields');
-        const t = selectedInfoType;
+      function inserirMapaDiretoNaLousa(tipo) {
+        fecharPopoversFlutuantes();
+        if (activeInlineMapEdit) fecharEditorInlineMapa(true);
+        if (textEditorBox && textEditorBox.style.display === 'flex') confirmarEditorTexto();
+
+        registrarHistoricoUndo();
+        const novoMapa = criarModeloMapaPadrao(tipo);
+        shapes.push(novoMapa);
+        hoveredShape = novoMapa;
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
+        desenharQuadro();
+        agendarSalvamentoNuvem(30);
+
+        // Já abre o título selecionado para o professor só começar a digitar!
+        abrirEditorInlineMapaPorChave(novoMapa, 'title');
+      }
+
+      function abrirEditorInlineMapa(shape, slot) {
+        if (!shape || !slot || !inlineMapEditor || !inlineMapInput) return;
+        if (activeInlineMapEdit) fecharEditorInlineMapa(true);
+
+        activeInlineMapEdit = { shape, slotKey: slot.key, slot };
+        hoveredShape = null;
+        hoveredHandle = null;
+
+        const scale = shape.scale || 1;
+        const fatorTela = obterFatorTelaPorMundo();
+        const posTela = quadroParaTela(shape.x + slot.x * scale, shape.y + slot.y * scale);
+        const wTela = Math.max(64, Math.round(slot.w * scale * fatorTela));
+        const hTela = Math.max(26, Math.round(slot.h * scale * fatorTela));
+        const fontTela = Math.max(11, Math.min(28, Math.round((slot.opts?.maxFont || 13) * scale * fatorTela)));
+
+        inlineMapEditor.style.left = Math.round(posTela.x) + 'px';
+        inlineMapEditor.style.top = Math.round(posTela.y) + 'px';
+        inlineMapEditor.style.width = wTela + 'px';
+        inlineMapEditor.style.height = hTela + 'px';
+        inlineMapEditor.classList.toggle('bar-below', posTela.y < 85);
+
+        inlineMapInput.value = slot.get ? String(slot.get()) : '';
+        inlineMapInput.style.fontSize = fontTela + 'px';
+        inlineMapInput.style.fontWeight = slot.opts?.weight || '700';
+        inlineMapInput.style.textAlign = slot.opts?.align || 'left';
+        inlineMapInput.style.color = slot.opts?.color || '#0f172a';
+        inlineMapInput.style.background = slot.opts?.darkBg ? 'rgba(15, 23, 42, 0.28)' : 'rgba(255, 255, 255, 0.85)';
+
+        if (inlineMapDelBtn) {
+          inlineMapDelBtn.style.display = (typeof slot.remove === 'function') ? 'inline-flex' : 'none';
+        }
+
+        inlineMapEditor.style.display = 'block';
+        desenharQuadro();
+
+        setTimeout(() => {
+          inlineMapInput.focus();
+          inlineMapInput.select();
+        }, 15);
+      }
+
+      function abrirEditorInlineMapaPorChave(shape, key) {
+        if (!shape || !Array.isArray(shape._editSlots)) return;
+        const slot = shape._editSlots.find(s => s.key === key) || shape._editSlots[0];
+        if (slot) abrirEditorInlineMapa(shape, slot);
+      }
+
+      function fecharEditorInlineMapa(salvar = true) {
+        if (!activeInlineMapEdit) {
+          if (inlineMapEditor) inlineMapEditor.style.display = 'none';
+          return;
+        }
+        const { slot } = activeInlineMapEdit;
+        if (salvar && slot && typeof slot.set === 'function') {
+          const valorAntes = slot.get ? String(slot.get()) : '';
+          const valorNovo = inlineMapInput.value;
+          if (valorNovo !== valorAntes) {
+            registrarHistoricoUndo();
+            slot.set(valorNovo);
+            guardarEstadoNaTelaAtual();
+            agendarSalvamentoNuvem(30);
+          }
+        }
+        activeInlineMapEdit = null;
+        if (inlineMapEditor) inlineMapEditor.style.display = 'none';
+        desenharQuadro();
+      }
+
+      function adicionarItemMapaMental(shape) {
+        if (!shape) return;
+        if (activeInlineMapEdit) fecharEditorInlineMapa(true);
+        registrarHistoricoUndo();
+
+        const d = shape.infoData = shape.infoData || {};
+        const t = shape.infoType;
+        let novaChave = 'title';
+
         if (t === 'comparativo') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-pair" style="display:flex; gap:8px;"><input type="text" class="info-input inp-a" placeholder="Novo item A"><input type="text" class="info-input inp-b" placeholder="Novo item B"></div>`);
+          d.itemsA = Array.isArray(d.itemsA) ? d.itemsA : [];
+          d.itemsB = Array.isArray(d.itemsB) ? d.itemsB : [];
+          d.itemsA.push('Novo item A');
+          d.itemsB.push('Novo item B');
+          novaChave = `itemA_${d.itemsA.length - 1}`;
         } else if (t === 'estatistico') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-stat" style="display:flex; gap:8px;"><input type="text" class="info-input inp-label" placeholder="Nova métrica" style="flex:2;"><input type="number" class="info-input inp-val" value="80" style="flex:1;"></div>`);
+          d.items = Array.isArray(d.items) ? d.items : [];
+          d.items.push({ label: 'Novo item', val: 75 });
+          novaChave = `stat_label_${d.items.length - 1}`;
         } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-ev" style="display:flex; gap:8px;"><input type="text" class="info-input inp-time" placeholder="Marco" style="flex:1;"><input type="text" class="info-input inp-label" placeholder="Detalhe" style="flex:2.2;"></div>`);
+          d.events = Array.isArray(d.events) ? d.events : [];
+          d.events.push({ time: 'Novo', label: 'Descrição' });
+          novaChave = `ev_time_${d.events.length - 1}`;
         } else if (t === 'espaco_tempo') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-st" style="display:flex; gap:8px;"><input type="text" class="info-input inp-place" placeholder="Lugar" style="flex:1;"><input type="text" class="info-input inp-desc" placeholder="Exemplo" style="flex:2;"></div>`);
+          d.stages = Array.isArray(d.stages) ? d.stages : [];
+          d.stages.push({ place: '📍 Novo local', desc: 'Exemplo de frase' });
+          novaChave = `st_place_${d.stages.length - 1}`;
         } else if (t === 'interativo') {
-          fieldsBox.insertAdjacentHTML('beforeend', `<div class="info-row-card" style="display:flex; gap:8px;"><input type="text" class="info-input inp-front" placeholder="Pergunta"><input type="text" class="info-input inp-back" placeholder="Resposta"></div>`);
+          d.cards = Array.isArray(d.cards) ? d.cards : [];
+          d.cards.push({ front: 'Nova pergunta?', back: 'Resposta...' });
+          novaChave = `card_front_${d.cards.length - 1}`;
+        } else if (t === 'processos' || t === 'mm_fluxo') {
+          d.steps = Array.isArray(d.steps) ? d.steps : [];
+          d.steps.push(`Etapa ${d.steps.length + 1}`);
+          novaChave = `step_${d.steps.length - 1}`;
+        } else if (t === 'informativo' || t === 'mm_texto') {
+          d.topics = Array.isArray(d.topics) ? d.topics : [];
+          d.topics.push(`Novo tópico ${d.topics.length + 1}`);
+          novaChave = `topic_${d.topics.length - 1}`;
         } else {
-          fieldsBox.insertAdjacentHTML('beforeend', `<input type="text" class="info-input inp-single" placeholder="Novo ramo / tópico">`);
-        }
-      };
-
-      document.getElementById('btn-insert-info').onclick = () => {
-        const titulo = document.getElementById('info-title-input').value.trim() || 'Esquema de Aula';
-        const fieldsBox = document.getElementById('info-dynamic-fields');
-        const t = selectedInfoType;
-        const infoData = { center: titulo };
-
-        if (t === 'comparativo') {
-          infoData.colA = document.getElementById('info-col-a')?.value || 'Coluna A';
-          infoData.colB = document.getElementById('info-col-b')?.value || 'Coluna B';
-          infoData.itemsA = Array.from(fieldsBox.querySelectorAll('.inp-a')).map(i => i.value.trim()).filter(Boolean);
-          infoData.itemsB = Array.from(fieldsBox.querySelectorAll('.inp-b')).map(i => i.value.trim()).filter(Boolean);
-        } else if (t === 'estatistico') {
-          infoData.items = Array.from(fieldsBox.querySelectorAll('.info-row-stat')).map(r => ({
-            label: r.querySelector('.inp-label')?.value.trim() || 'Item',
-            val: Number(r.querySelector('.inp-val')?.value) || 50
-          }));
-        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
-          infoData.events = Array.from(fieldsBox.querySelectorAll('.info-row-ev')).map(r => ({
-            time: r.querySelector('.inp-time')?.value.trim() || 'Etapa',
-            label: r.querySelector('.inp-label')?.value.trim() || ''
-          }));
-        } else if (t === 'espaco_tempo') {
-          infoData.stages = Array.from(fieldsBox.querySelectorAll('.info-row-st')).map(r => ({
-            place: r.querySelector('.inp-place')?.value.trim() || 'Local',
-            desc: r.querySelector('.inp-desc')?.value.trim() || ''
-          }));
-        } else if (t === 'interativo') {
-          infoData.cards = Array.from(fieldsBox.querySelectorAll('.info-row-card')).map(r => ({
-            front: r.querySelector('.inp-front')?.value.trim() || 'Q',
-            back: r.querySelector('.inp-back')?.value.trim() || 'A'
-          }));
-        } else {
-          const vals = Array.from(fieldsBox.querySelectorAll('.inp-single')).map(i => i.value.trim()).filter(Boolean);
-          infoData.nodes = vals;
-          infoData.steps = vals;
-          infoData.topics = vals;
+          d.nodes = Array.isArray(d.nodes) ? d.nodes : [];
+          d.nodes.push(`Ramo ${d.nodes.length + 1}`);
+          novaChave = `node_${d.nodes.length - 1}`;
         }
 
-        if (editingInfoShape) {
-          editingInfoShape.title = titulo;
-          editingInfoShape.infoType = t;
-          editingInfoShape.infoData = infoData;
-          editingInfoShape.color = currentColor;
-        } else {
-          const centro = telaParaQuadro(window.innerWidth / 2, window.innerHeight / 2);
-          shapes.push({
-            id: 'info_' + Date.now(),
-            tool: 'infographic',
-            infoType: t,
-            title: titulo,
-            color: currentColor === '#0f172a' ? '#2563eb' : currentColor,
-            x: Math.max(40, Math.round(centro.x - 270)),
-            y: Math.max(40, Math.round(centro.y - 150)),
-            scale: 1,
-            infoData
-          });
-        }
-
-        document.getElementById('infographic-modal').style.display = 'none';
-        editingInfoShape = null;
         guardarEstadoNaTelaAtual();
         desenharQuadro();
         agendarSalvamentoNuvem(30);
-      };
+        abrirEditorInlineMapaPorChave(shape, novaChave);
+      }
 
-      function adicionarOpcaoRapidaInfografico(shape) {
-        const novoTxt = prompt('Digite o novo tópico / ramo para adicionar a este quadro:');
-        if (!novoTxt || !novoTxt.trim()) return;
-        const d = shape.infoData = shape.infoData || {};
-        if (Array.isArray(d.nodes)) d.nodes.push(novoTxt.trim());
-        else if (Array.isArray(d.steps)) d.steps.push(novoTxt.trim());
-        else if (Array.isArray(d.topics)) d.topics.push(novoTxt.trim());
-        else if (Array.isArray(d.itemsA)) d.itemsA.push(novoTxt.trim());
-        else if (Array.isArray(d.events)) d.events.push({ time: 'Novo', label: novoTxt.trim() });
-        else if (Array.isArray(d.stages)) d.stages.push({ place: '📍 Novo', desc: novoTxt.trim() });
-        else if (Array.isArray(d.cards)) d.cards.push({ front: novoTxt.trim(), back: '...' });
-        else if (Array.isArray(d.items)) d.items.push({ label: novoTxt.trim(), val: 80 });
+      function removerUltimoItemMapaMental(shape) {
+        if (!shape) return;
+        if (activeInlineMapEdit) fecharEditorInlineMapa(true);
+        const d = shape.infoData || {};
+        const t = shape.infoType;
+        let removeu = false;
+
+        if (t === 'comparativo') {
+          if (Array.isArray(d.itemsA) && d.itemsA.length > 1) { registrarHistoricoUndo(); d.itemsA.pop(); if (Array.isArray(d.itemsB) && d.itemsB.length > 1) d.itemsB.pop(); removeu = true; }
+        } else if (t === 'estatistico') {
+          if (Array.isArray(d.items) && d.items.length > 1) { registrarHistoricoUndo(); d.items.pop(); removeu = true; }
+        } else if (t === 'linha_tempo' || t === 'mm_linha_tempo') {
+          if (Array.isArray(d.events) && d.events.length > 1) { registrarHistoricoUndo(); d.events.pop(); removeu = true; }
+        } else if (t === 'espaco_tempo') {
+          if (Array.isArray(d.stages) && d.stages.length > 1) { registrarHistoricoUndo(); d.stages.pop(); removeu = true; }
+        } else if (t === 'interativo') {
+          if (Array.isArray(d.cards) && d.cards.length > 1) { registrarHistoricoUndo(); d.cards.pop(); removeu = true; }
+        } else if (t === 'processos' || t === 'mm_fluxo') {
+          if (Array.isArray(d.steps) && d.steps.length > 1) { registrarHistoricoUndo(); d.steps.pop(); removeu = true; }
+        } else if (t === 'informativo' || t === 'mm_texto') {
+          if (Array.isArray(d.topics) && d.topics.length > 1) { registrarHistoricoUndo(); d.topics.pop(); removeu = true; }
+        } else if (Array.isArray(d.nodes) && d.nodes.length > 1) {
+          registrarHistoricoUndo(); d.nodes.pop(); removeu = true;
+        }
+
+        if (removeu) {
+          guardarEstadoNaTelaAtual();
+          desenharQuadro();
+          agendarSalvamentoNuvem(30);
+        }
+      }
+
+      function trocarCorMapaMental(shape) {
+        if (!shape) return;
+        registrarHistoricoUndo();
+        const atual = String(shape.color || '#2563eb').toLowerCase();
+        if (currentColor && currentColor.toLowerCase() !== '#0f172a' && currentColor.toLowerCase() !== atual) {
+          shape.color = currentColor;
+        } else {
+          const idx = CORES_MAPAS.findIndex(c => c.toLowerCase() === atual);
+          shape.color = CORES_MAPAS[(idx + 1) % CORES_MAPAS.length];
+        }
+        guardarEstadoNaTelaAtual();
         desenharQuadro();
         agendarSalvamentoNuvem(30);
       }
 
-      function abrirModalEdicaoInfografico(shape) {
-        const ehMapa = String(shape.infoType || '').startsWith('mm_');
-        abrirStudioModal(ehMapa ? 'mindmap' : 'infographic', shape);
+      function duplicarMapaMental(shape) {
+        if (!shape) return;
+        if (activeInlineMapEdit) fecharEditorInlineMapa(true);
+        registrarHistoricoUndo();
+        const copia = JSON.parse(JSON.stringify(shape));
+        copia.id = 'info_' + Date.now() + '_' + Math.random().toString(36).substring(2, 5);
+        copia.x = Math.round((shape.x || 80) + 28);
+        copia.y = Math.round((shape.y || 80) + 28);
+        shapes.push(copia);
+        hoveredShape = copia;
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
+        desenharQuadro();
+        agendarSalvamentoNuvem(30);
       }
 
-      document.getElementById('btn-open-infographic').onclick = () => abrirStudioModal('infographic', null);
-      document.getElementById('btn-open-mindmap').onclick = () => abrirStudioModal('mindmap', null);
-      document.getElementById('btn-close-info-modal').onclick = () => { document.getElementById('infographic-modal').style.display = 'none'; };
-      document.getElementById('btn-cancel-info').onclick = () => { document.getElementById('infographic-modal').style.display = 'none'; };
+      // Eventos do Editor Inline do Mapa Mental
+      document.getElementById('inline-map-ok').onclick = () => fecharEditorInlineMapa(true);
+      document.getElementById('inline-map-cancel').onclick = () => fecharEditorInlineMapa(false);
+      if (inlineMapDelBtn) {
+        inlineMapDelBtn.onclick = () => {
+          if (activeInlineMapEdit && typeof activeInlineMapEdit.slot?.remove === 'function') {
+            registrarHistoricoUndo();
+            activeInlineMapEdit.slot.remove();
+            activeInlineMapEdit = null;
+            inlineMapEditor.style.display = 'none';
+            guardarEstadoNaTelaAtual();
+            desenharQuadro();
+            agendarSalvamentoNuvem(30);
+          }
+        };
+      }
+      inlineMapInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          fecharEditorInlineMapa(true);
+        } else if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          fecharEditorInlineMapa(false);
+        }
+      });
+
+      // Abertura do Popover de Mapas Mentais (Botão único no Menu + Atalho 🧠 no Topo)
+      function abrirPopoverMapasMentais(e) {
+        e.stopPropagation();
+        const anchorBtn = e.currentTarget;
+        const r = anchorBtn.getBoundingClientRect();
+        if (colorPopover) colorPopover.style.display = 'none';
+        if (shapesPopover) shapesPopover.style.display = 'none';
+        const abrir = mindmapPopover.style.display !== 'flex';
+        mindmapPopover.style.display = abrir ? 'flex' : 'none';
+        if (abrir) {
+          mindmapPopover.style.left = Math.min(window.innerWidth - 345, Math.max(10, r.left)) + 'px';
+          mindmapPopover.style.top = Math.min(window.innerHeight - 360, Math.max(12, r.bottom + 8)) + 'px';
+        }
+      }
+
+      document.getElementById('btn-open-mindmaps-popover').onclick = abrirPopoverMapasMentais;
+      const qdBtnMindmaps = document.getElementById('qd-btn-mindmaps');
+      if (qdBtnMindmaps) qdBtnMindmaps.onclick = abrirPopoverMapasMentais;
+
+      document.querySelectorAll('.mindmap-option-btn').forEach(btn => {
+        btn.onclick = () => inserirMapaDiretoNaLousa(btn.dataset.mapType);
+      });
 
       // =========================================================================
       // 🖥️ NAVEGAÇÃO ENTRE TELAS, ZOOM, HISTÓRICO, LIMPAR E ATALHOS
@@ -3436,6 +3701,7 @@
             textEditorBox.style.display = 'none';
             editingShapeId = null;
           }
+        if (activeInlineMapEdit) fecharEditorInlineMapa(false);
           return;
         }
         const emCampo = ['INPUT', 'TEXTAREA', 'SELECT'].includes(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
