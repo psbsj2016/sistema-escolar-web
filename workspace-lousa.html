@@ -280,6 +280,8 @@
     .fmt-btn.confirm-btn:hover { background: #1d4ed8; }
     .fmt-btn.cancel-btn { background: #fff1f2; border-color: #fecdd3; color: #e11d48; font-weight: 800; }
     .fmt-btn.cancel-btn:hover { background: #ffe4e6; }
+    .fmt-btn.dup-btn { background: #ecfdf5; border-color: #a7f3d0; color: #059669; font-weight: 800; }
+    .fmt-btn.dup-btn:hover { background: #d1fae5; border-color: #34d399; }
 
     .fmt-color-wrap {
       display: inline-flex; align-items: center; gap: 3px;
@@ -545,6 +547,7 @@
           <option value="'Lucida Console', Monaco, monospace">Lucida Console</option>
         </select>
 
+        <button type="button" class="fmt-btn dup-btn" id="btn-text-duplicate" title="Duplicar este texto">📋</button>
         <button type="button" class="fmt-btn confirm-btn" id="btn-text-confirm" title="Fixar na lousa (Ctrl+Enter)">✔</button>
         <button type="button" class="fmt-btn cancel-btn" id="btn-text-cancel" title="Cancelar (Esc)">✕</button>
       </div>
@@ -757,6 +760,10 @@
           canvas.style.cursor = 'nwse-resize';
           return;
         }
+        if (hoveredHandle === 'duplicate' || hoveredHandle === 'info_add' || hoveredHandle === 'info_edit') {
+                          canvas.style.cursor = 'pointer';
+                          return;
+                      }
         if (hoveredShape && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           canvas.style.cursor = 'grab';
           return;
@@ -1947,36 +1954,62 @@
       }
 
       // ✋ Moldura de seleção ao passar o cursor sobre um objeto arrastável
+      function obterRetanguloBotaoDuplicarTexto(box) {
+        const z = camera.zoom || 1;
+        const badgeW = 104 / z;
+        const h = 21 / z;
+        const w = 68 / z;
+        const x = Math.max(box.x + box.w - w + 4, box.x + badgeW + 6 / z);
+        const y = box.y - h - 6;
+        return { x, y, w, h };
+      }
+
+      // ✋ Moldura de seleção com botãozinho de duplicar acima na ponta direita (somente fora da edição)
       function desenharDestaqueObjetoHover(c, item) {
-        if (!item || (role === 'aluno' && isReadonly)) return;
+        if (!item || (role === 'aluno' && isReadonly) || editorOuModalAberto()) return;
         const box = obterCaixaElemento(item);
         if (!box) return;
+        const z = camera.zoom || 1;
+
         c.save();
         c.strokeStyle = '#2563eb';
-        c.lineWidth = 1.6 / camera.zoom;
-        c.setLineDash([6 / camera.zoom, 4 / camera.zoom]);
+        c.lineWidth = 1.6 / z;
+        c.setLineDash([6 / z, 4 / z]);
         roundRect(c, box.x - 4, box.y - 4, box.w + 8, box.h + 8, 8);
         c.stroke();
         c.setLineDash([]);
 
-        const badgeW = 148 / camera.zoom;
-        const badgeH = 21 / camera.zoom;
+        const badgeW = 104 / z;
+        const badgeH = 21 / z;
         c.fillStyle = '#0f172a';
-        roundRect(c, box.x - 2, box.y - badgeH - 6, badgeW, badgeH, 6 / camera.zoom);
+        roundRect(c, box.x - 2, box.y - badgeH - 6, badgeW, badgeH, 6 / z);
         c.fill();
         c.fillStyle = '#ffffff';
-        c.font = `700 ${10 / camera.zoom}px "Inter", sans-serif`;
+        c.font = `700 ${10 / z}px "Inter", sans-serif`;
         c.textAlign = 'left';
         c.textBaseline = 'middle';
-        c.fillText('Arraste • 2x clique edita', box.x + 7 / camera.zoom, box.y - badgeH / 2 - 6);
+        c.fillText('2x clique edita', box.x + 8 / z, box.y - badgeH / 2 - 6);
+
+        // 📋 Botãozinho compacto acima na ponta direita da caixa para duplicar o texto com 1 clique
+        if (item.tool === 'text') {
+          const dupRect = obterRetanguloBotaoDuplicarTexto(box);
+          c.fillStyle = hoveredHandle === 'duplicate' ? '#059669' : '#2563eb';
+          roundRect(c, dupRect.x, dupRect.y, dupRect.w, dupRect.h, 6 / z);
+          c.fill();
+          c.fillStyle = '#ffffff';
+          c.font = `800 ${10 / z}px "Inter", sans-serif`;
+          c.textAlign = 'center';
+          c.textBaseline = 'middle';
+          c.fillText('📋 Duplicar', dupRect.x + dupRect.w / 2, dupRect.y + dupRect.h / 2);
+        }
 
         if (item.tool === 'text' || item.tool === 'image') {
-          const hs = 20 / camera.zoom;
+          const hs = 20 / z;
           c.fillStyle = '#2563eb';
-          roundRect(c, box.x + box.w - hs / 2, box.y + box.h - hs / 2, hs, hs, 5 / camera.zoom);
+          roundRect(c, box.x + box.w - hs / 2, box.y + box.h - hs / 2, hs, hs, 5 / z);
           c.fill();
           c.fillStyle = '#fff';
-          c.font = `900 ${11 / camera.zoom}px "Segoe UI", sans-serif`;
+          c.font = `900 ${11 / z}px "Segoe UI", sans-serif`;
           c.textAlign = 'center';
           c.textBaseline = 'middle';
           c.fillText('⤡', box.x + box.w + 1, box.y + box.h + 1);
@@ -2047,7 +2080,7 @@
         ctx.scale(camera.zoom, camera.zoom);
 
         const alvoDestaque = movingShape || resizingShape || hoveredShape;
-        if (alvoDestaque && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
+        if (alvoDestaque && !editorOuModalAberto() && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           desenharDestaqueObjetoHover(ctx, alvoDestaque);
         }
 
@@ -2128,6 +2161,19 @@
           if (!s || s.tool === 'meta_bg' || s.tool === 'pen' || s.tool === 'highlighter' || s.tool === 'eraser') continue;
           const box = obterCaixaElemento(s);
           if (!box) continue;
+
+          if (s.tool === 'text') {
+            const dupRect = obterRetanguloBotaoDuplicarTexto(box);
+            const folga = 4 / (camera.zoom || 1);
+            if (
+              pt.x >= dupRect.x - folga &&
+              pt.x <= dupRect.x + dupRect.w + folga &&
+              pt.y >= dupRect.y - folga &&
+              pt.y <= box.y + 4
+            ) {
+              return { shape: s, action: 'duplicate', box };
+            }
+          }
 
           if (s.tool === 'infographic') {
             const localX = (pt.x - s.x) / (box.scale || 1);
@@ -2359,6 +2405,10 @@
         if (!editorOuModalAberto() && currentTool !== 'eraser' && currentTool !== 'laser' && currentTool !== 'highlighter') {
           const hit = encontrarElementoNoPonto(pt);
           if (hit) {
+             if (hit.action === 'duplicate') {
+              duplicarObjetoTexto(hit.shape);
+              return;
+            }
             if (hit.action === 'info_add') {
               adicionarOpcaoRapidaInfografico(hit.shape);
               return;
@@ -3032,6 +3082,10 @@
       }
 
       function abrirEditorTextoNoPonto(worldPt, clientX, clientY, shapeExistente = null) {
+        hoveredShape = null;
+        hoveredHandle = null;
+        movingShape = null;
+        resizingShape = null;
         pendingTextWorldPt = worldPt;
         editingShapeId = shapeExistente ? shapeExistente.id : null;
         savedTextRange = null;
@@ -3082,8 +3136,8 @@
         if (textFontSelect) textFontSelect.value = textStyle.fontFamily;
 
         const rectCanvas = canvas.getBoundingClientRect();
-        const posX = Math.max(rectCanvas.left + 6, Math.min(window.innerWidth - 130, screenPos.x - 6));
-        const posY = Math.max(rectCanvas.top + 6, Math.min(window.innerHeight - 50, screenPos.y - (shapeExistente ? 2 : fontPxVisual * 0.5)));
+        const posX = Math.max(rectCanvas.left + 6, Math.min(window.innerWidth - 130, screenPos.x - 7));
+        const posY = Math.max(rectCanvas.top + 6, Math.min(window.innerHeight - 50, screenPos.y - (shapeExistente ? 3 : fontPxVisual * 0.5)));
 
         textEditorBox.style.left = Math.round(posX) + 'px';
         textEditorBox.style.top = Math.round(posY) + 'px';
@@ -3241,15 +3295,36 @@
         desenharQuadro();
       }
 
+      function duplicarObjetoTexto(shapeOriginal) {
+        if (!shapeOriginal || shapeOriginal.tool !== 'text') return null;
+        registrarHistoricoUndo();
+        const copia = JSON.parse(JSON.stringify(shapeOriginal));
+        const layout = calcularLayoutTextoRico(ctx, shapeOriginal);
+        const deslocY = Math.min(120, Math.max(30, Math.round(layout.totalHeight + 10)));
+        copia.id = 'txt_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6);
+        copia.x = Math.round((shapeOriginal.x || 0) + 16);
+        copia.y = Math.round((shapeOriginal.y || 0) + deslocY);
+        if (copia.y > 650) copia.y = Math.max(20, Math.round((shapeOriginal.y || 0) - deslocY));
+        shapes.push(copia);
+        hoveredShape = copia;
+        hoveredHandle = 'move';
+        guardarEstadoNaTelaAtual();
+        atualizarBarraNumeracaoTelas();
+        desenharQuadro();
+        agendarSalvamentoNuvem(30);
+        return copia;
+      }
+
       function confirmarEditorTexto() {
         const runs = extrairRunsDoEditor(textEditorInput);
         const textoPlano = runs.map(r => r.text).join('').trim();
+        let shapeSalvo = null;
 
         if (textoPlano) {
           registrarHistoricoUndo();
           const escalaTela = Math.max(0.1, obterFatorTelaPorMundo());
           const inputRect = textEditorInput.getBoundingClientRect();
-          const ptMundoFinal = telaParaQuadro(inputRect.left + 6, inputRect.top + 2);
+          const ptMundoFinal = telaParaQuadro(inputRect.left + 7, inputRect.top + 3);
           const larguraMoldadaMundo = textBoxWidthManual
             ? Math.max(80, Math.round((inputRect.width - 12) / escalaTela))
             : Math.max(80, Math.round((inputRect.width + 8) / escalaTela));
@@ -3266,9 +3341,10 @@
               alvo.fontSize = activeTextBaseFontSize;
               alvo.color = runs[0]?.color || currentColor;
               alvo.fontFamily = runs[0]?.fontFamily || textStyle.fontFamily;
+              shapeSalvo = alvo;
             }
           } else {
-            shapes.push({
+            shapeSalvo = {
               id: 'txt_' + Date.now(),
               tool: 'text',
               x: Math.round(ptMundoFinal.x),
@@ -3281,7 +3357,8 @@
               size: currentSize,
               scale: 1,
               fontFamily: runs[0]?.fontFamily || textStyle.fontFamily
-            });
+            };
+            shapes.push(shapeSalvo);
           }
           guardarEstadoNaTelaAtual();
           atualizarBarraNumeracaoTelas();
@@ -3290,12 +3367,23 @@
 
         textEditorBox.style.display = 'none';
         editingShapeId = null;
+        hoveredShape = null;
+        hoveredHandle = null;
         desenharQuadro();
         selecionarFerramenta('pen');
+        return shapeSalvo;
       }
 
+      const btnDupToolbar = document.getElementById('btn-text-duplicate');
+      if (btnDupToolbar) {
+        btnDupToolbar.addEventListener('mousedown', (e) => e.preventDefault());
+        btnDupToolbar.onclick = () => {
+          const salvo = confirmarEditorTexto();
+          if (salvo) duplicarObjetoTexto(salvo);
+        };
+      }
       document.getElementById('btn-text-cancel').onclick = cancelarEditorTexto;
-      document.getElementById('btn-text-confirm').onclick = confirmarEditorTexto;
+      document.getElementById('btn-text-confirm').onclick = () => confirmarEditorTexto();
 
       // =========================================================================
       // 📊 ESTÚDIO DE INFOGRÁFICOS E MAPAS MENTAIS (16 MODELOS PRESERVADOS)
